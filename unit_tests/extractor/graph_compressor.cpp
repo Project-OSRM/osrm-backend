@@ -29,8 +29,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        // src, tgt, weight, dur, edge_id, name_id, access_restr, fwd, bkwd, roundabout, travel_mode
         {0,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -43,6 +44,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          INVALID_LANE_DESCRIPTIONID},
         {1,
          0,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -55,6 +57,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
         {1,
          2,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -64,6 +67,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -77,6 +81,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
         {2,
          3,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -87,6 +92,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          INVALID_LANE_DESCRIPTIONID},
         {3,
          2,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -99,6 +105,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
         {3,
          4,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -109,6 +116,7 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          INVALID_LANE_DESCRIPTIONID},
         {4,
          3,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -148,8 +156,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        // src, tgt, weight, dur, edge_id, name_id, access_restr, fwd, bkwd, roundabout, travel_mode
         {0,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -163,6 +172,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
         {0,
          5,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -173,6 +183,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
          INVALID_LANE_DESCRIPTIONID},
         {1,
          0,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -185,6 +196,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
         {1,
          2,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -194,6 +206,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -207,6 +220,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
         {2,
          3,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -217,6 +231,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
          INVALID_LANE_DESCRIPTIONID},
         {3,
          2,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -229,6 +244,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
         {3,
          4,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -239,6 +255,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
          INVALID_LANE_DESCRIPTIONID},
         {4,
          3,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -251,6 +268,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
         {4,
          5,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -262,6 +280,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
         {5,
          0,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -272,6 +291,7 @@ BOOST_AUTO_TEST_CASE(loop_test)
          INVALID_LANE_DESCRIPTIONID},
         {5,
          4,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -323,8 +343,9 @@ BOOST_AUTO_TEST_CASE(t_intersection)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        // src, tgt, weight, dur, edge_id, name_id, access_restr, fwd, bkwd, roundabout, travel_mode
         {0,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -337,6 +358,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          INVALID_LANE_DESCRIPTIONID},
         {1,
          0,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -349,6 +371,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
         {1,
          2,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -359,6 +382,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          INVALID_LANE_DESCRIPTIONID},
         {1,
          3,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -371,6 +395,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
         {2,
          1,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -380,6 +405,7 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {3,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -419,8 +445,9 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        // src, tgt, weight, dur, edge_id, name_id, access_restr, fwd, bkwd, roundabout, travel_mode
         {0,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -433,6 +460,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
          INVALID_LANE_DESCRIPTIONID},
         {1,
          0,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -445,6 +473,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
         {1,
          2,
          1,
+         1,
          SPECIAL_EDGEID,
          1,
          false,
@@ -454,6 +483,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -489,8 +519,9 @@ BOOST_AUTO_TEST_CASE(direction_changes)
     CompressedEdgeContainer container;
 
     std::vector<InputEdge> edges = {
-        // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, travel_mode
+        // src, tgt, weight, dur, edge_id, name_id, access_restr, fwd, bkwd, roundabout, travel_mode
         {0,
+         1,
          1,
          1,
          SPECIAL_EDGEID,
@@ -503,6 +534,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
          INVALID_LANE_DESCRIPTIONID},
         {1,
          0,
+         1,
          1,
          SPECIAL_EDGEID,
          0,
@@ -515,6 +547,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
         {1,
          2,
          1,
+         1,
          SPECIAL_EDGEID,
          0,
          false,
@@ -524,6 +557,7 @@ BOOST_AUTO_TEST_CASE(direction_changes)
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
+         1,
          1,
          1,
          SPECIAL_EDGEID,

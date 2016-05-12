@@ -19,8 +19,9 @@ class CompressedEdgeContainer
     struct OnewayCompressedEdge
     {
       public:
-        NodeID node_id;    // refers to an internal node-based-node
-        EdgeWeight weight; // the weight of the edge leading to this node
+        NodeID node_id;      // refers to an internal node-based-node
+        EdgeWeight weight;   // the weight of the edge leading to this node
+        EdgeWeight duration; // the duration of the edge leading to this node
     };
 
     using OnewayEdgeBucket = std::vector<OnewayCompressedEdge>;
@@ -31,10 +32,14 @@ class CompressedEdgeContainer
                       const NodeID via_node_id,
                       const NodeID target_node,
                       const EdgeWeight weight1,
-                      const EdgeWeight weight2);
+                      const EdgeWeight weight2,
+                      const EdgeWeight duration1,
+                      const EdgeWeight duration2);
 
-    void
-    AddUncompressedEdge(const EdgeID edge_id, const NodeID target_node, const EdgeWeight weight);
+    void AddUncompressedEdge(const EdgeID edge_id,
+                             const NodeID target_node,
+                             const EdgeWeight weight,
+                             const EdgeWeight duration);
 
     void InitializeBothwayVector();
     unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos);
@@ -62,6 +67,8 @@ class CompressedEdgeContainer
     std::vector<NodeID> m_compressed_geometry_nodes;
     std::vector<EdgeWeight> m_compressed_geometry_fwd_weights;
     std::vector<EdgeWeight> m_compressed_geometry_rev_weights;
+    std::vector<EdgeWeight> m_compressed_geometry_fwd_durations;
+    std::vector<EdgeWeight> m_compressed_geometry_rev_durations;
     std::vector<unsigned> m_free_list;
     std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
     std::unordered_map<EdgeID, unsigned> m_forward_edge_id_to_zipped_index_map;

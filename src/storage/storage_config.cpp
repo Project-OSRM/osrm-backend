@@ -13,6 +13,8 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       hsgr_data_path{base.string() + ".hsgr"}, nodes_data_path{base.string() + ".nodes"},
       edges_data_path{base.string() + ".edges"}, core_data_path{base.string() + ".core"},
       geometries_path{base.string() + ".geometry"}, timestamp_path{base.string() + ".timestamp"},
+      turn_weight_penalties_path{base.string() + ".turn_weight_penalties"},
+      turn_duration_penalties_path{base.string() + ".turn_duration_penalties"},
       datasource_names_path{base.string() + ".datasource_names"},
       datasource_indexes_path{base.string() + ".datasource_indexes"},
       names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"},
@@ -23,7 +25,7 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
 
 bool StorageConfig::IsValid() const
 {
-    const constexpr auto num_files = 13;
+    const constexpr auto num_files = 15;
     const boost::filesystem::path paths[num_files] = {ram_index_path,
                                                       file_index_path,
                                                       hsgr_data_path,
@@ -32,6 +34,8 @@ bool StorageConfig::IsValid() const
                                                       core_data_path,
                                                       geometries_path,
                                                       timestamp_path,
+                                                      turn_weight_penalties_path,
+                                                      turn_duration_penalties_path,
                                                       datasource_indexes_path,
                                                       datasource_indexes_path,
                                                       names_data_path,

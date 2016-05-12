@@ -33,6 +33,8 @@ const constexpr char *block_id_to_name[] = {"NAME_OFFSETS",
                                             "GEOMETRIES_NODE_LIST",
                                             "GEOMETRIES_FWD_WEIGHT_LIST",
                                             "GEOMETRIES_REV_WEIGHT_LIST",
+                                            "GEOMETRIES_FWD_DURATION_LIST",
+                                            "GEOMETRIES_REV_DURATION_LIST",
                                             "HSGR_CHECKSUM",
                                             "TIMESTAMP",
                                             "FILE_INDEX_PATH",
@@ -52,7 +54,9 @@ const constexpr char *block_id_to_name[] = {"NAME_OFFSETS",
                                             "POST_TURN_BEARING",
                                             "TURN_LANE_DATA",
                                             "LANE_DESCRIPTION_OFFSETS",
-                                            "LANE_DESCRIPTION_MASKS"};
+                                            "LANE_DESCRIPTION_MASKS",
+                                            "TURN_WEIGHT_PENALTIES",
+                                            "TURN_DURATION_PENALTIES"};
 
 struct SharedDataLayout
 {
@@ -75,6 +79,8 @@ struct SharedDataLayout
         GEOMETRIES_NODE_LIST,
         GEOMETRIES_FWD_WEIGHT_LIST,
         GEOMETRIES_REV_WEIGHT_LIST,
+        GEOMETRIES_FWD_DURATION_LIST,
+        GEOMETRIES_REV_DURATION_LIST,
         HSGR_CHECKSUM,
         TIMESTAMP,
         FILE_INDEX_PATH,
@@ -95,6 +101,8 @@ struct SharedDataLayout
         TURN_LANE_DATA,
         LANE_DESCRIPTION_OFFSETS,
         LANE_DESCRIPTION_MASKS,
+        TURN_WEIGHT_PENALTIES,
+        TURN_DURATION_PENALTIES,
         NUM_BLOCKS
     };
 

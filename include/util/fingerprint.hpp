@@ -10,9 +10,8 @@ namespace util
 {
 
 // implements a singleton, i.e. there is one and only one conviguration object
-class FingerPrint
+struct FingerPrint
 {
-  public:
     static FingerPrint GetValid();
     const boost::uuids::uuid &GetFingerPrint() const;
     bool IsMagicNumberOK(const FingerPrint &other) const;
@@ -21,7 +20,6 @@ class FingerPrint
     bool TestRTree(const FingerPrint &other) const;
     bool TestQueryObjects(const FingerPrint &other) const;
 
-  private:
     unsigned magic_number;
     char md5_prepare[33];
     char md5_tree[33];
@@ -34,6 +32,7 @@ class FingerPrint
 
 static_assert(sizeof(FingerPrint) == 152, "FingerPrint has unexpected size");
 static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
+static_assert(std::is_pod<FingerPrint>::value, "FingerPrint needs to be a POD.");
 }
 }
 

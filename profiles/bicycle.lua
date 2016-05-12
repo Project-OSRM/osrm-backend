@@ -93,13 +93,15 @@ surface_speeds = {
 
 -- these need to be global because they are accesed externaly
 properties.traffic_signal_penalty        = 2
-properties.u_turn_penalty                = 20
 properties.max_speed_for_map_matching    = 110/3.6 -- kmph -> m/s
 properties.use_turn_restrictions         = false
 properties.continue_straight_at_waypoint = false
+properties.weight_name                   = 'duration'
+--properties.weight_name                   = 'cyclebiliyt'
 
 local obey_oneway               = true
 local ignore_areas              = true
+local uturn_penalty             = 20
 local turn_penalty              = 6
 local turn_bias                 = 1.4
 -- reduce the driving speed by 30% for unsafe roads
@@ -270,10 +272,6 @@ function way_function (way, result)
     -- regular ways
     result.forward_speed = bicycle_speeds[highway]
     result.backward_speed = bicycle_speeds[highway]
-    if safety_penalty < 1 and unsafe_highway_list[highway] then
-      result.forward_speed = result.forward_speed * safety_penalty
-      result.backward_speed = result.backward_speed * safety_penalty
-    end
   elseif access and access_tag_whitelist[access] then
     -- unknown way, but valid access tag
     result.forward_speed = default_speed
@@ -367,10 +365,13 @@ function way_function (way, result)
   -- cycleways
   if cycleway and cycleway_tags[cycleway] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   elseif cycleway_left and cycleway_tags[cycleway_left] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   elseif cycleway_right and cycleway_tags[cycleway_right] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   end
 
   -- dismount
@@ -394,15 +395,43 @@ function way_function (way, result)
 
   -- maxspeed
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
+
+  -- convert duration into cyclebility
+  local is_unsafe = safety_penalty < 1 and unsafe_highway_list[highway]
+  if result.forward_speed > 0 then
+    -- convert from km/h to m/s
+    result.forward_weight_per_meter = result.forward_speed / 3.6;
+    if is_unsafe then
+      result.forward_weight_per_meter = result.forward_weight_per_meter * safety_penalty
+    end
+  end
+  if result.backward_speed > 0 then
+    -- convert from km/h to m/s
+    result.backward_weight_per_meter = result.backward_speed / 3.6;
+    if is_unsafe then
+      result.backward_weight_per_meter = result.backward_weight_per_meter * safety_penalty
+    end
+  end
+  if result.duration > 0 then
+    result.weight = result.duration;
+    if is_unsafe then
+      result.weight = result.weight * (1+safety_penalty)
+    end
+  end
 end
 
-function turn_function (angle)
+function turn_function(turn)
   -- compute turn penalty as angle^2, with a left/right bias
-  -- multiplying by 10 converts to deci-seconds see issue #1318
-  k = 10*turn_penalty/(90.0*90.0)
-  if angle>=0 then
-    return angle*angle*k/turn_bias
+  local normalized_angle = turn.angle / 90.0
+  if normalized_angle >= 0.0 then
+    turn.duration = normalized_angle * normalized_angle * turn_penalty / turn_bias
   else
-    return angle*angle*k*turn_bias
+    turn.duration = normalized_angle * normalized_angle * turn_penalty * turn_bias
   end
+
+  if turn.direction_modifier == direction_modifier.uturn then
+    turn.duration = turn.duration + uturn_penalty
+  end
+
+  turn.weight = turn.duration
 end

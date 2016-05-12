@@ -244,28 +244,28 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
                 const auto geometry_index = facade.GetGeometryIndexForEdgeID(edge_data.id);
                 std::vector<NodeID> id_vector;
+
                 std::vector<EdgeWeight> weight_vector;
+                std::vector<EdgeWeight> duration_vector;
                 std::vector<DatasourceID> datasource_vector;
                 if (geometry_index.forward)
                 {
                     id_vector = facade.GetUncompressedForwardGeometry(geometry_index.id);
                     weight_vector = facade.GetUncompressedForwardWeights(geometry_index.id);
+                    duration_vector = facade.GetUncompressedForwardDurations(geometry_index.id);
                     datasource_vector = facade.GetUncompressedForwardDatasources(geometry_index.id);
                 }
                 else
                 {
                     id_vector = facade.GetUncompressedReverseGeometry(geometry_index.id);
                     weight_vector = facade.GetUncompressedReverseWeights(geometry_index.id);
+                    duration_vector = facade.GetUncompressedReverseDurations(geometry_index.id);
                     datasource_vector = facade.GetUncompressedReverseDatasources(geometry_index.id);
                 }
                 BOOST_ASSERT(id_vector.size() > 0);
-                BOOST_ASSERT(weight_vector.size() > 0);
                 BOOST_ASSERT(datasource_vector.size() > 0);
-
-                const auto total_weight =
-                    std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
-
                 BOOST_ASSERT(weight_vector.size() == id_vector.size() - 1);
+                BOOST_ASSERT(duration_vector.size() == id_vector.size() - 1);
                 const bool is_first_segment = unpacked_path.empty();
 
                 const std::size_t start_index =
@@ -285,6 +285,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                         PathData{id_vector[segment_idx + 1],
                                  name_index,
                                  weight_vector[segment_idx],
+                                 duration_vector[segment_idx],
                                  extractor::guidance::TurnInstruction::NO_TURN(),
                                  {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                                  travel_mode,
@@ -299,7 +300,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
                 unpacked_path.back().entry_classid = facade.GetEntryClassID(edge_data.id);
                 unpacked_path.back().turn_instruction = turn_instruction;
-                unpacked_path.back().duration_until_turn += (edge_data.weight - total_weight);
+                unpacked_path.back().duration_until_turn +=
+                    facade.GetDurationPenaltyForEdgeID(edge_data.id);
+                unpacked_path.back().weight_until_turn +=
+                    facade.GetWeightPenaltyForEdgeID(edge_data.id);
                 unpacked_path.back().pre_turn_bearing = facade.PreTurnBearing(edge_data.id);
                 unpacked_path.back().post_turn_bearing = facade.PostTurnBearing(edge_data.id);
             });
@@ -307,6 +311,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         std::size_t start_index = 0, end_index = 0;
         std::vector<unsigned> id_vector;
         std::vector<EdgeWeight> weight_vector;
+        std::vector<EdgeWeight> duration_vector;
         std::vector<DatasourceID> datasource_vector;
         const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id ==
                                     phantom_node_pair.target_phantom.packed_geometry_id) &&
@@ -318,6 +323,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
             weight_vector = facade.GetUncompressedReverseWeights(
+                phantom_node_pair.target_phantom.packed_geometry_id);
+
+            duration_vector = facade.GetUncompressedReverseDurations(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
             datasource_vector = facade.GetUncompressedReverseDatasources(
@@ -345,6 +353,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             weight_vector = facade.GetUncompressedForwardWeights(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
+            duration_vector = facade.GetUncompressedForwardDurations(
+                phantom_node_pair.target_phantom.packed_geometry_id);
+
             datasource_vector = facade.GetUncompressedForwardDatasources(
                 phantom_node_pair.target_phantom.packed_geometry_id);
         }
@@ -365,6 +376,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
                 phantom_node_pair.target_phantom.name_id,
                 weight_vector[segment_idx],
+                duration_vector[segment_idx],
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
@@ -380,6 +392,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             const auto source_weight = start_traversed_in_reverse
                                            ? phantom_node_pair.source_phantom.reverse_weight
                                            : phantom_node_pair.source_phantom.forward_weight;
+            const auto source_duration = start_traversed_in_reverse
+                                             ? phantom_node_pair.source_phantom.reverse_duration
+                                             : phantom_node_pair.source_phantom.forward_duration;
             // The above code will create segments for (v, w), (w,x), (x, y) and (y, Z).
             // However the first segment duration needs to be adjusted to the fact that the source
             // phantom is in the middle of the segment. We do this by subtracting v--s from the
@@ -393,8 +408,10 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             // TODO this creates a scenario where it's possible the duration from a phantom
             // node to the first turn would be the same as from end to end of a segment,
             // which is obviously incorrect and not ideal...
+            unpacked_path.front().weight_until_turn =
+                std::max(unpacked_path.front().weight_until_turn - source_weight, 0);
             unpacked_path.front().duration_until_turn =
-                std::max(unpacked_path.front().duration_until_turn - source_weight, 0);
+                std::max(unpacked_path.front().duration_until_turn - source_duration, 0);
         }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.

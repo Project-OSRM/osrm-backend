@@ -60,6 +60,8 @@ struct StorageConfig final
     boost::filesystem::path core_data_path;
     boost::filesystem::path geometries_path;
     boost::filesystem::path timestamp_path;
+    boost::filesystem::path turn_weight_penalties_path;
+    boost::filesystem::path turn_duration_penalties_path;
     boost::filesystem::path datasource_names_path;
     boost::filesystem::path datasource_indexes_path;
     boost::filesystem::path names_data_path;

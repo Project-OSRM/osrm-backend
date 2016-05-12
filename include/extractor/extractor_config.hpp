@@ -71,7 +71,9 @@ struct ExtractorConfig
         rtree_nodes_output_path = basepath + ".osrm.ramIndex";
         rtree_leafs_output_path = basepath + ".osrm.fileIndex";
         edge_segment_lookup_path = basepath + ".osrm.edge_segment_lookup";
-        edge_penalty_path = basepath + ".osrm.edge_penalties";
+        turn_duration_penalties_path = basepath + ".osrm.turn_duration_penalties";
+        turn_weight_penalties_path = basepath + ".osrm.turn_weight_penalties";
+        turn_penalties_index_path = basepath + ".osrm.turn_penalties_index";
         edge_based_node_weights_output_path = basepath + ".osrm.enw";
         profile_properties_output_path = basepath + ".osrm.properties";
         intersection_class_data_output_path = basepath + ".osrm.icd";
@@ -95,12 +97,14 @@ struct ExtractorConfig
     std::string rtree_leafs_output_path;
     std::string profile_properties_output_path;
     std::string intersection_class_data_output_path;
+    std::string turn_weight_penalties_path;
+    std::string turn_duration_penalties_path;
 
     unsigned requested_num_threads;
     unsigned small_component_size;
 
     bool generate_edge_lookup;
-    std::string edge_penalty_path;
+    std::string turn_penalties_index_path;
     std::string edge_segment_lookup_path;
 };
 }

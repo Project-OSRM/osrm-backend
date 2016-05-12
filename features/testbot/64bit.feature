@@ -1,4 +1,4 @@
-@testbot
+@testbot @64bit
 Feature: Support 64bit node IDs
 
     # Without 64bit support, this test should fail

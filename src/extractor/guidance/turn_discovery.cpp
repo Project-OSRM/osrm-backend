@@ -33,7 +33,7 @@ bool findPreviousIntersection(const NodeID node_v,
      * PREVIOUS_ID. To verify that find, we check the intersection using our PREVIOUS_ID candidate
      * to check the intersection at NODE for via_edge
      */
-    const constexpr double COMBINE_DISTANCE_CUTOFF = 30;
+    const constexpr double COMBINE_WEIGHT_CUTOFF = 30;
 
     const auto coordinate_extractor = turn_analysis.getGenerator().GetCoordinateExtractor();
     const auto via_edge_length = util::coordinate_calculation::getLength(
@@ -42,7 +42,7 @@ bool findPreviousIntersection(const NodeID node_v,
 
     // we check if via-edge is too short. In this case the previous turn cannot influence the turn
     // at via_edge and the intersection at NODE_W
-    if (via_edge_length > COMBINE_DISTANCE_CUTOFF)
+    if (via_edge_length > COMBINE_WEIGHT_CUTOFF)
         return false;
 
     // Node -> Via_Edge -> Intersection[0 == UTURN] -> reverse_of(via_edge) -> Intersection at node

@@ -145,16 +145,19 @@ maxspeed_table = {
 }
 
 -- set profile properties
-properties.u_turn_penalty                  = 20
 properties.traffic_signal_penalty          = 2
 properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false
+-- this will use the duration and {forward/backward}_speed values as weight
+properties.weight_name                     = 'duration'
+--properties.weight_name                     = 'distance'
 
 local side_road_speed_multiplier = 0.8
-
 local turn_penalty               = 7.5
+local uturn_penalty              = 20
+
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
 local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1.075
@@ -397,14 +400,13 @@ function way_function (way, result)
     result.backward_speed = min(result.backward_speed, max_speed)
   end
 
-  if -1 == result.forward_speed and -1 == result.backward_speed then
+  if result.forward_speed < 0 and result.backward_speed < 0 then
     return
   end
 
   -- reduce speed on special side roads
   local sideway = way:get_value_by_key("side_road")
-  if "yes" == sideway or
-  "rotary" == sideway then
+  if "yes" == sideway or "rotary" == sideway then
     result.forward_speed = result.forward_speed * side_road_speed_multiplier
     result.backward_speed = result.backward_speed * side_road_speed_multiplier
   end
@@ -595,6 +597,15 @@ function way_function (way, result)
     result.backward_speed = math.min(penalized_speed, scaled_speed)
   end
 
+  if properties.weight_name == 'distance' then
+    if result.duration > 0 or result.forward_speed > 0 then
+      result.forward_weight_per_meter = 1
+    end
+    if result.duration > 0 or result.backward_speed > 0 then
+      result.backward_weight_per_meter = 1
+    end
+  end
+
   -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
   -- Scaling speed to take average waiting time into account plus some more for start / stop.
   if oneway and "alternating" == oneway then
@@ -611,14 +622,27 @@ function way_function (way, result)
   result.is_startpoint = result.forward_mode == mode.driving or result.backward_mode == mode.driving
 end
 
-function turn_function (angle)
+function turn_function (turn)
   -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
   -- over the space of 0-180 degrees.  Values here were chosen by fitting
   -- the function to some turn penalty samples from real driving.
   -- multiplying by 10 converts to deci-seconds see issue #1318
-  if angle>=0 then
-    return 10 * turn_penalty / (1 + 2.718 ^ - ((13 / turn_bias) * angle/180 - 6.5*turn_bias))
-  else
-    return 10 * turn_penalty / (1 + 2.718 ^  - ((13 * turn_bias) * - angle/180 - 6.5/turn_bias))
+  if turn.turn_type ~= turn_type.no_turn then
+    if turn.angle >= 0 then
+      turn.duration = turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
+    else
+      turn.duration = turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
+    end
+
+    if turn.direction_modifier == direction_modifier.uturn then
+      turn.duration = turn.duration + uturn_penalty
+    end
+
+    -- for distance based routing we don't want to have penalties based on turn angle
+    if properties.weight_name == 'distance' then
+       turn.weight = 0
+    else
+       turn.weight = turn.duration
+    end
   end
 end

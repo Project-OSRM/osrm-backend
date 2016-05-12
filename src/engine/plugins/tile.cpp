@@ -1,6 +1,6 @@
-#include "engine/plugins/tile.hpp"
 #include "engine/edge_unpacker.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/vector_tile.hpp"
@@ -574,7 +574,6 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     // need to refer to.
     for (const auto &edge : edges)
     {
-
         const auto forward_datasource_vector =
             facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
         const auto reverse_datasource_vector =

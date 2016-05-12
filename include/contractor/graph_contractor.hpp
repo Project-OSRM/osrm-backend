@@ -821,47 +821,44 @@ class GraphContractor
                 const EdgeWeight path_weight = in_data.weight + out_data.weight;
                 if (target == source)
                 {
-                    if (path_weight < node_weights[node])
+                    if (RUNSIMULATION)
                     {
-                        if (RUNSIMULATION)
-                        {
-                            // make sure to prune better, but keep inserting this loop if it should
-                            // still be the best
-                            // CAREFUL: This only works due to the independent node-setting. This
-                            // guarantees that source is not connected to another node that is
-                            // contracted
-                            node_weights[source] = path_weight + 1;
-                            BOOST_ASSERT(stats != nullptr);
-                            stats->edges_added_count += 2;
-                            stats->original_edges_added_count +=
-                                2 * (out_data.originalEdges + in_data.originalEdges);
-                        }
-                        else
-                        {
-                            // CAREFUL: This only works due to the independent node-setting. This
-                            // guarantees that source is not connected to another node that is
-                            // contracted
-                            node_weights[source] = path_weight; // make sure to prune better
-                            inserted_edges.emplace_back(source,
-                                                        target,
-                                                        path_weight,
-                                                        out_data.originalEdges +
-                                                            in_data.originalEdges,
-                                                        node,
-                                                        SHORTCUT_ARC,
-                                                        FORWARD_DIRECTION_ENABLED,
-                                                        REVERSE_DIRECTION_DISABLED);
+                        // make sure to prune better, but keep inserting this loop if it should
+                        // still be the best
+                        // CAREFUL: This only works due to the independent node-setting. This
+                        // guarantees that source is not connected to another node that is
+                        // contracted
+                        node_weights[source] = path_weight + 1;
+                        BOOST_ASSERT(stats != nullptr);
+                        stats->edges_added_count += 2;
+                        stats->original_edges_added_count +=
+                            2 * (out_data.originalEdges + in_data.originalEdges);
+                    }
+                    else
+                    {
+                        // CAREFUL: This only works due to the independent node-setting. This
+                        // guarantees that source is not connected to another node that is
+                        // contracted
+                        node_weights[source] = path_weight; // make sure to prune better
+                        inserted_edges.emplace_back(source,
+                                                    target,
+                                                    path_weight,
+                                                    out_data.originalEdges +
+                                                        in_data.originalEdges,
+                                                    node,
+                                                    SHORTCUT_ARC,
+                                                    FORWARD_DIRECTION_ENABLED,
+                                                    REVERSE_DIRECTION_DISABLED);
 
-                            inserted_edges.emplace_back(target,
-                                                        source,
-                                                        path_weight,
-                                                        out_data.originalEdges +
-                                                            in_data.originalEdges,
-                                                        node,
-                                                        SHORTCUT_ARC,
-                                                        FORWARD_DIRECTION_DISABLED,
-                                                        REVERSE_DIRECTION_ENABLED);
-                        }
+                        inserted_edges.emplace_back(target,
+                                                    source,
+                                                    path_weight,
+                                                    out_data.originalEdges +
+                                                        in_data.originalEdges,
+                                                    node,
+                                                    SHORTCUT_ARC,
+                                                    FORWARD_DIRECTION_DISABLED,
+                                                    REVERSE_DIRECTION_ENABLED);
                     }
                     continue;
                 }

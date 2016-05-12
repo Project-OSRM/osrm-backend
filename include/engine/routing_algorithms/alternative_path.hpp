@@ -927,7 +927,7 @@ class AlternativeRouting final
         }
 
         t_test_path_length += unpacked_until_weight;
-        // Run actual T-Test query and compare if weight equal.
+        // Run actual T-Test query and compare if weights equal.
         engine_working_data.InitializeOrClearThirdThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &forward_heap3 = *engine_working_data.forward_heap_3;

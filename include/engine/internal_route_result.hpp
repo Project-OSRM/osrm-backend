@@ -24,6 +24,8 @@ struct PathData
     NodeID turn_via_node;
     // name of the street that leads to the turn
     unsigned name_id;
+    // weight that is traveled on the segment until the turn is reached
+    EdgeWeight weight_until_turn;
     // duration that is traveled on the segment until the turn is reached
     EdgeWeight duration_until_turn;
     // instruction to execute at the turn

@@ -93,10 +93,14 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<NodeID, true>::vector m_geometry_node_list;
     util::ShM<EdgeWeight, true>::vector m_geometry_fwd_weight_list;
     util::ShM<EdgeWeight, true>::vector m_geometry_rev_weight_list;
+    util::ShM<EdgeWeight, true>::vector m_geometry_fwd_duration_list;
+    util::ShM<EdgeWeight, true>::vector m_geometry_rev_duration_list;
     util::ShM<bool, true>::vector m_is_core_node;
     util::ShM<uint8_t, true>::vector m_datasource_list;
     util::ShM<std::uint32_t, true>::vector m_lane_description_offsets;
     util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector m_lane_description_masks;
+    util::ShM<TurnPenalty, true>::vector m_turn_weight_penalties;
+    util::ShM<TurnPenalty, true>::vector m_turn_duration_penalties;
 
     util::ShM<char, true>::vector m_datasource_name_data;
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
@@ -319,6 +323,29 @@ class SharedDataFacade final : public BaseDataFacade
         m_is_core_node = std::move(is_core_node);
     }
 
+    void LoadTurnPenalties()
+    {
+        auto turn_weight_penalties_ptr = data_layout->GetBlockPtr<TurnPenalty>(
+            shared_memory, storage::SharedDataLayout::TURN_WEIGHT_PENALTIES);
+        m_turn_weight_penalties = util::ShM<TurnPenalty, true>::vector(
+            turn_weight_penalties_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::TURN_WEIGHT_PENALTIES]);
+        if (data_layout->num_entries[storage::SharedDataLayout::TURN_DURATION_PENALTIES] == 0)
+        {
+            m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
+                turn_weight_penalties_ptr,
+                data_layout->num_entries[storage::SharedDataLayout::TURN_WEIGHT_PENALTIES]);
+        }
+        else
+        {
+            auto turn_duration_penalties_ptr = data_layout->GetBlockPtr<TurnPenalty>(
+                shared_memory, storage::SharedDataLayout::TURN_WEIGHT_PENALTIES);
+            m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
+                turn_duration_penalties_ptr,
+                data_layout->num_entries[storage::SharedDataLayout::TURN_DURATION_PENALTIES]);
+        }
+    }
+
     void LoadGeometries()
     {
         auto geometries_index_ptr = data_layout->GetBlockPtr<unsigned>(
@@ -348,6 +375,20 @@ class SharedDataFacade final : public BaseDataFacade
             geometries_rev_weight_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
         m_geometry_rev_weight_list = std::move(geometry_rev_weight_list);
+
+        auto geometries_fwd_duration_list_ptr = data_layout->GetBlockPtr<EdgeWeight>(
+            shared_memory, storage::SharedDataLayout::GEOMETRIES_FWD_DURATION_LIST);
+        util::ShM<EdgeWeight, true>::vector geometry_fwd_duration_list(
+            geometries_fwd_duration_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_FWD_DURATION_LIST]);
+        m_geometry_fwd_duration_list = std::move(geometry_fwd_duration_list);
+
+        auto geometries_rev_duration_list_ptr = data_layout->GetBlockPtr<EdgeWeight>(
+            shared_memory, storage::SharedDataLayout::GEOMETRIES_REV_DURATION_LIST);
+        util::ShM<EdgeWeight, true>::vector geometry_rev_duration_list(
+            geometries_rev_duration_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_REV_DURATION_LIST]);
+        m_geometry_rev_duration_list = std::move(geometry_rev_duration_list);
 
         auto datasources_list_ptr = data_layout->GetBlockPtr<uint8_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCES_LIST);
@@ -468,6 +509,7 @@ class SharedDataFacade final : public BaseDataFacade
         LoadGraph();
         LoadChecksum();
         LoadNodeAndEdgeInformation();
+        LoadTurnPenalties();
         LoadGeometries();
         LoadTimestamp();
         LoadViaNodeList();
@@ -589,6 +631,54 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     virtual std::vector<EdgeWeight>
+    GetUncompressedForwardDurations(const EdgeID id) const override final
+    {
+        /*
+         * EdgeWeights's for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_fwd_weight_list vector.
+         * */
+        const unsigned begin = m_geometry_indices.at(id) + 1;
+        const unsigned end = m_geometry_indices.at(id + 1);
+
+        std::vector<EdgeWeight> result_durations;
+        result_durations.resize(end - begin);
+
+        std::copy(m_geometry_fwd_duration_list.begin() + begin,
+                  m_geometry_fwd_duration_list.begin() + end,
+                  result_durations.begin());
+
+        return result_durations;
+    }
+
+    virtual std::vector<EdgeWeight>
+    GetUncompressedReverseDurations(const EdgeID id) const override final
+    {
+        /*
+         * EdgeWeights for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_rev_weight_list vector. For
+         * reverse durations of bi-directional edges, edges 1 to
+         * n-1 of that edge need to be read in reverse.
+         */
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1) - 1;
+
+        std::vector<EdgeWeight> result_durations;
+        result_durations.resize(end - begin);
+
+        std::copy(m_geometry_rev_duration_list.rbegin() + (m_geometry_rev_duration_list.size() - end),
+                  m_geometry_rev_duration_list.rbegin() + (m_geometry_rev_duration_list.size() - begin),
+                  result_durations.begin());
+
+        return result_durations;
+    }
+
+    virtual std::vector<EdgeWeight>
     GetUncompressedForwardWeights(const EdgeID id) const override final
     {
         /*
@@ -639,6 +729,18 @@ class SharedDataFacade final : public BaseDataFacade
     virtual GeometryID GetGeometryIndexForEdgeID(const unsigned id) const override final
     {
         return m_via_geometry_list.at(id);
+    }
+
+    virtual TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
+    {
+        BOOST_ASSERT(m_turn_weight_penalties.size() > id);
+        return m_turn_weight_penalties[id];
+    }
+
+    virtual TurnPenalty GetDurationPenaltyForEdgeID(const unsigned id) const override final
+    {
+        BOOST_ASSERT(m_turn_duration_penalties.size() > id);
+        return m_turn_duration_penalties[id];
     }
 
     extractor::guidance::TurnInstruction
@@ -935,6 +1037,8 @@ class SharedDataFacade final : public BaseDataFacade
     {
         return m_profile_properties->max_speed_for_map_matching;
     }
+
+    const char *GetWeightName() const override final { return m_profile_properties->weight_name; }
 
     BearingClassID GetBearingClassID(const NodeID id) const override final
     {

@@ -1,129 +1,100 @@
 #ifndef INTERNAL_EXTRACTOR_EDGE_HPP
 #define INTERNAL_EXTRACTOR_EDGE_HPP
 
+#include "extractor/guidance/road_classification.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/travel_mode.hpp"
+#include "osrm/coordinate.hpp"
+#include "util/strong_typedef.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-
-#include "extractor/guidance/road_classification.hpp"
-#include "osrm/coordinate.hpp"
 #include <utility>
+#include <variant/variant.hpp>
 
 namespace osrm
 {
 namespace extractor
 {
 
+namespace detail
+{
+// these are used for duration based mode of transportations like ferries
+OSRM_STRONG_TYPEDEF(double, ValueByEdge)
+OSRM_STRONG_TYPEDEF(double, ValueByMeter)
+using ByEdgeOrByMeterValue = mapbox::util::variant<detail::ValueByEdge, detail::ValueByMeter>;
+
+struct ToValueByEdge
+{
+    ToValueByEdge(double distance_) : distance(distance_) {}
+
+    ValueByEdge operator()(const ValueByMeter by_meter) const
+    {
+        return ValueByEdge{distance / static_cast<double>(by_meter)};
+    }
+
+    ValueByEdge operator()(const ValueByEdge by_edge) const { return by_edge; }
+
+    double distance;
+};
+}
+
 struct InternalExtractorEdge
 {
-    // specify the type of the weight data
-    enum class WeightType : char
-    {
-        INVALID,
-        SPEED,
-        EDGE_DURATION,
-        WAY_DURATION,
-    };
-
-    struct WeightData
-    {
-        WeightData() : duration(0.0), type(WeightType::INVALID) {}
-
-        union {
-            double duration;
-            double speed;
-        };
-        WeightType type;
-    };
-
-    explicit InternalExtractorEdge()
-        : result(MIN_OSM_NODEID,
-                 MIN_OSM_NODEID,
-                 0,
-                 0,
-                 false,
-                 false,
-                 false,
-                 false,
-                 true,
-                 TRAVEL_MODE_INACCESSIBLE,
-                 false,
-                 guidance::TurnLaneType::empty,
-                 guidance::RoadClassification())
-    {
-    }
-
-    explicit InternalExtractorEdge(OSMNodeID source,
-                                   OSMNodeID target,
-                                   NodeID name_id,
-                                   WeightData weight_data,
-                                   bool forward,
-                                   bool backward,
-                                   bool roundabout,
-                                   bool access_restricted,
-                                   bool startpoint,
-                                   TravelMode travel_mode,
-                                   bool is_split,
-                                   LaneDescriptionID lane_description,
-                                   guidance::RoadClassification road_classification)
-        : result(source,
-                 target,
-                 name_id,
-                 0,
-                 forward,
-                 backward,
-                 roundabout,
-                 access_restricted,
-                 startpoint,
-                 travel_mode,
-                 is_split,
-                 lane_description,
-                 std::move(road_classification)),
-          weight_data(std::move(weight_data))
-    {
-    }
+    using WeightData = detail::ByEdgeOrByMeterValue;
+    using DurationData = detail::ByEdgeOrByMeterValue;
 
     // data that will be written to disk
     NodeBasedEdgeWithOSM result;
     // intermediate edge weight
     WeightData weight_data;
+    // intermediate edge duration
+    DurationData duration_data;
     // coordinate of the source node
     util::Coordinate source_coordinate;
+
+    InternalExtractorEdge() = default;
 
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_osm_value()
     {
-        return InternalExtractorEdge(MIN_OSM_NODEID,
-                                     MIN_OSM_NODEID,
-                                     0,
-                                     WeightData(),
-                                     false,
-                                     false,
-                                     false,
-                                     false,
-                                     true,
-                                     TRAVEL_MODE_INACCESSIBLE,
-                                     false,
-                                     INVALID_LANE_DESCRIPTIONID,
-                                     guidance::RoadClassification());
+        return InternalExtractorEdge{NodeBasedEdgeWithOSM{MIN_OSM_NODEID,
+                                                          MIN_OSM_NODEID,
+                                                          0,
+                                                          0,
+                                                          0,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          TRAVEL_MODE_INACCESSIBLE,
+                                                          INVALID_LANE_DESCRIPTIONID,
+                                                          guidance::RoadClassification()},
+                                     detail::ValueByMeter{0.0},
+                                     detail::ValueByMeter{0.0},
+                                     {}};
     }
     static InternalExtractorEdge max_osm_value()
     {
-        return InternalExtractorEdge(MAX_OSM_NODEID,
-                                     MAX_OSM_NODEID,
-                                     SPECIAL_NODEID,
-                                     WeightData(),
-                                     false,
-                                     false,
-                                     false,
-                                     false,
-                                     true,
-                                     TRAVEL_MODE_INACCESSIBLE,
-                                     false,
-                                     INVALID_LANE_DESCRIPTIONID,
-                                     guidance::RoadClassification());
+        return InternalExtractorEdge{NodeBasedEdgeWithOSM{MAX_OSM_NODEID,
+                                                          MAX_OSM_NODEID,
+                                                          0,
+                                                          0,
+                                                          0,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          false,
+                                                          TRAVEL_MODE_INACCESSIBLE,
+                                                          INVALID_LANE_DESCRIPTIONID,
+                                                          guidance::RoadClassification()},
+                                     detail::ValueByMeter{0.0},
+                                     detail::ValueByMeter{0.0},
+                                     {}};
     }
 
     static InternalExtractorEdge min_internal_value()

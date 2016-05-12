@@ -3,7 +3,6 @@
 
 require 'testbot'
 
-function turn_function (angle)
-    -- multiplying by 10 converts to deci-seconds see issue #1318
-    return 10*20*math.abs(angle)/180
+function turn_function (turn)
+   turn.weight = 20 * math.abs(turn.angle) / 180 -- penalty
 end

@@ -28,7 +28,10 @@ struct ExtractionWay
     {
         forward_speed = -1;
         backward_speed = -1;
+        forward_weight_per_meter = -1;
+        backward_weight_per_meter = -1;
         duration = -1;
+        weight = -1;
         roundabout = false;
         is_startpoint = true;
         is_access_restricted = false;
@@ -50,9 +53,16 @@ struct ExtractionWay
     void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
     TravelMode get_backward_mode() const { return backward_travel_mode; }
 
+    // speed in km/h
     double forward_speed;
     double backward_speed;
+    // weight per meter
+    double forward_weight_per_meter;
+    double backward_weight_per_meter;
+    // duration of the whole way in both directions
     double duration;
+    // weight of the whole way in both directions
+    double weight;
     std::string name;
     std::string ref;
     std::string pronunciation;

@@ -10,6 +10,7 @@
 #include "util/guidance/entry_class.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/io.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
@@ -88,7 +89,11 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<NodeID, false>::vector m_geometry_node_list;
     util::ShM<EdgeWeight, false>::vector m_geometry_fwd_weight_list;
     util::ShM<EdgeWeight, false>::vector m_geometry_rev_weight_list;
+    util::ShM<EdgeWeight, false>::vector m_geometry_fwd_duration_list;
+    util::ShM<EdgeWeight, false>::vector m_geometry_rev_duration_list;
     util::ShM<bool, false>::vector m_is_core_node;
+    util::ShM<TurnPenalty, false>::vector m_turn_weight_penalties;
+    util::ShM<TurnPenalty, false>::vector m_turn_duration_penalties;
     util::ShM<uint8_t, false>::vector m_datasource_list;
     util::ShM<std::string, false>::vector m_datasource_names;
     util::ShM<std::uint32_t, false>::vector m_lane_description_offsets;
@@ -141,10 +146,24 @@ class InternalDataFacade final : public BaseDataFacade
                        sizeof(m_lane_tuple_id_pairs) * size);
     }
 
+    void LoadTurnPenalties(const boost::filesystem::path &turn_penalties_path,
+                           std::vector<TurnPenalty> &turn_penalties) const
+    {
+        boost::filesystem::ifstream turn_penalties_stream(turn_penalties_path);
+        if (!turn_penalties_stream)
+        {
+            throw util::exception("Could not open " + turn_penalties_path.string() +
+                                  " for reading.");
+        }
+        extractor::io::TurnPenaltiesHeader header;
+        turn_penalties_stream.read(reinterpret_cast<char *>(&header), sizeof(header));
+        turn_penalties.resize(header.number_of_penalties);
+        turn_penalties_stream.read(reinterpret_cast<char *>(turn_penalties.data()),
+                                   sizeof(TurnPenalty) * header.number_of_penalties);
+    }
+
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
     {
-        util::SimpleLogger().Write() << "Loading Timestamp";
-
         boost::filesystem::ifstream timestamp_stream(timestamp_path);
         if (!timestamp_stream)
         {
@@ -267,6 +286,8 @@ class InternalDataFacade final : public BaseDataFacade
         m_geometry_node_list.resize(number_of_compressed_geometries);
         m_geometry_fwd_weight_list.resize(number_of_compressed_geometries);
         m_geometry_rev_weight_list.resize(number_of_compressed_geometries);
+        m_geometry_fwd_duration_list.resize(number_of_compressed_geometries);
+        m_geometry_rev_duration_list.resize(number_of_compressed_geometries);
 
         if (number_of_compressed_geometries > 0)
         {
@@ -277,6 +298,12 @@ class InternalDataFacade final : public BaseDataFacade
                                  number_of_compressed_geometries * sizeof(EdgeWeight));
 
             geometry_stream.read((char *)&(m_geometry_rev_weight_list[0]),
+                                 number_of_compressed_geometries * sizeof(EdgeWeight));
+
+            geometry_stream.read((char *)&(m_geometry_fwd_duration_list[0]),
+                                 number_of_compressed_geometries * sizeof(EdgeWeight));
+
+            geometry_stream.read((char *)&(m_geometry_rev_duration_list[0]),
                                  number_of_compressed_geometries * sizeof(EdgeWeight));
         }
     }
@@ -433,6 +460,10 @@ class InternalDataFacade final : public BaseDataFacade
 
         util::SimpleLogger().Write() << "loading timestamp";
         LoadTimestamp(config.timestamp_path);
+
+        util::SimpleLogger().Write() << "loading turn penalties";
+        LoadTurnPenalties(config.turn_weight_penalties_path, m_turn_weight_penalties);
+        LoadTurnPenalties(config.turn_duration_penalties_path, m_turn_duration_penalties);
 
         util::SimpleLogger().Write() << "loading profile properties";
         LoadProfileProperties(config.properties_path);
@@ -699,6 +730,26 @@ class InternalDataFacade final : public BaseDataFacade
         return m_via_geometry_list.at(id);
     }
 
+    virtual TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
+    {
+        BOOST_ASSERT(m_turn_weight_penalties.size() > id);
+        return m_turn_weight_penalties[id];
+    }
+
+    virtual TurnPenalty GetDurationPenaltyForEdgeID(const unsigned id) const override final
+    {
+        if (m_turn_duration_penalties.empty())
+        {
+            // MKR: fallback to weight penalties
+            // "Only load the duration vector if weight doesn't
+            //   contain the same values (safes memory consumption)"
+            return GetWeightPenaltyForEdgeID(id);
+        }
+
+        BOOST_ASSERT(m_turn_duration_penalties.size() > id);
+        return m_turn_duration_penalties[id];
+    }
+
     virtual std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
 
     virtual bool IsCoreNode(const NodeID id) const override final
@@ -759,6 +810,54 @@ class InternalDataFacade final : public BaseDataFacade
                   result_nodes.begin());
 
         return result_nodes;
+    }
+
+    virtual std::vector<EdgeWeight>
+    GetUncompressedForwardDurations(const EdgeID id) const override final
+    {
+        /*
+         * EdgeWeights's for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_fwd_weight_list vector.
+         * */
+        const unsigned begin = m_geometry_indices.at(id) + 1;
+        const unsigned end = m_geometry_indices.at(id + 1);
+
+        std::vector<EdgeWeight> result_durations;
+        result_durations.resize(end - begin);
+
+        std::copy(m_geometry_fwd_duration_list.begin() + begin,
+                  m_geometry_fwd_duration_list.begin() + end,
+                  result_durations.begin());
+
+        return result_durations;
+    }
+
+    virtual std::vector<EdgeWeight>
+    GetUncompressedReverseDurations(const EdgeID id) const override final
+    {
+        /*
+         * EdgeWeights for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_rev_weight_list vector. For
+         * reverse durations of bi-directional edges, edges 1 to
+         * n-1 of that edge need to be read in reverse.
+         */
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1) - 1;
+
+        std::vector<EdgeWeight> result_durations;
+        result_durations.resize(end - begin);
+
+        std::copy(m_geometry_rev_duration_list.rbegin() + (m_geometry_rev_duration_list.size() - end),
+                  m_geometry_rev_duration_list.rbegin() + (m_geometry_rev_duration_list.size() - begin),
+                  result_durations.begin());
+
+        return result_durations;
     }
 
     virtual std::vector<EdgeWeight>
@@ -903,6 +1002,8 @@ class InternalDataFacade final : public BaseDataFacade
     {
         return m_profile_properties.max_speed_for_map_matching;
     }
+
+    const char *GetWeightName() const override final { return m_profile_properties.weight_name; }
 
     BearingClassID GetBearingClassID(const NodeID nid) const override final
     {
