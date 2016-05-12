@@ -48,6 +48,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <type_traits>
 
 namespace osrm
 {
@@ -644,8 +645,10 @@ void Extractor::WriteIntersectionClassificationData(
         file_out_stream.write( reinterpret_cast<const char*>(&bearings[0]), sizeof(bearings[0]) * bearings.size() );
     }
 
-    static_assert(std::is_trivially_copyable<util::guidance::EntryClass>::value,
-                  "EntryClass Serialization requires trivial copyable entry classes");
+    // FIXME
+    // This should be here, but g++4.8 does not have it...
+    // static_assert(std::is_trivially_copyable<util::guidance::EntryClass>::value,
+    //              "EntryClass Serialization requires trivial copyable entry classes");
 
     util::serializeVector(file_out_stream, entry_classes);
     TIMER_STOP(write_edges);

@@ -589,9 +589,12 @@ int Storage::Run()
 
         shared_layout_ptr->SetBlockSize<BearingClassID>(SharedDataLayout::BEARING_CLASSID,
                                                         bearing_class_id_table.size());
-        auto bearing_id_ptr = shared_layout_ptr->GetBlockPtr<BearingClassID, true>(
-            shared_memory_ptr, SharedDataLayout::BEARING_CLASSID);
-        std::copy(bearing_class_id_table.begin(), bearing_class_id_table.end(), bearing_id_ptr);
+        if (!bearing_class_id_table.empty())
+        {
+            auto bearing_id_ptr = shared_layout_ptr->GetBlockPtr<BearingClassID, true>(
+                shared_memory_ptr, SharedDataLayout::BEARING_CLASSID);
+            std::copy(bearing_class_id_table.begin(), bearing_class_id_table.end(), bearing_id_ptr);
+        }
 
         unsigned bearing_blocks = 0;
         intersection_stream.read((char *)&bearing_blocks, sizeof(unsigned));
@@ -603,19 +606,19 @@ int Storage::Run()
         shared_layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
             SharedDataLayout::BEARING_BLOCKS, bearing_blocks);
 
-        unsigned *bearing_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
-            shared_memory_ptr, SharedDataLayout::BEARING_OFFSETS);
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_OFFSETS) > 0)
         {
+            unsigned *bearing_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+                shared_memory_ptr, SharedDataLayout::BEARING_OFFSETS);
             intersection_stream.read(
                 reinterpret_cast<char *>(bearing_offsets_ptr),
                 shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_OFFSETS));
         }
 
-        unsigned *bearing_blocks_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
-            shared_memory_ptr, SharedDataLayout::BEARING_BLOCKS);
         if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_BLOCKS) > 0)
         {
+            unsigned *bearing_blocks_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+                shared_memory_ptr, SharedDataLayout::BEARING_BLOCKS);
             intersection_stream.read(
                 reinterpret_cast<char *>(bearing_blocks_ptr),
                 shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_BLOCKS));
@@ -629,22 +632,28 @@ int Storage::Run()
                                  sizeof(bearing_class_table[0]) * num_bearings);
         shared_layout_ptr->SetBlockSize<DiscreteBearing>(SharedDataLayout::BEARING_VALUES,
                                                          num_bearings);
-        auto bearing_class_ptr = shared_layout_ptr->GetBlockPtr<DiscreteBearing, true>(
-            shared_memory_ptr, SharedDataLayout::BEARING_VALUES);
-        std::copy(bearing_class_table.begin(), bearing_class_table.end(), bearing_class_ptr);
+        if (!bearing_class_table.empty())
+        {
+            auto bearing_class_ptr = shared_layout_ptr->GetBlockPtr<DiscreteBearing, true>(
+                shared_memory_ptr, SharedDataLayout::BEARING_VALUES);
+            std::copy(bearing_class_table.begin(), bearing_class_table.end(), bearing_class_ptr);
+        }
 
         if (!static_cast<bool>(intersection_stream))
             throw util::exception("Failed to read from " + config.names_data_path.string());
 
         std::vector<util::guidance::EntryClass> entry_class_table;
-        if(!util::deserializeVector(intersection_stream, entry_class_table))
+        if (!util::deserializeVector(intersection_stream, entry_class_table))
             throw util::exception("Failed to read from " + config.names_data_path.string());
 
         shared_layout_ptr->SetBlockSize<util::guidance::EntryClass>(SharedDataLayout::ENTRY_CLASS,
                                                                     entry_class_table.size());
-        auto entry_class_ptr = shared_layout_ptr->GetBlockPtr<util::guidance::EntryClass, true>(
-            shared_memory_ptr, SharedDataLayout::ENTRY_CLASS);
-        std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
+        if (!entry_class_table.empty())
+        {
+            auto entry_class_ptr = shared_layout_ptr->GetBlockPtr<util::guidance::EntryClass, true>(
+                shared_memory_ptr, SharedDataLayout::ENTRY_CLASS);
+            std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
+        }
     }
 
     data_timestamp_ptr->layout = layout_region;

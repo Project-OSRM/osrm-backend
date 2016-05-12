@@ -45,7 +45,6 @@ void fillInDepart(Intersection &intersection, const LegGeometry &leg_geometry)
     intersection.bearing_before = 0;
     intersection.bearing_after =
         util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
-    std::cout << "Depart: " << intersection.bearing_before << " " << intersection.bearing_after << std::endl;
 }
 
 void fillInArrive(Intersection &intersection, const LegGeometry &leg_geometry)
@@ -57,7 +56,6 @@ void fillInArrive(Intersection &intersection, const LegGeometry &leg_geometry)
     intersection.bearing_before =
         util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate);
     intersection.bearing_after = 0;
-    std::cout << "Arrive: " << intersection.bearing_before << " " << intersection.bearing_after << std::endl;
 }
 } // namespace
 

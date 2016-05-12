@@ -54,11 +54,7 @@ classifyIntersection(NodeID nid,
 
     std::sort(turns.begin(), turns.end(),
               [](const TurnPossibility left, const TurnPossibility right) {
-                  return util::guidance::BearingClass::getDiscreteBearing(left.bearing) <
-                             util::guidance::BearingClass::getDiscreteBearing(right.bearing) ||
-                         (util::guidance::BearingClass::getDiscreteBearing(left.bearing) ==
-                              util::guidance::BearingClass::getDiscreteBearing(right.bearing) &&
-                          left.bearing < right.bearing);
+                  return left.bearing < right.bearing;
               });
 
     util::guidance::EntryClass entry_class;
@@ -85,6 +81,12 @@ classifyIntersection(NodeID nid,
     std::size_t number = 0;
     if (canBeDiscretized)
     {
+        if(util::guidance::BearingClass::getDiscreteBearing(turns.back().bearing) <
+            util::guidance::BearingClass::getDiscreteBearing(turns.front().bearing))
+        {
+            turns.insert(turns.begin(), turns.back());
+            turns.pop_back();
+        }
         for (const auto turn : turns)
         {
             if (turn.entry_allowed)

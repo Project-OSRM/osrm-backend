@@ -138,7 +138,9 @@ module.exports = function () {
     };
 
     this.bearingList = (instructions) => {
-        return this.extractInstructionList(instructions, s => s.intersections[0].bearings[s.intersections[0].bearing_after]);
+        return this.extractInstructionList(instructions, s => (typeof s.intersections[0].out !== 'undefined')
+                                                                                                ? s.intersections[0].bearings[s.intersections[0].out]
+                                                                                                : 0);
     };
 
     this.annotationList = (instructions) => {
@@ -187,8 +189,8 @@ module.exports = function () {
                         for( i = 1; i < intersection.bearings.length; ++i )
                             string = string + ' ' + intersection.entry[i]+':'+intersection.bearings[i];
                         return string;
-                    }).join(',')
-            }).join(';')
+                    }).join(',');
+            }).join(';');
     };
 
     this.modeList = (instructions) => {

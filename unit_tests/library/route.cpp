@@ -56,29 +56,36 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                     {{"distance", 0.},
                      {"duration", 0.},
                      {"summary", ""},
-                     {"steps", json::Array{{json::Object{{{"duration", 0.},
-                                                          {"distance", 0.},
-                                                          {"geometry", "yw_jGupkl@??"},
-                                                          {"name", "Boulevard du Larvotto"},
-                                                          {"mode", "driving"},
-                                                          {"maneuver", json::Object{{
-                                                                           {"type", "depart"},
-                                                                           {"location", location},
-                                                                           {"bearing_before", 0.},
-                                                                           {"bearing_after", 0.},
-                                                                       }}}}},
+                     {"steps",
+                      json::Array{{{json::Object{{{"duration", 0.},
+                                                  {"distance", 0.},
+                                                  {"geometry", "yw_jGupkl@??"},
+                                                  {"name", "Boulevard du Larvotto"},
+                                                  {"mode", "driving"},
+                                                  {"maneuver", json::Object{{
+                                                                   {"type", "depart"},
+                                                               }}},
+                                                  {"intersections",
+                                                   json::Array{{json::Object{
+                                                       {{"location", location},
+                                                        {"bearings", json::Array{{0, 180}}},
+                                                        {"entry", json::Array{{"true", "true"}}},
+                                                        {"out", 0}}}}}}}}},
 
-                                            json::Object{{{"duration", 0.},
-                                                          {"distance", 0.},
-                                                          {"geometry", "yw_jGupkl@"},
-                                                          {"name", "Boulevard du Larvotto"},
-                                                          {"mode", "driving"},
-                                                          {"maneuver", json::Object{{
-                                                                           {"type", "arrive"},
-                                                                           {"location", location},
-                                                                           {"bearing_before", 0.},
-                                                                           {"bearing_after", 0.},
-                                                                       }}}}}}}}}}}}}}}}}}}};
+                                   json::Object{{{"duration", 0.},
+                                                 {"distance", 0.},
+                                                 {"geometry", "yw_jGupkl@"},
+                                                 {"name", "Boulevard du Larvotto"},
+                                                 {"mode", "driving"},
+                                                 {"maneuver", json::Object{{{"type", "arrive"}}}},
+                                                 {"intersections",
+                                                  json::Array{{json::Object{
+                                                      {{"location", location},
+                                                       {"bearings", json::Array{{0, 180}}},
+                                                       {"entry", json::Array{{"true", "true"}}},
+                                                       {"in", 1}}}}}}
+
+                                   }}}}}}}}}}}}}}}}};
 
     CHECK_EQUAL_JSON(reference, result);
 }
@@ -161,6 +168,8 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
             const auto &steps = leg_object.values.at("steps").get<json::Array>().values;
             BOOST_CHECK(!steps.empty());
 
+            std::size_t step_count = 0;
+
             for (const auto &step : steps)
             {
                 const auto &step_object = step.get<json::Object>();
@@ -185,25 +194,47 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 
                 const auto &maneuver = step_object.values.at("maneuver").get<json::Object>().values;
 
-                const auto location = maneuver.at("location").get<json::Array>().values;
-                const auto longitude = location[0].get<json::Number>().value;
-                const auto latitude = location[1].get<json::Number>().value;
-                BOOST_CHECK(longitude >= -180. && longitude <= 180.);
-                BOOST_CHECK(latitude >= -90. && latitude <= 90.);
-
-                const auto bearing_before = maneuver.at("bearing_before").get<json::Number>().value;
-                const auto bearing_after = maneuver.at("bearing_after").get<json::Number>().value;
-                BOOST_CHECK(bearing_before >= 0. && bearing_before <= 360.);
-                BOOST_CHECK(bearing_after >= 0. && bearing_after <= 360.);
-
                 const auto type = maneuver.at("type").get<json::String>().value;
                 BOOST_CHECK(!type.empty());
+
+                const auto &intersections =
+                    step_object.values.at("intersections").get<json::Array>().values;
+
+                for (auto &intersection : intersections)
+                {
+                    const auto &intersection_object = intersection.get<json::Object>().values;
+                    const auto location = intersection_object.at("location").get<json::Array>().values;
+                    const auto longitude = location[0].get<json::Number>().value;
+                    const auto latitude = location[1].get<json::Number>().value;
+                    BOOST_CHECK(longitude >= -180. && longitude <= 180.);
+                    BOOST_CHECK(latitude >= -90. && latitude <= 90.);
+
+                    const auto &bearings = intersection_object.at("bearings").get<json::Array>().values;
+                    BOOST_CHECK(!bearings.empty());
+                    const auto &entries = intersection_object.at("entry").get<json::Array>().values;
+                    BOOST_CHECK(bearings.size() == entries.size());
+
+                    for( const auto bearing : bearings )
+                        BOOST_CHECK( 0. <= bearing.get<json::Number>().value && bearing.get<json::Number>().value <= 360. );
+
+                    if( step_count > 0 )
+                    {
+                        const auto in = intersection_object.at("in").get<json::Number>().value;
+                        BOOST_CHECK(in < bearings.size());
+                    }
+                    if( step_count + 1 < steps.size() )
+                    {
+                        const auto out = intersection_object.at("out").get<json::Number>().value;
+                        BOOST_CHECK(out < bearings.size());
+                    }
+                }
 
                 // modifier is optional
                 // TODO(daniel-j-h):
 
                 // exit is optional
                 // TODO(daniel-j-h):
+                ++step_count;
             }
         }
     }

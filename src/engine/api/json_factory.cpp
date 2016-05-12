@@ -88,13 +88,12 @@ getIntersection(const guidance::Intersection &intersection, bool locate_before, 
     const auto &available_bearings = intersection.bearing_class.getAvailableBearings();
     for (std::size_t i = 0; i < available_bearings.size(); ++i)
     {
-        bearings.values.push_back(std::to_string(available_bearings[i]));
+        bearings.values.push_back(available_bearings[i]);
         entry.values.push_back(intersection.entry_class.allowsEntry(i) ? "true" : "false");
     }
     result.values["location"] = detail::coordinateToLonLat(intersection.location);
 
-    bool requires_correction = false;
-    if (locate_before || (!available_bearings.empty() && available_bearings.front()==0))
+    if (locate_before)
     {
         // bearings are oriented in the direction of driving. For the in-bearing, we actually need
         // to
@@ -104,30 +103,14 @@ getIntersection(const guidance::Intersection &intersection, bool locate_before, 
         const auto rotated_bearing_before = (intersection.bearing_before >= 180.0)
                                                 ? (intersection.bearing_before - 180.0)
                                                 : (intersection.bearing_before + 180.0);
-        result.values["bearing_before"] =
+        result.values["in"] =
             intersection.bearing_class.findMatchingBearing(rotated_bearing_before);
     }
-    else
-    {
-        result.values["bearing_before"] = available_bearings.size();
-        requires_correction = true;
-    }
 
-    if (locate_after || (!available_bearings.empty() && available_bearings.front()==0))
+    if (locate_after)
     {
-        result.values["bearing_after"] =
+        result.values["out"] =
             intersection.bearing_class.findMatchingBearing(intersection.bearing_after);
-    }
-    else
-    {
-        result.values["bearing_after"] = available_bearings.size();
-        requires_correction = true;
-    }
-
-    if (requires_correction)
-    {
-        bearings.values.push_back("0");
-        entry.values.push_back("false");
     }
 
     result.values["bearings"] = bearings;
