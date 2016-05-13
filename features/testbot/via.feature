@@ -85,13 +85,16 @@ Feature: Via points
     Scenario: Via points on ring of oneways
     # xa it to avoid only having a single ring, which cna trigger edge cases
         Given the node map
-            | x |   |   |   |   |   |   |
-            | a | 1 | b | 2 | c | 3 | d |
-            | f |   |   |   |   |   | e |
+            |   | x |   |   |   |   |   | g |   |
+            |   | a | 1 | b | 2 | c | 3 | d |   |
+            | i | f |   |   |   |   |   | e | h |
 
         And the ways
             | nodes | oneway |
             | xa    |        |
+            | if    |        |
+            | gd    |        |
+            | eh    |        |
             | ab    | yes    |
             | bc    | yes    |
             | cd    | yes    |
@@ -110,13 +113,16 @@ Feature: Via points
     Scenario: Via points on ring on the same oneway
     # xa it to avoid only having a single ring, which cna trigger edge cases
         Given the node map
-            | x |   |   |   |   |
-            | a | 1 | 2 | 3 | b |
-            | d |   |   |   | c |
+            |   | x |   |   |   | e |   |
+            |   | a | 1 | 2 | 3 | b |   |
+            | g | d |   |   |   | c | f |
 
         And the ways
             | nodes | oneway |
             | xa    |        |
+            | eb    |        |
+            | cf    |        |
+            | dg    |        |
             | ab    | yes    |
             | bc    | yes    |
             | cd    | yes    |

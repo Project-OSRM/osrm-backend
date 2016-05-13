@@ -1,5 +1,5 @@
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include <algorithm>

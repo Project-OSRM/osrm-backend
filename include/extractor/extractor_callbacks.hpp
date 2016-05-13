@@ -38,6 +38,7 @@ class ExtractorCallbacks
     using MapKey = std::pair<std::string, std::string>;
     using MapVal = unsigned;
     std::unordered_map<MapKey, MapVal, boost::hash<MapKey>> string_map;
+    std::unordered_map<std::string, LaneStringID> lane_map;
     ExtractionContainers &external_memory;
 
   public:

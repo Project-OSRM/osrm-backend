@@ -45,10 +45,8 @@ inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_base
 MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const std::vector<QueryNode> &node_info_list,
                                  const util::NameTable &name_table,
-                                 const SuffixTable &street_name_suffix_table,
-                                 const IntersectionGenerator &intersection_generator)
-    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
-      intersection_generator(intersection_generator)
+                                 const SuffixTable &street_name_suffix_table)
+    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
 {
 }
 

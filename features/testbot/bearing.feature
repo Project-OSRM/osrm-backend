@@ -59,10 +59,10 @@ Feature: Compass bearing
 
     Scenario: Bearing in a roundabout
         Given the node map
-            |   | d | c |   |
+            | k | d | c | j |
             | e |   |   | b |
             | f |   |   | a |
-            |   | g | h |   |
+            | l | g | h | i |
 
         And the ways
             | nodes | oneway |
@@ -74,6 +74,14 @@ Feature: Compass bearing
             | fg    | yes    |
             | gh    | yes    |
             | ha    | yes    |
+            | dk    | no     |
+            | ke    | no     |
+            | fl    | no     |
+            | lg    | no     |
+            | hi    | no     |
+            | ia    | no     |
+            | bj    | no     |
+            | cj    | no     |
 
         When I route I should get
             | from | to | route                   | bearing                                                     |
@@ -82,8 +90,10 @@ Feature: Compass bearing
 
     Scenario: Bearing should stay constant when zig-zagging
         Given the node map
+            | i | j | k |   |
             | b | d | f | h |
             | a | c | e | g |
+            |   | m | n | o |
 
         And the ways
             | nodes |
@@ -94,6 +104,12 @@ Feature: Compass bearing
             | ef    |
             | fg    |
             | gh    |
+            | bi    |
+            | cm    |
+            | dj    |
+            | en    |
+            | fk    |
+            | go    |
 
         When I route I should get
             | from | to | route                   | bearing               |
