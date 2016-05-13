@@ -33,7 +33,7 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        let destinations, pronunciations, instructions, bearings, turns, modes, times, distances, summary, intersections;
+                        let destinations, pronunciations, instructions, bearings, turns, modes, times, distances, summary, intersections, lanes;
 
                         let json = JSON.parse(body);
 
@@ -49,6 +49,7 @@ module.exports = function () {
                             modes = this.modeList(json.routes[0]);
                             times = this.timeList(json.routes[0]);
                             distances = this.distanceList(json.routes[0]);
+                            lanes = this.lanesList(json.routes[0]);
                             summary = this.summary(json.routes[0]);
                         }
 
@@ -101,6 +102,12 @@ module.exports = function () {
                                     throw new Error('*** Time must be specied in seconds. (ex: 60s)');
                                 got.time = instructions ? util.format('%ds', time) : '';
                             }
+
+
+                            if (headers.has('lanes')) {
+                                got.lanes = (lanes || '').trim();
+                            }
+
 
                             if (headers.has('speed')) {
                                 if (row.speed !== '' && instructions) {

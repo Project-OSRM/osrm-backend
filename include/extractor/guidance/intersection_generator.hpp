@@ -7,6 +7,7 @@
 #include "extractor/restriction_map.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
+#include "util/name_table.hpp"
 
 #include <unordered_set>
 #include <vector>

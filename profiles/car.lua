@@ -166,6 +166,56 @@ function get_exceptions(vector)
   end
 end
 
+-- returns forward,backward psv lane count
+local function getPSVCounts(way)
+    local psv = way:get_value_by_key("lanes:psv")
+    local psv_forward = way:get_value_by_key("lanes:psv:forward");
+    local psv_backward = way:get_value_by_key("lanes:psv:backward");
+
+    local fw = 0;
+    local bw = 0;
+    if( psv and psv ~= "" ) then
+        fw = tonumber(psv)
+        if( fw == nil ) then
+            fw = 0
+        end
+    end
+    if( psv_forward and psv_forward ~= "" ) then
+        fw = tonumber(psv_forward)
+        if( fw == nil ) then
+            fw = 0
+        end
+    end
+    if( psv_backward and psv_backward ~= "" ) then
+        bw = tonumber(psv_backward);
+        if( bw == nil ) then
+            fw = 0
+        end
+    end
+    return fw, bw
+end
+
+-- this is broken for left-sided driving. It needs to switch left and right in case of left-sided driving
+local function getTurnLanes(way)
+    local fw_psv = 0
+    local bw_psv = 0
+    fw_psv, bw_psv = getPSVCounts(way)
+
+    local turn_lanes = way:get_value_by_key("turn:lanes")
+    local turn_lanes_fw = way:get_value_by_key("turn:lanes:forward")
+    local turn_lanes_bw = way:get_value_by_key("turn:lanes:backward")
+
+    if( fw_psv ~= 0 or bw_psv ~= 0 ) then
+        turn_lanes = trimLaneString(turn_lanes, bw_psv, fw_psv )
+        turn_lanes_fw = trimLaneString(turn_lanes_fw, bw_psv, fw_psv )
+        --backwards turn lanes need to treat bw_psv as fw_psv and vice versa
+        turn_lanes_bw = trimLaneString(turn_lanes_bw, fw_psv, bw_psv )
+    end
+
+    return turn_lanes, turn_lanes_fw, turn_lanes_bw
+end
+
+
 local function parse_maxspeed(source)
   if not source then
     return 0
@@ -371,6 +421,25 @@ function way_function (way, result)
   if has_pronunciation then
     result.pronunciation = pronunciation
   end
+
+  local turn_lanes = ""
+  local turn_lanes_forward = ""
+  local turn_lanes_backward = ""
+
+  turn_lanes, turn_lanes_forward, turn_lanes_backward = getTurnLanes(way)
+  if( turn_lanes ~= "" ) then
+    result.turn_lanes_forward = turn_lanes;
+    result.turn_lanes_backward = turn_lanes;
+  else
+    if( turn_lanes_forward ~= "" ) then
+        result.turn_lanes_forward = turn_lanes_forward;
+    end
+
+    if( turn_lanes_backward ~= "" ) then
+        result.turn_lanes_backward = turn_lanes_backward;
+    end
+  end
+
 
   if junction and "roundabout" == junction then
     result.roundabout = true

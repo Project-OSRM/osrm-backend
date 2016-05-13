@@ -59,6 +59,9 @@ std::string toString(const ConnectedRoad &road);
 
 typedef std::vector<ConnectedRoad> Intersection;
 
+Intersection::const_iterator findClosestTurn(const Intersection &intersection, const double angle);
+Intersection::iterator findClosestTurn(Intersection &intersection, const double angle);
+
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm

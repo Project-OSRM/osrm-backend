@@ -44,10 +44,14 @@ class TurnAnalysis
                  const SuffixTable &street_name_suffix_table);
 
     // the entry into the turn analysis
-    std::vector<TurnOperation> getTurns(const NodeID from_node, const EdgeID via_eid) const;
-
-    // access to the intersection representation for classification purposes
     Intersection getIntersection(const NodeID from_node, const EdgeID via_eid) const;
+    Intersection
+    assignTurnTypes(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
+
+    std::vector<TurnOperation>
+    transformIntersectionIntoTurns(const Intersection &intersection) const;
+
+    const IntersectionGenerator& getGenerator() const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;

@@ -51,6 +51,9 @@ ExtractionContainers::ExtractionContainers()
     name_lengths.push_back(0);
     name_lengths.push_back(0);
     name_lengths.push_back(0);
+    name_lengths.push_back(0);
+    name_lengths.push_back(0);
+    turn_lane_lengths.push_back(0);
 }
 
 /**
@@ -66,6 +69,7 @@ ExtractionContainers::ExtractionContainers()
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
+                                       const std::string &turn_lane_file_name,
                                        lua_State *segment_state)
 {
     try
@@ -83,7 +87,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteNames(name_file_name);
+        WriteCharData(name_file_name,name_lengths,name_char_data);
+        WriteCharData(turn_lane_file_name,turn_lane_lengths,turn_lane_char_data);
     }
     catch (const std::exception &e)
     {
@@ -91,44 +96,46 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     }
 }
 
-void ExtractionContainers::WriteNames(const std::string &names_file_name) const
+void ExtractionContainers::WriteCharData(const std::string &file_name,
+                                         const stxxl::vector<unsigned> &offsets,
+                                         const stxxl::vector<char> &char_data) const
 {
     std::cout << "[extractor] writing street name index ... " << std::flush;
-    TIMER_START(write_name_index);
-    boost::filesystem::ofstream name_file_stream(names_file_name, std::ios::binary);
+    TIMER_START(write_index);
+    boost::filesystem::ofstream file_stream(file_name, std::ios::binary);
 
     unsigned total_length = 0;
 
-    for (const auto name_length : name_lengths)
+    for (const auto length : offsets)
     {
-        total_length += name_length;
+        total_length += length;
     }
 
     // builds and writes the index
-    util::RangeTable<> name_index_range(name_lengths);
-    name_file_stream << name_index_range;
+    util::RangeTable<> index_range(offsets);
+    file_stream << index_range;
 
-    name_file_stream.write((char *)&total_length, sizeof(unsigned));
+    file_stream.write((char *)&total_length, sizeof(unsigned));
 
     // write all chars consecutively
     char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
     unsigned buffer_len = 0;
 
-    for (const auto c : name_char_data)
+    for (const auto c : char_data)
     {
         write_buffer[buffer_len++] = c;
 
         if (buffer_len >= WRITE_BLOCK_BUFFER_SIZE)
         {
-            name_file_stream.write(write_buffer, WRITE_BLOCK_BUFFER_SIZE);
+            file_stream.write(write_buffer, WRITE_BLOCK_BUFFER_SIZE);
             buffer_len = 0;
         }
     }
 
-    name_file_stream.write(write_buffer, buffer_len);
+    file_stream.write(write_buffer, buffer_len);
 
-    TIMER_STOP(write_name_index);
-    std::cout << "ok, after " << TIMER_SEC(write_name_index) << "s" << std::endl;
+    TIMER_STOP(write_index);
+    std::cout << "ok, after " << TIMER_SEC(write_index) << "s" << std::endl;
 }
 
 void ExtractionContainers::PrepareNodes()
