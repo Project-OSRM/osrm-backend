@@ -239,6 +239,7 @@ int Extractor::run()
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,
+                                          config.turn_lane_file_name,
                                           main_context.state);
 
         WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
@@ -503,6 +504,7 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
     compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
 
     util::NameTable name_table(config.names_file_name);
+    util::NameTable turn_lanes(config.turn_lane_file_name);
 
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
@@ -512,7 +514,8 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
         internal_to_external_node_map,
         profile_properties,
-        name_table);
+        name_table,
+        turn_lanes);
 
     edge_based_graph_factory.Run(config.edge_output_path,
                                  lua_state,

@@ -37,7 +37,9 @@ class ExtractionContainers
     void WriteNodes(std::ofstream &file_out_stream) const;
     void WriteRestrictions(const std::string &restrictions_file_name) const;
     void WriteEdges(std::ofstream &file_out_stream) const;
-    void WriteNames(const std::string &names_file_name) const;
+    void WriteCharData(const std::string &file_name,
+                       const stxxl::vector<unsigned> &offests,
+                       const stxxl::vector<char> &char_data) const;
 
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
@@ -51,6 +53,8 @@ class ExtractionContainers
     STXXLEdgeVector all_edges_list;
     stxxl::vector<char> name_char_data;
     stxxl::vector<unsigned> name_lengths;
+    stxxl::vector<char> turn_lane_char_data;
+    stxxl::vector<unsigned> turn_lane_lengths;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
@@ -61,6 +65,7 @@ class ExtractionContainers
     void PrepareData(const std::string &output_file_name,
                      const std::string &restrictions_file_name,
                      const std::string &names_file_name,
+                     const std::string &turn_lane_file_name,
                      lua_State *segment_state);
 };
 }
