@@ -1,3 +1,12 @@
+# 5.3.0
+    - API
+     - Introduces new `TurnType` in the form of `use lane`. The type indicates that you have to stick to a lane without turning
+     - Introduces lanes to the route response, indicating which lanes are to be used on a turn
+
+    - Infrastructure
+     - BREAKING: The new turn type changes the turn-type order. This breaks the **data format**.
+     - BREAKING: Turn lane data introduces a new file (osrm.tld). This breaks the fileformat for older versions.
+
 # 5.2.5
   - Bugfixes
     - Fixes a segfault caused by incorrect trimming logic for very short steps.

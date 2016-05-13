@@ -296,3 +296,21 @@ Feature: Fork Instructions
             | waypoints | route     | turns                           |
             | a,c       | abc,abc   | depart,arrive                   |
             | a,d       | abc,bd,bd | depart,turn slight right,arrive |
+
+     Scenario: Fork on motorway links - don't fork on through
+        Given the node map
+            | i |   |   |   |   | a |
+            | j |   | c | b |   | x |
+
+        And the ways
+            | nodes | name | highway       |
+            | xb    | xbcj | motorway_link |
+            | bc    | xbcj | motorway_link |
+            | cj    | xbcj | motorway_link |
+            | ci    | off  | motorway_link |
+            | ab    | on   | motorway_link |
+
+        When I route I should get
+            | waypoints | route           | turns                                             |
+            | a,j       | on,xbcj,xbcj    | depart,merge slight left,arrive                   |
+            | a,i       | on,xbcj,off,off | depart,merge slight left,turn slight right,arrive |

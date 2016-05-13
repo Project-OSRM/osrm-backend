@@ -55,7 +55,8 @@ class EdgeBasedGraphFactory
                                    std::shared_ptr<const RestrictionMap> restriction_map,
                                    const std::vector<QueryNode> &node_info_list,
                                    ProfileProperties profile_properties,
-                                   const util::NameTable &name_table);
+                                   const util::NameTable &name_table,
+                                   const util::NameTable &turn_lanes);
 
     void Run(const std::string &original_edge_data_filename,
              lua_State *lua_state,
@@ -117,6 +118,7 @@ class EdgeBasedGraphFactory
     ProfileProperties profile_properties;
 
     const util::NameTable &name_table;
+    const util::NameTable &turn_lanes;
 
     void CompressGeometry();
     unsigned RenumberEdges();

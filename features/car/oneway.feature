@@ -35,8 +35,8 @@ Feature: Car - Oneway streets
 
     Scenario: Car - Around the Block
         Given the node map
-            | a | b |
-            | d | c |
+            |   | a | b |   |
+            | f | d | c | e |
 
         And the ways
             | nodes | oneway |
@@ -44,6 +44,8 @@ Feature: Car - Oneway streets
             | bc    |        |
             | cd    |        |
             | da    |        |
+            | ce    |        |
+            | df    |        |
 
         When I route I should get
             | from | to | route       |

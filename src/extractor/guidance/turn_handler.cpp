@@ -78,7 +78,8 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     const auto &first_data = node_based_graph.GetEdgeData(intersection[1].turn.eid);
     const auto &second_data = node_based_graph.GetEdgeData(intersection[2].turn.eid);
     BOOST_ASSERT(intersection[0].turn.angle < 0.001);
-    const auto isObviousOfTwo = [this](const ConnectedRoad road, const ConnectedRoad other) {
+    const auto isObviousOfTwo = [this, in_data](const ConnectedRoad road,
+                                                const ConnectedRoad other) {
         const auto first_class =
             node_based_graph.GetEdgeData(road.turn.eid).road_classification.road_class;
 
@@ -104,7 +105,8 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         const bool turn_is_perfectly_straight = angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <
                                                 std::numeric_limits<double>::epsilon();
 
-        if (turn_is_perfectly_straight)
+        if (turn_is_perfectly_straight && in_data.name_id != EMPTY_NAMEID &&
+            in_data.name_id == node_based_graph.GetEdgeData(road.turn.eid).name_id)
             return true;
 
         const bool is_much_narrower_than_other =
