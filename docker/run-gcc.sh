@@ -8,4 +8,4 @@ docker run \
     -e "CXX=g++" \
     -v `pwd`:/home/mapbox/osrm-backend \
     -t mapbox/osrm:linux \
-    osrm-backend/docker/test.sh
+    /bin/bash -lc "osrm-backend/docker/test.sh"
