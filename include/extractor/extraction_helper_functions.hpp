@@ -1,13 +1,8 @@
 #ifndef EXTRACTION_HELPER_FUNCTIONS_HPP
 #define EXTRACTION_HELPER_FUNCTIONS_HPP
 
-#include "util/cast.hpp"
-#include "util/iso_8601_duration_parser.hpp"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string_regex.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/regex.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 
 #include <limits>
 #include <string>
@@ -17,83 +12,106 @@ namespace osrm
 namespace extractor
 {
 
-inline bool simple_duration_is_valid(const std::string &s)
+namespace detail
 {
-    boost::regex simple_format(
-        "((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",
-        boost::regex_constants::icase | boost::regex_constants::perl);
 
-    const bool simple_matched = regex_match(s, simple_format);
+namespace qi = boost::spirit::qi;
 
-    if (simple_matched)
-    {
-        return true;
-    }
-    return false;
-}
-
-inline bool iso_8601_duration_is_valid(const std::string &s)
+template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator, unsigned()>
 {
-    util::iso_8601_grammar<std::string::const_iterator> iso_parser;
-    const bool result = boost::spirit::qi::parse(s.begin(), s.end(), iso_parser);
+    iso_8601_grammar()
+        : iso_8601_grammar::base_type(root)
 
-    // check if the was an error with the request
-    if (result && (0 != iso_parser.get_duration()))
     {
-        return true;
+        using qi::_1;
+        using qi::_a;
+        using qi::_b;
+        using qi::_c;
+        using qi::_pass;
+        using qi::_val;
+        using qi::eoi;
+        using qi::eps;
+        using qi::uint_;
+        using qi::char_;
+
+        hh = uint2_p[_pass = bind([](unsigned x) { return x < 24; }, _1), _val = _1];
+        mm = uint2_p[_pass = bind([](unsigned x) { return x < 60; }, _1), _val = _1];
+        ss = uint2_p[_pass = bind([](unsigned x) { return x < 60; }, _1), _val = _1];
+
+        osm_time
+            = (uint_p[_a = _1] >> eoi)                                                     [_val = _a * 60]
+            | (uint_p[_a = _1] >> ':' >> uint_p[_b = _1] >> eoi)                           [_val = _a * 3600 + _b * 60]
+            | (uint_p[_a = _1] >> ':' >> uint_p[_b = _1] >> ':' >> uint_p[_c = _1] >> eoi) [_val = _a * 3600 + _b * 60 + _c]
+            ;
+
+        alternative_time
+            = ('T' >> hh[_a = _1] >> mm[_b = _1] >> ss[_c = _1])                        [_val = _a * 3600 + _b * 60 + _c]
+            ;
+
+        extended_time
+            = ('T' >> hh[_a = _1] >> ':' >> mm[_b = _1] >> ':' >> ss[_c = _1])          [_val = _a * 3600 + _b * 60 + _c]
+            ;
+
+        standard_time
+            = ('T'
+               >> -(uint_ >> char_("Hh"))[_a = _1]
+               >> -(uint_ >> char_("Mm"))[_b = _1]
+               >> -(uint_ >> char_("Ss"))[_c = _1])                                     [_val = _a * 3600 + _b * 60 + _c]
+            ;
+
+        standard_date
+            = (uint_ >> char_("Dd"))                                                    [_val = _1 * 86400]
+            ;
+
+        standard_week
+            = (uint_ >> char_("Ww"))                                                    [_val = _1 * 604800]
+            ;
+
+        iso_period
+            = osm_time                                                                  [_val = _1]
+            | ('P' >> standard_week >> eoi)                                             [_val = _1]
+            | ('P' >> ( alternative_time[_a = 0, _b = _1]
+                      | extended_time[_a = 0, _b = _1]
+                      | (eps[_a = 0, _b = 0] >> -standard_date[_a = _1] >> -standard_time[_b = _1] ) )
+                   >> eoi)                                                              [_val = _a + _b]
+            ;
+
+        root = iso_period;
     }
-    return false;
+
+    qi::rule<Iterator, unsigned()> root;
+    qi::rule<Iterator, unsigned(), qi::locals<unsigned, unsigned>> iso_period;
+    qi::rule<Iterator, unsigned(), qi::locals<unsigned, unsigned, unsigned>> osm_time, standard_time, alternative_time, extended_time;
+    qi::rule<Iterator, unsigned()> standard_date, standard_week;
+    qi::rule<Iterator, unsigned()> hh, mm, ss;
+
+    qi::uint_parser<unsigned, 10, 1, 2> uint_p;
+    qi::uint_parser<unsigned, 10, 2, 2> uint2_p;
+};
 }
 
 inline bool durationIsValid(const std::string &s)
 {
-    return simple_duration_is_valid(s) || iso_8601_duration_is_valid(s);
+    static detail::iso_8601_grammar<std::string::const_iterator> const iso_8601_grammar;
+
+    std::string::const_iterator iter = s.begin();
+    unsigned duration = 0;
+    boost::spirit::qi::parse(iter, s.end(), iso_8601_grammar, duration);
+
+    return !s.empty() && iter == s.end();
 }
 
 inline unsigned parseDuration(const std::string &s)
 {
-    if (simple_duration_is_valid(s))
-    {
-        unsigned hours = 0;
-        unsigned minutes = 0;
-        unsigned seconds = 0;
-        boost::regex e(
-            "((\\d|\\d\\d):(\\d|\\d\\d):(\\d|\\d\\d))|((\\d|\\d\\d):(\\d|\\d\\d))|(\\d|\\d\\d)",
-            boost::regex_constants::icase | boost::regex_constants::perl);
+    static detail::iso_8601_grammar<std::string::const_iterator> const iso_8601_grammar;
 
-        std::vector<std::string> result;
-        boost::algorithm::split_regex(result, s, boost::regex(":"));
-        const bool matched = regex_match(s, e);
-        if (matched)
-        {
-            if (1 == result.size())
-            {
-                minutes = std::stoul(result[0]);
-            }
-            if (2 == result.size())
-            {
-                minutes = std::stoul(result[1]);
-                hours = std::stoul(result[0]);
-            }
-            if (3 == result.size())
-            {
-                seconds = std::stoul(result[2]);
-                minutes = std::stoul(result[1]);
-                hours = std::stoul(result[0]);
-            }
-            return (3600 * hours + 60 * minutes + seconds);
-        }
-    }
-    else if (iso_8601_duration_is_valid(s))
-    {
-        util::iso_8601_grammar<std::string::const_iterator> iso_parser;
-        boost::spirit::qi::parse(s.begin(), s.end(), iso_parser);
+    std::string::const_iterator iter = s.begin();
+    unsigned duration = 0;
+    boost::spirit::qi::parse(iter, s.end(), iso_8601_grammar, duration);
 
-        return iso_parser.get_duration();
-    }
-
-    return std::numeric_limits<unsigned>::max();
+    return !s.empty() && iter == s.end() ? duration : std::numeric_limits<unsigned>::max();
 }
+
 }
 }
 
