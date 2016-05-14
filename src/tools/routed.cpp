@@ -15,6 +15,10 @@
 #include <sys/mman.h>
 #endif
 
+#ifndef _WIN32
+#include <bsd/libutil.h>
+#endif
+
 #include <cstdlib>
 
 #include <signal.h>
@@ -51,6 +55,9 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
+#ifndef _WIN32
+struct pidfh *pfh = NULL;
+#endif
 // generate boost::program_options object for the routing part
 inline unsigned
 generateServerProgramOptions(const int argc,
@@ -306,6 +313,17 @@ int main(int argc, const char *argv[]) try
         sigaddset(&wait_mask, SIGTERM);
         pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);
         util::SimpleLogger().Write() << "running and waiting for requests";
+        pid_t otherpid;
+        pfh = pidfile_open(NULL, 0600, &otherpid);
+        if (pfh == NULL) {
+            if (errno == EEXIST) {
+                util::SimpleLogger().Write(logWARNING) << "Exiting. Daemon already running, pid: " << (intmax_t)otherpid;
+                return EXIT_FAILURE;
+            }
+            /* If we cannot create pidfile from other reasons, only warn. */
+            util::SimpleLogger().Write(logWARNING) << "Cannot open or create pidfile: errno " << errno;
+        }
+        pidfile_write(pfh);
         sigwait(&wait_mask, &sig);
 #else
         // Set console control handler to allow server to be stopped.
@@ -333,6 +351,11 @@ int main(int argc, const char *argv[]) try
 
     util::SimpleLogger().Write() << "freeing objects";
     routing_server.reset();
+#ifndef _WIN32
+    if (pfh != NULL) {
+        pidfile_remove(pfh);
+    }
+#endif
     util::SimpleLogger().Write() << "shutdown completed";
 }
 catch (const std::bad_alloc &e)
@@ -340,10 +363,20 @@ catch (const std::bad_alloc &e)
     util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     util::SimpleLogger().Write(logWARNING)
         << "Please provide more memory or consider using a larger swapfile";
+#ifndef _WIN32
+    if (pfh != NULL) {
+        pidfile_remove(pfh);
+    }
+#endif
     return EXIT_FAILURE;
 }
 catch (const std::exception &e)
 {
     util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+#ifndef _WIN32
+    if (pfh != NULL) {
+        pidfile_remove(pfh);
+    }
+#endif
     return EXIT_FAILURE;
 }
