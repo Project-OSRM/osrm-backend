@@ -16,7 +16,11 @@
 #endif
 
 #ifndef _WIN32
+#ifdef __linux__
 #include <bsd/libutil.h>
+#else
+#include <libutil.h>
+#endif
 #endif
 
 #include <cstdlib>
