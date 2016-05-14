@@ -13,6 +13,9 @@
 
 #include <zlib.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <functional>
 #include <memory>
 #include <thread>
@@ -50,11 +53,10 @@ class Server
 
         acceptor.open(endpoint.protocol());
 #ifdef SO_REUSEPORT
-        int one = 1;
-        setsockopt(acceptor.native_handle(), SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &one, sizeof(one));
-#else
-        acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+        const int option = 1;
+        setsockopt(acceptor.native_handle(), SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option));
 #endif
+        acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
         acceptor.bind(endpoint);
         acceptor.listen();
 
