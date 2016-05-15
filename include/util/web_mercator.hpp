@@ -35,7 +35,7 @@ inline FloatLatitude yToLat(const double y)
     const double normalized_lat =
         detail::RAD_TO_DEGREE * 2. * std::atan(std::exp(clamped_y * detail::DEGREE_TO_RAD));
 
-    return FloatLatitude(std::round(normalized_lat * COORDINATE_PRECISION) / COORDINATE_PRECISION - 90.);
+    return FloatLatitude(normalized_lat - 90.);
 }
 
 inline double latToY(const FloatLatitude latitude)
