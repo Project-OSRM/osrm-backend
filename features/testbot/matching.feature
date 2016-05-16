@@ -118,4 +118,4 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | matchings | annotation                                                                     |
             | abeh  | abcedgh   | 1:9.897633,0:0,1:10.008842,1:10.008842,1:10.008842,0:0,2:20.017685,1:10.008842 |
-            | abci  | abc,ci    | 1:9.897633,0:0,1:10.008842,0:0.111209,1:10.121593                              |
+            | abci  | abc,ci    | 1:9.897633,0:0,1:10.008842,0:0.111209,1:10.010367                              |
