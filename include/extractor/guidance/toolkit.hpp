@@ -247,12 +247,14 @@ inline bool isConflict(const TurnInstruction first, const TurnInstruction second
 inline DiscreteAngle discretizeAngle(const double angle)
 {
     BOOST_ASSERT(angle >= 0. && angle <= 360.);
-    return DiscreteAngle(static_cast<std::uint8_t>((angle + 0.5 *detail::discrete_angle_step_size) / detail::discrete_angle_step_size));
+    return DiscreteAngle(static_cast<std::uint8_t>(
+        (angle + 0.5 * detail::discrete_angle_step_size) / detail::discrete_angle_step_size));
 }
 
 inline double angleFromDiscreteAngle(const DiscreteAngle angle)
 {
-    return static_cast<double>(angle) * detail::discrete_angle_step_size + 0.5 * detail::discrete_angle_step_size;
+    return static_cast<double>(angle) * detail::discrete_angle_step_size +
+           0.5 * detail::discrete_angle_step_size;
 }
 
 inline double getAngularPenalty(const double angle, DirectionModifier modifier)
@@ -326,8 +328,8 @@ inline bool requiresNameAnnounced(const std::string &from,
                                   const std::string &to,
                                   const SuffixTable &suffix_table)
 {
-    //first is empty and the second is not
-    if(from.empty() && !to.empty())
+    // first is empty and the second is not
+    if (from.empty() && !to.empty())
         return true;
 
     // FIXME, handle in profile to begin with?
@@ -379,8 +381,8 @@ inline bool requiresNameAnnounced(const std::string &from,
                 if (!checkTable(first_prefix_and_suffixes.first))
                     return false;
                 return !first.compare(first_prefix_and_suffixes.first.length(), std::string::npos,
-                                     second, second_prefix_and_suffixes.first.length(),
-                                     std::string::npos);
+                                      second, second_prefix_and_suffixes.first.length(),
+                                      std::string::npos);
             }();
 
             const bool is_suffix_change = [&]() -> bool {
@@ -389,7 +391,8 @@ inline bool requiresNameAnnounced(const std::string &from,
                 if (!checkTable(first_prefix_and_suffixes.second))
                     return false;
                 return !first.compare(0, first.length() - first_prefix_and_suffixes.second.length(),
-                                     second, 0, second.length() - second_prefix_and_suffixes.second.length());
+                                      second, 0,
+                                      second.length() - second_prefix_and_suffixes.second.length());
             }();
 
             return is_prefix_change || is_suffix_change;
