@@ -164,13 +164,11 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
 {
     SegmentSpeedSourceMap map;
 
-    std::uint8_t segment_file_id = 1;
-    for (const auto &segment_speed_filename : segment_speed_filenames)
-    {
-        util::SimpleLogger().Write()
-            << "Segment speed data supplied, will update edge weights from "
-            << segment_speed_filename;
-        io::CSVReader<3> csv_in(segment_speed_filename);
+    const auto parse_segment_speed_file = [&](const std::size_t idx) {
+        const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
+        const auto filename = segment_speed_filenames[idx];
+
+        io::CSVReader<3> csv_in(filename);
         csv_in.set_header("from_node", "to_node", "speed");
         std::uint64_t from_node_id{};
         std::uint64_t to_node_id{};
@@ -178,10 +176,11 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         while (csv_in.read_row(from_node_id, to_node_id, speed))
         {
             map[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] =
-                std::make_pair(speed, segment_file_id);
+                std::make_pair(speed, file_id);
         }
-        ++segment_file_id;
-    }
+    };
+
+    tbb::parallel_for(std::size_t{0}, segment_speed_filenames.size(), parse_segment_speed_file);
 
     return map;
 }
@@ -191,13 +190,11 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
 {
     TurnPenaltySourceMap map;
 
-    std::uint8_t turn_file_id = 1;
-    for (auto turn_penalty_filename : turn_penalty_filenames)
-    {
-        util::SimpleLogger().Write()
-            << "Turn penalty data supplied, will update turn penalties from "
-            << turn_penalty_filename;
-        io::CSVReader<4> csv_in(turn_penalty_filename);
+    const auto parse_turn_penalty_file = [&](const std::size_t idx) {
+        const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
+        const auto filename = turn_penalty_filenames[idx];
+
+        io::CSVReader<4> csv_in(filename);
         csv_in.set_header("from_node", "via_node", "to_node", "penalty");
         std::uint64_t from_node_id{};
         std::uint64_t via_node_id{};
@@ -206,10 +203,11 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
         while (csv_in.read_row(from_node_id, via_node_id, to_node_id, penalty))
         {
             map[std::make_tuple(OSMNodeID(from_node_id), OSMNodeID(via_node_id),
-                                OSMNodeID(to_node_id))] = std::make_pair(penalty, turn_file_id);
+                                OSMNodeID(to_node_id))] = std::make_pair(penalty, file_id);
         }
-        ++turn_file_id;
-    }
+    };
+
+    tbb::parallel_for(std::size_t{0}, turn_penalty_filenames.size(), parse_turn_penalty_file);
 
     return map;
 }
@@ -605,7 +603,8 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                                                    sizeof(via_id));
             edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&to_id), sizeof(to_id));
 
-            const auto turn_iter = turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
+            const auto turn_iter =
+                turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
             if (turn_iter != turn_penalty_lookup.end())
             {
                 int new_turn_weight = static_cast<int>(turn_iter->second.first * 10);
