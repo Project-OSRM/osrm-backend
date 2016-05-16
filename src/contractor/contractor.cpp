@@ -152,6 +152,8 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 {
     util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
+    if (!input_stream)
+      throw util::exception("Could not load edge based graph file");
 
     const bool update_edge_weights = !segment_speed_filenames.empty();
     const bool update_turn_penalties = !turn_penalty_filenames.empty();
