@@ -29,7 +29,6 @@
 #include <tbb/parallel_sort.h>
 
 #include <bitset>
-#include <chrono>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -267,8 +266,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     util::SimpleLogger().Write() << "Reading " << number_of_edges
                                  << " edges from the edge based graph";
 
-    const auto t0 = std::chrono::high_resolution_clock::now();
-
     SegmentSpeedSourceMap segment_speed_lookup;
     TurnPenaltySourceMap turn_penalty_lookup;
 
@@ -290,15 +287,12 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
     if (update_edge_weights || update_turn_penalties)
     {
-        const auto t1 = std::chrono::high_resolution_clock::now();
-        const auto d0 = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-        util::SimpleLogger().Write() << ">>> D0: " << d0;
-
-        std::vector<extractor::QueryNode> internal_to_external_node_map;
-
         // Here, we have to update the compressed geometry weights
         // First, we need the external-to-internal node lookup table
-        {
+
+        std::vector<extractor::QueryNode> internal_to_external_node_map;
+            
+        const auto load_internal_to_external_node_map = [&] {
             boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
 
             if (!nodes_input_stream)
@@ -313,16 +307,12 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             // Load all the query nodes into a vector
             nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
                                     number_of_nodes * sizeof(extractor::QueryNode));
-        }
-
-        const auto t2 = std::chrono::high_resolution_clock::now();
-        const auto d1 = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-        util::SimpleLogger().Write() << ">>> D1: " << d1;
+        };
 
         std::vector<unsigned> m_geometry_indices;
         std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
 
-        {
+        const auto load_geometries = [&] {
             std::ifstream geometry_stream(geometry_filename, std::ios::binary);
             if (!geometry_stream)
             {
@@ -352,11 +342,9 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     number_of_compressed_geometries *
                         sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
             }
-        }
+        };
 
-        const auto t3 = std::chrono::high_resolution_clock::now();
-        const auto d2 = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
-        util::SimpleLogger().Write() << ">>> D2: " << d2;
+        tbb::parallel_invoke(load_internal_to_external_node_map, load_geometries);
 
         // This is a list of the "data source id" for every segment in the compressed
         // geometry container.  We assume that everything so far has come from the
@@ -483,10 +471,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                 --leaf_nodes_count;
             }
         }
-
-        const auto t4 = std::chrono::high_resolution_clock::now();
-        const auto d3 = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
-        util::SimpleLogger().Write() << ">>> D3: " << d3;
 
         // Now save out the updated compressed geometries
         {
