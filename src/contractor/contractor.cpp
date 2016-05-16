@@ -279,72 +279,76 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             turn_penalty_lookup = parse_turn_penalty_lookup_from_csv_files(turn_penalty_filenames);
     };
 
-    tbb::parallel_invoke(parse_segment_speeds, parse_turn_penalties);
-
     // If we update the edge weights, this file will hold the datasource information for each
-    // segment
+    // segment; the other files will also be conditionally filled concurrently if we make an update
     std::vector<uint8_t> m_geometry_datasource;
+
+    std::vector<extractor::QueryNode> internal_to_external_node_map;
+    std::vector<unsigned> m_geometry_indices;
+    std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
+
+    const auto maybe_load_internal_to_external_node_map = [&] {
+        if (!(update_edge_weights || update_turn_penalties))
+            return;
+
+        boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
+
+        if (!nodes_input_stream)
+        {
+            throw util::exception("Failed to open " + nodes_filename);
+        }
+
+        unsigned number_of_nodes = 0;
+        nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
+        internal_to_external_node_map.resize(number_of_nodes);
+
+        // Load all the query nodes into a vector
+        nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
+                                number_of_nodes * sizeof(extractor::QueryNode));
+    };
+
+    const auto maybe_load_geometries = [&] {
+        if (!(update_edge_weights || update_turn_penalties))
+            return;
+
+        std::ifstream geometry_stream(geometry_filename, std::ios::binary);
+        if (!geometry_stream)
+        {
+            throw util::exception("Failed to open " + geometry_filename);
+        }
+        unsigned number_of_indices = 0;
+        unsigned number_of_compressed_geometries = 0;
+
+        geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
+
+        m_geometry_indices.resize(number_of_indices);
+        if (number_of_indices > 0)
+        {
+            geometry_stream.read((char *)&(m_geometry_indices[0]),
+                                 number_of_indices * sizeof(unsigned));
+        }
+
+        geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
+
+        BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
+        m_geometry_list.resize(number_of_compressed_geometries);
+
+        if (number_of_compressed_geometries > 0)
+        {
+            geometry_stream.read((char *)&(m_geometry_list[0]),
+                                 number_of_compressed_geometries *
+                                     sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+        }
+    };
+
+    // Folds all our actions into independently concurrently executing lambdas
+    tbb::parallel_invoke(parse_segment_speeds, parse_turn_penalties, //
+                         maybe_load_internal_to_external_node_map, maybe_load_geometries);
 
     if (update_edge_weights || update_turn_penalties)
     {
         // Here, we have to update the compressed geometry weights
         // First, we need the external-to-internal node lookup table
-
-        std::vector<extractor::QueryNode> internal_to_external_node_map;
-            
-        const auto load_internal_to_external_node_map = [&] {
-            boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
-
-            if (!nodes_input_stream)
-            {
-                throw util::exception("Failed to open " + nodes_filename);
-            }
-
-            unsigned number_of_nodes = 0;
-            nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
-            internal_to_external_node_map.resize(number_of_nodes);
-
-            // Load all the query nodes into a vector
-            nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
-                                    number_of_nodes * sizeof(extractor::QueryNode));
-        };
-
-        std::vector<unsigned> m_geometry_indices;
-        std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
-
-        const auto load_geometries = [&] {
-            std::ifstream geometry_stream(geometry_filename, std::ios::binary);
-            if (!geometry_stream)
-            {
-                throw util::exception("Failed to open " + geometry_filename);
-            }
-            unsigned number_of_indices = 0;
-            unsigned number_of_compressed_geometries = 0;
-
-            geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
-
-            m_geometry_indices.resize(number_of_indices);
-            if (number_of_indices > 0)
-            {
-                geometry_stream.read((char *)&(m_geometry_indices[0]),
-                                     number_of_indices * sizeof(unsigned));
-            }
-
-            geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
-
-            BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
-            m_geometry_list.resize(number_of_compressed_geometries);
-
-            if (number_of_compressed_geometries > 0)
-            {
-                geometry_stream.read(
-                    (char *)&(m_geometry_list[0]),
-                    number_of_compressed_geometries *
-                        sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
-            }
-        };
-
-        tbb::parallel_invoke(load_internal_to_external_node_map, load_geometries);
 
         // This is a list of the "data source id" for every segment in the compressed
         // geometry container.  We assume that everything so far has come from the
