@@ -2,16 +2,16 @@
 #include "contractor/crc32_processor.hpp"
 #include "contractor/graph_contractor.hpp"
 
-#include "extractor/node_based_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/node_based_edge.hpp"
 
+#include "util/exception.hpp"
+#include "util/graph_loader.hpp"
+#include "util/integer_range.hpp"
+#include "util/io.hpp"
+#include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
-#include "util/graph_loader.hpp"
-#include "util/io.hpp"
-#include "util/integer_range.hpp"
-#include "util/exception.hpp"
-#include "util/simple_logger.hpp"
 #include "util/string_util.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
@@ -24,12 +24,12 @@
 
 #include <tbb/parallel_sort.h>
 
-#include <cstdint>
 #include <bitset>
 #include <chrono>
+#include <cstdint>
+#include <iterator>
 #include <memory>
 #include <thread>
-#include <iterator>
 #include <tuple>
 
 namespace std
@@ -137,6 +137,78 @@ int Contractor::Run()
     return 0;
 }
 
+// Utilities for LoadEdgeExpandedGraph to restore my sanity
+namespace
+{
+
+// Convenience aliases
+
+using Segment = std::pair<OSMNodeID, OSMNodeID>;
+using SpeedSource = std::pair<unsigned, std::uint8_t>;
+using SegmentSpeedSourceMap = std::unordered_map<Segment, SpeedSource>;
+
+using Turn = std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>;
+using PenaltySource = std::pair<double, std::uint8_t>;
+using TurnPenaltySourceMap = std::unordered_map<Turn, PenaltySource>;
+
+// Functions for parsing files and creating lookup tables
+
+SegmentSpeedSourceMap
+parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_speed_filenames)
+{
+    SegmentSpeedSourceMap map;
+
+    std::uint8_t segment_file_id = 1;
+    for (const auto &segment_speed_filename : segment_speed_filenames)
+    {
+        util::SimpleLogger().Write()
+            << "Segment speed data supplied, will update edge weights from "
+            << segment_speed_filename;
+        io::CSVReader<3> csv_in(segment_speed_filename);
+        csv_in.set_header("from_node", "to_node", "speed");
+        std::uint64_t from_node_id{};
+        std::uint64_t to_node_id{};
+        unsigned speed{};
+        while (csv_in.read_row(from_node_id, to_node_id, speed))
+        {
+            map[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] =
+                std::make_pair(speed, segment_file_id);
+        }
+        ++segment_file_id;
+    }
+
+    return map;
+}
+
+TurnPenaltySourceMap
+parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_penalty_filenames)
+{
+    TurnPenaltySourceMap map;
+
+    std::uint8_t turn_file_id = 1;
+    for (auto turn_penalty_filename : turn_penalty_filenames)
+    {
+        util::SimpleLogger().Write()
+            << "Turn penalty data supplied, will update turn penalties from "
+            << turn_penalty_filename;
+        io::CSVReader<4> csv_in(turn_penalty_filename);
+        csv_in.set_header("from_node", "via_node", "to_node", "penalty");
+        std::uint64_t from_node_id{};
+        std::uint64_t via_node_id{};
+        std::uint64_t to_node_id{};
+        double penalty{};
+        while (csv_in.read_row(from_node_id, via_node_id, to_node_id, penalty))
+        {
+            map[std::make_tuple(OSMNodeID(from_node_id), OSMNodeID(via_node_id),
+                                OSMNodeID(to_node_id))] = std::make_pair(penalty, turn_file_id);
+        }
+        ++turn_file_id;
+    }
+
+    return map;
+}
+} // anon ns
+
 std::size_t Contractor::LoadEdgeExpandedGraph(
     std::string const &edge_based_graph_filename,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
@@ -150,10 +222,13 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     const std::string &datasource_indexes_filename,
     const std::string &rtree_leaf_filename)
 {
+    if (segment_speed_filenames.size() > 255 || turn_penalty_filenames.size() > 255)
+        throw util::exception("Limit of 255 segment speed and turn penalty files each reached");
+
     util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
     if (!input_stream)
-      throw util::exception("Could not load edge based graph file");
+        throw util::exception("Could not load edge based graph file");
 
     const bool update_edge_weights = !segment_speed_filenames.empty();
     const bool update_turn_penalties = !turn_penalty_filenames.empty();
@@ -188,78 +263,29 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     util::SimpleLogger().Write() << "Reading " << number_of_edges
                                  << " edges from the edge based graph";
 
-    std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, std::pair<unsigned, uint8_t>>
-        segment_speed_lookup;
-    std::unordered_map<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>, std::pair<double, uint8_t>>
-        turn_penalty_lookup;
+    const auto t0 = std::chrono::high_resolution_clock::now();
 
-    // If we update the edge weights, this file will hold the datasource information
-    // for each segment
+    const SegmentSpeedSourceMap segment_speed_lookup = [&] {
+        if (update_edge_weights)
+            return parse_segment_lookup_from_csv_files(segment_speed_filenames);
+        return SegmentSpeedSourceMap{};
+    }();
+
+    const TurnPenaltySourceMap turn_penalty_lookup = [&] {
+        if (update_turn_penalties)
+            return parse_turn_penalty_lookup_from_csv_files(turn_penalty_filenames);
+        return TurnPenaltySourceMap{};
+    }();
+
+    // If we update the edge weights, this file will hold the datasource information for each
+    // segment
     std::vector<uint8_t> m_geometry_datasource;
 
     if (update_edge_weights || update_turn_penalties)
     {
-        std::uint8_t segment_file_id = 1;
-        std::uint8_t turn_file_id = 1;
-
-        if (update_edge_weights)
-        {
-            for (auto segment_speed_filename : segment_speed_filenames)
-            {
-                util::SimpleLogger().Write()
-                    << "Segment speed data supplied, will update edge weights from "
-                    << segment_speed_filename;
-                io::CSVReader<3> csv_in(segment_speed_filename);
-                csv_in.set_header("from_node", "to_node", "speed");
-                std::uint64_t from_node_id{};
-                std::uint64_t to_node_id{};
-                unsigned speed{};
-                while (csv_in.read_row(from_node_id, to_node_id, speed))
-                {
-                    segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id),
-                                                        OSMNodeID(to_node_id))] =
-                        std::make_pair(speed, segment_file_id);
-                }
-                ++segment_file_id;
-
-                // Check for overflow
-                if (segment_file_id == 0)
-                {
-                    throw util::exception(
-                        "Sorry, there's a limit of 255 segment speed files; you supplied too many");
-                }
-            }
-        }
-
-        if (update_turn_penalties)
-        {
-            for (auto turn_penalty_filename : turn_penalty_filenames)
-            {
-                util::SimpleLogger().Write()
-                    << "Turn penalty data supplied, will update turn penalties from "
-                    << turn_penalty_filename;
-                io::CSVReader<4> csv_in(turn_penalty_filename);
-                csv_in.set_header("from_node", "via_node", "to_node", "penalty");
-                uint64_t from_node_id{};
-                uint64_t via_node_id{};
-                uint64_t to_node_id{};
-                double penalty{};
-                while (csv_in.read_row(from_node_id, via_node_id, to_node_id, penalty))
-                {
-                    turn_penalty_lookup[std::make_tuple(
-                        OSMNodeID(from_node_id), OSMNodeID(via_node_id), OSMNodeID(to_node_id))] =
-                        std::make_pair(penalty, turn_file_id);
-                }
-                ++turn_file_id;
-
-                // Check for overflow
-                if (turn_file_id == 0)
-                {
-                    throw util::exception(
-                        "Sorry, there's a limit of 255 turn penalty files; you supplied too many");
-                }
-            }
-        }
+        const auto t1 = std::chrono::high_resolution_clock::now();
+        const auto d0 = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+        util::SimpleLogger().Write() << ">>> D0: " << d0;
 
         std::vector<extractor::QueryNode> internal_to_external_node_map;
 
@@ -281,6 +307,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
                                     number_of_nodes * sizeof(extractor::QueryNode));
         }
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        const auto d1 = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+        util::SimpleLogger().Write() << ">>> D1: " << d1;
 
         std::vector<unsigned> m_geometry_indices;
         std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
@@ -317,6 +347,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             }
         }
 
+        const auto t3 = std::chrono::high_resolution_clock::now();
+        const auto d2 = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
+        util::SimpleLogger().Write() << ">>> D2: " << d2;
+
         // This is a list of the "data source id" for every segment in the compressed
         // geometry container.  We assume that everything so far has come from the
         // profile (data source 0).  Here, we replace the 0's with the index of the
@@ -332,7 +366,8 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
             using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
 
-            std::ifstream leaf_node_file(rtree_leaf_filename, std::ios::binary | std::ios::in | std::ios::ate);
+            std::ifstream leaf_node_file(rtree_leaf_filename,
+                                         std::ios::binary | std::ios::in | std::ios::ate);
             if (!leaf_node_file)
             {
                 throw util::exception("Failed to open " + rtree_leaf_filename);
@@ -413,9 +448,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             u = &(internal_to_external_node_map
                                       [m_geometry_list[reverse_begin + rev_segment_position - 1]
                                            .node_id]);
-                            v = &(internal_to_external_node_map
-                                      [m_geometry_list[reverse_begin + rev_segment_position]
-                                           .node_id]);
+                            v = &(
+                                internal_to_external_node_map[m_geometry_list[reverse_begin +
+                                                                              rev_segment_position]
+                                                                  .node_id]);
                         }
                         const double segment_length =
                             util::coordinate_calculation::greatCircleDistance(
@@ -440,6 +476,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                 --leaf_nodes_count;
             }
         }
+
+        const auto t4 = std::chrono::high_resolution_clock::now();
+        const auto d3 = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
+        util::SimpleLogger().Write() << ">>> D3: " << d3;
 
         // Now save out the updated compressed geometries
         {
@@ -635,8 +675,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
-    const unsigned max_used_node_id = [&contracted_edge_list]
-    {
+    const unsigned max_used_node_id = [&contracted_edge_list] {
         unsigned tmp_max = 0;
         for (const QueryEdge &edge : contracted_edge_list)
         {
