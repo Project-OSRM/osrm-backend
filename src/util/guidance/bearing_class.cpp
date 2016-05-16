@@ -65,6 +65,7 @@ DiscreteBearing BearingClass::getDiscreteBearing(const double bearing)
 
 std::size_t BearingClass::findMatchingBearing(const double bearing) const
 {
+    BOOST_ASSERT(!available_bearings.empty());
     // the small size of the intersections allows a linear compare
     auto discrete_bearing = static_cast<DiscreteBearing>(bearing);
     auto max_element =

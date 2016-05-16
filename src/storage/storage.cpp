@@ -324,7 +324,8 @@ int Storage::Run()
 
     std::vector<BearingClassID> bearing_class_id_table;
     if (!util::deserializeVector(intersection_stream, bearing_class_id_table))
-        throw util::exception("Failed to read from " + config.names_data_path.string());
+        throw util::exception("Failed to bearing class ids read from " +
+                              config.names_data_path.string());
 
     shared_layout_ptr->SetBlockSize<BearingClassID>(SharedDataLayout::BEARING_CLASSID,
                                                     bearing_class_id_table.size());
@@ -338,19 +339,18 @@ int Storage::Run()
         SharedDataLayout::BEARING_BLOCKS, bearing_blocks);
 
     std::vector<unsigned> bearing_offsets_data(bearing_blocks);
-    std::vector<unsigned> bearing_blocks_data(bearing_blocks);
+    std::vector<typename util::RangeTable<16, true>::BlockT> bearing_blocks_data(bearing_blocks);
 
     if (bearing_blocks)
     {
-        intersection_stream.read(
-            reinterpret_cast<char *>(&bearing_offsets_data[0]),
-            shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_OFFSETS));
+        intersection_stream.read(reinterpret_cast<char *>(&bearing_offsets_data[0]),
+                                 bearing_blocks * sizeof(bearing_offsets_data[0]));
     }
 
     if (bearing_blocks)
     {
         intersection_stream.read(reinterpret_cast<char *>(&bearing_blocks_data[0]),
-                                 shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_BLOCKS));
+                                 bearing_blocks * sizeof(bearing_blocks_data[0]));
     }
 
     std::uint64_t num_bearings;
@@ -362,11 +362,13 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<DiscreteBearing>(SharedDataLayout::BEARING_VALUES,
                                                      num_bearings);
     if (!static_cast<bool>(intersection_stream))
-        throw util::exception("Failed to read from " + config.names_data_path.string());
+        throw util::exception("Failed to read bearing values from " +
+                              config.intersection_class_path.string());
 
     std::vector<util::guidance::EntryClass> entry_class_table;
     if (!util::deserializeVector(intersection_stream, entry_class_table))
-        throw util::exception("Failed to read from " + config.names_data_path.string());
+        throw util::exception("Failed to read entry classes from " +
+                              config.intersection_class_path.string());
 
     shared_layout_ptr->SetBlockSize<util::guidance::EntryClass>(SharedDataLayout::ENTRY_CLASS,
                                                                 entry_class_table.size());
@@ -615,21 +617,6 @@ int Storage::Run()
     profile_properties_stream.read(reinterpret_cast<char *>(profile_properties_ptr),
                                    sizeof(extractor::ProfileProperties));
 
-    // acquire lock
-    SharedMemory *data_type_memory =
-        makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true, false);
-    SharedDataTimestamp *data_timestamp_ptr =
-        static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
-
-    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
-        barrier.query_mutex);
-
-    // notify all processes that were waiting for this condition
-    if (0 < barrier.number_of_queries)
-    {
-        barrier.no_running_queries_condition.wait(query_lock);
-    }
-
     // load intersection classes
     if (!bearing_class_id_table.empty())
     {
@@ -640,17 +627,17 @@ int Storage::Run()
 
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_OFFSETS) > 0)
     {
-        unsigned *bearing_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+        auto *bearing_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
             shared_memory_ptr, SharedDataLayout::BEARING_OFFSETS);
-        std::copy(bearing_offsets_data.begin(), bearing_offsets_data.end(),
-                  bearing_offsets_ptr);
+        std::copy(bearing_offsets_data.begin(), bearing_offsets_data.end(), bearing_offsets_ptr);
     }
 
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_BLOCKS) > 0)
     {
-        unsigned *bearing_blocks_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
-            shared_memory_ptr, SharedDataLayout::BEARING_BLOCKS);
-        std::copy(bearing_blocks_data.begin(), bearing_blocks_data.end(),bearing_blocks_ptr);
+        auto *bearing_blocks_ptr =
+            shared_layout_ptr->GetBlockPtr<typename util::RangeTable<16, true>::BlockT, true>(
+                shared_memory_ptr, SharedDataLayout::BEARING_BLOCKS);
+        std::copy(bearing_blocks_data.begin(), bearing_blocks_data.end(), bearing_blocks_ptr);
     }
 
     if (!bearing_class_table.empty())
@@ -665,6 +652,21 @@ int Storage::Run()
         auto entry_class_ptr = shared_layout_ptr->GetBlockPtr<util::guidance::EntryClass, true>(
             shared_memory_ptr, SharedDataLayout::ENTRY_CLASS);
         std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
+    }
+
+    // acquire lock
+    SharedMemory *data_type_memory =
+        makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true, false);
+    SharedDataTimestamp *data_timestamp_ptr =
+        static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
+
+    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
+        barrier.query_mutex);
+
+    // notify all processes that were waiting for this condition
+    if (0 < barrier.number_of_queries)
+    {
+        barrier.no_running_queries_condition.wait(query_lock);
     }
 
     data_timestamp_ptr->layout = layout_region;

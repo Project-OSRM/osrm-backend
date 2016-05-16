@@ -56,7 +56,10 @@ void print(const std::vector<RouteStep> &steps)
         {
             std::cout << "(" << intersection.duration << " " << intersection.distance << " "
                       << " Bearings: " << intersection.bearing_before << " "
-                      << intersection.bearing_after << ")";
+                      << intersection.bearing_after << " -- ";
+            for( auto bearing : intersection.bearing_class.getAvailableBearings() )
+                std:: cout << " " << bearing;
+            std::cout << ")";
         }
 
         std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
@@ -430,7 +433,6 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
     };
 
     boost::remove_erase_if(steps, not_is_valid);
-
     return steps;
 }
 
