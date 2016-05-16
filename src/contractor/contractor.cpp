@@ -22,7 +22,9 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
 
-#include <tbb/parallel_for_each.h>
+#include <tbb/blocked_range.h>
+#include <tbb/concurrent_unordered_map.h>
+#include <tbb/parallel_for.h>
 #include <tbb/parallel_invoke.h>
 #include <tbb/parallel_sort.h>
 
@@ -143,15 +145,17 @@ int Contractor::Run()
 namespace
 {
 
-// Convenience aliases
+// Convenience aliases. TODO: make actual types at some point in time.
 
 using Segment = std::pair<OSMNodeID, OSMNodeID>;
+using SegmentHasher = std::hash<Segment>;
 using SpeedSource = std::pair<unsigned, std::uint8_t>;
-using SegmentSpeedSourceMap = std::unordered_map<Segment, SpeedSource>;
+using SegmentSpeedSourceMap = tbb::concurrent_unordered_map<Segment, SpeedSource, SegmentHasher>;
 
 using Turn = std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>;
+using TurnHasher = std::hash<Turn>;
 using PenaltySource = std::pair<double, std::uint8_t>;
-using TurnPenaltySourceMap = std::unordered_map<Turn, PenaltySource>;
+using TurnPenaltySourceMap = tbb::concurrent_unordered_map<Turn, PenaltySource, TurnHasher>;
 
 // Functions for parsing files and creating lookup tables
 
@@ -601,7 +605,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                                                    sizeof(via_id));
             edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&to_id), sizeof(to_id));
 
-            auto turn_iter = turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
+            const auto turn_iter = turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
             if (turn_iter != turn_penalty_lookup.end())
             {
                 int new_turn_weight = static_cast<int>(turn_iter->second.first * 10);
