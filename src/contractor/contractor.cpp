@@ -22,6 +22,8 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
 
+#include <tbb/parallel_for_each.h>
+#include <tbb/parallel_invoke.h>
 #include <tbb/parallel_sort.h>
 
 #include <bitset>
@@ -37,7 +39,7 @@ namespace std
 
 template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 {
-    std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const
+    std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const noexcept
     {
         return static_cast<uint64_t>(k.first) ^ (static_cast<uint64_t>(k.second) << 12);
     }
@@ -45,7 +47,7 @@ template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 
 template <> struct hash<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>>
 {
-    std::size_t operator()(const std::tuple<OSMNodeID, OSMNodeID, OSMNodeID> &k) const
+    std::size_t operator()(const std::tuple<OSMNodeID, OSMNodeID, OSMNodeID> &k) const noexcept
     {
         std::size_t seed = 0;
         boost::hash_combine(seed, static_cast<uint64_t>(std::get<0>(k)));
@@ -265,17 +267,20 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
     const auto t0 = std::chrono::high_resolution_clock::now();
 
-    const SegmentSpeedSourceMap segment_speed_lookup = [&] {
-        if (update_edge_weights)
-            return parse_segment_lookup_from_csv_files(segment_speed_filenames);
-        return SegmentSpeedSourceMap{};
-    }();
+    SegmentSpeedSourceMap segment_speed_lookup;
+    TurnPenaltySourceMap turn_penalty_lookup;
 
-    const TurnPenaltySourceMap turn_penalty_lookup = [&] {
+    const auto parse_segment_speeds = [&] {
+        if (update_edge_weights)
+            segment_speed_lookup = parse_segment_lookup_from_csv_files(segment_speed_filenames);
+    };
+
+    const auto parse_turn_penalties = [&] {
         if (update_turn_penalties)
-            return parse_turn_penalty_lookup_from_csv_files(turn_penalty_filenames);
-        return TurnPenaltySourceMap{};
-    }();
+            turn_penalty_lookup = parse_turn_penalty_lookup_from_csv_files(turn_penalty_filenames);
+    };
+
+    tbb::parallel_invoke(parse_segment_speeds, parse_turn_penalties);
 
     // If we update the edge weights, this file will hold the datasource information for each
     // segment
