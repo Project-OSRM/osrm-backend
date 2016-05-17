@@ -146,9 +146,9 @@ module.exports = function () {
         // instructions, and the leading 0 on all timestamps arrays.
         var pairs = [];
         for (var i in instructions.annotation.duration) {
-            pairs.push(instructions.annotation.duration[i]+":"+instructions.annotation.distance[i]);
+            pairs.push(instructions.annotation.duration[i]+':'+instructions.annotation.distance[i]);
         }
-        return pairs.join(",");
+        return pairs.join(',');
     };
 
     this.turnList = (instructions) => {
