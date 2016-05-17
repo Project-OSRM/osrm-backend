@@ -5,6 +5,9 @@
      - new parameter `annotate` for `route` and `match` requests.  Returns additional data about each
        coordinate along the selected/matched route line.
 
+   - Profile changes:
+     - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
+
 # 5.1.0
    Changes with regard to 5.0.0
 
