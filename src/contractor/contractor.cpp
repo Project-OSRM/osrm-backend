@@ -21,10 +21,13 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_unordered_map.h>
 #include <tbb/parallel_for.h>
+#include <tbb/parallel_for_each.h>
 #include <tbb/parallel_invoke.h>
 #include <tbb/parallel_sort.h>
 
@@ -363,23 +366,22 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         // update the RTree itself, we just use the leaf nodes to iterate over all segments)
         using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
 
-        std::ifstream leaf_node_file(rtree_leaf_filename,
-                                     std::ios::binary | std::ios::in | std::ios::ate);
-        if (!leaf_node_file)
-        {
-            throw util::exception("Failed to open " + rtree_leaf_filename);
-        }
-        std::size_t leaf_nodes_count = leaf_node_file.tellg() / sizeof(LeafNode);
-        leaf_node_file.seekg(0, std::ios::beg);
+        using boost::interprocess::file_mapping;
+        using boost::interprocess::mapped_region;
+        using boost::interprocess::read_only;
 
-        LeafNode current_node;
-        for(; leaf_nodes_count > 0; --leaf_nodes_count)
-        {
-            leaf_node_file.read(reinterpret_cast<char *>(&current_node), sizeof(current_node));
+        const file_mapping mapping{rtree_leaf_filename.c_str(), read_only};
+        mapped_region region{mapping, read_only};
+        region.advise(mapped_region::advice_willneed);
 
+        const auto bytes = region.get_size();
+        const auto first = static_cast<const LeafNode *>(region.get_address());
+        const auto last = first + (bytes / sizeof(LeafNode));
+
+        tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
             for (size_t i = 0; i < current_node.object_count; i++)
             {
-                auto &leaf_object = current_node.objects[i];
+                const auto &leaf_object = current_node.objects[i];
                 extractor::QueryNode *u;
                 extractor::QueryNode *v;
 
@@ -465,7 +467,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     }
                 }
             }
-        }
+        }); // parallel_for_each
     }
 
     const auto maybe_save_geometries = [&] {
