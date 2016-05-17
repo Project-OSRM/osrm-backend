@@ -373,7 +373,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         leaf_node_file.seekg(0, std::ios::beg);
 
         LeafNode current_node;
-        while (leaf_nodes_count > 0)
+        for(; leaf_nodes_count > 0; --leaf_nodes_count)
         {
             leaf_node_file.read(reinterpret_cast<char *>(&current_node), sizeof(current_node));
 
@@ -465,7 +465,6 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     }
                 }
             }
-            --leaf_nodes_count;
         }
     }
 
