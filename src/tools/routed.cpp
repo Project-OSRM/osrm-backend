@@ -306,6 +306,9 @@ int main(int argc, const char *argv[]) try
         sigaddset(&wait_mask, SIGTERM);
         pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);
         util::SimpleLogger().Write() << "running and waiting for requests";
+        if(std::getenv("SIGNAL_PARENT_WHEN_READY")) {
+            kill(getppid(), SIGUSR1);
+        }
         sigwait(&wait_mask, &sig);
 #else
         // Set console control handler to allow server to be stopped.
