@@ -50,6 +50,10 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     {
         return {util::FixedLongitude{0}, util::FixedLatitude{0}};
     }
+    OSMNodeID GetOSMNodeIDOfNode(const unsigned /* id */) const override
+    {
+        return OSMNodeID{0};
+    }
     bool EdgeIsCompressed(const unsigned /* id */) const { return false; }
     unsigned GetGeometryIndexForEdgeID(const unsigned /* id */) const override
     {

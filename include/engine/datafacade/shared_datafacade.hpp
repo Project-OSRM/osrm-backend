@@ -76,6 +76,7 @@ class SharedDataFacade final : public BaseDataFacade
     extractor::ProfileProperties *m_profile_properties;
 
     util::ShM<util::Coordinate, true>::vector m_coordinate_list;
+    util::ShM<OSMNodeID, true>::vector m_osmnodeid_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
@@ -169,6 +170,11 @@ class SharedDataFacade final : public BaseDataFacade
         m_coordinate_list.reset(
             coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
+
+        auto osmnodeid_list_ptr = data_layout->GetBlockPtr<OSMNodeID>(
+            shared_memory, storage::SharedDataLayout::OSM_NODE_ID_LIST);
+        m_osmnodeid_list.reset(osmnodeid_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
@@ -469,6 +475,11 @@ class SharedDataFacade final : public BaseDataFacade
     util::Coordinate GetCoordinateOfNode(const NodeID id) const override final
     {
         return m_coordinate_list[id];
+    }
+
+    OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
+    {
+        return m_osmnodeid_list[id];
     }
 
     virtual void GetUncompressedGeometry(const EdgeID id,

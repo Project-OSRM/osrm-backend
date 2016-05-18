@@ -67,6 +67,7 @@ class BaseDataFacade
 
     // node and edge information access
     virtual util::Coordinate GetCoordinateOfNode(const unsigned id) const = 0;
+    virtual OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const = 0;
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const = 0;
 

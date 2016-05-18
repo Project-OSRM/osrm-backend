@@ -3,6 +3,7 @@
 
 #include "util/coordinate.hpp"
 #include "util/integer_range.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 
@@ -30,6 +31,8 @@ struct LegGeometry
     std::vector<std::size_t> segment_offsets;
     // length of the segment in meters
     std::vector<double> segment_distances;
+    // original OSM node IDs for each coordinate
+    std::vector<OSMNodeID> osm_node_ids;
 
     // Per-coordinate metadata
     struct Annotation

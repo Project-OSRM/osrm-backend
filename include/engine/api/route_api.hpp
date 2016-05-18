@@ -198,6 +198,7 @@ class RouteAPI : public BaseAPI
             {
                 util::json::Array durations;
                 util::json::Array distances;
+                util::json::Array nodes;
                 auto &leg_geometry = leg_geometries[idx];
                 std::for_each(
                     leg_geometry.annotations.begin(),
@@ -206,9 +207,16 @@ class RouteAPI : public BaseAPI
                         durations.values.push_back(step.duration);
                         distances.values.push_back(step.distance);
                     });
+                std::for_each(
+                    leg_geometry.osm_node_ids.begin(),
+                    leg_geometry.osm_node_ids.end(),
+                    [this, &nodes](const OSMNodeID &node_id) {
+                        nodes.values.push_back(static_cast<std::uint64_t>(node_id));
+                    });
                 util::json::Object annotation;
                 annotation.values["distance"] = std::move(distances);
                 annotation.values["duration"] = std::move(durations);
+                annotation.values["nodes"] = std::move(nodes);
                 annotations.push_back(std::move(annotation));
             }
         }
