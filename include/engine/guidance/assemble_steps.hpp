@@ -64,7 +64,6 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
 
     auto bearings = detail::getDepartBearings(leg_geometry);
-    std::cout << "depart bearings: " << bearings.first << "->" << bearings.second << std::endl;
 
     StepManeuver maneuver{source_node.location, bearings.first,
                           bearings.second,      extractor::guidance::TurnInstruction::NO_TURN(),

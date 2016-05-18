@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <functional>
 
-#include <iostream>
 #include <bitset>
 
 namespace osrm
@@ -53,11 +52,6 @@ class EntryClass
 
     // sorting
     bool operator<(const EntryClass &) const;
-
-    inline void print() const
-    {
-        std::cout << "Flags: " << std::bitset<16>(enabled_entries_flags) << std::endl;
-    }
 
   private:
     // given a list of possible discrete angles, the available angles flag indicates the presence of
