@@ -8,6 +8,9 @@
    - Profile changes:
      - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
 
+   - Infrastructure:
+     - Open sockets with SO_REUSEPORT to allow multiple servers connecting to the same port
+
 # 5.1.0
    Changes with regard to 5.0.0
 

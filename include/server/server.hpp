@@ -13,6 +13,11 @@
 
 #include <zlib.h>
 
+#ifndef _WIN32
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
+
 #include <functional>
 #include <memory>
 #include <thread>
@@ -49,6 +54,10 @@ class Server
         boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
 
         acceptor.open(endpoint.protocol());
+#ifdef SO_REUSEPORT
+        const int option = 1;
+        setsockopt(acceptor.native_handle(), SOL_SOCKET, SO_REUSEPORT, &option, sizeof(option));
+#endif
         acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
         acceptor.bind(endpoint);
         acceptor.listen();
