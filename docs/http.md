@@ -1,3 +1,12 @@
+## Environent Variables
+
+### SIGNAL_PARENT_WHEN_READY
+
+If the SIGNAL_PARENT_WHEN_READY environment variable is set osrm-routed will
+send the USR1 signal to its parent when it will be running and waiting for
+requests. This could be used to upgrade osrm-routed to a new binary on the fly
+without any service downtime - no incoming requests will be lost.
+
 ## HTTP API
 
 `osrm-routed` supports only `GET` requests of the form. If you your response size
