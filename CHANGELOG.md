@@ -10,7 +10,7 @@
 
    - Infrastructure:
      - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:
-       - Open sockets with SO_REUSEPORT to allow multiple servers connecting to the same port.
+       - Open sockets with SO_REUSEPORT to allow multiple osrm-routed processes serving requests from the same port.
        - Add SIGNAL_PARENT_WHEN_READY environment variable to enable osrm-routed signal its parent with USR1 when it's running and waiting for requests.
 
    - Guidance:
