@@ -377,7 +377,7 @@ Represents a route between two waypoints.
 - `duration`: The estimated travel time, in `float` number of seconds.
 - `summary`: Summary of the route taken as `string`. Depends on the `steps` parameter:
    
-   | summary      |                                                                       |
+   | steps        |                                                                       |
    |--------------|-----------------------------------------------------------------------|
    | true         | Names of the two major roads used. Can be empty if route is too short.|
    | false        | empty `string`                                                        |
@@ -464,6 +464,12 @@ step.
 ### StepManeuver
 
 #### Properties
+
+- `location`: A `[longitude, latitude]` pair describing the location of the turn.
+- `bearing_before`: The clockwise angle from true north to the
+  direction of travel immediately before the maneuver.
+- `bearing_after`: The clockwise angle from true north to the
+  direction of travel immediately after the maneuver.
 - `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
    Types  unknown to the client should be handled like the `turn` type, the existance of correct `modifier` values is guranteed.
   
@@ -517,6 +523,7 @@ step.
   | `type`                 | Description                                                                                                               |
   |------------------------|---------------------------------------------------------------------------------------------------------------------------|
   | `roundabout`           | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
+  | else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
   
 
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.

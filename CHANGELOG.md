@@ -4,12 +4,10 @@
    - API:
      - new parameter `annotate` for `route` and `match` requests.  Returns additional data about each
        coordinate along the selected/matched route line.
-     - Introducing Intersections for Route Steps. This breaks the API format in multiple ways.
-         - `bearing_before`/`bearing_after` are no longer supplied with a StepManeuver
-         - `exit` is no longer supplied for turns other than roundabouts
-         - `location` is no longer supplied for StepManeuvers
-         - every RouteStep is supplied with a list of at least one `Intersection`.
-         - Intersections offer the removed values from StepManeuver
+     - Introducing Intersections for Route Steps. This changes the API format in multiple ways.
+         - `bearing_before`/`bearing_after` of `StepManeuver` are now deprecated and will be removed in the next major release
+         - `location` of `StepManeuvers` is now deprecated and will be removed in the next major release
+         - every `RouteStep` now has property `intersections` containing a list of `Intersection` objects.
 
    - Profile changes:
      - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.

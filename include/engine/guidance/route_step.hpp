@@ -28,24 +28,21 @@ namespace guidance
 // A represenetation of intermediate intersections
 struct Intersection
 {
-    double duration;
-    double distance;
+    static const constexpr std::size_t NO_INDEX = std::numeric_limits<std::size_t>::max();
     util::Coordinate location;
-    double bearing_before;
-    double bearing_after;
-    util::guidance::EntryClass entry_class;
-    util::guidance::BearingClass bearing_class;
+    std::vector<short> bearings;
+    std::vector<bool> entry;
+    std::size_t in;
+    std::size_t out;
 };
 
 inline Intersection getInvalidIntersection()
 {
-    return {0,
-            0,
-            util::Coordinate{util::FloatLongitude{0.0}, util::FloatLatitude{0.0}},
-            0,
-            0,
-            util::guidance::EntryClass(),
-            util::guidance::BearingClass()};
+    return {util::Coordinate{util::FloatLongitude{0.0}, util::FloatLatitude{0.0}},
+        {},
+        {},
+        Intersection::NO_INDEX,
+        Intersection::NO_INDEX};
 }
 
 struct RouteStep
@@ -74,7 +71,7 @@ inline RouteStep getInvalidRouteStep()
             getInvalidStepManeuver(),
             0,
             0,
-            std::vector<Intersection>(1, getInvalidIntersection())};
+            {getInvalidIntersection()}};
 }
 }
 }

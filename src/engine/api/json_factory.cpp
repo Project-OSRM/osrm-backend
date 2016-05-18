@@ -78,63 +78,6 @@ util::json::Array coordinateToLonLat(const util::Coordinate coordinate)
     return array;
 }
 
-util::json::Object
-getIntersection(const guidance::Intersection &intersection, bool locate_before, bool locate_after)
-{
-    util::json::Object result;
-    util::json::Array bearings;
-    util::json::Array entry;
-
-    const auto &available_bearings = intersection.bearing_class.getAvailableBearings();
-    for (std::size_t i = 0; i < available_bearings.size(); ++i)
-    {
-        bearings.values.push_back(available_bearings[i]);
-        entry.values.push_back(intersection.entry_class.allowsEntry(i) ? "true" : "false");
-    }
-    result.values["location"] = detail::coordinateToLonLat(intersection.location);
-
-    if (locate_before)
-    {
-        // bearings are oriented in the direction of driving. For the in-bearing, we actually need
-        // to
-        // find the bearing from the view of the intersection. This means we have to rotate the
-        // bearing
-        // by 180 degree.
-        const auto rotated_bearing_before = (intersection.bearing_before >= 180.0)
-                                                ? (intersection.bearing_before - 180.0)
-                                                : (intersection.bearing_before + 180.0);
-        result.values["in"] =
-            intersection.bearing_class.findMatchingBearing(rotated_bearing_before);
-    }
-
-    if (locate_after)
-    {
-        result.values["out"] =
-            intersection.bearing_class.findMatchingBearing(intersection.bearing_after);
-    }
-
-    result.values["bearings"] = bearings;
-    result.values["entry"] = entry;
-
-    return result;
-}
-
-util::json::Array getIntersection(const guidance::RouteStep &step)
-{
-    util::json::Array result;
-    bool first = true;
-    for (const auto &intersection : step.intersections)
-    {
-        // on waypoints, the first/second bearing is invalid. In these cases, we cannot locate the
-        // bearing as part of the available bearings at the intersection.
-        result.values.push_back(getIntersection(
-            intersection, !first || step.maneuver.waypoint_type != guidance::WaypointType::Depart,
-            !first || step.maneuver.waypoint_type != guidance::WaypointType::Arrive));
-        first = false;
-    }
-    return result;
-}
-
 // FIXME this actually needs to be configurable from the profiles
 std::string modeToString(const extractor::TravelMode mode)
 {
@@ -198,10 +141,44 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
 
+    step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
+    step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);
+    step_maneuver.values["bearing_after"] = std::round(maneuver.bearing_after);
     if (maneuver.exit != 0)
         step_maneuver.values["exit"] = maneuver.exit;
 
     return step_maneuver;
+}
+
+util::json::Object
+makeIntersection(const guidance::Intersection &intersection)
+{
+    util::json::Object result;
+    util::json::Array bearings;
+    util::json::Array entry;
+
+    bearings.values.reserve(intersection.bearings.size());
+    std::copy(intersection.bearings.begin(), intersection.bearings.end(), std::back_inserter(bearings.values));
+
+    entry.values.reserve(intersection.entry.size());
+    std::transform(intersection.entry.begin(), intersection.entry.end(),
+                   std::back_inserter(entry.values), [](const bool has_entry) -> util::json::Value
+                   {
+                       if (has_entry)
+                           return util::json::True();
+                       else
+                           return util::json::False();
+                   });
+
+    result.values["location"] = detail::coordinateToLonLat(intersection.location);
+    result.values["bearings"] = bearings;
+    result.values["entry"] = entry;
+    if (intersection.in != guidance::Intersection::NO_INDEX)
+        result.values["in"] = intersection.in;
+    if (intersection.out != guidance::Intersection::NO_INDEX)
+        result.values["out"] = intersection.out;
+
+    return result;
 }
 
 util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geometry)
@@ -216,7 +193,13 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
     route_step.values["geometry"] = std::move(geometry);
-    route_step.values["intersections"] = detail::getIntersection(step);
+
+    util::json::Array intersections;
+    intersections.values.reserve(step.intersections.size());
+    std::transform(step.intersections.begin(), step.intersections.end(),
+                   std::back_inserter(intersections.values), makeIntersection);
+    route_step.values["intersections"] = std::move(intersections);
+
     return route_step;
 }
 

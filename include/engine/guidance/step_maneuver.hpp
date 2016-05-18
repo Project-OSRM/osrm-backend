@@ -23,6 +23,9 @@ enum class WaypointType : std::uint8_t
 
 struct StepManeuver
 {
+    util::Coordinate location;
+    short bearing_before;
+    short bearing_after;
     extractor::guidance::TurnInstruction instruction;
     WaypointType waypoint_type;
     unsigned exit;
@@ -30,7 +33,12 @@ struct StepManeuver
 
 inline StepManeuver getInvalidStepManeuver()
 {
-    return {extractor::guidance::TurnInstruction::NO_TURN(), WaypointType::None, 0};
+    return {util::Coordinate{util::FloatLongitude{0.0}, util::FloatLatitude{0.0}},
+            0,
+            0,
+            extractor::guidance::TurnInstruction::NO_TURN(),
+            WaypointType::None,
+            0};
 }
 
 } // namespace guidance

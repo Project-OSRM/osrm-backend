@@ -13,11 +13,8 @@ namespace guidance
 {
 namespace detail
 {
-namespace
-{
-void fillInIntermediate(Intersection &intersection,
-                        const LegGeometry &leg_geometry,
-                        const std::size_t segment_index)
+std::pair<short, short> getIntermediateBearings(const LegGeometry &leg_geometry,
+                                                const std::size_t segment_index)
 {
     auto turn_index = leg_geometry.BackIndex(segment_index);
     BOOST_ASSERT(turn_index > 0);
@@ -28,58 +25,27 @@ void fillInIntermediate(Intersection &intersection,
     const auto turn_coordinate = leg_geometry.locations[turn_index];
     const auto post_turn_coordinate = leg_geometry.locations[turn_index + 1];
 
-    intersection.bearing_before =
-        util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate);
-    intersection.bearing_after =
-        util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
-
-    intersection.location = turn_coordinate;
+    return std::make_pair<short, short>(
+        std::round(util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate)),
+        std::round(util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate)));
 }
 
-void fillInDepart(Intersection &intersection, const LegGeometry &leg_geometry)
+std::pair<short, short> getDepartBearings(const LegGeometry &leg_geometry)
 {
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
     const auto turn_coordinate = leg_geometry.locations.front();
     const auto post_turn_coordinate = *(leg_geometry.locations.begin() + 1);
-    intersection.location = turn_coordinate;
-    intersection.bearing_before = 0;
-    intersection.bearing_after =
-        util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate);
+    return std::make_pair<short, short>(
+        0, std::round(util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate)));
 }
 
-void fillInArrive(Intersection &intersection, const LegGeometry &leg_geometry)
+std::pair<short, short> getArriveBearings(const LegGeometry &leg_geometry)
 {
     BOOST_ASSERT(leg_geometry.locations.size() >= 2);
     const auto turn_coordinate = leg_geometry.locations.back();
     const auto pre_turn_coordinate = *(leg_geometry.locations.end() - 2);
-    intersection.location = turn_coordinate;
-    intersection.bearing_before =
-        util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate);
-    intersection.bearing_after = 0;
-}
-} // namespace
-
-Intersection intersectionFromGeometry(const WaypointType waypoint_type,
-                                      const double segment_duration,
-                                      const LegGeometry &leg_geometry,
-                                      const std::size_t segment_index)
-{
-    Intersection intersection;
-    intersection.duration = segment_duration;
-    intersection.distance = leg_geometry.segment_distances[segment_index];
-    switch (waypoint_type)
-    {
-    case WaypointType::None:
-        fillInIntermediate(intersection, leg_geometry, segment_index);
-        break;
-    case WaypointType::Depart:
-        fillInDepart(intersection, leg_geometry);
-        break;
-    case WaypointType::Arrive:
-        fillInArrive(intersection, leg_geometry);
-        break;
-    }
-    return intersection;
+    return std::make_pair<short, short>(
+        std::round(util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate)), 0);
 }
 } // ns detail
 } // ns engine

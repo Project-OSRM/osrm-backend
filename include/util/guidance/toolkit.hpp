@@ -49,36 +49,6 @@ inline extractor::guidance::DirectionModifier getTurnDirection(const double angl
     return extractor::guidance::DirectionModifier::UTurn;
 }
 
-inline engine::guidance::Intersection
-setIntersectionClasses(engine::guidance::Intersection intersection,
-                       const engine::PhantomNode &phantom)
-{
-    BOOST_ASSERT(intersection.bearing_before == 0 || intersection.bearing_after == 0);
-    const double bearing = std::max(intersection.bearing_before, intersection.bearing_after);
-
-    intersection.bearing_class = {};
-    intersection.entry_class = {};
-    if (bearing >= 180.)
-    {
-        intersection.bearing_class.add(std::round(bearing - 180.));
-        if (phantom.forward_segment_id.id != SPECIAL_SEGMENTID &&
-            phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
-            intersection.entry_class.activate(0);
-        intersection.bearing_class.add(std::round(bearing));
-        intersection.entry_class.activate(1);
-    }
-    else
-    {
-        intersection.bearing_class.add(std::round(bearing));
-        intersection.entry_class.activate(0);
-        intersection.bearing_class.add(std::round(bearing + 180.));
-        if (phantom.forward_segment_id.id != SPECIAL_SEGMENTID &&
-            phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
-            intersection.entry_class.activate(1);
-    }
-    return intersection;
-}
-
 } // namespace guidance
 } // namespace util
 } // namespace osrm
