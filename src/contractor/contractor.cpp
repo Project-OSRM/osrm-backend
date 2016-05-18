@@ -16,13 +16,12 @@
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 
-#include <fast-cpp-csv-parser/csv.h>
-
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_unordered_map.h>
@@ -33,10 +32,12 @@
 
 #include <bitset>
 #include <cstdint>
+#include <fstream>
 #include <iterator>
 #include <memory>
 #include <thread>
 #include <tuple>
+#include <vector>
 
 namespace std
 {
@@ -164,19 +165,36 @@ using TurnPenaltySourceMap = tbb::concurrent_unordered_map<Turn, PenaltySource, 
 SegmentSpeedSourceMap
 parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_speed_filenames)
 {
+    // TODO: shares code with turn penalty lookup parse function
     SegmentSpeedSourceMap map;
 
     const auto parse_segment_speed_file = [&](const std::size_t idx) {
         const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
         const auto filename = segment_speed_filenames[idx];
 
-        io::CSVReader<3> csv_in(filename);
-        csv_in.set_header("from_node", "to_node", "speed");
+        std::ifstream segment_speed_file{filename, std::ios::binary};
+        if (!segment_speed_file)
+            throw util::exception{"Unable to open segment speed file " + filename};
+
         std::uint64_t from_node_id{};
         std::uint64_t to_node_id{};
         unsigned speed{};
-        while (csv_in.read_row(from_node_id, to_node_id, speed))
+
+        for (std::string line; std::getline(segment_speed_file, line);)
         {
+            using namespace boost::spirit::qi;
+
+            auto it = begin(line);
+            const auto last = end(line);
+
+            // The ulong_long -> uint64_t will likely break on 32bit platforms
+            const auto ok = parse(it, last,                                          //
+                                  (ulong_long >> ',' >> ulong_long >> ',' >> uint_), //
+                                  from_node_id, to_node_id, speed);                  //
+
+            if (!ok || it != last)
+                throw util::exception{"Segment speed file " + filename + " malformed"};
+
             map[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] =
                 std::make_pair(speed, file_id);
         }
@@ -190,20 +208,38 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
 TurnPenaltySourceMap
 parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_penalty_filenames)
 {
+    // TODO: shares code with turn penalty lookup parse function
     TurnPenaltySourceMap map;
 
     const auto parse_turn_penalty_file = [&](const std::size_t idx) {
         const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
         const auto filename = turn_penalty_filenames[idx];
 
-        io::CSVReader<4> csv_in(filename);
-        csv_in.set_header("from_node", "via_node", "to_node", "penalty");
+        std::ifstream turn_penalty_file{filename, std::ios::binary};
+        if (!turn_penalty_file)
+            throw util::exception{"Unable to open turn penalty file " + filename};
+
         std::uint64_t from_node_id{};
         std::uint64_t via_node_id{};
         std::uint64_t to_node_id{};
         double penalty{};
-        while (csv_in.read_row(from_node_id, via_node_id, to_node_id, penalty))
+
+        for (std::string line; std::getline(turn_penalty_file, line);)
         {
+            using namespace boost::spirit::qi;
+
+            auto it = begin(line);
+            const auto last = end(line);
+
+            // The ulong_long -> uint64_t will likely break on 32bit platforms
+            const auto ok =
+                parse(it, last,                                                                 //
+                      (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >> ',' >> double_), //
+                      from_node_id, via_node_id, to_node_id, penalty);                          //
+
+            if (!ok || it != last)
+                throw util::exception{"Turn penalty file " + filename + " malformed"};
+
             map[std::make_tuple(OSMNodeID(from_node_id), OSMNodeID(via_node_id),
                                 OSMNodeID(to_node_id))] = std::make_pair(penalty, file_id);
         }
