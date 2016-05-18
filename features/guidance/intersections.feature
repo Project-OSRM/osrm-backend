@@ -125,10 +125,10 @@ Feature: Intersections Data
             | hd    |            |
 
         When I route I should get
-            | waypoints | route          | turns                              | intersections                                                                                                                                |
-            | e,f       | ea,fb,fb       | depart,abcda-exit-1,arrive         | true:180;false:0 false:150 true:210,false:30 true:150 true:270;true:90                                                       |
-            | e,g       | ea,gc,gc       | depart,abcda-exit-2,arrive         | true:180;false:0 false:150 true:210,false:30 true:150 true:270,true:30 true:180 false:330;true:0                             |
+            | waypoints | route          | turns                              | intersections                                                         |
+            | e,f       | ea,fb,fb       | depart,abcda-exit-1,arrive         | true:180;false:0 false:150 true:210,false:30 true:150 true:270;true:90 |
+            | e,g       | ea,gc,gc       | depart,abcda-exit-2,arrive         | true:180;false:0 false:150 true:210,false:30 true:150 true:270,true:30 true:180 false:330;true:0|
             | e,h       | ea,hd,hd       | depart,abcda-exit-3,arrive         | true:180;false:0 false:150 true:210,false:30 true:150 true:270,true:30 true:180 false:330,true:90 false:210 true:330;true:270 |
-            | e,2       | ea,abcda,abcda | depart,abcda-exit-undefined,arrive | true:180;false:0 false:150 true:210,false:30 true:150 true:270;true:326                                                     |
-            | 1,g       | abcda,gc,gc    | depart,abcda-exit-2,arrive         | true:214;true:214,false:30 true:150 true:270,true:30 true:180 false:330;true:0                                    |
-            | 1,3       | abcda,abcda    | depart,arrive                      | true:214,false:30 true:150 true:270,true:30 true:180 false:330;true:214                                                    |
+            | e,2       | ea,abcda,abcda | depart,abcda-exit-undefined,arrive | true:180;false:0 false:150 true:210,false:30 true:150 true:270;true:327 +-1|
+            | 1,g       | abcda,gc,gc    | depart,abcda-exit-2,arrive         | true:214;true:214,false:30 true:150 true:270,true:30 true:180 false:330;true:0|
+            | 1,3       | abcda,abcda    | depart,arrive                      | true:214,false:30 true:150 true:270,true:30 true:180 false:330;true:214|

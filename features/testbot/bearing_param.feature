@@ -35,10 +35,10 @@ Feature: Bearing parameter
         When I route I should get
             | from | to | bearings | route | bearing |
             | 0    | c  | 0 0      |       |         |
-            | 0    | c  | 45 45    | bc,bc | 0->45,45->0|
+            | 0    | c  | 45 45    | bc,bc | 0->44,44->0 +- 1|
             | 0    | c  | 85 85    |       |         |
             | 0    | c  | 95 95    |       |         |
-            | 0    | c  | 135 135  | ac,ac | 0->136,136->0 |
+            | 0    | c  | 135 135  | ac,ac | 0->135,135->0 +- 1|
             | 0    | c  | 180 180  |       |         |
 
     Scenario: Testbot - Initial bearing on split way
