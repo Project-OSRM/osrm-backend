@@ -63,13 +63,16 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                   {"name", "Boulevard du Larvotto"},
                                                   {"mode", "driving"},
                                                   {"maneuver", json::Object{{
+                                                                   {"location", location},
+                                                                   {"bearing_before", 0},
+                                                                   {"bearing_after", 0},
                                                                    {"type", "depart"},
                                                                }}},
                                                   {"intersections",
                                                    json::Array{{json::Object{
                                                        {{"location", location},
-                                                        {"bearings", json::Array{{0, 180}}},
-                                                        {"entry", json::Array{{"true", "true"}}},
+                                                        {"bearings", json::Array{{0}}},
+                                                        {"entry", json::Array{{json::True()}}},
                                                         {"out", 0}}}}}}}}},
 
                                    json::Object{{{"duration", 0.},
@@ -77,13 +80,13 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                  {"geometry", "yw_jGupkl@"},
                                                  {"name", "Boulevard du Larvotto"},
                                                  {"mode", "driving"},
-                                                 {"maneuver", json::Object{{{"type", "arrive"}}}},
+                                                 {"maneuver", json::Object{{{"location", location}, {"bearing_before", 0}, {"bearing_after", 0}, {"type", "arrive"}}}},
                                                  {"intersections",
                                                   json::Array{{json::Object{
                                                       {{"location", location},
-                                                       {"bearings", json::Array{{0, 180}}},
-                                                       {"entry", json::Array{{"true", "true"}}},
-                                                       {"in", 1}}}}}}
+                                                       {"bearings", json::Array{{180}}},
+                                                       {"entry", json::Array{{json::True()}}},
+                                                       {"in", 0}}}}}}
 
                                    }}}}}}}}}}}}}}}}};
 
