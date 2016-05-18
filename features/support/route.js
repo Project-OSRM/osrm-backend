@@ -138,9 +138,7 @@ module.exports = function () {
     };
 
     this.bearingList = (instructions) => {
-        return this.extractInstructionList(instructions, s => (typeof s.intersections[0].out !== 'undefined')
-                                                                                                ? s.intersections[0].bearings[s.intersections[0].out]
-                                                                                                : 0);
+        return this.extractInstructionList(instructions, s => s.maneuver.bearing_before + '->' + s.maneuver.bearing_after);
     };
 
     this.annotationList = (instructions) => {
