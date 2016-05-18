@@ -9,7 +9,9 @@
      - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
 
    - Infrastructure:
-     - Open sockets with SO_REUSEPORT to allow multiple servers connecting to the same port
+     - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:
+       - Open sockets with SO_REUSEPORT to allow multiple servers connecting to the same port.
+       - Add SIGNAL_PARENT_WHEN_READY environment variable to enable osrm-routed signal its parent with USR1 when it's running and waiting for requests.
 
 # 5.1.0
    Changes with regard to 5.0.0
