@@ -19,7 +19,7 @@
     "test": "npm run lint && ./node_modules/cucumber/bin/cucumber.js features/ -p verify",
     "clean-test": "rm -rf test/cache",
     "cucumber": "./node_modules/cucumber/bin/cucumber.js",
-    "node-test": "make -C bindings/node/test/data && build/osrm-datastore bindings/node/test/data/berlin-latest.osrm && node bindings/node/test/index.js"
+    "node-test": "export OSRM_DATA_PATH=$(pwd)/test/data && build/osrm-datastore bindings/node/test/data/berlin-latest.osrm && node bindings/node/test/index.js"
   },
   "repository": {
     "type": "git",
