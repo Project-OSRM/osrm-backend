@@ -17,8 +17,8 @@
 #include <utility>
 
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
-using TurnType = osrm::extractor::guidance::TurnType;
-using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
+namespace TurnType = osrm::extractor::guidance::TurnType;
+namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
 using osrm::util::guidance::angularDeviation;
 using osrm::util::guidance::getTurnDirection;
 
@@ -41,12 +41,8 @@ void print(const std::vector<RouteStep> &steps)
     int segment = 0;
     for (const auto &step : steps)
     {
-        const auto type =
-            static_cast<std::underlying_type<TurnType>::type>(step.maneuver.instruction.type);
-        const auto modifier = static_cast<std::underlying_type<DirectionModifier>::type>(
-            step.maneuver.instruction.direction_modifier);
-
-        std::cout << "\t[" << ++segment << "]: " << type << " " << modifier << "  " << static_cast<int>(step.maneuver.waypoint_type)
+        std::cout << "\t[" << ++segment << "]: " << step.maneuver.instruction.type
+                  << " " << step.maneuver.instruction.direction_modifier << "  " << static_cast<int>(step.maneuver.waypoint_type)
                   << " Duration: " << step.duration << " Distance: " << step.distance
                   << " Geometry: " << step.geometry_begin << " " << step.geometry_end
                   << " exit: " << step.maneuver.exit
@@ -187,7 +183,7 @@ void closeOffRoundabout(const bool on_roundabout,
         steps[1] = forwardInto(steps[1], steps[0]);
         steps[0].duration = 0;
         steps[0].distance = 0;
-        const auto exitToEnter = [](const TurnType type) {
+        const auto exitToEnter = [](const TurnType::Enum type) {
             if (TurnType::ExitRotary == type)
                 return TurnType::EnterRotary;
             // if we do not enter the roundabout Intersection, we cannot treat the full traversal as

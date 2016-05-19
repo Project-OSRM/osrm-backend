@@ -49,7 +49,7 @@ class IntersectionHandler
     std::size_t countValid(const Intersection &intersection) const;
 
     // Decide on a basic turn types
-    TurnType findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
+    TurnType::Enum findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
 
     // Get the Instruction for an obvious turn
     TurnInstruction getInstructionForObvious(const std::size_t number_of_candidates,

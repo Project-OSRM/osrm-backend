@@ -49,7 +49,7 @@ inline bool staysOnRoundabout(const extractor::guidance::TurnInstruction instruc
     return instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
 }
 
-inline extractor::guidance::DirectionModifier angleToDirectionModifier(const double bearing)
+inline extractor::guidance::DirectionModifier::Enum angleToDirectionModifier(const double bearing)
 {
     if (bearing < 135)
     {
