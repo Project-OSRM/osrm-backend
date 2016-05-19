@@ -26,7 +26,7 @@ inline double angularDeviation(const double angle, const double from)
     return std::min(360 - deviation, deviation);
 }
 
-inline extractor::guidance::DirectionModifier getTurnDirection(const double angle)
+inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const double angle)
 {
     // An angle of zero is a u-turn
     // 180 goes perfectly straight
