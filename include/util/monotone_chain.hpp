@@ -38,26 +38,19 @@ int ccw(Node &p, Node &q, Node &r)
     return (val < 0) ? -1 : 1; // clock or counterclock wise
 }
 
-void monotoneChain(std::vector<Node> &P, util::json::Object &response)
+std::vector<Node> monotoneChain(std::vector<Node> &nodes)
 {
+    std::vector<Node> P(nodes);
     int n = P.size(), k = 0;
     std::vector<Node> H(2 * n);
 
-    // sort Points
+
+    // sort Points by lat and lon
     std::sort(P.begin(), P.end(), [&](const Node &a, const Node &b)
               {
                   return a.node.lat < b.node.lat ||
                          (a.node.lat == b.node.lat && a.node.lon < b.node.lon);
               });
-
-    for(int i = 1; i < n; i++) {
-        if(P[i-1].node.lat > P[i].node.lat) {
-            util::SimpleLogger().Write() << "FFFUUUU";
-        }
-        if(P[i-1].node.lat == P[i].node.lat && P[i-1].node.lon > P[i].node.lon) {
-            util::SimpleLogger().Write() << "FFFUUUU2";
-        }
-    }
 
     // Build lower hull
     for (int i = 0; i < n; ++i)
@@ -77,15 +70,7 @@ void monotoneChain(std::vector<Node> &P, util::json::Object &response)
 
     H.resize(k - 1);
 
-    util::json::Array borderjson;
-    for (Node p : H)
-    {
-        util::json::Object point;
-        point.values["lat"] = static_cast<double>(util::toFloating(p.node.lat));
-        point.values["lon"] = static_cast<double>(util::toFloating(p.node.lon));
-        borderjson.values.push_back(point);
-    }
-    response.values["border"] = std::move(borderjson);
+    return H;
 }
 }
 }

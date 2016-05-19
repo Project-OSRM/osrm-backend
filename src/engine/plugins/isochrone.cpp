@@ -2,17 +2,15 @@
 // Created by robin on 4/13/16.
 //
 
-#include "engine/plugins/isochrone.hpp"
 #include "engine/api/isochrone_api.hpp"
-#include "util/graph_loader.hpp"
 #include "engine/phantom_node.hpp"
+#include "engine/plugins/isochrone.hpp"
+#include "util/graph_loader.hpp"
 #include "util/simple_logger.hpp"
-#include <util/graham_scan.hpp>
-#include <util/monotone_chain.hpp>
+#include "util/graham_scan.hpp"
+#include "util/monotone_chain.hpp"
 
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
+//#include <utility>
 #include <algorithm>
 
 namespace osrm
@@ -62,25 +60,38 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
                   return a.distance > b.distance;
               });
     auto phantom = phantomnodes.front();
-
-    isochroneSet.clear();
-
     std::vector<NodeID> forward_id_vector;
     facade.GetUncompressedGeometry(phantom.front().phantom_node.forward_packed_geometry_id,
                                    forward_id_vector);
     auto source = forward_id_vector[phantom.front().phantom_node.fwd_segment_position];
 
+    IsochroneSet isochroneSet;
+    dijkstra(isochroneSet, source, params.distance);
+
+    util::SimpleLogger().Write() << "Nodes Found: " << isochroneSet.size();
+    std::vector<IsochroneNode> isoByDistance(isochroneSet.begin(), isochroneSet.end());
+    std::sort(isoByDistance.begin(), isoByDistance.end(),
+              [&](const IsochroneNode n1, const IsochroneNode n2)
+              {
+                  return n1.distance < n2.distance;
+              });
+
+    //    util::convexHull(isochroneSet, json_result);
+    std::vector<IsochroneNode> convexhull = util::monotoneChain(isoByDistance);
+
+    api::IsochroneAPI isochroneAPI(facade, params);
+    isochroneAPI.MakeResponse(isoByDistance, convexhull, json_result);
+
+    return Status::Ok;
+}
+
+void IsochronePlugin::dijkstra(IsochroneSet &isochroneSet, NodeID &source, int distance)
+{
+
     QueryHeap heap(number_of_nodes);
     heap.Insert(source, 0, source);
 
-    // value is in metres
-//    const int MAX = 2000;
-    int MAX = params.distance;
-    util::SimpleLogger().Write() << MAX;
-
-
-    std::vector<NodeID> border;
-
+    int MAX_DISTANCE = distance;
     {
         // Standard Dijkstra search, terminating when path length > MAX
         while (!heap.Empty())
@@ -97,63 +108,30 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
                     if (data.real)
                     {
                         int to_distance = distance + data.weight;
-                        if (to_distance > MAX)
+                        if (to_distance > MAX_DISTANCE)
                         {
                             continue;
                         }
                         else if (!heap.WasInserted(target))
                         {
                             heap.Insert(target, to_distance, source);
-                            isochroneSet.insert(IsochroneNode(coordinate_list[target], coordinate_list[source], to_distance));
+                            isochroneSet.insert(IsochroneNode(
+                                coordinate_list[target], coordinate_list[source], to_distance));
                         }
                         else if (to_distance < heap.GetKey(target))
                         {
                             heap.GetData(target).parent = source;
                             heap.DecreaseKey(target, to_distance);
-                            update(isochroneSet, IsochroneNode(coordinate_list[target], coordinate_list[source], to_distance));
+                            update(isochroneSet,
+                                   IsochroneNode(coordinate_list[target], coordinate_list[source],
+                                                 to_distance));
                         }
                     }
                 }
             }
         }
     }
-
-    util::SimpleLogger().Write() << "Nodes Found: " << isochroneSet.size();
-    std::vector<IsochroneNode> isoByDistance(isochroneSet.begin(), isochroneSet.end());
-    std::sort(isoByDistance.begin(), isoByDistance.end(),[] (IsochroneNode n1, IsochroneNode n2){
-        return n1.distance < n2.distance;
-    });
-    util::json::Array data;
-    for (auto isochrone : isoByDistance)
-    {
-        util::json::Object object;
-
-        util::json::Object source;
-        source.values["lat"] =
-            static_cast<double>(util::toFloating(isochrone.node.lat));
-        source.values["lon"] =
-            static_cast<double>(util::toFloating(isochrone.node.lon));
-        object.values["p1"] = std::move(source);
-
-        util::json::Object predecessor;
-        predecessor.values["lat"] =
-            static_cast<double>(util::toFloating(isochrone.predecessor.lat));
-        predecessor.values["lon"] =
-            static_cast<double>(util::toFloating(isochrone.predecessor.lon));
-        object.values["p2"] = std::move(predecessor);
-
-        util::json::Object distance;
-        object.values["distance_from_start"] = isochrone.distance;
-
-        data.values.push_back(object);
-    }
-    json_result.values["isochrone"] = std::move(data);
-
-//    util::convexHull(isochroneSet, json_result);
-    util::monotoneChain(isoByDistance, json_result);
-    return Status::Ok;
 }
-
 std::size_t IsochronePlugin::loadGraph(const std::string &path,
                                        std::vector<extractor::QueryNode> &coordinate_list,
                                        std::vector<SimpleEdge> &graph_edge_list)
@@ -185,7 +163,6 @@ std::size_t IsochronePlugin::loadGraph(const std::string &path,
         {
             continue;
         }
-
         // forward edge
         graph_edge_list.emplace_back(input_edge.source, input_edge.target, input_edge.weight,
                                      input_edge.forward);

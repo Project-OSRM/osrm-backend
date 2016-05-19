@@ -7,6 +7,7 @@
 
 #include "engine/api/base_api.hpp"
 #include "engine/api/isochrone_parameters.hpp"
+#include "engine/plugins/isochrone.hpp"
 #include "engine/plugins/plugin_base.hpp"
 
 namespace osrm
@@ -27,13 +28,44 @@ class IsochroneAPI final : public BaseAPI
     {
     }
 
-//    void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
-//                      util::json::Object &response) const
-//    {
-//
-//    }
+    void MakeResponse(const std::vector<engine::plugins::IsochroneNode> isochroneNodes,
+                      const std::vector<engine::plugins::IsochroneNode> convexhull,
+                      util::json::Object &response) const
+    {
+        util::json::Array data;
+        for (auto isochrone : isochroneNodes)
+        {
+            util::json::Object object;
 
+            util::json::Object source;
+            source.values["lat"] = static_cast<double>(util::toFloating(isochrone.node.lat));
+            source.values["lon"] = static_cast<double>(util::toFloating(isochrone.node.lon));
+            object.values["p1"] = std::move(source);
 
+            util::json::Object predecessor;
+            predecessor.values["lat"] =
+                    static_cast<double>(util::toFloating(isochrone.predecessor.lat));
+            predecessor.values["lon"] =
+                    static_cast<double>(util::toFloating(isochrone.predecessor.lon));
+            object.values["p2"] = std::move(predecessor);
+
+            util::json::Object distance;
+            object.values["distance_from_start"] = isochrone.distance;
+
+            data.values.push_back(object);
+        }
+        response.values["isochrone"] = std::move(data);
+
+        util::json::Array borderjson;
+        for (engine::plugins::IsochroneNode n : convexhull)
+        {
+            util::json::Object point;
+            point.values["lat"] = static_cast<double>(util::toFloating(n.node.lat));
+            point.values["lon"] = static_cast<double>(util::toFloating(n.node.lon));
+            borderjson.values.push_back(point);
+        }
+        response.values["border"] = std::move(borderjson);
+    }
 };
 }
 }
