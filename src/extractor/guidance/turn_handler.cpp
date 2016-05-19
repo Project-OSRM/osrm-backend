@@ -3,7 +3,6 @@
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_handler.hpp"
 
-#include "util/simple_logger.hpp"
 #include "util/guidance/toolkit.hpp"
 
 #include <limits>
@@ -78,6 +77,9 @@ Intersection TurnHandler::handleTwoWayTurn(const EdgeID via_edge, Intersection i
 
 Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection intersection) const
 {
+    const auto &in_data = node_based_graph.GetEdgeData(via_edge);
+    const auto &first_data = node_based_graph.GetEdgeData(intersection[1].turn.eid);
+    const auto &second_data = node_based_graph.GetEdgeData(intersection[2].turn.eid);
     BOOST_ASSERT(intersection[0].turn.angle < 0.001);
     const auto isObviousOfTwo = [this](const ConnectedRoad road, const ConnectedRoad other) {
         const auto first_class =
@@ -134,14 +136,16 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
             {
                 assignFork(via_edge, intersection[2], intersection[1]);
             }
-            else if (isObviousOfTwo(intersection[1], intersection[2]))
+            else if (isObviousOfTwo(intersection[1], intersection[2]) &&
+                     second_data.name_id != in_data.name_id)
             {
                 intersection[1].turn.instruction =
                     getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
                 intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
                                                     DirectionModifier::SlightLeft};
             }
-            else if (isObviousOfTwo(intersection[2], intersection[1]))
+            else if (isObviousOfTwo(intersection[2], intersection[1]) &&
+                     first_data.name_id != in_data.name_id)
             {
                 intersection[2].turn.instruction =
                     getInstructionForObvious(intersection.size(), via_edge, false, intersection[2]);
@@ -193,7 +197,8 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     }
     else
     {
-        if (isObviousOfTwo(intersection[1], intersection[2]))
+        if (isObviousOfTwo(intersection[1], intersection[2]) &&
+            in_data.name_id != second_data.name_id)
         {
             intersection[1].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(1, intersection), intersection[1]);
@@ -204,7 +209,8 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                                                 getTurnDirection(intersection[1].turn.angle)};
         }
 
-        if (isObviousOfTwo(intersection[2], intersection[1]))
+        if (isObviousOfTwo(intersection[2], intersection[1]) &&
+            in_data.name_id != first_data.name_id)
         {
             intersection[2].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(2, intersection), intersection[2]);
@@ -234,12 +240,44 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
         }
     }
 
+    // check whether there is a turn of the same name
+    const auto &in_data = node_based_graph.GetEdgeData(via_edge);
+
+    const bool has_same_name_turn = [&]() {
+        for (std::size_t i = 1; i < intersection.size(); ++i)
+        {
+            if (node_based_graph.GetEdgeData(intersection[i].turn.eid).name_id == in_data.name_id)
+                return true;
+        }
+        return false;
+    }();
+
     // check whether the obvious choice is actually a through street
     if (obvious_index != 0)
     {
         intersection[obvious_index].turn.instruction = getInstructionForObvious(
             intersection.size(), via_edge, isThroughStreet(obvious_index, intersection),
             intersection[obvious_index]);
+        if (has_same_name_turn &&
+            node_based_graph.GetEdgeData(intersection[obvious_index].turn.eid).name_id !=
+                in_data.name_id &&
+            intersection[obvious_index].turn.instruction.type == TurnType::NewName)
+        {
+            // this is a special case that is necessary to correctly handle obvious turns on
+            // continuing streets. Right now osrm does not know about right of way. If a street
+            // turns to the left just like:
+            //
+            //       a
+            //       a
+            // aaaaaaa b b
+            //
+            // And another road exits here, we don't want to call it a new name, even though the
+            // turn is obvious and does not require steering. To correctly handle these situations
+            // in turn collapsing, we use the turn + straight combination here
+            intersection[obvious_index].turn.instruction.type = TurnType::Turn;
+            intersection[obvious_index].turn.instruction.direction_modifier =
+                DirectionModifier::Straight;
+        }
 
         // assign left/right turns
         intersection = assignLeftTurns(via_edge, std::move(intersection), obvious_index + 1);
@@ -302,7 +340,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
     }
     else
     {
-        assignTrivialTurns(via_edge,intersection,1,intersection.size());
+        assignTrivialTurns(via_edge, intersection, 1, intersection.size());
     }
     return intersection;
 }
@@ -394,8 +432,7 @@ Intersection TurnHandler::assignLeftTurns(const EdgeID via_edge,
                                           const std::size_t starting_at) const
 {
     BOOST_ASSERT(starting_at <= intersection.size());
-    const auto switch_left_and_right = []( Intersection &intersection )
-    {
+    const auto switch_left_and_right = [](Intersection &intersection) {
         BOOST_ASSERT(!intersection.empty());
 
         for (auto &road : intersection)
@@ -409,7 +446,6 @@ Intersection TurnHandler::assignLeftTurns(const EdgeID via_edge,
     const auto count = intersection.size() - starting_at + 1;
     intersection = assignRightTurns(via_edge, std::move(intersection), count);
     switch_left_and_right(intersection);
-
 
     return intersection;
 }
@@ -537,18 +573,6 @@ Intersection TurnHandler::assignRightTurns(const EdgeID via_edge,
         }
         else
         {
-            util::SimpleLogger().Write(logWARNING)
-                << "Reached fallback for right turns, size 3 "
-                << " Valids: " << (intersection[1].entry_allowed + intersection[2].entry_allowed +
-                                   intersection[3].entry_allowed);
-            for (const auto road : intersection)
-            {
-                const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
-                util::SimpleLogger().Write(logWARNING)
-                    << "\troad: " << toString(road) << " Name: " << out_data.name_id
-                    << " Road Class: " << (int)out_data.road_classification.road_class;
-            }
-
             assignTrivialTurns(via_edge, intersection, 1, up_to);
         }
     }

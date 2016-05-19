@@ -2,42 +2,49 @@
 #include "contractor/crc32_processor.hpp"
 #include "contractor/graph_contractor.hpp"
 
-#include "extractor/node_based_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/node_based_edge.hpp"
 
+#include "util/exception.hpp"
+#include "util/graph_loader.hpp"
+#include "util/integer_range.hpp"
+#include "util/io.hpp"
+#include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
-#include "util/graph_loader.hpp"
-#include "util/io.hpp"
-#include "util/integer_range.hpp"
-#include "util/exception.hpp"
-#include "util/simple_logger.hpp"
 #include "util/string_util.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 
-#include <fast-cpp-csv-parser/csv.h>
-
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/spirit/include/qi.hpp>
 
+#include <tbb/blocked_range.h>
+#include <tbb/concurrent_unordered_map.h>
+#include <tbb/parallel_for.h>
+#include <tbb/parallel_for_each.h>
+#include <tbb/parallel_invoke.h>
 #include <tbb/parallel_sort.h>
 
-#include <cstdint>
 #include <bitset>
-#include <chrono>
+#include <cstdint>
+#include <fstream>
+#include <iterator>
 #include <memory>
 #include <thread>
-#include <iterator>
 #include <tuple>
+#include <vector>
 
 namespace std
 {
 
 template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 {
-    std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const
+    std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const noexcept
     {
         return static_cast<uint64_t>(k.first) ^ (static_cast<uint64_t>(k.second) << 12);
     }
@@ -45,7 +52,7 @@ template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
 
 template <> struct hash<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>>
 {
-    std::size_t operator()(const std::tuple<OSMNodeID, OSMNodeID, OSMNodeID> &k) const
+    std::size_t operator()(const std::tuple<OSMNodeID, OSMNodeID, OSMNodeID> &k) const noexcept
     {
         std::size_t seed = 0;
         boost::hash_combine(seed, static_cast<uint64_t>(std::get<0>(k)));
@@ -137,6 +144,113 @@ int Contractor::Run()
     return 0;
 }
 
+// Utilities for LoadEdgeExpandedGraph to restore my sanity
+namespace
+{
+
+// Convenience aliases. TODO: make actual types at some point in time.
+
+using Segment = std::pair<OSMNodeID, OSMNodeID>;
+using SegmentHasher = std::hash<Segment>;
+using SpeedSource = std::pair<unsigned, std::uint8_t>;
+using SegmentSpeedSourceMap = tbb::concurrent_unordered_map<Segment, SpeedSource, SegmentHasher>;
+
+using Turn = std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>;
+using TurnHasher = std::hash<Turn>;
+using PenaltySource = std::pair<double, std::uint8_t>;
+using TurnPenaltySourceMap = tbb::concurrent_unordered_map<Turn, PenaltySource, TurnHasher>;
+
+// Functions for parsing files and creating lookup tables
+
+SegmentSpeedSourceMap
+parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_speed_filenames)
+{
+    // TODO: shares code with turn penalty lookup parse function
+    SegmentSpeedSourceMap map;
+
+    const auto parse_segment_speed_file = [&](const std::size_t idx) {
+        const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
+        const auto filename = segment_speed_filenames[idx];
+
+        std::ifstream segment_speed_file{filename, std::ios::binary};
+        if (!segment_speed_file)
+            throw util::exception{"Unable to open segment speed file " + filename};
+
+        std::uint64_t from_node_id{};
+        std::uint64_t to_node_id{};
+        unsigned speed{};
+
+        for (std::string line; std::getline(segment_speed_file, line);)
+        {
+            using namespace boost::spirit::qi;
+
+            auto it = begin(line);
+            const auto last = end(line);
+
+            // The ulong_long -> uint64_t will likely break on 32bit platforms
+            const auto ok = parse(it, last,                                          //
+                                  (ulong_long >> ',' >> ulong_long >> ',' >> uint_), //
+                                  from_node_id, to_node_id, speed);                  //
+
+            if (!ok || it != last)
+                throw util::exception{"Segment speed file " + filename + " malformed"};
+
+            map[std::make_pair(OSMNodeID(from_node_id), OSMNodeID(to_node_id))] =
+                std::make_pair(speed, file_id);
+        }
+    };
+
+    tbb::parallel_for(std::size_t{0}, segment_speed_filenames.size(), parse_segment_speed_file);
+
+    return map;
+}
+
+TurnPenaltySourceMap
+parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_penalty_filenames)
+{
+    // TODO: shares code with turn penalty lookup parse function
+    TurnPenaltySourceMap map;
+
+    const auto parse_turn_penalty_file = [&](const std::size_t idx) {
+        const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
+        const auto filename = turn_penalty_filenames[idx];
+
+        std::ifstream turn_penalty_file{filename, std::ios::binary};
+        if (!turn_penalty_file)
+            throw util::exception{"Unable to open turn penalty file " + filename};
+
+        std::uint64_t from_node_id{};
+        std::uint64_t via_node_id{};
+        std::uint64_t to_node_id{};
+        double penalty{};
+
+        for (std::string line; std::getline(turn_penalty_file, line);)
+        {
+            using namespace boost::spirit::qi;
+
+            auto it = begin(line);
+            const auto last = end(line);
+
+            // The ulong_long -> uint64_t will likely break on 32bit platforms
+            const auto ok =
+                parse(it, last,                                                                 //
+                      (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >> ',' >> double_), //
+                      from_node_id, via_node_id, to_node_id, penalty);                          //
+
+            if (!ok || it != last)
+                throw util::exception{"Turn penalty file " + filename + " malformed"};
+
+            map[std::make_tuple(OSMNodeID(from_node_id), OSMNodeID(via_node_id),
+                                OSMNodeID(to_node_id))] = std::make_pair(penalty, file_id);
+        }
+    };
+
+    tbb::parallel_for(std::size_t{0}, turn_penalty_filenames.size(), parse_turn_penalty_file);
+
+    return map;
+}
+} // anon ns
+
 std::size_t Contractor::LoadEdgeExpandedGraph(
     std::string const &edge_based_graph_filename,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
@@ -150,8 +264,13 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     const std::string &datasource_indexes_filename,
     const std::string &rtree_leaf_filename)
 {
+    if (segment_speed_filenames.size() > 255 || turn_penalty_filenames.size() > 255)
+        throw util::exception("Limit of 255 segment speed and turn penalty files each reached");
+
     util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
     boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
+    if (!input_stream)
+        throw util::exception("Could not load edge based graph file");
 
     const bool update_edge_weights = !segment_speed_filenames.empty();
     const bool update_turn_penalties = !turn_penalty_filenames.empty();
@@ -186,134 +305,89 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     util::SimpleLogger().Write() << "Reading " << number_of_edges
                                  << " edges from the edge based graph";
 
-    std::unordered_map<std::pair<OSMNodeID, OSMNodeID>, std::pair<unsigned, uint8_t>>
-        segment_speed_lookup;
-    std::unordered_map<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>, std::pair<double, uint8_t>>
-        turn_penalty_lookup;
+    SegmentSpeedSourceMap segment_speed_lookup;
+    TurnPenaltySourceMap turn_penalty_lookup;
 
-    // If we update the edge weights, this file will hold the datasource information
-    // for each segment
+    const auto parse_segment_speeds = [&] {
+        if (update_edge_weights)
+            segment_speed_lookup = parse_segment_lookup_from_csv_files(segment_speed_filenames);
+    };
+
+    const auto parse_turn_penalties = [&] {
+        if (update_turn_penalties)
+            turn_penalty_lookup = parse_turn_penalty_lookup_from_csv_files(turn_penalty_filenames);
+    };
+
+    // If we update the edge weights, this file will hold the datasource information for each
+    // segment; the other files will also be conditionally filled concurrently if we make an update
     std::vector<uint8_t> m_geometry_datasource;
+
+    std::vector<extractor::QueryNode> internal_to_external_node_map;
+    std::vector<unsigned> m_geometry_indices;
+    std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
+
+    const auto maybe_load_internal_to_external_node_map = [&] {
+        if (!(update_edge_weights || update_turn_penalties))
+            return;
+
+        boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
+
+        if (!nodes_input_stream)
+        {
+            throw util::exception("Failed to open " + nodes_filename);
+        }
+
+        unsigned number_of_nodes = 0;
+        nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
+        internal_to_external_node_map.resize(number_of_nodes);
+
+        // Load all the query nodes into a vector
+        nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
+                                number_of_nodes * sizeof(extractor::QueryNode));
+    };
+
+    const auto maybe_load_geometries = [&] {
+        if (!(update_edge_weights || update_turn_penalties))
+            return;
+
+        std::ifstream geometry_stream(geometry_filename, std::ios::binary);
+        if (!geometry_stream)
+        {
+            throw util::exception("Failed to open " + geometry_filename);
+        }
+        unsigned number_of_indices = 0;
+        unsigned number_of_compressed_geometries = 0;
+
+        geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
+
+        m_geometry_indices.resize(number_of_indices);
+        if (number_of_indices > 0)
+        {
+            geometry_stream.read((char *)&(m_geometry_indices[0]),
+                                 number_of_indices * sizeof(unsigned));
+        }
+
+        geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
+
+        BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
+        m_geometry_list.resize(number_of_compressed_geometries);
+
+        if (number_of_compressed_geometries > 0)
+        {
+            geometry_stream.read((char *)&(m_geometry_list[0]),
+                                 number_of_compressed_geometries *
+                                     sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+        }
+    };
+
+    // Folds all our actions into independently concurrently executing lambdas
+    tbb::parallel_invoke(parse_segment_speeds, parse_turn_penalties, //
+                         maybe_load_internal_to_external_node_map, maybe_load_geometries);
 
     if (update_edge_weights || update_turn_penalties)
     {
-        std::uint8_t segment_file_id = 1;
-        std::uint8_t turn_file_id = 1;
-
-        if (update_edge_weights)
-        {
-            for (auto segment_speed_filename : segment_speed_filenames)
-            {
-                util::SimpleLogger().Write()
-                    << "Segment speed data supplied, will update edge weights from "
-                    << segment_speed_filename;
-                io::CSVReader<3> csv_in(segment_speed_filename);
-                csv_in.set_header("from_node", "to_node", "speed");
-                std::uint64_t from_node_id{};
-                std::uint64_t to_node_id{};
-                unsigned speed{};
-                while (csv_in.read_row(from_node_id, to_node_id, speed))
-                {
-                    segment_speed_lookup[std::make_pair(OSMNodeID(from_node_id),
-                                                        OSMNodeID(to_node_id))] =
-                        std::make_pair(speed, segment_file_id);
-                }
-                ++segment_file_id;
-
-                // Check for overflow
-                if (segment_file_id == 0)
-                {
-                    throw util::exception(
-                        "Sorry, there's a limit of 255 segment speed files; you supplied too many");
-                }
-            }
-        }
-
-        if (update_turn_penalties)
-        {
-            for (auto turn_penalty_filename : turn_penalty_filenames)
-            {
-                util::SimpleLogger().Write()
-                    << "Turn penalty data supplied, will update turn penalties from "
-                    << turn_penalty_filename;
-                io::CSVReader<4> csv_in(turn_penalty_filename);
-                csv_in.set_header("from_node", "via_node", "to_node", "penalty");
-                uint64_t from_node_id{};
-                uint64_t via_node_id{};
-                uint64_t to_node_id{};
-                double penalty{};
-                while (csv_in.read_row(from_node_id, via_node_id, to_node_id, penalty))
-                {
-                    turn_penalty_lookup[std::make_tuple(
-                        OSMNodeID(from_node_id), OSMNodeID(via_node_id), OSMNodeID(to_node_id))] =
-                        std::make_pair(penalty, turn_file_id);
-                }
-                ++turn_file_id;
-
-                // Check for overflow
-                if (turn_file_id == 0)
-                {
-                    throw util::exception(
-                        "Sorry, there's a limit of 255 turn penalty files; you supplied too many");
-                }
-            }
-        }
-
-        std::vector<extractor::QueryNode> internal_to_external_node_map;
-
         // Here, we have to update the compressed geometry weights
         // First, we need the external-to-internal node lookup table
-        {
-            boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
-
-            if (!nodes_input_stream)
-            {
-                throw util::exception("Failed to open " + nodes_filename);
-            }
-
-            unsigned number_of_nodes = 0;
-            nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
-            internal_to_external_node_map.resize(number_of_nodes);
-
-            // Load all the query nodes into a vector
-            nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
-                                    number_of_nodes * sizeof(extractor::QueryNode));
-        }
-
-        std::vector<unsigned> m_geometry_indices;
-        std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
-
-        {
-            std::ifstream geometry_stream(geometry_filename, std::ios::binary);
-            if (!geometry_stream)
-            {
-                throw util::exception("Failed to open " + geometry_filename);
-            }
-            unsigned number_of_indices = 0;
-            unsigned number_of_compressed_geometries = 0;
-
-            geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
-
-            m_geometry_indices.resize(number_of_indices);
-            if (number_of_indices > 0)
-            {
-                geometry_stream.read((char *)&(m_geometry_indices[0]),
-                                     number_of_indices * sizeof(unsigned));
-            }
-
-            geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
-
-            BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
-            m_geometry_list.resize(number_of_compressed_geometries);
-
-            if (number_of_compressed_geometries > 0)
-            {
-                geometry_stream.read(
-                    (char *)&(m_geometry_list[0]),
-                    number_of_compressed_geometries *
-                        sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
-            }
-        }
 
         // This is a list of the "data source id" for every segment in the compressed
         // geometry container.  We assume that everything so far has come from the
@@ -326,141 +400,135 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         // Now, we iterate over all the segments stored in the StaticRTree, updating
         // the packed geometry weights in the `.geometries` file (note: we do not
         // update the RTree itself, we just use the leaf nodes to iterate over all segments)
-        {
+        using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
 
-            using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
+        using boost::interprocess::file_mapping;
+        using boost::interprocess::mapped_region;
+        using boost::interprocess::read_only;
 
-            std::ifstream leaf_node_file(rtree_leaf_filename, std::ios::binary | std::ios::in | std::ios::ate);
-            if (!leaf_node_file)
+        const file_mapping mapping{rtree_leaf_filename.c_str(), read_only};
+        mapped_region region{mapping, read_only};
+        region.advise(mapped_region::advice_willneed);
+
+        const auto bytes = region.get_size();
+        const auto first = static_cast<const LeafNode *>(region.get_address());
+        const auto last = first + (bytes / sizeof(LeafNode));
+
+        tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
+            for (size_t i = 0; i < current_node.object_count; i++)
             {
-                throw util::exception("Failed to open " + rtree_leaf_filename);
-            }
-            std::size_t leaf_nodes_count = leaf_node_file.tellg() / sizeof(LeafNode);
-            leaf_node_file.seekg(0, std::ios::beg);
+                const auto &leaf_object = current_node.objects[i];
+                extractor::QueryNode *u;
+                extractor::QueryNode *v;
 
-            LeafNode current_node;
-            while (leaf_nodes_count > 0)
-            {
-                leaf_node_file.read(reinterpret_cast<char *>(&current_node), sizeof(current_node));
-
-                for (size_t i = 0; i < current_node.object_count; i++)
+                if (leaf_object.forward_packed_geometry_id != SPECIAL_EDGEID)
                 {
-                    auto &leaf_object = current_node.objects[i];
-                    extractor::QueryNode *u;
-                    extractor::QueryNode *v;
+                    const unsigned forward_begin =
+                        m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
 
-                    if (leaf_object.forward_packed_geometry_id != SPECIAL_EDGEID)
+                    if (leaf_object.fwd_segment_position == 0)
                     {
-                        const unsigned forward_begin =
-                            m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
-
-                        if (leaf_object.fwd_segment_position == 0)
-                        {
-                            u = &(internal_to_external_node_map[leaf_object.u]);
-                            v = &(internal_to_external_node_map[m_geometry_list[forward_begin]
-                                                                    .node_id]);
-                        }
-                        else
-                        {
-                            u = &(internal_to_external_node_map
-                                      [m_geometry_list[forward_begin +
-                                                       leaf_object.fwd_segment_position - 1]
-                                           .node_id]);
-                            v = &(internal_to_external_node_map
-                                      [m_geometry_list[forward_begin +
-                                                       leaf_object.fwd_segment_position]
-                                           .node_id]);
-                        }
-                        const double segment_length =
-                            util::coordinate_calculation::greatCircleDistance(
-                                util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
-
-                        auto forward_speed_iter =
-                            segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
-                        if (forward_speed_iter != segment_speed_lookup.end())
-                        {
-                            int new_segment_weight =
-                                std::max(1, static_cast<int>(std::floor(
-                                                (segment_length * 10.) /
-                                                    (forward_speed_iter->second.first / 3.6) +
-                                                .5)));
-                            m_geometry_list[forward_begin + leaf_object.fwd_segment_position]
-                                .weight = new_segment_weight;
-                            m_geometry_datasource[forward_begin +
-                                                  leaf_object.fwd_segment_position] =
-                                forward_speed_iter->second.second;
-                        }
+                        u = &(internal_to_external_node_map[leaf_object.u]);
+                        v = &(
+                            internal_to_external_node_map[m_geometry_list[forward_begin].node_id]);
                     }
-                    if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
+                    else
                     {
-                        const unsigned reverse_begin =
-                            m_geometry_indices.at(leaf_object.reverse_packed_geometry_id);
-                        const unsigned reverse_end =
-                            m_geometry_indices.at(leaf_object.reverse_packed_geometry_id + 1);
+                        u = &(internal_to_external_node_map
+                                  [m_geometry_list[forward_begin +
+                                                   leaf_object.fwd_segment_position - 1]
+                                       .node_id]);
+                        v = &(internal_to_external_node_map
+                                  [m_geometry_list[forward_begin + leaf_object.fwd_segment_position]
+                                       .node_id]);
+                    }
+                    const double segment_length = util::coordinate_calculation::greatCircleDistance(
+                        util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
 
-                        int rev_segment_position =
-                            (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
-                        if (rev_segment_position == 0)
-                        {
-                            u = &(internal_to_external_node_map[leaf_object.v]);
-                            v = &(internal_to_external_node_map[m_geometry_list[reverse_begin]
-                                                                    .node_id]);
-                        }
-                        else
-                        {
-                            u = &(internal_to_external_node_map
-                                      [m_geometry_list[reverse_begin + rev_segment_position - 1]
-                                           .node_id]);
-                            v = &(internal_to_external_node_map
-                                      [m_geometry_list[reverse_begin + rev_segment_position]
-                                           .node_id]);
-                        }
-                        const double segment_length =
-                            util::coordinate_calculation::greatCircleDistance(
-                                util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
-
-                        auto reverse_speed_iter =
-                            segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
-                        if (reverse_speed_iter != segment_speed_lookup.end())
-                        {
-                            int new_segment_weight =
-                                std::max(1, static_cast<int>(std::floor(
-                                                (segment_length * 10.) /
-                                                    (reverse_speed_iter->second.first / 3.6) +
-                                                .5)));
-                            m_geometry_list[reverse_begin + rev_segment_position].weight =
-                                new_segment_weight;
-                            m_geometry_datasource[reverse_begin + rev_segment_position] =
-                                reverse_speed_iter->second.second;
-                        }
+                    auto forward_speed_iter =
+                        segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
+                    if (forward_speed_iter != segment_speed_lookup.end())
+                    {
+                        int new_segment_weight = std::max(
+                            1,
+                            static_cast<int>(std::floor(
+                                (segment_length * 10.) / (forward_speed_iter->second.first / 3.6) +
+                                .5)));
+                        m_geometry_list[forward_begin + leaf_object.fwd_segment_position].weight =
+                            new_segment_weight;
+                        m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
+                            forward_speed_iter->second.second;
                     }
                 }
-                --leaf_nodes_count;
-            }
-        }
+                if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
+                {
+                    const unsigned reverse_begin =
+                        m_geometry_indices.at(leaf_object.reverse_packed_geometry_id);
+                    const unsigned reverse_end =
+                        m_geometry_indices.at(leaf_object.reverse_packed_geometry_id + 1);
 
-        // Now save out the updated compressed geometries
-        {
-            std::ofstream geometry_stream(geometry_filename, std::ios::binary);
-            if (!geometry_stream)
-            {
-                throw util::exception("Failed to open " + geometry_filename + " for writing");
+                    int rev_segment_position =
+                        (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
+                    if (rev_segment_position == 0)
+                    {
+                        u = &(internal_to_external_node_map[leaf_object.v]);
+                        v = &(
+                            internal_to_external_node_map[m_geometry_list[reverse_begin].node_id]);
+                    }
+                    else
+                    {
+                        u = &(
+                            internal_to_external_node_map[m_geometry_list[reverse_begin +
+                                                                          rev_segment_position - 1]
+                                                              .node_id]);
+                        v = &(internal_to_external_node_map
+                                  [m_geometry_list[reverse_begin + rev_segment_position].node_id]);
+                    }
+                    const double segment_length = util::coordinate_calculation::greatCircleDistance(
+                        util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
+
+                    auto reverse_speed_iter =
+                        segment_speed_lookup.find(std::make_pair(u->node_id, v->node_id));
+                    if (reverse_speed_iter != segment_speed_lookup.end())
+                    {
+                        int new_segment_weight = std::max(
+                            1,
+                            static_cast<int>(std::floor(
+                                (segment_length * 10.) / (reverse_speed_iter->second.first / 3.6) +
+                                .5)));
+                        m_geometry_list[reverse_begin + rev_segment_position].weight =
+                            new_segment_weight;
+                        m_geometry_datasource[reverse_begin + rev_segment_position] =
+                            reverse_speed_iter->second.second;
+                    }
+                }
             }
-            const unsigned number_of_indices = m_geometry_indices.size();
-            const unsigned number_of_compressed_geometries = m_geometry_list.size();
-            geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices),
-                                  sizeof(unsigned));
-            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_indices[0])),
-                                  number_of_indices * sizeof(unsigned));
-            geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries),
-                                  sizeof(unsigned));
-            geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])),
-                                  number_of_compressed_geometries *
-                                      sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
-        }
+        }); // parallel_for_each
     }
 
-    {
+    const auto maybe_save_geometries = [&] {
+        if (!(update_edge_weights || update_turn_penalties))
+            return;
+
+        // Now save out the updated compressed geometries
+        std::ofstream geometry_stream(geometry_filename, std::ios::binary);
+        if (!geometry_stream)
+        {
+            throw util::exception("Failed to open " + geometry_filename + " for writing");
+        }
+        const unsigned number_of_indices = m_geometry_indices.size();
+        const unsigned number_of_compressed_geometries = m_geometry_list.size();
+        geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices), sizeof(unsigned));
+        geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_indices[0])),
+                              number_of_indices * sizeof(unsigned));
+        geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries),
+                              sizeof(unsigned));
+        geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])),
+                              number_of_compressed_geometries *
+                                  sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+    };
+
+    const auto save_datasource_indexes = [&] {
         std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
         if (!datasource_stream)
         {
@@ -474,9 +542,9 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             datasource_stream.write(reinterpret_cast<char *>(&(m_geometry_datasource[0])),
                                     number_of_datasource_entries * sizeof(uint8_t));
         }
-    }
+    };
 
-    {
+    const auto save_datastore_names = [&] {
         std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
         if (!datasource_stream)
         {
@@ -487,7 +555,9 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         {
             datasource_stream << name << std::endl;
         }
-    }
+    };
+
+    tbb::parallel_invoke(maybe_save_geometries, save_datasource_indexes, save_datastore_names);
 
     // TODO: can we read this in bulk?  util::DeallocatingVector isn't necessarily
     // all stored contiguously
@@ -554,7 +624,8 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                                                    sizeof(via_id));
             edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&to_id), sizeof(to_id));
 
-            auto turn_iter = turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
+            const auto turn_iter =
+                turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
             if (turn_iter != turn_penalty_lookup.end())
             {
                 int new_turn_weight = static_cast<int>(turn_iter->second.first * 10);
@@ -633,8 +704,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
-    const unsigned max_used_node_id = [&contracted_edge_list]
-    {
+    const unsigned max_used_node_id = [&contracted_edge_list] {
         unsigned tmp_max = 0;
         for (const QueryEdge &edge : contracted_edge_list)
         {

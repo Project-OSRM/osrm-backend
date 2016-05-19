@@ -37,7 +37,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug'
+      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
 
     - os: linux
       compiler: "gcc-4.8-debug"
@@ -136,6 +136,7 @@ install:
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
+  - make osrm-extract --jobs=3
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
@@ -174,5 +175,5 @@ after_success:
     fi
   - |
     if [ -n "${COVERAGE}" ]; then
-      coveralls --build-root build --exclude unit_tests --exclude third_party --exclude node_modules --gcov-options '\-lp'
+      bash <(curl -s https://codecov.io/bash)
     fi

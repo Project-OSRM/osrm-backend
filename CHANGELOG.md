@@ -1,3 +1,21 @@
+# 5.2.0
+   Changes from 5.1.0
+
+   - API:
+     - new parameter `annotate` for `route` and `match` requests.  Returns additional data about each
+       coordinate along the selected/matched route line.
+
+   - Profile changes:
+     - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
+
+   - Infrastructure:
+     - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:
+       - Open sockets with SO_REUSEPORT to allow multiple osrm-routed processes serving requests from the same port.
+       - Add SIGNAL_PARENT_WHEN_READY environment variable to enable osrm-routed signal its parent with USR1 when it's running and waiting for requests.
+
+   - Guidance:
+     - improved detection of turning streets, not reporting new-name in wrong situations
+
 # 5.1.0
    Changes with regard to 5.0.0
 
