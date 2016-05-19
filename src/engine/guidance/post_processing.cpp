@@ -46,7 +46,7 @@ void print(const std::vector<RouteStep> &steps)
         const auto modifier = static_cast<std::underlying_type<DirectionModifier>::type>(
             step.maneuver.instruction.direction_modifier);
 
-        std::cout << "\t[" << ++segment << "]: " << type << " " << modifier
+        std::cout << "\t[" << ++segment << "]: " << type << " " << modifier << "  " << static_cast<int>(step.maneuver.waypoint_type)
                   << " Duration: " << step.duration << " Distance: " << step.distance
                   << " Geometry: " << step.geometry_begin << " " << step.geometry_end
                   << " exit: " << step.maneuver.exit
@@ -294,6 +294,7 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
     step.duration += by_step.duration;
     step.distance += by_step.distance;
 
+    // by_step comes after step -> we append at the end
     if (step.geometry_end == by_step.geometry_begin + 1)
     {
         step.geometry_end = by_step.geometry_end;
@@ -303,6 +304,7 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
         step.intersections.insert(step.intersections.end(), by_step.intersections.begin(),
                                   by_step.intersections.end());
     }
+    // by_step comes before step -> we append at the front
     else
     {
         BOOST_ASSERT(step.maneuver.waypoint_type == WaypointType::None &&
