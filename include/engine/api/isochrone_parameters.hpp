@@ -19,10 +19,7 @@ struct IsochroneParameters : public BaseParameters
     unsigned int distance;
     bool convexhull;
 
-
-    bool IsValid() const {
-        return BaseParameters::IsValid();
-    }
+    bool IsValid() const { return BaseParameters::IsValid(); }
 };
 }
 }

@@ -44,9 +44,9 @@ class IsochroneAPI final : public BaseAPI
 
             util::json::Object predecessor;
             predecessor.values["lat"] =
-                    static_cast<double>(util::toFloating(isochrone.predecessor.lat));
+                static_cast<double>(util::toFloating(isochrone.predecessor.lat));
             predecessor.values["lon"] =
-                    static_cast<double>(util::toFloating(isochrone.predecessor.lon));
+                static_cast<double>(util::toFloating(isochrone.predecessor.lon));
             object.values["p2"] = std::move(predecessor);
 
             util::json::Object distance;
@@ -55,7 +55,8 @@ class IsochroneAPI final : public BaseAPI
             data.values.push_back(object);
         }
         response.values["isochrone"] = std::move(data);
-        if(!convexhull.empty()) {
+        if (!convexhull.empty())
+        {
             util::json::Array convexhullArray;
             for (engine::plugins::IsochroneNode n : convexhull)
             {
@@ -66,7 +67,6 @@ class IsochroneAPI final : public BaseAPI
             }
             response.values["convexhull"] = std::move(convexhullArray);
         }
-
     }
 };
 }

@@ -75,10 +75,10 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
               });
     std::vector<IsochroneNode> convexhull;
 
-    if(params.convexhull) {
+    if (params.convexhull)
+    {
         convexhull = util::monotoneChain(isoByDistance);
     }
-
 
     api::IsochroneAPI isochroneAPI(facade, params);
     isochroneAPI.MakeResponse(isoByDistance, convexhull, json_result);

@@ -32,12 +32,12 @@ struct IsochroneParametersGrammar final : public BaseParametersGrammar<Iterator,
     IsochroneParametersGrammar() : BaseGrammar(root_rule)
     {
 
-        distance_rule = (qi::lit("distance=") >
-                          qi::uint_)[ph::bind(&engine::api::IsochroneParameters::distance,
-                                              qi::_r1) = qi::_1];
-        convexhull_rule = (qi::lit("convexhull=") >
-                           qi::bool_)[ph::bind(&engine::api::IsochroneParameters::convexhull,
-                                               qi::_r1) = qi::_1];
+        distance_rule =
+            (qi::lit("distance=") >
+             qi::uint_)[ph::bind(&engine::api::IsochroneParameters::distance, qi::_r1) = qi::_1];
+        convexhull_rule =
+            (qi::lit("convexhull=") >
+             qi::bool_)[ph::bind(&engine::api::IsochroneParameters::convexhull, qi::_r1) = qi::_1];
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
                     -('?' > (distance_rule(qi::_r1) | convexhull_rule(qi::_r1)) % '&');
