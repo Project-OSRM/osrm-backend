@@ -17,6 +17,7 @@ namespace api
 struct IsochroneParameters : public BaseParameters
 {
     unsigned int distance;
+    bool convexhull;
 
 
     bool IsValid() const {

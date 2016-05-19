@@ -6,11 +6,9 @@
 #include "engine/phantom_node.hpp"
 #include "engine/plugins/isochrone.hpp"
 #include "util/graph_loader.hpp"
-#include "util/simple_logger.hpp"
-#include "util/graham_scan.hpp"
 #include "util/monotone_chain.hpp"
+#include "util/simple_logger.hpp"
 
-//#include <utility>
 #include <algorithm>
 
 namespace osrm
@@ -75,9 +73,12 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
               {
                   return n1.distance < n2.distance;
               });
+    std::vector<IsochroneNode> convexhull;
 
-    //    util::convexHull(isochroneSet, json_result);
-    std::vector<IsochroneNode> convexhull = util::monotoneChain(isoByDistance);
+    if(params.convexhull) {
+        convexhull = util::monotoneChain(isoByDistance);
+    }
+
 
     api::IsochroneAPI isochroneAPI(facade, params);
     isochroneAPI.MakeResponse(isoByDistance, convexhull, json_result);

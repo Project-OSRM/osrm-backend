@@ -55,16 +55,18 @@ class IsochroneAPI final : public BaseAPI
             data.values.push_back(object);
         }
         response.values["isochrone"] = std::move(data);
-
-        util::json::Array borderjson;
-        for (engine::plugins::IsochroneNode n : convexhull)
-        {
-            util::json::Object point;
-            point.values["lat"] = static_cast<double>(util::toFloating(n.node.lat));
-            point.values["lon"] = static_cast<double>(util::toFloating(n.node.lon));
-            borderjson.values.push_back(point);
+        if(!convexhull.empty()) {
+            util::json::Array convexhullArray;
+            for (engine::plugins::IsochroneNode n : convexhull)
+            {
+                util::json::Object point;
+                point.values["lat"] = static_cast<double>(util::toFloating(n.node.lat));
+                point.values["lon"] = static_cast<double>(util::toFloating(n.node.lon));
+                convexhullArray.values.push_back(point);
+            }
+            response.values["convexhull"] = std::move(convexhullArray);
         }
-        response.values["border"] = std::move(borderjson);
+
     }
 };
 }
