@@ -510,9 +510,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         {
             // count intersections. We cannot use exit, since intersections can follow directly
             // after a roundabout
-            steps[last_valid_instruction].intersections.insert(
-                steps[last_valid_instruction].intersections.end(), step.intersections.begin(),
-                step.intersections.end());
+            steps[last_valid_instruction] = elongate(steps[last_valid_instruction], step);
             step.maneuver.instruction = TurnInstruction::NO_TURN();
         }
         else if (!isSilent(instruction))
