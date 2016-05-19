@@ -34,6 +34,7 @@
     "node": ">=4.0.0"
   },
   "devDependencies": {
-    "eslint": "^2.4.0"
+    "eslint": "^2.4.0",
+    "node-cmake": "^1.2.1"
   }
 }
