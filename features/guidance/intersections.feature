@@ -83,6 +83,25 @@ Feature: Intersections Data
             | waypoints | route           | turns         | intersections                                                        |
             | a,d       | through,through | depart,arrive | true:90,true:0 true:90 false:270,true:90 true:180 false:270;true:270 |
 
+    Scenario: Regression test #2424
+        Given the node map
+            |   |   | e |   |   |   |   |   | i |   |   |   |   |
+            | a |   | b |   | c |   | d |   | h |   | k |   | m |
+            |   |   |   |   | f |   |   |   |   |   | l |   |   |
+
+        And the ways
+            | nodes  | name    |
+            | abcd   | Fritz-Elsas-Straße |
+            | hkm    | Fritz-Elsas-Straße |
+            | dhi    | Martin-Luther-Straße |
+            | be     | corner  |
+            | kl     | corner  |
+            | cf     | corner  |
+
+       When I route I should get
+            | waypoints | route | turns         |
+            | a,m       | Fritz-Elsas-Straße,Fritz-Elsas-Straße| depart,arrive |
+
     Scenario: Passing Two Intersections, Collapsing
         Given the node map
             |   |   | e |   |   |   |   |
