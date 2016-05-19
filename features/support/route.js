@@ -163,6 +163,11 @@ module.exports = function () {
         return matching.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance).map(p => { return p.join(':'); }).join(','); }).join(',');
     };
 
+    this.OSMIDList = (instructions) => {
+        // OSM node IDs also come from the annotation list
+        return instructions.annotation.nodes.map(x => x.toString()).join(',');
+    }
+
     this.turnList = (instructions) => {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map(v => {
