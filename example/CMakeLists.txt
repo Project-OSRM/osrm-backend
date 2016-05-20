@@ -26,7 +26,7 @@ endif()
 add_executable(osrm-example example.cpp)
 
 find_package(LibOSRM REQUIRED)
-find_package(Boost 1.49.0 COMPONENTS filesystem system thread REQUIRED)
+find_package(Boost 1.49.0 COMPONENTS filesystem system thread iostreams REQUIRED)
 
 target_link_libraries(osrm-example ${LibOSRM_LIBRARIES} ${Boost_LIBRARIES})
 include_directories(SYSTEM ${LibOSRM_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
