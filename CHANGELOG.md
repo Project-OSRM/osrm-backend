@@ -1,4 +1,4 @@
-# 5.2.0
+# 5.2.0 RC1
    Changes from 5.1.0
 
    - API:
