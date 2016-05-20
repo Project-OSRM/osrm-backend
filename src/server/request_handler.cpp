@@ -64,7 +64,8 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         ltime = time(nullptr);
         time_stamp = localtime(&ltime);
 
-        if(!std::getenv("DISABLE_ACCESS_LOGGING")) {
+        if (!std::getenv("DISABLE_ACCESS_LOGGING"))
+        {
             // log timestamp
             util::SimpleLogger().Write()
                 << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
