@@ -10,7 +10,7 @@ if [[ ${INSTALL_PREFIX:-false} == false ]]; then
 fi
 
 # we pin the mason version to avoid changes in mason breaking builds
-MASON_VERSION="3e0cc5a"
+MASON_VERSION="0d4842d"
 
 if [[ `which pkg-config` ]]; then
     echo "Success: Found pkg-config";
@@ -36,6 +36,8 @@ function all_deps() {
     dep lua 5.3.0 &
     dep luabind e414c57bcb687bb3091b7c55bbff6947f052e46b &
     dep boost 1.61.0 &
+    dep boost_libatomic 1.61.0 &
+    dep boost_libchrono 1.61.0 &
     dep boost_libsystem 1.61.0 &
     dep boost_libthread 1.61.0 &
     dep boost_libfilesystem 1.61.0 &
