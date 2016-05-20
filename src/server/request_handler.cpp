@@ -64,17 +64,19 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         ltime = time(nullptr);
         time_stamp = localtime(&ltime);
 
-        // log timestamp
-        util::SimpleLogger().Write()
-            << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
-            << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
-            << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
-            << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
-            << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
-            << time_stamp->tm_sec << " " << current_request.endpoint.to_string() << " "
-            << current_request.referrer << (0 == current_request.referrer.length() ? "- " : " ")
-            << current_request.agent << (0 == current_request.agent.length() ? "- " : " ")
-            << request_string;
+        if(!std::getenv("DISABLE_ACCESS_LOGGING")) {
+            // log timestamp
+            util::SimpleLogger().Write()
+                << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
+                << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
+                << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
+                << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
+                << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
+                << time_stamp->tm_sec << " " << current_request.endpoint.to_string() << " "
+                << current_request.referrer << (0 == current_request.referrer.length() ? "- " : " ")
+                << current_request.agent << (0 == current_request.agent.length() ? "- " : " ")
+                << request_string;
+        }
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
