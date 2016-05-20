@@ -2,6 +2,13 @@
 
 set -e
 
+INSTALL_PREFIX=$1
+
+if [[ ${INSTALL_PREFIX:-false} == false ]]; then
+    echo "please provide install prefix as first arg"
+    exit 1
+fi
+
 # we pin the mason version to avoid changes in mason breaking builds
 MASON_VERSION="3e0cc5a"
 
@@ -79,7 +86,7 @@ function main() {
     if [[ ${NM:-false} != false ]]; then
         CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_NM=${NM}"
     fi
-    ${MASON_HOME}/bin/cmake ../ -DCMAKE_INSTALL_PREFIX=${MASON_HOME} \
+    ${MASON_HOME}/bin/cmake ../ -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
       -DCMAKE_CXX_COMPILER="$CXX" \
       -DBoost_NO_SYSTEM_PATHS=ON \
       -DTBB_INSTALL_DIR=${MASON_HOME} \
