@@ -28,6 +28,14 @@ matrix:
 
     # Debug Builds
     - os: linux
+      compiler: "clang-3.5-sanitze-debug"
+      sudo: false
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5' ]
+          packages: [ 'clang-3.5', 'llvm-3.5-dev' ]
+      env: CCOMPILER='clang-3.5' CXXCOMPILER='clang++-3.5' BUILD_TYPE='Debug' STATIC=ON
+    - os: linux
       compiler: "gcc-5-debug"
       # sudo:required is needed for trusty images
       sudo: required
@@ -145,7 +153,12 @@ install:
     fi
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
+  - |
+    if [[ ${STATIC} == "ON" ]]; then
+       ../scripts/configure_static.sh
+    else
+       cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
+    fi
   - echo "travis_fold:start:MAKE"
   - make osrm-extract --jobs=3
   - make --jobs=${JOBS}
@@ -153,10 +166,12 @@ install:
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
   - ccache -s
-  - sudo make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      sudo ldconfig
+      export LD_LIBRARY_PATH=$(pwd)
+    else
+      export DYLD_LIBRARY_PATH=$(pwd)
+      export OSRM_SHARED_LIBRARY_PATH=${DYLD_LIBRARY_PATH}
     fi
   - popd
   - mkdir example/build && pushd example/build
