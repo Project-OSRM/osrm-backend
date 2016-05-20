@@ -233,7 +233,7 @@ include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-if(NOT WIN32)
+if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
 add_definitions(-DBOOST_SPIRIT_USE_PHOENIX_V3)
