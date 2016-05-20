@@ -3,10 +3,6 @@ language: cpp
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
-sudo: required
-dist: trusty
-
 notifications:
   email: false
 
@@ -33,6 +29,9 @@ matrix:
     # Debug Builds
     - os: linux
       compiler: "gcc-5-debug"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -41,6 +40,9 @@ matrix:
 
     - os: linux
       compiler: "gcc-4.8-debug"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -49,6 +51,9 @@ matrix:
 
     - os: linux
       compiler: "clang-3.8-debug"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
@@ -63,6 +68,9 @@ matrix:
     # Release Builds
     - os: linux
       compiler: "gcc-5-release"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -96,6 +104,9 @@ matrix:
     # Shared Library
     - os: linux
       compiler: "gcc-5-release-shared"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
