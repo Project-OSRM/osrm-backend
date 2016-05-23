@@ -655,6 +655,15 @@ class SharedDataFacade final : public BaseDataFacade
         return result;
     }
 
+    // At the moment we de-duplicate destination names in the street name table, so just dispatch to that
+    unsigned GetDestinationIndexFromEdgeID(const unsigned id) const override {
+        return GetNameIndexFromEdgeID(id);
+    }
+
+    std::string GetDestinationForID(const unsigned destination_id) const override {
+        return GetNameForID(destination_id);
+    }
+
     bool IsCoreNode(const NodeID id) const override final
     {
         if (m_is_core_node.size() > 0)
