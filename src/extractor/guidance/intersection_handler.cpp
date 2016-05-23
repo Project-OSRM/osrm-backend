@@ -42,7 +42,7 @@ std::size_t IntersectionHandler::countValid(const Intersection &intersection) co
                          [](const ConnectedRoad &road) { return road.entry_allowed; });
 }
 
-TurnType IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
+TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
                                                 const ConnectedRoad &road) const
 {
 

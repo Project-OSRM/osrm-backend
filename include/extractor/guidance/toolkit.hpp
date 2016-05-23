@@ -145,13 +145,13 @@ getRepresentativeCoordinate(const NodeID from_node,
 }
 
 // shift an instruction around the degree circle in CCW order
-inline DirectionModifier forcedShiftCCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum forcedShiftCCW(const DirectionModifier::Enum modifier)
 {
-    return static_cast<DirectionModifier>((static_cast<std::uint32_t>(modifier) + 1) %
-                                          detail::num_direction_modifiers);
+    return static_cast<DirectionModifier::Enum>((static_cast<std::uint32_t>(modifier) + 1) %
+                                                detail::num_direction_modifiers);
 }
 
-inline DirectionModifier shiftCCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum shiftCCW(const DirectionModifier::Enum modifier)
 {
     if (detail::shiftable_ccw[static_cast<int>(modifier)])
         return forcedShiftCCW(modifier);
@@ -160,14 +160,14 @@ inline DirectionModifier shiftCCW(const DirectionModifier modifier)
 }
 
 // shift an instruction around the degree circle in CW order
-inline DirectionModifier forcedShiftCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum forcedShiftCW(const DirectionModifier::Enum modifier)
 {
-    return static_cast<DirectionModifier>(
+    return static_cast<DirectionModifier::Enum>(
         (static_cast<std::uint32_t>(modifier) + detail::num_direction_modifiers - 1) %
         detail::num_direction_modifiers);
 }
 
-inline DirectionModifier shiftCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum shiftCW(const DirectionModifier::Enum modifier)
 {
     if (detail::shiftable_cw[static_cast<int>(modifier)])
         return forcedShiftCW(modifier);
@@ -175,7 +175,7 @@ inline DirectionModifier shiftCW(const DirectionModifier modifier)
         return modifier;
 }
 
-inline bool isBasic(const TurnType type)
+inline bool isBasic(const TurnType::Enum type)
 {
     return type == TurnType::Turn || type == TurnType::EndOfRoad;
 }
@@ -219,7 +219,7 @@ inline bool isSlightTurn(const TurnInstruction turn)
             turn.direction_modifier == DirectionModifier::SlightLeft);
 }
 
-inline bool isSlightModifier(const DirectionModifier direction_modifier)
+inline bool isSlightModifier(const DirectionModifier::Enum direction_modifier)
 {
     return (direction_modifier == DirectionModifier::Straight ||
             direction_modifier == DirectionModifier::SlightRight ||
@@ -257,7 +257,7 @@ inline double angleFromDiscreteAngle(const DiscreteAngle angle)
            0.5 * detail::discrete_angle_step_size;
 }
 
-inline double getAngularPenalty(const double angle, DirectionModifier modifier)
+inline double getAngularPenalty(const double angle, DirectionModifier::Enum modifier)
 {
     // these are not aligned with getTurnDirection but represent an ideal center
     const double center[] = {0, 45, 90, 135, 180, 225, 270, 315};
@@ -278,16 +278,16 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
 }
 
 // swaps left <-> right modifier types
-inline DirectionModifier mirrorDirectionModifier(const DirectionModifier modifier)
+inline DirectionModifier::Enum mirrorDirectionModifier(const DirectionModifier::Enum modifier)
 {
-    const constexpr DirectionModifier results[] = {
+    const constexpr DirectionModifier::Enum results[] = {
         DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
         DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
         DirectionModifier::Right,      DirectionModifier::SharpRight};
     return results[modifier];
 }
 
-inline bool canBeSuppressed(const TurnType type)
+inline bool canBeSuppressed(const TurnType::Enum type)
 {
     if (type == TurnType::Turn)
         return true;
@@ -300,7 +300,7 @@ inline bool isLowPriorityRoadClass(const FunctionalRoadClass road_class)
            road_class == FunctionalRoadClass::SERVICE;
 }
 
-inline bool isDistinct(const DirectionModifier first, const DirectionModifier second)
+inline bool isDistinct(const DirectionModifier::Enum first, const DirectionModifier::Enum second)
 {
     if ((first + 1) % detail::num_direction_modifiers == second)
         return false;
@@ -441,7 +441,7 @@ inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoa
 // turn and vice versa.
 inline ConnectedRoad mirror(ConnectedRoad road)
 {
-    const constexpr DirectionModifier mirrored_modifiers[] = {
+    const constexpr DirectionModifier::Enum mirrored_modifiers[] = {
         DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
         DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
         DirectionModifier::Right,      DirectionModifier::SharpRight};
