@@ -112,6 +112,7 @@ matrix:
       #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 before_install:
+  - if [[ $(uname -s) == 'Darwin' ]]; then sudo mdutil -i off /; fi;
   - source ./scripts/install_node.sh 4
   - npm install
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
