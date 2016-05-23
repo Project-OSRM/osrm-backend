@@ -137,7 +137,8 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 assignFork(via_edge, intersection[2], intersection[1]);
             }
             else if (isObviousOfTwo(intersection[1], intersection[2]) &&
-                     second_data.name_id != in_data.name_id)
+                     (second_data.name_id != in_data.name_id ||
+                      first_data.name_id == second_data.name_id))
             {
                 intersection[1].turn.instruction =
                     getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
@@ -145,7 +146,8 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                                                     DirectionModifier::SlightLeft};
             }
             else if (isObviousOfTwo(intersection[2], intersection[1]) &&
-                     first_data.name_id != in_data.name_id)
+                     (first_data.name_id != in_data.name_id ||
+                      first_data.name_id == second_data.name_id))
             {
                 intersection[2].turn.instruction =
                     getInstructionForObvious(intersection.size(), via_edge, false, intersection[2]);
@@ -198,7 +200,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     else
     {
         if (isObviousOfTwo(intersection[1], intersection[2]) &&
-            in_data.name_id != second_data.name_id)
+            (in_data.name_id != second_data.name_id || first_data.name_id == second_data.name_id))
         {
             intersection[1].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(1, intersection), intersection[1]);
@@ -210,7 +212,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         }
 
         if (isObviousOfTwo(intersection[2], intersection[1]) &&
-            in_data.name_id != first_data.name_id)
+            (in_data.name_id != first_data.name_id || first_data.name_id == second_data.name_id))
         {
             intersection[2].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(2, intersection), intersection[2]);

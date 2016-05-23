@@ -20,6 +20,39 @@ Feature: Continue Instructions
             | a,c       | abc,abc,abc | depart,continue left,arrive |
             | a,d       | abc,bd,bd   | depart,turn straight,arrive |
 
+    Scenario: Road turning left and straight
+        Given the node map
+            |   |   | c |   |
+            | a |   | b | d |
+
+        And the ways
+            | nodes  | highway | name |
+            | abc    | primary | road |
+            | bd     | primary | road |
+
+       When I route I should get
+            | waypoints | route          | turns                       |
+            | a,c       | road,road,road | depart,continue left,arrive |
+            | a,d       | road,road      | depart,arrive               |
+
+    Scenario: Road turning left and straight
+        Given the node map
+            |   |   | c |   |
+            | a |   | b | d |
+            |   |   | e |   |
+
+        And the ways
+            | nodes  | highway | name |
+            | abc    | primary | road |
+            | bd     | primary | road |
+            | be     | primary | road |
+
+       When I route I should get
+            | waypoints | route          | turns                        |
+            | a,c       | road,road,road | depart,continue left,arrive  |
+            | a,d       | road,road      | depart,arrive                |
+            | a,e       | road,road,road | depart,continue right,arrive |
+
     Scenario: Road turning right
         Given the node map
             | a |   | b | d |
