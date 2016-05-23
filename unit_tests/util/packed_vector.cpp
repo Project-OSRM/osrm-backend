@@ -21,14 +21,27 @@ BOOST_AUTO_TEST_CASE(insert_and_retrieve_packed_test)
     {
         OSMNodeID r = static_cast<OSMNodeID>(rand() % 2147483647); // max 33-bit uint
 
-        packed_ids.insert(r);
+        packed_ids.push_back(r);
         original_ids.push_back(r);
     }
 
     for (std::size_t i = 0; i < num_test_cases; i++)
     {
-        BOOST_CHECK_EQUAL(original_ids.at(i), packed_ids.retrieve(i));
+        BOOST_CHECK_EQUAL(original_ids.at(i), packed_ids.at(i));
     }
+}
+
+BOOST_AUTO_TEST_CASE(packed_vector_capacity_test)
+{
+    PackedVector packed_vec;
+    const std::size_t original_size = packed_vec.capacity();
+    std::vector<OSMNodeID> dummy_vec;
+
+    BOOST_CHECK_EQUAL(original_size, dummy_vec.capacity());
+
+    packed_vec.reserve(100);
+
+    BOOST_CHECK(packed_vec.capacity() >= 100);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

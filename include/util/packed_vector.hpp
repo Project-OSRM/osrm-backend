@@ -25,7 +25,7 @@ class PackedVector
   public:
     PackedVector() = default;
 
-    void insert(OSMNodeID incoming_node_id)
+    void push_back(OSMNodeID incoming_node_id)
     {
         std::uint64_t node_id = static_cast<std::uint64_t>(incoming_node_id);
         // mask incoming values, just in case they are > bitsize
@@ -61,7 +61,7 @@ class PackedVector
         num_elements++;
     }
 
-    OSMNodeID retrieve(const std::size_t &a_index) const
+    OSMNodeID at(const std::size_t &a_index) const
     {
         BOOST_ASSERT(a_index < num_elements);
 
@@ -100,6 +100,21 @@ class PackedVector
             const std::uint64_t right_side = next_elem >> (ELEMSIZE - (BITSIZE - left_index));
             return static_cast<OSMNodeID>(left_side | right_side);
         }
+    }
+
+    std::size_t size() const
+    {
+        return num_elements;
+    }
+
+    void reserve(std::size_t capacity)
+    {
+        vec.reserve(ceil(float(capacity) / ELEMSIZE) * BITSIZE);
+    }
+
+    std::size_t capacity() const
+    {
+        return floor(float(vec.capacity()) / BITSIZE) * ELEMSIZE;
     }
 
   private:
