@@ -624,7 +624,11 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         datasource_stream << "lua profile" << std::endl;
         for (auto const &name : segment_speed_filenames)
         {
-            datasource_stream << name << std::endl;
+            // Only write the filename, without path or extension.
+            // This prevents information leakage, and keeps names short
+            // for rendering in the debug tiles.
+            const boost::filesystem::path p(name);
+            datasource_stream << p.stem().string() << std::endl;
         }
     };
 
