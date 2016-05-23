@@ -1,7 +1,6 @@
 'use strict';
 
 var fs = require('fs');
-var net = require('net');
 var spawn = require('child_process').spawn;
 var util = require('util');
 var Timeout = require('node-timeout');
@@ -15,9 +14,7 @@ var OSRMBaseLoader = class {
         var limit = Timeout(this.scope.TIMEOUT, { err: this.scope.RoutedError('Launching osrm-routed timed out.') });
 
         var runLaunch = (cb) => {
-            this.osrmUp(() => {
-                this.waitForConnection(cb);
-            });
+            this.osrmUp(cb);
         };
 
         runLaunch(limit((e) => { if (e) callback(e); else callback(); }));
@@ -43,21 +40,6 @@ var OSRMBaseLoader = class {
             this.waitForShutdown(callback);
             this.scope.pid = null;
         } else callback(true);
-    }
-
-    waitForConnection (callback) {
-        net.connect({
-            port: this.scope.OSRM_PORT,
-            host: '127.0.0.1'
-        })
-            .on('connect', () => {
-                callback();
-            })
-            .on('error', (e) => {
-                setTimeout(() => {
-                    callback(e);
-                }, 100);
-            });
     }
 
     waitForShutdown (callback) {
