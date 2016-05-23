@@ -7,8 +7,8 @@
 #include "util/for_each_pair.hpp"
 #include "util/simple_logger.hpp"
 
-#include <boost/optional/optional.hpp>
 #include "extractor/extractor_callbacks.hpp"
+#include <boost/optional/optional.hpp>
 
 #include <osmium/osm.hpp>
 
@@ -206,7 +206,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                     OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
-                    backward_weight_data, true, false, parsed_way.roundabout,
+                    destination_id, backward_weight_data, true, false, parsed_way.roundabout,
                     parsed_way.is_access_restricted, parsed_way.is_startpoint,
                     parsed_way.backward_travel_mode, false, road_classification));
             });
@@ -225,7 +225,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                 external_memory.all_edges_list.push_back(InternalExtractorEdge(
                     OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
-                    forward_weight_data, true, !forward_only, parsed_way.roundabout,
+                    destination_id, forward_weight_data, true, !forward_only, parsed_way.roundabout,
                     parsed_way.is_access_restricted, parsed_way.is_startpoint,
                     parsed_way.forward_travel_mode, split_edge, road_classification));
             });
@@ -237,7 +237,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                     external_memory.all_edges_list.push_back(InternalExtractorEdge(
                         OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
-                        backward_weight_data, false, true, parsed_way.roundabout,
+                        destination_id, backward_weight_data, false, true, parsed_way.roundabout,
                         parsed_way.is_access_restricted, parsed_way.is_startpoint,
                         parsed_way.backward_travel_mode, true, road_classification));
                 });

@@ -17,7 +17,8 @@ struct NodeBasedEdge
 
     NodeBasedEdge(NodeID source,
                   NodeID target,
-                  NodeID name_id,
+                  unsigned name_id,
+                  unsigned destination_id,
                   EdgeWeight weight,
                   bool forward,
                   bool backward,
@@ -32,7 +33,8 @@ struct NodeBasedEdge
 
     NodeID source;
     NodeID target;
-    NodeID name_id;
+    unsigned name_id;
+    unsigned destination_id;
     EdgeWeight weight;
     bool forward : 1;
     bool backward : 1;
@@ -48,7 +50,8 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 {
     NodeBasedEdgeWithOSM(OSMNodeID source,
                          OSMNodeID target,
-                         NodeID name_id,
+                         unsigned name_id,
+                         unsigned destination_id,
                          EdgeWeight weight,
                          bool forward,
                          bool backward,
@@ -66,15 +69,16 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 // Impl.
 
 inline NodeBasedEdge::NodeBasedEdge()
-    : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), forward(false),
-      backward(false), roundabout(false), access_restricted(false), startpoint(true),
-      is_split(false), travel_mode(false)
+    : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), destination_id(0), weight(0),
+      forward(false), backward(false), roundabout(false), access_restricted(false),
+      startpoint(true), is_split(false), travel_mode(false)
 {
 }
 
 inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     NodeID target,
-                                    NodeID name_id,
+                                    unsigned name_id,
+                                    unsigned destination_id,
                                     EdgeWeight weight,
                                     bool forward,
                                     bool backward,
@@ -84,10 +88,10 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     TravelMode travel_mode,
                                     bool is_split,
                                     guidance::RoadClassificationData road_classification)
-    : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
-      backward(backward), roundabout(roundabout), access_restricted(access_restricted),
-      startpoint(startpoint), is_split(is_split), travel_mode(travel_mode),
-      road_classification(std::move(road_classification))
+    : source(source), target(target), name_id(name_id), destination_id(destination_id),
+      weight(weight), forward(forward), backward(backward), roundabout(roundabout),
+      access_restricted(access_restricted), startpoint(startpoint), is_split(is_split),
+      travel_mode(travel_mode), road_classification(std::move(road_classification))
 {
 }
 
@@ -111,7 +115,8 @@ inline bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
 inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(
     OSMNodeID source,
     OSMNodeID target,
-    NodeID name_id,
+    unsigned name_id,
+    unsigned destination_id,
     EdgeWeight weight,
     bool forward,
     bool backward,
@@ -124,6 +129,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(
     : NodeBasedEdge(SPECIAL_NODEID,
                     SPECIAL_NODEID,
                     name_id,
+                    destination_id,
                     weight,
                     forward,
                     backward,
