@@ -86,11 +86,7 @@ var OSRMDirectLoader = class extends OSRMBaseLoader {
             fs.appendFile(this.scope.OSRM_ROUTED_LOG_FILE, data, (err) => { if (err) throw err; });
         };
 
-        var shell_cmd = './scripts/command_wrapper.sh';
-        var final_args = [util.format('%s/osrm-routed',this.scope.BIN_PATH),
-                          this.inputFile,
-                          util.format('-p%d', this.scope.OSRM_PORT)];
-        var child = spawn(shell_cmd, final_args);
+        var child = spawn(util.format('%s/osrm-routed', this.scope.BIN_PATH), [this.inputFile, util.format('-p%d', this.scope.OSRM_PORT)]);
         this.scope.pid = child.pid;
         child.stdout.on('data', writeToLog);
         child.stderr.on('data', writeToLog);
@@ -126,11 +122,7 @@ var OSRMDatastoreLoader = class extends OSRMBaseLoader {
             fs.appendFile(this.scope.OSRM_ROUTED_LOG_FILE, data, (err) => { if (err) throw err; });
         };
 
-        var shell_cmd = './scripts/command_wrapper.sh';
-        var final_args = [util.format('%s/osrm-routed',this.scope.BIN_PATH),
-                          '--shared-memory=1',
-                          util.format('-p%d', this.scope.OSRM_PORT)];
-        var child = spawn(shell_cmd, final_args);
+        var child = spawn(util.format('%s/osrm-routed', this.scope.BIN_PATH), ['--shared-memory=1', util.format('-p%d', this.scope.OSRM_PORT)]);
         this.child = child;
         this.scope.pid = child.pid;
         child.stdout.on('data', writeToLog);

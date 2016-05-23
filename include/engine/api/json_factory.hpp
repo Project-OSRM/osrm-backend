@@ -33,8 +33,8 @@ namespace json
 namespace detail
 {
 
-std::string instructionTypeToString(extractor::guidance::TurnType type);
-std::string instructionModifierToString(extractor::guidance::DirectionModifier modifier);
+std::string instructionTypeToString(extractor::guidance::TurnType::Enum type);
+std::string instructionModifierToString(extractor::guidance::DirectionModifier::Enum modifier);
 
 util::json::Array coordinateToLonLat(const util::Coordinate coordinate);
 

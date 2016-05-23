@@ -17,8 +17,8 @@
 #include <utility>
 #include <vector>
 
-using TurnType = osrm::extractor::guidance::TurnType;
-using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
+namespace TurnType = osrm::extractor::guidance::TurnType;
+namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
 
 namespace osrm
@@ -55,12 +55,12 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
     return true;
 }
 
-std::string instructionTypeToString(const TurnType type)
+std::string instructionTypeToString(const TurnType::Enum type)
 {
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
-std::string instructionModifierToString(const DirectionModifier modifier)
+std::string instructionModifierToString(const DirectionModifier::Enum modifier)
 {
     return modifier_names[static_cast<std::size_t>(modifier)];
 }
