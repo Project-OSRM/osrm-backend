@@ -32,6 +32,7 @@
 #include <tbb/spin_mutex.h>
 
 #include <algorithm>
+#include <atomic>
 #include <bitset>
 #include <cstdint>
 #include <fstream>
@@ -244,6 +245,9 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
             local.push_back(std::move(val));
         }
 
+        util::SimpleLogger().Write() << "Loaded speed file " << filename << " with " << local.size()
+                                     << " speeds";
+
         {
             Mutex::scoped_lock _{flatten_mutex};
 
@@ -272,6 +276,10 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
     const auto it = std::unique(begin(flatten), end(flatten), unique_by);
 
     flatten.erase(it, end(flatten));
+
+    util::SimpleLogger().Write() << "In total loaded " << segment_speed_filenames.size()
+                                 << " speed file(s) with a total of " << flatten.size()
+                                 << " unique values";
 
     return flatten;
 }
@@ -485,6 +493,14 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         const auto first = static_cast<const LeafNode *>(region.get_address());
         const auto last = first + (bytes / sizeof(LeafNode));
 
+        // vector to count used speeds for logging
+        // size offset by one since index 0 is used for speeds not from external file
+        std::vector<std::atomic<std::uint64_t>> segment_speeds_counters(
+            segment_speed_filenames.size() + 1);
+        for (auto &each : segment_speeds_counters)
+            each.store(0);
+        const constexpr auto LUA_SOURCE = 0;
+
         tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
             for (size_t i = 0; i < current_node.object_count; i++)
             {
@@ -529,6 +545,14 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             new_segment_weight;
                         m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
                             forward_speed_iter->speed_source.source;
+
+                        // count statistics for logging
+                        segment_speeds_counters[forward_speed_iter->speed_source.source] += 1;
+                    }
+                    else
+                    {
+                        // count statistics for logging
+                        segment_speeds_counters[LUA_SOURCE] += 1;
                     }
                 }
                 if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
@@ -571,10 +595,34 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             new_segment_weight;
                         m_geometry_datasource[reverse_begin + rev_segment_position] =
                             reverse_speed_iter->speed_source.source;
+
+                        // count statistics for logging
+                        segment_speeds_counters[reverse_speed_iter->speed_source.source] += 1;
+                    }
+                    else
+                    {
+                        // count statistics for logging
+                        segment_speeds_counters[LUA_SOURCE] += 1;
                     }
                 }
             }
         }); // parallel_for_each
+
+        for (std::size_t i = 0; i < segment_speeds_counters.size(); i++)
+        {
+            if (i == LUA_SOURCE)
+            {
+                util::SimpleLogger().Write() << "Used " << segment_speeds_counters[LUA_SOURCE]
+                                             << " speeds from LUA profile or input map";
+            }
+            else
+            {
+                // segments_speeds_counters has 0 as LUA, segment_speed_filenames not, thus we need
+                // to susbstract 1 to avoid off-by-one error
+                util::SimpleLogger().Write() << "Used " << segment_speeds_counters[i]
+                                             << " speeds from " << segment_speed_filenames[i - 1];
+            }
+        }
     }
 
     const auto maybe_save_geometries = [&] {

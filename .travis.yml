@@ -137,7 +137,7 @@ before_install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - export PATH=${DEPS_DIR}/bin:${PATH} && mkdir -p ${DEPS_DIR}
   - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/3.5.2.tar.gz"
-  - mkdir cmake && travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}
+  - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       # implicit deps, but seem to be installed by default with recent images: libxml2 GDAL boost
