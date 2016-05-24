@@ -2,6 +2,7 @@
 #define PACKED_VECTOR_HPP
 
 #include "util/typedefs.hpp"
+#include "util/shared_memory_vector_wrapper.hpp"
 
 #include <cmath>
 #include <vector>
@@ -15,12 +16,18 @@ const constexpr std::size_t BITSIZE = 33;
 const constexpr std::size_t ELEMSIZE = 64;
 const constexpr std::size_t PACKSIZE = BITSIZE * ELEMSIZE;
 
-std::size_t PackedVectorSize(std::size_t elements)
+/**
+ * Returns the size of the packed vector datastructure with `elements` packed elements (the size of its underlying vector)
+ */
+inline std::size_t PackedVectorSize(std::size_t elements)
 {
     return ceil(float(elements) / ELEMSIZE) * BITSIZE;
 };
 
-std::size_t PackedVectorCapacity(std::size_t vec_size)
+/**
+ * Returns the capacity of a packed vector with underlying vector size `vec_size`
+ */
+inline std::size_t PackedVectorCapacity(std::size_t vec_size)
 {
     return floor(float(vec_size) / BITSIZE) * ELEMSIZE;
 }
@@ -33,11 +40,13 @@ std::size_t PackedVectorCapacity(std::size_t vec_size)
 template <bool UseSharedMemory> class PackedVector
 {
   public:
+
     PackedVector() = default;
 
     void push_back(OSMNodeID incoming_node_id)
     {
         std::uint64_t node_id = static_cast<std::uint64_t>(incoming_node_id);
+
         // mask incoming values, just in case they are > bitsize
         const std::uint64_t incoming_mask = static_cast<std::uint64_t>(pow(2, BITSIZE)) - 1;
         node_id = node_id & incoming_mask;

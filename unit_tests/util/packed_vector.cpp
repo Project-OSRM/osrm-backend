@@ -12,7 +12,7 @@ using namespace osrm::util;
 // Verify that the packed vector behaves as expected
 BOOST_AUTO_TEST_CASE(insert_and_retrieve_packed_test)
 {
-    PackedVector packed_ids;
+    PackedVector<false> packed_ids;
     std::vector<OSMNodeID> original_ids;
 
     const constexpr std::size_t num_test_cases = 399;
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(insert_and_retrieve_packed_test)
 
 BOOST_AUTO_TEST_CASE(packed_vector_capacity_test)
 {
-    PackedVector packed_vec;
+    PackedVector<false> packed_vec;
     const std::size_t original_size = packed_vec.capacity();
     std::vector<OSMNodeID> dummy_vec;
 
