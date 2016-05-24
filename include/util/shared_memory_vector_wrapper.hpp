@@ -3,6 +3,8 @@
 
 #include <boost/assert.hpp>
 
+#include "util/simple_logger.hpp"
+
 #include <cstddef>
 
 #include <algorithm>

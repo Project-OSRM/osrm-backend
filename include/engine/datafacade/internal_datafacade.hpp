@@ -24,6 +24,7 @@
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
+#include "util/packed_vector.hpp"
 
 #include "osrm/coordinate.hpp"
 
@@ -73,7 +74,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::string m_timestamp;
 
     util::ShM<util::Coordinate, false>::vector m_coordinate_list;
-    util::ShM<OSMNodeID, false>::vector m_osmnodeid_list;
+    util::PackedVector<false> m_osmnodeid_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;
@@ -157,12 +158,12 @@ class InternalDataFacade final : public BaseDataFacade
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list.resize(number_of_coordinates);
-        m_osmnodeid_list.resize(number_of_coordinates);
+        m_osmnodeid_list.reserve(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
             m_coordinate_list[i] = util::Coordinate(current_node.lon, current_node.lat);
-            m_osmnodeid_list[i] = current_node.node_id;
+            m_osmnodeid_list.push_back(current_node.node_id);
             BOOST_ASSERT(m_coordinate_list[i].IsValid());
         }
 
@@ -443,7 +444,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
     {
-        return m_osmnodeid_list[id];
+        return m_osmnodeid_list.at(id);
     }
 
     extractor::guidance::TurnInstruction

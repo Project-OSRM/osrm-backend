@@ -20,6 +20,7 @@
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
+#include "util/packed_vector.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -244,9 +245,9 @@ int Storage::Run()
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
                                                       coordinate_list_size);
-    // we'll read a list of OSM node IDs from the same data, so set the same block size:
+    // we'll read a list of OSM node IDs from the same data, so set the block size for the same number of items:
     shared_layout_ptr->SetBlockSize<OSMNodeID>(SharedDataLayout::OSM_NODE_ID_LIST,
-                                               coordinate_list_size);
+                                               util::PackedVectorSize(coordinate_list_size));
 
     // load geometries sizes
     boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
@@ -540,13 +541,15 @@ int Storage::Run()
         shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
     OSMNodeID *osmnodeid_ptr = shared_layout_ptr->GetBlockPtr<OSMNodeID, true>(
         shared_memory_ptr, SharedDataLayout::OSM_NODE_ID_LIST);
+    util::PackedVector<true> osmnodeid_list;
+    osmnodeid_list.reset(osmnodeid_ptr, shared_layout_ptr->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
 
     extractor::QueryNode current_node;
     for (unsigned i = 0; i < coordinate_list_size; ++i)
     {
         nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
         coordinates_ptr[i] = util::Coordinate(current_node.lon, current_node.lat);
-        osmnodeid_ptr[i] = OSMNodeID(current_node.node_id);
+        osmnodeid_list.push_back(OSMNodeID(current_node.node_id));
     }
     nodes_input_stream.close();
 
