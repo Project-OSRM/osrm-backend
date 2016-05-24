@@ -166,18 +166,13 @@ install:
   - echo "travis_fold:end:MAKE"
   - ccache -s
   - make install
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      export LD_LIBRARY_PATH=$(pwd)
-    else
-      export DYLD_LIBRARY_PATH=$(pwd)
-      export OSRM_SHARED_LIBRARY_PATH=${DYLD_LIBRARY_PATH}
-    fi
   - popd
   - mkdir example/build && pushd example/build
   - |
     if [[ ${STATIC} == "ON" ]]; then
        MASON_HOME=${TRAVIS_BUILD_DIR}/mason_packages/.link
+       export DYLD_LIBRARY_PATH=${MASON_HOME}/lib
+       export OSRM_SHARED_LIBRARY_PATH=${DYLD_LIBRARY_PATH}
        cmake .. -DCMAKE_INCLUDE_PATH=${MASON_HOME}/include -DCMAKE_LIBRARY_PATH=${MASON_HOME}/lib -DBoost_NO_SYSTEM_PATHS=ON -DBoost_USE_STATIC_LIBS=ON -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DLibOSRM_INCLUDE_DIR=${INSTALL_PREFIX}/include -DLibOSRM_LIBRARIES=${INSTALL_PREFIX}/lib/libosrm.a
     else
        cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DLibOSRM_INCLUDE_DIR=${INSTALL_PREFIX}/include -DLibOSRM_LIBRARIES=${INSTALL_PREFIX}/lib/libosrm.a
