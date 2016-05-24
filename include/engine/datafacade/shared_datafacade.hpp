@@ -173,9 +173,11 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto osmnodeid_list_ptr = data_layout->GetBlockPtr<OSMNodeID>(
             shared_memory, storage::SharedDataLayout::OSM_NODE_ID_LIST);
-        m_osmnodeid_list.reset(osmnodeid_list_ptr,
+        m_osmnodeid_list.reset(
+            osmnodeid_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
-        m_osmnodeid_list.set_number_of_entries(util::PackedVectorCapacity(data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]));
+        m_osmnodeid_list.set_number_of_entries(util::PackedVectorCapacity(
+            data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]));
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);

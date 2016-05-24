@@ -17,7 +17,8 @@ const constexpr std::size_t ELEMSIZE = 64;
 const constexpr std::size_t PACKSIZE = BITSIZE * ELEMSIZE;
 
 /**
- * Returns the size of the packed vector datastructure with `elements` packed elements (the size of its underlying vector)
+ * Returns the size of the packed vector datastructure with `elements` packed elements (the size of
+ * its underlying vector)
  */
 inline std::size_t PackedVectorSize(std::size_t elements)
 {
@@ -40,7 +41,6 @@ inline std::size_t PackedVectorCapacity(std::size_t vec_size)
 template <bool UseSharedMemory> class PackedVector
 {
   public:
-
     PackedVector() = default;
 
     void push_back(OSMNodeID incoming_node_id)
@@ -124,10 +124,7 @@ template <bool UseSharedMemory> class PackedVector
         }
     }
 
-    std::size_t size() const
-    {
-        return num_elements;
-    }
+    std::size_t size() const { return num_elements; }
 
     template <bool enabled = UseSharedMemory>
     void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
@@ -136,7 +133,8 @@ template <bool UseSharedMemory> class PackedVector
     }
 
     template <bool enabled = UseSharedMemory>
-    void reset(typename std::enable_if<enabled, OSMNodeID>::type *ptr, typename std::enable_if<enabled, std::size_t>::type size)
+    void reset(typename std::enable_if<enabled, OSMNodeID>::type *ptr,
+               typename std::enable_if<enabled, std::size_t>::type size)
     {
         vec.reset(reinterpret_cast<std::uint64_t *>(ptr), size);
     }
@@ -147,13 +145,9 @@ template <bool UseSharedMemory> class PackedVector
         num_elements = count;
     }
 
-    std::size_t capacity() const
-    {
-        return PackedVectorCapacity(vec.capacity());
-    }
+    std::size_t capacity() const { return PackedVectorCapacity(vec.capacity()); }
 
   private:
-
     typename util::ShM<std::uint64_t, UseSharedMemory>::vector vec;
 
     std::size_t num_elements = 0;
@@ -186,13 +180,13 @@ template <bool UseSharedMemory> class PackedVector
     }
 
     template <bool enabled = UseSharedMemory>
-    std::uint64_t vec_back(typename std::enable_if<enabled>::type* = nullptr)
+    std::uint64_t vec_back(typename std::enable_if<enabled>::type * = nullptr)
     {
         return vec[cursor];
     }
 
     template <bool enabled = UseSharedMemory>
-    std::uint64_t vec_back(typename std::enable_if<!enabled>::type* = nullptr)
+    std::uint64_t vec_back(typename std::enable_if<!enabled>::type * = nullptr)
     {
         return vec.back();
     }

@@ -245,7 +245,8 @@ int Storage::Run()
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
                                                       coordinate_list_size);
-    // we'll read a list of OSM node IDs from the same data, so set the block size for the same number of items:
+    // we'll read a list of OSM node IDs from the same data, so set the block size for the same
+    // number of items:
     shared_layout_ptr->SetBlockSize<OSMNodeID>(SharedDataLayout::OSM_NODE_ID_LIST,
                                                util::PackedVectorSize(coordinate_list_size));
 
@@ -542,7 +543,8 @@ int Storage::Run()
     OSMNodeID *osmnodeid_ptr = shared_layout_ptr->GetBlockPtr<OSMNodeID, true>(
         shared_memory_ptr, SharedDataLayout::OSM_NODE_ID_LIST);
     util::PackedVector<true> osmnodeid_list;
-    osmnodeid_list.reset(osmnodeid_ptr, shared_layout_ptr->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
+    osmnodeid_list.reset(
+        osmnodeid_ptr, shared_layout_ptr->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
 
     extractor::QueryNode current_node;
     for (unsigned i = 0; i < coordinate_list_size; ++i)
