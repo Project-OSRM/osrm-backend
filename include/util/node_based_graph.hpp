@@ -27,12 +27,13 @@ struct NodeBasedEdgeData
     NodeBasedEdgeData(int distance,
                       unsigned edge_id,
                       unsigned name_id,
+                      unsigned destination_id,
                       bool access_restricted,
                       bool reversed,
                       bool roundabout,
                       bool startpoint,
                       extractor::TravelMode travel_mode)
-        : distance(distance), edge_id(edge_id), name_id(name_id),
+        : distance(distance), edge_id(edge_id), name_id(name_id), destination_id(destination_id),
           access_restricted(access_restricted), reversed(reversed), roundabout(roundabout),
           startpoint(startpoint), travel_mode(travel_mode)
     {
@@ -41,6 +42,7 @@ struct NodeBasedEdgeData
     int distance;
     unsigned edge_id;
     unsigned name_id;
+    unsigned destination_id;
     bool access_restricted : 1;
     bool reversed : 1;
     bool roundabout : 1;
@@ -76,6 +78,7 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
 
             output_edge.data.roundabout = input_edge.roundabout;
             output_edge.data.name_id = input_edge.name_id;
+            output_edge.data.destination_id = input_edge.destination_id;
             output_edge.data.access_restricted = input_edge.access_restricted;
             output_edge.data.travel_mode = input_edge.travel_mode;
             output_edge.data.startpoint = input_edge.startpoint;

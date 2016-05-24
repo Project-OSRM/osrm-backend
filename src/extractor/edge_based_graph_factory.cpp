@@ -1,5 +1,5 @@
-#include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
+#include "extractor/edge_based_edge.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
@@ -9,9 +9,9 @@
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 
-#include "extractor/suffix_table.hpp"
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/suffix_table.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -125,8 +125,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
     NodeID current_edge_source_coordinate_id = node_u;
 
-    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id)
-    {
+    const auto edge_id_to_segment_id = [](const NodeID edge_based_node_id) {
         if (edge_based_node_id == SPECIAL_NODEID)
         {
             return SegmentID{SPECIAL_SEGMENTID, false};
@@ -149,7 +148,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         m_edge_based_node_list.emplace_back(
             edge_id_to_segment_id(forward_data.edge_id),
             edge_id_to_segment_id(reverse_data.edge_id), current_edge_source_coordinate_id,
-            current_edge_target_coordinate_id, forward_data.name_id,
+            current_edge_target_coordinate_id, forward_data.name_id, forward_data.destination_id,
             m_compressed_edge_container.GetPositionForID(edge_id_1),
             m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID, i,
             forward_data.travel_mode, reverse_data.travel_mode);
@@ -413,7 +412,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_from_u));
                 original_edge_data_vector.emplace_back(
                     m_compressed_edge_container.GetPositionForID(edge_from_u), edge_data1.name_id,
-                    turn_instruction, entry_class_id, edge_data1.travel_mode);
+                    edge_data1.destination_id, turn_instruction, entry_class_id,
+                    edge_data1.travel_mode);
 
                 ++original_edges_counter;
 
