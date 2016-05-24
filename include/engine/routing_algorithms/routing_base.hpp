@@ -226,6 +226,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             recursion_stack.emplace(*std::prev(current), *current);
         }
 
+        BOOST_ASSERT(*packed_path_begin == phantom_node_pair.source_phantom.forward_segment_id.id ||
+                     *packed_path_begin == phantom_node_pair.source_phantom.reverse_segment_id.id);
+        BOOST_ASSERT(*std::prev(packed_path_end) == phantom_node_pair.target_phantom.forward_segment_id.id ||
+                     *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
+
         std::pair<NodeID, NodeID> edge;
         while (!recursion_stack.empty())
         {
