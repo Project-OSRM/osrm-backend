@@ -67,7 +67,7 @@ target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${BoostUnitTestLibrary})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${BoostUnitTestLibrary})
 target_link_libraries(library-tests osrm ${Boost_LIBRARIES} ${BoostUnitTestLibrary})
-target_link_libraries(server-tests osrm ${Boost_LIBRARIES} ${BoostUnitTestLibrary} ${ZLIB_LIBRARY})
+target_link_libraries(server-tests osrm ${Boost_LIBRARIES} ${BoostUnitTestLibrary})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${BoostUnitTestLibrary})
 
 
