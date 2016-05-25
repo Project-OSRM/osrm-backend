@@ -8,6 +8,7 @@
 #include "util/graph_loader.hpp"
 #include "util/monotone_chain.hpp"
 #include "util/simple_logger.hpp"
+#include "util/shmem_graph_loader.hpp"
 
 #include <algorithm>
 
@@ -21,8 +22,17 @@ namespace plugins
 IsochronePlugin::IsochronePlugin(datafacade::BaseDataFacade &facade, const std::string base)
     : BasePlugin{facade}, base{base}
 {
+
     // Prepares uncontracted Graph
-    number_of_nodes = loadGraph(base, coordinate_list, graph_edge_list);
+    if (!base.empty())
+    {
+        number_of_nodes = loadGraph(base, coordinate_list, graph_edge_list);
+    }
+    else
+    {
+        std::string path = util::getFilePathFromShmem();
+        number_of_nodes = loadGraph(path, coordinate_list, graph_edge_list);
+    }
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
     graph = std::make_shared<engine::plugins::SimpleGraph>(number_of_nodes, graph_edge_list);
@@ -50,19 +60,29 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         return Error("PhantomNode", "PhantomNode couldnt be found for coordinate", json_result);
     }
 
+    util::SimpleLogger().Write() << phantomnodes.front().front().phantom_node.location;
     // Find closest phantomnode
-    std::sort(phantomnodes.front().begin(), phantomnodes.front().end(),
-              [&](const osrm::engine::PhantomNodeWithDistance &a,
-                  const osrm::engine::PhantomNodeWithDistance &b)
-              {
-                  return a.distance > b.distance;
-              });
-    auto phantom = phantomnodes.front();
-    std::vector<NodeID> forward_id_vector;
-    facade.GetUncompressedGeometry(phantom.front().phantom_node.forward_packed_geometry_id,
-                                   forward_id_vector);
-    auto source = forward_id_vector[phantom.front().phantom_node.fwd_segment_position];
+    // isnt closest node
+//    std::sort(phantomnodes.front().begin(), phantomnodes.front().end(),
+//              [&](const osrm::engine::PhantomNodeWithDistance &a,
+//                  const osrm::engine::PhantomNodeWithDistance &b)
+//              {
+//                  return a.distance < b.distance;
+//              });
 
+//    for(auto p : phantomnodes.front()) {
+//        util::SimpleLogger().Write() << p.phantom_node.location;
+//    }
+
+    auto phantom = phantomnodes.front();
+    util::SimpleLogger().Write() << "ph" << phantom.size();
+
+    std::vector<NodeID> forward_id_vector;
+    facade.GetUncompressedGeometry(phantom.front().phantom_node.reverse_packed_geometry_id,
+                                   forward_id_vector);
+    auto source = forward_id_vector[0];
+//    auto source = phantom.front().phantom_node.forward_segment_id;
+    util::SimpleLogger().Write() << "forvec" << forward_id_vector.size();
     IsochroneSet isochroneSet;
     dijkstra(isochroneSet, source, params.distance);
 
@@ -92,6 +112,9 @@ void IsochronePlugin::dijkstra(IsochroneSet &isochroneSet, NodeID &source, int d
     QueryHeap heap(number_of_nodes);
     heap.Insert(source, 0, source);
 
+    isochroneSet.insert(IsochroneNode(coordinate_list[source], coordinate_list[source], 0));
+    util::SimpleLogger().Write() << coordinate_list[source].lon << "   "
+                                 << coordinate_list[source].lat;
     int MAX_DISTANCE = distance;
     {
         // Standard Dijkstra search, terminating when path length > MAX

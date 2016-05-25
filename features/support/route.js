@@ -1,5 +1,6 @@
 var Timeout = require('node-timeout');
 var request = require('request');
+var util = require('util');
 
 module.exports = function () {
     this.requestPath = (service, params, callback) => {
@@ -77,7 +78,18 @@ module.exports = function () {
         return this.requestPath('nearest', params, callback);
     };
 
-    this.requestTable = (waypoints, userParams, callback) => {
+    this.requestIsochrone = (node, userParams, callback) => {
+        var defaults = {
+                output: 'json'
+            },
+            params = this.overwriteParams(defaults, userParams);
+        params.coordinates = [[node.lon, node.lat].join(',')];
+        params.distance = 1000;
+
+        return this.requestPath('isochrone', params, callback);
+    };
+
+    this.requestTable = (isochrone, userParams, callback) => {
         var defaults = {
                 output: 'json'
             },
