@@ -84,7 +84,7 @@ int main(const int argc, const char *argv[]) try
     storage::StorageConfig config(base_path);
     if (!config.IsValid())
     {
-        util::SimpleLogger().Write(logWARNING) << "Invalid file path given!";
+        util::SimpleLogger().Write(logWARNING) << "Config contains invalid file paths. Exiting!";
         return EXIT_FAILURE;
     }
     storage::Storage storage(std::move(config));
