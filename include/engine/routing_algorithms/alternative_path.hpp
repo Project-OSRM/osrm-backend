@@ -162,8 +162,6 @@ class AlternativeRouting final
         if (path_is_a_loop)
         {
             // Self Loop
-            BOOST_ASSERT(forward_heap1.GetData(middle_node).parent == middle_node &&
-                         reverse_heap1.GetData(middle_node).parent == middle_node);
             packed_forward_path.push_back(middle_node);
             packed_forward_path.push_back(middle_node);
         }

@@ -2,8 +2,8 @@
 #define RAW_ROUTE_DATA_H
 
 #include "engine/phantom_node.hpp"
-#include "extractor/travel_mode.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"
@@ -29,6 +29,8 @@ struct PathData
     extractor::guidance::TurnInstruction turn_instruction;
     // travel mode of the street that leads to the turn
     extractor::TravelMode travel_mode : 4;
+    // entry class of the turn, indicating possibility of turns
+    EntryClassID entry_classid;
 };
 
 struct InternalRouteResult

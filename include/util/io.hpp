@@ -8,8 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <fstream>
 #include <bitset>
+#include <fstream>
 #include <vector>
 
 #include "util/fingerprint.hpp"
@@ -52,6 +52,16 @@ bool serializeVector(const std::string &filename, const std::vector<simple_type>
 }
 
 template <typename simple_type>
+bool serializeVector(std::ostream &stream, const std::vector<simple_type> &data)
+{
+    std::uint64_t count = data.size();
+    stream.write(reinterpret_cast<const char *>(&count), sizeof(count));
+    if (!data.empty())
+        stream.write(reinterpret_cast<const char *>(&data[0]), sizeof(simple_type) * count);
+    return static_cast<bool>(stream);
+}
+
+template <typename simple_type>
 bool deserializeVector(const std::string &filename, std::vector<simple_type> &data)
 {
     std::ifstream stream(filename, std::ios::binary);
@@ -59,6 +69,17 @@ bool deserializeVector(const std::string &filename, std::vector<simple_type> &da
     if (!readAndCheckFingerprint(stream))
         return false;
 
+    std::uint64_t count = 0;
+    stream.read(reinterpret_cast<char *>(&count), sizeof(count));
+    data.resize(count);
+    if (count)
+        stream.read(reinterpret_cast<char *>(&data[0]), sizeof(simple_type) * count);
+    return static_cast<bool>(stream);
+}
+
+template <typename simple_type>
+bool deserializeVector(std::istream &stream, std::vector<simple_type> &data)
+{
     std::uint64_t count = 0;
     stream.read(reinterpret_cast<char *>(&count), sizeof(count));
     data.resize(count);

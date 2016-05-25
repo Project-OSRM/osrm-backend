@@ -7,17 +7,20 @@
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 
+#include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/profile_properties.hpp"
-#include "extractor/compressed_edge_container.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
 
 #include "engine/geospatial_query.hpp"
+#include "util/make_unique.hpp"
 #include "util/range_table.hpp"
+#include "util/rectangle.hpp"
+#include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
-#include "util/make_unique.hpp"
-#include "util/simple_logger.hpp"
-#include "util/rectangle.hpp"
+#include "util/typedefs.hpp"
 
 #include <cstddef>
 
@@ -30,9 +33,9 @@
 #include <vector>
 
 #include <boost/assert.hpp>
-#include <boost/thread/tss.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_guard.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/tss.hpp>
 
 namespace osrm
 {
@@ -49,7 +52,7 @@ class SharedDataFacade final : public BaseDataFacade
     using QueryGraph = util::StaticGraph<EdgeData, true>;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
-    using NameIndexBlock = util::RangeTable<16, true>::BlockT;
+    using IndexBlock = util::RangeTable<16, true>::BlockT;
     using InputEdge = QueryGraph::InputEdge;
     using RTreeLeaf = super::RTreeLeaf;
     using SharedRTree =
@@ -93,6 +96,18 @@ class SharedDataFacade final : public BaseDataFacade
     boost::filesystem::path file_index_path;
 
     std::shared_ptr<util::RangeTable<16, true>> m_name_table;
+
+    // bearing classes by node based node
+    util::ShM<BearingClassID, true>::vector m_bearing_class_id_table;
+    // entry class IDs
+    util::ShM<EntryClassID, true>::vector m_entry_class_id_list;
+    // the look-up table for entry classes. An entry class lists the possibility of entry for all
+    // available turns. Such a class id is stored with every edge.
+    util::ShM<util::guidance::EntryClass, true>::vector m_entry_class_table;
+    // the look-up table for distinct bearing classes. A bearing class lists the available bearings
+    // at an intersection
+    std::shared_ptr<util::RangeTable<16, true>> m_bearing_ranges_table;
+    util::ShM<DiscreteBearing, true>::vector m_bearing_values_table;
 
     void LoadChecksum()
     {
@@ -171,6 +186,13 @@ class SharedDataFacade final : public BaseDataFacade
         util::ShM<unsigned, true>::vector name_id_list(
             name_id_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_ID_LIST]);
         m_name_ID_list = std::move(name_id_list);
+
+        auto entry_class_id_list_ptr = data_layout->GetBlockPtr<EntryClassID>(
+            shared_memory, storage::SharedDataLayout::ENTRY_CLASSID);
+        typename util::ShM<EntryClassID, true>::vector entry_class_id_list(
+            entry_class_id_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::ENTRY_CLASSID]);
+        m_entry_class_id_list = std::move(entry_class_id_list);
     }
 
     void LoadViaNodeList()
@@ -186,11 +208,11 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto offsets_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::NAME_OFFSETS);
-        auto blocks_ptr = data_layout->GetBlockPtr<NameIndexBlock>(
+        auto blocks_ptr = data_layout->GetBlockPtr<IndexBlock>(
             shared_memory, storage::SharedDataLayout::NAME_BLOCKS);
         util::ShM<unsigned, true>::vector name_offsets(
             offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_OFFSETS]);
-        util::ShM<NameIndexBlock, true>::vector name_blocks(
+        util::ShM<IndexBlock, true>::vector name_blocks(
             blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_BLOCKS]);
 
         auto names_list_ptr = data_layout->GetBlockPtr<char>(
@@ -261,6 +283,40 @@ class SharedDataFacade final : public BaseDataFacade
             datasource_name_lengths_ptr,
             data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS]);
         m_datasource_name_lengths = std::move(datasource_name_lengths);
+    }
+
+    void LoadIntersectionClasses()
+    {
+        auto bearing_class_id_ptr = data_layout->GetBlockPtr<BearingClassID>(
+            shared_memory, storage::SharedDataLayout::BEARING_CLASSID);
+        typename util::ShM<BearingClassID, true>::vector bearing_class_id_table(
+            bearing_class_id_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::BEARING_CLASSID]);
+        m_bearing_class_id_table = std::move(bearing_class_id_table);
+
+        auto bearing_class_ptr = data_layout->GetBlockPtr<DiscreteBearing>(
+            shared_memory, storage::SharedDataLayout::BEARING_VALUES);
+        typename util::ShM<DiscreteBearing, true>::vector bearing_class_table(
+            bearing_class_ptr, data_layout->num_entries[storage::SharedDataLayout::BEARING_VALUES]);
+        m_bearing_values_table = std::move(bearing_class_table);
+
+        auto offsets_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, storage::SharedDataLayout::BEARING_OFFSETS);
+        auto blocks_ptr = data_layout->GetBlockPtr<IndexBlock>(
+            shared_memory, storage::SharedDataLayout::BEARING_BLOCKS);
+        util::ShM<unsigned, true>::vector bearing_offsets(
+            offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::BEARING_OFFSETS]);
+        util::ShM<IndexBlock, true>::vector bearing_blocks(
+            blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::BEARING_BLOCKS]);
+
+        m_bearing_ranges_table = util::make_unique<util::RangeTable<16, true>>(
+            bearing_offsets, bearing_blocks, static_cast<unsigned>(m_bearing_values_table.size()));
+
+        auto entry_class_ptr = data_layout->GetBlockPtr<util::guidance::EntryClass>(
+            shared_memory, storage::SharedDataLayout::ENTRY_CLASS);
+        typename util::ShM<util::guidance::EntryClass, true>::vector entry_class_table(
+            entry_class_ptr, data_layout->num_entries[storage::SharedDataLayout::ENTRY_CLASS]);
+        m_entry_class_table = std::move(entry_class_table);
     }
 
   public:
@@ -350,6 +406,7 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadCoreInformation();
                 LoadProfileProperties();
                 LoadRTree();
+                LoadIntersectionClasses();
 
                 util::SimpleLogger().Write() << "number of geometries: "
                                              << m_coordinate_list.size();
@@ -420,8 +477,7 @@ class SharedDataFacade final : public BaseDataFacade
         result_nodes.clear();
         result_nodes.reserve(end - begin);
         std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
-                      {
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_nodes.emplace_back(edge.node_id);
                       });
     }
@@ -436,8 +492,7 @@ class SharedDataFacade final : public BaseDataFacade
         result_weights.clear();
         result_weights.reserve(end - begin);
         std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge)
-                      {
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_weights.emplace_back(edge.weight);
                       });
     }
@@ -634,11 +689,9 @@ class SharedDataFacade final : public BaseDataFacade
         }
         else
         {
-            std::for_each(m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
-                          [&](const uint8_t &datasource_id)
-                          {
-                              result_datasources.push_back(datasource_id);
-                          });
+            std::for_each(
+                m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
+                [&](const uint8_t &datasource_id) { result_datasources.push_back(datasource_id); });
         }
     }
 
@@ -662,6 +715,33 @@ class SharedDataFacade final : public BaseDataFacade
     bool GetContinueStraightDefault() const override final
     {
         return m_profile_properties->continue_straight_at_waypoint;
+    }
+
+    BearingClassID GetBearingClassID(const NodeID id) const override final
+    {
+        return m_bearing_class_id_table.at(id);
+    }
+
+    util::guidance::BearingClass
+    GetBearingClass(const BearingClassID bearing_class_id) const override final
+    {
+        BOOST_ASSERT(bearing_class_id != INVALID_BEARING_CLASSID);
+        auto range = m_bearing_ranges_table->GetRange(bearing_class_id);
+        util::guidance::BearingClass result;
+        for (auto itr = m_bearing_values_table.begin() + range.front();
+             itr != m_bearing_values_table.begin() + range.back() + 1; ++itr)
+            result.add(*itr);
+        return result;
+    }
+
+    EntryClassID GetEntryClassID(const EdgeID eid) const override final
+    {
+        return m_entry_class_id_list.at(eid);
+    }
+
+    util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
+    {
+        return m_entry_class_table.at(entry_class_id);
     }
 };
 }

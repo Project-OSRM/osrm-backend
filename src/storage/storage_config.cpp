@@ -15,7 +15,8 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       timestamp_path{base.string() + ".timestamp"},
       datasource_names_path{base.string() + ".datasource_names"},
       datasource_indexes_path{base.string() + ".datasource_indexes"},
-      names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"}
+      names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"},
+      intersection_class_path{base.string() + ".icd"}
 {
 }
 

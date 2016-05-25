@@ -41,7 +41,8 @@ const constexpr bool shiftable_ccw[] = {false, true, true, false, false, true, t
 const constexpr bool shiftable_cw[] = {false, false, true, true, false, false, true, true};
 const constexpr std::uint8_t modifier_bounds[detail::num_direction_modifiers] = {
     0, 36, 93, 121, 136, 163, 220, 255};
-const constexpr double discrete_angle_step_size = 360. / 256.;
+
+const constexpr double discrete_angle_step_size = 360. / 24;
 
 template <typename IteratorType>
 util::Coordinate
@@ -144,13 +145,13 @@ getRepresentativeCoordinate(const NodeID from_node,
 }
 
 // shift an instruction around the degree circle in CCW order
-inline DirectionModifier forcedShiftCCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum forcedShiftCCW(const DirectionModifier::Enum modifier)
 {
-    return static_cast<DirectionModifier>((static_cast<std::uint32_t>(modifier) + 1) %
-                                          detail::num_direction_modifiers);
+    return static_cast<DirectionModifier::Enum>((static_cast<std::uint32_t>(modifier) + 1) %
+                                                detail::num_direction_modifiers);
 }
 
-inline DirectionModifier shiftCCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum shiftCCW(const DirectionModifier::Enum modifier)
 {
     if (detail::shiftable_ccw[static_cast<int>(modifier)])
         return forcedShiftCCW(modifier);
@@ -159,14 +160,14 @@ inline DirectionModifier shiftCCW(const DirectionModifier modifier)
 }
 
 // shift an instruction around the degree circle in CW order
-inline DirectionModifier forcedShiftCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum forcedShiftCW(const DirectionModifier::Enum modifier)
 {
-    return static_cast<DirectionModifier>(
+    return static_cast<DirectionModifier::Enum>(
         (static_cast<std::uint32_t>(modifier) + detail::num_direction_modifiers - 1) %
         detail::num_direction_modifiers);
 }
 
-inline DirectionModifier shiftCW(const DirectionModifier modifier)
+inline DirectionModifier::Enum shiftCW(const DirectionModifier::Enum modifier)
 {
     if (detail::shiftable_cw[static_cast<int>(modifier)])
         return forcedShiftCW(modifier);
@@ -174,7 +175,7 @@ inline DirectionModifier shiftCW(const DirectionModifier modifier)
         return modifier;
 }
 
-inline bool isBasic(const TurnType type)
+inline bool isBasic(const TurnType::Enum type)
 {
     return type == TurnType::Turn || type == TurnType::EndOfRoad;
 }
@@ -218,7 +219,7 @@ inline bool isSlightTurn(const TurnInstruction turn)
             turn.direction_modifier == DirectionModifier::SlightLeft);
 }
 
-inline bool isSlightModifier(const DirectionModifier direction_modifier)
+inline bool isSlightModifier(const DirectionModifier::Enum direction_modifier)
 {
     return (direction_modifier == DirectionModifier::Straight ||
             direction_modifier == DirectionModifier::SlightRight ||
@@ -246,15 +247,17 @@ inline bool isConflict(const TurnInstruction first, const TurnInstruction second
 inline DiscreteAngle discretizeAngle(const double angle)
 {
     BOOST_ASSERT(angle >= 0. && angle <= 360.);
-    return DiscreteAngle(static_cast<std::uint8_t>(angle / detail::discrete_angle_step_size));
+    return DiscreteAngle(static_cast<std::uint8_t>(
+        (angle + 0.5 * detail::discrete_angle_step_size) / detail::discrete_angle_step_size));
 }
 
 inline double angleFromDiscreteAngle(const DiscreteAngle angle)
 {
-    return static_cast<double>(angle) * detail::discrete_angle_step_size;
+    return static_cast<double>(angle) * detail::discrete_angle_step_size +
+           0.5 * detail::discrete_angle_step_size;
 }
 
-inline double getAngularPenalty(const double angle, DirectionModifier modifier)
+inline double getAngularPenalty(const double angle, DirectionModifier::Enum modifier)
 {
     // these are not aligned with getTurnDirection but represent an ideal center
     const double center[] = {0, 45, 90, 135, 180, 225, 270, 315};
@@ -275,16 +278,16 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
 }
 
 // swaps left <-> right modifier types
-inline DirectionModifier mirrorDirectionModifier(const DirectionModifier modifier)
+inline DirectionModifier::Enum mirrorDirectionModifier(const DirectionModifier::Enum modifier)
 {
-    const constexpr DirectionModifier results[] = {
+    const constexpr DirectionModifier::Enum results[] = {
         DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
         DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
         DirectionModifier::Right,      DirectionModifier::SharpRight};
     return results[modifier];
 }
 
-inline bool canBeSuppressed(const TurnType type)
+inline bool canBeSuppressed(const TurnType::Enum type)
 {
     if (type == TurnType::Turn)
         return true;
@@ -297,7 +300,7 @@ inline bool isLowPriorityRoadClass(const FunctionalRoadClass road_class)
            road_class == FunctionalRoadClass::SERVICE;
 }
 
-inline bool isDistinct(const DirectionModifier first, const DirectionModifier second)
+inline bool isDistinct(const DirectionModifier::Enum first, const DirectionModifier::Enum second)
 {
     if ((first + 1) % detail::num_direction_modifiers == second)
         return false;
@@ -325,8 +328,8 @@ inline bool requiresNameAnnounced(const std::string &from,
                                   const std::string &to,
                                   const SuffixTable &suffix_table)
 {
-    //first is empty and the second is not
-    if(from.empty() && !to.empty())
+    // first is empty and the second is not
+    if (from.empty() && !to.empty())
         return true;
 
     // FIXME, handle in profile to begin with?
@@ -378,8 +381,8 @@ inline bool requiresNameAnnounced(const std::string &from,
                 if (!checkTable(first_prefix_and_suffixes.first))
                     return false;
                 return !first.compare(first_prefix_and_suffixes.first.length(), std::string::npos,
-                                     second, second_prefix_and_suffixes.first.length(),
-                                     std::string::npos);
+                                      second, second_prefix_and_suffixes.first.length(),
+                                      std::string::npos);
             }();
 
             const bool is_suffix_change = [&]() -> bool {
@@ -388,7 +391,8 @@ inline bool requiresNameAnnounced(const std::string &from,
                 if (!checkTable(first_prefix_and_suffixes.second))
                     return false;
                 return !first.compare(0, first.length() - first_prefix_and_suffixes.second.length(),
-                                     second, 0, second.length() - second_prefix_and_suffixes.second.length());
+                                      second, 0,
+                                      second.length() - second_prefix_and_suffixes.second.length());
             }();
 
             return is_prefix_change || is_suffix_change;
@@ -437,7 +441,7 @@ inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoa
 // turn and vice versa.
 inline ConnectedRoad mirror(ConnectedRoad road)
 {
-    const constexpr DirectionModifier mirrored_modifiers[] = {
+    const constexpr DirectionModifier::Enum mirrored_modifiers[] = {
         DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
         DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
         DirectionModifier::Right,      DirectionModifier::SharpRight};

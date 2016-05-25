@@ -3,7 +3,15 @@
 
 /* A set of tools required for guidance in both pre and post-processing */
 
+#include "engine/guidance/route_step.hpp"
+#include "engine/phantom_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
+#include "util/simple_logger.hpp"
+
+#include <algorithm>
+#include <vector>
 
 namespace osrm
 {
@@ -18,7 +26,7 @@ inline double angularDeviation(const double angle, const double from)
     return std::min(360 - deviation, deviation);
 }
 
-inline extractor::guidance::DirectionModifier getTurnDirection(const double angle)
+inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const double angle)
 {
     // An angle of zero is a u-turn
     // 180 goes perfectly straight
@@ -41,8 +49,8 @@ inline extractor::guidance::DirectionModifier getTurnDirection(const double angl
     return extractor::guidance::DirectionModifier::UTurn;
 }
 
-} /* namespace guidance */
-} /* namespace util */
-} /* namespace osrm */
+} // namespace guidance
+} // namespace util
+} // namespace osrm
 
 #endif /* OSRM_UTIL_GUIDANCE_TOOLKIT_HPP_ */

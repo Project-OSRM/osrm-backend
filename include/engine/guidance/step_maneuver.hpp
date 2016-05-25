@@ -21,23 +21,14 @@ enum class WaypointType : std::uint8_t
     Depart,
 };
 
-// A represenetation of intermediate intersections
-struct IntermediateIntersection
-{
-    double duration;
-    double distance;
-    util::Coordinate location;
-};
-
 struct StepManeuver
 {
     util::Coordinate location;
-    double bearing_before;
-    double bearing_after;
+    short bearing_before;
+    short bearing_after;
     extractor::guidance::TurnInstruction instruction;
     WaypointType waypoint_type;
     unsigned exit;
-    std::vector<IntermediateIntersection> intersections;
 };
 
 inline StepManeuver getInvalidStepManeuver()
@@ -47,8 +38,7 @@ inline StepManeuver getInvalidStepManeuver()
             0,
             extractor::guidance::TurnInstruction::NO_TURN(),
             WaypointType::None,
-            0,
-            {}};
+            0};
 }
 
 } // namespace guidance

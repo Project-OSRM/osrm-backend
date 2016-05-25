@@ -4,6 +4,10 @@
 #include "engine/polyline_compressor.hpp"
 #include "util/integer_range.hpp"
 
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
+#include "util/guidance/toolkit.hpp"
+
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
@@ -13,8 +17,8 @@
 #include <utility>
 #include <vector>
 
-using TurnType = osrm::extractor::guidance::TurnType;
-using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
+namespace TurnType = osrm::extractor::guidance::TurnType;
+namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
 
 namespace osrm
@@ -33,31 +37,12 @@ const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "s
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
-const constexpr char *turn_type_names[] = {"invalid",
-                                           "new name",
-                                           "continue",
-                                           "turn",
-                                           "merge",
-                                           "on ramp",
-                                           "off ramp",
-                                           "fork",
-                                           "end of road",
-                                           "notification",
-                                           "roundabout",
-                                           "roundabout",
-                                           "rotary",
-                                           "rotary",
-                                           "roundabout turn",
-                                           "roundabout turn",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid",
-                                           "invalid"};
+const constexpr char *turn_type_names[] = {
+    "invalid",         "new name",   "continue", "turn",        "merge",
+    "on ramp",         "off ramp",   "fork",     "end of road", "notification",
+    "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
+    "roundabout turn", "invalid",    "invalid",  "invalid",     "invalid",
+    "invalid",         "invalid",    "invalid",  "invalid",     "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
@@ -70,12 +55,12 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
     return true;
 }
 
-std::string instructionTypeToString(const TurnType type)
+std::string instructionTypeToString(const TurnType::Enum type)
 {
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
-std::string instructionModifierToString(const DirectionModifier modifier)
+std::string instructionModifierToString(const DirectionModifier::Enum modifier)
 {
     return modifier_names[static_cast<std::size_t>(modifier)];
 }
@@ -148,9 +133,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
     if (maneuver.waypoint_type == guidance::WaypointType::None)
-    {
         step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
-    }
     else
         step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
 
@@ -164,12 +147,38 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     if (maneuver.exit != 0)
         step_maneuver.values["exit"] = maneuver.exit;
 
-    // TODO currently we need this to comply with the api.
-    // We should move this to an additional entry, the moment we
-    // actually compute the correct locations of the intersections
-    if (!maneuver.intersections.empty() && maneuver.exit == 0)
-        step_maneuver.values["exit"] = maneuver.intersections.size();
     return step_maneuver;
+}
+
+util::json::Object
+makeIntersection(const guidance::Intersection &intersection)
+{
+    util::json::Object result;
+    util::json::Array bearings;
+    util::json::Array entry;
+
+    bearings.values.reserve(intersection.bearings.size());
+    std::copy(intersection.bearings.begin(), intersection.bearings.end(), std::back_inserter(bearings.values));
+
+    entry.values.reserve(intersection.entry.size());
+    std::transform(intersection.entry.begin(), intersection.entry.end(),
+                   std::back_inserter(entry.values), [](const bool has_entry) -> util::json::Value
+                   {
+                       if (has_entry)
+                           return util::json::True();
+                       else
+                           return util::json::False();
+                   });
+
+    result.values["location"] = detail::coordinateToLonLat(intersection.location);
+    result.values["bearings"] = bearings;
+    result.values["entry"] = entry;
+    if (intersection.in != guidance::Intersection::NO_INDEX)
+        result.values["in"] = intersection.in;
+    if (intersection.out != guidance::Intersection::NO_INDEX)
+        result.values["out"] = intersection.out;
+
+    return result;
 }
 
 util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geometry)
@@ -184,6 +193,13 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
     route_step.values["geometry"] = std::move(geometry);
+
+    util::json::Array intersections;
+    intersections.values.reserve(step.intersections.size());
+    std::transform(step.intersections.begin(), step.intersections.end(),
+                   std::back_inserter(intersections.values), makeIntersection);
+    route_step.values["intersections"] = std::move(intersections);
+
     return route_step;
 }
 

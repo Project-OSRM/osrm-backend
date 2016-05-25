@@ -7,6 +7,12 @@ send the USR1 signal to its parent when it will be running and waiting for
 requests. This could be used to upgrade osrm-routed to a new binary on the fly
 without any service downtime - no incoming requests will be lost.
 
+### DISABLE_ACCESS_LOGGING
+
+If the DISABLE_ACCESS_LOGGING environment variable is set osrm-routed will
+**not** log any http requests to standard output. This can be useful in high
+traffic setup.
+
 ## HTTP API
 
 `osrm-routed` supports only `GET` requests of the form. If you your response size
@@ -432,8 +438,34 @@ step.
 - `name`: The name of the way along which travel proceeds.
 - `mode`: A string signifying the mode of transportation.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
+- `intersections`: A list of `Intersections` that are passed along the segment, the very first belonging to the StepManeuver
 
 #### Example
+
+```
+{
+ "distance":152.3,
+ "duration":15.6,
+ "name":"Lortzingstraße",
+ "maneuver":{
+     "type":"depart",
+     "modifier":"left"
+ },
+ "geometry":"{lu_IypwpAVrAvAdI",
+ "mode":"driving",
+ "intersections":[
+    {"location":[13.39677,52.54366],
+    "out":1,
+    "bearings":[66,246],
+    "entry":["true","true"]},
+    {"location":[13.394718,52.543096],
+    "in":0,
+    "out":2,
+    "bearings":[60,150,240,330],
+    "entry":["false","true","true","true"]
+    }
+]}
+```
 
 ### StepManeuver
 
@@ -497,10 +529,38 @@ step.
   | `type`                 | Description                                                                                                               |
   |------------------------|---------------------------------------------------------------------------------------------------------------------------|
   | `roundabout`           | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
-  | `turn` or `end of road`| Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
+  | else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
   
 
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.
+
+### Intersections
+
+An intersection gives a full representation of any cross-way the path passes bay. For every step, the very first intersection (`intersections[0]`) corresponds to the
+location of the StepManeuver. Further intersections are listed for every cross-way until the next turn instruction.
+
+#### Properties
+
+- `location`: A `[longitude, latitude]` pair describing the location of the turn.
+- `bearings`: A list of bearing values (e.g. [0,90,180,270]) that are available at the intersection. The bearings describe all available roads at the intersection.
+- `entry`: A list of entry flags, corresponding in a 1:1 relationship to the bearings. A value of `true` indicates that the respective road could be entered on a valid route.
+  `false` indicates that the turn onto the respective road would violate a restriction.
+- `in`: index into bearings/entry array. Used to calculate the bearing just before the turn. Namely, the clockwise angle from true north to the
+  direction of travel immediately before the maneuver/passing the intersection. Bearings are given relative to the intersection. To get the bearing
+  in the direction of driving, the bearing has to be rotated by a value of 180. The value is not supplied for `depart` maneuvers.
+- `out`: index into the bearings/entry array. Used to extract the bearing just after the turn. Namely, The clockwise angle from true north to the
+  direction of travel immediately after the maneuver/passing the intersection. The value is not supplied for `arrive` maneuvers.
+
+#### Example
+```
+{
+    "location":[13.394718,52.543096],
+    "in":0,
+    "out":2,
+    "bearings":[60,150,240,330],
+    "entry":["false","true","true","true"]
+}
+```
 
 ### Waypoint
 

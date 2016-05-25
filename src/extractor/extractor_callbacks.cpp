@@ -1,4 +1,3 @@
-#include "extractor/extractor_callbacks.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
@@ -9,6 +8,7 @@
 #include "util/for_each_pair.hpp"
 
 #include <boost/optional/optional.hpp>
+#include "extractor/extractor_callbacks.hpp"
 
 #include <osmium/osm.hpp>
 

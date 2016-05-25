@@ -49,7 +49,7 @@ set(AllBoostLibrariesExceptUnitTest ${Boost_LIBRARIES})
 
 find_package(Boost 1.49.0 REQUIRED COMPONENTS unit_test_framework)
 
-if(NOT WIN32)
+if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
 

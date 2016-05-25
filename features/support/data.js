@@ -222,7 +222,7 @@ module.exports = function () {
                 });
             };
 
-            ['osrm','osrm.names','osrm.restrictions','osrm.ebg','osrm.enw','osrm.edges','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.properties'].forEach(file => {
+            ['osrm','osrm.names','osrm.restrictions','osrm.ebg','osrm.enw','osrm.edges','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.properties','osrm.icd'].forEach(file => {
                 q.defer(rename, file);
             });
 
@@ -273,7 +273,7 @@ module.exports = function () {
 
             var q = d3.queue();
 
-            ['osrm.hsgr','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.core','osrm.edges','osrm.datasource_indexes','osrm.datasource_names','osrm.level'].forEach((file) => {
+            ['osrm.hsgr','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.core','osrm.edges','osrm.datasource_indexes','osrm.datasource_names','osrm.level','osrm.icd'].forEach((file) => {
                 q.defer(rename, file);
             });
 

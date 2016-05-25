@@ -3,9 +3,12 @@
 
 // implements all data storage when shared memory _IS_ used
 
-#include "extractor/guidance/turn_instruction.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
 #include "contractor/query_edge.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
+#include "util/typedefs.hpp"
 
 namespace osrm
 {
@@ -171,6 +174,27 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     std::size_t GetCoreSize() const override { return 0; }
     std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }
+    BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; };
+    EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
+
+    util::guidance::BearingClass GetBearingClass(const BearingClassID /*bearing_class_id*/) const override
+    {
+        util::guidance::BearingClass result;
+        result.add(0);
+        result.add(90);
+        result.add(180);
+        result.add(270);
+        return result;
+    }
+
+    util::guidance::EntryClass GetEntryClass(const EntryClassID /*entry_class_id*/) const override
+    {
+        util::guidance::EntryClass result;
+        result.activate(1);
+        result.activate(2);
+        result.activate(3);
+        return result;
+    }
 };
 } // ns test
 } // ns osrm

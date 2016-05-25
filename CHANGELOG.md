@@ -1,9 +1,13 @@
-# 5.2.0
+# 5.2.0 RC1
    Changes from 5.1.0
 
    - API:
      - new parameter `annotate` for `route` and `match` requests.  Returns additional data about each
        coordinate along the selected/matched route line.
+     - Introducing Intersections for Route Steps. This changes the API format in multiple ways.
+         - `bearing_before`/`bearing_after` of `StepManeuver` are now deprecated and will be removed in the next major release
+         - `location` of `StepManeuvers` is now deprecated and will be removed in the next major release
+         - every `RouteStep` now has property `intersections` containing a list of `Intersection` objects.
 
    - Profile changes:
      - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
@@ -12,6 +16,9 @@
      - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:
        - Open sockets with SO_REUSEPORT to allow multiple osrm-routed processes serving requests from the same port.
        - Add SIGNAL_PARENT_WHEN_READY environment variable to enable osrm-routed signal its parent with USR1 when it's running and waiting for requests.
+     - BREAKING: Intersection Classification adds a new file to the mix (osrm.icd). This breaks the fileformat for older versions.
+     - Disable http access logging via DISABLE_ACCESS_LOGGING environment
+       variable.
 
    - Guidance:
      - improved detection of turning streets, not reporting new-name in wrong situations

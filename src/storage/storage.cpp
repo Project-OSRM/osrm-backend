@@ -1,24 +1,25 @@
-#include "extractor/original_edge_data.hpp"
-#include "util/range_table.hpp"
 #include "contractor/query_edge.hpp"
-#include "extractor/query_node.hpp"
-#include "extractor/profile_properties.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/original_edge_data.hpp"
+#include "extractor/profile_properties.hpp"
+#include "extractor/query_node.hpp"
+#include "extractor/travel_mode.hpp"
+#include "storage/shared_barriers.hpp"
+#include "storage/shared_datatype.hpp"
+#include "storage/shared_memory.hpp"
+#include "storage/storage.hpp"
+#include "util/coordinate.hpp"
+#include "util/exception.hpp"
+#include "util/fingerprint.hpp"
+#include "util/io.hpp"
+#include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
+#include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
-#include "extractor/travel_mode.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
-#include "storage/storage.hpp"
-#include "storage/shared_datatype.hpp"
-#include "storage/shared_barriers.hpp"
-#include "storage/shared_memory.hpp"
-#include "util/fingerprint.hpp"
-#include "util/exception.hpp"
-#include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
-#include "util/coordinate.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>
@@ -30,6 +31,7 @@
 #include <cstdint>
 
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <new>
 #include <string>
@@ -49,8 +51,7 @@ void deleteRegion(const SharedDataType region)
 {
     if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
     {
-        const std::string name = [&]
-        {
+        const std::string name = [&] {
             switch (region)
             {
             case CURRENT_REGIONS:
@@ -105,20 +106,14 @@ int Storage::Run()
 
     // determine segment to use
     bool segment2_in_use = SharedMemory::RegionExists(LAYOUT_2);
-    const storage::SharedDataType layout_region = [&]
-    {
+    const storage::SharedDataType layout_region = [&] {
         return segment2_in_use ? LAYOUT_1 : LAYOUT_2;
     }();
-    const storage::SharedDataType data_region = [&]
-    {
-        return segment2_in_use ? DATA_1 : DATA_2;
-    }();
-    const storage::SharedDataType previous_layout_region = [&]
-    {
+    const storage::SharedDataType data_region = [&] { return segment2_in_use ? DATA_1 : DATA_2; }();
+    const storage::SharedDataType previous_layout_region = [&] {
         return segment2_in_use ? LAYOUT_2 : LAYOUT_1;
     }();
-    const storage::SharedDataType previous_data_region = [&]
-    {
+    const storage::SharedDataType previous_data_region = [&] {
         return segment2_in_use ? DATA_2 : DATA_1;
     }();
 
@@ -136,7 +131,8 @@ int Storage::Run()
     boost::filesystem::ifstream name_stream(config.names_data_path, std::ios::binary);
     if (!name_stream)
     {
-        throw util::exception("Could not open " + config.names_data_path.string() + " for reading.");
+        throw util::exception("Could not open " + config.names_data_path.string() +
+                              " for reading.");
     }
     unsigned name_blocks = 0;
     name_stream.read((char *)&name_blocks, sizeof(unsigned));
@@ -154,7 +150,8 @@ int Storage::Run()
     boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
     if (!edges_input_stream)
     {
-        throw util::exception("Could not open " + config.edges_data_path.string() + " for reading.");
+        throw util::exception("Could not open " + config.edges_data_path.string() +
+                              " for reading.");
     }
     unsigned number_of_original_edges = 0;
     edges_input_stream.read((char *)&number_of_original_edges, sizeof(unsigned));
@@ -168,6 +165,8 @@ int Storage::Run()
                                                            number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::guidance::TurnInstruction>(
         SharedDataLayout::TURN_INSTRUCTION, number_of_original_edges);
+    shared_layout_ptr->SetBlockSize<EntryClassID>(SharedDataLayout::ENTRY_CLASSID,
+                                                  number_of_original_edges);
 
     boost::filesystem::ifstream hsgr_input_stream(config.hsgr_data_path, std::ios::binary);
     if (!hsgr_input_stream)
@@ -250,7 +249,8 @@ int Storage::Run()
     boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
     if (!geometry_input_stream)
     {
-        throw util::exception("Could not open " + config.geometries_path.string() + " for reading.");
+        throw util::exception("Could not open " + config.geometries_path.string() +
+                              " for reading.");
     }
     unsigned number_of_geometries_indices = 0;
     unsigned number_of_compressed_geometries = 0;
@@ -270,7 +270,8 @@ int Storage::Run()
                                                                  std::ios::binary);
     if (!geometry_datasource_input_stream)
     {
-        throw util::exception("Could not open " + config.datasource_indexes_path.string() + " for reading.");
+        throw util::exception("Could not open " + config.datasource_indexes_path.string() +
+                              " for reading.");
     }
     std::size_t number_of_compressed_datasources = 0;
     if (geometry_datasource_input_stream)
@@ -287,7 +288,8 @@ int Storage::Run()
                                                               std::ios::binary);
     if (!datasource_names_input_stream)
     {
-        throw util::exception("Could not open " + config.datasource_names_path.string() + " for reading.");
+        throw util::exception("Could not open " + config.datasource_names_path.string() +
+                              " for reading.");
     }
     std::vector<char> m_datasource_name_data;
     std::vector<std::size_t> m_datasource_name_offsets;
@@ -310,6 +312,67 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
                                                  m_datasource_name_lengths.size());
 
+    boost::filesystem::ifstream intersection_stream(config.intersection_class_path,
+                                                    std::ios::binary);
+    if (!static_cast<bool>(intersection_stream))
+        throw util::exception("Could not open " + config.intersection_class_path.string() +
+                              " for reading.");
+
+    if (!util::readAndCheckFingerprint(intersection_stream))
+        throw util::exception("Fingerprint of " + config.intersection_class_path.string() +
+                              " does not match or could not read from file");
+
+    std::vector<BearingClassID> bearing_class_id_table;
+    if (!util::deserializeVector(intersection_stream, bearing_class_id_table))
+        throw util::exception("Failed to bearing class ids read from " +
+                              config.names_data_path.string());
+
+    shared_layout_ptr->SetBlockSize<BearingClassID>(SharedDataLayout::BEARING_CLASSID,
+                                                    bearing_class_id_table.size());
+    unsigned bearing_blocks = 0;
+    intersection_stream.read((char *)&bearing_blocks, sizeof(unsigned));
+    unsigned sum_lengths = 0;
+    intersection_stream.read((char *)&sum_lengths, sizeof(unsigned));
+
+    shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::BEARING_OFFSETS, bearing_blocks);
+    shared_layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
+        SharedDataLayout::BEARING_BLOCKS, bearing_blocks);
+
+    std::vector<unsigned> bearing_offsets_data(bearing_blocks);
+    std::vector<typename util::RangeTable<16, true>::BlockT> bearing_blocks_data(bearing_blocks);
+
+    if (bearing_blocks)
+    {
+        intersection_stream.read(reinterpret_cast<char *>(&bearing_offsets_data[0]),
+                                 bearing_blocks * sizeof(bearing_offsets_data[0]));
+    }
+
+    if (bearing_blocks)
+    {
+        intersection_stream.read(reinterpret_cast<char *>(&bearing_blocks_data[0]),
+                                 bearing_blocks * sizeof(bearing_blocks_data[0]));
+    }
+
+    std::uint64_t num_bearings;
+    intersection_stream >> num_bearings;
+
+    std::vector<DiscreteBearing> bearing_class_table(num_bearings);
+    intersection_stream.read(reinterpret_cast<char *>(&bearing_class_table[0]),
+                             sizeof(bearing_class_table[0]) * num_bearings);
+    shared_layout_ptr->SetBlockSize<DiscreteBearing>(SharedDataLayout::BEARING_VALUES,
+                                                     num_bearings);
+    if (!static_cast<bool>(intersection_stream))
+        throw util::exception("Failed to read bearing values from " +
+                              config.intersection_class_path.string());
+
+    std::vector<util::guidance::EntryClass> entry_class_table;
+    if (!util::deserializeVector(intersection_stream, entry_class_table))
+        throw util::exception("Failed to read entry classes from " +
+                              config.intersection_class_path.string());
+
+    shared_layout_ptr->SetBlockSize<util::guidance::EntryClass>(SharedDataLayout::ENTRY_CLASS,
+                                                                entry_class_table.size());
+
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
                                  << shared_layout_ptr->GetSizeOfLayout() << " bytes";
@@ -331,7 +394,8 @@ int Storage::Run()
               file_index_path_ptr +
                   shared_layout_ptr->GetBlockSize(SharedDataLayout::FILE_INDEX_PATH),
               0);
-    std::copy(absolute_file_index_path.string().begin(), absolute_file_index_path.string().end(), file_index_path_ptr);
+    std::copy(absolute_file_index_path.string().begin(), absolute_file_index_path.string().end(),
+              file_index_path_ptr);
 
     // Loading street names
     unsigned *name_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
@@ -382,6 +446,9 @@ int Storage::Run()
         shared_layout_ptr->GetBlockPtr<extractor::guidance::TurnInstruction, true>(
             shared_memory_ptr, SharedDataLayout::TURN_INSTRUCTION);
 
+    EntryClassID *entry_class_id_ptr = shared_layout_ptr->GetBlockPtr<EntryClassID, true>(
+        shared_memory_ptr, SharedDataLayout::ENTRY_CLASSID);
+
     extractor::OriginalEdgeData current_edge_data;
     for (unsigned i = 0; i < number_of_original_edges; ++i)
     {
@@ -390,6 +457,7 @@ int Storage::Run()
         name_id_ptr[i] = current_edge_data.name_id;
         travel_mode_ptr[i] = current_edge_data.travel_mode;
         turn_instructions_ptr[i] = current_edge_data.turn_instruction;
+        entry_class_id_ptr[i] = current_edge_data.entry_classid;
     }
     edges_input_stream.close();
 
@@ -503,8 +571,7 @@ int Storage::Run()
         {
             const unsigned bucket = i / 32;
             const unsigned offset = i % 32;
-            const unsigned value = [&]
-            {
+            const unsigned value = [&] {
                 unsigned return_value = 0;
                 if (0 != offset)
                 {
@@ -539,13 +606,53 @@ int Storage::Run()
     hsgr_input_stream.close();
 
     // load profile properties
-    auto profile_properties_ptr = shared_layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(shared_memory_ptr, SharedDataLayout::PROPERTIES);
+    auto profile_properties_ptr =
+        shared_layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(
+            shared_memory_ptr, SharedDataLayout::PROPERTIES);
     boost::filesystem::ifstream profile_properties_stream(config.properties_path);
     if (!profile_properties_stream)
     {
         util::exception("Could not open " + config.properties_path.string() + " for reading!");
     }
-    profile_properties_stream.read(reinterpret_cast<char*>(profile_properties_ptr), sizeof(extractor::ProfileProperties));
+    profile_properties_stream.read(reinterpret_cast<char *>(profile_properties_ptr),
+                                   sizeof(extractor::ProfileProperties));
+
+    // load intersection classes
+    if (!bearing_class_id_table.empty())
+    {
+        auto bearing_id_ptr = shared_layout_ptr->GetBlockPtr<BearingClassID, true>(
+            shared_memory_ptr, SharedDataLayout::BEARING_CLASSID);
+        std::copy(bearing_class_id_table.begin(), bearing_class_id_table.end(), bearing_id_ptr);
+    }
+
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_OFFSETS) > 0)
+    {
+        auto *bearing_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+            shared_memory_ptr, SharedDataLayout::BEARING_OFFSETS);
+        std::copy(bearing_offsets_data.begin(), bearing_offsets_data.end(), bearing_offsets_ptr);
+    }
+
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::BEARING_BLOCKS) > 0)
+    {
+        auto *bearing_blocks_ptr =
+            shared_layout_ptr->GetBlockPtr<typename util::RangeTable<16, true>::BlockT, true>(
+                shared_memory_ptr, SharedDataLayout::BEARING_BLOCKS);
+        std::copy(bearing_blocks_data.begin(), bearing_blocks_data.end(), bearing_blocks_ptr);
+    }
+
+    if (!bearing_class_table.empty())
+    {
+        auto bearing_class_ptr = shared_layout_ptr->GetBlockPtr<DiscreteBearing, true>(
+            shared_memory_ptr, SharedDataLayout::BEARING_VALUES);
+        std::copy(bearing_class_table.begin(), bearing_class_table.end(), bearing_class_ptr);
+    }
+
+    if (!entry_class_table.empty())
+    {
+        auto entry_class_ptr = shared_layout_ptr->GetBlockPtr<util::guidance::EntryClass, true>(
+            shared_memory_ptr, SharedDataLayout::ENTRY_CLASS);
+        std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
+    }
 
     // acquire lock
     SharedMemory *data_type_memory =

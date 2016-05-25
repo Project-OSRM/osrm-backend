@@ -17,8 +17,8 @@
 #include <utility>
 
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
-using TurnType = osrm::extractor::guidance::TurnType;
-using DirectionModifier = osrm::extractor::guidance::DirectionModifier;
+namespace TurnType = osrm::extractor::guidance::TurnType;
+namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
 using osrm::util::guidance::angularDeviation;
 using osrm::util::guidance::getTurnDirection;
 
@@ -41,23 +41,25 @@ void print(const std::vector<RouteStep> &steps)
     int segment = 0;
     for (const auto &step : steps)
     {
-        const auto type =
-            static_cast<std::underlying_type<TurnType>::type>(step.maneuver.instruction.type);
-        const auto modifier = static_cast<std::underlying_type<DirectionModifier>::type>(
-            step.maneuver.instruction.direction_modifier);
-
-        std::cout << "\t[" << ++segment << "]: " << type << " " << modifier
+        std::cout << "\t[" << ++segment << "]: " << step.maneuver.instruction.type
+                  << " " << step.maneuver.instruction.direction_modifier << "  " << static_cast<int>(step.maneuver.waypoint_type)
                   << " Duration: " << step.duration << " Distance: " << step.distance
                   << " Geometry: " << step.geometry_begin << " " << step.geometry_end
                   << " exit: " << step.maneuver.exit
-                  << " Intersections: " << step.maneuver.intersections.size() << " [";
+                  << " Intersections: " << step.intersections.size() << " [";
 
-        for (const auto &intersection : step.maneuver.intersections)
-            std::cout << "(" << intersection.duration << " " << intersection.distance << ")";
+        for (const auto &intersection : step.intersections)
+        {
+            std::cout << "(bearings:";
+            for( auto bearing : intersection.bearings)
+                std:: cout << " " << bearing;
+            std::cout << ", entry: ";
+            for( auto entry : intersection.entry)
+                std:: cout << " " << entry;
+            std::cout << ")";
+        }
 
-        std::cout << "] name[" << step.name_id << "]: " << step.name
-                  << " Bearings: " << step.maneuver.bearing_before << " "
-                  << step.maneuver.bearing_after << std::endl;
+        std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
     }
 }
 
@@ -67,8 +69,22 @@ RouteStep forwardInto(RouteStep destination, const RouteStep &source)
     // Overwrites turn instruction and increases exit NR
     destination.duration += source.duration;
     destination.distance += source.distance;
+
+    if (destination.geometry_begin < source.geometry_begin)
+    {
+        destination.intersections.insert(destination.intersections.end(),
+                                         source.intersections.begin(), source.intersections.end());
+    }
+    else
+    {
+        destination.intersections.insert(destination.intersections.begin(),
+                                         source.intersections.begin(), source.intersections.end());
+    }
+
     destination.geometry_begin = std::min(destination.geometry_begin, source.geometry_begin);
     destination.geometry_end = std::max(destination.geometry_end, source.geometry_end);
+    destination.maneuver.exit = destination.intersections.size() - 1;
+
     return destination;
 }
 
@@ -167,7 +183,7 @@ void closeOffRoundabout(const bool on_roundabout,
         steps[1] = forwardInto(steps[1], steps[0]);
         steps[0].duration = 0;
         steps[0].distance = 0;
-        const auto exitToEnter = [](const TurnType type) {
+        const auto exitToEnter = [](const TurnType::Enum type) {
             if (TurnType::ExitRotary == type)
                 return TurnType::EnterRotary;
             // if we do not enter the roundabout Intersection, we cannot treat the full traversal as
@@ -185,7 +201,10 @@ void closeOffRoundabout(const bool on_roundabout,
     // Normal exit from the roundabout, or exit from a previously fixed roundabout. Propagate the
     // index back to the entering location and prepare the current silent set of instructions for
     // removal.
-    const auto exit_bearing = steps[step_index].maneuver.bearing_after;
+    std::vector<std::size_t> intermediate_steps;
+    BOOST_ASSERT(!steps[step_index].intersections.empty());
+    const auto exit_intersection = steps[step_index].intersections.back();
+    const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
     if (step_index > 1)
     {
         // The very first route-step is head, so we cannot iterate past that one
@@ -198,6 +217,8 @@ void closeOffRoundabout(const bool on_roundabout,
             {
                 propagation_step.maneuver.exit = step.maneuver.exit;
                 propagation_step.geometry_end = step.geometry_end;
+                const auto entry_intersection = propagation_step.intersections.front();
+
                 // remember rotary name
                 if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
                     propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
@@ -228,6 +249,7 @@ void closeOffRoundabout(const bool on_roundabout,
                     // % 360;
                     // All other cases are handled by first rotating both bearings to an
                     // entry_bearing of 0.
+                    BOOST_ASSERT(!propagation_step.intersections.empty());
                     const double angle = [](const double entry_bearing, const double exit_bearing) {
                         const double offset = 360 - entry_bearing;
                         const double rotated_exit = [](double bearing, const double offset) {
@@ -237,7 +259,7 @@ void closeOffRoundabout(const bool on_roundabout,
 
                         const auto angle = 540 - rotated_exit;
                         return angle > 360 ? angle - 360 : angle;
-                    }(propagation_step.maneuver.bearing_before, exit_bearing);
+                    }(util::bearing::reverseBearing(entry_intersection.bearings[entry_intersection.in]), exit_bearing);
 
                     propagation_step.maneuver.instruction.direction_modifier =
                         ::osrm::util::guidance::getTurnDirection(angle);
@@ -268,16 +290,17 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
     step.duration += by_step.duration;
     step.distance += by_step.distance;
 
+    // by_step comes after step -> we append at the end
     if (step.geometry_end == by_step.geometry_begin + 1)
     {
         step.geometry_end = by_step.geometry_end;
 
         // if we elongate in the back, we only need to copy the intersections to the beginning.
         // the bearings remain the same, as the location of the turn doesn't change
-        step.maneuver.intersections.insert(step.maneuver.intersections.end(),
-                                           by_step.maneuver.intersections.begin(),
-                                           by_step.maneuver.intersections.end());
+        step.intersections.insert(step.intersections.end(), by_step.intersections.begin(),
+                                  by_step.intersections.end());
     }
+    // by_step comes before step -> we append at the front
     else
     {
         BOOST_ASSERT(step.maneuver.waypoint_type == WaypointType::None &&
@@ -286,14 +309,10 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
         step.geometry_begin = by_step.geometry_begin;
 
         // elongating in the front changes the location of the maneuver
-        step.maneuver.location = by_step.maneuver.location;
-        step.maneuver.bearing_before = by_step.maneuver.bearing_before;
-        step.maneuver.bearing_after = by_step.maneuver.bearing_after;
-        step.maneuver.instruction = by_step.maneuver.instruction;
+        step.maneuver = by_step.maneuver;
 
-        step.maneuver.intersections.insert(step.maneuver.intersections.begin(),
-                                           by_step.maneuver.intersections.begin(),
-                                           by_step.maneuver.intersections.end());
+        step.intersections.insert(step.intersections.begin(), by_step.intersections.begin(),
+                                  by_step.intersections.end());
     }
     return step;
 }
@@ -323,12 +342,12 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         return angularDeviation(bearing_in, bearing_out) > 170;
     };
 
+    BOOST_ASSERT(!one_back_step.intersections.empty() && !current_step.intersections.empty());
     const auto isCollapsableInstruction = [](const TurnInstruction instruction) {
         return instruction.type == TurnType::NewName ||
                (instruction.type == TurnType::Turn &&
                 instruction.direction_modifier == DirectionModifier::Straight);
     };
-
     // Very Short New Name
     if (isCollapsableInstruction(one_back_step.maneuver.instruction))
     {
@@ -359,8 +378,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         }
     }
     // Potential U-Turn
-    else if (bearingsAreReversed(one_back_step.maneuver.bearing_before,
-                                 current_step.maneuver.bearing_after))
+    else if (bearingsAreReversed(util::bearing::reverseBearing(one_back_step.intersections.front().bearings[one_back_step.intersections.front().in]),
+                                 current_step.intersections.front().bearings[current_step.intersections.front().out]))
 
     {
         BOOST_ASSERT(two_back_index < steps.size());
@@ -417,6 +436,16 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 
     boost::remove_erase_if(steps, not_is_valid);
 
+    BOOST_ASSERT(steps.front().intersections.size() >= 1);
+    BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.front().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.front().maneuver.waypoint_type == WaypointType::Depart);
+
+    BOOST_ASSERT(steps.back().intersections.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
+
     return steps;
 }
 
@@ -426,7 +455,6 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 // They are required for maintenance purposes. We can calculate the number
 // of exits to pass in a roundabout and the number of intersections
 // that we come across.
-
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 {
     // the steps should always include the first/last step in form of a location
@@ -437,17 +465,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // Count Street Exits forward
     bool on_roundabout = false;
     bool has_entered_roundabout = false;
-
-    // adds an intersection to the initial route step
-    // It includes the length of the last step, until the intersection
-    // Also updates the length of the respective segment
-    auto addIntersection = [](RouteStep into, const RouteStep &last_step,
-                              const RouteStep &intersection) {
-        into.maneuver.intersections.push_back(
-            {last_step.duration, last_step.distance, intersection.maneuver.location});
-
-        return forwardInto(std::move(into), intersection);
-    };
 
     // count the exits forward. if enter/exit roundabout happen both, no further treatment is
     // required. We might end up with only one of them (e.g. starting within a roundabout)
@@ -491,8 +508,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         {
             // count intersections. We cannot use exit, since intersections can follow directly
             // after a roundabout
-            steps[last_valid_instruction] = addIntersection(
-                std::move(steps[last_valid_instruction]), steps[step_index - 1], step);
+            steps[last_valid_instruction] = elongate(steps[last_valid_instruction], step);
             step.maneuver.instruction = TurnInstruction::NO_TURN();
         }
         else if (!isSilent(instruction))
@@ -501,6 +517,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
             last_valid_instruction = step_index;
         }
     }
+
     // unterminated roundabout
     // Move backwards through the instructions until the start and remove the exit number
     // A roundabout without exit translates to enter-roundabout.
@@ -508,6 +525,16 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     {
         fixFinalRoundabout(steps);
     }
+
+    BOOST_ASSERT(steps.front().intersections.size() >= 1);
+    BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.front().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.front().maneuver.waypoint_type == WaypointType::Depart);
+
+    BOOST_ASSERT(steps.back().intersections.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
 
     return removeNoTurnInstructions(std::move(steps));
 }
@@ -597,18 +624,29 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             collapseTurnAt(steps, two_back_index, one_back_index, step_index);
         }
     }
+
+    BOOST_ASSERT(steps.front().intersections.size() >= 1);
+    BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.front().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.front().maneuver.waypoint_type == WaypointType::Depart);
+
+    BOOST_ASSERT(steps.back().intersections.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
+
     return removeNoTurnInstructions(std::move(steps));
 }
 
+// Doing this step in post-processing provides a few challenges we cannot overcome.
+// The removal of an initial step imposes some copy overhead in the steps, moving all later
+// steps to the front. In addition, we cannot reduce the travel time that is accumulated at a
+// different location.
+// As a direct implication, we have to keep the time of the initial/final turns (which adds a
+// few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
+// usually not be as relevant.
 void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 {
-    // Doing this step in post-processing provides a few challenges we cannot overcome.
-    // The removal of an initial step imposes some copy overhead in the steps, moving all later
-    // steps to the front. In addition, we cannot reduce the travel time that is accumulated at a
-    // different location.
-    // As a direct implication, we have to keep the time of the initial/final turns (which adds a
-    // few seconds of inaccuracy at both ends. This is acceptable, however, since the turn should
-    // usually not be as relevant.
 
     if (steps.size() < 2 || geometry.locations.size() <= 2)
         return;
@@ -663,22 +701,29 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 
             // update initial turn direction/bearings. Due to the duplicated first coordinate,
             // the initial bearing is invalid
-            designated_depart.maneuver = detail::stepManeuverFromGeometry(
-                TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
+            designated_depart.maneuver.waypoint_type = WaypointType::Depart;
+            designated_depart.maneuver.bearing_before = 0;
+            designated_depart.maneuver.instruction = TurnInstruction::NO_TURN();
+            // we need to make this conform with the intersection format for the first intersection
+            auto& first_intersection = designated_depart.intersections.front();
+            first_intersection.bearings = {first_intersection.bearings[first_intersection.out]};
+            first_intersection.entry = {true};
+            first_intersection.in = Intersection::NO_INDEX;
+            first_intersection.out = 0;
 
             // finally remove the initial (now duplicated move)
             steps.erase(steps.begin());
         }
         else
         {
+            // we need to make this at least 1 because we will substract 1
+            // from all offsets at the end of the loop.
             steps.front().geometry_begin = 1;
+
             // reduce all offsets by one (inplace)
             std::transform(geometry.segment_offsets.begin(), geometry.segment_offsets.end(),
                            geometry.segment_offsets.begin(),
                            [](const std::size_t val) { return val - 1; });
-
-            steps.front().maneuver = detail::stepManeuverFromGeometry(
-                TurnInstruction::NO_TURN(), WaypointType::Depart, geometry);
         }
 
         // and update the leg geometry indices for the removed entry
@@ -686,11 +731,30 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             --step.geometry_begin;
             --step.geometry_end;
         });
+
+        auto& first_step = steps.front();
+        // we changed the geometry, we need to recalculate the bearing
+        auto bearing = std::round(util::coordinate_calculation::bearing(
+            geometry.locations[first_step.geometry_begin],
+            geometry.locations[first_step.geometry_begin+1]));
+        first_step.maneuver.bearing_after = bearing;
+        first_step.intersections.front().bearings.front() = bearing;
     }
+
+    BOOST_ASSERT(steps.front().intersections.size() >= 1);
+    BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.front().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.front().maneuver.waypoint_type == WaypointType::Depart);
+
+    BOOST_ASSERT(steps.back().intersections.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
 
     // make sure we still have enough segments
     if (steps.size() < 2 || geometry.locations.size() == 2)
         return;
+
 
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     auto &next_to_last_step = *(steps.end() - 2);
@@ -704,8 +768,15 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         BOOST_ASSERT(geometry.segment_distances.back() < 1);
         geometry.segment_distances.pop_back();
 
-        next_to_last_step.maneuver = detail::stepManeuverFromGeometry(
-            TurnInstruction::NO_TURN(), WaypointType::Arrive, geometry);
+        next_to_last_step.maneuver.waypoint_type = WaypointType::Arrive;
+        next_to_last_step.maneuver.instruction = TurnInstruction::NO_TURN();
+        next_to_last_step.maneuver.bearing_after = 0;
+        BOOST_ASSERT(next_to_last_step.intersections.size() == 1);
+        auto& last_intersection = next_to_last_step.intersections.back();
+        last_intersection.bearings = {last_intersection.bearings[last_intersection.in]};
+        last_intersection.entry = {true};
+        last_intersection.out = Intersection::NO_INDEX;
+        last_intersection.in = 0;
         steps.pop_back();
 
         // Because we eliminated a really short segment, it was probably
@@ -733,11 +804,29 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         BOOST_ASSERT(next_to_last_step.geometry_end == steps.back().geometry_begin + 1);
         BOOST_ASSERT(next_to_last_step.geometry_begin < next_to_last_step.geometry_end);
         next_to_last_step.geometry_end--;
-        steps.back().geometry_begin--;
-        steps.back().geometry_end--;
-        steps.back().maneuver = detail::stepManeuverFromGeometry(TurnInstruction::NO_TURN(),
-                                                                 WaypointType::Arrive, geometry);
+        auto& last_step = steps.back();
+        last_step.geometry_begin--;
+        last_step.geometry_end--;
+        BOOST_ASSERT(next_to_last_step.geometry_end == last_step.geometry_begin + 1);
+        BOOST_ASSERT(last_step.geometry_begin == last_step.geometry_end-1);
+        BOOST_ASSERT(next_to_last_step.geometry_end >= 2);
+        // we changed the geometry, we need to recalculate the bearing
+        auto bearing = std::round(util::coordinate_calculation::bearing(
+            geometry.locations[next_to_last_step.geometry_end - 2],
+            geometry.locations[last_step.geometry_begin]));
+        last_step.maneuver.bearing_before = bearing;
+        last_step.intersections.front().bearings.front() = util::bearing::reverseBearing(bearing);
     }
+
+    BOOST_ASSERT(steps.front().intersections.size() >= 1);
+    BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.front().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.front().maneuver.waypoint_type == WaypointType::Depart);
+
+    BOOST_ASSERT(steps.back().intersections.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
 }
 
 // assign relative locations to depart/arrive instructions
@@ -774,6 +863,16 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
             : extractor::guidance::DirectionModifier::UTurn;
 
     steps.back().maneuver.instruction.direction_modifier = final_modifier;
+
+    BOOST_ASSERT(steps.front().intersections.size() >= 1);
+    BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.front().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.front().maneuver.waypoint_type == WaypointType::Depart);
+
+    BOOST_ASSERT(steps.back().intersections.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
+    BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
+    BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
     return steps;
 }
 

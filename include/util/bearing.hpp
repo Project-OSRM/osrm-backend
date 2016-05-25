@@ -89,6 +89,14 @@ inline bool CheckInBounds(const int A, const int B, const int range)
         return normalized_B - range <= normalized_A && normalized_A <= normalized_B + range;
     }
 }
+
+inline double reverseBearing(const double bearing)
+{
+    if (bearing >= 180)
+        return bearing - 180.;
+    return bearing + 180;
+}
+
 }
 }
 }

@@ -1,4 +1,5 @@
 var assert = require('assert');
+var fs = require('fs');
 
 module.exports = function () {
     this.When(/^I run "osrm\-routed\s?(.*?)"$/, { timeout: this.TIMEOUT }, (options, callback) => {
@@ -57,6 +58,11 @@ module.exports = function () {
 
     this.Then(/^stdout should contain (\d+) lines?$/, (lines) => {
         assert.equal(this.stdout.split('\n').length - 1, parseInt(lines));
+    });
+
+    this.Then(/^datasource names should contain "(.+)"$/, (expectedData) => {
+        var actualData = fs.readFileSync(this.osmData.extractedFile+'.osrm.datasource_names',{encoding:'UTF-8'}).trim().split("\n").join(",");
+        assert.equal(actualData, expectedData);
     });
 
     this.Given(/^the query options$/, (table, callback) => {

@@ -3,13 +3,15 @@
 
 // Exposes all data access interfaces to the algorithms via base class ptr
 
-#include "extractor/edge_based_node.hpp"
-#include "extractor/external_memory_node.hpp"
 #include "contractor/query_edge.hpp"
 #include "engine/phantom_node.hpp"
+#include "extractor/edge_based_node.hpp"
+#include "extractor/external_memory_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
-#include "util/integer_range.hpp"
 #include "util/exception.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
+#include "util/integer_range.hpp"
 #include "util/string_util.hpp"
 #include "util/typedefs.hpp"
 
@@ -17,9 +19,9 @@
 
 #include <cstddef>
 
-#include <vector>
-#include <utility>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace osrm
 {
@@ -145,6 +147,15 @@ class BaseDataFacade
     virtual std::string GetTimestamp() const = 0;
 
     virtual bool GetContinueStraightDefault() const = 0;
+
+    virtual BearingClassID GetBearingClassID(const NodeID id) const = 0;
+
+    virtual util::guidance::BearingClass
+    GetBearingClass(const BearingClassID bearing_class_id) const = 0;
+
+    virtual EntryClassID GetEntryClassID(const EdgeID eid) const = 0;
+
+    virtual util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const = 0;
 };
 }
 }

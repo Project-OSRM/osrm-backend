@@ -1,10 +1,10 @@
 #ifndef ROUTING_BASE_HPP
 #define ROUTING_BASE_HPP
 
-#include "util/coordinate_calculation.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -14,10 +14,10 @@
 
 #include <algorithm>
 #include <iterator>
+#include <numeric>
+#include <stack>
 #include <utility>
 #include <vector>
-#include <stack>
-#include <numeric>
 
 namespace osrm
 {
@@ -226,6 +226,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             recursion_stack.emplace(*std::prev(current), *current);
         }
 
+        BOOST_ASSERT(*packed_path_begin == phantom_node_pair.source_phantom.forward_segment_id.id ||
+                     *packed_path_begin == phantom_node_pair.source_phantom.reverse_segment_id.id);
+        BOOST_ASSERT(*std::prev(packed_path_end) == phantom_node_pair.target_phantom.forward_segment_id.id ||
+                     *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
+
         std::pair<NodeID, NodeID> edge;
         while (!recursion_stack.empty())
         {
@@ -317,13 +322,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 for (std::size_t i = start_index; i < end_index; ++i)
                 {
                     unpacked_path.push_back(
-                        PathData{id_vector[i],
-                                 name_index,
-                                 weight_vector[i],
-                                 extractor::guidance::TurnInstruction::NO_TURN(),
-                                 travel_mode});
+                        PathData{id_vector[i], name_index, weight_vector[i],
+                                 extractor::guidance::TurnInstruction::NO_TURN(), travel_mode,
+                                 INVALID_ENTRY_CLASSID});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
+                unpacked_path.back().entry_classid = facade->GetEntryClassID(ed.id);
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
             }
@@ -376,14 +380,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         {
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
-            unpacked_path.push_back(
-                PathData{id_vector[i],
-                         phantom_node_pair.target_phantom.name_id,
-                         weight_vector[i],
-                         extractor::guidance::TurnInstruction::NO_TURN(),
-                         target_traversed_in_reverse
-                             ? phantom_node_pair.target_phantom.backward_travel_mode
-                             : phantom_node_pair.target_phantom.forward_travel_mode});
+            unpacked_path.push_back(PathData{
+                id_vector[i], phantom_node_pair.target_phantom.name_id, weight_vector[i],
+                extractor::guidance::TurnInstruction::NO_TURN(),
+                target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
+                                            : phantom_node_pair.target_phantom.forward_travel_mode,
+                INVALID_ENTRY_CLASSID});
         }
 
         if (unpacked_path.size() > 0)
@@ -641,9 +643,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
         // TODO check if unordered_set might be faster
         // sort by id and increasing by distance
-        auto entry_point_comparator =
-            [](const std::pair<NodeID, EdgeWeight> &lhs, const std::pair<NodeID, EdgeWeight> &rhs)
-        {
+        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
+                                         const std::pair<NodeID, EdgeWeight> &rhs) {
             return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
         };
         std::sort(forward_entry_points.begin(), forward_entry_points.end(), entry_point_comparator);
