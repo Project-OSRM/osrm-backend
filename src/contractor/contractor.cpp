@@ -495,7 +495,8 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
         // vector to count used speeds for logging
         // size offset by one since index 0 is used for speeds not from external file
-        std::vector<std::atomic<std::uint64_t>> segment_speeds_counters;
+        std::vector<std::atomic<std::uint64_t>> segment_speeds_counters(
+            segment_speed_filenames.size() + 1);
         for (auto &each : segment_speeds_counters)
             each.store(0);
         const constexpr auto LUA_SOURCE = 0;
