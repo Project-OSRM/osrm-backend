@@ -45,8 +45,10 @@ inline bool isRampClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_base
 MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const std::vector<QueryNode> &node_info_list,
                                  const util::NameTable &name_table,
-                                 const SuffixTable &street_name_suffix_table)
-    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
+                                 const SuffixTable &street_name_suffix_table,
+                                 const IntersectionGenerator &intersection_generator)
+    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
+      intersection_generator(intersection_generator)
 {
 }
 
@@ -251,18 +253,16 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                     else if (road.turn.angle < continue_angle)
                     {
                         road.turn.instruction = {
-                            detail::isRampClass(road.turn.eid, node_based_graph)
-                                ? TurnType::OffRamp
-                                : TurnType::Turn,
+                            detail::isRampClass(road.turn.eid, node_based_graph) ? TurnType::OffRamp
+                                                                                 : TurnType::Turn,
                             (road.turn.angle < 145) ? DirectionModifier::Right
                                                     : DirectionModifier::SlightRight};
                     }
                     else if (road.turn.angle > continue_angle)
                     {
                         road.turn.instruction = {
-                            detail::isRampClass(road.turn.eid, node_based_graph)
-                                ? TurnType::OffRamp
-                                : TurnType::Turn,
+                            detail::isRampClass(road.turn.eid, node_based_graph) ? TurnType::OffRamp
+                                                                                 : TurnType::Turn,
                             (road.turn.angle > 215) ? DirectionModifier::Left
                                                     : DirectionModifier::SlightLeft};
                     }

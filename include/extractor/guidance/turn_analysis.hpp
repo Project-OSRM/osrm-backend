@@ -59,6 +59,9 @@ class TurnAnalysis
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     Intersection
     setTurnTypes(const NodeID from, const EdgeID via_edge, Intersection intersection) const;
+
+    Intersection handleSliproads(const NodeID intersection_node_id,
+                                 Intersection intersection) const;
 }; // class TurnAnalysis
 
 } // namespace guidance

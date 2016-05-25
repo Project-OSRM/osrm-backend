@@ -20,7 +20,6 @@ namespace detail
 const constexpr uint8_t num_direction_modifiers = 8;
 } // detail
 
-
 // direction modifiers based on angle
 namespace DirectionModifier
 {
@@ -38,31 +37,36 @@ const constexpr Enum SharpLeft = 7;
 namespace TurnType
 {
 typedef std::uint8_t Enum;
-const constexpr Enum Invalid = 0;                             // no valid turn instruction
-const constexpr Enum NewName = 1;                             // no turn, but name changes
-const constexpr Enum Continue = 2;                            // remain on a street
-const constexpr Enum Turn = 3;                                // basic turn
-const constexpr Enum Merge = 4;                               // merge onto a street
-const constexpr Enum OnRamp = 5;                              // special turn (highway ramp on-ramps)
-const constexpr Enum OffRamp = 6;                             // special turn, highway exit
-const constexpr Enum Fork = 7;                                // fork road splitting up
-const constexpr Enum EndOfRoad = 8;                           // T intersection
-const constexpr Enum Notification = 9;                        // Travel Mode Changes, Restrictions apply...
-const constexpr Enum EnterRoundabout = 10;                    // Entering a small Roundabout
-const constexpr Enum EnterAndExitRoundabout = 11;             // Touching a roundabout
-const constexpr Enum EnterRotary = 12;                        // Enter a rotary
-const constexpr Enum EnterAndExitRotary = 13;                 // Touching a rotary
-const constexpr Enum EnterRoundaboutIntersection = 14;        // Entering a small Roundabout
+const constexpr Enum Invalid = 0;                      // no valid turn instruction
+const constexpr Enum NewName = 1;                      // no turn, but name changes
+const constexpr Enum Continue = 2;                     // remain on a street
+const constexpr Enum Turn = 3;                         // basic turn
+const constexpr Enum Merge = 4;                        // merge onto a street
+const constexpr Enum OnRamp = 5;                       // special turn (highway ramp on-ramps)
+const constexpr Enum OffRamp = 6;                      // special turn, highway exit
+const constexpr Enum Fork = 7;                         // fork road splitting up
+const constexpr Enum EndOfRoad = 8;                    // T intersection
+const constexpr Enum Notification = 9;                 // Travel Mode Changes, Restrictions apply...
+const constexpr Enum EnterRoundabout = 10;             // Entering a small Roundabout
+const constexpr Enum EnterAndExitRoundabout = 11;      // Touching a roundabout
+const constexpr Enum EnterRotary = 12;                 // Enter a rotary
+const constexpr Enum EnterAndExitRotary = 13;          // Touching a rotary
+const constexpr Enum EnterRoundaboutIntersection = 14; // Entering a small Roundabout
 const constexpr Enum EnterAndExitRoundaboutIntersection = 15; // Touching a roundabout
-const constexpr Enum NoTurn = 16;                             // end of segment without turn/middle of a segment
-const constexpr Enum Suppressed = 17;                         // location that suppresses a turn
-const constexpr Enum EnterRoundaboutAtExit = 18;              // Entering a small Roundabout at a countable exit
-const constexpr Enum ExitRoundabout = 19;                     // Exiting a small Roundabout
-const constexpr Enum EnterRotaryAtExit = 20;                  // Enter A Rotary at a countable exit
-const constexpr Enum ExitRotary = 21;                         // Exit a rotary
-const constexpr Enum EnterRoundaboutIntersectionAtExit = 22;  // Entering a small Roundabout at a countable exit
-const constexpr Enum ExitRoundaboutIntersection = 23;         // Exiting a small Roundabout
-const constexpr Enum StayOnRoundabout = 24;                   // Continue on Either a small or a large Roundabout
+
+// Values below here are silent instructions
+const constexpr Enum NoTurn = 16;                // end of segment without turn/middle of a segment
+const constexpr Enum Suppressed = 17;            // location that suppresses a turn
+const constexpr Enum EnterRoundaboutAtExit = 18; // Entering a small Roundabout at a countable exit
+const constexpr Enum ExitRoundabout = 19;        // Exiting a small Roundabout
+const constexpr Enum EnterRotaryAtExit = 20;     // Enter A Rotary at a countable exit
+const constexpr Enum ExitRotary = 21;            // Exit a rotary
+const constexpr Enum EnterRoundaboutIntersectionAtExit =
+    22; // Entering a small Roundabout at a countable exit
+const constexpr Enum ExitRoundaboutIntersection = 23; // Exiting a small Roundabout
+const constexpr Enum StayOnRoundabout = 24; // Continue on Either a small or a large Roundabout
+const constexpr Enum Sliproad =
+    25; // Something that looks like a ramp, but is actually just a small sliproad
 }
 
 // turn angle in 1.40625 degree -> 128 == 180 degree
@@ -87,7 +91,8 @@ struct TurnInstruction
         return TurnInstruction(TurnType::NoTurn, DirectionModifier::UTurn);
     }
 
-    static TurnInstruction REMAIN_ROUNDABOUT(const RoundaboutType, const DirectionModifier::Enum modifier)
+    static TurnInstruction REMAIN_ROUNDABOUT(const RoundaboutType,
+                                             const DirectionModifier::Enum modifier)
     {
         return TurnInstruction(TurnType::StayOnRoundabout, modifier);
     }
@@ -104,9 +109,9 @@ struct TurnInstruction
     static TurnInstruction EXIT_ROUNDABOUT(const RoundaboutType roundabout_type,
                                            const DirectionModifier::Enum modifier)
     {
-        const constexpr TurnType::Enum exit_instruction[] = {TurnType::Invalid, TurnType::ExitRoundabout,
-                                                       TurnType::ExitRotary,
-                                                       TurnType::ExitRoundaboutIntersection};
+        const constexpr TurnType::Enum exit_instruction[] = {
+            TurnType::Invalid, TurnType::ExitRoundabout, TurnType::ExitRotary,
+            TurnType::ExitRoundaboutIntersection};
         return {exit_instruction[static_cast<int>(roundabout_type)], modifier};
     }
 

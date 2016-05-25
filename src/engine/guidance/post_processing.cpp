@@ -41,8 +41,8 @@ void print(const std::vector<RouteStep> &steps)
     int segment = 0;
     for (const auto &step : steps)
     {
-        std::cout << "\t[" << ++segment << "]: " << step.maneuver.instruction.type << " "
-                  << step.maneuver.instruction.direction_modifier << "  "
+        std::cout << "\t[" << ++segment << "]: " << static_cast<int>(step.maneuver.instruction.type)
+                  << " " << static_cast<int>(step.maneuver.instruction.direction_modifier) << "  "
                   << static_cast<int>(step.maneuver.waypoint_type) << " Duration: " << step.duration
                   << " Distance: " << step.distance << " Geometry: " << step.geometry_begin << " "
                   << step.geometry_end << " exit: " << step.maneuver.exit
@@ -61,6 +61,37 @@ void print(const std::vector<RouteStep> &steps)
 
         std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
     }
+}
+
+// Compute the angle between two bearings on a normal turn circle
+//
+//      Bearings                      Angles
+//
+//         0                           180
+//   315         45               225       135
+//
+// 270     x       90           270     x      90
+//
+//   225        135               315        45
+//        180                           0
+//
+// A turn from north to north-east offerst bearing 0 and 45 has to be translated
+// into a turn of 135 degrees. The same holdes for 90 - 135 (east to south
+// east).
+// For north, the transformation works by angle = 540 (360 + 180) - exit_bearing
+// % 360;
+// All other cases are handled by first rotating both bearings to an
+// entry_bearing of 0.
+double turn_angle(const double entry_bearing, const double exit_bearing)
+{
+    const double offset = 360 - entry_bearing;
+    const double rotated_exit = [](double bearing, const double offset) {
+        bearing += offset;
+        return bearing > 360 ? bearing - 360 : bearing;
+    }(exit_bearing, offset);
+
+    const auto angle = 540 - rotated_exit;
+    return angle > 360 ? angle - 360 : angle;
 }
 
 RouteStep forwardInto(RouteStep destination, const RouteStep &source)
@@ -232,39 +263,11 @@ void closeOffRoundabout(const bool on_roundabout,
                          propagation_step.maneuver.instruction.type ==
                              TurnType::EnterRoundaboutIntersectionAtExit)
                 {
-                    // Compute the angle between two bearings on a normal turn circle
-                    //
-                    //      Bearings                      Angles
-                    //
-                    //         0                           180
-                    //   315         45               225       135
-                    //
-                    // 270     x       90           270     x      90
-                    //
-                    //   225        135               315        45
-                    //        180                           0
-                    //
-                    // A turn from north to north-east offerst bearing 0 and 45 has to be translated
-                    // into a turn of 135 degrees. The same holdes for 90 - 135 (east to south
-                    // east).
-                    // For north, the transformation works by angle = 540 (360 + 180) - exit_bearing
-                    // % 360;
-                    // All other cases are handled by first rotating both bearings to an
-                    // entry_bearing of 0.
                     BOOST_ASSERT(!propagation_step.intersections.empty());
                     const double angle =
-                        [](const double entry_bearing, const double exit_bearing) {
-                            const double offset = 360 - entry_bearing;
-                            const double rotated_exit = [](double bearing, const double offset) {
-                                bearing += offset;
-                                return bearing > 360 ? bearing - 360 : bearing;
-                            }(exit_bearing, offset);
-
-                            const auto angle = 540 - rotated_exit;
-                            return angle > 360 ? angle - 360 : angle;
-                        }(util::bearing::reverseBearing(
-                              entry_intersection.bearings[entry_intersection.in]),
-                          exit_bearing);
+                        turn_angle(util::bearing::reverseBearing(
+                                       entry_intersection.bearings[entry_intersection.in]),
+                                   exit_bearing);
 
                     propagation_step.maneuver.instruction.direction_modifier =
                         ::osrm::util::guidance::getTurnDirection(angle);
@@ -417,6 +420,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             }
 
             steps[one_back_index].name = steps[two_back_index].name;
+            steps[one_back_index].name_id = steps[two_back_index].name_id;
             steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
             steps[one_back_index].maneuver.instruction.direction_modifier =
                 DirectionModifier::UTurn;
@@ -580,6 +584,15 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 instruction.direction_modifier == DirectionModifier::Straight);
     };
 
+    // Special case handling: if the phantomnode landed on a sliproad, we
+    // change this into a 'turn' instruction.  Sliproads are small ramps
+    // between roads, not ramps.
+    if (steps.size() >= 3 &&
+        steps[steps.size() - 2].maneuver.instruction.type == TurnType::Sliproad)
+    {
+        steps[steps.size() - 2].maneuver.instruction.type = TurnType::Turn;
+    }
+
     // first and last instructions are waypoints that cannot be collapsed
     for (std::size_t step_index = 2; step_index < steps.size(); ++step_index)
     {
@@ -595,10 +608,40 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         const auto two_back_index = getPreviousIndex(one_back_index);
         BOOST_ASSERT(two_back_index < steps.size());
 
+        // Handle sliproads from motorways in urban areas
+        if (one_back_step.maneuver.instruction.type == TurnType::Sliproad)
+        {
+
+            // Handle possible u-turns between highways that look like slip-roads
+            if (steps[two_back_index].name_id == steps[step_index].name_id &&
+                steps[step_index].name_id != INVALID_NAMEID)
+            {
+                steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+            }
+            else
+            {
+                steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
+            }
+            steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
+            steps[one_back_index].name_id = steps[step_index].name_id;
+            steps[one_back_index].name = steps[step_index].name;
+
+            const auto exit_intersection = steps[step_index].intersections.front();
+            const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
+
+            const auto entry_intersection = steps[one_back_index].intersections.front();
+            const auto entry_bearing = entry_intersection.bearings[entry_intersection.in];
+
+            const double angle =
+                turn_angle(util::bearing::reverseBearing(entry_bearing), exit_bearing);
+            steps[one_back_index].maneuver.instruction.direction_modifier =
+                ::osrm::util::guidance::getTurnDirection(angle);
+            invalidateStep(steps[step_index]);
+        }
         // Due to empty segments, we can get name-changes from A->A
         // These have to be handled in post-processing
-        if (isCollapsableInstruction(current_step.maneuver.instruction) &&
-            current_step.name == steps[one_back_index].name)
+        else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
+                 current_step.name == steps[one_back_index].name)
         {
             steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
             invalidateStep(steps[step_index]);
