@@ -205,6 +205,8 @@ function way_function (way, result)
   local service = way:get_value_by_key("service")
   local area = way:get_value_by_key("area")
   local foot = way:get_value_by_key("foot")
+  local foot_forward = way:get_value_by_key("foot:forward")
+  local foot_backward = way:get_value_by_key("foot:backward")
   local surface = way:get_value_by_key("surface")
   local bicycle = way:get_value_by_key("bicycle")
 
