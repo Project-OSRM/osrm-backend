@@ -260,6 +260,13 @@ module.exports = function () {
                 });
             };
 
+            var renameIfExists = (file, cb) => {
+                fs.stat([this.osmData.extractedFile, file].join('.'), (doesNotExistErr, exists) => {
+                    if (exists) rename(file, cb);
+                    else cb();
+                });
+            };
+
             var copy = (file, cb) => {
                 this.log(util.format('Copying %s.%s to %s.%s', this.osmData.extractedFile, file, this.osmData.contractedFile, file), 'preprocess');
                 fs.createReadStream([this.osmData.extractedFile, file].join('.'))
@@ -273,11 +280,15 @@ module.exports = function () {
 
             var q = d3.queue();
 
-            ['osrm.hsgr','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.core','osrm.edges','osrm.datasource_indexes','osrm.datasource_names','osrm.level','osrm.icd'].forEach((file) => {
+            ['osrm.hsgr','osrm.ebg','osrm.enw','osrm.level','osrm.core','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.edges','osrm.datasource_indexes','osrm.datasource_names','osrm.icd','osrm.names','osrm.restrictions','osrm.properties','osrm'].forEach((file) => {
                 q.defer(rename, file);
             });
 
-            ['osrm.names','osrm.restrictions','osrm.properties','osrm'].forEach((file) => {
+            ['osrm.edge_segment_lookup','osrm.edge_penalties'].forEach(file => {
+                q.defer(renameIfExists, file);
+            });
+
+            [].forEach((file) => {
                 q.defer(copy, file);
             });
 
@@ -292,32 +303,33 @@ module.exports = function () {
     var noop = (cb) => cb();
 
     this.reprocess = (callback) => {
-        this.writeAndExtract((e) => {
-            if (e) return callback(e);
+        this.osmData.populate(() => {
             this.isContracted((isContracted) => {
-                var contractFn = (isContracted && !this.forceContract) ? noop : this.contractData;
-                if (isContracted) this.log('Already contracted ' + this.osmData.contractedFile, 'preprocess');
-                contractFn((e) => {
-                    this.forceContract = false;
-                    if (e) return callback(e);
-                    this.logPreprocessDone();
+                if (!isContracted) {
+                    this.writeAndExtract((e) => {
+                        if (e) return callback(e);
+                        this.contractData((e) => {
+                            if (e) return callback(e);
+                            this.logPreprocessDone();
+                            callback();
+                        });
+                    });
+                } else {
+                    this.log('Already contracted ' + this.osmData.contractedFile, 'preprocess');
                     callback();
-                });
+                }
             });
         });
     };
 
     this.writeAndExtract = (callback) => {
-        this.osmData.populate(() => {
-            this.writeInputData((e) => {
-                if (e) return callback(e);
-                this.isExtracted((isExtracted) => {
-                    var extractFn = (isExtracted && !this.forceExtract) ? noop : this.extractData;
-                    if (isExtracted) this.log('Already extracted ' + this.osmData.extractedFile, 'preprocess');
-                    extractFn((e) => {
-                        this.forceExtract = false;
-                        callback(e);
-                    });
+        this.writeInputData((e) => {
+            if (e) return callback(e);
+            this.isExtracted((isExtracted) => {
+                var extractFn = isExtracted ? noop : this.extractData;
+                if (isExtracted) this.log('Already extracted ' + this.osmData.extractedFile, 'preprocess');
+                extractFn((e) => {
+                    callback(e);
                 });
             });
         });

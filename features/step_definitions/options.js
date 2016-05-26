@@ -61,7 +61,7 @@ module.exports = function () {
     });
 
     this.Then(/^datasource names should contain "(.+)"$/, (expectedData) => {
-        var actualData = fs.readFileSync(this.osmData.extractedFile+'.osrm.datasource_names',{encoding:'UTF-8'}).trim().split('\n').join(',');
+        var actualData = fs.readFileSync(this.osmData.extractedFile + '.osrm.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
         assert.equal(actualData, expectedData);
     });
 
