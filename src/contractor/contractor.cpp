@@ -517,12 +517,12 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         // vector to count used speeds for logging
         // size offset by one since index 0 is used for speeds not from external file
         std::vector<std::atomic<std::uint64_t>> segment_speeds_counters;
-        for (std::size_t i=0;i<segment_speed_filenames.size() + 1;++i)
-       {
+        for (std::size_t i = 0; i < segment_speed_filenames.size() + 1; ++i)
+        {
             segment_speeds_counters.emplace_back();
             segment_speeds_counters[i].store(0);
         }
-       const constexpr auto LUA_SOURCE = 0;
+        const constexpr auto LUA_SOURCE = 0;
 
         tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
             for (size_t i = 0; i < current_node.object_count; i++)
