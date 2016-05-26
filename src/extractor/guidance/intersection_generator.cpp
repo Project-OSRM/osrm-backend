@@ -176,7 +176,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
         const auto &first_data = node_based_graph.GetEdgeData(intersection[first].turn.eid);
         const auto &second_data = node_based_graph.GetEdgeData(intersection[second].turn.eid);
 
-        return first_data.name_id != INVALID_NAME_ID && first_data.name_id == second_data.name_id &&
+        return first_data.name_id != EMPTY_NAMEID && first_data.name_id == second_data.name_id &&
                !first_data.roundabout && !second_data.roundabout &&
                first_data.travel_mode == second_data.travel_mode &&
                first_data.road_classification == second_data.road_classification &&

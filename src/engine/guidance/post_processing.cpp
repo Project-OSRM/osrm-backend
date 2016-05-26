@@ -616,7 +616,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 
             // Handle possible u-turns between highways that look like slip-roads
             if (steps[two_back_index].name_id == steps[step_index].name_id &&
-                steps[step_index].name_id != INVALID_NAMEID)
+                steps[step_index].name_id != EMPTY_NAMEID)
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
             }

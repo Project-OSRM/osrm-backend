@@ -149,7 +149,7 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
             // Test to see if the source edge and the one we're looking at are the same road
             return road_edge_data.road_classification.road_class ==
                        source_edge_data.road_classification.road_class &&
-                   road_edge_data.name_id != INVALID_NAME_ID &&
+                   road_edge_data.name_id != EMPTY_NAMEID &&
                    road_edge_data.name_id == source_edge_data.name_id && road.entry_allowed &&
                    angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE;
         });
