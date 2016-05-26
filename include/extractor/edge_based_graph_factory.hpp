@@ -61,6 +61,7 @@ class EdgeBasedGraphFactory
              lua_State *lua_state,
              const std::string &edge_segment_lookup_filename,
              const std::string &edge_penalty_filename,
+             const std::string &destinations_filename,
              const bool generate_edge_lookup);
 
     // The following get access functions destroy the content in the factory
@@ -120,7 +121,7 @@ class EdgeBasedGraphFactory
 
     void CompressGeometry();
     unsigned RenumberEdges();
-    void GenerateEdgeExpandedNodes();
+    void GenerateEdgeExpandedNodes(const std::string &destinations_filename);
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    lua_State *lua_state,
                                    const std::string &edge_segment_lookup_filename,

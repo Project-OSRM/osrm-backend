@@ -85,7 +85,9 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &out
 
 unsigned EdgeBasedGraphFactory::GetHighestEdgeID() { return m_max_edge_id; }
 
-void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v, bool& has_destination)
+void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u,
+                                                const NodeID node_v,
+                                                bool &has_destination)
 {
     // merge edges together into one EdgeBasedNode
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
@@ -179,6 +181,7 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
                                 lua_State *lua_state,
                                 const std::string &edge_segment_lookup_filename,
                                 const std::string &edge_penalty_filename,
+                                const std::string &destinations_filename,
                                 const bool generate_edge_lookup)
 {
     TIMER_START(renumber);
@@ -187,7 +190,7 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
 
     TIMER_START(generate_nodes);
     m_edge_based_node_weights.reserve(m_max_edge_id + 1);
-    GenerateEdgeExpandedNodes();
+    GenerateEdgeExpandedNodes(destinations_filename);
     TIMER_STOP(generate_nodes);
 
     TIMER_START(generate_edges);
@@ -239,7 +242,7 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
 }
 
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.
-void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
+void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &destinations_filename)
 {
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
 
@@ -286,6 +289,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                                  << " nodes in edge-expanded graph";
+
+    std::ofstream destinations_stream(destinations_filename, std::ios::binary);
+    if (!destinations_stream)
+        throw util::exception("Unable to open destinations file: " + destinations_filename);
+    destinations_stream.write(reinterpret_cast<const char *>(&num_destinations),
+                              sizeof(num_destinations));
     util::SimpleLogger().Write() << "Destinations: " << num_destinations;
 }
 
