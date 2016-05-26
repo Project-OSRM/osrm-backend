@@ -180,7 +180,7 @@ class RouteAPI : public BaseAPI
                                json::makeRouteLegs(std::move(legs), std::move(step_geometries)),
                                std::move(json_overview));
 
-        if (parameters.annotation)
+        if (parameters.annotations)
         {
             util::json::Array durations;
             util::json::Array distances;

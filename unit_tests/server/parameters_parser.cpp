@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_1.steps, result_1->steps);
     BOOST_CHECK_EQUAL(reference_1.alternatives, result_1->alternatives);
     BOOST_CHECK_EQUAL(reference_1.geometries, result_1->geometries);
-    BOOST_CHECK_EQUAL(reference_1.annotation, result_1->annotation);
+    BOOST_CHECK_EQUAL(reference_1.annotations, result_1->annotations);
     BOOST_CHECK_EQUAL(reference_1.overview, result_1->overview);
     BOOST_CHECK_EQUAL(reference_1.continue_straight, result_1->continue_straight);
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
@@ -96,15 +96,15 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     RouteParameters reference_2{};
     reference_2.alternatives = true;
     reference_2.steps = true;
-    reference_2.annotation = true;
+    reference_2.annotations = true;
     reference_2.coordinates = coords_1;
     auto result_2 = parseParameters<RouteParameters>(
-        "1,2;3,4?steps=true&alternatives=true&geometries=polyline&overview=simplified&annotate=true");
+        "1,2;3,4?steps=true&alternatives=true&geometries=polyline&overview=simplified&annotations=true");
     BOOST_CHECK(result_2);
     BOOST_CHECK_EQUAL(reference_2.steps, result_2->steps);
     BOOST_CHECK_EQUAL(reference_2.alternatives, result_2->alternatives);
     BOOST_CHECK_EQUAL(reference_2.geometries, result_2->geometries);
-    BOOST_CHECK_EQUAL(reference_2.annotation, result_2->annotation);
+    BOOST_CHECK_EQUAL(reference_2.annotations, result_2->annotations);
     BOOST_CHECK_EQUAL(reference_2.overview, result_2->overview);
     BOOST_CHECK_EQUAL(reference_2.continue_straight, result_2->continue_straight);
     CHECK_EQUAL_RANGE(reference_2.bearings, result_2->bearings);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_3.steps, result_3->steps);
     BOOST_CHECK_EQUAL(reference_3.alternatives, result_3->alternatives);
     BOOST_CHECK_EQUAL(reference_3.geometries, result_3->geometries);
-    BOOST_CHECK_EQUAL(reference_3.annotation, result_3->annotation);
+    BOOST_CHECK_EQUAL(reference_3.annotations, result_3->annotations);
     BOOST_CHECK_EQUAL(reference_3.overview, result_3->overview);
     BOOST_CHECK_EQUAL(reference_3.continue_straight, result_3->continue_straight);
     CHECK_EQUAL_RANGE(reference_3.bearings, result_3->bearings);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_4.steps, result_4->steps);
     BOOST_CHECK_EQUAL(reference_4.alternatives, result_4->alternatives);
     BOOST_CHECK_EQUAL(reference_4.geometries, result_4->geometries);
-    BOOST_CHECK_EQUAL(reference_4.annotation, result_4->annotation);
+    BOOST_CHECK_EQUAL(reference_4.annotations, result_4->annotations);
     BOOST_CHECK_EQUAL(reference_4.overview, result_4->overview);
     BOOST_CHECK_EQUAL(reference_4.continue_straight, result_4->continue_straight);
     CHECK_EQUAL_RANGE(reference_4.bearings, result_4->bearings);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_5.steps, result_5->steps);
     BOOST_CHECK_EQUAL(reference_5.alternatives, result_5->alternatives);
     BOOST_CHECK_EQUAL(reference_5.geometries, result_5->geometries);
-    BOOST_CHECK_EQUAL(reference_5.annotation, result_5->annotation);
+    BOOST_CHECK_EQUAL(reference_5.annotations, result_5->annotations);
     BOOST_CHECK_EQUAL(reference_5.overview, result_5->overview);
     BOOST_CHECK_EQUAL(reference_5.continue_straight, result_5->continue_straight);
     CHECK_EQUAL_RANGE(reference_5.bearings, result_5->bearings);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_6.steps, result_6->steps);
     BOOST_CHECK_EQUAL(reference_6.alternatives, result_6->alternatives);
     BOOST_CHECK_EQUAL(reference_6.geometries, result_6->geometries);
-    BOOST_CHECK_EQUAL(reference_6.annotation, result_6->annotation);
+    BOOST_CHECK_EQUAL(reference_6.annotations, result_6->annotations);
     BOOST_CHECK_EQUAL(reference_6.overview, result_6->overview);
     BOOST_CHECK_EQUAL(reference_6.continue_straight, result_6->continue_straight);
     CHECK_EQUAL_RANGE(reference_6.bearings, result_6->bearings);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_7.steps, result_7->steps);
     BOOST_CHECK_EQUAL(reference_7.alternatives, result_7->alternatives);
     BOOST_CHECK_EQUAL(reference_7.geometries, result_7->geometries);
-    BOOST_CHECK_EQUAL(reference_7.annotation, result_7->annotation);
+    BOOST_CHECK_EQUAL(reference_7.annotations, result_7->annotations);
     BOOST_CHECK_EQUAL(reference_7.overview, result_7->overview);
     BOOST_CHECK_EQUAL(reference_7.continue_straight, result_7->continue_straight);
     CHECK_EQUAL_RANGE(reference_7.bearings, result_7->bearings);
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK_EQUAL(reference_10.steps, result_10->steps);
     BOOST_CHECK_EQUAL(reference_10.alternatives, result_10->alternatives);
     BOOST_CHECK_EQUAL(reference_10.geometries, result_10->geometries);
-    BOOST_CHECK_EQUAL(reference_10.annotation, result_10->annotation);
+    BOOST_CHECK_EQUAL(reference_10.annotations, result_10->annotations);
     BOOST_CHECK_EQUAL(reference_10.overview, result_10->overview);
     BOOST_CHECK_EQUAL(reference_10.continue_straight, result_10->continue_straight);
     CHECK_EQUAL_RANGE(reference_10.bearings, result_10->bearings);

@@ -57,7 +57,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
         base_rule =
             BaseGrammar::base_rule(qi::_r1)
             | (qi::lit("steps=") > qi::bool_[ph::bind(&engine::api::RouteParameters::steps, qi::_r1) = qi::_1])
-            | (qi::lit("annotate=") > qi::bool_[ph::bind(&engine::api::RouteParameters::annotation, qi::_r1) = qi::_1])
+            | (qi::lit("annotations=") > qi::bool_[ph::bind(&engine::api::RouteParameters::annotations, qi::_r1) = qi::_1])
             | (qi::lit("geometries=") > geometries_type[ph::bind(&engine::api::RouteParameters::geometries, qi::_r1) = qi::_1])
             | (qi::lit("overview=") > overview_type[ph::bind(&engine::api::RouteParameters::overview, qi::_r1) = qi::_1])
             ;

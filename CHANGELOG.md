@@ -1,9 +1,12 @@
-# 5.2
-   Changes from 5.2.0 RC2
+# 5.2.0 RC2
+   Changes from 5.2.0 RC1
 
    - Guidance:
      - improved handling of sliproads (emit turns instead of 'take the ramp')
-       BREAKING: modifies the file format with new internal identifiers
+     - BREAKING: modifies the file format with new internal identifiers
+
+   - API:
+    - paramater `annotate` was renamed to `annotations`.
 
 # 5.2.0 RC1
    Changes from 5.1.0

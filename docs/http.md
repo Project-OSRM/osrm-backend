@@ -151,7 +151,7 @@ http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?number=3&b
 ### Request
 
 ```
-http://{server}/route/v1/{profile}/{coordinates}?alternatives={true|false}&steps={true|false}&geometries={polyline|geojson}&overview={full|simplified|false}
+http://{server}/route/v1/{profile}/{coordinates}?alternatives={true|false}&steps={true|false}&geometries={polyline|geojson}&overview={full|simplified|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
@@ -160,7 +160,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------------------|-------------------------------------------------------------------------------|
 |alternatives|`true`, `false` (default)                 |Search for alternative routes and return as well.\*                            |
 |steps       |`true`, `false` (default)                 |Return route steps for each route leg                                          |
-|annotate    |`true`, `false` (default)                 |Returns additional metadata for each coordinate along the route geometry.      |
+|annotations |`true`, `false` (default)                 |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `geojson`           |Returned route geometry format (influences overview and per step)             |
 |overview    |`simplified` (default), `full`, `false`   |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 |continue_straight |`default` (default), `true`, `false`|Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile. |
@@ -253,7 +253,7 @@ The algorithm might not be able to match all points. Outliers are removed if the
 ### Request
 
 ```
-http://{server}/match/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|geojson}&overview={simplified|full|false}
+http://{server}/match/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|geojson}&overview={simplified|full|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
@@ -263,7 +263,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------------------------|------------------------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Return route steps for each route                                                         |
 |geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)                        |
-|annotate    |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                |
+|annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamp of the input location.                                                          |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
@@ -301,7 +301,7 @@ multiple trips for each connected component are returned.
 ### Request
 
 ```
-http://{server}/trip/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|geojson}&overview={simplified|full|false}
+http://{server}/trip/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|geojson}&overview={simplified|full|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
@@ -309,7 +309,7 @@ In addition to the [general options](#general-options) the following options are
 |Option      |Values                                          |Description                                                                |
 |------------|------------------------------------------------|---------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Return route instructions for each trip                                    |
-|annotate    |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.      |
+|annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)         |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 
@@ -397,14 +397,14 @@ Represents a route between two waypoints.
 
 - `annotation`: Additional details about each coordinate along the route geometry:
 
-   | annotate     |                                                                       |
+   | annotations  |                                                                       |
    |--------------|-----------------------------------------------------------------------|
    | true         | returns distance and durations of each coordinate along the route     |
    | false        | will not exist                                                        |
 
 #### Example
 
-With `steps=false` and `annotate=true`:
+With `steps=false` and `annotations=true`:
 
 ```json
 {
