@@ -41,21 +41,21 @@ void print(const std::vector<RouteStep> &steps)
     int segment = 0;
     for (const auto &step : steps)
     {
-        std::cout << "\t[" << ++segment << "]: " << step.maneuver.instruction.type
-                  << " " << step.maneuver.instruction.direction_modifier << "  " << static_cast<int>(step.maneuver.waypoint_type)
-                  << " Duration: " << step.duration << " Distance: " << step.distance
-                  << " Geometry: " << step.geometry_begin << " " << step.geometry_end
-                  << " exit: " << step.maneuver.exit
+        std::cout << "\t[" << ++segment << "]: " << step.maneuver.instruction.type << " "
+                  << step.maneuver.instruction.direction_modifier << "  "
+                  << static_cast<int>(step.maneuver.waypoint_type) << " Duration: " << step.duration
+                  << " Distance: " << step.distance << " Geometry: " << step.geometry_begin << " "
+                  << step.geometry_end << " exit: " << step.maneuver.exit
                   << " Intersections: " << step.intersections.size() << " [";
 
         for (const auto &intersection : step.intersections)
         {
             std::cout << "(bearings:";
-            for( auto bearing : intersection.bearings)
-                std:: cout << " " << bearing;
+            for (auto bearing : intersection.bearings)
+                std::cout << " " << bearing;
             std::cout << ", entry: ";
-            for( auto entry : intersection.entry)
-                std:: cout << " " << entry;
+            for (auto entry : intersection.entry)
+                std::cout << " " << entry;
             std::cout << ")";
         }
 
@@ -203,7 +203,9 @@ void closeOffRoundabout(const bool on_roundabout,
     // removal.
     std::vector<std::size_t> intermediate_steps;
     BOOST_ASSERT(!steps[step_index].intersections.empty());
-    const auto exit_intersection = steps[step_index].intersections.back();
+    // the very first intersection in the steps represents the location of the turn. Following
+    // intersections are locations passed along the way
+    const auto exit_intersection = steps[step_index].intersections.front();
     const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
     if (step_index > 1)
     {
@@ -250,16 +252,19 @@ void closeOffRoundabout(const bool on_roundabout,
                     // All other cases are handled by first rotating both bearings to an
                     // entry_bearing of 0.
                     BOOST_ASSERT(!propagation_step.intersections.empty());
-                    const double angle = [](const double entry_bearing, const double exit_bearing) {
-                        const double offset = 360 - entry_bearing;
-                        const double rotated_exit = [](double bearing, const double offset) {
-                            bearing += offset;
-                            return bearing > 360 ? bearing - 360 : bearing;
-                        }(exit_bearing, offset);
+                    const double angle =
+                        [](const double entry_bearing, const double exit_bearing) {
+                            const double offset = 360 - entry_bearing;
+                            const double rotated_exit = [](double bearing, const double offset) {
+                                bearing += offset;
+                                return bearing > 360 ? bearing - 360 : bearing;
+                            }(exit_bearing, offset);
 
-                        const auto angle = 540 - rotated_exit;
-                        return angle > 360 ? angle - 360 : angle;
-                    }(util::bearing::reverseBearing(entry_intersection.bearings[entry_intersection.in]), exit_bearing);
+                            const auto angle = 540 - rotated_exit;
+                            return angle > 360 ? angle - 360 : angle;
+                        }(util::bearing::reverseBearing(
+                              entry_intersection.bearings[entry_intersection.in]),
+                          exit_bearing);
 
                     propagation_step.maneuver.instruction.direction_modifier =
                         ::osrm::util::guidance::getTurnDirection(angle);
@@ -378,8 +383,11 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         }
     }
     // Potential U-Turn
-    else if (bearingsAreReversed(util::bearing::reverseBearing(one_back_step.intersections.front().bearings[one_back_step.intersections.front().in]),
-                                 current_step.intersections.front().bearings[current_step.intersections.front().out]))
+    else if (bearingsAreReversed(util::bearing::reverseBearing(
+                                     one_back_step.intersections.front()
+                                         .bearings[one_back_step.intersections.front().in]),
+                                 current_step.intersections.front()
+                                     .bearings[current_step.intersections.front().out]))
 
     {
         BOOST_ASSERT(two_back_index < steps.size());
@@ -705,7 +713,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             designated_depart.maneuver.bearing_before = 0;
             designated_depart.maneuver.instruction = TurnInstruction::NO_TURN();
             // we need to make this conform with the intersection format for the first intersection
-            auto& first_intersection = designated_depart.intersections.front();
+            auto &first_intersection = designated_depart.intersections.front();
             first_intersection.bearings = {first_intersection.bearings[first_intersection.out]};
             first_intersection.entry = {true};
             first_intersection.in = Intersection::NO_INDEX;
@@ -732,11 +740,11 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             --step.geometry_end;
         });
 
-        auto& first_step = steps.front();
+        auto &first_step = steps.front();
         // we changed the geometry, we need to recalculate the bearing
         auto bearing = std::round(util::coordinate_calculation::bearing(
             geometry.locations[first_step.geometry_begin],
-            geometry.locations[first_step.geometry_begin+1]));
+            geometry.locations[first_step.geometry_begin + 1]));
         first_step.maneuver.bearing_after = bearing;
         first_step.intersections.front().bearings.front() = bearing;
     }
@@ -755,7 +763,6 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     if (steps.size() < 2 || geometry.locations.size() == 2)
         return;
 
-
     BOOST_ASSERT(geometry.locations.size() >= steps.size());
     auto &next_to_last_step = *(steps.end() - 2);
     // in the end, the situation with the roundabout cannot occur. As a result, we can remove
@@ -772,7 +779,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.maneuver.instruction = TurnInstruction::NO_TURN();
         next_to_last_step.maneuver.bearing_after = 0;
         BOOST_ASSERT(next_to_last_step.intersections.size() == 1);
-        auto& last_intersection = next_to_last_step.intersections.back();
+        auto &last_intersection = next_to_last_step.intersections.back();
         last_intersection.bearings = {last_intersection.bearings[last_intersection.in]};
         last_intersection.entry = {true};
         last_intersection.out = Intersection::NO_INDEX;
@@ -804,11 +811,11 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         BOOST_ASSERT(next_to_last_step.geometry_end == steps.back().geometry_begin + 1);
         BOOST_ASSERT(next_to_last_step.geometry_begin < next_to_last_step.geometry_end);
         next_to_last_step.geometry_end--;
-        auto& last_step = steps.back();
+        auto &last_step = steps.back();
         last_step.geometry_begin--;
         last_step.geometry_end--;
         BOOST_ASSERT(next_to_last_step.geometry_end == last_step.geometry_begin + 1);
-        BOOST_ASSERT(last_step.geometry_begin == last_step.geometry_end-1);
+        BOOST_ASSERT(last_step.geometry_begin == last_step.geometry_end - 1);
         BOOST_ASSERT(next_to_last_step.geometry_end >= 2);
         // we changed the geometry, we need to recalculate the bearing
         auto bearing = std::round(util::coordinate_calculation::bearing(

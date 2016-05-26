@@ -367,3 +367,25 @@ Feature: Basic Roundabout
            | h,d       | gh,cd,cd | depart,roundabout-exit-2,arrive |
            | h,f       | gh,ef,ef | depart,roundabout-exit-1,arrive |
 
+    Scenario: Enter and Exit -- Bearing
+        Given the node map
+           |   |   | a |   |   |
+           |   |   | b |   |   |
+           | h | g |   | c | d |
+           |   |   | e |   |   |
+           |   |   | f |   |   |
+
+       And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | cd    |            |
+            | ef    |            |
+            | gh    |            |
+            | bgecb | roundabout |
+
+       When I route I should get
+           | waypoints | route    | turns                                         | bearing                |
+           | a,d       | ab,cd,cd | depart,roundabout turn left exit-3,arrive     | 0->180,180->224,90->0  |
+           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive | 0->180,180->224,180->0 |
+           | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    | 0->180,180->224,270->0 |
+
