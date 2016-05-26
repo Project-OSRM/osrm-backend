@@ -127,7 +127,7 @@ class EdgeBasedGraphFactory
                                    const std::string &edge_fixed_penalties_filename,
                                    const bool generate_edge_lookup);
 
-    void InsertEdgeBasedNode(const NodeID u, const NodeID v);
+    void InsertEdgeBasedNode(const NodeID u, const NodeID v, bool& has_destination);
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;

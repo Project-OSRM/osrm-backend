@@ -1,10 +1,10 @@
 #ifndef NODE_BASED_GRAPH_HPP
 #define NODE_BASED_GRAPH_HPP
 
-#include "util/dynamic_graph.hpp"
-#include "extractor/node_based_edge.hpp"
-#include "util/graph_utils.hpp"
 #include "extractor/guidance/classification_data.hpp"
+#include "extractor/node_based_edge.hpp"
+#include "util/dynamic_graph.hpp"
+#include "util/graph_utils.hpp"
 
 #include <tbb/parallel_sort.h>
 
@@ -19,8 +19,10 @@ struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
         : distance(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
-          name_id(std::numeric_limits<unsigned>::max()), access_restricted(false), reversed(false),
-          roundabout(false), travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          name_id(std::numeric_limits<unsigned>::max()),
+          destination_id(std::numeric_limits<unsigned>::max()), access_restricted(false),
+          reversed(false), roundabout(false), startpoint(false),
+          travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
@@ -71,8 +73,7 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
 {
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(
         input_edge_list, [](NodeBasedDynamicGraph::InputEdge &output_edge,
-                            const extractor::NodeBasedEdge &input_edge)
-        {
+                            const extractor::NodeBasedEdge &input_edge) {
             output_edge.data.distance = static_cast<int>(input_edge.weight);
             BOOST_ASSERT(output_edge.data.distance > 0);
 

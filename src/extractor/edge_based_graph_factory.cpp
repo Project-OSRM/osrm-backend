@@ -85,7 +85,7 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &out
 
 unsigned EdgeBasedGraphFactory::GetHighestEdgeID() { return m_max_edge_id; }
 
-void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v)
+void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v, bool& has_destination)
 {
     // merge edges together into one EdgeBasedNode
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
@@ -144,11 +144,13 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
+        has_destination = forward_data.destination_id != 0;
+
         // build edges
         m_edge_based_node_list.emplace_back(
             edge_id_to_segment_id(forward_data.edge_id),
             edge_id_to_segment_id(reverse_data.edge_id), current_edge_source_coordinate_id,
-            current_edge_target_coordinate_id, forward_data.name_id, forward_data.destination_id,
+            current_edge_target_coordinate_id, forward_data.name_id, has_destination,
             m_compressed_edge_container.GetPositionForID(edge_id_1),
             m_compressed_edge_container.GetPositionForID(edge_id_2), false, INVALID_COMPONENTID, i,
             forward_data.travel_mode, reverse_data.travel_mode);
@@ -241,6 +243,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 {
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
 
+    std::size_t num_destinations{0};
+
     // loop over all edges and generate new set of nodes
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
@@ -263,14 +267,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
             BOOST_ASSERT(node_u < node_v);
 
+            bool has_destination{false};
+
             // if we found a non-forward edge reverse and try again
             if (edge_data.edge_id == SPECIAL_NODEID)
             {
-                InsertEdgeBasedNode(node_v, node_u);
+                InsertEdgeBasedNode(node_v, node_u, has_destination);
             }
             else
             {
-                InsertEdgeBasedNode(node_u, node_v);
+                InsertEdgeBasedNode(node_u, node_v, has_destination);
             }
         }
     }
@@ -280,6 +286,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
     util::SimpleLogger().Write() << "Generated " << m_edge_based_node_list.size()
                                  << " nodes in edge-expanded graph";
+    util::SimpleLogger().Write() << "Destinations: " << num_destinations;
 }
 
 /// Actually it also generates OriginalEdgeData and serializes them...

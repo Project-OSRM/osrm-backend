@@ -22,7 +22,7 @@ struct EdgeBasedNode
     EdgeBasedNode()
         : forward_segment_id{SPECIAL_SEGMENTID, false},
           reverse_segment_id{SPECIAL_SEGMENTID, false}, u(SPECIAL_NODEID), v(SPECIAL_NODEID),
-          name_id(0), destination_id(0), forward_packed_geometry_id(SPECIAL_EDGEID),
+          name_id(0), has_destination(false), forward_packed_geometry_id(SPECIAL_EDGEID),
           reverse_packed_geometry_id(SPECIAL_EDGEID), component{INVALID_COMPONENTID, false},
           fwd_segment_position(std::numeric_limits<unsigned short>::max()),
           forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
@@ -35,7 +35,7 @@ struct EdgeBasedNode
                            NodeID u,
                            NodeID v,
                            unsigned name_id,
-                           unsigned destination_id,
+                           bool has_destination,
                            unsigned forward_geometry_id_,
                            unsigned reverse_geometry_id_,
                            bool is_tiny_component,
@@ -44,7 +44,7 @@ struct EdgeBasedNode
                            TravelMode forward_travel_mode,
                            TravelMode backward_travel_mode)
         : forward_segment_id(forward_segment_id_), reverse_segment_id(reverse_segment_id_), u(u),
-          v(v), name_id(name_id), destination_id(destination_id),
+          v(v), name_id(name_id), has_destination(has_destination),
           forward_packed_geometry_id(forward_geometry_id_),
           reverse_packed_geometry_id(reverse_geometry_id_),
           component{component_id, is_tiny_component}, fwd_segment_position(fwd_segment_position),
@@ -57,8 +57,8 @@ struct EdgeBasedNode
     SegmentID reverse_segment_id; // needed for edge-expanded graph
     NodeID u;                     // indices into the coordinates array
     NodeID v;                     // indices into the coordinates array
-    unsigned name_id;             // id of the edge name
-    unsigned destination_id;      // id of the edge destination
+    unsigned name_id : 31;        // id of the edge name
+    bool has_destination : 1;     // indicates if there is destination data to look up
 
     unsigned forward_packed_geometry_id;
     unsigned reverse_packed_geometry_id;
