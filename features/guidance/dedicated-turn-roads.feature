@@ -23,6 +23,10 @@ Feature: Slipways and Dedicated Turn Lanes
             | bhf   | trunk_link |        |
             | ecfg  | primary    | second |
 
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | abcd     | ecfg   | c        | no_right_turn |
+
        When I route I should get
             | waypoints | route               | turns                           |
             | a,g       | first,second,second | depart,turn right,arrive        |
@@ -69,6 +73,10 @@ Feature: Slipways and Dedicated Turn Lanes
             | abc   | primary      | road  |
             | bfd   | trunk_link   |       |
             | cde   | trunk        | trunk |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | abc      | cde    | c        | no_right_turn |
 
        When I route I should get
             | waypoints | route                | turns                    |
