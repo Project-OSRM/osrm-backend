@@ -1,11 +1,11 @@
 #ifndef EXTRACTION_CONTAINERS_HPP
 #define EXTRACTION_CONTAINERS_HPP
 
-#include "extractor/internal_extractor_edge.hpp"
-#include "extractor/first_and_last_segment_of_way.hpp"
-#include "extractor/scripting_environment.hpp"
 #include "extractor/external_memory_node.hpp"
+#include "extractor/first_and_last_segment_of_way.hpp"
+#include "extractor/internal_extractor_edge.hpp"
 #include "extractor/restriction.hpp"
+#include "extractor/scripting_environment.hpp"
 
 #include <stxxl/vector>
 #include <unordered_map>
@@ -57,8 +57,6 @@ class ExtractionContainers
     unsigned max_internal_node_id;
 
     ExtractionContainers();
-
-    ~ExtractionContainers();
 
     void PrepareData(const std::string &output_file_name,
                      const std::string &restrictions_file_name,

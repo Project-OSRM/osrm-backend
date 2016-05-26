@@ -1,10 +1,12 @@
 #include "extractor/extractor.hpp"
 
+#include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/extractor_callbacks.hpp"
+#include "extractor/restriction_map.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 
@@ -16,10 +18,12 @@
 #include "util/name_table.hpp"
 #include "util/range_table.hpp"
 #include "util/simple_logger.hpp"
+#include "util/static_graph.hpp"
+#include "util/static_rtree.hpp"
 #include "util/timing_util.hpp"
 
-#include "extractor/compressed_edge_container.hpp"
-#include "extractor/restriction_map.hpp"
+#include "util/typedefs.hpp"
+
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 
@@ -46,9 +50,9 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <type_traits>
 
 namespace osrm
 {
@@ -68,7 +72,8 @@ namespace extractor
  *    is extracted at this point.
  *
  * The result of this process are the following files:
- *  .names : Names of all streets, stored as long consecutive string with prefix sum based index
+ *  .names : Names of all streets and street destinations, stored as long consecutive string with
+ * prefix sum based index
  *  .osrm  : Nodes and edges in a intermediate format that easy to digest for osrm-contract
  *  .restrictions : Turn restrictions that are used by osrm-contract to construct the edge-expanded
  * graph
@@ -177,7 +182,7 @@ int Extractor::run()
                                 local_context.state, "node_function",
                                 boost::cref(static_cast<const osmium::Node &>(*entity)),
                                 boost::ref(result_node));
-                            resulting_nodes.push_back(std::make_pair(x, result_node));
+                            resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
                             break;
                         case osmium::item_type::way:
                             result_way.clear();
@@ -186,7 +191,7 @@ int Extractor::run()
                                 local_context.state, "way_function",
                                 boost::cref(static_cast<const osmium::Way &>(*entity)),
                                 boost::ref(result_way));
-                            resulting_ways.push_back(std::make_pair(x, result_way));
+                            resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
                             break;
                         case osmium::item_type::relation:
                             ++number_of_relations;
@@ -499,7 +504,7 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     edge_based_graph_factory.Run(config.edge_output_path, lua_state,
                                  config.edge_segment_lookup_path, config.edge_penalty_path,
-                                 config.generate_edge_lookup);
+                                 config.destinations_output_path, config.generate_edge_lookup);
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
@@ -630,8 +635,10 @@ void Extractor::WriteIntersectionClassificationData(
     std::vector<unsigned> bearing_counts;
     bearing_counts.reserve(bearing_classes.size());
     std::uint64_t total_bearings = 0;
-    for (const auto &bearing_class : bearing_classes){
-        bearing_counts.push_back(static_cast<unsigned>(bearing_class.getAvailableBearings().size()));
+    for (const auto &bearing_class : bearing_classes)
+    {
+        bearing_counts.push_back(
+            static_cast<unsigned>(bearing_class.getAvailableBearings().size()));
         total_bearings += bearing_class.getAvailableBearings().size();
     }
 
@@ -639,10 +646,11 @@ void Extractor::WriteIntersectionClassificationData(
     file_out_stream << bearing_class_range_table;
 
     file_out_stream << total_bearings;
-    for( const auto &bearing_class : bearing_classes)
+    for (const auto &bearing_class : bearing_classes)
     {
         const auto &bearings = bearing_class.getAvailableBearings();
-        file_out_stream.write( reinterpret_cast<const char*>(&bearings[0]), sizeof(bearings[0]) * bearings.size() );
+        file_out_stream.write(reinterpret_cast<const char *>(&bearings[0]),
+                              sizeof(bearings[0]) * bearings.size());
     }
 
     // FIXME

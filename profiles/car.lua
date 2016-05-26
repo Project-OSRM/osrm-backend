@@ -400,6 +400,8 @@ function way_function (way, result)
 
       if has_destination and has_name and not has_ref then
         result.name = name .. " (" .. destination .. ")"
+      elseif has_destination then
+        result.destination = destination
       end
     end
   end

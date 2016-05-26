@@ -4,11 +4,11 @@
 
 #include "extractor/external_memory_node.hpp"
 #include "extractor/restriction.hpp"
-#include "util/simple_logger.hpp"
 #include "util/for_each_pair.hpp"
+#include "util/simple_logger.hpp"
 
-#include <boost/optional/optional.hpp>
 #include "extractor/extractor_callbacks.hpp"
+#include <boost/optional/optional.hpp>
 
 #include <osmium/osm.hpp>
 
@@ -43,6 +43,8 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node,
         {util::toFixed(util::FloatLongitude(input_node.location().lon())),
          util::toFixed(util::FloatLatitude(input_node.location().lat())),
          OSMNodeID(input_node.id()), result_node.barrier, result_node.traffic_lights});
+
+    // TODO(daniel-j-h): add exit handling for nodes here and down the call chain
 }
 
 void ExtractorCallbacks::ProcessRestriction(
@@ -137,20 +139,48 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         road_classification.road_class = guidance::functionalRoadClassFromTag(data);
     }
 
+    // Deduplicates street names and street destination names based on the street_map map.
+    // In case we do not already store the name, inserts (name, id) tuple and return id.
+    // Otherwise fetches the id based on the name and returns it without insertion.
+
+    const constexpr auto MAX_STRING_LENGTH = 255u;
+
     // Get the unique identifier for the street name
-    const auto &string_map_iterator = string_map.find(parsed_way.name);
+    const auto string_map_iterator = string_map.find(parsed_way.name);
     unsigned name_id = external_memory.name_lengths.size();
     if (string_map.end() == string_map_iterator)
     {
-        auto name_length = std::min<unsigned>(255u, parsed_way.name.size());
+        auto name_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.name.size());
+
+        external_memory.name_char_data.reserve(name_id + name_length);
         std::copy(parsed_way.name.c_str(), parsed_way.name.c_str() + name_length,
                   std::back_inserter(external_memory.name_char_data));
+
         external_memory.name_lengths.push_back(name_length);
         string_map.insert(std::make_pair(parsed_way.name, name_id));
     }
     else
     {
         name_id = string_map_iterator->second;
+    }
+
+    // Get the unique identifier for the street destination
+    const auto destination_iter = string_map.find(parsed_way.destination);
+    unsigned destination_id = external_memory.name_lengths.size();
+    if (string_map.end() == destination_iter)
+    {
+        auto dest_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.destination.size());
+
+        external_memory.name_char_data.reserve(destination_id + dest_length);
+        std::copy(parsed_way.destination.c_str(), parsed_way.destination.c_str() + dest_length,
+                  std::back_inserter(external_memory.name_char_data));
+
+        external_memory.name_lengths.push_back(dest_length);
+        string_map.insert(std::make_pair(parsed_way.destination, destination_id));
+    }
+    else
+    {
+        destination_id = destination_iter->second;
     }
 
     const bool split_edge = (parsed_way.forward_speed > 0) &&
@@ -162,10 +192,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     std::transform(input_way.nodes().begin(), input_way.nodes().end(),
                    std::back_inserter(external_memory.used_node_id_list),
-                   [](const osmium::NodeRef &ref)
-                   {
-                       return OSMNodeID(ref.ref());
-                   });
+                   [](const osmium::NodeRef &ref) { return OSMNodeID(ref.ref()); });
 
     const bool is_opposite_way = TRAVEL_MODE_INACCESSIBLE == parsed_way.forward_travel_mode;
 
@@ -174,16 +201,15 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     {
         BOOST_ASSERT(split_edge == false);
         BOOST_ASSERT(parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
-        util::for_each_pair(input_way.nodes().crbegin(), input_way.nodes().crend(),
-                            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
-                            {
-                                external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()),
-                                    name_id, backward_weight_data, true, false,
-                                    parsed_way.roundabout, parsed_way.is_access_restricted,
-                                    parsed_way.is_startpoint, parsed_way.backward_travel_mode,
-                                    false, road_classification));
-                            });
+        util::for_each_pair(
+            input_way.nodes().crbegin(), input_way.nodes().crend(),
+            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+                external_memory.all_edges_list.push_back(InternalExtractorEdge(
+                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
+                    destination_id, backward_weight_data, true, false, parsed_way.roundabout,
+                    parsed_way.is_access_restricted, parsed_way.is_startpoint,
+                    parsed_way.backward_travel_mode, false, road_classification));
+            });
 
         external_memory.way_start_end_id_list.push_back(
             {OSMWayID(input_way.id()), OSMNodeID(input_way.nodes().back().ref()),
@@ -194,26 +220,24 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     {
         const bool forward_only =
             split_edge || TRAVEL_MODE_INACCESSIBLE == parsed_way.backward_travel_mode;
-        util::for_each_pair(input_way.nodes().cbegin(), input_way.nodes().cend(),
-                            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
-                            {
-                                external_memory.all_edges_list.push_back(InternalExtractorEdge(
-                                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()),
-                                    name_id, forward_weight_data, true, !forward_only,
-                                    parsed_way.roundabout, parsed_way.is_access_restricted,
-                                    parsed_way.is_startpoint, parsed_way.forward_travel_mode,
-                                    split_edge, road_classification));
-                            });
+        util::for_each_pair(
+            input_way.nodes().cbegin(), input_way.nodes().cend(),
+            [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
+                external_memory.all_edges_list.push_back(InternalExtractorEdge(
+                    OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
+                    destination_id, forward_weight_data, true, !forward_only, parsed_way.roundabout,
+                    parsed_way.is_access_restricted, parsed_way.is_startpoint,
+                    parsed_way.forward_travel_mode, split_edge, road_classification));
+            });
         if (split_edge)
         {
             BOOST_ASSERT(parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
             util::for_each_pair(
                 input_way.nodes().cbegin(), input_way.nodes().cend(),
-                [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
-                {
+                [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
                     external_memory.all_edges_list.push_back(InternalExtractorEdge(
                         OSMNodeID(first_node.ref()), OSMNodeID(last_node.ref()), name_id,
-                        backward_weight_data, false, true, parsed_way.roundabout,
+                        destination_id, backward_weight_data, false, true, parsed_way.roundabout,
                         parsed_way.is_access_restricted, parsed_way.is_startpoint,
                         parsed_way.backward_travel_mode, true, road_classification));
                 });

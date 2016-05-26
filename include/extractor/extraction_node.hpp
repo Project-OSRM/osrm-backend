@@ -8,10 +8,13 @@ namespace extractor
 
 struct ExtractionNode
 {
-    ExtractionNode() : traffic_lights(false), barrier(false) {}
-    void clear() { traffic_lights = barrier = false; }
+    ExtractionNode() { clear(); }
+
+    void clear() { traffic_lights = barrier = exit = false; }
+
     bool traffic_lights;
     bool barrier;
+    bool exit;
 };
 }
 }
