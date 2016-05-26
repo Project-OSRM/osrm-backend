@@ -28,13 +28,13 @@ matrix:
 
     # Debug Builds
     - os: linux
-      compiler: "clang-3.5-sanitze-debug"
+      compiler: "clang-3.8-sanitize-debug"
       sudo: false
       addons:
         apt:
-          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5' ]
-          packages: [ 'clang-3.5', 'llvm-3.5-dev' ]
-      env: CCOMPILER='clang-3.5' CXXCOMPILER='clang++-3.5' BUILD_TYPE='Debug' STATIC=ON
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
+          packages: [ 'clang-3.8', 'llvm-3.8-dev' ]
+      env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Debug' STATIC=ON
     - os: linux
       compiler: "gcc-5-debug"
       # sudo:required is needed for trusty images
@@ -167,6 +167,7 @@ install:
   - ccache -s
   - make install VERBOSE=1
   - popd
+  # waiting on https://github.com/Project-OSRM/osrm-backend/pull/2461
   #- mkdir example/build && pushd example/build
   #- |
   #  if [[ ${STATIC} == "ON" ]]; then
