@@ -1,3 +1,5 @@
+'use strict';
+
 var util = require('util');
 var assert = require('assert');
 
@@ -31,14 +33,15 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        var instructions, bearings, turns, modes, times, distances, summary, intersections;
+                        let pronunciations, instructions, bearings, turns, modes, times, distances, summary, intersections;
 
-                        var json = JSON.parse(body);
+                        let json = JSON.parse(body);
 
-                        var hasRoute = json.code === 'Ok';
+                        let hasRoute = json.code === 'Ok';
 
                         if (hasRoute) {
                             instructions = this.wayList(json.routes[0]);
+                            pronunciations = this.pronunciationList(json.routes[0]);
                             bearings = this.bearingList(json.routes[0]);
                             turns = this.turnList(json.routes[0]);
                             intersections = this.intersectionList(json.routes[0]);
@@ -122,6 +125,7 @@ module.exports = function () {
                             putValue('modes', modes);
                             putValue('times', times);
                             putValue('distances', distances);
+                            putValue('pronunciations', pronunciations);
                         }
 
                         var ok = true;

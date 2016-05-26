@@ -98,10 +98,12 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
             {
                 BOOST_ASSERT(segment_duration >= 0);
                 const auto name = facade.GetNameForID(step_name_id);
+                const auto pronunciation = facade.GetPronunciationForID(step_name_id);
                 const auto distance = leg_geometry.segment_distances[segment_index];
 
                 steps.push_back(RouteStep{step_name_id,
-                                          name,
+                                          std::move(name),
+                                          std::move(pronunciation),
                                           NO_ROTARY_NAME,
                                           segment_duration / 10.0,
                                           distance,
@@ -152,6 +154,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
         BOOST_ASSERT(duration >= 0);
         steps.push_back(RouteStep{step_name_id,
                                   facade.GetNameForID(step_name_id),
+                                  facade.GetPronunciationForID(step_name_id),
                                   NO_ROTARY_NAME,
                                   duration / 10.,
                                   distance,
@@ -175,6 +178,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
 
         steps.push_back(RouteStep{source_node.name_id,
                                   facade.GetNameForID(source_node.name_id),
+                                  facade.GetPronunciationForID(source_node.name_id),
                                   NO_ROTARY_NAME,
                                   duration / 10.,
                                   leg_geometry.segment_distances[segment_index],
@@ -204,6 +208,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     BOOST_ASSERT(!leg_geometry.locations.empty());
     steps.push_back(RouteStep{target_node.name_id,
                               facade.GetNameForID(target_node.name_id),
+                              facade.GetPronunciationForID(target_node.name_id),
                               NO_ROTARY_NAME,
                               ZERO_DURATION,
                               ZERO_DISTANCE,

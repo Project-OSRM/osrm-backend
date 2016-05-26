@@ -349,6 +349,7 @@ function way_function (way, result)
 
   -- parse the remaining tags
   local name = way:get_value_by_key("name")
+  local pronunciation = way:get_value_by_key("name:pronunciation")
   local ref = way:get_value_by_key("ref")
   local junction = way:get_value_by_key("junction")
   -- local barrier = way:get_value_by_key("barrier", "")
@@ -358,6 +359,7 @@ function way_function (way, result)
   -- Set the name that will be used for instructions
   local has_ref = ref and "" ~= ref
   local has_name = name and "" ~= name
+  local has_pronunciation = pronunciation and "" ~= pronunciation
 
   if has_name and has_ref then
     result.name = name .. " (" .. ref .. ")"
@@ -365,8 +367,10 @@ function way_function (way, result)
     result.name = ref
   elseif has_name then
     result.name = name
---  else
-      --    result.name = highway  -- if no name exists, use way type
+  end
+
+  if has_pronunciation then
+    result.pronunciation = pronunciation
   end
 
   if junction and ("roundabout" == junction or "mini_roundabout" == highway) then

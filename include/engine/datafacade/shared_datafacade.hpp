@@ -660,6 +660,11 @@ class SharedDataFacade final : public BaseDataFacade
         return result;
     }
 
+    std::string GetPronunciationForID(const unsigned name_id) const override final
+    {
+        return GetNameForID(name_id + 1);
+    }
+
     bool IsCoreNode(const NodeID id) const override final
     {
         if (m_is_core_node.size() > 0)

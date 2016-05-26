@@ -22,9 +22,11 @@
          - `bearing_before`/`bearing_after` of `StepManeuver` are now deprecated and will be removed in the next major release
          - `location` of `StepManeuvers` is now deprecated and will be removed in the next major release
          - every `RouteStep` now has property `intersections` containing a list of `Intersection` objects.
+     - Support for name pronounciations. New member `pronounciation` in `RouteStep`, based on `name:pronounciation`.
 
    - Profile changes:
      - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
+     - `result.pronounciation` allows you to set way name pronounciations.
 
    - Infrastructure:
      - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:

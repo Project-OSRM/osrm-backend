@@ -146,9 +146,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     const constexpr auto MAX_STRING_LENGTH = 255u;
 
     // Get the unique identifier for the street name
-    const auto string_map_iterator = string_map.find(parsed_way.name);
+    const auto name_iterator = string_map.find(parsed_way.name);
     unsigned name_id = external_memory.name_lengths.size();
-    if (string_map.end() == string_map_iterator)
+    if (string_map.end() == name_iterator)
     {
         auto name_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.name.size());
 
@@ -158,11 +158,17 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                   std::back_inserter(external_memory.name_char_data));
 
         external_memory.name_lengths.push_back(name_length);
+
+        auto pronunciation_length = std::min<unsigned>(255u, parsed_way.pronunciation.size());
+        std::copy(parsed_way.pronunciation.c_str(), parsed_way.pronunciation.c_str() + pronunciation_length,
+                  std::back_inserter(external_memory.name_char_data));
+        external_memory.name_lengths.push_back(pronunciation_length);
+
         string_map.insert(std::make_pair(parsed_way.name, name_id));
     }
     else
     {
-        name_id = string_map_iterator->second;
+        name_id = name_iterator->second;
     }
 
     const bool split_edge = (parsed_way.forward_speed > 0) &&

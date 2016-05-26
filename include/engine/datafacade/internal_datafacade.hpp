@@ -591,6 +591,14 @@ class InternalDataFacade final : public BaseDataFacade
         return result;
     }
 
+    std::string GetPronunciationForID(const unsigned name_id) const override final
+    {
+        // We store the pronounciation directly after the name of a street.
+        // We do this to get around the street length limit of 255 which would hit
+        // if we concatenate these.
+        return GetNameForID(name_id + 1);
+    }
+
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
     {
         return m_via_node_list.at(id);
