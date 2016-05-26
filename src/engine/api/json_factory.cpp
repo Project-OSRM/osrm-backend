@@ -198,6 +198,8 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["name"] = std::move(step.name);
     if (!step.pronunciation.empty())
         route_step.values["pronunciation"] = std::move(step.pronunciation);
+    if (!step.destinations.empty())
+      route_step.values["destinations"] = std::move(step.destinations);
     if (!step.rotary_name.empty())
         route_step.values["rotary_name"] = std::move(step.rotary_name);
 

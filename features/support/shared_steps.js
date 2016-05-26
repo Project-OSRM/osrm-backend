@@ -33,7 +33,7 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        let pronunciations, instructions, bearings, turns, modes, times, distances, summary, intersections;
+                        let destinations, pronunciations, instructions, bearings, turns, modes, times, distances, summary, intersections;
 
                         let json = JSON.parse(body);
 
@@ -42,6 +42,7 @@ module.exports = function () {
                         if (hasRoute) {
                             instructions = this.wayList(json.routes[0]);
                             pronunciations = this.pronunciationList(json.routes[0]);
+                            destinations = this.destinationsList(json.routes[0]);
                             bearings = this.bearingList(json.routes[0]);
                             turns = this.turnList(json.routes[0]);
                             intersections = this.intersectionList(json.routes[0]);
@@ -126,6 +127,7 @@ module.exports = function () {
                             putValue('times', times);
                             putValue('distances', distances);
                             putValue('pronunciations', pronunciations);
+                            putValue('destinations', destinations);
                         }
 
                         var ok = true;

@@ -3,6 +3,7 @@
 
 #include "util/typedefs.hpp"
 #include <boost/optional/optional_fwd.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <string>
 #include <unordered_map>
@@ -34,7 +35,9 @@ class ExtractorCallbacks
 {
   private:
     // used to deduplicate street names and street destinations: actually maps to name ids
-    std::unordered_map<std::string, unsigned> string_map;
+    using MapKey = std::pair<std::string, std::string>;
+    using MapVal = unsigned;
+    std::unordered_map<MapKey, MapVal, boost::hash<MapKey>> string_map;
     ExtractionContainers &external_memory;
 
   public:

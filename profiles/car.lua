@@ -407,6 +407,8 @@ function way_function (way, result)
       if has_destination and has_name and not has_ref then
         result.name = name .. " (" .. destination .. ")"
       end
+
+      result.destinations = destination
     end
   end
 

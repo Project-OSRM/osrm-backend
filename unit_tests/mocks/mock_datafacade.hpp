@@ -172,6 +172,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     unsigned GetNameIndexFromEdgeID(const unsigned /* id */) const override { return 0; }
     std::string GetNameForID(const unsigned /* name_id */) const override { return ""; }
     std::string GetPronunciationForID(const unsigned /* name_id */) const override { return ""; }
+    std::string GetDestinationsForID(const unsigned /* name_id */) const override { return ""; }
     std::size_t GetCoreSize() const override { return 0; }
     std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }

@@ -143,6 +143,10 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.pronunciation || '');
     };
 
+    this.destinationsList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.destinations || '');
+    };
+
     this.bearingList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.maneuver.bearing_before + '->' + s.maneuver.bearing_after);
     };

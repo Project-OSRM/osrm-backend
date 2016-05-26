@@ -50,6 +50,7 @@ struct RouteStep
     unsigned name_id;
     std::string name;
     std::string pronunciation;
+    std::string destinations;
     std::string rotary_name;
     double duration;
     double distance;
@@ -64,6 +65,7 @@ struct RouteStep
 inline RouteStep getInvalidRouteStep()
 {
     return {0,
+            "",
             "",
             "",
             "",

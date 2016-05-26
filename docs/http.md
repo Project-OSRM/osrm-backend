@@ -437,6 +437,7 @@ step.
   
 - `name`: The name of the way along which travel proceeds.
 - `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
+- `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `mode`: A string signifying the mode of transportation.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
 - `intersections`: A list of `Intersections` that are passed along the segment, the very first belonging to the StepManeuver

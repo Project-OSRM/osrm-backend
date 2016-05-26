@@ -27,7 +27,7 @@ namespace extractor
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
     : external_memory(extraction_containers)
 {
-    string_map[""] = 0;
+    string_map[MapKey("", "")] = 0;
 }
 
 /**
@@ -146,25 +146,38 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     const constexpr auto MAX_STRING_LENGTH = 255u;
 
     // Get the unique identifier for the street name
-    const auto name_iterator = string_map.find(parsed_way.name);
+    // Get the unique identifier for the street name and destination
+    const auto name_iterator = string_map.find(MapKey(parsed_way.name, parsed_way.destinations));
     unsigned name_id = external_memory.name_lengths.size();
     if (string_map.end() == name_iterator)
     {
         auto name_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.name.size());
+        auto destinations_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.destinations.size());
+        auto pronunciation_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.pronunciation.size());
 
-        external_memory.name_char_data.reserve(name_id + name_length);
+
+        external_memory.name_char_data.reserve(name_id + name_length + destinations_length + pronunciation_length);
+
         std::copy(parsed_way.name.c_str(),
                   parsed_way.name.c_str() + name_length,
                   std::back_inserter(external_memory.name_char_data));
 
-        external_memory.name_lengths.push_back(name_length);
-
-        auto pronunciation_length = std::min<unsigned>(255u, parsed_way.pronunciation.size());
-        std::copy(parsed_way.pronunciation.c_str(), parsed_way.pronunciation.c_str() + pronunciation_length,
+        std::copy(parsed_way.destinations.c_str(),
+                  parsed_way.destinations.c_str() + destinations_length,
                   std::back_inserter(external_memory.name_char_data));
+
+
+        std::copy(parsed_way.pronunciation.c_str(),
+                  parsed_way.pronunciation.c_str() + pronunciation_length,
+                  std::back_inserter(external_memory.name_char_data));
+
+        external_memory.name_lengths.push_back(name_length);
+        external_memory.name_lengths.push_back(destinations_length);
         external_memory.name_lengths.push_back(pronunciation_length);
 
-        string_map.insert(std::make_pair(parsed_way.name, name_id));
+        auto k = MapKey{parsed_way.name, parsed_way.destinations};
+        auto v = MapVal{name_id};
+        string_map.emplace(std::move(k), std::move(v));
     }
     else
     {

@@ -6,11 +6,15 @@
      - BREAKING: modifies the file format with new internal identifiers
 
    - API:
-    - paramater `annotate` was renamed to `annotations`.
-    - `annotation` as accidentally placed in `Route` instead of `RouteLeg`
+     - paramater `annotate` was renamed to `annotations`.
+     - `annotation` as accidentally placed in `Route` instead of `RouteLeg`
+     - Support for destination signs. New member `destinations` in `RouteStep`, based on `destination` and `destination:ref`.
+
+   - Profile changes:
+     - `result.destinations` allows you to set a way's destinations
 
    - Infrastructure
-    - BREAKING: Changed the on-disk encoding of the StaticRTree to reduce ramIndex file size. This breaks the **data format**
+     - BREAKING: Changed the on-disk encoding of the StaticRTree to reduce ramIndex file size. This breaks the **data format**
 
    - Bugfixes
     - fixed broken summaries for very short routes
