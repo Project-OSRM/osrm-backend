@@ -7,7 +7,7 @@ var d3 = require('d3-queue');
 module.exports = function () {
     this.initializeEnv = (callback) => {
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
-        this.TIMEOUT = process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT) || 3000;
+        this.TIMEOUT = process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT) || 5000;
         this.setDefaultTimeout(this.TIMEOUT);
         this.ROOT_FOLDER = process.cwd();
         this.OSM_USER = 'osrm';
