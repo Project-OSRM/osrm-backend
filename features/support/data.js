@@ -222,11 +222,12 @@ module.exports = function () {
                 });
             };
 
-            ['osrm','osrm.names','osrm.restrictions','osrm.ebg','osrm.enw','osrm.edges','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.properties','osrm.icd'].forEach(file => {
-                q.defer(rename, file);
-            });
+            ['osrm', 'osrm.ebg', 'osrm.edges', 'osrm.enw', 'osrm.fileIndex', 'osrm.geometry', 'osrm.icd',
+             'osrm.names', 'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions'].forEach(file => {
+                 q.defer(rename, file);
+             });
 
-            ['osrm.edge_segment_lookup','osrm.edge_penalties'].forEach(file => {
+            ['osrm.edge_penalties', 'osrm.edge_segment_lookup'].forEach(file => {
                 q.defer(renameIfExists, file);
             });
 
@@ -280,11 +281,13 @@ module.exports = function () {
 
             var q = d3.queue();
 
-            ['osrm.hsgr','osrm.ebg','osrm.enw','osrm.level','osrm.core','osrm.fileIndex','osrm.geometry','osrm.nodes','osrm.ramIndex','osrm.edges','osrm.datasource_indexes','osrm.datasource_names','osrm.icd','osrm.names','osrm.restrictions','osrm.properties','osrm'].forEach((file) => {
-                q.defer(rename, file);
-            });
+            ['osrm', 'osrm.core', 'osrm.datasource_indexes', 'osrm.datasource_names', 'osrm.ebg','osrm.edges',
+             'osrm.enw', 'osrm.fileIndex', 'osrm.geometry', 'osrm.hsgr', 'osrm.icd','osrm.level', 'osrm.names',
+             'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions'].forEach((file) => {
+                 q.defer(rename, file);
+             });
 
-            ['osrm.edge_segment_lookup','osrm.edge_penalties'].forEach(file => {
+            ['osrm.edge_penalties', 'osrm.edge_segment_lookup'].forEach(file => {
                 q.defer(renameIfExists, file);
             });
 
