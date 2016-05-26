@@ -228,14 +228,17 @@ module.exports = function () {
     });
 
     this.Given(/^the raster source$/, (data, callback) => {
+        this.updateFingerprintExtract(data);
         fs.writeFile(path.resolve(this.TEST_FOLDER, 'rastersource.asc'), data, callback);
     });
 
     this.Given(/^the speed file$/, (data, callback) => {
+        this.updateFingerprintContract(data);
         fs.writeFile(path.resolve(this.TEST_FOLDER, 'speeds.csv'), data, callback);
     });
 
     this.Given(/^the turn penalty file$/, (data, callback) => {
+        this.updateFingerprintContract(data);
         fs.writeFile(path.resolve(this.TEST_FOLDER, 'penalties.csv'), data, callback);
     });
 
@@ -249,9 +252,11 @@ module.exports = function () {
     });
 
     this.Given(/^the data has been extracted$/, (callback) => {
-        this.writeAndExtract((err) => {
-            if (err) this.processError = err;
-            callback();
+        this.osmData.populate(() => {
+            this.writeAndExtract((err) => {
+                if (err) this.processError = err;
+                callback();
+            });
         });
     });
 
