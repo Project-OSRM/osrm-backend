@@ -171,7 +171,7 @@ script:
 after_success:
   - |
     if [ -n "${RUN_CLANG_FORMAT}" ]; then
-      ./scripts/format.sh || true # we don't want to fail just yet
+      ./scripts/format.sh # we don't want to fail just yet
     fi
   - |
     if [ -n "${COVERAGE}" ]; then
