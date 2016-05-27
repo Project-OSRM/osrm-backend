@@ -152,7 +152,7 @@ install:
     fi
   - popd
   - mkdir example/build && pushd example/build
-  - cmake ..
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make
   - popd
 

@@ -8,4 +8,4 @@ Version: v@OSRM_VERSION_MAJOR@.@OSRM_VERSION_MINOR@.@OSRM_VERSION_PATCH@
 Requires:
 Libs: -L${libdir} -losrm
 Libs.private: @ENGINE_LIBRARY_LISTING@
-Cflags: -I${includedir} -I${includedir}/osrm
+Cflags: -I${includedir} -I${includedir}/osrm @OSRM_INCLUDE_PATHS_STRING@ @OSRM_DEFINES_STRING@ @CMAKE_CXX_FLAGS@
