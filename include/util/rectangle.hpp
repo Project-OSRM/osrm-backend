@@ -7,10 +7,10 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <iomanip>
 #include <algorithm>
-#include <utility>
+#include <iomanip>
 #include <limits>
+#include <utility>
 
 #include <cstdint>
 
@@ -136,20 +136,20 @@ struct RectangleInt2D
                 location, Coordinate(max_lon, location.lat));
             break;
         case NORTH_EAST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(max_lon, max_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(max_lon, max_lat));
             break;
         case NORTH_WEST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(min_lon, max_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(min_lon, max_lat));
             break;
         case SOUTH_EAST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(max_lon, min_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(max_lon, min_lat));
             break;
         case SOUTH_WEST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(min_lon, min_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(min_lon, min_lat));
             break;
         default:
             break;

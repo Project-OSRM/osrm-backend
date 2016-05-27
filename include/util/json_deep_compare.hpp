@@ -1,8 +1,8 @@
 #ifndef UTIL_JSON_DEEP_COMPARE_HPP
 #define UTIL_JSON_DEEP_COMPARE_HPP
 
-#include "util/json_container.hpp"
 #include "util/integer_range.hpp"
+#include "util/json_container.hpp"
 
 #include <boost/assert.hpp>
 
@@ -24,22 +24,26 @@ struct Comparator : mapbox::util::static_visitor<bool>
     {
     }
 
-    bool operator()(const String &lhs, const String &rhs) const {
-      bool is_same = lhs.value == rhs.value;
-      if (!is_same)
-      {
-        reason = lhs_path + " (= \"" + lhs.value + "\") != " + rhs_path + " (= \"" + rhs.value + "\")";
-      }
-      return is_same;
+    bool operator()(const String &lhs, const String &rhs) const
+    {
+        bool is_same = lhs.value == rhs.value;
+        if (!is_same)
+        {
+            reason = lhs_path + " (= \"" + lhs.value + "\") != " + rhs_path + " (= \"" + rhs.value +
+                     "\")";
+        }
+        return is_same;
     }
 
-    bool operator()(const Number &lhs, const Number &rhs) const {
-      bool is_same = lhs.value == rhs.value;
-      if (!is_same)
-      {
-        reason = lhs_path + " (= " + std::to_string(lhs.value) + ") != " + rhs_path + " (= " + std::to_string(rhs.value) + ")";
-      }
-      return is_same;
+    bool operator()(const Number &lhs, const Number &rhs) const
+    {
+        bool is_same = lhs.value == rhs.value;
+        if (!is_same)
+        {
+            reason = lhs_path + " (= " + std::to_string(lhs.value) + ") != " + rhs_path + " (= " +
+                     std::to_string(rhs.value) + ")";
+        }
+        return is_same;
     }
 
     bool operator()(const Object &lhs, const Object &rhs) const
@@ -82,7 +86,8 @@ struct Comparator : mapbox::util::static_visitor<bool>
             const auto &rhs_child = rhs.values.find(key)->second;
             const auto &lhs_child = lhs.values.find(key)->second;
             auto is_same = mapbox::util::apply_visitor(
-                Comparator(reason, lhs_path + "." + key, rhs_path + "." + key), lhs_child,
+                Comparator(reason, lhs_path + "." + key, rhs_path + "." + key),
+                lhs_child,
                 rhs_child);
             if (!is_same)
             {
@@ -103,10 +108,12 @@ struct Comparator : mapbox::util::static_visitor<bool>
 
         for (auto i = 0UL; i < lhs.values.size(); ++i)
         {
-            auto is_same = mapbox::util::apply_visitor(
-                Comparator(reason, lhs_path + "[" + std::to_string(i) + "]",
-                           rhs_path + "[" + std::to_string(i) + "]"),
-                lhs.values[i], rhs.values[i]);
+            auto is_same =
+                mapbox::util::apply_visitor(Comparator(reason,
+                                                       lhs_path + "[" + std::to_string(i) + "]",
+                                                       rhs_path + "[" + std::to_string(i) + "]"),
+                                            lhs.values[i],
+                                            rhs.values[i]);
             if (!is_same)
             {
                 return false;
@@ -148,8 +155,8 @@ struct Comparator : mapbox::util::static_visitor<bool>
 
 inline bool compare(const Value &reference, const Value &result, std::string &reason)
 {
-    return mapbox::util::apply_visitor(Comparator(reason, "reference", "result"), reference,
-                                       result);
+    return mapbox::util::apply_visitor(
+        Comparator(reason, "reference", "result"), reference, result);
 }
 }
 }

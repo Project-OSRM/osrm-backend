@@ -1,14 +1,14 @@
 #include "engine/engine.hpp"
-#include "engine/engine_config.hpp"
 #include "engine/api/route_parameters.hpp"
+#include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
-#include "engine/plugins/table.hpp"
+#include "engine/plugins/match.hpp"
 #include "engine/plugins/nearest.hpp"
+#include "engine/plugins/table.hpp"
+#include "engine/plugins/tile.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
-#include "engine/plugins/tile.hpp"
-#include "engine/plugins/match.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/datafacade/internal_datafacade.hpp"
@@ -137,7 +137,8 @@ Engine::Engine(EngineConfig &config)
         {
             throw util::exception("Invalid file paths given!");
         }
-        query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.storage_config);
+        query_data_facade =
+            util::make_unique<datafacade::InternalDataFacade>(config.storage_config);
     }
 
     // Register plugins

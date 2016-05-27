@@ -52,9 +52,10 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()("input,i", boost::program_options::value<boost::filesystem::path>(
-                                                &extractor_config.input_path),
-                                 "Input file in .osm, .osm.bz2 or .osm.pbf format");
+    hidden_options.add_options()(
+        "input,i",
+        boost::program_options::value<boost::filesystem::path>(&extractor_config.input_path),
+        "Input file in .osm, .osm.bz2 or .osm.pbf format");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -64,9 +65,10 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
 
-    const auto* executable = argv[0];
+    const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        boost::filesystem::path(executable).filename().string() + " <input.osm/.osm.bz2/.osm.pbf> [options]");
+        boost::filesystem::path(executable).filename().string() +
+        " <input.osm/.osm.bz2/.osm.pbf> [options]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options

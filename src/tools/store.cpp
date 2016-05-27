@@ -10,7 +10,9 @@
 using namespace osrm;
 
 // generate boost::program_options object for the routing part
-bool generateDataStoreOptions(const int argc, const char *argv[], boost::filesystem::path& base_path)
+bool generateDataStoreOptions(const int argc,
+                              const char *argv[],
+                              boost::filesystem::path &base_path)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -23,9 +25,9 @@ bool generateDataStoreOptions(const int argc, const char *argv[], boost::filesys
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "base,b", boost::program_options::value<boost::filesystem::path>(&base_path),
-        "base path to .osrm file");
+    hidden_options.add_options()("base,b",
+                                 boost::program_options::value<boost::filesystem::path>(&base_path),
+                                 "base path to .osrm file");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -35,7 +37,7 @@ bool generateDataStoreOptions(const int argc, const char *argv[], boost::filesys
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
 
-    const auto* executable = argv[0];
+    const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
         boost::filesystem::path(executable).filename().string() + " [<options>] <configuration>");
     visible_options.add(generic_options).add(config_options);

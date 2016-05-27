@@ -1,5 +1,5 @@
+#include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/original_edge_data.hpp"
@@ -9,7 +9,7 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "storage/storage.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
@@ -258,8 +258,8 @@ int Storage::Run()
     geometry_input_stream.read((char *)&number_of_geometries_indices, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDEX,
                                               number_of_geometries_indices);
-    boost::iostreams::seek(geometry_input_stream, number_of_geometries_indices * sizeof(unsigned),
-                           BOOST_IOS::cur);
+    boost::iostreams::seek(
+        geometry_input_stream, number_of_geometries_indices * sizeof(unsigned), BOOST_IOS::cur);
     geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<extractor::CompressedEdgeContainer::CompressedEdge>(
         SharedDataLayout::GEOMETRIES_LIST, number_of_compressed_geometries);
@@ -300,7 +300,8 @@ int Storage::Run()
         while (std::getline(datasource_names_input_stream, name))
         {
             m_datasource_name_offsets.push_back(m_datasource_name_data.size());
-            std::copy(name.c_str(), name.c_str() + name.size(),
+            std::copy(name.c_str(),
+                      name.c_str() + name.size(),
                       std::back_inserter(m_datasource_name_data));
             m_datasource_name_lengths.push_back(name.size());
         }
@@ -394,7 +395,8 @@ int Storage::Run()
               file_index_path_ptr +
                   shared_layout_ptr->GetBlockSize(SharedDataLayout::FILE_INDEX_PATH),
               0);
-    std::copy(absolute_file_index_path.string().begin(), absolute_file_index_path.string().end(),
+    std::copy(absolute_file_index_path.string().begin(),
+              absolute_file_index_path.string().end(),
               file_index_path_ptr);
 
     // Loading street names
@@ -508,15 +510,16 @@ int Storage::Run()
     {
         std::cout << "Copying " << (m_datasource_name_data.end() - m_datasource_name_data.begin())
                   << " chars into name data ptr\n";
-        std::copy(m_datasource_name_data.begin(), m_datasource_name_data.end(),
-                  datasource_name_data_ptr);
+        std::copy(
+            m_datasource_name_data.begin(), m_datasource_name_data.end(), datasource_name_data_ptr);
     }
 
     auto datasource_name_offsets_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_OFFSETS);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_OFFSETS) > 0)
     {
-        std::copy(m_datasource_name_offsets.begin(), m_datasource_name_offsets.end(),
+        std::copy(m_datasource_name_offsets.begin(),
+                  m_datasource_name_offsets.end(),
                   datasource_name_offsets_ptr);
     }
 
@@ -524,7 +527,8 @@ int Storage::Run()
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_LENGTHS);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_LENGTHS) > 0)
     {
-        std::copy(m_datasource_name_lengths.begin(), m_datasource_name_lengths.end(),
+        std::copy(m_datasource_name_lengths.begin(),
+                  m_datasource_name_lengths.end(),
                   datasource_name_lengths_ptr);
     }
 

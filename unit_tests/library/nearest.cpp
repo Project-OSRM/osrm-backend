@@ -1,17 +1,17 @@
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "args.hpp"
-#include "fixture.hpp"
 #include "coordinates.hpp"
+#include "fixture.hpp"
 
 #include "osrm/nearest_parameters.hpp"
 
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
-#include "osrm/status.hpp"
 #include "osrm/osrm.hpp"
+#include "osrm/status.hpp"
 
 BOOST_AUTO_TEST_SUITE(nearest)
 

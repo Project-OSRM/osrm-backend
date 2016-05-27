@@ -1,8 +1,8 @@
 #ifndef TRIP_PARAMETERS_GRAMMAR_HPP
 #define TRIP_PARAMETERS_GRAMMAR_HPP
 
-#include "engine/api/trip_parameters.hpp"
 #include "server/api/route_parameters_grammar.hpp"
+#include "engine/api/trip_parameters.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 
@@ -26,10 +26,8 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
 
     TripParametersGrammar() : BaseGrammar(root_rule)
     {
-        root_rule
-            = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json")
-            > -('?' > (BaseGrammar::base_rule(qi::_r1)) % '&')
-            ;
+        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+                    -('?' > (BaseGrammar::base_rule(qi::_r1)) % '&');
     }
 
   private:

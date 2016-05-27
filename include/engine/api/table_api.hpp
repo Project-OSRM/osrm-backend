@@ -2,15 +2,15 @@
 #define ENGINE_API_TABLE_HPP
 
 #include "engine/api/base_api.hpp"
-#include "engine/api/table_parameters.hpp"
 #include "engine/api/json_factory.hpp"
+#include "engine/api/table_parameters.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 
-#include "engine/guidance/assemble_leg.hpp"
-#include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_geometry.hpp"
+#include "engine/guidance/assemble_leg.hpp"
 #include "engine/guidance/assemble_overview.hpp"
+#include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_steps.hpp"
 
 #include "engine/internal_route_result.hpp"
@@ -78,11 +78,10 @@ class TableAPI final : public BaseAPI
         json_waypoints.values.reserve(phantoms.size());
         BOOST_ASSERT(phantoms.size() == parameters.coordinates.size());
 
-        boost::range::transform(phantoms, std::back_inserter(json_waypoints.values),
-                                [this](const PhantomNode &phantom)
-                                {
-                                    return BaseAPI::MakeWaypoint(phantom);
-                                });
+        boost::range::transform(
+            phantoms,
+            std::back_inserter(json_waypoints.values),
+            [this](const PhantomNode &phantom) { return BaseAPI::MakeWaypoint(phantom); });
         return json_waypoints;
     }
 
@@ -91,9 +90,9 @@ class TableAPI final : public BaseAPI
     {
         util::json::Array json_waypoints;
         json_waypoints.values.reserve(indices.size());
-        boost::range::transform(indices, std::back_inserter(json_waypoints.values),
-                                [this, phantoms](const std::size_t idx)
-                                {
+        boost::range::transform(indices,
+                                std::back_inserter(json_waypoints.values),
+                                [this, phantoms](const std::size_t idx) {
                                     BOOST_ASSERT(idx < phantoms.size());
                                     return BaseAPI::MakeWaypoint(phantoms[idx]);
                                 });
@@ -111,9 +110,10 @@ class TableAPI final : public BaseAPI
             auto row_begin_iterator = values.begin() + (row * number_of_columns);
             auto row_end_iterator = values.begin() + ((row + 1) * number_of_columns);
             json_row.values.resize(number_of_columns);
-            std::transform(row_begin_iterator, row_end_iterator, json_row.values.begin(),
-                           [](const EdgeWeight duration)
-                           {
+            std::transform(row_begin_iterator,
+                           row_end_iterator,
+                           json_row.values.begin(),
+                           [](const EdgeWeight duration) {
                                if (duration == INVALID_EDGE_WEIGHT)
                                {
                                    return util::json::Value(util::json::Null());

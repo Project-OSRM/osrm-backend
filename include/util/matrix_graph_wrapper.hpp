@@ -1,9 +1,9 @@
 #ifndef MATRIX_GRAPH_WRAPPER_H
 #define MATRIX_GRAPH_WRAPPER_H
 
-#include <vector>
 #include <cstddef>
 #include <iterator>
+#include <vector>
 
 #include "util/typedefs.hpp"
 
@@ -20,7 +20,9 @@ template <typename T> class MatrixGraphWrapper
 {
   public:
     MatrixGraphWrapper(std::vector<T> table, const std::size_t number_of_nodes)
-        : table_(std::move(table)), number_of_nodes_(number_of_nodes){}
+        : table_(std::move(table)), number_of_nodes_(number_of_nodes)
+    {
+    }
 
     std::size_t GetNumberOfNodes() const { return number_of_nodes_; }
 

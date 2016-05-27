@@ -9,10 +9,10 @@ namespace guidance
 {
 enum class RoundaboutType
 {
-    None,                   // not a roundabout
-    Roundabout,             // standard roundabout
-    Rotary,                 // traffic circle (large roundabout) with dedicated name
-    RoundaboutIntersection  // small roundabout with distinct turns, handled as intersection
+    None,                  // not a roundabout
+    Roundabout,            // standard roundabout
+    Rotary,                // traffic circle (large roundabout) with dedicated name
+    RoundaboutIntersection // small roundabout with distinct turns, handled as intersection
 };
 } /* namespace guidance */
 } /* namespace extractor */

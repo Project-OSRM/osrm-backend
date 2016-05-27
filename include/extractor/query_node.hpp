@@ -36,13 +36,15 @@ struct QueryNode
     static QueryNode min_value()
     {
         return QueryNode(util::FixedLongitude(-180 * COORDINATE_PRECISION),
-                         util::FixedLatitude(-90 * COORDINATE_PRECISION), MIN_OSM_NODEID);
+                         util::FixedLatitude(-90 * COORDINATE_PRECISION),
+                         MIN_OSM_NODEID);
     }
 
     static QueryNode max_value()
     {
         return QueryNode(util::FixedLongitude(180 * COORDINATE_PRECISION),
-                         util::FixedLatitude(90 * COORDINATE_PRECISION), MAX_OSM_NODEID);
+                         util::FixedLatitude(90 * COORDINATE_PRECISION),
+                         MAX_OSM_NODEID);
     }
 };
 }

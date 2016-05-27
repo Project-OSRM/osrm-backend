@@ -1,13 +1,13 @@
 #ifndef GRAPH_LOADER_HPP
 #define GRAPH_LOADER_HPP
 
-#include "util/fingerprint.hpp"
-#include "util/exception.hpp"
-#include "util/simple_logger.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
+#include "util/exception.hpp"
+#include "util/fingerprint.hpp"
+#include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -121,12 +121,13 @@ NodeID loadEdgesFromFile(std::istream &input_stream,
 
 #ifndef NDEBUG
     SimpleLogger().Write() << "Validating loaded edges...";
-    tbb::parallel_sort(edge_list.begin(), edge_list.end(),
-                       [](const extractor::NodeBasedEdge &lhs, const extractor::NodeBasedEdge &rhs)
-                       {
-                           return (lhs.source < rhs.source) ||
-                                  (lhs.source == rhs.source && lhs.target < rhs.target);
-                       });
+    tbb::parallel_sort(
+        edge_list.begin(),
+        edge_list.end(),
+        [](const extractor::NodeBasedEdge &lhs, const extractor::NodeBasedEdge &rhs) {
+            return (lhs.source < rhs.source) ||
+                   (lhs.source == rhs.source && lhs.target < rhs.target);
+        });
     for (auto i = 1u; i < edge_list.size(); ++i)
     {
         const auto &edge = edge_list[i];

@@ -1,18 +1,18 @@
 #ifndef TRIP_FARTHEST_INSERTION_HPP
 #define TRIP_FARTHEST_INSERTION_HPP
 
-#include "util/typedefs.hpp"
 #include "util/dist_table_wrapper.hpp"
+#include "util/typedefs.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/json_container.hpp"
 #include <boost/assert.hpp>
 
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
+#include <limits>
 #include <string>
 #include <vector>
-#include <limits>
 
 namespace osrm
 {
@@ -152,7 +152,6 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     // 4. repeat 2-3 until all locations are visited
     // 5. DONE!
     //////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     // Guard against division-by-zero in the code path below.
     BOOST_ASSERT(number_of_locations > 0);

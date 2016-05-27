@@ -23,7 +23,6 @@ const constexpr long double RAD_TO_DEGREE = 1. / DEGREE_TO_RAD;
 const constexpr long double EARTH_RADIUS = 6372797.560856;
 }
 
-
 //! Takes the squared euclidean distance of the input coordinates. Does not return meters!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs);
 
@@ -32,8 +31,8 @@ double haversineDistance(const Coordinate first_coordinate, const Coordinate sec
 double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 inline std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoordinate &source,
-                                                         const FloatCoordinate &target,
-                                                         const FloatCoordinate &coordinate)
+                                                                const FloatCoordinate &target,
+                                                                const FloatCoordinate &coordinate)
 {
     const FloatCoordinate slope_vector{target.lon - source.lon, target.lat - source.lat};
     const FloatCoordinate rel_coordinate{coordinate.lon - source.lon, coordinate.lat - source.lat};

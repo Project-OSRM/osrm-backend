@@ -32,11 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "contractor/query_edge.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node.hpp"
-#include "util/typedefs.hpp"
 #include "util/deallocating_vector.hpp"
+#include "util/typedefs.hpp"
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include <cstddef>
 

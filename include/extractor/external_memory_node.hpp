@@ -25,15 +25,17 @@ struct ExternalMemoryNode : QueryNode
 
     static ExternalMemoryNode min_value()
     {
-        return ExternalMemoryNode(util::FixedLongitude(0), util::FixedLatitude(0), MIN_OSM_NODEID,
-                                  false, false);
+        return ExternalMemoryNode(
+            util::FixedLongitude(0), util::FixedLatitude(0), MIN_OSM_NODEID, false, false);
     }
 
     static ExternalMemoryNode max_value()
     {
         return ExternalMemoryNode(util::FixedLongitude(std::numeric_limits<int>::max()),
                                   util::FixedLatitude(std::numeric_limits<int>::max()),
-                                  MAX_OSM_NODEID, false, false);
+                                  MAX_OSM_NODEID,
+                                  false,
+                                  false);
     }
 
     bool barrier;

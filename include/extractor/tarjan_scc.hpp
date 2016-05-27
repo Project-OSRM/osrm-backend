@@ -1,11 +1,11 @@
 #ifndef TARJAN_SCC_HPP
 #define TARJAN_SCC_HPP
 
-#include "util/typedefs.hpp"
-#include "util/deallocating_vector.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/query_node.hpp"
+#include "util/deallocating_vector.hpp"
 #include "util/percent.hpp"
+#include "util/typedefs.hpp"
 
 #include "util/integer_range.hpp"
 #include "util/simple_logger.hpp"
@@ -16,9 +16,9 @@
 #include <boost/assert.hpp>
 #include <cstdint>
 
-#include <memory>
 #include <algorithm>
 #include <climits>
+#include <memory>
 #include <stack>
 #include <vector>
 
@@ -160,11 +160,9 @@ template <typename GraphT> class TarjanSCC
         TIMER_STOP(SCC_RUN);
         util::SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN) / 1000. << "s";
 
-        size_one_counter = std::count_if(component_size_vector.begin(), component_size_vector.end(),
-                                         [](unsigned value)
-                                         {
-                                             return 1 == value;
-                                         });
+        size_one_counter = std::count_if(component_size_vector.begin(),
+                                         component_size_vector.end(),
+                                         [](unsigned value) { return 1 == value; });
     }
 
     std::size_t GetNumberOfComponents() const { return component_size_vector.size(); }

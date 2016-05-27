@@ -3,12 +3,12 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
-#include "engine/polyline_compressor.hpp"
+#include "engine/guidance/leg_geometry.hpp"
+#include "engine/guidance/route.hpp"
+#include "engine/guidance/route_leg.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
-#include "engine/guidance/route_leg.hpp"
-#include "engine/guidance/route.hpp"
-#include "engine/guidance/leg_geometry.hpp"
+#include "engine/polyline_compressor.hpp"
 #include "util/coordinate.hpp"
 #include "util/json_container.hpp"
 
@@ -57,7 +57,8 @@ util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
     {
         geojson.values["type"] = "LineString";
         util::json::Array coordinates;
-        std::transform(begin, end, std::back_inserter(coordinates.values), &detail::coordinateToLonLat);
+        std::transform(
+            begin, end, std::back_inserter(coordinates.values), &detail::coordinateToLonLat);
         geojson.values["coordinates"] = std::move(coordinates);
     }
     else if (num_coordinates > 0)

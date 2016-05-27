@@ -1,5 +1,5 @@
-#include "util/exception.hpp"
 #include "util/name_table.hpp"
+#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
@@ -57,7 +57,8 @@ std::string NameTable::GetNameForID(const unsigned name_id) const
     {
         result.resize(range.back() - range.front() + 1);
         std::copy(m_names_char_list.begin() + range.front(),
-                  m_names_char_list.begin() + range.back() + 1, result.begin());
+                  m_names_char_list.begin() + range.back() + 1,
+                  result.begin());
     }
     return result;
 }

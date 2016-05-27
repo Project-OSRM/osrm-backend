@@ -34,10 +34,10 @@ class NearestAPI final : public BaseAPI
 
         util::json::Array waypoints;
         waypoints.values.resize(phantom_nodes.front().size());
-        std::transform(phantom_nodes.front().begin(), phantom_nodes.front().end(),
+        std::transform(phantom_nodes.front().begin(),
+                       phantom_nodes.front().end(),
                        waypoints.values.begin(),
-                       [this](const PhantomNodeWithDistance &phantom_with_distance)
-                       {
+                       [this](const PhantomNodeWithDistance &phantom_with_distance) {
                            auto waypoint = MakeWaypoint(phantom_with_distance.phantom_node);
                            waypoint.values["distance"] = phantom_with_distance.distance;
                            return waypoint;

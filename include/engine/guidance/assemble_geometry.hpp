@@ -1,18 +1,18 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_GEOMETRY_HPP
 #define ENGINE_GUIDANCE_ASSEMBLE_GEOMETRY_HPP
 
-#include "engine/internal_route_result.hpp"
-#include "engine/phantom_node.hpp"
-#include "engine/guidance/route_step.hpp"
-#include "engine/guidance/leg_geometry.hpp"
-#include "engine/guidance/toolkit.hpp"
-#include "util/coordinate_calculation.hpp"
-#include "util/coordinate.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "engine/guidance/leg_geometry.hpp"
+#include "engine/guidance/route_step.hpp"
+#include "engine/guidance/toolkit.hpp"
+#include "engine/internal_route_result.hpp"
+#include "engine/phantom_node.hpp"
+#include "util/coordinate.hpp"
+#include "util/coordinate_calculation.hpp"
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace osrm
 {
@@ -62,7 +62,8 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
         }
 
         prev_coordinate = coordinate;
-        geometry.annotations.emplace_back(LegGeometry::Annotation{current_distance, path_point.duration_until_turn / 10.});
+        geometry.annotations.emplace_back(
+            LegGeometry::Annotation{current_distance, path_point.duration_until_turn / 10.});
         geometry.locations.push_back(std::move(coordinate));
     }
     current_distance =
@@ -70,7 +71,8 @@ LegGeometry assembleGeometry(const DataFacadeT &facade,
     cumulative_distance += current_distance;
     // segment leading to the target node
     geometry.segment_distances.push_back(cumulative_distance);
-    geometry.annotations.emplace_back(LegGeometry::Annotation{current_distance, target_node.forward_weight / 10.});
+    geometry.annotations.emplace_back(
+        LegGeometry::Annotation{current_distance, target_node.forward_weight / 10.});
     geometry.segment_offsets.push_back(geometry.locations.size());
     geometry.locations.push_back(target_node.location);
 

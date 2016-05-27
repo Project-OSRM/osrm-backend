@@ -3,9 +3,9 @@
 
 // implements all data storage when shared memory _IS_ used
 
-#include "engine/datafacade/datafacade_base.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -138,9 +138,11 @@ class SharedDataFacade final : public BaseDataFacade
 
         auto tree_ptr = data_layout->GetBlockPtr<RTreeNode>(
             shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
-        m_static_rtree.reset(new SharedRTree(
-            tree_ptr, data_layout->num_entries[storage::SharedDataLayout::R_SEARCH_TREE],
-            file_index_path, m_coordinate_list));
+        m_static_rtree.reset(
+            new SharedRTree(tree_ptr,
+                            data_layout->num_entries[storage::SharedDataLayout::R_SEARCH_TREE],
+                            file_index_path,
+                            m_coordinate_list));
         m_geospatial_query.reset(
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
@@ -164,7 +166,8 @@ class SharedDataFacade final : public BaseDataFacade
     {
         auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
             shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
-        m_coordinate_list.reset(coordinate_list_ptr,
+        m_coordinate_list.reset(
+            coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
@@ -332,8 +335,8 @@ class SharedDataFacade final : public BaseDataFacade
                 "No shared memory blocks found, have you forgotten to run osrm-datastore?");
         }
         data_timestamp_ptr = static_cast<storage::SharedDataTimestamp *>(
-            storage::makeSharedMemory(storage::CURRENT_REGIONS,
-                                      sizeof(storage::SharedDataTimestamp), false, false)
+            storage::makeSharedMemory(
+                storage::CURRENT_REGIONS, sizeof(storage::SharedDataTimestamp), false, false)
                 ->Ptr());
         CURRENT_LAYOUT = storage::LAYOUT_NONE;
         CURRENT_DATA = storage::DATA_NONE;
@@ -476,7 +479,8 @@ class SharedDataFacade final : public BaseDataFacade
 
         result_nodes.clear();
         result_nodes.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+        std::for_each(m_geometry_list.begin() + begin,
+                      m_geometry_list.begin() + end,
                       [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_nodes.emplace_back(edge.node_id);
                       });
@@ -491,7 +495,8 @@ class SharedDataFacade final : public BaseDataFacade
 
         result_weights.clear();
         result_weights.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+        std::for_each(m_geometry_list.begin() + begin,
+                      m_geometry_list.begin() + end,
                       [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_weights.emplace_back(edge.weight);
                       });
@@ -517,8 +522,8 @@ class SharedDataFacade final : public BaseDataFacade
                                          const util::Coordinate north_east) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
-        const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
-                                        north_east.lat};
+        const util::RectangleInt2D bbox{
+            south_west.lon, north_east.lon, south_west.lat, north_east.lat};
         return m_geospatial_query->Search(bbox);
     }
 
@@ -539,8 +544,8 @@ class SharedDataFacade final : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance,
-                                                              bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodesInRange(
+            input_coordinate, max_distance, bearing, bearing_range);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -570,8 +575,8 @@ class SharedDataFacade final : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
-                                                       bearing_range);
+        return m_geospatial_query->NearestPhantomNodes(
+            input_coordinate, max_results, bearing, bearing_range);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -583,8 +588,8 @@ class SharedDataFacade final : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance,
-                                                       bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodes(
+            input_coordinate, max_results, max_distance, bearing, bearing_range);
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
@@ -596,9 +601,8 @@ class SharedDataFacade final : public BaseDataFacade
             input_coordinate);
     }
 
-    std::pair<PhantomNode, PhantomNode>
-    NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
-                                                      const double max_distance) const override final
+    std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
+        const util::Coordinate input_coordinate, const double max_distance) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
@@ -650,7 +654,8 @@ class SharedDataFacade final : public BaseDataFacade
         {
             result.resize(range.back() - range.front() + 1);
             std::copy(m_names_char_list.begin() + range.front(),
-                      m_names_char_list.begin() + range.back() + 1, result.begin());
+                      m_names_char_list.begin() + range.back() + 1,
+                      result.begin());
         }
         return result;
     }
@@ -690,7 +695,8 @@ class SharedDataFacade final : public BaseDataFacade
         else
         {
             std::for_each(
-                m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
+                m_datasource_list.begin() + begin,
+                m_datasource_list.begin() + end,
                 [&](const uint8_t &datasource_id) { result_datasources.push_back(datasource_id); });
         }
     }
@@ -729,7 +735,8 @@ class SharedDataFacade final : public BaseDataFacade
         auto range = m_bearing_ranges_table->GetRange(bearing_class_id);
         util::guidance::BearingClass result;
         for (auto itr = m_bearing_values_table.begin() + range.front();
-             itr != m_bearing_values_table.begin() + range.back() + 1; ++itr)
+             itr != m_bearing_values_table.begin() + range.back() + 1;
+             ++itr)
             result.add(*itr);
         return result;
     }

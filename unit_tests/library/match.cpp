@@ -1,9 +1,9 @@
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "args.hpp"
-#include "fixture.hpp"
 #include "coordinates.hpp"
+#include "fixture.hpp"
 #include "waypoint_check.hpp"
 
 #include "osrm/match_parameters.hpp"
@@ -11,8 +11,8 @@
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
-#include "osrm/status.hpp"
 #include "osrm/osrm.hpp"
+#include "osrm/status.hpp"
 
 BOOST_AUTO_TEST_SUITE(match)
 
@@ -49,14 +49,21 @@ BOOST_AUTO_TEST_CASE(test_match)
         {
             BOOST_CHECK(waypoint_check(waypoint));
             const auto &waypoint_object = waypoint.get<json::Object>();
-            const auto matchings_index = waypoint_object.values.at("matchings_index").get<json::Number>().value;
-            const auto waypoint_index = waypoint_object.values.at("waypoint_index").get<json::Number>().value;
-            const auto &route_legs = matchings[matchings_index].get<json::Object>().values.at("legs").get<json::Array>().values;
+            const auto matchings_index =
+                waypoint_object.values.at("matchings_index").get<json::Number>().value;
+            const auto waypoint_index =
+                waypoint_object.values.at("waypoint_index").get<json::Number>().value;
+            const auto &route_legs = matchings[matchings_index]
+                                         .get<json::Object>()
+                                         .values.at("legs")
+                                         .get<json::Array>()
+                                         .values;
             BOOST_CHECK_LT(waypoint_index, route_legs.size() + 1);
             BOOST_CHECK_LT(matchings_index, number_of_matchings);
-        } else
+        }
+        else
         {
-          BOOST_CHECK(waypoint.is<json::Null>());
+            BOOST_CHECK(waypoint.is<json::Null>());
         }
     }
 }

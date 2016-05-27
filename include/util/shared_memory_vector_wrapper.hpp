@@ -8,8 +8,8 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace osrm
 {

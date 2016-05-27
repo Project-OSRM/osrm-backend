@@ -11,18 +11,18 @@
 #include "util/typedefs.hpp"
 
 #include "engine/status.hpp"
-#include "util/json_container.hpp"
 #include "osrm/osrm.hpp"
+#include "util/json_container.hpp"
 
-#include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 
 #include <ctime>
 
 #include <algorithm>
-#include <iterator>
 #include <iostream>
+#include <iterator>
 #include <string>
 
 namespace osrm
@@ -103,10 +103,11 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         {
             const auto position = std::distance(request_string.begin(), api_iterator);
             BOOST_ASSERT(position >= 0);
-            const auto context_begin = request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
+            const auto context_begin =
+                request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
             BOOST_ASSERT(context_begin >= request_string.begin());
-            const auto context_end =
-                request_string.begin() + std::min<std::size_t>(position + 3UL, request_string.size());
+            const auto context_end = request_string.begin() +
+                                     std::min<std::size_t>(position + 3UL, request_string.size());
             BOOST_ASSERT(context_end <= request_string.end());
             std::string context(context_begin, context_end);
 
@@ -133,7 +134,8 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         else
         {
             BOOST_ASSERT(result.is<std::string>());
-            std::copy(result.get<std::string>().cbegin(), result.get<std::string>().cend(),
+            std::copy(result.get<std::string>().cbegin(),
+                      result.get<std::string>().cend(),
                       std::back_inserter(current_reply.content));
 
             current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");

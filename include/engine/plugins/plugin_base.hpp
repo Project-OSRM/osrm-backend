@@ -1,15 +1,15 @@
 #ifndef BASE_PLUGIN_HPP
 #define BASE_PLUGIN_HPP
 
-#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/api/base_parameters.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/status.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/json_container.hpp"
 #include "util/integer_range.hpp"
+#include "util/json_container.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -31,11 +31,10 @@ class BasePlugin
 
     bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates)
     {
-        return !std::any_of(std::begin(coordinates), std::end(coordinates),
-                            [](const util::Coordinate coordinate)
-                            {
-                                return !coordinate.IsValid();
-                            });
+        return !std::any_of(
+            std::begin(coordinates), std::end(coordinates), [](const util::Coordinate coordinate) {
+                return !coordinate.IsValid();
+            });
     }
 
     Status Error(const std::string &code,
@@ -53,43 +52,38 @@ class BasePlugin
     SnapPhantomNodes(const std::vector<PhantomNodePair> &phantom_node_pair_list) const
     {
         const auto check_component_id_is_tiny =
-            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
-        {
-            return phantom_pair.first.component.is_tiny;
-        };
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair) {
+                return phantom_pair.first.component.is_tiny;
+            };
 
         // are all phantoms from a tiny cc?
         const auto check_all_in_same_component =
-            [](const std::vector<std::pair<PhantomNode, PhantomNode>> &nodes)
-        {
-            const auto component_id = nodes.front().first.component.id;
+            [](const std::vector<std::pair<PhantomNode, PhantomNode>> &nodes) {
+                const auto component_id = nodes.front().first.component.id;
 
-            return std::all_of(std::begin(nodes), std::end(nodes),
-                               [component_id](const PhantomNodePair &phantom_pair)
-                               {
-                                   return component_id == phantom_pair.first.component.id;
-                               });
-        };
+                return std::all_of(std::begin(nodes),
+                                   std::end(nodes),
+                                   [component_id](const PhantomNodePair &phantom_pair) {
+                                       return component_id == phantom_pair.first.component.id;
+                                   });
+            };
 
         const auto fallback_to_big_component =
-            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
-        {
-            if (phantom_pair.first.component.is_tiny && phantom_pair.second.IsValid() &&
-                !phantom_pair.second.component.is_tiny)
-            {
-                return phantom_pair.second;
-            }
-            return phantom_pair.first;
-        };
+            [](const std::pair<PhantomNode, PhantomNode> &phantom_pair) {
+                if (phantom_pair.first.component.is_tiny && phantom_pair.second.IsValid() &&
+                    !phantom_pair.second.component.is_tiny)
+                {
+                    return phantom_pair.second;
+                }
+                return phantom_pair.first;
+            };
 
-        const auto use_closed_phantom = [](const std::pair<PhantomNode, PhantomNode> &phantom_pair)
-        {
-            return phantom_pair.first;
-        };
+        const auto use_closed_phantom = [](
+            const std::pair<PhantomNode, PhantomNode> &phantom_pair) { return phantom_pair.first; };
 
-        const bool every_phantom_is_in_tiny_cc =
-            std::all_of(std::begin(phantom_node_pair_list), std::end(phantom_node_pair_list),
-                        check_component_id_is_tiny);
+        const bool every_phantom_is_in_tiny_cc = std::all_of(std::begin(phantom_node_pair_list),
+                                                             std::end(phantom_node_pair_list),
+                                                             check_component_id_is_tiny);
         auto all_in_same_component = check_all_in_same_component(phantom_node_pair_list);
 
         std::vector<PhantomNode> snapped_phantoms;
@@ -99,13 +93,17 @@ class BasePlugin
         // component
         if (every_phantom_is_in_tiny_cc && all_in_same_component)
         {
-            std::transform(phantom_node_pair_list.begin(), phantom_node_pair_list.end(),
-                           std::back_inserter(snapped_phantoms), use_closed_phantom);
+            std::transform(phantom_node_pair_list.begin(),
+                           phantom_node_pair_list.end(),
+                           std::back_inserter(snapped_phantoms),
+                           use_closed_phantom);
         }
         else
         {
-            std::transform(phantom_node_pair_list.begin(), phantom_node_pair_list.end(),
-                           std::back_inserter(snapped_phantoms), fallback_to_big_component);
+            std::transform(phantom_node_pair_list.begin(),
+                           phantom_node_pair_list.end(),
+                           std::back_inserter(snapped_phantoms),
+                           fallback_to_big_component);
         }
 
         return snapped_phantoms;
@@ -137,9 +135,11 @@ class BasePlugin
             }
             if (use_bearings && parameters.bearings[i])
             {
-                phantom_nodes[i] = facade.NearestPhantomNodesInRange(
-                    parameters.coordinates[i], radiuses[i], parameters.bearings[i]->bearing,
-                    parameters.bearings[i]->range);
+                phantom_nodes[i] =
+                    facade.NearestPhantomNodesInRange(parameters.coordinates[i],
+                                                      radiuses[i],
+                                                      parameters.bearings[i]->bearing,
+                                                      parameters.bearings[i]->range);
             }
             else
             {
@@ -179,15 +179,18 @@ class BasePlugin
             {
                 if (use_radiuses && parameters.radiuses[i])
                 {
-                    phantom_nodes[i] = facade.NearestPhantomNodes(
-                        parameters.coordinates[i], number_of_results, *parameters.radiuses[i],
-                        parameters.bearings[i]->bearing, parameters.bearings[i]->range);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(parameters.coordinates[i],
+                                                                  number_of_results,
+                                                                  *parameters.radiuses[i],
+                                                                  parameters.bearings[i]->bearing,
+                                                                  parameters.bearings[i]->range);
                 }
                 else
                 {
-                    phantom_nodes[i] = facade.NearestPhantomNodes(
-                        parameters.coordinates[i], number_of_results,
-                        parameters.bearings[i]->bearing, parameters.bearings[i]->range);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(parameters.coordinates[i],
+                                                                  number_of_results,
+                                                                  parameters.bearings[i]->bearing,
+                                                                  parameters.bearings[i]->range);
                 }
             }
             else
@@ -238,14 +241,17 @@ class BasePlugin
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], *parameters.radiuses[i],
-                            parameters.bearings[i]->bearing, parameters.bearings[i]->range);
+                            parameters.coordinates[i],
+                            *parameters.radiuses[i],
+                            parameters.bearings[i]->bearing,
+                            parameters.bearings[i]->range);
                 }
                 else
                 {
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i], parameters.bearings[i]->bearing,
+                            parameters.coordinates[i],
+                            parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range);
                 }
             }

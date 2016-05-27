@@ -4,8 +4,8 @@
 // implements all data storage when shared memory _IS_ used
 
 #include "contractor/query_edge.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/typedefs.hpp"
@@ -177,7 +177,8 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; };
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
 
-    util::guidance::BearingClass GetBearingClass(const BearingClassID /*bearing_class_id*/) const override
+    util::guidance::BearingClass
+    GetBearingClass(const BearingClassID /*bearing_class_id*/) const override
     {
         util::guidance::BearingClass result;
         result.add(0);

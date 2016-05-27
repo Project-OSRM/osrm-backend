@@ -9,10 +9,10 @@
 
 #include "osrm/json_container.hpp"
 
-#include <ostream>
-#include <vector>
 #include <iterator>
+#include <ostream>
 #include <string>
+#include <vector>
 
 namespace osrm
 {

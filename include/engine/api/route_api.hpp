@@ -42,14 +42,16 @@ class RouteAPI : public BaseAPI
         auto number_of_routes = raw_route.has_alternative() ? 2UL : 1UL;
         util::json::Array routes;
         routes.values.resize(number_of_routes);
-        routes.values[0] =
-            MakeRoute(raw_route.segment_end_coordinates, raw_route.unpacked_path_segments,
-                      raw_route.source_traversed_in_reverse, raw_route.target_traversed_in_reverse);
+        routes.values[0] = MakeRoute(raw_route.segment_end_coordinates,
+                                     raw_route.unpacked_path_segments,
+                                     raw_route.source_traversed_in_reverse,
+                                     raw_route.target_traversed_in_reverse);
         if (raw_route.has_alternative())
         {
             std::vector<std::vector<PathData>> wrapped_leg(1);
             wrapped_leg.front() = std::move(raw_route.unpacked_alternative);
-            routes.values[1] = MakeRoute(raw_route.segment_end_coordinates, wrapped_leg,
+            routes.values[1] = MakeRoute(raw_route.segment_end_coordinates,
+                                         wrapped_leg,
                                          raw_route.alt_source_traversed_in_reverse,
                                          raw_route.alt_target_traversed_in_reverse);
         }
@@ -93,14 +95,23 @@ class RouteAPI : public BaseAPI
 
             auto leg_geometry = guidance::assembleGeometry(
                 BaseAPI::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
-            auto leg = guidance::assembleLeg(facade, path_data, leg_geometry, phantoms.source_phantom,
-                                             phantoms.target_phantom, reversed_target, parameters.steps);
+            auto leg = guidance::assembleLeg(facade,
+                                             path_data,
+                                             leg_geometry,
+                                             phantoms.source_phantom,
+                                             phantoms.target_phantom,
+                                             reversed_target,
+                                             parameters.steps);
 
             if (parameters.steps)
             {
-                auto steps = guidance::assembleSteps(
-                    BaseAPI::facade, path_data, leg_geometry, phantoms.source_phantom,
-                    phantoms.target_phantom, reversed_source, reversed_target);
+                auto steps = guidance::assembleSteps(BaseAPI::facade,
+                                                     path_data,
+                                                     leg_geometry,
+                                                     phantoms.source_phantom,
+                                                     phantoms.target_phantom,
+                                                     reversed_source,
+                                                     reversed_target);
 
                 /* Perform step-based post-processing.
                  *
@@ -133,7 +144,8 @@ class RouteAPI : public BaseAPI
                 guidance::trimShortSegments(steps, leg_geometry);
                 leg.steps = guidance::postProcess(std::move(steps));
                 leg.steps = guidance::collapseTurns(std::move(leg.steps));
-                leg.steps = guidance::assignRelativeLocations(std::move(leg.steps), leg_geometry,
+                leg.steps = guidance::assignRelativeLocations(std::move(leg.steps),
+                                                              leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
@@ -161,7 +173,9 @@ class RouteAPI : public BaseAPI
         {
             auto &leg_geometry = leg_geometries[idx];
             std::transform(
-                legs[idx].steps.begin(), legs[idx].steps.end(), std::back_inserter(step_geometries),
+                legs[idx].steps.begin(),
+                legs[idx].steps.end(),
+                std::back_inserter(step_geometries),
                 [this, &leg_geometry](const guidance::RouteStep &step) {
                     if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
                     {
@@ -185,23 +199,25 @@ class RouteAPI : public BaseAPI
                 util::json::Array durations;
                 util::json::Array distances;
                 auto &leg_geometry = leg_geometries[idx];
-                std::for_each(leg_geometry.annotations.begin(),
-                              leg_geometry.annotations.end(),
-                              [this, &durations, &distances](const guidance::LegGeometry::Annotation &step) {
-                                  durations.values.push_back(step.duration);
-                                  distances.values.push_back(step.distance);
-                              });
+                std::for_each(
+                    leg_geometry.annotations.begin(),
+                    leg_geometry.annotations.end(),
+                    [this, &durations, &distances](const guidance::LegGeometry::Annotation &step) {
+                        durations.values.push_back(step.duration);
+                        distances.values.push_back(step.distance);
+                    });
                 util::json::Object annotation;
                 annotation.values["distance"] = std::move(distances);
                 annotation.values["duration"] = std::move(durations);
                 annotations.push_back(std::move(annotation));
             }
-
         }
 
         auto result = json::makeRoute(route,
-                               json::makeRouteLegs(std::move(legs), std::move(step_geometries), std::move(annotations)),
-                               std::move(json_overview));
+                                      json::makeRouteLegs(std::move(legs),
+                                                          std::move(step_geometries),
+                                                          std::move(annotations)),
+                                      std::move(json_overview));
 
         return result;
     }

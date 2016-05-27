@@ -30,8 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/filesystem/path.hpp>
 
-#include <string>
 #include <array>
+#include <string>
 
 namespace osrm
 {
@@ -72,7 +72,7 @@ struct ExtractorConfig
         edge_penalty_path = basepath + ".osrm.edge_penalties";
         edge_based_node_weights_output_path = basepath + ".osrm.enw";
         profile_properties_output_path = basepath + ".osrm.properties";
-        intersection_class_data_output_path = basepath  + ".osrm.icd";
+        intersection_class_data_output_path = basepath + ".osrm.icd";
     }
 
     boost::filesystem::path config_file_path;

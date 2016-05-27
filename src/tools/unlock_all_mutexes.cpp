@@ -1,5 +1,5 @@
-#include "util/simple_logger.hpp"
 #include "storage/shared_barriers.hpp"
+#include "util/simple_logger.hpp"
 
 #include <iostream>
 

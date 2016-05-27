@@ -39,23 +39,27 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
         "core,k",
         boost::program_options::value<double>(&contractor_config.core_factor)->default_value(1.0),
         "Percentage of the graph (in vertices) to contract [0..1]")(
-        "segment-speed-file", boost::program_options::value<std::vector<std::string>>(
-                                  &contractor_config.segment_speed_lookup_paths)
-                                  ->composing(),
+        "segment-speed-file",
+        boost::program_options::value<std::vector<std::string>>(
+            &contractor_config.segment_speed_lookup_paths)
+            ->composing(),
         "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
-        "turn-penalty-file", boost::program_options::value<std::vector<std::string>>(
-                                 &contractor_config.turn_penalty_lookup_paths)
-                                 ->composing(),
+        "turn-penalty-file",
+        boost::program_options::value<std::vector<std::string>>(
+            &contractor_config.turn_penalty_lookup_paths)
+            ->composing(),
         "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
-        "level-cache,o", boost::program_options::value<bool>(&contractor_config.use_cached_priority)
-                             ->default_value(false),
+        "level-cache,o",
+        boost::program_options::value<bool>(&contractor_config.use_cached_priority)
+            ->default_value(false),
         "Use .level file to retain the contaction level for each node from the last run.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()("input,i", boost::program_options::value<boost::filesystem::path>(
-                                                &contractor_config.osrm_input_path),
-                                 "Input file in .osm, .osm.bz2 or .osm.pbf format");
+    hidden_options.add_options()(
+        "input,i",
+        boost::program_options::value<boost::filesystem::path>(&contractor_config.osrm_input_path),
+        "Input file in .osm, .osm.bz2 or .osm.pbf format");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -65,9 +69,10 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
 
-    const auto* executable = argv[0];
+    const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
-        "Usage: " + boost::filesystem::path(executable).filename().string() + " <input.osrm> [options]");
+        "Usage: " + boost::filesystem::path(executable).filename().string() +
+        " <input.osrm> [options]");
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options

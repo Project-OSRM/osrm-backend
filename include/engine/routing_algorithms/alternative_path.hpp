@@ -130,16 +130,22 @@ class AlternativeRouting final
         {
             if (0 < forward_heap1.Size())
             {
-                AlternativeRoutingStep<true>(forward_heap1, reverse_heap1, &middle_node,
+                AlternativeRoutingStep<true>(forward_heap1,
+                                             reverse_heap1,
+                                             &middle_node,
                                              &upper_bound_to_shortest_path_distance,
-                                             via_node_candidate_list, forward_search_space,
+                                             via_node_candidate_list,
+                                             forward_search_space,
                                              min_edge_offset);
             }
             if (0 < reverse_heap1.Size())
             {
-                AlternativeRoutingStep<false>(forward_heap1, reverse_heap1, &middle_node,
+                AlternativeRoutingStep<false>(forward_heap1,
+                                              reverse_heap1,
+                                              &middle_node,
                                               &upper_bound_to_shortest_path_distance,
-                                              via_node_candidate_list, reverse_search_space,
+                                              via_node_candidate_list,
+                                              reverse_search_space,
                                               min_edge_offset);
             }
         }
@@ -168,10 +174,10 @@ class AlternativeRouting final
         else
         {
 
-            super::RetrievePackedPathFromSingleHeap(forward_heap1, middle_node,
-                                                    packed_forward_path);
-            super::RetrievePackedPathFromSingleHeap(reverse_heap1, middle_node,
-                                                    packed_reverse_path);
+            super::RetrievePackedPathFromSingleHeap(
+                forward_heap1, middle_node, packed_forward_path);
+            super::RetrievePackedPathFromSingleHeap(
+                reverse_heap1, middle_node, packed_reverse_path);
         }
 
         // this set is is used as an indicator if a node is on the shortest path
@@ -271,8 +277,8 @@ class AlternativeRouting final
         {
             std::reverse(packed_shortest_path.begin(), packed_shortest_path.end());
             packed_shortest_path.emplace_back(middle_node);
-            packed_shortest_path.insert(packed_shortest_path.end(), packed_reverse_path.begin(),
-                                        packed_reverse_path.end());
+            packed_shortest_path.insert(
+                packed_shortest_path.end(), packed_reverse_path.begin(), packed_reverse_path.end());
         }
         std::vector<RankedCandidateNode> ranked_candidates_list;
 
@@ -280,8 +286,11 @@ class AlternativeRouting final
         for (const NodeID node : preselected_node_list)
         {
             int length_of_via_path = 0, sharing_of_via_path = 0;
-            ComputeLengthAndSharingOfViaPath(node, &length_of_via_path, &sharing_of_via_path,
-                                             packed_shortest_path, min_edge_offset);
+            ComputeLengthAndSharingOfViaPath(node,
+                                             &length_of_via_path,
+                                             &sharing_of_via_path,
+                                             packed_shortest_path,
+                                             min_edge_offset);
             const int maximum_allowed_sharing =
                 static_cast<int>(upper_bound_to_shortest_path_distance * VIAPATH_GAMMA);
             if (sharing_of_via_path <= maximum_allowed_sharing &&
@@ -297,10 +306,16 @@ class AlternativeRouting final
         NodeID s_v_middle = SPECIAL_NODEID, v_t_middle = SPECIAL_NODEID;
         for (const RankedCandidateNode &candidate : ranked_candidates_list)
         {
-            if (ViaNodeCandidatePassesTTest(
-                    forward_heap1, reverse_heap1, forward_heap2, reverse_heap2, candidate,
-                    upper_bound_to_shortest_path_distance, &length_of_via_path, &s_v_middle,
-                    &v_t_middle, min_edge_offset))
+            if (ViaNodeCandidatePassesTTest(forward_heap1,
+                                            reverse_heap1,
+                                            forward_heap2,
+                                            reverse_heap2,
+                                            candidate,
+                                            upper_bound_to_shortest_path_distance,
+                                            &length_of_via_path,
+                                            &s_v_middle,
+                                            &v_t_middle,
+                                            min_edge_offset))
             {
                 // select first admissable
                 selected_via_node = candidate.node;
@@ -322,7 +337,8 @@ class AlternativeRouting final
 
             super::UnpackPath(
                 // -- packed input
-                packed_shortest_path.begin(), packed_shortest_path.end(),
+                packed_shortest_path.begin(),
+                packed_shortest_path.end(),
                 // -- start of route
                 phantom_node_pair,
                 // -- unpacked output
@@ -334,8 +350,13 @@ class AlternativeRouting final
         {
             std::vector<NodeID> packed_alternate_path;
             // retrieve alternate path
-            RetrievePackedAlternatePath(forward_heap1, reverse_heap1, forward_heap2, reverse_heap2,
-                                        s_v_middle, v_t_middle, packed_alternate_path);
+            RetrievePackedAlternatePath(forward_heap1,
+                                        reverse_heap1,
+                                        forward_heap2,
+                                        reverse_heap2,
+                                        s_v_middle,
+                                        v_t_middle,
+                                        packed_alternate_path);
 
             raw_route_data.alt_source_traversed_in_reverse.push_back(
                 (packed_alternate_path.front() !=
@@ -345,8 +366,10 @@ class AlternativeRouting final
                  phantom_node_pair.target_phantom.forward_segment_id.id));
 
             // unpack the alternate path
-            super::UnpackPath(packed_alternate_path.begin(), packed_alternate_path.end(),
-                              phantom_node_pair, raw_route_data.unpacked_alternative);
+            super::UnpackPath(packed_alternate_path.begin(),
+                              packed_alternate_path.end(),
+                              phantom_node_pair,
+                              raw_route_data.unpacked_alternative);
 
             raw_route_data.alternative_path_length = length_of_via_path;
         }
@@ -372,8 +395,8 @@ class AlternativeRouting final
         packed_path.pop_back(); // remove middle node. It's in both half-paths
 
         // fetch patched path [v,t]
-        super::RetrievePackedPathFromHeap(forward_heap2, reverse_heap1, v_t_middle,
-                                          packed_v_t_path);
+        super::RetrievePackedPathFromHeap(
+            forward_heap2, reverse_heap1, v_t_middle, packed_v_t_path);
 
         packed_path.insert(packed_path.end(), packed_v_t_path.begin(), packed_v_t_path.end());
     }
@@ -410,9 +433,15 @@ class AlternativeRouting final
         const bool constexpr DO_NOT_FORCE_LOOPS = false;
         while (!new_reverse_heap.Empty())
         {
-            super::RoutingStep(new_reverse_heap, existing_forward_heap, s_v_middle,
-                               upper_bound_s_v_path_length, min_edge_offset, false,
-                               STALLING_ENABLED, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+            super::RoutingStep(new_reverse_heap,
+                               existing_forward_heap,
+                               s_v_middle,
+                               upper_bound_s_v_path_length,
+                               min_edge_offset,
+                               false,
+                               STALLING_ENABLED,
+                               DO_NOT_FORCE_LOOPS,
+                               DO_NOT_FORCE_LOOPS);
         }
         // compute path <v,..,t> by reusing backward search from node t
         NodeID v_t_middle = SPECIAL_NODEID;
@@ -420,9 +449,15 @@ class AlternativeRouting final
         new_forward_heap.Insert(via_node, 0, via_node);
         while (!new_forward_heap.Empty())
         {
-            super::RoutingStep(new_forward_heap, existing_reverse_heap, v_t_middle,
-                               upper_bound_of_v_t_path_length, min_edge_offset, true,
-                               STALLING_ENABLED, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+            super::RoutingStep(new_forward_heap,
+                               existing_reverse_heap,
+                               v_t_middle,
+                               upper_bound_of_v_t_path_length,
+                               min_edge_offset,
+                               true,
+                               STALLING_ENABLED,
+                               DO_NOT_FORCE_LOOPS,
+                               DO_NOT_FORCE_LOOPS);
         }
         *real_length_of_via_path = upper_bound_s_v_path_length + upper_bound_of_v_t_path_length;
 
@@ -432,10 +467,10 @@ class AlternativeRouting final
         }
 
         // retrieve packed paths
-        super::RetrievePackedPathFromHeap(existing_forward_heap, new_reverse_heap, s_v_middle,
-                                          packed_s_v_path);
-        super::RetrievePackedPathFromHeap(new_forward_heap, existing_reverse_heap, v_t_middle,
-                                          packed_v_t_path);
+        super::RetrievePackedPathFromHeap(
+            existing_forward_heap, new_reverse_heap, s_v_middle, packed_s_v_path);
+        super::RetrievePackedPathFromHeap(
+            new_forward_heap, existing_reverse_heap, v_t_middle, packed_v_t_path);
 
         // partial unpacking, compute sharing
         // First partially unpack s-->v until paths deviate, note length of common path.
@@ -501,7 +536,8 @@ class AlternativeRouting final
                 if (packed_v_t_path[via_path_index] == packed_shortest_path[shortest_path_index])
                 {
                     super::UnpackEdge(packed_v_t_path[via_path_index - 1],
-                                      packed_v_t_path[via_path_index], partially_unpacked_via_path);
+                                      packed_v_t_path[via_path_index],
+                                      partially_unpacked_via_path);
                     super::UnpackEdge(packed_shortest_path[shortest_path_index - 1],
                                       packed_shortest_path[shortest_path_index],
                                       partially_unpacked_shortest_path);
@@ -699,9 +735,15 @@ class AlternativeRouting final
         const bool constexpr DO_NOT_FORCE_LOOPS = false;
         while (new_reverse_heap.Size() > 0)
         {
-            super::RoutingStep(new_reverse_heap, existing_forward_heap, *s_v_middle,
-                               upper_bound_s_v_path_length, min_edge_offset, false,
-                               STALLING_ENABLED, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+            super::RoutingStep(new_reverse_heap,
+                               existing_forward_heap,
+                               *s_v_middle,
+                               upper_bound_s_v_path_length,
+                               min_edge_offset,
+                               false,
+                               STALLING_ENABLED,
+                               DO_NOT_FORCE_LOOPS,
+                               DO_NOT_FORCE_LOOPS);
         }
 
         if (INVALID_EDGE_WEIGHT == upper_bound_s_v_path_length)
@@ -715,9 +757,15 @@ class AlternativeRouting final
         new_forward_heap.Insert(candidate.node, 0, candidate.node);
         while (new_forward_heap.Size() > 0)
         {
-            super::RoutingStep(new_forward_heap, existing_reverse_heap, *v_t_middle,
-                               upper_bound_of_v_t_path_length, min_edge_offset, true,
-                               STALLING_ENABLED, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+            super::RoutingStep(new_forward_heap,
+                               existing_reverse_heap,
+                               *v_t_middle,
+                               upper_bound_of_v_t_path_length,
+                               min_edge_offset,
+                               true,
+                               STALLING_ENABLED,
+                               DO_NOT_FORCE_LOOPS,
+                               DO_NOT_FORCE_LOOPS);
         }
 
         if (INVALID_EDGE_WEIGHT == upper_bound_of_v_t_path_length)
@@ -728,11 +776,11 @@ class AlternativeRouting final
         *length_of_via_path = upper_bound_s_v_path_length + upper_bound_of_v_t_path_length;
 
         // retrieve packed paths
-        super::RetrievePackedPathFromHeap(existing_forward_heap, new_reverse_heap, *s_v_middle,
-                                          packed_s_v_path);
+        super::RetrievePackedPathFromHeap(
+            existing_forward_heap, new_reverse_heap, *s_v_middle, packed_s_v_path);
 
-        super::RetrievePackedPathFromHeap(new_forward_heap, existing_reverse_heap, *v_t_middle,
-                                          packed_v_t_path);
+        super::RetrievePackedPathFromHeap(
+            new_forward_heap, existing_reverse_heap, *v_t_middle, packed_v_t_path);
 
         NodeID s_P = *s_v_middle, t_P = *v_t_middle;
         if (SPECIAL_NODEID == s_P)
@@ -812,7 +860,8 @@ class AlternativeRouting final
         // Traverse path s-->v
         BOOST_ASSERT(!packed_v_t_path.empty());
         for (unsigned i = 0, packed_path_length = static_cast<unsigned>(packed_v_t_path.size() - 1);
-             (i < packed_path_length) && unpack_stack.empty(); ++i)
+             (i < packed_path_length) && unpack_stack.empty();
+             ++i)
         {
             const EdgeID edgeID =
                 facade->FindEdgeInEitherDirection(packed_v_t_path[i], packed_v_t_path[i + 1]);
@@ -884,14 +933,26 @@ class AlternativeRouting final
         {
             if (!forward_heap3.Empty())
             {
-                super::RoutingStep(forward_heap3, reverse_heap3, middle, upper_bound,
-                                   min_edge_offset, true, STALLING_ENABLED, DO_NOT_FORCE_LOOPS,
+                super::RoutingStep(forward_heap3,
+                                   reverse_heap3,
+                                   middle,
+                                   upper_bound,
+                                   min_edge_offset,
+                                   true,
+                                   STALLING_ENABLED,
+                                   DO_NOT_FORCE_LOOPS,
                                    DO_NOT_FORCE_LOOPS);
             }
             if (!reverse_heap3.Empty())
             {
-                super::RoutingStep(reverse_heap3, forward_heap3, middle, upper_bound,
-                                   min_edge_offset, false, STALLING_ENABLED, DO_NOT_FORCE_LOOPS,
+                super::RoutingStep(reverse_heap3,
+                                   forward_heap3,
+                                   middle,
+                                   upper_bound,
+                                   min_edge_offset,
+                                   false,
+                                   STALLING_ENABLED,
+                                   DO_NOT_FORCE_LOOPS,
                                    DO_NOT_FORCE_LOOPS);
             }
         }

@@ -3,9 +3,9 @@
 
 /* A set of tools required for guidance in both pre and post-processing */
 
+#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/phantom_node.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/simple_logger.hpp"

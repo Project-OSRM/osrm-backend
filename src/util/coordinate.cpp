@@ -8,15 +8,14 @@
 #ifndef NDEBUG
 #include <bitset>
 #endif
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 
 namespace osrm
 {
 namespace util
 {
-
 
 bool Coordinate::IsValid() const
 {
@@ -26,15 +25,11 @@ bool Coordinate::IsValid() const
              lon < FixedLongitude(-180 * COORDINATE_PRECISION));
 }
 
-
 bool FloatCoordinate::IsValid() const
 {
-    return !(lat > FloatLatitude(90) ||
-             lat < FloatLatitude(-90) ||
-             lon > FloatLongitude(180) ||
+    return !(lat > FloatLatitude(90) || lat < FloatLatitude(-90) || lon > FloatLongitude(180) ||
              lon < FloatLongitude(-180));
 }
-
 
 bool operator==(const Coordinate lhs, const Coordinate rhs)
 {
@@ -56,8 +51,7 @@ std::ostream &operator<<(std::ostream &out, const Coordinate coordinate)
 }
 std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate)
 {
-    out << std::setprecision(12) << "(lon:" << coordinate.lon
-        << ", lat:" << coordinate.lat << ")";
+    out << std::setprecision(12) << "(lon:" << coordinate.lon << ", lat:" << coordinate.lat << ")";
     return out;
 }
 }

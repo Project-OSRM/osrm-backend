@@ -1,8 +1,8 @@
 #ifndef ROUTE_STEP_HPP
 #define ROUTE_STEP_HPP
 
-#include "engine/guidance/step_maneuver.hpp"
 #include "extractor/travel_mode.hpp"
+#include "engine/guidance/step_maneuver.hpp"
 #include "util/coordinate.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -39,10 +39,10 @@ struct Intersection
 inline Intersection getInvalidIntersection()
 {
     return {util::Coordinate{util::FloatLongitude{0.0}, util::FloatLatitude{0.0}},
-        {},
-        {},
-        Intersection::NO_INDEX,
-        Intersection::NO_INDEX};
+            {},
+            {},
+            Intersection::NO_INDEX,
+            Intersection::NO_INDEX};
 }
 
 struct RouteStep

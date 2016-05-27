@@ -1,15 +1,15 @@
 #ifndef INTERNAL_EXTRACTOR_EDGE_HPP
 #define INTERNAL_EXTRACTOR_EDGE_HPP
 
-#include "util/typedefs.hpp"
-#include "extractor/travel_mode.hpp"
 #include "extractor/node_based_edge.hpp"
+#include "extractor/travel_mode.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 
+#include "extractor/guidance/classification_data.hpp"
 #include "osrm/coordinate.hpp"
 #include <utility>
-#include "extractor/guidance/classification_data.hpp"
 
 namespace osrm
 {
@@ -32,8 +32,7 @@ struct InternalExtractorEdge
 
         WeightData() : duration(0.0), type(WeightType::INVALID) {}
 
-        union
-        {
+        union {
             double duration;
             double speed;
         };
@@ -94,14 +93,32 @@ struct InternalExtractorEdge
     // necessary static util functions for stxxl's sorting
     static InternalExtractorEdge min_osm_value()
     {
-        return InternalExtractorEdge(MIN_OSM_NODEID, MIN_OSM_NODEID, 0, WeightData(), false, false,
-                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false,
+        return InternalExtractorEdge(MIN_OSM_NODEID,
+                                     MIN_OSM_NODEID,
+                                     0,
+                                     WeightData(),
+                                     false,
+                                     false,
+                                     false,
+                                     false,
+                                     true,
+                                     TRAVEL_MODE_INACCESSIBLE,
+                                     false,
                                      guidance::RoadClassificationData());
     }
     static InternalExtractorEdge max_osm_value()
     {
-        return InternalExtractorEdge(MAX_OSM_NODEID, MAX_OSM_NODEID, 0, WeightData(), false, false,
-                                     false, false, true, TRAVEL_MODE_INACCESSIBLE, false,
+        return InternalExtractorEdge(MAX_OSM_NODEID,
+                                     MAX_OSM_NODEID,
+                                     0,
+                                     WeightData(),
+                                     false,
+                                     false,
+                                     false,
+                                     false,
+                                     true,
+                                     TRAVEL_MODE_INACCESSIBLE,
+                                     false,
                                      guidance::RoadClassificationData());
     }
 

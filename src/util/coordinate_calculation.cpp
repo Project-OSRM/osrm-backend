@@ -77,7 +77,6 @@ double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coord
     return std::hypot(x_value, y_value) * detail::EARTH_RADIUS;
 }
 
-
 double perpendicularDistance(const Coordinate segment_source,
                              const Coordinate segment_target,
                              const Coordinate query_location,
@@ -89,9 +88,10 @@ double perpendicularDistance(const Coordinate segment_source,
     BOOST_ASSERT(query_location.IsValid());
 
     FloatCoordinate projected_nearest;
-    std::tie(ratio, projected_nearest) = projectPointOnSegment(
-        web_mercator::fromWGS84(segment_source), web_mercator::fromWGS84(segment_target),
-        web_mercator::fromWGS84(query_location));
+    std::tie(ratio, projected_nearest) =
+        projectPointOnSegment(web_mercator::fromWGS84(segment_source),
+                              web_mercator::fromWGS84(segment_target),
+                              web_mercator::fromWGS84(query_location));
     nearest_location = web_mercator::toWGS84(projected_nearest);
 
     const double approximate_distance = greatCircleDistance(query_location, nearest_location);
@@ -106,8 +106,8 @@ double perpendicularDistance(const Coordinate source_coordinate,
     double ratio;
     Coordinate nearest_location;
 
-    return perpendicularDistance(source_coordinate, target_coordinate, query_location,
-                                 nearest_location, ratio);
+    return perpendicularDistance(
+        source_coordinate, target_coordinate, query_location, nearest_location, ratio);
 }
 
 Coordinate centroid(const Coordinate lhs, const Coordinate rhs)

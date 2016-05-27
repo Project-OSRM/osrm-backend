@@ -1,11 +1,11 @@
 #include "server/service_handler.hpp"
 
+#include "server/service/match_service.hpp"
+#include "server/service/nearest_service.hpp"
 #include "server/service/route_service.hpp"
 #include "server/service/table_service.hpp"
-#include "server/service/nearest_service.hpp"
-#include "server/service/trip_service.hpp"
-#include "server/service/match_service.hpp"
 #include "server/service/tile_service.hpp"
+#include "server/service/trip_service.hpp"
 
 #include "server/api/parsed_url.hpp"
 #include "util/json_util.hpp"

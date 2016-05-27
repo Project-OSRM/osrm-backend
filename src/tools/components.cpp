@@ -1,13 +1,13 @@
-#include "util/typedefs.hpp"
 #include "extractor/tarjan_scc.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/dynamic_graph.hpp"
-#include "util/static_graph.hpp"
+#include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/graph_loader.hpp"
 #include "util/make_unique.hpp"
-#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
+#include "util/static_graph.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -65,8 +65,8 @@ std::size_t loadGraph(const char *path,
     std::vector<NodeID> traffic_light_node_list;
     std::vector<NodeID> barrier_node_list;
 
-    auto number_of_nodes = util::loadNodesFromFile(input_stream, barrier_node_list,
-                                                   traffic_light_node_list, coordinate_list);
+    auto number_of_nodes = util::loadNodesFromFile(
+        input_stream, barrier_node_list, traffic_light_node_list, coordinate_list);
 
     util::loadEdgesFromFile(input_stream, edge_list);
 
@@ -83,13 +83,17 @@ std::size_t loadGraph(const char *path,
 
         if (input_edge.forward)
         {
-            graph_edge_list.emplace_back(input_edge.source, input_edge.target,
-                                         (std::max)(input_edge.weight, 1), input_edge.name_id);
+            graph_edge_list.emplace_back(input_edge.source,
+                                         input_edge.target,
+                                         (std::max)(input_edge.weight, 1),
+                                         input_edge.name_id);
         }
         if (input_edge.backward)
         {
-            graph_edge_list.emplace_back(input_edge.target, input_edge.source,
-                                         (std::max)(input_edge.weight, 1), input_edge.name_id);
+            graph_edge_list.emplace_back(input_edge.target,
+                                         input_edge.source,
+                                         (std::max)(input_edge.weight, 1),
+                                         input_edge.name_id);
         }
     }
 
@@ -135,7 +139,6 @@ int main(int argc, char *argv[]) try
     osrm::tools::deleteFileIfExists("component.dbf");
     osrm::tools::deleteFileIfExists("component.shx");
     osrm::tools::deleteFileIfExists("component.shp");
-
 
     OGRRegisterAll();
 

@@ -1,7 +1,7 @@
 #include <cstdio>
 
-#include "storage/shared_memory.hpp"
 #include "storage/shared_datatype.hpp"
+#include "storage/shared_memory.hpp"
 #include "util/simple_logger.hpp"
 
 namespace osrm
@@ -16,8 +16,7 @@ void deleteRegion(const SharedDataType region)
 {
     if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
     {
-        const std::string name = [&]
-        {
+        const std::string name = [&] {
             switch (region)
             {
             case CURRENT_REGIONS:

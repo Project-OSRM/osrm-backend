@@ -1,8 +1,8 @@
 #ifndef NEAREST_PARAMETERS_GRAMMAR_HPP
 #define NEAREST_PARAMETERS_GRAMMAR_HPP
 
-#include "engine/api/nearest_parameters.hpp"
 #include "server/api/base_parameters_grammar.hpp"
+#include "engine/api/nearest_parameters.hpp"
 
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
@@ -28,15 +28,12 @@ struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, S
 
     NearestParametersGrammar() : BaseGrammar(root_rule)
     {
-        nearest_rule
-            = (qi::lit("number=") > qi::uint_)
-              [ph::bind(&engine::api::NearestParameters::number_of_results, qi::_r1) = qi::_1]
-            ;
+        nearest_rule = (qi::lit("number=") >
+                        qi::uint_)[ph::bind(&engine::api::NearestParameters::number_of_results,
+                                            qi::_r1) = qi::_1];
 
-        root_rule
-            = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json")
-            > -('?' > (nearest_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&')
-            ;
+        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+                    -('?' > (nearest_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
     }
 
   private:

@@ -1,8 +1,8 @@
 #ifndef PERCENT_HPP
 #define PERCENT_HPP
 
-#include <iostream>
 #include <atomic>
+#include <iostream>
 
 namespace osrm
 {

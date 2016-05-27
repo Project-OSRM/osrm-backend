@@ -96,7 +96,6 @@ inline double reverseBearing(const double bearing)
         return bearing - 180.;
     return bearing + 180;
 }
-
 }
 }
 }

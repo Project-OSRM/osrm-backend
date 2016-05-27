@@ -14,15 +14,15 @@
 #include <zlib.h>
 
 #ifndef _WIN32
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #endif
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <thread>
 #include <vector>
-#include <string>
 
 namespace osrm
 {

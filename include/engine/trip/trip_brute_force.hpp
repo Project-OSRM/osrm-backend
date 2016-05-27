@@ -1,18 +1,18 @@
 #ifndef TRIP_BRUTE_FORCE_HPP
 #define TRIP_BRUTE_FORCE_HPP
 
-#include "util/typedefs.hpp"
 #include "util/dist_table_wrapper.hpp"
 #include "util/simple_logger.hpp"
+#include "util/typedefs.hpp"
 
 #include "osrm/json_container.hpp"
 
-#include <cstdlib>
 #include <algorithm>
-#include <string>
+#include <cstdlib>
 #include <iterator>
-#include <vector>
 #include <limits>
+#include <string>
+#include <vector>
 
 namespace osrm
 {

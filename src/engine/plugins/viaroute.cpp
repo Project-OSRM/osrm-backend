@@ -1,6 +1,6 @@
 #include "engine/plugins/viaroute.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/api/route_api.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/status.hpp"
 
 #include "util/for_each_pair.hpp"
@@ -50,8 +50,9 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     auto phantom_node_pairs = GetPhantomNodes(route_parameters);
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
-        return Error("NoSegment", std::string("Could not find a matching segment for coordinate ") +
-                                      std::to_string(phantom_node_pairs.size()),
+        return Error("NoSegment",
+                     std::string("Could not find a matching segment for coordinate ") +
+                         std::to_string(phantom_node_pairs.size()),
                      json_result);
     }
     BOOST_ASSERT(phantom_node_pairs.size() == route_parameters.coordinates.size());
@@ -64,8 +65,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
     InternalRouteResult raw_route;
     auto build_phantom_pairs = [&raw_route, continue_straight_at_waypoint](
-        const PhantomNode &first_node, const PhantomNode &second_node)
-    {
+        const PhantomNode &first_node, const PhantomNode &second_node) {
         raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
         auto &last_inserted = raw_route.segment_end_coordinates.back();
         // enable forward direction if possible
@@ -77,7 +77,8 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
         // enable reverse direction if possible
         if (last_inserted.source_phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
         {
-            last_inserted.source_phantom.reverse_segment_id.enabled |= !continue_straight_at_waypoint;
+            last_inserted.source_phantom.reverse_segment_id.enabled |=
+                !continue_straight_at_waypoint;
         }
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
@@ -95,7 +96,8 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     }
     else
     {
-        shortest_path(raw_route.segment_end_coordinates, route_parameters.continue_straight, raw_route);
+        shortest_path(
+            raw_route.segment_end_coordinates, route_parameters.continue_straight, raw_route);
     }
 
     // we can only know this after the fact, different SCC ids still
@@ -108,9 +110,9 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     else
     {
         auto first_component_id = snapped_phantoms.front().component.id;
-        auto not_in_same_component = std::any_of(snapped_phantoms.begin(), snapped_phantoms.end(),
-                                                 [first_component_id](const PhantomNode &node)
-                                                 {
+        auto not_in_same_component = std::any_of(snapped_phantoms.begin(),
+                                                 snapped_phantoms.end(),
+                                                 [first_component_id](const PhantomNode &node) {
                                                      return node.component.id != first_component_id;
                                                  });
 

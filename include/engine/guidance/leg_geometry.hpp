@@ -8,8 +8,8 @@
 
 #include <cstddef>
 
-#include <vector>
 #include <cstdlib>
+#include <vector>
 
 namespace osrm
 {
@@ -32,7 +32,8 @@ struct LegGeometry
     std::vector<double> segment_distances;
 
     // Per-coordinate metadata
-    struct Annotation {
+    struct Annotation
+    {
         double distance;
         double duration;
     };

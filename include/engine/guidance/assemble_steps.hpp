@@ -1,14 +1,14 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_STEPS_HPP_
 #define ENGINE_GUIDANCE_ASSEMBLE_STEPS_HPP_
 
+#include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/travel_mode.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
 #include "engine/guidance/toolkit.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/travel_mode.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -65,11 +65,17 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
 
     auto bearings = detail::getDepartBearings(leg_geometry);
 
-    StepManeuver maneuver{source_node.location, bearings.first,
-                          bearings.second,      extractor::guidance::TurnInstruction::NO_TURN(),
-                          WaypointType::Depart, 0};
-    Intersection intersection{source_node.location, std::vector<short>({bearings.second}),
-                              std::vector<bool>({true}), Intersection::NO_INDEX, 0};
+    StepManeuver maneuver{source_node.location,
+                          bearings.first,
+                          bearings.second,
+                          extractor::guidance::TurnInstruction::NO_TURN(),
+                          WaypointType::Depart,
+                          0};
+    Intersection intersection{source_node.location,
+                              std::vector<short>({bearings.second}),
+                              std::vector<bool>({true}),
+                              Intersection::NO_INDEX,
+                              0};
 
     if (leg_data.size() > 0)
     {
@@ -131,8 +137,12 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                 {
                     intersection.entry.push_back(entry_class.allowsEntry(idx));
                 }
-                maneuver = {intersection.location,       bearings.first,     bearings.second,
-                            path_point.turn_instruction, WaypointType::None, 0};
+                maneuver = {intersection.location,
+                            bearings.first,
+                            bearings.second,
+                            path_point.turn_instruction,
+                            WaypointType::None,
+                            0};
                 segment_index++;
                 segment_duration = 0;
             }
@@ -178,13 +188,18 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     BOOST_ASSERT(segment_index == number_of_segments - 1);
     bearings = detail::getArriveBearings(leg_geometry);
     // This step has length zero, the only reason we need it is the target location
-    maneuver = {intersection.location, bearings.first,
-                bearings.second,       extractor::guidance::TurnInstruction::NO_TURN(),
-                WaypointType::Arrive,  0};
+    maneuver = {intersection.location,
+                bearings.first,
+                bearings.second,
+                extractor::guidance::TurnInstruction::NO_TURN(),
+                WaypointType::Arrive,
+                0};
     intersection = {
         target_node.location,
         std::vector<short>({static_cast<short>(util::bearing::reverseBearing(bearings.first))}),
-        std::vector<bool>({true}), 0, Intersection::NO_INDEX};
+        std::vector<bool>({true}),
+        0,
+        Intersection::NO_INDEX};
 
     BOOST_ASSERT(!leg_geometry.locations.empty());
     steps.push_back(RouteStep{target_node.name_id,

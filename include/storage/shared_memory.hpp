@@ -104,8 +104,8 @@ class SharedMemory
             {
                 Remove(key);
             }
-            shm = boost::interprocess::xsi_shared_memory(boost::interprocess::open_or_create, key,
-                                                         size);
+            shm = boost::interprocess::xsi_shared_memory(
+                boost::interprocess::open_or_create, key, size);
 #ifdef __linux__
             if (-1 == shmctl(shm.get_shmid(), SHM_LOCK, nullptr))
             {
@@ -236,7 +236,8 @@ class SharedMemory
         if (0 == size)
         { // read_only
             shm = boost::interprocess::shared_memory_object(
-                boost::interprocess::open_only, key,
+                boost::interprocess::open_only,
+                key,
                 read_write ? boost::interprocess::read_write : boost::interprocess::read_only);
             region = boost::interprocess::mapped_region(
                 shm, read_write ? boost::interprocess::read_write : boost::interprocess::read_only);
@@ -248,8 +249,8 @@ class SharedMemory
             {
                 Remove(key);
             }
-            shm = boost::interprocess::shared_memory_object(boost::interprocess::open_or_create,
-                                                            key, boost::interprocess::read_write);
+            shm = boost::interprocess::shared_memory_object(
+                boost::interprocess::open_or_create, key, boost::interprocess::read_write);
             shm.truncate(size);
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
 
@@ -290,8 +291,8 @@ class SharedMemory
         bool result = true;
         try
         {
-            boost::interprocess::shared_memory_object shm(boost::interprocess::open_only, key,
-                                                          boost::interprocess::read_write);
+            boost::interprocess::shared_memory_object shm(
+                boost::interprocess::open_only, key, boost::interprocess::read_write);
         }
         catch (...)
         {

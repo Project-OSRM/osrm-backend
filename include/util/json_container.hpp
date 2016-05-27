@@ -33,10 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <variant/variant.hpp>
 
-#include <vector>
 #include <string>
-#include <utility>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace osrm
 {

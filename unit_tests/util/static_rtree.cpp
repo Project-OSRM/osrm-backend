@@ -1,10 +1,10 @@
-#include "engine/geospatial_query.hpp"
+#include "util/static_rtree.hpp"
 #include "extractor/edge_based_node.hpp"
+#include "engine/geospatial_query.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
 #include "util/rectangle.hpp"
-#include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
 
 #include "mocks/mock_datafacade.hpp"
@@ -52,8 +52,7 @@ static const int32_t WORLD_MAX_LON = 180 * COORDINATE_PRECISION;
 template <typename DataT> class LinearSearchNN
 {
   public:
-    LinearSearchNN(const std::vector<Coordinate> &coords,
-                   const std::vector<DataT> &edges)
+    LinearSearchNN(const std::vector<Coordinate> &coords, const std::vector<DataT> &edges)
         : coords(coords), edges(edges)
     {
     }
@@ -77,7 +76,9 @@ template <typename DataT> class LinearSearchNN
             return lhs_squared_dist < rhs_squared_dist;
         };
 
-        std::nth_element(local_edges.begin(), local_edges.begin() + num_results, local_edges.end(),
+        std::nth_element(local_edges.begin(),
+                         local_edges.begin() + num_results,
+                         local_edges.end(),
                          segment_comparator);
         local_edges.resize(num_results);
 
@@ -317,8 +318,8 @@ BOOST_AUTO_TEST_CASE(regression_test)
 
     std::string leaves_path;
     std::string nodes_path;
-    build_rtree<GraphFixture, MiniStaticRTree>("test_regression", &fixture, leaves_path,
-                                               nodes_path);
+    build_rtree<GraphFixture, MiniStaticRTree>(
+        "test_regression", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
     LinearSearchNN<TestData> lsnn(fixture.coords, fixture.edges);
 
@@ -351,8 +352,8 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
     build_rtree<GraphFixture, MiniStaticRTree>("test_angle", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
     MockDataFacade mockfacade;
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
-                                                                   mockfacade);
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(
+        rtree, fixture.coords, mockfacade);
 
     Coordinate input(FloatLongitude(5.2), FloatLatitude(5.0));
 
@@ -378,8 +379,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     build_rtree<GraphFixture, MiniStaticRTree>("test_bearing", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
     MockDataFacade mockfacade;
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
-                                                                   mockfacade);
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(
+        rtree, fixture.coords, mockfacade);
 
     Coordinate input(FloatLongitude(5.1), FloatLatitude(5.0));
 
@@ -452,19 +453,19 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
     build_rtree<GraphFixture, MiniStaticRTree>("test_bbox", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
     MockDataFacade mockfacade;
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(rtree, fixture.coords,
-                                                                   mockfacade);
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(
+        rtree, fixture.coords, mockfacade);
 
     {
-        RectangleInt2D bbox = {FloatLongitude(0.5), FloatLongitude(1.5), FloatLatitude(0.5),
-                               FloatLatitude(1.5)};
+        RectangleInt2D bbox = {
+            FloatLongitude(0.5), FloatLongitude(1.5), FloatLatitude(0.5), FloatLatitude(1.5)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
-        RectangleInt2D bbox = {FloatLongitude(1.5), FloatLongitude(3.5), FloatLatitude(1.5),
-                               FloatLatitude(3.5)};
+        RectangleInt2D bbox = {
+            FloatLongitude(1.5), FloatLongitude(3.5), FloatLatitude(1.5), FloatLatitude(3.5)};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 3);
     }

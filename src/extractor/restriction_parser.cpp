@@ -2,13 +2,13 @@
 #include "extractor/profile_properties.hpp"
 
 #include "extractor/external_memory_node.hpp"
-#include "util/lua_util.hpp"
 #include "util/exception.hpp"
+#include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/regex.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/ref.hpp>
 #include <boost/regex.hpp>
@@ -48,8 +48,8 @@ void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
     {
         luabind::set_pcall_callback(&luaErrorCallback);
         // get list of turn restriction exceptions
-        luabind::call_function<void>(lua_state, "get_exceptions",
-                                     boost::ref(restriction_exceptions));
+        luabind::call_function<void>(
+            lua_state, "get_exceptions", boost::ref(restriction_exceptions));
         const unsigned exception_count = restriction_exceptions.size();
         util::SimpleLogger().Write() << "Found " << exception_count
                                      << " exceptions to turn restrictions:";
@@ -117,8 +117,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         // "restriction:<transportation_type>")
         if (key.size() > 11)
         {
-            const auto ex_suffix = [&](const std::string &exception)
-            {
+            const auto ex_suffix = [&](const std::string &exception) {
                 return boost::algorithm::ends_with(key, exception);
             };
             bool is_actually_restricted =
@@ -201,13 +200,12 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
     std::vector<std::string> exceptions;
     boost::algorithm::split_regex(exceptions, except_tag_string, boost::regex("[;][ ]*"));
 
-    return std::any_of(std::begin(exceptions), std::end(exceptions),
-                       [&](const std::string &current_string)
-                       {
-                           return std::end(restriction_exceptions) !=
-                                  std::find(std::begin(restriction_exceptions),
-                                            std::end(restriction_exceptions), current_string);
-                       });
+    return std::any_of(
+        std::begin(exceptions), std::end(exceptions), [&](const std::string &current_string) {
+            return std::end(restriction_exceptions) != std::find(std::begin(restriction_exceptions),
+                                                                 std::end(restriction_exceptions),
+                                                                 current_string);
+        });
 }
 }
 }

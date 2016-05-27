@@ -66,8 +66,7 @@ class ManyToManyRouting final
         SearchSpaceWithBuckets search_space_with_buckets;
 
         unsigned column_idx = 0;
-        const auto search_target_phantom = [&](const PhantomNode &phantom)
-        {
+        const auto search_target_phantom = [&](const PhantomNode &phantom) {
             query_heap.Clear();
             // insert target(s) at distance 0
 
@@ -94,8 +93,7 @@ class ManyToManyRouting final
 
         // for each source do forward search
         unsigned row_idx = 0;
-        const auto search_source_phantom = [&](const PhantomNode &phantom)
-        {
+        const auto search_source_phantom = [&](const PhantomNode &phantom) {
             query_heap.Clear();
             // insert target(s) at distance 0
 
@@ -115,8 +113,11 @@ class ManyToManyRouting final
             // explore search space
             while (!query_heap.Empty())
             {
-                ForwardRoutingStep(row_idx, number_of_targets, query_heap,
-                                   search_space_with_buckets, result_table);
+                ForwardRoutingStep(row_idx,
+                                   number_of_targets,
+                                   query_heap,
+                                   search_space_with_buckets,
+                                   result_table);
             }
             ++row_idx;
         };

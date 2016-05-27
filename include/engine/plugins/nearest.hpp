@@ -1,8 +1,8 @@
 #ifndef NEAREST_HPP
 #define NEAREST_HPP
 
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/api/nearest_parameters.hpp"
+#include "engine/plugins/plugin_base.hpp"
 #include "osrm/json_container.hpp"
 
 namespace osrm

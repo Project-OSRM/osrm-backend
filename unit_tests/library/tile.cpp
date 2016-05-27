@@ -1,5 +1,5 @@
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "args.hpp"
 #include "fixture.hpp"
@@ -9,8 +9,8 @@
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
-#include "osrm/status.hpp"
 #include "osrm/osrm.hpp"
+#include "osrm/status.hpp"
 
 #include "util/vector_tile.hpp"
 
@@ -57,16 +57,16 @@ BOOST_AUTO_TEST_CASE(test_tile)
         BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 8);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
-        BOOST_CHECK_LT(*iter++, 128); // speed value
+        BOOST_CHECK_LT(*iter++, 128);  // speed value
         BOOST_CHECK_EQUAL(*iter++, 1); // component key
         // component value
         BOOST_CHECK_GE(*iter, 128);
         BOOST_CHECK_LE(*iter, 129);
         iter++;
         BOOST_CHECK_EQUAL(*iter++, 2); // data source key
-        *iter++; // skip value check, can be valud uint32
+        *iter++;                       // skip value check, can be valud uint32
         BOOST_CHECK_EQUAL(*iter++, 3); // duration key
-        BOOST_CHECK_GT(*iter++, 130); // duration value
+        BOOST_CHECK_GT(*iter++, 130);  // duration value
         BOOST_CHECK(iter == value_end);
         // geometry
         feature_message.next();
@@ -77,20 +77,20 @@ BOOST_AUTO_TEST_CASE(test_tile)
     const auto check_value = [](protozero::pbf_reader value) {
         while (value.next())
         {
-            switch(value.tag())
+            switch (value.tag())
             {
-                case util::vector_tile::VARIANT_TYPE_BOOL:
-                    value.get_bool();
-                    break;
-                case util::vector_tile::VARIANT_TYPE_DOUBLE:
-                    value.get_double();
-                    break;
-                case util::vector_tile::VARIANT_TYPE_STRING:
-                    value.get_string();
-                    break;
-                case util::vector_tile::VARIANT_TYPE_UINT32:
-                    value.get_uint32();
-                    break;
+            case util::vector_tile::VARIANT_TYPE_BOOL:
+                value.get_bool();
+                break;
+            case util::vector_tile::VARIANT_TYPE_DOUBLE:
+                value.get_double();
+                break;
+            case util::vector_tile::VARIANT_TYPE_STRING:
+                value.get_string();
+                break;
+            case util::vector_tile::VARIANT_TYPE_UINT32:
+                value.get_uint32();
+                break;
             }
         }
     };
@@ -100,31 +100,31 @@ BOOST_AUTO_TEST_CASE(test_tile)
 
     while (layer_message.next())
     {
-        switch(layer_message.tag())
+        switch (layer_message.tag())
         {
-            case util::vector_tile::VERSION_TAG:
-                BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
-                break;
-            case util::vector_tile::NAME_TAG:
-                BOOST_CHECK_EQUAL(layer_message.get_string(), "speeds");
-                break;
-            case util::vector_tile::EXTEND_TAG:
-                BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
-                break;
-            case util::vector_tile::FEATURE_TAG:
-                check_feature(layer_message.get_message());
-                break;
-            case util::vector_tile::KEY_TAG:
-                layer_message.get_string();
-                number_of_keys++;
-                break;
-            case util::vector_tile::VARIANT_TAG:
-                check_value(layer_message.get_message());
-                number_of_values++;
-                break;
-            default:
-                BOOST_CHECK(false); // invalid tag
-                break;
+        case util::vector_tile::VERSION_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_uint32(), 2);
+            break;
+        case util::vector_tile::NAME_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_string(), "speeds");
+            break;
+        case util::vector_tile::EXTEND_TAG:
+            BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
+            break;
+        case util::vector_tile::FEATURE_TAG:
+            check_feature(layer_message.get_message());
+            break;
+        case util::vector_tile::KEY_TAG:
+            layer_message.get_string();
+            number_of_keys++;
+            break;
+        case util::vector_tile::VARIANT_TAG:
+            check_value(layer_message.get_message());
+            number_of_values++;
+            break;
+        default:
+            BOOST_CHECK(false); // invalid tag
+            break;
         }
     }
 

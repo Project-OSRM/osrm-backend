@@ -1,8 +1,8 @@
 #ifndef MATCH_HPP
 #define MATCH_HPP
 
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/api/match_parameters.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
 #include "engine/map_matching/bayes_classifier.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"

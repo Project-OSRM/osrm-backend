@@ -23,11 +23,19 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
 bool StorageConfig::IsValid() const
 {
     const constexpr auto num_files = 13;
-    const boost::filesystem::path paths[num_files] = {
-        ram_index_path,          file_index_path,         hsgr_data_path,  nodes_data_path,
-        edges_data_path,         core_data_path,          geometries_path, timestamp_path,
-        datasource_indexes_path, datasource_indexes_path, names_data_path, properties_path,
-        intersection_class_path};
+    const boost::filesystem::path paths[num_files] = {ram_index_path,
+                                                      file_index_path,
+                                                      hsgr_data_path,
+                                                      nodes_data_path,
+                                                      edges_data_path,
+                                                      core_data_path,
+                                                      geometries_path,
+                                                      timestamp_path,
+                                                      datasource_indexes_path,
+                                                      datasource_indexes_path,
+                                                      names_data_path,
+                                                      properties_path,
+                                                      intersection_class_path};
 
     bool success = true;
     for (auto path = paths; path != paths + num_files; ++path)

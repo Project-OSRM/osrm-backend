@@ -1,21 +1,21 @@
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/plugins/tile.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/web_mercator.hpp"
 #include "util/vector_tile.hpp"
+#include "util/web_mercator.hpp"
 
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/multi/geometries/multi_linestring.hpp>
 
-#include <protozero/varint.hpp>
 #include <protozero/pbf_writer.hpp>
+#include <protozero/varint.hpp>
 
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <cmath>
 #include <cstdint>
@@ -171,8 +171,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     double min_lon, min_lat, max_lon, max_lat;
 
     // Convert the z,x,y mercator tile coordinates into WGS84 lon/lat values
-    util::web_mercator::xyzToWGS84(parameters.x, parameters.y, parameters.z, min_lon, min_lat,
-                                   max_lon, max_lat);
+    util::web_mercator::xyzToWGS84(
+        parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
 
     util::Coordinate southwest{util::FloatLongitude(min_lon), util::FloatLatitude(min_lat)};
     util::Coordinate northeast{util::FloatLongitude(max_lon), util::FloatLatitude(max_lat)};
@@ -242,8 +242,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     // TODO: extract speed values for compressed and uncompressed geometries
 
     // Convert tile coordinates into mercator coordinates
-    util::web_mercator::xyzToMercator(parameters.x, parameters.y, parameters.z, min_lon, min_lat,
-                                      max_lon, max_lat);
+    util::web_mercator::xyzToMercator(
+        parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
     const detail::BBox tile_bbox{min_lon, min_lat, max_lon, max_lat};
 
     // Protobuf serialized blocks when objects go out of scope, hence
@@ -317,10 +317,12 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
                 const auto encode_tile_line = [&layer_writer, &edge, &id, &max_datasource_id](
-                    const detail::FixedLine &tile_line, const std::uint32_t speed_kmh,
-                    const std::size_t duration, const std::uint8_t datasource,
-                    std::int32_t &start_x, std::int32_t &start_y)
-                {
+                    const detail::FixedLine &tile_line,
+                    const std::uint32_t speed_kmh,
+                    const std::size_t duration,
+                    const std::uint8_t datasource,
+                    std::int32_t &start_x,
+                    std::int32_t &start_y) {
                     // Here, we save the two attributes for our feature: the speed and the
                     // is_small
                     // boolean.  We onl serve up speeds from 0-139, so all we do is save the
@@ -377,8 +379,12 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                     if (!tile_line.empty())
                     {
-                        encode_tile_line(tile_line, speed_kmh, weight_offsets[forward_weight],
-                                         forward_datasource, start_x, start_y);
+                        encode_tile_line(tile_line,
+                                         speed_kmh,
+                                         weight_offsets[forward_weight],
+                                         forward_datasource,
+                                         start_x,
+                                         start_y);
                     }
                 }
 
@@ -396,8 +402,12 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                     if (!tile_line.empty())
                     {
-                        encode_tile_line(tile_line, speed_kmh, weight_offsets[reverse_weight],
-                                         reverse_datasource, start_x, start_y);
+                        encode_tile_line(tile_line,
+                                         speed_kmh,
+                                         weight_offsets[reverse_weight],
+                                         reverse_datasource,
+                                         start_x,
+                                         start_y);
                     }
                 }
             }

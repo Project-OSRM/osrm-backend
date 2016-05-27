@@ -36,9 +36,11 @@ BOOST_AUTO_TEST_CASE(decode)
     for (unsigned i = 0; i < cmp_coords.size(); ++i)
     {
         BOOST_CHECK_CLOSE(static_cast<double>(util::toFloating(coords[i].lat)),
-                          static_cast<double>(util::toFloating(cmp_coords[i].lat)), 0.0001);
+                          static_cast<double>(util::toFloating(cmp_coords[i].lat)),
+                          0.0001);
         BOOST_CHECK_CLOSE(static_cast<double>(util::toFloating(coords[i].lon)),
-                          static_cast<double>(util::toFloating(cmp_coords[i].lon)), 0.0001);
+                          static_cast<double>(util::toFloating(cmp_coords[i].lon)),
+                          0.0001);
     }
 }
 

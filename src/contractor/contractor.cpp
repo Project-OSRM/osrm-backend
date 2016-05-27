@@ -93,11 +93,17 @@ int Contractor::Run()
 
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
-    std::size_t max_edge_id = LoadEdgeExpandedGraph(
-        config.edge_based_graph_path, edge_based_edge_list, config.edge_segment_lookup_path,
-        config.edge_penalty_path, config.segment_speed_lookup_paths,
-        config.turn_penalty_lookup_paths, config.node_based_graph_path, config.geometry_path,
-        config.datasource_names_path, config.datasource_indexes_path, config.rtree_leaf_path);
+    std::size_t max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
+                                                    edge_based_edge_list,
+                                                    config.edge_segment_lookup_path,
+                                                    config.edge_penalty_path,
+                                                    config.segment_speed_lookup_paths,
+                                                    config.turn_penalty_lookup_paths,
+                                                    config.node_based_graph_path,
+                                                    config.geometry_path,
+                                                    config.datasource_names_path,
+                                                    config.datasource_indexes_path,
+                                                    config.rtree_leaf_path);
 
     // Contracting the edge-expanded graph
 
@@ -122,8 +128,12 @@ int Contractor::Run()
     }
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
-    ContractGraph(max_edge_id, edge_based_edge_list, contracted_edge_list, std::move(node_weights),
-                  is_core_node, node_levels);
+    ContractGraph(max_edge_id,
+                  edge_based_edge_list,
+                  contracted_edge_list,
+                  std::move(node_weights),
+                  is_core_node,
+                  node_levels);
     TIMER_STOP(contraction);
 
     util::SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
@@ -231,9 +241,12 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
             const auto last = end(line);
 
             // The ulong_long -> uint64_t will likely break on 32bit platforms
-            const auto ok = parse(it, last,                                          //
+            const auto ok = parse(it,
+                                  last,                                              //
                                   (ulong_long >> ',' >> ulong_long >> ',' >> uint_), //
-                                  from_node_id, to_node_id, speed);                  //
+                                  from_node_id,
+                                  to_node_id,
+                                  speed); //
 
             if (!ok || it != last)
                 throw util::exception{"Segment speed file " + filename + " malformed"};
@@ -251,7 +264,8 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         {
             Mutex::scoped_lock _{flatten_mutex};
 
-            flatten.insert(end(flatten), std::make_move_iterator(begin(local)),
+            flatten.insert(end(flatten),
+                           std::make_move_iterator(begin(local)),
                            std::make_move_iterator(end(local)));
         }
     };
@@ -312,15 +326,20 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
 
             // The ulong_long -> uint64_t will likely break on 32bit platforms
             const auto ok =
-                parse(it, last,                                                                 //
+                parse(it,
+                      last,                                                                     //
                       (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >> ',' >> double_), //
-                      from_node_id, via_node_id, to_node_id, penalty);                          //
+                      from_node_id,
+                      via_node_id,
+                      to_node_id,
+                      penalty); //
 
             if (!ok || it != last)
                 throw util::exception{"Turn penalty file " + filename + " malformed"};
 
-            map[std::make_tuple(OSMNodeID(from_node_id), OSMNodeID(via_node_id),
-                                OSMNodeID(to_node_id))] = std::make_pair(penalty, file_id);
+            map[std::make_tuple(
+                OSMNodeID(from_node_id), OSMNodeID(via_node_id), OSMNodeID(to_node_id))] =
+                std::make_pair(penalty, file_id);
         }
     };
 
@@ -460,8 +479,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     };
 
     // Folds all our actions into independently concurrently executing lambdas
-    tbb::parallel_invoke(parse_segment_speeds, parse_turn_penalties, //
-                         maybe_load_internal_to_external_node_map, maybe_load_geometries);
+    tbb::parallel_invoke(parse_segment_speeds,
+                         parse_turn_penalties, //
+                         maybe_load_internal_to_external_node_map,
+                         maybe_load_geometries);
 
     if (update_edge_weights || update_turn_penalties)
     {
@@ -537,10 +558,11 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     if (forward_speed_iter != segment_speed_lookup.end())
                     {
                         int new_segment_weight =
-                            std::max(1, static_cast<int>(std::floor(
-                                            (segment_length * 10.) /
-                                                (forward_speed_iter->speed_source.speed / 3.6) +
-                                            .5)));
+                            std::max(1,
+                                     static_cast<int>(std::floor(
+                                         (segment_length * 10.) /
+                                             (forward_speed_iter->speed_source.speed / 3.6) +
+                                         .5)));
                         m_geometry_list[forward_begin + leaf_object.fwd_segment_position].weight =
                             new_segment_weight;
                         m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
@@ -587,10 +609,11 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     if (reverse_speed_iter != segment_speed_lookup.end())
                     {
                         int new_segment_weight =
-                            std::max(1, static_cast<int>(std::floor(
-                                            (segment_length * 10.) /
-                                                (reverse_speed_iter->speed_source.speed / 3.6) +
-                                            .5)));
+                            std::max(1,
+                                     static_cast<int>(std::floor(
+                                         (segment_length * 10.) /
+                                             (reverse_speed_iter->speed_source.speed / 3.6) +
+                                         .5)));
                         m_geometry_list[reverse_begin + rev_segment_position].weight =
                             new_segment_weight;
                         m_geometry_datasource[reverse_begin + rev_segment_position] =
@@ -947,8 +970,8 @@ void Contractor::ContractGraph(
     std::vector<float> node_levels;
     node_levels.swap(inout_node_levels);
 
-    GraphContractor graph_contractor(max_edge_id + 1, edge_based_edge_list, std::move(node_levels),
-                                     std::move(node_weights));
+    GraphContractor graph_contractor(
+        max_edge_id + 1, edge_based_edge_list, std::move(node_levels), std::move(node_weights));
     graph_contractor.Run(config.core_factor);
     graph_contractor.GetEdges(contracted_edge_list);
     graph_contractor.GetCoreMarker(is_core_node);

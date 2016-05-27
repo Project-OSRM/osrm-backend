@@ -104,12 +104,14 @@ RouteStep forwardInto(RouteStep destination, const RouteStep &source)
     if (destination.geometry_begin < source.geometry_begin)
     {
         destination.intersections.insert(destination.intersections.end(),
-                                         source.intersections.begin(), source.intersections.end());
+                                         source.intersections.begin(),
+                                         source.intersections.end());
     }
     else
     {
         destination.intersections.insert(destination.intersections.begin(),
-                                         source.intersections.begin(), source.intersections.end());
+                                         source.intersections.begin(),
+                                         source.intersections.end());
     }
 
     destination.geometry_begin = std::min(destination.geometry_begin, source.geometry_begin);
@@ -305,8 +307,8 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
 
         // if we elongate in the back, we only need to copy the intersections to the beginning.
         // the bearings remain the same, as the location of the turn doesn't change
-        step.intersections.insert(step.intersections.end(), by_step.intersections.begin(),
-                                  by_step.intersections.end());
+        step.intersections.insert(
+            step.intersections.end(), by_step.intersections.begin(), by_step.intersections.end());
     }
     // by_step comes before step -> we append at the front
     else
@@ -319,8 +321,8 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
         // elongating in the front changes the location of the maneuver
         step.maneuver = by_step.maneuver;
 
-        step.intersections.insert(step.intersections.begin(), by_step.intersections.begin(),
-                                  by_step.intersections.end());
+        step.intersections.insert(
+            step.intersections.begin(), by_step.intersections.begin(), by_step.intersections.end());
     }
     return step;
 }
@@ -738,7 +740,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             BOOST_ASSERT(geometry.segment_offsets[1] == 1);
             // geometry offsets have to be adjusted. Move all offsets to the front and reduce by
             // one. (This is an inplace forward one and reduce by one)
-            std::transform(geometry.segment_offsets.begin() + 1, geometry.segment_offsets.end(),
+            std::transform(geometry.segment_offsets.begin() + 1,
+                           geometry.segment_offsets.end(),
                            geometry.segment_offsets.begin(),
                            [](const std::size_t val) { return val - 1; });
 
@@ -772,7 +775,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             steps.front().geometry_begin = 1;
 
             // reduce all offsets by one (inplace)
-            std::transform(geometry.segment_offsets.begin(), geometry.segment_offsets.end(),
+            std::transform(geometry.segment_offsets.begin(),
+                           geometry.segment_offsets.end(),
                            geometry.segment_offsets.begin(),
                            [](const std::size_t val) { return val - 1; });
         }

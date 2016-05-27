@@ -1,21 +1,21 @@
 #include "extractor/scripting_environment.hpp"
 
+#include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_helper_functions.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/internal_extractor_edge.hpp"
-#include "extractor/external_memory_node.hpp"
-#include "extractor/raster_source.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/raster_source.hpp"
+#include "util/exception.hpp"
 #include "util/lua_util.hpp"
 #include "util/make_unique.hpp"
-#include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 
-#include <luabind/tag_function.hpp>
 #include <luabind/iterator_policy.hpp>
 #include <luabind/operator.hpp>
+#include <luabind/tag_function.hpp>
 
 #include <osmium/osm.hpp>
 
@@ -44,10 +44,9 @@ template <class T> double lonToDouble(T const &object)
     return static_cast<double>(util::toFloating(object.lon));
 }
 
-// Luabind does not like memr funs: instead of casting to the function's signature (mem fun ptr) we simply wrap it
-auto get_nodes_for_way(const osmium::Way& way) -> decltype(way.nodes()) {
-  return way.nodes();
-}
+// Luabind does not like memr funs: instead of casting to the function's signature (mem fun ptr) we
+// simply wrap it
+auto get_nodes_for_way(const osmium::Way &way) -> decltype(way.nodes()) { return way.nodes(); }
 
 // Error handler
 int luaErrorCallback(lua_State *state)
@@ -78,19 +77,19 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
     luabind::module(context.state)
         [luabind::def("durationIsValid", durationIsValid),
          luabind::def("parseDuration", parseDuration),
-         luabind::class_<TravelMode>("mode")
-             .enum_("enums")[luabind::value("inaccessible", TRAVEL_MODE_INACCESSIBLE),
-                             luabind::value("driving", TRAVEL_MODE_DRIVING),
-                             luabind::value("cycling", TRAVEL_MODE_CYCLING),
-                             luabind::value("walking", TRAVEL_MODE_WALKING),
-                             luabind::value("ferry", TRAVEL_MODE_FERRY),
-                             luabind::value("train", TRAVEL_MODE_TRAIN),
-                             luabind::value("pushing_bike", TRAVEL_MODE_PUSHING_BIKE),
-                             luabind::value("steps_up", TRAVEL_MODE_STEPS_UP),
-                             luabind::value("steps_down", TRAVEL_MODE_STEPS_DOWN),
-                             luabind::value("river_up", TRAVEL_MODE_RIVER_UP),
-                             luabind::value("river_down", TRAVEL_MODE_RIVER_DOWN),
-                             luabind::value("route", TRAVEL_MODE_ROUTE)],
+         luabind::class_<TravelMode>("mode").enum_(
+             "enums")[luabind::value("inaccessible", TRAVEL_MODE_INACCESSIBLE),
+                      luabind::value("driving", TRAVEL_MODE_DRIVING),
+                      luabind::value("cycling", TRAVEL_MODE_CYCLING),
+                      luabind::value("walking", TRAVEL_MODE_WALKING),
+                      luabind::value("ferry", TRAVEL_MODE_FERRY),
+                      luabind::value("train", TRAVEL_MODE_TRAIN),
+                      luabind::value("pushing_bike", TRAVEL_MODE_PUSHING_BIKE),
+                      luabind::value("steps_up", TRAVEL_MODE_STEPS_UP),
+                      luabind::value("steps_down", TRAVEL_MODE_STEPS_DOWN),
+                      luabind::value("river_up", TRAVEL_MODE_RIVER_UP),
+                      luabind::value("river_down", TRAVEL_MODE_RIVER_DOWN),
+                      luabind::value("route", TRAVEL_MODE_ROUTE)],
          luabind::class_<SourceContainer>("sources")
              .def(luabind::constructor<>())
              .def("load", &SourceContainer::LoadRasterSource)
@@ -101,16 +100,20 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
 
          luabind::class_<ProfileProperties>("ProfileProperties")
              .def(luabind::constructor<>())
-             .property("traffic_signal_penalty", &ProfileProperties::GetTrafficSignalPenalty,
+             .property("traffic_signal_penalty",
+                       &ProfileProperties::GetTrafficSignalPenalty,
                        &ProfileProperties::SetTrafficSignalPenalty)
-             .property("u_turn_penalty", &ProfileProperties::GetUturnPenalty,
+             .property("u_turn_penalty",
+                       &ProfileProperties::GetUturnPenalty,
                        &ProfileProperties::SetUturnPenalty)
              .def_readwrite("use_turn_restrictions", &ProfileProperties::use_turn_restrictions)
-             .def_readwrite("continue_straight_at_waypoint", &ProfileProperties::continue_straight_at_waypoint),
+             .def_readwrite("continue_straight_at_waypoint",
+                            &ProfileProperties::continue_straight_at_waypoint),
 
-         luabind::class_<std::vector<std::string>>("vector")
-             .def("Add", static_cast<void (std::vector<std::string>::*)(const std::string &)>(
-                             &std::vector<std::string>::push_back)),
+         luabind::class_<std::vector<std::string>>("vector").def(
+             "Add",
+             static_cast<void (std::vector<std::string>::*)(const std::string &)>(
+                 &std::vector<std::string>::push_back)),
 
          luabind::class_<osmium::Location>("Location")
              .def<location_member_ptr_type>("lat", &osmium::Location::lat)
@@ -136,18 +139,19 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
              .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
              .def_readwrite("is_startpoint", &ExtractionWay::is_startpoint)
              .def_readwrite("duration", &ExtractionWay::duration)
-             .property("forward_mode", &ExtractionWay::get_forward_mode,
-                       &ExtractionWay::set_forward_mode)
-             .property("backward_mode", &ExtractionWay::get_backward_mode,
+             .property(
+                 "forward_mode", &ExtractionWay::get_forward_mode, &ExtractionWay::set_forward_mode)
+             .property("backward_mode",
+                       &ExtractionWay::get_backward_mode,
                        &ExtractionWay::set_backward_mode),
-         luabind::class_<osmium::WayNodeList>("WayNodeList")
-           .def(luabind::constructor<>()),
+         luabind::class_<osmium::WayNodeList>("WayNodeList").def(luabind::constructor<>()),
          luabind::class_<osmium::NodeRef>("NodeRef")
-           .def(luabind::constructor<>())
-           // Dear ambitious reader: registering .location() as in:
-           // .def("location", +[](const osmium::NodeRef& nref){ return nref.location(); })
-           // will crash at runtime, since we're not (yet?) using libosnmium's NodeLocationsForWays cache
-           .def("id", &osmium::NodeRef::ref),
+             .def(luabind::constructor<>())
+             // Dear ambitious reader: registering .location() as in:
+             // .def("location", +[](const osmium::NodeRef& nref){ return nref.location(); })
+             // will crash at runtime, since we're not (yet?) using libosnmium's
+             // NodeLocationsForWays cache
+             .def("id", &osmium::NodeRef::ref),
          luabind::class_<osmium::Way>("Way")
              .def("get_value_by_key", &osmium::Way::get_value_by_key)
              .def("get_value_by_key", &get_value_by_key<osmium::Way>)

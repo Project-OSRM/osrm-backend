@@ -1,5 +1,5 @@
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "args.hpp"
 #include "coordinates.hpp"
@@ -11,8 +11,8 @@
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
-#include "osrm/status.hpp"
 #include "osrm/osrm.hpp"
+#include "osrm/status.hpp"
 
 BOOST_AUTO_TEST_SUITE(table)
 
@@ -47,7 +47,8 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
     for (unsigned int i = 0; i < durations_array.size(); i++)
     {
         const auto durations_matrix = durations_array[i].get<json::Array>().values;
-        BOOST_CHECK_EQUAL(durations_matrix.size(), params.sources.size()*params.destinations.size());
+        BOOST_CHECK_EQUAL(durations_matrix.size(),
+                          params.sources.size() * params.destinations.size());
     }
     // check destinations array of waypoint objects
     const auto &destinations_array = result.values.at("destinations").get<json::Array>().values;
@@ -96,7 +97,8 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
     {
         const auto durations_matrix = durations_array[i].get<json::Array>().values;
         BOOST_CHECK_EQUAL(durations_matrix[i].get<json::Number>().value, 0);
-        BOOST_CHECK_EQUAL(durations_matrix.size(), params.sources.size()*params.coordinates.size());
+        BOOST_CHECK_EQUAL(durations_matrix.size(),
+                          params.sources.size() * params.coordinates.size());
     }
     // check destinations array of waypoint objects
     const auto &destinations_array = result.values.at("destinations").get<json::Array>().values;

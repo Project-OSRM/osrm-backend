@@ -23,8 +23,8 @@ int normalize(double coord) { return static_cast<int>(coord * COORDINATE_PRECISI
 BOOST_AUTO_TEST_CASE(raster_test)
 {
     SourceContainer sources;
-    int source_id = sources.LoadRasterSource("../unit_tests/fixtures/raster_data.asc", 0, 0.09, 0,
-                                             0.09, 10, 10);
+    int source_id = sources.LoadRasterSource(
+        "../unit_tests/fixtures/raster_data.asc", 0, 0.09, 0, 0.09, 10, 10);
     BOOST_CHECK_EQUAL(source_id, 0);
 
     // Expected nearest-neighbor queries

@@ -20,8 +20,7 @@ template <int length, int precision> char *printInt(char *buffer, int value)
     static_assert(length > 0, "length must be positive");
     static_assert(precision > 0, "precision must be positive");
 
-    const bool minus = [&value]
-    {
+    const bool minus = [&value] {
         if (value >= 0)
         {
             value = -value;

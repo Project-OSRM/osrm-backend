@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/guidance/constants.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -109,9 +109,9 @@ TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection int
         const EdgeID onto_edge = road.turn.eid;
         const NodeID to_nid = node_based_graph.GetTarget(onto_edge);
 
-        road.turn.instruction = {TurnType::Turn, (from_nid == to_nid)
-                                                     ? DirectionModifier::UTurn
-                                                     : getTurnDirection(road.turn.angle)};
+        road.turn.instruction = {TurnType::Turn,
+                                 (from_nid == to_nid) ? DirectionModifier::UTurn
+                                                      : getTurnDirection(road.turn.angle)};
     }
     return intersection;
 }
@@ -142,7 +142,8 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
 
     // Find the continuation of the intersection we're on
     auto next_road = std::find_if(
-        intersection.begin(), intersection.end(),
+        intersection.begin(),
+        intersection.end(),
         [this, source_edge_data](const ConnectedRoad &road) {
             const auto road_edge_data = node_based_graph.GetEdgeData(road.turn.eid);
             // Test to see if the source edge and the one we're looking at are the same road

@@ -1,13 +1,13 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
-#include "engine/status.hpp"
 #include "storage/shared_barriers.hpp"
+#include "engine/status.hpp"
 #include "util/json_container.hpp"
 
 #include <memory>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace osrm
 {

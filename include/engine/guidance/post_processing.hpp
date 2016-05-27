@@ -1,9 +1,9 @@
 #ifndef ENGINE_GUIDANCE_POST_PROCESSING_HPP
 #define ENGINE_GUIDANCE_POST_PROCESSING_HPP
 
-#include "engine/phantom_node.hpp"
-#include "engine/guidance/route_step.hpp"
 #include "engine/guidance/leg_geometry.hpp"
+#include "engine/guidance/route_step.hpp"
+#include "engine/phantom_node.hpp"
 
 #include <vector>
 
@@ -37,7 +37,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
                                                const PhantomNode &source_node,
                                                const PhantomNode &target_node);
 
-//remove steps invalidated by post-processing
+// remove steps invalidated by post-processing
 std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps);
 
 // postProcess will break the connection between the leg geometry

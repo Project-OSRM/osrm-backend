@@ -1,8 +1,8 @@
 #include "server/service/match_service.hpp"
 
-#include "engine/api/match_parameters.hpp"
 #include "server/api/parameters_parser.hpp"
 #include "server/service/utils.hpp"
+#include "engine/api/match_parameters.hpp"
 
 #include "util/json_container.hpp"
 
@@ -22,14 +22,15 @@ std::string getWrongOptionHelp(const engine::api::MatchParameters &parameters)
 
     const auto coord_size = parameters.coordinates.size();
 
-    const bool param_size_mismatch = constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "hints",
-                                                        parameters.hints, coord_size, help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "bearings",
-                                                        parameters.bearings, coord_size, help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "radiuses",
-                                                        parameters.radiuses, coord_size, help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "timestamps",
-                                                        parameters.timestamps, coord_size, help);
+    const bool param_size_mismatch =
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "timestamps", parameters.timestamps, coord_size, help);
 
     if (!param_size_mismatch && parameters.coordinates.size() < 2)
     {
@@ -40,7 +41,8 @@ std::string getWrongOptionHelp(const engine::api::MatchParameters &parameters)
 }
 } // anon. ns
 
-engine::Status MatchService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
+engine::Status
+MatchService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();

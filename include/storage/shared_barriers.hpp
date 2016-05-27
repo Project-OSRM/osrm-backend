@@ -1,8 +1,8 @@
 #ifndef SHARED_BARRIERS_HPP
 #define SHARED_BARRIERS_HPP
 
-#include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
 
 namespace osrm
 {

@@ -1,9 +1,9 @@
 #ifndef RAW_ROUTE_DATA_H
 #define RAW_ROUTE_DATA_H
 
-#include "engine/phantom_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "engine/phantom_node.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/coordinate.hpp"

@@ -1,8 +1,8 @@
 #include "engine/douglas_peucker.hpp"
 #include "util/coordinate_calculation.hpp"
 
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <osrm/coordinate.hpp>
 
@@ -79,7 +79,6 @@ BOOST_AUTO_TEST_CASE(removed_middle_test_zoom_sensitive)
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(remove_second_node_test)
 {
     // derived from the degreeToPixel function
@@ -99,14 +98,11 @@ BOOST_AUTO_TEST_CASE(remove_second_node_test)
                 x
         */
         std::vector<util::Coordinate> input = {
-            util::Coordinate(util::FloatLongitude(5),
-                             util::FloatLatitude(5)),
+            util::Coordinate(util::FloatLongitude(5), util::FloatLatitude(5)),
             util::Coordinate(util::FloatLongitude(5 + delta_pixel_to_delta_degree(2, z)),
                              util::FloatLatitude(5)),
-            util::Coordinate(util::FloatLongitude(10),
-                             util::FloatLatitude(10)),
-            util::Coordinate(util::FloatLongitude(5),
-                             util::FloatLatitude(15)),
+            util::Coordinate(util::FloatLongitude(10), util::FloatLatitude(10)),
+            util::Coordinate(util::FloatLongitude(5), util::FloatLatitude(15)),
             util::Coordinate(util::FloatLongitude(5),
                              util::FloatLatitude(15 + delta_pixel_to_delta_degree(2, z)))};
         BOOST_TEST_MESSAGE("Delta (" << z << "): " << delta_pixel_to_delta_degree(2, z));

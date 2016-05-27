@@ -1,11 +1,11 @@
 #include "engine/plugins/table.hpp"
 
-#include "engine/api/table_parameters.hpp"
 #include "engine/api/table_api.hpp"
+#include "engine/api/table_parameters.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/search_engine_data.hpp"
-#include "util/string_util.hpp"
 #include "util/json_container.hpp"
+#include "util/string_util.hpp"
 
 #include <cstdlib>
 
@@ -40,8 +40,8 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
 
     if (params.bearings.size() > 0 && params.coordinates.size() != params.bearings.size())
     {
-        return Error("InvalidOptions", "Number of bearings does not match number of coordinates",
-                     result);
+        return Error(
+            "InvalidOptions", "Number of bearings does not match number of coordinates", result);
     }
 
     // Empty sources or destinations means the user wants all of them included, respectively

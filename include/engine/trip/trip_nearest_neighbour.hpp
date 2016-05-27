@@ -1,17 +1,17 @@
 #ifndef TRIP_NEAREST_NEIGHBOUR_HPP
 #define TRIP_NEAREST_NEIGHBOUR_HPP
 
-#include "util/typedefs.hpp"
-#include "util/simple_logger.hpp"
 #include "util/dist_table_wrapper.hpp"
+#include "util/simple_logger.hpp"
+#include "util/typedefs.hpp"
 
 #include "osrm/json_container.hpp"
 
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
+#include <limits>
 #include <string>
 #include <vector>
-#include <limits>
 
 namespace osrm
 {

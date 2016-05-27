@@ -1,17 +1,17 @@
 #ifndef GRAPH_CONTRACTOR_HPP
 #define GRAPH_CONTRACTOR_HPP
 
+#include "contractor/query_edge.hpp"
 #include "util/binary_heap.hpp"
 #include "util/deallocating_vector.hpp"
 #include "util/dynamic_graph.hpp"
-#include "util/percent.hpp"
-#include "contractor/query_edge.hpp"
-#include "util/xor_fast_hash.hpp"
-#include "util/xor_fast_hash_storage.hpp"
 #include "util/integer_range.hpp"
+#include "util/percent.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
+#include "util/xor_fast_hash.hpp"
+#include "util/xor_fast_hash_storage.hpp"
 
 #include <boost/assert.hpp>
 
@@ -165,14 +165,22 @@ class GraphContractor
                     << static_cast<unsigned int>(diter->target);
             }
 #endif
-            edges.emplace_back(diter->source, diter->target,
-                               static_cast<unsigned int>(std::max(diter->weight, 1)), 1,
-                               diter->edge_id, false, diter->forward ? true : false,
+            edges.emplace_back(diter->source,
+                               diter->target,
+                               static_cast<unsigned int>(std::max(diter->weight, 1)),
+                               1,
+                               diter->edge_id,
+                               false,
+                               diter->forward ? true : false,
                                diter->backward ? true : false);
 
-            edges.emplace_back(diter->target, diter->source,
-                               static_cast<unsigned int>(std::max(diter->weight, 1)), 1,
-                               diter->edge_id, false, diter->backward ? true : false,
+            edges.emplace_back(diter->target,
+                               diter->source,
+                               static_cast<unsigned int>(std::max(diter->weight, 1)),
+                               1,
+                               diter->edge_id,
+                               false,
+                               diter->backward ? true : false,
                                diter->forward ? true : false);
         }
         // clear input vector
@@ -276,8 +284,7 @@ class GraphContractor
         std::vector<RemainingNodeData> remaining_nodes(number_of_nodes);
         // initialize priorities in parallel
         tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, InitGrainSize),
-                          [this, &remaining_nodes](const tbb::blocked_range<int> &range)
-                          {
+                          [this, &remaining_nodes](const tbb::blocked_range<int> &range) {
                               for (int x = range.begin(), end = range.end(); x != end; ++x)
                               {
                                   remaining_nodes[x].id = x;
@@ -299,9 +306,8 @@ class GraphContractor
 
             std::cout << "initializing elimination PQ ..." << std::flush;
             tbb::parallel_for(tbb::blocked_range<int>(0, number_of_nodes, PQGrainSize),
-                              [this, &node_priorities, &node_depth,
-                               &thread_data_list](const tbb::blocked_range<int> &range)
-                              {
+                              [this, &node_priorities, &node_depth, &thread_data_list](
+                                  const tbb::blocked_range<int> &range) {
                                   ContractorThreadData *data = thread_data_list.GetThreadData();
                                   for (int x = range.begin(), end = range.end(); x != end; ++x)
                                   {
@@ -342,7 +348,8 @@ class GraphContractor
                 // remaining graph
                 std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, SPECIAL_NODEID);
 
-                for (const auto new_node_id : util::irange<std::size_t>(0UL, remaining_nodes.size()))
+                for (const auto new_node_id :
+                     util::irange<std::size_t>(0UL, remaining_nodes.size()))
                 {
                     auto &node = remaining_nodes[new_node_id];
                     BOOST_ASSERT(node_priorities.size() > node.id);
@@ -352,7 +359,8 @@ class GraphContractor
                 }
 
                 // build forward and backward renumbering map and remap ids in remaining_nodes
-                for (const auto new_node_id : util::irange<std::size_t>(0UL, remaining_nodes.size()))
+                for (const auto new_node_id :
+                     util::irange<std::size_t>(0UL, remaining_nodes.size()))
                 {
                     auto &node = remaining_nodes[new_node_id];
                     // create renumbering maps in both directions
@@ -378,7 +386,8 @@ class GraphContractor
                             // node is not yet contracted.
                             // add (renumbered) outgoing edges to new util::DynamicGraph.
                             ContractorEdge new_edge = {new_node_id_from_orig_id_map[source],
-                                                       new_node_id_from_orig_id_map[target], data};
+                                                       new_node_id_from_orig_id_map[target],
+                                                       data};
 
                             new_edge.data.is_original_via_node_ID = true;
                             BOOST_ASSERT_MSG(SPECIAL_NODEID != new_node_id_from_orig_id_map[source],
@@ -421,9 +430,8 @@ class GraphContractor
 
             tbb::parallel_for(
                 tbb::blocked_range<std::size_t>(0, remaining_nodes.size(), IndependentGrainSize),
-                [this, &node_priorities, &remaining_nodes,
-                 &thread_data_list](const tbb::blocked_range<std::size_t> &range)
-                {
+                [this, &node_priorities, &remaining_nodes, &thread_data_list](
+                    const tbb::blocked_range<std::size_t> &range) {
                     ContractorThreadData *data = thread_data_list.GetThreadData();
                     // determine independent node set
                     for (auto i = range.begin(), end = range.end(); i != end; ++i)
@@ -436,8 +444,7 @@ class GraphContractor
 
             // sort all remaining nodes to the beginning of the sequence
             const auto begin_independent_nodes = stable_partition(
-                remaining_nodes.begin(), remaining_nodes.end(), [](RemainingNodeData node_data)
-                {
+                remaining_nodes.begin(), remaining_nodes.end(), [](RemainingNodeData node_data) {
                     return !node_data.is_independent;
                 });
             auto begin_independent_nodes_idx =
@@ -448,11 +455,10 @@ class GraphContractor
             {
                 // write out contraction level
                 tbb::parallel_for(
-                    tbb::blocked_range<std::size_t>(begin_independent_nodes_idx,
-                                                    end_independent_nodes_idx, ContractGrainSize),
-                    [this, remaining_nodes, flushed_contractor,
-                     current_level](const tbb::blocked_range<std::size_t> &range)
-                    {
+                    tbb::blocked_range<std::size_t>(
+                        begin_independent_nodes_idx, end_independent_nodes_idx, ContractGrainSize),
+                    [this, remaining_nodes, flushed_contractor, current_level](
+                        const tbb::blocked_range<std::size_t> &range) {
                         if (flushed_contractor)
                         {
                             for (int position = range.begin(), end = range.end(); position != end;
@@ -475,26 +481,24 @@ class GraphContractor
             }
 
             // contract independent nodes
-            tbb::parallel_for(tbb::blocked_range<std::size_t>(begin_independent_nodes_idx,
-                                                              end_independent_nodes_idx,
-                                                              ContractGrainSize),
-                              [this, &remaining_nodes,
-                               &thread_data_list](const tbb::blocked_range<std::size_t> &range)
-                              {
-                                  ContractorThreadData *data = thread_data_list.GetThreadData();
-                                  for (int position = range.begin(), end = range.end();
-                                       position != end; ++position)
-                                  {
-                                      const NodeID x = remaining_nodes[position].id;
-                                      this->ContractNode<false>(data, x);
-                                  }
-                              });
+            tbb::parallel_for(
+                tbb::blocked_range<std::size_t>(
+                    begin_independent_nodes_idx, end_independent_nodes_idx, ContractGrainSize),
+                [this, &remaining_nodes, &thread_data_list](
+                    const tbb::blocked_range<std::size_t> &range) {
+                    ContractorThreadData *data = thread_data_list.GetThreadData();
+                    for (int position = range.begin(), end = range.end(); position != end;
+                         ++position)
+                    {
+                        const NodeID x = remaining_nodes[position].id;
+                        this->ContractNode<false>(data, x);
+                    }
+                });
 
             tbb::parallel_for(
-                tbb::blocked_range<int>(begin_independent_nodes_idx, end_independent_nodes_idx,
-                                        DeleteGrainSize),
-                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range)
-                {
+                tbb::blocked_range<int>(
+                    begin_independent_nodes_idx, end_independent_nodes_idx, DeleteGrainSize),
+                [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range) {
                     ContractorThreadData *data = thread_data_list.GetThreadData();
                     for (int position = range.begin(), end = range.end(); position != end;
                          ++position)
@@ -507,8 +511,7 @@ class GraphContractor
             // make sure we really sort each block
             tbb::parallel_for(
                 thread_data_list.data.range(),
-                [&](const ThreadDataContainer::EnumerableThreadData::range_type &range)
-                {
+                [&](const ThreadDataContainer::EnumerableThreadData::range_type &range) {
                     for (auto &data : range)
                         tbb::parallel_sort(data->inserted_edges.begin(),
                                            data->inserted_edges.end());
@@ -542,11 +545,11 @@ class GraphContractor
             if (!use_cached_node_priorities)
             {
                 tbb::parallel_for(
-                    tbb::blocked_range<int>(begin_independent_nodes_idx, end_independent_nodes_idx,
+                    tbb::blocked_range<int>(begin_independent_nodes_idx,
+                                            end_independent_nodes_idx,
                                             NeighboursGrainSize),
-                    [this, &node_priorities, &remaining_nodes, &node_depth,
-                     &thread_data_list](const tbb::blocked_range<int> &range)
-                    {
+                    [this, &node_priorities, &remaining_nodes, &node_depth, &thread_data_list](
+                        const tbb::blocked_range<int> &range) {
                         ContractorThreadData *data = thread_data_list.GetThreadData();
                         for (int position = range.begin(), end = range.end(); position != end;
                              ++position)
@@ -570,8 +573,7 @@ class GraphContractor
             if (orig_node_id_from_new_node_id_map.size() > 0)
             {
                 tbb::parallel_for(tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
-                                  [this, &remaining_nodes](const tbb::blocked_range<int> &range)
-                                  {
+                                  [this, &remaining_nodes](const tbb::blocked_range<int> &range) {
                                       for (int x = range.begin(), end = range.end(); x != end; ++x)
                                       {
                                           const auto orig_id = remaining_nodes[x].id;
@@ -583,8 +585,7 @@ class GraphContractor
             else
             {
                 tbb::parallel_for(tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
-                                  [this, &remaining_nodes](const tbb::blocked_range<int> &range)
-                                  {
+                                  [this, &remaining_nodes](const tbb::blocked_range<int> &range) {
                                       for (int x = range.begin(), end = range.end(); x != end; ++x)
                                       {
                                           const auto orig_id = remaining_nodes[x].id;
@@ -843,15 +844,25 @@ class GraphContractor
                             // guarantees that source is not connected to another node that is
                             // contracted
                             node_weights[source] = path_distance; // make sure to prune better
-                            inserted_edges.emplace_back(
-                                source, target, path_distance,
-                                out_data.originalEdges + in_data.originalEdges, node, SHORTCUT_ARC,
-                                FORWARD_DIRECTION_ENABLED, REVERSE_DIRECTION_DISABLED);
+                            inserted_edges.emplace_back(source,
+                                                        target,
+                                                        path_distance,
+                                                        out_data.originalEdges +
+                                                            in_data.originalEdges,
+                                                        node,
+                                                        SHORTCUT_ARC,
+                                                        FORWARD_DIRECTION_ENABLED,
+                                                        REVERSE_DIRECTION_DISABLED);
 
-                            inserted_edges.emplace_back(
-                                target, source, path_distance,
-                                out_data.originalEdges + in_data.originalEdges, node, SHORTCUT_ARC,
-                                FORWARD_DIRECTION_DISABLED, REVERSE_DIRECTION_ENABLED);
+                            inserted_edges.emplace_back(target,
+                                                        source,
+                                                        path_distance,
+                                                        out_data.originalEdges +
+                                                            in_data.originalEdges,
+                                                        node,
+                                                        SHORTCUT_ARC,
+                                                        FORWARD_DIRECTION_DISABLED,
+                                                        REVERSE_DIRECTION_ENABLED);
                         }
                     }
                     continue;
@@ -867,8 +878,8 @@ class GraphContractor
             if (RUNSIMULATION)
             {
                 const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
-                Dijkstra(max_distance, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, *data,
-                         node);
+                Dijkstra(
+                    max_distance, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, *data, node);
             }
             else
             {
@@ -898,14 +909,22 @@ class GraphContractor
                     }
                     else
                     {
-                        inserted_edges.emplace_back(source, target, path_distance,
+                        inserted_edges.emplace_back(source,
+                                                    target,
+                                                    path_distance,
                                                     out_data.originalEdges + in_data.originalEdges,
-                                                    node, SHORTCUT_ARC, FORWARD_DIRECTION_ENABLED,
+                                                    node,
+                                                    SHORTCUT_ARC,
+                                                    FORWARD_DIRECTION_ENABLED,
                                                     REVERSE_DIRECTION_DISABLED);
 
-                        inserted_edges.emplace_back(target, source, path_distance,
+                        inserted_edges.emplace_back(target,
+                                                    source,
+                                                    path_distance,
                                                     out_data.originalEdges + in_data.originalEdges,
-                                                    node, SHORTCUT_ARC, FORWARD_DIRECTION_DISABLED,
+                                                    node,
+                                                    SHORTCUT_ARC,
+                                                    FORWARD_DIRECTION_DISABLED,
                                                     REVERSE_DIRECTION_ENABLED);
                     }
                 }

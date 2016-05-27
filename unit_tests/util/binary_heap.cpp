@@ -1,9 +1,9 @@
 #include "util/binary_heap.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/test/unit_test.hpp>
-#include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -25,7 +25,8 @@ typedef int TestKey;
 typedef int TestWeight;
 typedef boost::mpl::list<ArrayStorage<TestNodeID, TestKey>,
                          MapStorage<TestNodeID, TestKey>,
-                         UnorderedMapStorage<TestNodeID, TestKey>> storage_types;
+                         UnorderedMapStorage<TestNodeID, TestKey>>
+    storage_types;
 
 template <unsigned NUM_ELEM> struct RandomDataFixture
 {

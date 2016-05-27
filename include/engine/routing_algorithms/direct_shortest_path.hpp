@@ -102,12 +102,22 @@ class DirectShortestPathRouting final
             forward_core_heap.Clear();
             reverse_core_heap.Clear();
 
-            super::SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
-                                  distance, packed_leg, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS);
+            super::SearchWithCore(forward_heap,
+                                  reverse_heap,
+                                  forward_core_heap,
+                                  reverse_core_heap,
+                                  distance,
+                                  packed_leg,
+                                  DO_NOT_FORCE_LOOPS,
+                                  DO_NOT_FORCE_LOOPS);
         }
         else
         {
-            super::Search(forward_heap, reverse_heap, distance, packed_leg, DO_NOT_FORCE_LOOPS,
+            super::Search(forward_heap,
+                          reverse_heap,
+                          distance,
+                          packed_leg,
+                          DO_NOT_FORCE_LOOPS,
                           DO_NOT_FORCE_LOOPS);
         }
 
@@ -128,7 +138,9 @@ class DirectShortestPathRouting final
         raw_route_data.target_traversed_in_reverse.push_back(
             (packed_leg.back() != phantom_node_pair.target_phantom.forward_segment_id.id));
 
-        super::UnpackPath(packed_leg.begin(), packed_leg.end(), phantom_node_pair,
+        super::UnpackPath(packed_leg.begin(),
+                          packed_leg.end(),
+                          phantom_node_pair,
                           raw_route_data.unpacked_path_segments.front());
     }
 };

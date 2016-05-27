@@ -6,9 +6,9 @@
 
 #include "util/lua_util.hpp"
 
-#include <string>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <tbb/enumerable_thread_specific.h>
 
 struct lua_State;

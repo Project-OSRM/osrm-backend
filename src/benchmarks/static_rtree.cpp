@@ -1,10 +1,10 @@
-#include "engine/geospatial_query.hpp"
-#include "extractor/query_node.hpp"
-#include "extractor/edge_based_node.hpp"
 #include "util/static_rtree.hpp"
-#include "util/timing_util.hpp"
-#include "util/coordinate.hpp"
+#include "extractor/edge_based_node.hpp"
+#include "extractor/query_node.hpp"
 #include "mocks/mock_datafacade.hpp"
+#include "engine/geospatial_query.hpp"
+#include "util/coordinate.hpp"
+#include "util/timing_util.hpp"
 
 #include <iostream>
 #include <random>
@@ -79,14 +79,12 @@ void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
                              util::FixedLatitude{lat_udist(mt_rand)});
     }
 
-    benchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const util::Coordinate &q)
-                   {
-                       return rtree.Nearest(q, 1);
-                   });
-    benchmarkQuery(queries, "raw RTree queries (10 results)", [&rtree](const util::Coordinate &q)
-                   {
-                       return rtree.Nearest(q, 10);
-                   });
+    benchmarkQuery(queries, "raw RTree queries (1 result)", [&rtree](const util::Coordinate &q) {
+        return rtree.Nearest(q, 1);
+    });
+    benchmarkQuery(queries, "raw RTree queries (10 results)", [&rtree](const util::Coordinate &q) {
+        return rtree.Nearest(q, 10);
+    });
 }
 }
 }

@@ -149,8 +149,8 @@ struct PhantomNode
     unsigned reverse_packed_geometry_id;
     struct ComponentType
     {
-        std::uint32_t id         : 31;
-        std::uint32_t is_tiny    : 1;
+        std::uint32_t id : 31;
+        std::uint32_t is_tiny : 1;
     } component;
     static_assert(sizeof(ComponentType) == 4, "ComponentType needs to be 4 bytes big");
 

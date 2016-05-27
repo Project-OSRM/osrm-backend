@@ -4,20 +4,20 @@
 #include "engine/plugins/plugin_base.hpp"
 
 #include "engine/api/trip_parameters.hpp"
-#include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
+#include "engine/routing_algorithms/shortest_path.hpp"
 
 #include "osrm/json_container.hpp"
 
 #include <boost/assert.hpp>
 
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <iterator>
 
 namespace osrm
 {
