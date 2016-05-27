@@ -3,6 +3,13 @@
 set -eu
 set -o pipefail
 
+INSTALL_PREFIX=$1
+
+if [[ ${INSTALL_PREFIX:-false} == false ]]; then
+    echo "please provide install prefix as first arg"
+    exit 1
+fi
+
 export CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # ensure we start inside the osrm-backend directory (one level up)
