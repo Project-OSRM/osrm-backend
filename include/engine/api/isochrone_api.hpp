@@ -55,6 +55,7 @@ class IsochroneAPI final : public BaseAPI
             data.values.push_back(object);
         }
         response.values["isochrone"] = std::move(data);
+        
         if (!convexhull.empty())
         {
             util::json::Array convexhullArray;

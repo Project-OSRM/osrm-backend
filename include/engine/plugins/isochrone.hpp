@@ -58,11 +58,6 @@ struct IsochroneNode
     osrm::extractor::QueryNode node;
     osrm::extractor::QueryNode predecessor;
     int distance;
-
-    bool operator<(const IsochroneNode &n) const
-    {
-        return node.node_id < n.node.node_id;
-    }
 };
 
 
@@ -71,7 +66,7 @@ using SimpleGraph = util::StaticGraph<SimpleEdgeData>;
 using SimpleEdge = SimpleGraph::InputEdge;
 using QueryHeap = osrm::util::
     BinaryHeap<NodeID, NodeID, int, HeapData, osrm::util::UnorderedMapStorage<NodeID, int>>;
-typedef std::set<IsochroneNode> IsochroneSet;
+typedef std::vector<IsochroneNode> IsochroneVector;
 
 class IsochronePlugin final : public BasePlugin
 {
@@ -86,8 +81,8 @@ class IsochronePlugin final : public BasePlugin
                           std::vector<extractor::QueryNode> &coordinate_list,
                           std::vector<SimpleEdge> &graph_edge_list);
 
-    void dijkstra(IsochroneSet &set, NodeID &source, int distance);
-    void update(IsochroneSet &s, IsochroneNode node);
+    void dijkstra(IsochroneVector &set, NodeID &source, int distance);
+    void update(IsochroneVector &s, IsochroneNode node);
 
   public:
     explicit IsochronePlugin(datafacade::BaseDataFacade &facade, const std::string base);

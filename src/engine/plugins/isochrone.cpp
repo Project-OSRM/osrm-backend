@@ -22,12 +22,11 @@ IsochronePlugin::IsochronePlugin(datafacade::BaseDataFacade &facade, const std::
     : BasePlugin{facade}, base{base}
 {
 
-    // Prepares uncontracted Graph
+    // Loads Graph into memory
     if (!base.empty())
     {
         number_of_nodes = loadGraph(base, coordinate_list, graph_edge_list);
     }
-
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
     graph = std::make_shared<engine::plugins::SimpleGraph>(number_of_nodes, graph_edge_list);
@@ -55,59 +54,42 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         return Error("PhantomNode", "PhantomNode couldnt be found for coordinate", json_result);
     }
 
-    util::SimpleLogger().Write() << phantomnodes.front().front().phantom_node.location;
-    // Find closest phantomnode
-    // isnt closest node
-//    std::sort(phantomnodes.front().begin(), phantomnodes.front().end(),
-//              [&](const osrm::engine::PhantomNodeWithDistance &a,
-//                  const osrm::engine::PhantomNodeWithDistance &b)
-//              {
-//                  return a.distance < b.distance;
-//              });
-
-//    for(auto p : phantomnodes.front()) {
-//        util::SimpleLogger().Write() << p.phantom_node.location;
-//    }
-
     auto phantom = phantomnodes.front();
-    util::SimpleLogger().Write() << "ph" << phantom.size();
-
     std::vector<NodeID> forward_id_vector;
     facade.GetUncompressedGeometry(phantom.front().phantom_node.reverse_packed_geometry_id,
                                    forward_id_vector);
     auto source = forward_id_vector[0];
-//    auto source = phantom.front().phantom_node.forward_segment_id;
-    util::SimpleLogger().Write() << "forvec" << forward_id_vector.size();
-    IsochroneSet isochroneSet;
-    dijkstra(isochroneSet, source, params.distance);
 
-    util::SimpleLogger().Write() << "Nodes Found: " << isochroneSet.size();
-    std::vector<IsochroneNode> isoByDistance(isochroneSet.begin(), isochroneSet.end());
-    std::sort(isoByDistance.begin(), isoByDistance.end(),
+    IsochroneVector isochroneVector;
+    dijkstra(isochroneVector, source, params.distance);
+
+    util::SimpleLogger().Write() << "Nodes Found: " << isochroneVector.size();
+    std::sort(isochroneVector.begin(), isochroneVector.end(),
               [&](const IsochroneNode n1, const IsochroneNode n2)
               {
                   return n1.distance < n2.distance;
               });
     std::vector<IsochroneNode> convexhull;
 
+    // Optional param for calculating Convex Hull
     if (params.convexhull)
     {
-        convexhull = util::monotoneChain(isoByDistance);
+        convexhull = util::monotoneChain(isochroneVector);
     }
 
     api::IsochroneAPI isochroneAPI(facade, params);
-    isochroneAPI.MakeResponse(isoByDistance, convexhull, json_result);
+    isochroneAPI.MakeResponse(isochroneVector, convexhull, json_result);
 
     return Status::Ok;
 }
 
-void IsochronePlugin::dijkstra(IsochroneSet &isochroneSet, NodeID &source, int distance)
+void IsochronePlugin::dijkstra(IsochroneVector &isochroneSet, NodeID &source, int distance)
 {
 
     QueryHeap heap(number_of_nodes);
     heap.Insert(source, 0, source);
 
-    isochroneSet.insert(IsochroneNode(coordinate_list[source], coordinate_list[source], 0));
+    isochroneSet.emplace_back(IsochroneNode(coordinate_list[source], coordinate_list[source], 0));
     util::SimpleLogger().Write() << coordinate_list[source].lon << "   "
                                  << coordinate_list[source].lat;
     int MAX_DISTANCE = distance;
@@ -134,7 +116,7 @@ void IsochronePlugin::dijkstra(IsochroneSet &isochroneSet, NodeID &source, int d
                         else if (!heap.WasInserted(target))
                         {
                             heap.Insert(target, to_distance, source);
-                            isochroneSet.insert(IsochroneNode(
+                            isochroneSet.emplace_back(IsochroneNode(
                                 coordinate_list[target], coordinate_list[source], to_distance));
                         }
                         else if (to_distance < heap.GetKey(target))
@@ -193,16 +175,14 @@ std::size_t IsochronePlugin::loadGraph(const std::string &path,
     return number_of_nodes;
 }
 
-void IsochronePlugin::update(IsochroneSet &s, IsochroneNode node)
+void IsochronePlugin::update(IsochroneVector &v, IsochroneNode n)
 {
-    std::pair<IsochroneSet::iterator, bool> p = s.insert(node);
-    bool alreadyThere = !p.second;
-    if (alreadyThere)
+    for (auto node : v)
     {
-        IsochroneSet::iterator hint = p.first;
-        hint++;
-        s.erase(p.first);
-        s.insert(hint, node);
+        if (node.node.node_id == n.node.node_id)
+        {
+            node = n;
+        }
     }
 }
 }
