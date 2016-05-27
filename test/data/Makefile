@@ -11,6 +11,11 @@ POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
 TIMER:=$(SCRIPT_ROOT)/timer.sh
 PROFILE:=$(PROFILE_ROOT)/car.lua
 
+LOAD_LIBRARIES:=
+ifneq ($(OSRM_SHARED_LIBRARY_PATH),)
+	LOAD_LIBRARIES=DYLD_LIBRARY_PATH=$(OSRM_SHARED_LIBRARY_PATH)
+endif
+
 all: $(DATA_NAME).osrm.hsgr
 
 clean:
@@ -36,7 +41,7 @@ $(DATA_NAME).requests: $(DATA_NAME).poly
 	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests
 
 osrm-routed.pid: $(DATA_NAME).osrm.hsgr
-	@/bin/sh -c '$(OSRM_ROUTED) $(DATA_NAME).osrm& echo "$$!" > osrm-routed.pid'
+	@/bin/sh -c '$(LOAD_LIBRARIES) $(OSRM_ROUTED) $(DATA_NAME).osrm& echo "$$!" > osrm-routed.pid'
 	sleep 1
 
 benchmark: $(DATA_NAME).requests osrm-routed.pid

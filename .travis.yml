@@ -3,10 +3,6 @@ language: cpp
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
-sudo: required
-dist: trusty
-
 notifications:
   email: false
 
@@ -34,7 +30,18 @@ matrix:
 
     # Debug Builds
     - os: linux
+      compiler: "clang-3.8-sanitize-debug"
+      sudo: false
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
+          packages: [ 'clang-3.8', 'llvm-3.8-dev' ]
+      env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Debug' STATIC=ON
+    - os: linux
       compiler: "gcc-5-debug"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -43,6 +50,9 @@ matrix:
 
     - os: linux
       compiler: "gcc-4.8-debug"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -51,6 +61,9 @@ matrix:
 
     - os: linux
       compiler: "clang-3.8-debug"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
@@ -65,6 +78,9 @@ matrix:
     # Release Builds
     - os: linux
       compiler: "gcc-5-release"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -98,6 +114,9 @@ matrix:
     # Shared Library
     - os: linux
       compiler: "gcc-5-release-shared"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -132,32 +151,43 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
+  - export INSTALL_PREFIX=$(pwd)/local-install
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
+  - |
+    if [[ ${STATIC} == "ON" ]]; then
+       ../scripts/configure_static.sh ${INSTALL_PREFIX}
+    else
+       cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
+    fi
   - echo "travis_fold:start:MAKE"
-  - make osrm-extract --jobs=3
-  - make --jobs=${JOBS}
-  - make tests --jobs=${JOBS}
-  - make benchmarks --jobs=${JOBS}
+  - make osrm-extract --jobs=3 VERBOSE=1
+  - make --jobs=${JOBS} VERBOSE=1
+  - make tests --jobs=${JOBS} VERBOSE=1
+  - make benchmarks --jobs=${JOBS} VERBOSE=1
   - echo "travis_fold:end:MAKE"
   - ccache -s
-  - sudo make install
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      sudo ldconfig
-    fi
+  - make install VERBOSE=1
   - popd
-  - mkdir example/build && pushd example/build
-  - cmake ..
-  - make
-  - popd
+  # waiting on https://github.com/Project-OSRM/osrm-backend/pull/2461
+  #- mkdir example/build && pushd example/build
+  #- |
+  #  if [[ ${STATIC} == "ON" ]]; then
+  #     MASON_HOME=${TRAVIS_BUILD_DIR}/mason_packages/.link
+  #     export DYLD_LIBRARY_PATH=${MASON_HOME}/lib
+  #     export OSRM_SHARED_LIBRARY_PATH=${DYLD_LIBRARY_PATH}
+  #     cmake .. -DCMAKE_INCLUDE_PATH=${MASON_HOME}/include -DCMAKE_LIBRARY_PATH=${MASON_HOME}/lib -DBoost_NO_SYSTEM_PATHS=ON -DBoost_USE_STATIC_LIBS=ON -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DLibOSRM_INCLUDE_DIR=${INSTALL_PREFIX}/include -DLibOSRM_LIBRARIES=${INSTALL_PREFIX}/lib/libosrm.a
+  #  else
+  #     cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DLibOSRM_INCLUDE_DIR=${INSTALL_PREFIX}/include -DLibOSRM_LIBRARIES=${INSTALL_PREFIX}/lib/libosrm.a
+  #  fi
+  #- make VERBOSE=1
+  #- popd
 
 script:
   - echo "travis_fold:start:BENCHMARK"
-  - make -C test/data benchmark
+  - make -C test/data benchmark VERBOSE=1
   - echo "travis_fold:end:BENCHMARK"
-  - ./example/build/osrm-example test/data/monaco.osrm
+  #- ./example/build/osrm-example test/data/monaco.osrm
   # All tests assume to be run from the build directory
   - pushd build
   - ./unit_tests/library-tests ../test/data/monaco.osrm
