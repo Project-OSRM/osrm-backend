@@ -8,7 +8,6 @@
 #include "util/graph_loader.hpp"
 #include "util/monotone_chain.hpp"
 #include "util/simple_logger.hpp"
-#include "util/shmem_graph_loader.hpp"
 
 #include <algorithm>
 
@@ -28,11 +27,7 @@ IsochronePlugin::IsochronePlugin(datafacade::BaseDataFacade &facade, const std::
     {
         number_of_nodes = loadGraph(base, coordinate_list, graph_edge_list);
     }
-    else
-    {
-        std::string path = util::getFilePathFromShmem();
-        number_of_nodes = loadGraph(path, coordinate_list, graph_edge_list);
-    }
+
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
     graph = std::make_shared<engine::plugins::SimpleGraph>(number_of_nodes, graph_edge_list);

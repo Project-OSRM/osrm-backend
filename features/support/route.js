@@ -84,7 +84,7 @@ module.exports = function () {
             },
             params = this.overwriteParams(defaults, userParams);
         params.coordinates = [[node.lon, node.lat].join(',')];
-        params.distance = 1000;
+        params.distance = 10000;
 
         return this.requestPath('isochrone', params, callback);
     };
