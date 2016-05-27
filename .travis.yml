@@ -3,10 +3,6 @@ language: cpp
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
-sudo: required
-dist: trusty
-
 notifications:
   email: false
 
@@ -32,9 +28,20 @@ matrix:
   # We override the compiler names here to yield better ccache behavior, which uses this as key
   include:
 
+    - os: linux
+      compiler: "clang-3.8-sanitize-debug"
+      sudo: false
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
+          packages: [ 'clang-3.8' ]
+      env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Debug'
     # Debug Builds
     - os: linux
       compiler: "gcc-5-debug"
+      # sudo:required is needed for trusty images
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -43,6 +50,8 @@ matrix:
 
     - os: linux
       compiler: "gcc-4.8-debug"
+      sudo: required
+      dist: trusty
       addons: &gcc48
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -51,6 +60,8 @@ matrix:
 
     - os: linux
       compiler: "clang-3.8-debug"
+      sudo: required
+      dist: trusty
       addons: &clang38
         apt:
           sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
@@ -59,12 +70,16 @@ matrix:
 
     - os: osx
       osx_image: xcode7.3
+      sudo: required
+      dist: trusty
       compiler: clang
       env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
 
     # Release Builds
     - os: linux
       compiler: "gcc-5-release"
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -74,6 +89,8 @@ matrix:
       # Disabled because of CI slowness
       #- os: linux
       #- compiler: gcc
+      #  sudo: required
+      #  dist: trusty
       #- addons: &gcc48
       #-   apt:
       #-     sources: ['ubuntu-toolchain-r-test']
@@ -83,6 +100,8 @@ matrix:
       # Disabled because of CI slowness
       #- os: linux
       #- compiler: clang
+      #  sudo: required
+      #  dist: trusty
       #- addons: &clang38
       #-   apt:
       #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
@@ -98,6 +117,8 @@ matrix:
     # Shared Library
     - os: linux
       compiler: "gcc-5-release-shared"
+      sudo: required
+      dist: trusty
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
@@ -107,6 +128,8 @@ matrix:
       # Disabled because CI slowness
       #- os: linux
       #- compiler: clang
+      #  sudo: required
+      #  dist: trusty
       #- addons: &clang38
       #-   apt:
       #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
@@ -132,9 +155,11 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
+  - export INSTALL_PREFIX=$(pwd)/local-install
+  - export PKG_CONFIG_PATH=${INSTALL_PREFIX}/lib/pkgconfig
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
+  - cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=1 -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
   - make osrm-extract --jobs=3
   - make --jobs=${JOBS}
@@ -142,10 +167,10 @@ install:
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
   - ccache -s
-  - sudo make install
+  - make install
   - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      sudo ldconfig
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]] && [[ "${BUILD_SHARED_LIBS}" == "ON" ]]; then
+      export LD_LIBRARY_PATH=${INSTALL_PREFIX}/lib
     fi
   - popd
   - mkdir example/build && pushd example/build
