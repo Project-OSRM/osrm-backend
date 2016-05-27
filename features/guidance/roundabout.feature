@@ -337,3 +337,27 @@ Feature: Basic Roundabout
             | a,e       | ac,de,de | depart,roundabout-exit-1,arrive |
             | a,f       | ac,bf,bf | depart,roundabout-exit-2,arrive |
 
+    Scenario: Enter and Exit - Bearings
+        Given the node map
+            |   |   |   | a |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   | i | b | l |   |   |
+            | h |   | g |   | c |   | d |
+            |   |   | j | e | k |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   | f |   |   |   |
+
+       And the ways
+            | nodes      | junction   |
+            | ab         |            |
+            | cd         |            |
+            | ef         |            |
+            | gh         |            |
+            | bigjekclb  | roundabout |
+
+       When I route I should get
+           | waypoints | route    | turns                           | bearing                |
+           | a,d       | ab,cd,cd | depart,roundabout-exit-3,arrive | 0->180,180->270,90->0  |
+           | a,f       | ab,ef,ef | depart,roundabout-exit-2,arrive | 0->180,180->270,180->0 |
+           | a,h       | ab,gh,gh | depart,roundabout-exit-1,arrive | 0->180,180->270,270->0 |
+

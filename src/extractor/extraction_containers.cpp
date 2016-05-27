@@ -51,18 +51,6 @@ ExtractionContainers::ExtractionContainers()
     name_lengths.push_back(0);
 }
 
-ExtractionContainers::~ExtractionContainers()
-{
-    // FIXME isn't this done implicitly of the stxxl::vectors go out of scope?
-    used_node_id_list.clear();
-    all_nodes_list.clear();
-    all_edges_list.clear();
-    name_char_data.clear();
-    name_lengths.clear();
-    restrictions_list.clear();
-    way_start_end_id_list.clear();
-}
-
 /**
  * Processes the collected data and serializes it.
  * At this point nodes are still referenced by their OSM id.
@@ -109,7 +97,7 @@ void ExtractionContainers::WriteNames(const std::string &names_file_name) const
 
     unsigned total_length = 0;
 
-    for (const unsigned &name_length : name_lengths)
+    for (const auto name_length : name_lengths)
     {
         total_length += name_length;
     }
@@ -124,7 +112,7 @@ void ExtractionContainers::WriteNames(const std::string &names_file_name) const
     char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
     unsigned buffer_len = 0;
 
-    for (const char &c : name_char_data)
+    for (const auto c : name_char_data)
     {
         write_buffer[buffer_len++] = c;
 

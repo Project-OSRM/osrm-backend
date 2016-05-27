@@ -12,7 +12,8 @@ module.exports = function () {
                 throw new Error('*** routability table must contain either "forw", "backw" or "bothw" column');
             }
 
-            this.reprocessAndLoadData(() => {
+            this.reprocessAndLoadData((e) => {
+                if (e) callback(e);
                 var testRow = (row, i, cb) => {
                     var outputRow = row;
 

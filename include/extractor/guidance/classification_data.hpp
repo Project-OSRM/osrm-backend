@@ -47,6 +47,17 @@ inline bool isRampClass(const FunctionalRoadClass road_class)
            road_class == FunctionalRoadClass::TRUNK_LINK;
 }
 
+// Links are usually smaller than ramps, but are sometimes tagged
+// as MOTORWAY_LINK if they exit/enter a motorway/trunk road.
+inline bool isLinkClass(const FunctionalRoadClass road_class)
+{
+    return road_class == FunctionalRoadClass::MOTORWAY_LINK ||
+           road_class == FunctionalRoadClass::TRUNK_LINK ||
+           road_class == FunctionalRoadClass::PRIMARY_LINK ||
+           road_class == FunctionalRoadClass::SECONDARY_LINK ||
+           road_class == FunctionalRoadClass::TERTIARY_LINK;
+}
+
 // TODO augment this with all data required for guidance generation
 struct RoadClassificationData
 {

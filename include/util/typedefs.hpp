@@ -32,9 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/assert.hpp>
 
-#include <limits>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 // OpenStreetMap node ids are higher than 2^32
 OSRM_STRONG_TYPEDEF(std::uint64_t, OSMNodeID)
@@ -56,6 +56,7 @@ using OSMEdgeID_weak = std::uint64_t;
 
 using NodeID = unsigned int;
 using EdgeID = unsigned int;
+using NameID = std::uint32_t;
 using EdgeWeight = int;
 
 using BearingClassID = std::uint32_t;
@@ -80,8 +81,8 @@ struct SegmentID
         BOOST_ASSERT(!enabled || id != SPECIAL_SEGMENTID);
     }
 
-    NodeID  id              : 31;
-    std::uint32_t enabled   :  1;
+    NodeID id : 31;
+    std::uint32_t enabled : 1;
 };
 
 static_assert(sizeof(SegmentID) == 4, "SegmentID needs to be 4 bytes big");

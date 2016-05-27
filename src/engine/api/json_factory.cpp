@@ -42,7 +42,8 @@ const constexpr char *turn_type_names[] = {
     "on ramp",         "off ramp",   "fork",     "end of road", "notification",
     "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
     "roundabout turn", "invalid",    "invalid",  "invalid",     "invalid",
-    "invalid",         "invalid",    "invalid",  "invalid",     "invalid"};
+    "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
+    "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
@@ -150,20 +151,19 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     return step_maneuver;
 }
 
-util::json::Object
-makeIntersection(const guidance::Intersection &intersection)
+util::json::Object makeIntersection(const guidance::Intersection &intersection)
 {
     util::json::Object result;
     util::json::Array bearings;
     util::json::Array entry;
 
     bearings.values.reserve(intersection.bearings.size());
-    std::copy(intersection.bearings.begin(), intersection.bearings.end(), std::back_inserter(bearings.values));
+    std::copy(intersection.bearings.begin(), intersection.bearings.end(),
+              std::back_inserter(bearings.values));
 
     entry.values.reserve(intersection.entry.size());
     std::transform(intersection.entry.begin(), intersection.entry.end(),
-                   std::back_inserter(entry.values), [](const bool has_entry) -> util::json::Value
-                   {
+                   std::back_inserter(entry.values), [](const bool has_entry) -> util::json::Value {
                        if (has_entry)
                            return util::json::True();
                        else

@@ -106,6 +106,9 @@ Feature: Basic Map Matching
             | efgh  | ab,bc,cd  |
 
     Scenario: Testbot - Duration details
+        Given the query options
+            | annotations | true |
+
         Given the node map
             | a | b | c | d | e |   | g | h |
             |   |   | i |   |   |   |   |   |

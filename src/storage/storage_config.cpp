@@ -1,6 +1,8 @@
 #include "storage/storage_config.hpp"
+#include "util/simple_logger.hpp"
 
 #include <boost/filesystem/operations.hpp>
+
 
 namespace osrm
 {
@@ -22,19 +24,33 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
 
 bool StorageConfig::IsValid() const
 {
-    return boost::filesystem::is_regular_file(base) &&
-           boost::filesystem::is_regular_file(ram_index_path) &&
-           boost::filesystem::is_regular_file(file_index_path) &&
-           boost::filesystem::is_regular_file(hsgr_data_path) &&
-           boost::filesystem::is_regular_file(nodes_data_path) &&
-           boost::filesystem::is_regular_file(edges_data_path) &&
-           boost::filesystem::is_regular_file(core_data_path) &&
-           boost::filesystem::is_regular_file(geometries_path) &&
-           boost::filesystem::is_regular_file(timestamp_path) &&
-           boost::filesystem::is_regular_file(datasource_names_path) &&
-           boost::filesystem::is_regular_file(datasource_indexes_path) &&
-           boost::filesystem::is_regular_file(names_data_path) &&
-           boost::filesystem::is_regular_file(properties_path);
+    const constexpr auto num_files = 14;
+    const boost::filesystem::path paths[num_files] = {base,
+                                                      ram_index_path,
+                                                      file_index_path,
+                                                      hsgr_data_path,
+                                                      nodes_data_path,
+                                                      edges_data_path,
+                                                      core_data_path,
+                                                      geometries_path,
+                                                      timestamp_path,
+                                                      datasource_indexes_path,
+                                                      datasource_indexes_path,
+                                                      names_data_path,
+                                                      properties_path,
+                                                      intersection_class_path};
+
+    bool success = true;
+    for (auto path = paths; path != paths + num_files; ++path)
+    {
+        if (!boost::filesystem::is_regular_file(*path))
+        {
+            util::SimpleLogger().Write(logWARNING) << "Missing/Broken File: " << path->string();
+            success = false;
+        }
+    }
+
+    return success;
 }
 }
 }

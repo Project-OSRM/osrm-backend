@@ -145,7 +145,6 @@ module.exports = function () {
                     this.requestUrl(row.request, afterRequest);
                 } else {
                     var params = this.queryParams;
-                    params['annotate'] = 'true';
                     got = {};
                     for (var k in row) {
                         var match = k.match(/param:(.*)/);

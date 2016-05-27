@@ -59,7 +59,6 @@ module.exports = function () {
         var hashContract = (cb) => {
             this.hashOfFiles(util.format('%s/osrm-contract%s', this.BIN_PATH, this.EXE), (hash) => {
                 this.binContractHash = hash;
-                this.fingerprintContract = this.hashString(this.binContractHash);
                 cb();
             });
         };
@@ -79,16 +78,18 @@ module.exports = function () {
             .defer(hashContract)
             .defer(hashRouted)
             .awaitAll(() => {
-                this.fingerprintExtract = this.hashString([this.profileHash, this.luaLibHash, this.binExtractHash].join('-'));
                 this.AfterConfiguration(() => {
                     callback();
                 });
             });
     };
 
-    this.setProfileBasedHashes = () => {
-        this.fingerprintExtract = this.hashString([this.profileHash, this.luaLibHash, this.binExtractHash].join('-'));
-        this.fingerprintContract = this.hashString(this.binContractHash);
+    this.updateFingerprintExtract = (str) => {
+        this.fingerprintExtract = this.hashString([this.fingerprintExtract, str].join('-'));
+    };
+
+    this.updateFingerprintContract = (str) => {
+        this.fingerprintContract = this.hashString([this.fingerprintContract, str].join('-'));
     };
 
     this.setProfile = (profile, cb) => {
@@ -97,22 +98,24 @@ module.exports = function () {
             this.profile = profile;
             this.hashProfile((hash) => {
                 this.profileHash = hash;
-                this.setProfileBasedHashes();
+                this.updateFingerprintExtract(this.profileHash);
                 cb();
             });
-        } else cb();
+        } else {
+            this.updateFingerprintExtract(this.profileHash);
+            cb();
+        }
     };
 
     this.setExtractArgs = (args, callback) => {
         this.extractArgs = args;
-        this.forceExtract = true;
-        this.forceContract = true;
+        this.updateFingerprintExtract(args);
         callback();
     };
 
     this.setContractArgs = (args, callback) => {
         this.contractArgs = args;
-        this.forceContract = true;
+        this.updateFingerprintContract(args);
         callback();
     };
 };

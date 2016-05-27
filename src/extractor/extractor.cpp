@@ -177,7 +177,7 @@ int Extractor::run()
                                 local_context.state, "node_function",
                                 boost::cref(static_cast<const osmium::Node &>(*entity)),
                                 boost::ref(result_node));
-                            resulting_nodes.push_back(std::make_pair(x, result_node));
+                            resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
                             break;
                         case osmium::item_type::way:
                             result_way.clear();
@@ -186,7 +186,7 @@ int Extractor::run()
                                 local_context.state, "way_function",
                                 boost::cref(static_cast<const osmium::Way &>(*entity)),
                                 boost::ref(result_way));
-                            resulting_ways.push_back(std::make_pair(x, result_way));
+                            resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
                             break;
                         case osmium::item_type::relation:
                             ++number_of_relations;

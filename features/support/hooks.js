@@ -20,6 +20,8 @@ module.exports = function () {
         this.hasLoggedScenarioInfo = false;
         this.setGridSize(this.DEFAULT_GRID_SIZE);
         this.setOrigin(this.DEFAULT_ORIGIN);
+        this.fingerprintExtract = this.hashString([this.luaLibHash, this.binExtractHash].join('-'));
+        this.fingerprintContract = this.hashString(this.binContractHash);
         callback();
     });
 

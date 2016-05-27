@@ -17,6 +17,8 @@ branches:
 cache:
   ccache: true
   apt: true
+  directories:
+    - test/cache
 
 env:
   global:

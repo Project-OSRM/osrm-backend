@@ -33,8 +33,8 @@ struct ExtractionWay;
 class ExtractorCallbacks
 {
   private:
-    // used to deduplicate street names: actually maps to name ids
-    std::unordered_map<std::string, NodeID> string_map;
+    // used to deduplicate street names and street destinations: actually maps to name ids
+    std::unordered_map<std::string, unsigned> string_map;
     ExtractionContainers &external_memory;
 
   public:

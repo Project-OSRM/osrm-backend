@@ -1,9 +1,9 @@
 'use strict';
 
 var fs = require('fs');
-var net = require('net');
 var spawn = require('child_process').spawn;
 var util = require('util');
+var net = require('net');
 var Timeout = require('node-timeout');
 
 var OSRMBaseLoader = class {
@@ -15,9 +15,7 @@ var OSRMBaseLoader = class {
         var limit = Timeout(this.scope.TIMEOUT, { err: this.scope.RoutedError('Launching osrm-routed timed out.') });
 
         var runLaunch = (cb) => {
-            this.osrmUp(() => {
-                this.waitForConnection(cb);
-            });
+            this.osrmUp(() => { this.waitForConnection(cb); });
         };
 
         runLaunch(limit((e) => { if (e) callback(e); else callback(); }));
@@ -46,18 +44,21 @@ var OSRMBaseLoader = class {
     }
 
     waitForConnection (callback) {
-        net.connect({
-            port: this.scope.OSRM_PORT,
-            host: '127.0.0.1'
-        })
-            .on('connect', () => {
-                callback();
-            })
-            .on('error', (e) => {
-                setTimeout(() => {
-                    callback(e);
-                }, 100);
-            });
+        var retryCount = 0;
+        var connectWithRetry = () => {
+            net.connect({ port: this.scope.OSRM_PORT, host: '127.0.0.1' })
+               .on('connect', () => { callback(); })
+               .on('error', () => {
+                   if (retryCount < 2) {
+                       retryCount++;
+                       setTimeout(connectWithRetry, 100);
+                   } else {
+                       callback(new Error('Could not connect to osrm-routed after three retires'));
+                   }
+               });
+        };
+
+        connectWithRetry();
     }
 
     waitForShutdown (callback) {
@@ -148,7 +149,7 @@ module.exports = {
                 this.loader = new OSRMDirectLoader(this.scope);
                 this.loader.load(inputFile, callback);
             } else {
-                throw new Error('*** Unknown load method ' + method);
+                callback(new Error('*** Unknown load method ' + method));
             }
         }
 
