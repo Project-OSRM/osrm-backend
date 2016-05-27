@@ -28,11 +28,6 @@ module.exports = function () {
         this.OSRM_ROUTED_LOG_FILE = path.resolve(this.TEST_FOLDER, 'osrm-routed.log');
         this.ERROR_LOG_FILE = path.resolve(this.TEST_FOLDER, 'error.log');
 
-        // OS X shim to ensure shared libraries from custom locations can be loaded
-        // This is needed in OS X >= 10.11 because DYLD_LIBRARY_PATH is blocked
-        // https://forums.developer.apple.com/thread/9233
-        this.LOAD_LIBRARIES = process.env.OSRM_SHARED_LIBRARY_PATH ? util.format('DYLD_LIBRARY_PATH=%s ', process.env.OSRM_SHARED_LIBRARY_PATH) : '';
-
         // TODO make sure this works on win
         if (process.platform.match(/indows.*/)) {
             this.TERMSIGNAL = 9;
@@ -65,7 +60,7 @@ module.exports = function () {
             var binPath = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
             fs.exists(binPath, (exists) => {
                 if (!exists) throw new Error(util.format('%s is missing. Build failed?', binPath));
-                var helpPath = util.format('%s%s --help > /dev/null 2>&1', this.LOAD_LIBRARIES, binPath);
+                var helpPath = util.format('%s --help > /dev/null 2>&1', binPath);
                 exec(helpPath, (err) => {
                     if (err) {
                         this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
