@@ -3,6 +3,10 @@
 set -eu
 set -o pipefail
 
+export CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# ensure we start inside the osrm-backend directory (one level up)
+cd ${CURRENT_DIR}/../
 
 # we pin the mason version to avoid changes in mason breaking builds
 MASON_VERSION="0d4842d"
@@ -66,6 +70,10 @@ function setup_mason() {
 
 
 function main() {
+    if [[ -d build ]]; then
+        echo "$(pwd)/build already exists, please delete before re-running"
+        exit 1
+    fi
     setup_mason
     all_deps
     # put mason installed ccache on PATH
@@ -83,6 +91,7 @@ function main() {
     if [[ ${NM:-false} != false ]]; then
         CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_NM=${NM}"
     fi
+    mkdir build && cd build
     ${MASON_HOME}/bin/cmake ../ -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
       -DCMAKE_CXX_COMPILER="$CXX" \
       -DBoost_NO_SYSTEM_PATHS=ON \

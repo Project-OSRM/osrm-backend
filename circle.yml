@@ -21,7 +21,7 @@ dependencies:
     # https://discuss.circleci.com/t/add-ability-to-cache-apt-get-programs/598/3
     - sudo rm -rf /var/cache/apt/archives && sudo ln -s ~/.apt-cache /var/cache/apt/archives && mkdir -p ~/.apt-cache/partial
     - sudo wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
-    - sudo add-apt-repository -y "deb http://llvm.org/apt/precise/ llvm-toolchain-precise-${LLVM_VERSION} main"
+    - sudo add-apt-repository -y "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-${LLVM_VERSION} main"
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     - sudo apt-get update -y
   override:
