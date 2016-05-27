@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/14/16.
-//
-
 #ifndef SERVER_SERVICE_ISOCHRONE_SERVICE_HPP
 #define SERVER_SERVICE_ISOCHRONE_SERVICE_HPP
 

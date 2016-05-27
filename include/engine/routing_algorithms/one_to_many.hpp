@@ -1,7 +1,3 @@
-//
-// Created by robin on 3/16/16.
-//
-
 #ifndef OSRM_ONE_TO_MANY_HPP
 #define OSRM_ONE_TO_MANY_HPP
 

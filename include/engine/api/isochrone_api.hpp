@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/13/16.
-//
-
 #ifndef ENGINE_API_ISOCHRONE_HPP
 #define ENGINE_API_ISOCHRONE_HPP
 
@@ -55,7 +51,7 @@ class IsochroneAPI final : public BaseAPI
             data.values.push_back(object);
         }
         response.values["isochrone"] = std::move(data);
-        
+
         if (!convexhull.empty())
         {
             util::json::Array convexhullArray;

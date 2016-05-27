@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/13/16.
-//
-
 #ifndef ENGINE_API_ISOCHRONE_PARAMETERS_HPP
 #define ENGINE_API_ISOCHRONE_PARAMETERS_HPP
 

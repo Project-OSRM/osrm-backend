@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/6/16.
-//
-
 #ifndef ISOCHRONE_HPP
 #define ISOCHRONE_HPP
 

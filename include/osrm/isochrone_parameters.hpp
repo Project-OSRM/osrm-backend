@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/14/16.
-//
-
 #ifndef GLOBAL_ISOCHRONE_PARAMETERS_HPP
 #define GLOBAL_ISOCHRONE_PARAMETERS_HPP
 

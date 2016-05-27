@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/13/16.
-//
-
 #include "engine/api/isochrone_api.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/plugins/isochrone.hpp"

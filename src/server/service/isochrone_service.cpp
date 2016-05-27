@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/14/16.
-//
-
 #include "server/service/isochrone_service.hpp"
 #include "server/service/utils.hpp"
 

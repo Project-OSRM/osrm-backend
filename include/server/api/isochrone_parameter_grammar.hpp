@@ -1,7 +1,3 @@
-//
-// Created by robin on 4/13/16.
-//
-
 #ifndef OSRM_ISOCHRONE_PARAMETER_GRAMMAR_HPP
 #define OSRM_ISOCHRONE_PARAMETER_GRAMMAR_HPP
 

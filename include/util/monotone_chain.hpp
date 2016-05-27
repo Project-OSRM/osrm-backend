@@ -1,7 +1,3 @@
-//
-// Created by robin on 5/11/16.
-//
-
 #ifndef OSRM_MONOTONE_CHAIN_HPP
 #define OSRM_MONOTONE_CHAIN_HPP
 
