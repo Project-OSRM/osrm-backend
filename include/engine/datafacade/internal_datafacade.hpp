@@ -74,7 +74,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::string m_timestamp;
 
     util::ShM<util::Coordinate, false>::vector m_coordinate_list;
-    util::PackedVector<false> m_osmnodeid_list;
+    util::PackedVector<OSMNodeID, false> m_osmnodeid_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;

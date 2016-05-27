@@ -37,13 +37,14 @@ inline std::size_t PackedVectorCapacity(std::size_t vec_size)
  * Since OSM node IDs are (at the time of writing) not quite yet overflowing 32 bits, and
  * will predictably be containable within 33 bits for a long time, the following packs
  * 64-bit OSM IDs as 33-bit numbers within a 64-bit vector.
+ *
+ * NOTE: this type is templated for future use, but will require a slight refactor to
+ * configure BITSIZE and ELEMSIZE
  */
-template <bool UseSharedMemory> class PackedVector
+template <typename T, bool UseSharedMemory> class PackedVector
 {
   public:
-    PackedVector() = default;
-
-    void push_back(OSMNodeID incoming_node_id)
+    void push_back(T incoming_node_id)
     {
         std::uint64_t node_id = static_cast<std::uint64_t>(incoming_node_id);
 
@@ -83,7 +84,7 @@ template <bool UseSharedMemory> class PackedVector
         num_elements++;
     }
 
-    OSMNodeID at(const std::size_t &a_index) const
+    T at(const std::size_t &a_index) const
     {
         BOOST_ASSERT(a_index < num_elements);
 
@@ -101,14 +102,14 @@ template <bool UseSharedMemory> class PackedVector
         if (left_index == 0)
         {
             // ID is at the far left side of this element
-            return static_cast<OSMNodeID>(elem >> (ELEMSIZE - BITSIZE));
+            return static_cast<T>(elem >> (ELEMSIZE - BITSIZE));
         }
         else if (left_index >= BITSIZE)
         {
             // ID is entirely contained within this element
             const std::uint64_t at_right = elem >> (left_index - BITSIZE);
             const std::uint64_t left_mask = static_cast<std::uint64_t>(pow(2, BITSIZE)) - 1;
-            return static_cast<OSMNodeID>(at_right & left_mask);
+            return static_cast<T>(at_right & left_mask);
         }
         else
         {
@@ -120,7 +121,7 @@ template <bool UseSharedMemory> class PackedVector
             const std::uint64_t next_elem = static_cast<std::uint64_t>(vec.at(index + 1));
 
             const std::uint64_t right_side = next_elem >> (ELEMSIZE - (BITSIZE - left_index));
-            return static_cast<OSMNodeID>(left_side | right_side);
+            return static_cast<T>(left_side | right_side);
         }
     }
 
@@ -133,7 +134,7 @@ template <bool UseSharedMemory> class PackedVector
     }
 
     template <bool enabled = UseSharedMemory>
-    void reset(typename std::enable_if<enabled, OSMNodeID>::type *ptr,
+    void reset(typename std::enable_if<enabled, T>::type *ptr,
                typename std::enable_if<enabled, std::size_t>::type size)
     {
         vec.reset(reinterpret_cast<std::uint64_t *>(ptr), size);

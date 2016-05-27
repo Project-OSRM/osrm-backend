@@ -542,7 +542,7 @@ int Storage::Run()
         shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
     OSMNodeID *osmnodeid_ptr = shared_layout_ptr->GetBlockPtr<OSMNodeID, true>(
         shared_memory_ptr, SharedDataLayout::OSM_NODE_ID_LIST);
-    util::PackedVector<true> osmnodeid_list;
+    util::PackedVector<OSMNodeID, true> osmnodeid_list;
     osmnodeid_list.reset(
         osmnodeid_ptr, shared_layout_ptr->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
 

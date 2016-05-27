@@ -76,7 +76,7 @@ class SharedDataFacade final : public BaseDataFacade
     extractor::ProfileProperties *m_profile_properties;
 
     util::ShM<util::Coordinate, true>::vector m_coordinate_list;
-    util::PackedVector<true> m_osmnodeid_list;
+    util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
