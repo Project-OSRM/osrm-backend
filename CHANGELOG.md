@@ -7,6 +7,7 @@
 
    - API:
     - paramater `annotate` was renamed to `annotations`.
+    - `annotation` as accidentally placed in `Route` instead of `RouteLeg`
 
 # 5.2.0 RC1
    Changes from 5.1.0

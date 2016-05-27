@@ -176,16 +176,14 @@ class RouteAPI : public BaseAPI
                 });
         }
 
-        auto result = json::makeRoute(route,
-                               json::makeRouteLegs(std::move(legs), std::move(step_geometries)),
-                               std::move(json_overview));
+        std::vector<util::json::Object> annotations;
 
         if (parameters.annotations)
         {
-            util::json::Array durations;
-            util::json::Array distances;
             for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
             {
+                util::json::Array durations;
+                util::json::Array distances;
                 auto &leg_geometry = leg_geometries[idx];
                 std::for_each(leg_geometry.annotations.begin(),
                               leg_geometry.annotations.end(),
@@ -193,14 +191,17 @@ class RouteAPI : public BaseAPI
                                   durations.values.push_back(step.duration);
                                   distances.values.push_back(step.distance);
                               });
+                util::json::Object annotation;
+                annotation.values["distance"] = std::move(distances);
+                annotation.values["duration"] = std::move(durations);
+                annotations.push_back(std::move(annotation));
             }
 
-            util::json::Object details;
-            details.values["distance"] = std::move(distances);
-            details.values["duration"] = std::move(durations);
-
-            result.values["annotation"] = std::move(details);
         }
+
+        auto result = json::makeRoute(route,
+                               json::makeRouteLegs(std::move(legs), std::move(step_geometries), std::move(annotations)),
+                               std::move(json_overview));
 
         return result;
     }

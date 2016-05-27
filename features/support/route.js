@@ -1,3 +1,5 @@
+'use strict';
+
 var Timeout = require('node-timeout');
 var request = require('request');
 var util = require('util');
@@ -153,14 +155,16 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.maneuver.bearing_before + '->' + s.maneuver.bearing_after);
     };
 
-    this.annotationList = (instructions) => {
-        // Pull out all the distinct segment distances, skipping the arrive
-        // instructions, and the leading 0 on all timestamps arrays.
-        var pairs = [];
-        for (var i in instructions.annotation.duration) {
-            pairs.push(instructions.annotation.duration[i]+':'+instructions.annotation.distance[i]);
+    this.annotationList = (matching) => {
+        function zip(list_1, list_2)
+        {
+            let pairs = [];
+            for (let i = 0; i <  list_1.length; ++i) {
+                pairs.push([list_1[i], list_2[i]]);
+            }
+            return pairs;
         }
-        return pairs.join(',');
+        return matching.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance).map(p => { return p.join(':'); }).join(','); }).join(',');
     };
 
     this.turnList = (instructions) => {
