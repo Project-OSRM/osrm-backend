@@ -25,6 +25,7 @@
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_unordered_map.h>
+#include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_for_each.h>
 #include <tbb/parallel_invoke.h>
@@ -32,7 +33,6 @@
 #include <tbb/spin_mutex.h>
 
 #include <algorithm>
-#include <atomic>
 #include <bitset>
 #include <cstdint>
 #include <fstream>
@@ -516,15 +516,14 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
         // vector to count used speeds for logging
         // size offset by one since index 0 is used for speeds not from external file
-        std::vector<std::atomic<std::uint64_t>> segment_speeds_counters;
-        for (std::size_t i = 0; i < segment_speed_filenames.size() + 1; ++i)
-        {
-            segment_speeds_counters.emplace_back();
-            segment_speeds_counters[i].store(0);
-        }
+        using counters_type = std::vector<std::size_t>;
+        std::size_t num_counters = segment_speed_filenames.size() + 1;
+        tbb::enumerable_thread_specific<counters_type> segment_speeds_counters(
+            counters_type(num_counters, 0));
         const constexpr auto LUA_SOURCE = 0;
 
         tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
+            auto &counters = segment_speeds_counters.local();
             for (size_t i = 0; i < current_node.object_count; i++)
             {
                 const auto &leaf_object = current_node.objects[i];
@@ -571,12 +570,12 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             forward_speed_iter->speed_source.source;
 
                         // count statistics for logging
-                        segment_speeds_counters[forward_speed_iter->speed_source.source] += 1;
+                        counters[forward_speed_iter->speed_source.source] += 1;
                     }
                     else
                     {
                         // count statistics for logging
-                        segment_speeds_counters[LUA_SOURCE] += 1;
+                        counters[LUA_SOURCE] += 1;
                     }
                 }
                 if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
@@ -622,30 +621,39 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                             reverse_speed_iter->speed_source.source;
 
                         // count statistics for logging
-                        segment_speeds_counters[reverse_speed_iter->speed_source.source] += 1;
+                        counters[reverse_speed_iter->speed_source.source] += 1;
                     }
                     else
                     {
                         // count statistics for logging
-                        segment_speeds_counters[LUA_SOURCE] += 1;
+                        counters[LUA_SOURCE] += 1;
                     }
                 }
             }
         }); // parallel_for_each
 
-        for (std::size_t i = 0; i < segment_speeds_counters.size(); i++)
+        counters_type merged_counters(num_counters, 0);
+        for (const auto &counters : segment_speeds_counters)
+        {
+            for (std::size_t i = 0; i < counters.size(); i++)
+            {
+                merged_counters[i] += counters[i];
+            }
+        }
+
+        for (std::size_t i = 0; i < merged_counters.size(); i++)
         {
             if (i == LUA_SOURCE)
             {
-                util::SimpleLogger().Write() << "Used " << segment_speeds_counters[LUA_SOURCE]
+                util::SimpleLogger().Write() << "Used " << merged_counters[LUA_SOURCE]
                                              << " speeds from LUA profile or input map";
             }
             else
             {
                 // segments_speeds_counters has 0 as LUA, segment_speed_filenames not, thus we need
                 // to susbstract 1 to avoid off-by-one error
-                util::SimpleLogger().Write() << "Used " << segment_speeds_counters[i]
-                                             << " speeds from " << segment_speed_filenames[i - 1];
+                util::SimpleLogger().Write() << "Used " << merged_counters[i] << " speeds from "
+                                             << segment_speed_filenames[i - 1];
             }
         }
     }
