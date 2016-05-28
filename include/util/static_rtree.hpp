@@ -32,6 +32,16 @@
 #include <string>
 #include <vector>
 
+// An extended alignment is implementation-defined, so use compiler attributes
+// until alignas(LEAF_PAGE_SIZE) is compiler-independent.
+#if defined(_MSC_VER)
+#define ALIGNED(x) __declspec(align(x))
+#elif defined(__GNUC__)
+#define ALIGNED(x) __attribute__ ((aligned(x)))
+#else
+#define ALIGNED(x)
+#endif
+
 namespace osrm
 {
 namespace util
@@ -74,13 +84,11 @@ class StaticRTree
         std::uint32_t children[BRANCHING_FACTOR];
     };
 
-    struct LeafNode
+    struct ALIGNED(LEAF_PAGE_SIZE) LeafNode
     {
         LeafNode() : object_count(0), objects() {}
         std::uint32_t object_count;
         std::array<EdgeDataT, LEAF_NODE_SIZE> objects;
-        unsigned char leaf_page_padding[LEAF_PAGE_SIZE - sizeof(std::uint32_t) -
-                                        sizeof(std::array<EdgeDataT, LEAF_NODE_SIZE>)];
     };
     static_assert(sizeof(LeafNode) == LEAF_PAGE_SIZE, "LeafNode size does not fit the page size");
 
