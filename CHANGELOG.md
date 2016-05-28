@@ -9,6 +9,9 @@
     - paramater `annotate` was renamed to `annotations`.
     - `annotation` as accidentally placed in `Route` instead of `RouteLeg`
 
+   - Infrastructure
+    - BREAKING: Changed the on-disk encoding of the StaticRTree to reduce ramIndex file size. This breaks the **data format**
+
 # 5.2.0 RC1
    Changes from 5.1.0
 
