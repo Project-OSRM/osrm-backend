@@ -3,6 +3,7 @@ Feature: Alternative route
 
     Background:
         Given the profile "testbot"
+        And a grid size of 200 meters
 
         And the node map
             |   | b | c | d |   |   |
@@ -17,11 +18,11 @@ Feature: Alternative route
             | dz    |
             | ag    |
             | gh    |
+            | ck    |
+            | kh    |
             | hi    |
             | ij    |
             | jz    |
-            | ck    |
-            | kh    |
 
     Scenario: Enabled alternative
         Given the query options

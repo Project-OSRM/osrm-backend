@@ -11,6 +11,7 @@ Feature: Testbot - Travel mode
 
     Background:
        Given the profile "testbot"
+       Given a grid size of 200 meters
 
     Scenario: Testbot - Always announce mode change
         Given the node map
@@ -72,9 +73,9 @@ Feature: Testbot - Travel mode
             | ab    | steps   |
 
         When I route I should get
-            | from | to | route | modes                 | time    |
-            | 0    | 1  | ab,ab | steps down,steps down | 60s +-1 |
-            | 1    | 0  | ab,ab | steps up,steps up     | 60s +-1 |
+            | from | to | route | modes                 | time     |
+            | 0    | 1  | ab,ab | steps down,steps down | 120s +-1 |
+            | 1    | 0  | ab,ab | steps up,steps up     | 120s +-1 |
 
     @oneway
     Scenario: Testbot - Modes for oneway, different forward/backward speeds

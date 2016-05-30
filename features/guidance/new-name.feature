@@ -3,7 +3,7 @@ Feature: New-Name Instructions
 
     Background:
         Given the profile "car"
-        Given a grid size of 10 meters
+        Given a grid size of 100 meters
 
     Scenario: Undisturbed name Change
         Given the node map
@@ -136,7 +136,7 @@ Feature: New-Name Instructions
 
     Scenario: Empty road names - Announce Change From, suppress Change To
         Given the node map
-            | a |  | b |  | c |  | d |
+            | a |  | b | 1 | c |  | d |
 
         And the ways
             | nodes | name |
@@ -147,7 +147,7 @@ Feature: New-Name Instructions
         When I route I should get
             | waypoints | route    | turns                           |
             | a,d       | ab,cd,cd | depart,new name straight,arrive |
-            | a,c       | ab,      | depart,arrive                   |
+            | a,1       | ab,      | depart,arrive                   |
 
     Scenario: Empty road names - Loose name shortly
         Given the node map

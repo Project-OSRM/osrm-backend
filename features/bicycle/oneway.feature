@@ -115,7 +115,7 @@ Feature: Bike - Oneway streets
 
     Scenario: Bike - Two consecutive oneways
         Given the node map
-            | a | b | c |
+            | a | b |   | c |
 
         And the ways
             | nodes | oneway |

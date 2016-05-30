@@ -3,6 +3,7 @@
 
    - Guidance:
      - improved handling of sliproads (emit turns instead of 'take the ramp')
+     - improved collapsing of instructions. Some 'new name' instructions will be suppressed if they are without alternative and the segment is short
      - BREAKING: modifies the file format with new internal identifiers
 
    - API:

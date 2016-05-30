@@ -69,9 +69,6 @@ Intersection TurnHandler::handleTwoWayTurn(const EdgeID via_edge, Intersection i
     intersection[1].turn.instruction =
         getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
 
-    if (intersection[1].turn.instruction.type == TurnType::Suppressed)
-        intersection[1].turn.instruction.type = TurnType::NoTurn;
-
     return intersection;
 }
 

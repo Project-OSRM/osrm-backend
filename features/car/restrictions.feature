@@ -5,6 +5,7 @@ Feature: Car - Turn restrictions
 
     Background: Use car routing
         Given the profile "car"
+        Given a grid size of 200 meters
 
     @no_turning
     Scenario: Car - No left turn

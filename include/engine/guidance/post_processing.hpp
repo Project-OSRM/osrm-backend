@@ -37,6 +37,9 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
                                                const PhantomNode &source_node,
                                                const PhantomNode &target_node);
 
+// collapse suppressed instructions remaining into intersections array
+std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps);
+
 // remove steps invalidated by post-processing
 std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps);
 

@@ -3,9 +3,10 @@ Feature: Basic Routing
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 200 meters
 
     @smallest
-    Scenario: Checking 
+    Scenario: Checking
         Given the node map
             | a | b | 1 | c | d | e |
 

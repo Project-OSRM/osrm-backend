@@ -3,6 +3,7 @@ Feature: U-turns at via points
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 100 meters
 
     Scenario: Continue straight at waypoints enabled by default
         Given the node map
