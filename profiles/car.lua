@@ -368,7 +368,7 @@ function way_function (way, result)
       --    result.name = highway  -- if no name exists, use way type
   end
 
-  if junction and "roundabout" == junction then
+  if junction and ("roundabout" == junction or "mini_roundabout" == highway) then
     result.roundabout = true
   end
 
@@ -390,6 +390,7 @@ function way_function (way, result)
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
+    highway == "mini_roundabout" or
     (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
       result.backward_mode = mode.inaccessible

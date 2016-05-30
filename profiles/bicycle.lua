@@ -225,7 +225,7 @@ function way_function (way, result)
   end
 
   -- roundabout handling
-  if junction and "roundabout" == junction then
+  if junction and "roundabout" == junction or "mini_roundabout" == highway then
     result.roundabout = true
   end
 
@@ -285,7 +285,7 @@ function way_function (way, result)
   else
     -- biking not allowed, maybe we can push our bike?
     -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
-    if foot ~= 'no' and junction ~= "roundabout" then
+    if foot ~= 'no' and junction ~= "roundabout" and highway ~= "mini_roundabout" then
       if pedestrian_speeds[highway] then
         -- pedestrian-only ways and areas
         result.forward_speed = pedestrian_speeds[highway]
@@ -317,7 +317,7 @@ function way_function (way, result)
 
   -- direction
   local impliedOneway = false
-  if junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
+  if junction == "roundabout" or highway == "mini_roundabout" or highway == "motorway_link" or highway == "motorway" then
     impliedOneway = true
   end
 
@@ -357,7 +357,7 @@ function way_function (way, result)
 
   -- pushing bikes
   if bicycle_speeds[highway] or pedestrian_speeds[highway] then
-    if foot ~= "no" and junction ~= "roundabout" then
+    if foot ~= "no" and junction ~= "roundabout" and highway ~= "mini_roundabout" then
       if result.backward_mode == mode.inaccessible then
         result.backward_speed = walking_speed
         result.backward_mode = mode.pushing_bike
