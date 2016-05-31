@@ -32,10 +32,12 @@ module.exports = function () {
         if (process.platform.match(/indows.*/)) {
             this.TERMSIGNAL = 9;
             this.EXE = '.exe';
+            this.LIB = '.dll';
             this.QQ = '"';
         } else {
             this.TERMSIGNAL = 'SIGTERM';
             this.EXE = '';
+            this.LIB = '.so';
             this.QQ = '';
         }
 

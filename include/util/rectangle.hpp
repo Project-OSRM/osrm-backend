@@ -167,6 +167,14 @@ struct RectangleInt2D
         return lons_contained && lats_contained;
     }
 
+    bool IsValid() const
+    {
+        return min_lon != FixedLongitude(std::numeric_limits<std::int32_t>::max()) &&
+               max_lon != FixedLongitude(std::numeric_limits<std::int32_t>::min()) &&
+               min_lat != FixedLatitude(std::numeric_limits<std::int32_t>::max()) &&
+               max_lat != FixedLatitude(std::numeric_limits<std::int32_t>::min());
+    }
+
     friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect);
 };
 inline std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect)

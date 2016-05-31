@@ -6,14 +6,19 @@ var d3 = require('d3-queue');
 module.exports = function () {
     this.hashOfFiles = (paths, cb) => {
         paths = Array.isArray(paths) ? paths : [paths];
-        var shasum = crypto.createHash('sha1');
+        var shasum = crypto.createHash('sha1'), hashedFiles = false;
 
         var q = d3.queue(1);
 
         var addFile = (path, cb) => {
             fs.readFile(path, (err, data) => {
-                shasum.update(data);
-                cb(err);
+                if (err && err.code === 'ENOENT') cb(); // ignore non-existing files
+                else if (err) cb(err);
+                else {
+                    shasum.update(data);
+                    hashedFiles = true;
+                    cb();
+                }
             });
         };
 
@@ -21,6 +26,7 @@ module.exports = function () {
 
         q.awaitAll(err => {
             if (err) throw new Error('*** Error reading files:', err);
+            if (!hashedFiles) throw new Error('*** No files found: [' + paths.join(', ') + ']');
             cb(shasum.digest('hex'));
         });
     };

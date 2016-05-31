@@ -50,21 +50,27 @@ module.exports = function () {
         };
 
         var hashExtract = (cb) => {
-            this.hashOfFiles(util.format('%s/osrm-extract%s', this.BIN_PATH, this.EXE), (hash) => {
+            var files = [ util.format('%s/osrm-extract%s', this.BIN_PATH, this.EXE),
+                          util.format('%s/libosrm_extract%s', this.BIN_PATH, this.LIB) ];
+            this.hashOfFiles(files, (hash) => {
                 this.binExtractHash = hash;
                 cb();
             });
         };
 
         var hashContract = (cb) => {
-            this.hashOfFiles(util.format('%s/osrm-contract%s', this.BIN_PATH, this.EXE), (hash) => {
+            var files = [ util.format('%s/osrm-contract%s', this.BIN_PATH, this.EXE),
+                          util.format('%s/libosrm_contract%s', this.BIN_PATH, this.LIB) ];
+            this.hashOfFiles(files, (hash) => {
                 this.binContractHash = hash;
                 cb();
             });
         };
 
         var hashRouted = (cb) => {
-            this.hashOfFiles(util.format('%s/osrm-routed%s', this.BIN_PATH, this.EXE), (hash) => {
+            var files = [ util.format('%s/osrm-routed%s', this.BIN_PATH, this.EXE),
+                          util.format('%s/libosrm%s', this.BIN_PATH, this.LIB) ];
+            this.hashOfFiles(files, (hash) => {
                 this.binRoutedHash = hash;
                 this.fingerprintRoute = this.hashString(this.binRoutedHash);
                 cb();
