@@ -21,7 +21,7 @@ Feature: Foot - Oneway streets
     Scenario: Foot - Walking and roundabouts
         Then routability should be
             | junction   | bothw |
-            | roundarout | x     |
+            | roundabout | x     |
 
     Scenario: Foot - Oneway:foot tag should not cause walking on big roads
         Then routability should be
