@@ -16,6 +16,7 @@ restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 suffix_list = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "North", "South", "West", "East" }
 
 speed_profile = {
+  ["mini_roundabout"] = 25,
   ["motorway"] = 90,
   ["motorway_link"] = 45,
   ["trunk"] = 85,
