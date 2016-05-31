@@ -48,14 +48,14 @@ Feature: Bike - Oneway streets
 
     Scenario: Bike - Implied oneways
         Then routability should be
-            | highway         | foot | bicycle | junction   | forw | backw |
-            |                 | no   |         |            | x    | x     |
-            |                 | no   |         | roundabout | x    |       |
-            | motorway        | no   | yes     |            | x    |       |
-            | motorway_link   | no   | yes     |            | x    |       |
-            | motorway        | no   | yes     | roundabout | x    |       |
-            | motorway_link   | no   | yes     | roundabout | x    |       |
-            | mini_roundabout | no   | yes     |            | x    |       |
+            | highway         | foot | bicycle | junction   | forw | backw | #                     |
+            |                 | no   |         |            | x    | x     |                       |
+            |                 | no   |         | roundabout | x    |       |                       |
+            | motorway        | no   | yes     |            | x    |       |                       |
+            | motorway_link   | no   | yes     |            | x    | x     | does not imply oneway |
+            | motorway        | no   | yes     | roundabout | x    |       |                       |
+            | motorway_link   | no   | yes     | roundabout | x    |       |                       |
+            | mini_roundabout | no   | yes     |            | x    |       |                       |
 
     Scenario: Bike - Overriding implied oneways
         Then routability should be

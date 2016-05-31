@@ -396,7 +396,6 @@ function way_function (way, result)
     oneway == "true" or
     junction == "roundabout" or
     highway == "mini_roundabout" or
-    (highway == "motorway_link" and oneway ~="no") or
     (highway == "motorway" and oneway ~= "no") then
       result.backward_mode = mode.inaccessible
 
