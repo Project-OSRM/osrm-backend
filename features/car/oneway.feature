@@ -17,13 +17,14 @@ Feature: Car - Oneway streets
 
     Scenario: Car - Implied oneways
         Then routability should be
-            | highway       | junction   | forw | backw |
-            | motorway      |            | x    |       |
-            | motorway_link |            | x    |       |
-            | primary       |            | x    | x     |
-            | motorway      | roundabout | x    |       |
-            | motorway_link | roundabout | x    |       |
-            | primary       | roundabout | x    |       |
+            | highway         | junction   | forw | backw |
+            | motorway        |            | x    |       |
+            | motorway_link   |            | x    |       |
+            | primary         |            | x    | x     |
+            | motorway        | roundabout | x    |       |
+            | motorway_link   | roundabout | x    |       |
+            | primary         | roundabout | x    |       |
+            | mini_roundabout |            | x    |       |
 
     Scenario: Car - Overrule implied oneway
         Then routability should be
