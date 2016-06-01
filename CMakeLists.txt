@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 3.1)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
@@ -456,3 +456,4 @@ add_custom_target(uninstall
 # Modular build system: each directory registered here provides its own CMakeLists.txt
 add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
+add_subdirectory(bindings/node)
