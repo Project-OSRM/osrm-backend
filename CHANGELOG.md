@@ -12,6 +12,9 @@
    - Infrastructure
     - BREAKING: Changed the on-disk encoding of the StaticRTree to reduce ramIndex file size. This breaks the **data format**
 
+   - Bugfixes
+    - fixed broken summaries for very short routes
+
 # 5.2.0 RC1
    Changes from 5.1.0
 

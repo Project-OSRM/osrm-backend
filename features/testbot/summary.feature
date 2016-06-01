@@ -7,7 +7,7 @@ Feature: Basic Routing
     @smallest
     Scenario: Checking 
         Given the node map
-            | a | b |  | c | d | e |
+            | a | b | 1 | c | d | e |
 
         And the ways
             | nodes |
@@ -22,6 +22,7 @@ Feature: Basic Routing
             | e    | a  | de,cd,bc,ab,ab | de, bc   |
             | a    | b  | ab,ab          | ab       |
             | b    | d  | bc,cd,cd       | bc, cd   |
+            | 1    | c  | bc,bc          | bc       |
 
     @smallest
     Scenario: Check handling empty values

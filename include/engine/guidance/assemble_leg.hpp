@@ -35,7 +35,9 @@ struct NamedSegment
 
 template <std::size_t SegmentNumber>
 
-std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathData> &route_data)
+std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathData> &route_data,
+                                                        const PhantomNode &target_node,
+                                                        const bool target_traversed_in_reverse)
 {
     // merges segments with same name id
     const auto collapse_segments = [](std::vector<NamedSegment> &segments) {
@@ -71,6 +73,10 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
         route_data.begin(), route_data.end(), segments.begin(), [&index](const PathData &point) {
             return NamedSegment{point.duration_until_turn, index++, point.name_id};
         });
+    const auto target_duration =
+        target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
+    if (target_duration > 1)
+        segments.push_back({target_duration, index++, target_node.name_id});
     // this makes sure that the segment with the lowest position comes first
     std::sort(
         segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
@@ -85,6 +91,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
         return segment.name_id == 0;
     });
     segments.resize(new_end - segments.begin());
+
 
     // sort descending
     std::sort(
@@ -164,7 +171,10 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     std::string summary;
     if (needs_summary)
     {
-        auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(route_data);
+        auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(
+            route_data, target_node, target_traversed_in_reverse);
+        if (route_data.empty())
+            summary_array[0] = source_node.name_id;
 
         BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
         BOOST_ASSERT(summary_array.begin() != summary_array.end());
