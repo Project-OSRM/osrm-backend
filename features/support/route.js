@@ -151,7 +151,7 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.maneuver.bearing_before + '->' + s.maneuver.bearing_after);
     };
 
-    this.annotationList = (matching) => {
+    this.annotationList = (instructions) => {
         function zip(list_1, list_2)
         {
             let pairs = [];
@@ -160,12 +160,12 @@ module.exports = function () {
             }
             return pairs;
         }
-        return matching.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance).map(p => { return p.join(':'); }).join(','); }).join(',');
+        return instructions.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance).map(p => { return p.join(':'); }).join(','); }).join(',');
     };
 
     this.OSMIDList = (instructions) => {
         // OSM node IDs also come from the annotation list
-        return instructions.annotation.nodes.map(x => x.toString()).join(',');
+        return instructions.legs.map(l => l.annotation.nodes.map(n => n.toString()).join(',')).join(',');
     }
 
     this.turnList = (instructions) => {
