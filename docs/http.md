@@ -413,7 +413,8 @@ With `steps=false` and `annotations=true`:
   "steps": []
   "annotation": {
     "distance": [5,5,10,5,5],
-    "duration": [15,15,40,15,15]
+    "duration": [15,15,40,15,15],
+    "nodes": [49772551,49772552,49786799,49786800,49786801,49786802]
   }
 }
 ```

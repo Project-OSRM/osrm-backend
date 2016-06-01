@@ -9,6 +9,7 @@
      - paramater `annotate` was renamed to `annotations`.
      - `annotation` as accidentally placed in `Route` instead of `RouteLeg`
      - Support for destination signs. New member `destinations` in `RouteStep`, based on `destination` and `destination:ref`.
+     - Add `nodes` property to `annotation` in `RouteLeg` containing the ids of nodes covered by the route
 
    - Profile changes:
      - `result.destinations` allows you to set a way's destinations
