@@ -207,12 +207,11 @@ class RouteAPI : public BaseAPI
                         durations.values.push_back(step.duration);
                         distances.values.push_back(step.distance);
                     });
-                std::for_each(
-                    leg_geometry.osm_node_ids.begin(),
-                    leg_geometry.osm_node_ids.end(),
-                    [this, &nodes](const OSMNodeID &node_id) {
-                        nodes.values.push_back(static_cast<std::uint64_t>(node_id));
-                    });
+                std::for_each(leg_geometry.osm_node_ids.begin(),
+                              leg_geometry.osm_node_ids.end(),
+                              [this, &nodes](const OSMNodeID &node_id) {
+                                  nodes.values.push_back(static_cast<std::uint64_t>(node_id));
+                              });
                 util::json::Object annotation;
                 annotation.values["distance"] = std::move(distances);
                 annotation.values["duration"] = std::move(durations);

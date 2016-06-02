@@ -14,13 +14,13 @@
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
+#include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
-#include "util/packed_vector.hpp"
 
 #ifdef __linux__
 #include <sys/mman.h>

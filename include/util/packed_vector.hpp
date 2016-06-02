@@ -1,8 +1,8 @@
 #ifndef PACKED_VECTOR_HPP
 #define PACKED_VECTOR_HPP
 
-#include "util/typedefs.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
+#include "util/typedefs.hpp"
 
 #include <cmath>
 #include <vector>

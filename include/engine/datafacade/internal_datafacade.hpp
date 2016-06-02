@@ -17,6 +17,7 @@
 #include "engine/geospatial_query.hpp"
 #include "util/graph_loader.hpp"
 #include "util/io.hpp"
+#include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
@@ -24,7 +25,6 @@
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
-#include "util/packed_vector.hpp"
 
 #include "osrm/coordinate.hpp"
 
