@@ -92,7 +92,6 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
     });
     segments.resize(new_end - segments.begin());
 
-
     // sort descending
     std::sort(
         segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {

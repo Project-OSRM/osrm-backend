@@ -2,8 +2,8 @@
 #define EXTRACTOR_CALLBACKS_HPP
 
 #include "util/typedefs.hpp"
-#include <boost/optional/optional_fwd.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/optional/optional_fwd.hpp>
 
 #include <string>
 #include <unordered_map>

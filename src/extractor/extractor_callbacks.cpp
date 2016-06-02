@@ -152,11 +152,13 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (string_map.end() == name_iterator)
     {
         auto name_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.name.size());
-        auto destinations_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.destinations.size());
-        auto pronunciation_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.pronunciation.size());
+        auto destinations_length =
+            std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.destinations.size());
+        auto pronunciation_length =
+            std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.pronunciation.size());
 
-
-        external_memory.name_char_data.reserve(name_id + name_length + destinations_length + pronunciation_length);
+        external_memory.name_char_data.reserve(name_id + name_length + destinations_length +
+                                               pronunciation_length);
 
         std::copy(parsed_way.name.c_str(),
                   parsed_way.name.c_str() + name_length,
@@ -165,7 +167,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         std::copy(parsed_way.destinations.c_str(),
                   parsed_way.destinations.c_str() + destinations_length,
                   std::back_inserter(external_memory.name_char_data));
-
 
         std::copy(parsed_way.pronunciation.c_str(),
                   parsed_way.pronunciation.c_str() + pronunciation_length,
