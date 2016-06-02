@@ -8,17 +8,20 @@
    - API:
      - paramater `annotate` was renamed to `annotations`.
      - `annotation` as accidentally placed in `Route` instead of `RouteLeg`
-     - Support for destination signs. New member `destinations` in `RouteStep`, based on `destination` and `destination:ref`.
+     - Support for destination signs. New member `destinations` in `RouteStep`, based on `destination` and `destination:ref`
+     - Support for name pronounciations. New member `pronounciation` in `RouteStep`, based on `name:pronounciation`
      - Add `nodes` property to `annotation` in `RouteLeg` containing the ids of nodes covered by the route
 
    - Profile changes:
      - `result.destinations` allows you to set a way's destinations
+     - `result.pronounciation` allows you to set way name pronounciations
+     - `highway=motorway_link` no longer implies `oneway` as per the OSM Wiki
 
    - Infrastructure
      - BREAKING: Changed the on-disk encoding of the StaticRTree to reduce ramIndex file size. This breaks the **data format**
 
    - Bugfixes
-    - fixed broken summaries for very short routes
+     - fixed broken summaries for very short routes
 
 # 5.2.0 RC1
    Changes from 5.1.0
@@ -30,11 +33,9 @@
          - `bearing_before`/`bearing_after` of `StepManeuver` are now deprecated and will be removed in the next major release
          - `location` of `StepManeuvers` is now deprecated and will be removed in the next major release
          - every `RouteStep` now has property `intersections` containing a list of `Intersection` objects.
-     - Support for name pronounciations. New member `pronounciation` in `RouteStep`, based on `name:pronounciation`.
 
    - Profile changes:
      - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
-     - `result.pronounciation` allows you to set way name pronounciations.
 
    - Infrastructure:
      - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:
