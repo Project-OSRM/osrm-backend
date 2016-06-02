@@ -144,7 +144,6 @@
         {"key": "highway", "value": "movable"},
         {"key": "highway", "value": "shuttle_train"},
         {"key": "highway", "value": "default"},
-        {"key": "highway", "value": "mini_roundabout"},
         {"key": "width", "description": "Penalties for narrow streets"},
         {"key": "lanes", "description": "Penalties for shared single lane streets"},
         {"key": "surface", "value": "asphalt"},
