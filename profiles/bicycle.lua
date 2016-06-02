@@ -18,7 +18,6 @@ local default_speed = 15
 local walking_speed = 6
 
 bicycle_speeds = {
-  ["mini_roundabout"] = default_speed,
   ["cycleway"] = default_speed,
   ["primary"] = default_speed,
   ["primary_link"] = default_speed,
