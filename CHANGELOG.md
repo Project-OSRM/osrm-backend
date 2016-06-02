@@ -9,12 +9,12 @@
      - paramater `annotate` was renamed to `annotations`.
      - `annotation` as accidentally placed in `Route` instead of `RouteLeg`
      - Support for destination signs. New member `destinations` in `RouteStep`, based on `destination` and `destination:ref`
-     - Support for name pronounciations. New member `pronounciation` in `RouteStep`, based on `name:pronounciation`
+     - Support for name pronunciations. New member `pronunciation` in `RouteStep`, based on `name:pronunciation`
      - Add `nodes` property to `annotation` in `RouteLeg` containing the ids of nodes covered by the route
 
    - Profile changes:
      - `result.destinations` allows you to set a way's destinations
-     - `result.pronounciation` allows you to set way name pronounciations
+     - `result.pronunciation` allows you to set way name pronunciations
      - `highway=motorway_link` no longer implies `oneway` as per the OSM Wiki
 
    - Infrastructure

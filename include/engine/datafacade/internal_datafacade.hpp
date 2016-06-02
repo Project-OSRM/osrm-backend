@@ -602,7 +602,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     std::string GetPronunciationForID(const unsigned name_id) const override final
     {
-        // We store the pronounciation after the name and destination of a street.
+        // We store the pronunciation after the name and destination of a street.
         // We do this to get around the street length limit of 255 which would hit
         // if we concatenate these. Order (see extractor_callbacks):
         // name (0), destination (1), pronunciation (2)
