@@ -24,7 +24,6 @@ Feature: Car - Oneway streets
             | motorway        | roundabout | x    |       |                       |
             | motorway_link   | roundabout | x    |       |                       |
             | primary         | roundabout | x    |       |                       |
-            | mini_roundabout |            | x    |       |                       |
 
     Scenario: Car - Overrule implied oneway
         Then routability should be

@@ -85,12 +85,6 @@ Feature: Bike - Accessability of different way types
             | junction   | forw | backw |
             | roundabout | x    |       |
 
-    @roundabout
-    Scenario: Bike - Don't push bikes against oneway flow on mini roundabouts
-        Then routability should be
-            | highway         | forw | backw |
-            | mini_roundabout | x    |       |
-
     Scenario: Bike - Instructions when pushing bike on oneways
         Given the node map
             | a | b |   |
