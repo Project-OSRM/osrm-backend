@@ -372,7 +372,7 @@ function way_function (way, result)
     result.pronunciation = pronunciation
   end
 
-  if junction and ("roundabout" == junction or "mini_roundabout" == highway) then
+  if junction and "roundabout" == junction then
     result.roundabout = true
   end
 
@@ -394,7 +394,6 @@ function way_function (way, result)
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
-    highway == "mini_roundabout" or
     (highway == "motorway" and oneway ~= "no") then
       result.backward_mode = mode.inaccessible
 

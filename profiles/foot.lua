@@ -162,7 +162,7 @@ function way_function (way, result)
   end
 
     -- roundabouts
-  if "roundabout" == junction or "mini_roundabout" == highway then
+  if "roundabout" == junction then
     result.roundabout = true
   end
 

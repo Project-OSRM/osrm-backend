@@ -103,11 +103,11 @@ function way_function (way, result)
     -- nothing to do
   elseif oneway == "-1" then
     result.forward_mode = mode.inaccessible
-  elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" or highway == "mini_roundabout" then
+  elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
     result.backward_mode = mode.inaccessible
   end
 
-  if junction == 'roundabout' or highway == 'mini_roundabout' then
+  if junction == 'roundabout' then
     result.roundabout = true
   end
 end
