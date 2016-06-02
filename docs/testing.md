@@ -132,6 +132,34 @@ Scenario: Testbot - Straight Road
         | a    | d  | road,road,road | depart,continue right,arrive |
 ```
 
+### Test all directions
+
+Modelling a road as roundabout has an implied oneway tag associated with it. In the following case, we can route from `a` to `d` but not from `d` to `a`.
+To discover those errors, make sure to check for all allowed directions.
+
+```
+Scenario: Enter and Exit mini roundabout with sharp angle   # features/guidance/mini-roundabout.feature:37
+    Given the profile "car"                                   # features/step_definitions/data.js:8
+    Given a grid size of 10 meters                            # features/step_definitions/data.js:20
+    Given the node map                                        # features/step_definitions/data.js:45
+        | a | b |   |
+        |   | c | d |
+    And the ways                                              # features/step_definitions/data.js:128
+        | nodes | highway         | name |
+        | ab    | tertiary        | MySt |
+        | bc    | roundabout      |      |
+        | cd    | tertiary        | MySt |
+    When I route I should get                                 # features/step_definitions/routing.js:4
+        | from | to | route     | turns         | #                                               |
+        | a    | d  | MySt,MySt | depart,arrive | # suppress multiple enter/exit mini roundabouts |
+        | d    | a  | MySt,MySt | depart,arrive | # suppress multiple enter/exit mini roundabouts |
+    Tables were not identical:
+        |  from |     to |     route     |     turns         |     #
+        |     a |      d |     MySt,MySt |     depart,arrive |     # suppress multiple enter/exit mini roundabouts |
+        | (-) d |  (-) a | (-) MySt,MySt | (-) depart,arrive | (-) # suppress multiple enter/exit mini roundabouts |
+        | (+) d |  (+) a | (+)           | (+)               | (+) # suppress multiple enter/exit mini roundabouts |
+```
+
 ### Prevent Randomness
 
 Some features in OSRM can result in strange experiences during testcases. To prevent some of these issues, follow the guidelines below.
