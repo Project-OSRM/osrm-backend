@@ -240,14 +240,16 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 
         if (is_connected_to_roundabout)
         {
-            // We are merging a u-turn against the direction of a roundabout
-            //
-            //    -----------> roundabout
-            //       /    \
-            //    out      in
-            //
-            // These cases have to be disabled, even if they are not forbidden specifically by a
-            // relation
+            /*
+             * We are merging a u-turn against the direction of a roundabout
+             *
+             *     -----------> roundabout
+             *        /    \
+             *     out      in
+             *
+             * These cases have to be disabled, even if they are not forbidden specifically by a
+             * relation
+             */
             intersection[0].entry_allowed = false;
         }
 
