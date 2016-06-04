@@ -11,6 +11,8 @@
 #include "util/json_container.hpp"
 #include "util/matrix_graph_wrapper.hpp" // wrapper to use tarjan scc on dist table
 
+#include "util/compat.hpp"
+
 #include <boost/assert.hpp>
 
 #include <algorithm>

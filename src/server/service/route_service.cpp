@@ -6,6 +6,8 @@
 
 #include "util/json_container.hpp"
 
+#include "util/compat.hpp"
+
 namespace osrm
 {
 namespace server

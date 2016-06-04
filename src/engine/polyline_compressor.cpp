@@ -1,5 +1,6 @@
 #include "engine/polyline_compressor.hpp"
 
+#include "util/compat.hpp"
 #include <algorithm>
 #include <boost/assert.hpp>
 #include <cmath>

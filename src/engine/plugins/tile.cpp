@@ -5,6 +5,8 @@
 #include "util/vector_tile.hpp"
 #include "util/web_mercator.hpp"
 
+#include "util/compat.hpp"
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>

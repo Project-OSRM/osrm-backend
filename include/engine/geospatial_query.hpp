@@ -8,6 +8,8 @@
 #include "util/typedefs.hpp"
 #include "util/web_mercator.hpp"
 
+#include "util/compat.hpp"
+
 #include "osrm/coordinate.hpp"
 
 #include <algorithm>

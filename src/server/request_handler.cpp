@@ -10,6 +10,8 @@
 #include "util/string_util.hpp"
 #include "util/typedefs.hpp"
 
+#include "util/compat.hpp"
+
 #include "engine/status.hpp"
 #include "osrm/osrm.hpp"
 #include "util/json_container.hpp"

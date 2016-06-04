@@ -6,6 +6,8 @@
 
 #include "util/json_container.hpp"
 
+#include "util/compat.hpp"
+
 #include <boost/format.hpp>
 
 namespace osrm
