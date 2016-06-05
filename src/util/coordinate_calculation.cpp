@@ -276,10 +276,13 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
 {
     BOOST_ASSERT(0 <= factor && factor <= 1.0);
 
-    FixedLongitude interpolated_lon(((1. - factor) * static_cast<std::int32_t>(from.lon)) +
-                                    (factor * static_cast<std::int32_t>(to.lon)));
-    FixedLatitude interpolated_lat(((1. - factor) * static_cast<std::int32_t>(from.lat)) +
-                                   (factor * static_cast<std::int32_t>(to.lat)));
+    const auto from_lon = static_cast<std::int32_t>(from.lon);
+    const auto from_lat = static_cast<std::int32_t>(from.lat);
+    const auto to_lon = static_cast<std::int32_t>(to.lon);
+    const auto to_lat = static_cast<std::int32_t>(to.lat);
+
+    FixedLongitude interpolated_lon(from_lon + factor * (to_lon - from_lon));
+    FixedLatitude interpolated_lat(from_lat + factor * (to_lat - from_lat));
 
     return {std::move(interpolated_lon), std::move(interpolated_lat)};
 }
