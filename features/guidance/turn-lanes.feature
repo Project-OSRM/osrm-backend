@@ -290,26 +290,6 @@ Feature: Turn Lane Guidance
             | a,e       | road,through,through | depart,new name straight,arrive | ,1,   |
             | a,f       | road,right,right     | depart,turn right,arrive        | ,0,   |
 
-    Scenario: Anticipate Lane Change
-        Given the node map
-            | a |   | b |   | x |
-            |   |   |   |   |   |
-            |   |   | c |   | d |
-            |   |   |   |   |   |
-            |   |   | y |   |   |
-
-        And the ways
-            | nodes | turn:lanes:forward   | turn:lanes:backward |
-            | ab    | through\|right&right |                     |
-            | bx    |                      | left\|left&through  |
-            | bc    | left\|through        | left\|right         |
-            | cd    |                      | left\|right         |
-            | cy    |                      |                     |
-
-       When I route I should get
-            | waypoints | route       | turns                                            | lanes |
-            | d,a       | cd,bc,ab,ab | depart,end of road right,end of road left,arrive | ,0,1, |
-
      Scenario: Turn at a traffic light
         Given the node map
             | a | b | c | d |
