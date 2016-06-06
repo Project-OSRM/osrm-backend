@@ -43,6 +43,11 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps);
 // remove steps invalidated by post-processing
 std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps);
 
+// Constrains lanes for multi-hop situations where lane changes depend on earlier ones.
+// Instead of forcing users to change lanes rapidly in a short amount of time,
+// we anticipate lane changes emitting only matching lanes early on.
+std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps);
+
 // postProcess will break the connection between the leg geometry
 // for which a segment is supposed to represent exactly the coordinates
 // between routing maneuvers and the route steps itself.
