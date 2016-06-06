@@ -49,6 +49,22 @@ inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const doubl
     return extractor::guidance::DirectionModifier::UTurn;
 }
 
+// swaps left <-> right modifier types
+inline extractor::guidance::DirectionModifier::Enum
+mirrorDirectionModifier(const extractor::guidance::DirectionModifier::Enum modifier)
+{
+    const constexpr extractor::guidance::DirectionModifier::Enum results[] = {
+        extractor::guidance::DirectionModifier::UTurn,
+        extractor::guidance::DirectionModifier::SharpLeft,
+        extractor::guidance::DirectionModifier::Left,
+        extractor::guidance::DirectionModifier::SlightLeft,
+        extractor::guidance::DirectionModifier::Straight,
+        extractor::guidance::DirectionModifier::SlightRight,
+        extractor::guidance::DirectionModifier::Right,
+        extractor::guidance::DirectionModifier::SharpRight};
+    return results[modifier];
+}
+
 } // namespace guidance
 } // namespace util
 } // namespace osrm

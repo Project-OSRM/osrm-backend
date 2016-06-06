@@ -485,3 +485,29 @@ Feature: Collapse
             | waypoints | route          | turns                        |
             | a,d       | road,road,road | depart,continue right,arrive |
 
+    Scenario: Segregated Intersection into Slight Turn
+        Given the node map
+            | h |   |   |   |   |   |   |
+            | a |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   | g |   |   |   |   |
+            |   |   | b | f |   |   |   |
+            |   |   |   | c |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | e |
+            |   |   |   |   |   |   | d |
+            |   |   | j | i |   |   |   |
+
+        And the ways
+            | nodes | highway   | name | oneway |
+            | abcd  | primary   | road | yes    |
+            | efgh  | primary   | road | yes    |
+            | icf   | secondary | in   | yes    |
+            | gbj   | secondary | out  | yes    |
+
+        When I route I should get
+            | waypoints | route        | turns                           |
+            | i,h       | in,road,road | depart,turn slight left,arrive  |
+            | a,d       | road,road    | depart,arrive                   |
+            | a,j       | road,out,out | depart,turn slight right,arrive |

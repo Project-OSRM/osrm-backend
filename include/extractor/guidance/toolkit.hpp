@@ -280,20 +280,6 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
     return 1.0 - (difference / max_deviation) * (difference / max_deviation);
 }
 
-// swaps left <-> right modifier types
-inline DirectionModifier::Enum mirrorDirectionModifier(const DirectionModifier::Enum modifier)
-{
-    const constexpr DirectionModifier::Enum results[] = {DirectionModifier::UTurn,
-                                                         DirectionModifier::SharpLeft,
-                                                         DirectionModifier::Left,
-                                                         DirectionModifier::SlightLeft,
-                                                         DirectionModifier::Straight,
-                                                         DirectionModifier::SlightRight,
-                                                         DirectionModifier::Right,
-                                                         DirectionModifier::SharpRight};
-    return results[modifier];
-}
-
 inline bool canBeSuppressed(const TurnType::Enum type)
 {
     if (type == TurnType::Turn)

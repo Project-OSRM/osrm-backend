@@ -805,4 +805,3 @@ Feature: Simple Turns
             | a,d       | abc,bd,bd | depart,turn sharp right,arrive  |
             | a,e       | abc,be,be | depart,turn right,arrive        |
             | a,f       | abc,bf,bf | depart,turn slight right,arrive |
-

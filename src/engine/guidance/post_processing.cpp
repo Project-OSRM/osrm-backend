@@ -40,7 +40,8 @@ bool isCollapsableInstruction(const TurnInstruction instruction)
            (instruction.type == TurnType::Suppressed &&
             instruction.direction_modifier == DirectionModifier::Straight) ||
            (instruction.type == TurnType::Turn &&
-            instruction.direction_modifier == DirectionModifier::Straight);
+            instruction.direction_modifier == DirectionModifier::Straight) ||
+           (instruction.type == TurnType::Merge);
 }
 
 // A check whether two instructions can be treated as one. This is only the case for very short
@@ -395,6 +396,13 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             if (TurnType::Continue == current_step.maneuver.instruction.type ||
                 TurnType::Suppressed == current_step.maneuver.instruction.type)
                 steps[step_index].maneuver.instruction.type = TurnType::Turn;
+            else if (TurnType::Merge == current_step.maneuver.instruction.type)
+            {
+                steps[step_index].maneuver.instruction.direction_modifier =
+                    util::guidance::mirrorDirectionModifier(
+                        steps[step_index].maneuver.instruction.direction_modifier);
+                steps[step_index].maneuver.instruction.type = TurnType::Turn;
+            }
             else if (TurnType::NewName == current_step.maneuver.instruction.type &&
                      current_step.maneuver.instruction.direction_modifier !=
                          DirectionModifier::Straight &&
@@ -424,6 +432,12 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                      current_step.name_id == steps[two_back_index].name_id)
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+            }
+            else if (TurnType::Merge == one_back_step.maneuver.instruction.type)
+            {
+                steps[one_back_index].maneuver.instruction.direction_modifier =
+                    util::guidance::mirrorDirectionModifier(
+                        steps[one_back_index].maneuver.instruction.direction_modifier);
             }
             steps[one_back_index].name = current_step.name;
             steps[one_back_index].name_id = current_step.name_id;
