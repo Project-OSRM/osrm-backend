@@ -1,10 +1,33 @@
 # Testsuite
 
-OSRM comes with a testsuite containing both unit-tests using the BOOST library and cucucmber.js for scenario driven testing.
+OSRM comes with a testsuite containing both unit-tests using the Boost library and cucucmber.js for scenario driven testing.
 
 ## Unit Tests
 
-TODO write a guide on unit tests.
+For a general introduction on Boost.Test have a look at [its docs](http://www.boost.org/doc/libs/1_60_0/libs/test/doc/html/index.html).
+
+### Separate Test Binaries
+
+Unit tests should be registered according to the sub-project they're in.
+If you want to write tests for utility functions, add them to the utility test binary.
+See `CMakeLists.txt` in the unit test directory for how to register new unit tests.
+
+### Using Boost.Test Primitives
+
+There is a difference between only reporting a failed condition and aborting the test right at a failed condition.
+Have a look at [`BOOST_CHECK` vs `BOOST_REQUIRE`](http://www.boost.org/doc/libs/1_60_0/libs/test/doc/html/boost_test/utf_reference/testing_tool_ref/assertion_boost_level.html).
+Instead of manually checking e.g. for equality, less than, if a function throws etc. use their [corresponding Boost.Test primitives](http://www.boost.org/doc/libs/1_60_0/libs/test/doc/html/boost_test/utf_reference/testing_tool_ref.html).
+
+If you use `BOOST_CHECK_EQUAL` you have to implement `operator<<` for your type so that Boost.Test can print mismatches.
+If you do not want to do this, define `BOOST_TEST_DONT_PRINT_LOG_VALUE` (and undef it after the check call) or sidestep it with `BOOST_CHECK(fst == snd);`.
+
+### Test Fixture
+
+If you need to test features on a real dataset (think about this twice: prefer cucumber and dataset-independent tests for their reproducibility and minimality), there is a fixed dataset in `test/data`.
+This dataset is a small extract and may not even contain all tags or edge cases.
+Furthermore this dataset is not in sync with what you see in up-to-date OSM maps or on the demo server.
+See the library tests for how to add new dataset dependent tests.
+
 
 ## Cucumber
 
@@ -165,6 +188,7 @@ Scenario: Enter and Exit mini roundabout with sharp angle   # features/guidance/
 Some features in OSRM can result in strange experiences during testcases. To prevent some of these issues, follow the guidelines below.
 
 #### Use Waypoints
+
 Using grid nodes as waypoints offers the chance of unwanted side effects.
 OSRM converts the grid into a so called edge-based graph.
 
@@ -211,4 +235,5 @@ Whenever you are independent of the start location (see use waypoints), the wayp
 If you are testing for a duration metric, allow for a tiny offset to ensure a passing test in the presence of rounding/snapping issues.
 
 #### Don't Rely on Alternatives
+
 Alternative route discovery is a random feature in itself. The discovery of routes depends on the contraction order of roads and cannot be assumed successful, ever.
