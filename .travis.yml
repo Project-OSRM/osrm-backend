@@ -75,6 +75,10 @@ matrix:
       compiler: "gcc-5-release-i686"
       env: TARGET_ARCH='i686' CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
 
+    - os: linux
+      compiler: "gcc-4.8-release-armhf"
+      env: TARGET_ARCH='armhf' CCOMPILER='arm-linux-gnueabihf-gcc-4.8' CXXCOMPILER='arm-linux-gnueabihf-g++-4.8' BUILD_TYPE='Release'
+
       # Disabled because of CI slowness
       #- os: linux
       #- compiler: gcc
@@ -166,6 +170,7 @@ install:
   - popd
 
 script:
+  - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
   - echo "travis_fold:start:BENCHMARK"
   - make -C test/data benchmark
   - echo "travis_fold:end:BENCHMARK"
