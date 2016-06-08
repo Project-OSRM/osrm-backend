@@ -1,7 +1,7 @@
-#include "extractor/guidance/turn_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_handler.hpp"
 
 #include "util/guidance/toolkit.hpp"
 
@@ -377,8 +377,12 @@ std::size_t TurnHandler::findObviousTurn(const EdgeID via_edge,
         }
 
         const auto out_data = node_based_graph.GetEdgeData(intersection[i].turn.eid);
+        auto continue_class = node_based_graph.GetEdgeData(intersection[best_continue].turn.eid)
+                                  .road_classification.road_class;
         if (intersection[i].entry_allowed && out_data.name_id == in_data.name_id &&
-            deviation < best_continue_deviation)
+            (best_continue == 0 || continue_class > out_data.road_classification.road_class ||
+             (deviation < best_continue_deviation &&
+              out_data.road_classification.road_class == continue_class)))
         {
             best_continue_deviation = deviation;
             best_continue = i;
@@ -392,7 +396,12 @@ std::size_t TurnHandler::findObviousTurn(const EdgeID via_edge,
         return 0;
 
     // has no obvious continued road
-    if (best_continue == 0 || true)
+    if (best_continue == 0 || best_continue_deviation >= 2 * NARROW_TURN_ANGLE ||
+        (node_based_graph.GetEdgeData(intersection[best_continue].turn.eid)
+                 .road_classification.road_class ==
+             node_based_graph.GetEdgeData(intersection[best].turn.eid)
+                 .road_classification.road_class &&
+         std::abs(best_continue_deviation) > 1 && best_deviation / best_continue_deviation < 0.75))
     {
         // Find left/right deviation
         const double left_deviation = angularDeviation(
@@ -422,8 +431,31 @@ std::size_t TurnHandler::findObviousTurn(const EdgeID via_edge,
             return best;
         }
     }
+    else
+    {
+        const double deviation =
+            angularDeviation(intersection[best_continue].turn.angle, STRAIGHT_ANGLE);
+        const auto &continue_data =
+            node_based_graph.GetEdgeData(intersection[best_continue].turn.eid);
+        if (std::abs(deviation) < 1)
+            return best_continue;
 
-    return 0; // no obvious turn
+        // check if any other similar best continues exist
+        for (std::size_t i = 1; i < intersection.size(); ++i)
+        {
+            if (i == best_continue || !intersection[i].entry_allowed)
+                continue;
+
+            if (angularDeviation(intersection[i].turn.angle, STRAIGHT_ANGLE) / deviation < 1.1 &&
+                continue_data.road_classification.road_class ==
+                    node_based_graph.GetEdgeData(intersection[i].turn.eid)
+                        .road_classification.road_class)
+                return 0;
+        }
+        return best_continue; // no obvious turn
+    }
+
+    return 0;
 }
 
 // Assignment of left turns hands of to right turns.

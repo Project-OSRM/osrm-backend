@@ -85,31 +85,31 @@ Feature: Bearing parameter
             | f |  |   | e |   |  | d |
 
         And the ways
-            | nodes | oneway |
-            | ia    | yes    |
-            | jb    | yes    |
-            | kc    | yes    |
-            | ld    | yes    |
-            | me    | yes    |
-            | nf    | yes    |
-            | og    | yes    |
-            | ph    | yes    |
-            | ab    | yes    |
-            | bc    | yes    |
-            | cd    | yes    |
-            | de    | yes    |
-            | ef    | yes    |
-            | fg    | yes    |
-            | gh    | yes    |
-            | ha    | yes    |
+            | nodes | oneway | name |
+            | ia    | yes    | ia   |
+            | jb    | yes    | jb   |
+            | kc    | yes    | kc   |
+            | ld    | yes    | ld   |
+            | me    | yes    | me   |
+            | nf    | yes    | nf   |
+            | og    | yes    | og   |
+            | ph    | yes    | ph   |
+            | ab    | yes    | ring |
+            | bc    | yes    | ring |
+            | cd    | yes    | ring |
+            | de    | yes    | ring |
+            | ef    | yes    | ring |
+            | fg    | yes    | ring |
+            | gh    | yes    | ring |
+            | ha    | yes    | ring |
 
         When I route I should get
-            | from | to | bearings | route                         | bearing                       |
-            | 0    | q  | 0 90     | ia,ab,bc,cd,de,ef,fg,gh,ha,ha | 0->0,0->90,90->180,180->180,180->270,270->270,270->0,0->0,0->90,90->0 |
-            | 0    | a  | 45 90    | jb,bc,cd,de,ef,fg,gh,ha,ha    | 0->45,45->180,180->180,180->270,270->270,270->0,0->0,0->90,90->0   |
-            | 0    | q  | 90 90    | kc,cd,de,ef,fg,gh,ha,ha       | 0->90,90->180,180->270,270->270,270->0,0->0,0->90,90->0       |
-            | 0    | a  | 135 90   | ld,de,ef,fg,gh,ha,ha          | 0->135,135->270,270->270,270->0,0->0,0->90,90->0          |
-            | 0    | a  | 180 90   | me,ef,fg,gh,ha,ha             | 0->180,180->270,270->0,0->0,0->90,90->0              |
-            | 0    | a  | 225 90   | nf,fg,gh,ha,ha                | 0->225,225->0,0->0,0->90,90->0                  |
-            | 0    | a  | 270 90   | og,gh,ha,ha                   | 0->270,270->0,0->90,90->0                    |
-            | 0    | a  | 315 90   | ph,ha,ha                      | 0->315,315->90,90->0                      |
+            | from | to | bearings | route                       | bearing                                   |
+            | 0    | q  | 0 90     | ia,ring,ring,ring,ring,ring | 0->0,0->90,180->270,270->0,0->90,90->0    |
+            | 0    | a  | 45 90    | jb,ring,ring,ring,ring,ring | 0->45,45->180,180->270,270->0,0->90,90->0 |
+            | 0    | q  | 90 90    | kc,ring,ring,ring,ring      | 0->90,90->180,270->0,0->90,90->0          |
+            | 0    | a  | 135 90   | ld,ring,ring,ring,ring      | 0->135,135->270,270->0,0->90,90->0        |
+            | 0    | a  | 180 90   | me,ring,ring,ring           | 0->180,180->270,0->90,90->0               |
+            | 0    | a  | 225 90   | nf,ring,ring,ring           | 0->225,225->0,0->90,90->0                 |
+            | 0    | a  | 270 90   | og,ring,ring                | 0->270,270->0,90->0                       |
+            | 0    | a  | 315 90   | ph,ring,ring                | 0->315,315->90,90->0                      |

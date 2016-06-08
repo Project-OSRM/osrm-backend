@@ -805,3 +805,31 @@ Feature: Simple Turns
             | a,d       | abc,bd,bd | depart,turn sharp right,arrive  |
             | a,e       | abc,be,be | depart,turn right,arrive        |
             | a,f       | abc,bf,bf | depart,turn slight right,arrive |
+
+    Scenario: Turn Lane on Splitting up Road
+        Given the node map
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            | g |   |   |   | f |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | h |   |   | e |   |   | c |   |   | d |
+            | a |   |   | b |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   | i |   |   |   |   |   |   |   |   |   |   |   |
+
+        And the ways
+            | nodes | highway        | oneway | name  |
+            | ab    | secondary      | yes    | road  |
+            | be    | secondary      | yes    | road  |
+            | ecd   | secondary      | no     | road  |
+            | efg   | secondary      | yes    | road  |
+            | ehb   | secondary_link | yes    | road  |
+            | bi    | tertiary       | no     | cross |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ehb      | be     | b        | no_left_turn |
+
+        When I route I should get
+            | waypoints | route            | turns                   |
+            | a,d       | road,road        | depart,arrive           |
+            | d,i       | road,cross,cross | depart,turn left,arrive |
+            | d,g       | road,road        | depart,arrive           |
