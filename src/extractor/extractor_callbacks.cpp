@@ -193,6 +193,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             ((parsed_way.forward_speed != parsed_way.backward_speed) ||
                              (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode));
 
+    external_memory.used_node_id_list.reserve(external_memory.used_node_id_list.size() +
+                                              input_way.nodes().size());
+
     std::transform(input_way.nodes().begin(),
                    input_way.nodes().end(),
                    std::back_inserter(external_memory.used_node_id_list),

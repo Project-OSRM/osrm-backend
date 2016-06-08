@@ -105,9 +105,11 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         else
         {
             BOOST_ASSERT(result.is<std::string>());
+            current_reply.content.resize(current_reply.content.size() +
+                                         result.get<std::string>().size());
             std::copy(result.get<std::string>().cbegin(),
                       result.get<std::string>().cend(),
-                      std::back_inserter(current_reply.content));
+                      current_reply.content.end());
 
             current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
         }

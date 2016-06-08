@@ -173,6 +173,9 @@ class RouteAPI : public BaseAPI
         for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
         {
             auto &leg_geometry = leg_geometries[idx];
+
+            step_geometries.reserve(step_geometries.size() + legs[idx].steps.size());
+
             std::transform(
                 legs[idx].steps.begin(),
                 legs[idx].steps.end(),
@@ -201,6 +204,11 @@ class RouteAPI : public BaseAPI
                 util::json::Array distances;
                 util::json::Array nodes;
                 auto &leg_geometry = leg_geometries[idx];
+
+                durations.values.reserve(leg_geometry.annotations.size());
+                distances.values.reserve(leg_geometry.annotations.size());
+                nodes.values.reserve(leg_geometry.osm_node_ids.size());
+
                 std::for_each(
                     leg_geometry.annotations.begin(),
                     leg_geometry.annotations.end(),

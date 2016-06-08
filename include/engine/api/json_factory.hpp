@@ -57,6 +57,7 @@ util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
     {
         geojson.values["type"] = "LineString";
         util::json::Array coordinates;
+        coordinates.values.reserve(num_coordinates);
         std::transform(
             begin, end, std::back_inserter(coordinates.values), &detail::coordinateToLonLat);
         geojson.values["coordinates"] = std::move(coordinates);
