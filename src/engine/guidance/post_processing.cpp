@@ -387,7 +387,9 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 
     BOOST_ASSERT(!one_back_step.intersections.empty() && !current_step.intersections.empty());
     // Very Short New Name
-    if (collapsable(one_back_step))
+    if (collapsable(one_back_step) && !(one_back_step.maneuver.instruction.type == TurnType::Merge))
+    // this checks whether we merge onto a highway. It might be that we need a dedicated suppress
+    // for highway
     {
         BOOST_ASSERT(two_back_index < steps.size());
         if (compatible(one_back_step, steps[two_back_index]))
@@ -433,7 +435,11 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
             }
-            else if (TurnType::Merge == one_back_step.maneuver.instruction.type)
+            else if (TurnType::Merge == one_back_step.maneuver.instruction.type &&
+                     current_step.maneuver.instruction.type !=
+                         TurnType::Suppressed) // This suppressed is a check for highways. We might
+                                               // need a highway-suppressed to get the turn onto a
+                                               // highway...
             {
                 steps[one_back_index].maneuver.instruction.direction_modifier =
                     util::guidance::mirrorDirectionModifier(
@@ -529,6 +535,7 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 // that we come across.
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 {
+    print(steps);
     // the steps should always include the first/last step in form of a location
     BOOST_ASSERT(steps.size() >= 2);
     if (steps.size() == 2)
@@ -757,7 +764,9 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 collapseTurnAt(steps, two_back_index, one_back_index, step_index);
             }
         }
-        else if (one_back_index > 0 && one_back_step.distance <= MAX_COLLAPSE_DISTANCE)
+        else if (one_back_index > 0 &&
+                 (one_back_step.distance <= MAX_COLLAPSE_DISTANCE ||
+                  current_step.name_id == steps[getPreviousIndex(one_back_index)].name_id))
         {
             // check for one of the multiple collapse scenarios and, if possible, collapse the turn
             const auto two_back_index = getPreviousIndex(one_back_index);
