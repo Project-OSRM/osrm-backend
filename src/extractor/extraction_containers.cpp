@@ -47,7 +47,9 @@ ExtractionContainers::ExtractionContainers()
 {
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
-    // Insert the empty string, it has no data and is zero length
+    // Insert three empty strings for name, destination and pronunciation
+    name_lengths.push_back(0);
+    name_lengths.push_back(0);
     name_lengths.push_back(0);
 }
 

@@ -27,6 +27,7 @@ namespace extractor
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
     : external_memory(extraction_containers)
 {
+    // we reserved 0, 1, 2 for the empty case
     string_map[MapKey("", "")] = 0;
 }
 
