@@ -62,7 +62,7 @@ RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) con
     const std::size_t right = static_cast<std::size_t>(fmin(ceil(xthP), width - 1));
 
     // Calculate distances from corners for bilinear interpolation
-    const float fromLeft = (lon - left * xstep + xmin) / xstep;
+    const float fromLeft = (lon - left * xstep - xmin) / xstep;
     const float fromTop = (ymax - top * ystep - lat) / ystep;
     const float fromRight = 1 - fromLeft;
     const float fromBottom = 1 - fromTop;
