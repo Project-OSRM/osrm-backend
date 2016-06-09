@@ -12,8 +12,9 @@ namespace api
 
 struct IsochroneParameters : public BaseParameters
 {
-    unsigned int distance;
-    bool convexhull;
+    unsigned int duration = 0;
+    double distance = 0;
+    bool convexhull = false;
 
     bool IsValid() const { return BaseParameters::IsValid(); }
 };

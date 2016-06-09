@@ -28,7 +28,7 @@ class IsochroneAPI final : public BaseAPI
                       const std::vector<engine::plugins::IsochroneNode> convexhull,
                       util::json::Object &response) const
     {
-        util::json::Array data;
+        util::json::Array isochroneJson;
         for (auto isochrone : isochroneNodes)
         {
             util::json::Object object;
@@ -48,9 +48,12 @@ class IsochroneAPI final : public BaseAPI
             util::json::Object distance;
             object.values["distance_from_start"] = isochrone.distance;
 
-            data.values.push_back(object);
+            util::json::Object duration;
+            object.values["duration_from_start"] = isochrone.duration;
+
+            isochroneJson.values.push_back(object);
         }
-        response.values["isochrone"] = std::move(data);
+        response.values["isochrone"] = std::move(isochroneJson);
 
         if (!convexhull.empty())
         {

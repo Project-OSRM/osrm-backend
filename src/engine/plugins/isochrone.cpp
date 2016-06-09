@@ -1,9 +1,11 @@
 #include "engine/api/isochrone_api.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/plugins/isochrone.hpp"
+#include "util/coordinate_calculation.hpp"
 #include "util/graph_loader.hpp"
 #include "util/monotone_chain.hpp"
 #include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
 
 #include <algorithm>
 
@@ -43,6 +45,11 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         return Error("InvalidOptions", "Only one input coordinate is supported", json_result);
     }
 
+    if (params.distance != 0 && params.duration != 0)
+    {
+        return Error("InvalidOptions", "Only distance or duration should be set", json_result);
+    }
+
     auto phantomnodes = GetPhantomNodes(params, 1);
 
     if (phantomnodes.front().size() <= 0)
@@ -56,16 +63,42 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
                                    forward_id_vector);
     auto source = forward_id_vector[0];
 
-    IsochroneVector isochroneVector;
-    dijkstra(isochroneVector, source, params.distance);
+    isochroneVector.clear();
+
+    if (params.duration != 0)
+    {
+        TIMER_START(DIJKSTRA);
+        dijkstraByDuration(isochroneVector, source, params.duration);
+        TIMER_STOP(DIJKSTRA);
+        util::SimpleLogger().Write() << "DijkstraByDuration took: " << TIMER_MSEC(DIJKSTRA) << "ms";
+        TIMER_START(SORTING);
+        std::sort(isochroneVector.begin(), isochroneVector.end(),
+                  [&](const IsochroneNode n1, const IsochroneNode n2)
+                  {
+                      return n1.duration < n2.duration;
+                  });
+        TIMER_STOP(SORTING);
+        util::SimpleLogger().Write() << "SORTING took: " << TIMER_MSEC(SORTING) << "ms";
+    }
+    if (params.distance != 0)
+    {
+        TIMER_START(DIJKSTRA);
+        dijkstraByDistance(isochroneVector, source, params.distance);
+        TIMER_STOP(DIJKSTRA);
+        util::SimpleLogger().Write() << "DijkstraByDistance took: " << TIMER_MSEC(DIJKSTRA) << "ms";
+        TIMER_START(SORTING);
+        std::sort(isochroneVector.begin(), isochroneVector.end(),
+                  [&](const IsochroneNode n1, const IsochroneNode n2)
+                  {
+                      return n1.distance < n2.distance;
+                  });
+        TIMER_STOP(SORTING);
+        util::SimpleLogger().Write() << "SORTING took: " << TIMER_MSEC(SORTING) << "ms";
+    }
 
     util::SimpleLogger().Write() << "Nodes Found: " << isochroneVector.size();
-    std::sort(isochroneVector.begin(), isochroneVector.end(),
-              [&](const IsochroneNode n1, const IsochroneNode n2)
-              {
-                  return n1.distance < n2.distance;
-              });
-    std::vector<IsochroneNode> convexhull;
+
+    convexhull.clear();
 
     // Optional param for calculating Convex Hull
     if (params.convexhull)
@@ -73,28 +106,33 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         convexhull = util::monotoneChain(isochroneVector);
     }
 
+    TIMER_START(RESPONSE);
     api::IsochroneAPI isochroneAPI(facade, params);
     isochroneAPI.MakeResponse(isochroneVector, convexhull, json_result);
+    TIMER_STOP(RESPONSE);
+    util::SimpleLogger().Write() << "RESPONSE took: " << TIMER_MSEC(RESPONSE) << "ms";
 
     return Status::Ok;
 }
 
-void IsochronePlugin::dijkstra(IsochroneVector &isochroneSet, NodeID &source, int distance)
+void IsochronePlugin::dijkstraByDuration(IsochroneVector &isochroneSet,
+                                         NodeID &source,
+                                         int duration)
 {
 
     QueryHeap heap(number_of_nodes);
     heap.Insert(source, 0, source);
 
-    isochroneSet.emplace_back(IsochroneNode(coordinate_list[source], coordinate_list[source], 0));
-    util::SimpleLogger().Write() << coordinate_list[source].lon << "   "
-                                 << coordinate_list[source].lat;
-    int MAX_DISTANCE = distance;
+    isochroneSet.emplace_back(
+        IsochroneNode(coordinate_list[source], coordinate_list[source], 0, 0));
+
+    int MAX_DURATION = duration * 60 *10;
     {
         // Standard Dijkstra search, terminating when path length > MAX
         while (!heap.Empty())
         {
             const NodeID source = heap.DeleteMin();
-            const std::int32_t distance = heap.GetKey(source);
+            const std::int32_t weight = heap.GetKey(source);
 
             for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
             {
@@ -104,7 +142,65 @@ void IsochronePlugin::dijkstra(IsochroneVector &isochroneSet, NodeID &source, in
                     const auto data = graph->GetEdgeData(current_edge);
                     if (data.real)
                     {
-                        int to_distance = distance + data.weight;
+                        int to_duration = weight + data.weight;
+                        if (to_duration > MAX_DURATION)
+                        {
+                            continue;
+                        }
+                        else if (!heap.WasInserted(target))
+                        {
+                            heap.Insert(target, to_duration, source);
+                            isochroneSet.emplace_back(IsochroneNode(
+                                coordinate_list[target], coordinate_list[source], 0, to_duration));
+                        }
+                        else if (to_duration < heap.GetKey(target))
+                        {
+                            heap.GetData(target).parent = source;
+                            heap.DecreaseKey(target, to_duration);
+                            update(isochroneSet,
+                                   IsochroneNode(coordinate_list[target], coordinate_list[source],
+                                                 0, to_duration));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+void IsochronePlugin::dijkstraByDistance(IsochroneVector &isochroneSet,
+                                         NodeID &source,
+                                         double distance)
+{
+    QueryHeap heap(number_of_nodes);
+    heap.Insert(source, 0, source);
+
+    isochroneSet.emplace_back(
+        IsochroneNode(coordinate_list[source], coordinate_list[source], 0, 0));
+
+    int MAX_DISTANCE = distance;
+    {
+        // Standard Dijkstra search, terminating when path length > MAX
+        while (!heap.Empty())
+        {
+            NodeID source = heap.DeleteMin();
+            std::int32_t weight = heap.GetKey(source);
+
+            for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
+            {
+                const auto target = graph->GetTarget(current_edge);
+                if (target != SPECIAL_NODEID)
+                {
+                    const auto data = graph->GetEdgeData(current_edge);
+                    if (data.real)
+                    {
+                        Coordinate s(coordinate_list[source].lon, coordinate_list[source].lat);
+                        Coordinate t(coordinate_list[target].lon, coordinate_list[target].lat);
+                        //FIXME this might not be accurate enough
+                        int to_distance =
+                            static_cast<int>(
+                                util::coordinate_calculation::haversineDistance(s, t)) +
+                            weight;
+
                         if (to_distance > MAX_DISTANCE)
                         {
                             continue;
@@ -113,7 +209,7 @@ void IsochronePlugin::dijkstra(IsochroneVector &isochroneSet, NodeID &source, in
                         {
                             heap.Insert(target, to_distance, source);
                             isochroneSet.emplace_back(IsochroneNode(
-                                coordinate_list[target], coordinate_list[source], to_distance));
+                                coordinate_list[target], coordinate_list[source], to_distance, 0));
                         }
                         else if (to_distance < heap.GetKey(target))
                         {
@@ -121,7 +217,7 @@ void IsochronePlugin::dijkstra(IsochroneVector &isochroneSet, NodeID &source, in
                             heap.DecreaseKey(target, to_distance);
                             update(isochroneSet,
                                    IsochroneNode(coordinate_list[target], coordinate_list[source],
-                                                 to_distance));
+                                                 to_distance, 0));
                         }
                     }
                 }
@@ -149,7 +245,6 @@ std::size_t IsochronePlugin::loadGraph(const std::string &path,
                                                    traffic_light_node_list, coordinate_list);
 
     util::loadEdgesFromFile(input_stream, edge_list);
-
     traffic_light_node_list.clear();
     traffic_light_node_list.shrink_to_fit();
 

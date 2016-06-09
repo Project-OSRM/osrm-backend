@@ -46,14 +46,15 @@ struct SimpleEdgeData
 struct IsochroneNode
 {
     IsochroneNode(){};
-    IsochroneNode(osrm::extractor::QueryNode node, osrm::extractor::QueryNode predecessor, int distance)
-        : node(node), predecessor(predecessor), distance(distance)
+    IsochroneNode(osrm::extractor::QueryNode node, osrm::extractor::QueryNode predecessor, double distance, int duration)
+        : node(node), predecessor(predecessor), distance(distance), duration(duration)
     {
     }
 
     osrm::extractor::QueryNode node;
     osrm::extractor::QueryNode predecessor;
-    int distance;
+    double distance;
+    int duration;
 };
 
 
@@ -72,12 +73,15 @@ class IsochronePlugin final : public BasePlugin
     std::vector<osrm::extractor::QueryNode> coordinate_list;
     std::vector<engine::plugins::SimpleEdge> graph_edge_list;
     std::size_t number_of_nodes;
+    IsochroneVector isochroneVector;
+    IsochroneVector convexhull;
 
     std::size_t loadGraph(const std::string &path,
                           std::vector<extractor::QueryNode> &coordinate_list,
                           std::vector<SimpleEdge> &graph_edge_list);
 
-    void dijkstra(IsochroneVector &set, NodeID &source, int distance);
+    void dijkstraByDuration(IsochroneVector &set, NodeID &source, int duration);
+    void dijkstraByDistance(IsochroneVector &isochroneSet, NodeID &source, double distance);
     void update(IsochroneVector &s, IsochroneNode node);
 
   public:
