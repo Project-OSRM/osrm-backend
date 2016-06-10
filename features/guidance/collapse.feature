@@ -511,3 +511,20 @@ Feature: Collapse
             | i,h       | in,road,road | depart,turn slight left,arrive  |
             | a,d       | road,road    | depart,arrive                   |
             | a,j       | road,out,out | depart,turn slight right,arrive |
+
+    Scenario: Don't collapse everything to u-turn / too wide
+        Given the node map
+            | a |   | b |   | e |
+            |   |   |   |   |   |
+            | d |   | c |   | f |
+
+        And the ways
+            | nodes | highway   | name   |
+            | abcd  | primary   | road   |
+            | be    | secondary | top    |
+            | cf    | secondary | bottom |
+
+        When I route I should get
+            | waypoints | turns                                          | route               |
+            | a,d       | depart,continue right,end of road right,arrive | road,road,road,road |
+            | d,a       | depart,continue left,end of road left,arrive   | road,road,road,road |
