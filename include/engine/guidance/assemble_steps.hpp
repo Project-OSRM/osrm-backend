@@ -133,6 +133,7 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                 intersection.out = bearing_class.findMatchingBearing(bearings.second);
                 intersection.location = facade.GetCoordinateOfNode(path_point.turn_via_node);
                 intersection.bearings.clear();
+                intersection.bearings.reserve(bearing_class.getAvailableBearings().size());
                 std::copy(bearing_class.getAvailableBearings().begin(),
                           bearing_class.getAvailableBearings().end(),
                           std::back_inserter(intersection.bearings));

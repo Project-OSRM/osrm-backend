@@ -5,7 +5,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assert.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/ref.hpp>
 
 #include <iterator>
