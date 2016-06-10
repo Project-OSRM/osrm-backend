@@ -1,14 +1,14 @@
 #ifndef VIA_ROUTE_HPP
 #define VIA_ROUTE_HPP
 
+#include "engine/api/route_api.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/plugins/plugin_base.hpp"
-#include "engine/api/route_api.hpp"
 
-#include "engine/search_engine_data.hpp"
-#include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/alternative_path.hpp"
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
+#include "engine/routing_algorithms/shortest_path.hpp"
+#include "engine/search_engine_data.hpp"
 #include "util/json_container.hpp"
 
 #include <cstdlib>

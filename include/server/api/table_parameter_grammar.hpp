@@ -1,8 +1,8 @@
 #ifndef TABLE_PARAMETERS_GRAMMAR_HPP
 #define TABLE_PARAMETERS_GRAMMAR_HPP
 
-#include "engine/api/table_parameters.hpp"
 #include "server/api/base_parameters_grammar.hpp"
+#include "engine/api/table_parameters.hpp"
 
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
@@ -37,22 +37,21 @@ struct TableParametersGrammar final : public BaseParametersGrammar<Iterator, Sig
         size_t_ = qi::ulong_;
 #endif
 
-        destinations_rule
-            = qi::lit("destinations=")
-            > (qi::lit("all") | (size_t_ % ';')[ph::bind(&engine::api::TableParameters::destinations, qi::_r1) = qi::_1])
-            ;
+        destinations_rule =
+            qi::lit("destinations=") >
+            (qi::lit("all") |
+             (size_t_ %
+              ';')[ph::bind(&engine::api::TableParameters::destinations, qi::_r1) = qi::_1]);
 
-        sources_rule
-            = qi::lit("sources=")
-            > (qi::lit("all") | (size_t_ % ';')[ph::bind(&engine::api::TableParameters::sources, qi::_r1) = qi::_1])
-            ;
+        sources_rule =
+            qi::lit("sources=") >
+            (qi::lit("all") |
+             (size_t_ % ';')[ph::bind(&engine::api::TableParameters::sources, qi::_r1) = qi::_1]);
 
         table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1);
 
-        root_rule
-            = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json")
-            > -('?' > (table_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&')
-            ;
+        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+                    -('?' > (table_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
     }
 
   private:

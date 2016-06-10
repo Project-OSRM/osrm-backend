@@ -1,16 +1,16 @@
 #ifndef ENGINE_GUIDANCE_ASSEMBLE_OVERVIEW_HPP
 #define ENGINE_GUIDANCE_ASSEMBLE_OVERVIEW_HPP
 
-#include "engine/guidance/leg_geometry.hpp"
 #include "engine/douglas_peucker.hpp"
+#include "engine/guidance/leg_geometry.hpp"
 #include "util/viewport.hpp"
 
-#include <vector>
-#include <tuple>
-#include <numeric>
-#include <utility>
 #include <iterator>
 #include <limits>
+#include <numeric>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace osrm
 {
@@ -23,8 +23,10 @@ namespace
 
 unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometries)
 {
-    util::Coordinate south_west{util::FixedLongitude{std::numeric_limits<int>::max()}, util::FixedLatitude{std::numeric_limits<int>::max()}};
-    util::Coordinate north_east{util::FixedLongitude{std::numeric_limits<int>::min()}, util::FixedLatitude{std::numeric_limits<int>::min()}};
+    util::Coordinate south_west{util::FixedLongitude{std::numeric_limits<int>::max()},
+                                util::FixedLatitude{std::numeric_limits<int>::max()}};
+    util::Coordinate north_east{util::FixedLongitude{std::numeric_limits<int>::min()},
+                                util::FixedLatitude{std::numeric_limits<int>::min()}};
 
     for (const auto &leg_geometry : leg_geometries)
     {
@@ -46,7 +48,7 @@ std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &l
 {
     std::vector<util::Coordinate> overview_geometry;
     auto leg_index = 0UL;
-    for (const auto& geometry : leg_geometries)
+    for (const auto &geometry : leg_geometries)
     {
         auto simplified_geometry =
             douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
@@ -55,8 +57,8 @@ std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &l
         {
             simplified_geometry.pop_back();
         }
-        overview_geometry.insert(overview_geometry.end(), simplified_geometry.begin(),
-                                 simplified_geometry.end());
+        overview_geometry.insert(
+            overview_geometry.end(), simplified_geometry.begin(), simplified_geometry.end());
     }
     return overview_geometry;
 }
@@ -72,17 +74,19 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
     }
     BOOST_ASSERT(!use_simplification);
 
-    auto overview_size = std::accumulate(leg_geometries.begin(), leg_geometries.end(), 0,
-                                         [](const std::size_t sum, const LegGeometry &leg_geometry)
-                                         {
-                                             return sum + leg_geometry.locations.size();
-                                         }) -
-                         leg_geometries.size() + 1;
+    auto overview_size =
+        std::accumulate(leg_geometries.begin(),
+                        leg_geometries.end(),
+                        0,
+                        [](const std::size_t sum, const LegGeometry &leg_geometry) {
+                            return sum + leg_geometry.locations.size();
+                        }) -
+        leg_geometries.size() + 1;
     std::vector<util::Coordinate> overview_geometry;
     overview_geometry.reserve(overview_size);
 
     auto leg_index = 0UL;
-    for (const auto& geometry : leg_geometries)
+    for (const auto &geometry : leg_geometries)
     {
         auto begin = geometry.locations.begin();
         auto end = geometry.locations.end();

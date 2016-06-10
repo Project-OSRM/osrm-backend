@@ -30,13 +30,11 @@ struct TileParametersGrammar final : boost::spirit::qi::grammar<Iterator, Signat
 {
     TileParametersGrammar() : TileParametersGrammar::base_type(root_rule)
     {
-        root_rule
-            = qi::lit("tile(")
-            > qi::uint_[ph::bind(&engine::api::TileParameters::x, qi::_r1) = qi::_1] > ','
-            > qi::uint_[ph::bind(&engine::api::TileParameters::y, qi::_r1) = qi::_1] > ','
-            > qi::uint_[ph::bind(&engine::api::TileParameters::z, qi::_r1) = qi::_1]
-            > qi::lit(").mvt")
-            ;
+        root_rule = qi::lit("tile(") >
+                    qi::uint_[ph::bind(&engine::api::TileParameters::x, qi::_r1) = qi::_1] > ',' >
+                    qi::uint_[ph::bind(&engine::api::TileParameters::y, qi::_r1) = qi::_1] > ',' >
+                    qi::uint_[ph::bind(&engine::api::TileParameters::z, qi::_r1) = qi::_1] >
+                    qi::lit(").mvt");
     }
 
   private:

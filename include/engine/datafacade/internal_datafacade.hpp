@@ -9,14 +9,15 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
-#include "engine/geospatial_query.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "storage/storage_config.hpp"
+#include "engine/geospatial_query.hpp"
 #include "util/graph_loader.hpp"
 #include "util/io.hpp"
+#include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
@@ -73,6 +74,7 @@ class InternalDataFacade final : public BaseDataFacade
     std::string m_timestamp;
 
     util::ShM<util::Coordinate, false>::vector m_coordinate_list;
+    util::PackedVector<OSMNodeID, false> m_osmnodeid_list;
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;
@@ -156,10 +158,12 @@ class InternalDataFacade final : public BaseDataFacade
         unsigned number_of_coordinates = 0;
         nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
         m_coordinate_list.resize(number_of_coordinates);
+        m_osmnodeid_list.reserve(number_of_coordinates);
         for (unsigned i = 0; i < number_of_coordinates; ++i)
         {
             nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
             m_coordinate_list[i] = util::Coordinate(current_node.lon, current_node.lat);
+            m_osmnodeid_list.push_back(current_node.node_id);
             BOOST_ASSERT(m_coordinate_list[i].IsValid());
         }
 
@@ -312,11 +316,12 @@ class InternalDataFacade final : public BaseDataFacade
             util::SimpleLogger().Write(logINFO) << "Loading Bearing Class IDs";
             std::vector<BearingClassID> bearing_class_id;
             if (!util::deserializeVector(intersection_stream, bearing_class_id))
-                throw util::exception("Reading from " + intersection_class_file.string() + " failed.");
+                throw util::exception("Reading from " + intersection_class_file.string() +
+                                      " failed.");
 
             m_bearing_class_id_table.resize(bearing_class_id.size());
-            std::copy(bearing_class_id.begin(), bearing_class_id.end(),
-                      &m_bearing_class_id_table[0]);
+            std::copy(
+                bearing_class_id.begin(), bearing_class_id.end(), &m_bearing_class_id_table[0]);
         }
         {
             util::SimpleLogger().Write(logINFO) << "Loading Bearing Classes";
@@ -330,13 +335,15 @@ class InternalDataFacade final : public BaseDataFacade
             intersection_stream.read(reinterpret_cast<char *>(&m_bearing_values_table[0]),
                                      sizeof(m_bearing_values_table[0]) * num_bearings);
             if (!static_cast<bool>(intersection_stream))
-                throw util::exception("Reading from " + intersection_class_file.string() + " failed.");
+                throw util::exception("Reading from " + intersection_class_file.string() +
+                                      " failed.");
         }
         {
             util::SimpleLogger().Write(logINFO) << "Loading Entry Classes";
             std::vector<util::guidance::EntryClass> entry_classes;
             if (!util::deserializeVector(intersection_stream, entry_classes))
-                throw util::exception("Reading from " + intersection_class_file.string() + " failed.");
+                throw util::exception("Reading from " + intersection_class_file.string() +
+                                      " failed.");
 
             m_entry_class_table.resize(entry_classes.size());
             std::copy(entry_classes.begin(), entry_classes.end(), &m_entry_class_table[0]);
@@ -435,6 +442,11 @@ class InternalDataFacade final : public BaseDataFacade
         return m_coordinate_list[id];
     }
 
+    OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
+    {
+        return m_osmnodeid_list.at(id);
+    }
+
     extractor::guidance::TurnInstruction
     GetTurnInstructionForEdgeID(const unsigned id) const override final
     {
@@ -450,8 +462,8 @@ class InternalDataFacade final : public BaseDataFacade
                                          const util::Coordinate north_east) const override final
     {
         BOOST_ASSERT(m_geospatial_query.get());
-        const util::RectangleInt2D bbox{south_west.lon, north_east.lon, south_west.lat,
-                                        north_east.lat};
+        const util::RectangleInt2D bbox{
+            south_west.lon, north_east.lon, south_west.lat, north_east.lat};
         return m_geospatial_query->Search(bbox);
     }
 
@@ -472,8 +484,8 @@ class InternalDataFacade final : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodesInRange(input_coordinate, max_distance,
-                                                              bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodesInRange(
+            input_coordinate, max_distance, bearing, bearing_range);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -503,8 +515,8 @@ class InternalDataFacade final : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, bearing,
-                                                       bearing_range);
+        return m_geospatial_query->NearestPhantomNodes(
+            input_coordinate, max_results, bearing, bearing_range);
     }
 
     std::vector<PhantomNodeWithDistance>
@@ -516,8 +528,8 @@ class InternalDataFacade final : public BaseDataFacade
     {
         BOOST_ASSERT(m_geospatial_query.get());
 
-        return m_geospatial_query->NearestPhantomNodes(input_coordinate, max_results, max_distance,
-                                                       bearing, bearing_range);
+        return m_geospatial_query->NearestPhantomNodes(
+            input_coordinate, max_results, max_distance, bearing, bearing_range);
     }
 
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
@@ -582,9 +594,28 @@ class InternalDataFacade final : public BaseDataFacade
         {
             result.resize(range.back() - range.front() + 1);
             std::copy(m_names_char_list.begin() + range.front(),
-                      m_names_char_list.begin() + range.back() + 1, result.begin());
+                      m_names_char_list.begin() + range.back() + 1,
+                      result.begin());
         }
         return result;
+    }
+
+    std::string GetPronunciationForID(const unsigned name_id) const override final
+    {
+        // We store the pronunciation after the name and destination of a street.
+        // We do this to get around the street length limit of 255 which would hit
+        // if we concatenate these. Order (see extractor_callbacks):
+        // name (0), destination (1), pronunciation (2)
+        return GetNameForID(name_id + 2);
+    }
+
+    std::string GetDestinationsForID(const unsigned name_id) const override final
+    {
+        // We store the destination after the name of a street.
+        // We do this to get around the street length limit of 255 which would hit
+        // if we concatenate these. Order (see extractor_callbacks):
+        // name (0), destination (1), pronunciation (2)
+        return GetNameForID(name_id + 1);
     }
 
     virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
@@ -614,7 +645,8 @@ class InternalDataFacade final : public BaseDataFacade
 
         result_nodes.clear();
         result_nodes.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+        std::for_each(m_geometry_list.begin() + begin,
+                      m_geometry_list.begin() + end,
                       [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_nodes.emplace_back(edge.node_id);
                       });
@@ -629,7 +661,8 @@ class InternalDataFacade final : public BaseDataFacade
 
         result_weights.clear();
         result_weights.reserve(end - begin);
-        std::for_each(m_geometry_list.begin() + begin, m_geometry_list.begin() + end,
+        std::for_each(m_geometry_list.begin() + begin,
+                      m_geometry_list.begin() + end,
                       [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_weights.emplace_back(edge.weight);
                       });
@@ -658,7 +691,8 @@ class InternalDataFacade final : public BaseDataFacade
         else
         {
             std::for_each(
-                m_datasource_list.begin() + begin, m_datasource_list.begin() + end,
+                m_datasource_list.begin() + begin,
+                m_datasource_list.begin() + end,
                 [&](const uint8_t &datasource_id) { result_datasources.push_back(datasource_id); });
         }
     }
@@ -691,7 +725,8 @@ class InternalDataFacade final : public BaseDataFacade
         util::guidance::BearingClass result;
 
         for (auto itr = m_bearing_values_table.begin() + range.front();
-             itr != m_bearing_values_table.begin() + range.back() + 1; ++itr)
+             itr != m_bearing_values_table.begin() + range.back() + 1;
+             ++itr)
             result.add(*itr);
 
         return result;

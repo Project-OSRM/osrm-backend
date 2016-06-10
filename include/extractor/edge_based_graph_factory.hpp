@@ -11,10 +11,10 @@
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
 
-#include "util/guidance/bearing_class.hpp"
-#include "util/guidance/entry_class.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
 
 #include "util/deallocating_vector.hpp"
 #include "util/name_table.hpp"

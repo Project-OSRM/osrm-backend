@@ -42,7 +42,7 @@ struct ProfileProperties;
 class RestrictionParser
 {
   public:
-    RestrictionParser(lua_State *lua_state, const ProfileProperties& properties);
+    RestrictionParser(lua_State *lua_state, const ProfileProperties &properties);
     boost::optional<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
 
   private:

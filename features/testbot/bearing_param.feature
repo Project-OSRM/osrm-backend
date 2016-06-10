@@ -43,8 +43,8 @@ Feature: Bearing parameter
 
     Scenario: Testbot - Initial bearing on split way
         Given the node map
-        | d |  |  |  |  | 1 |  |  |  |  | c |
-        | a |  |  |  |  | 0 |  |  |  |  | b |
+           | g | d |  |  |  |  | 1 |  |  |  |  | c | f |
+           | h | a |  |  |  |  | 0 |  |  |  |  | b | e |
 
         And the ways
             | nodes | oneway |
@@ -52,6 +52,10 @@ Feature: Bearing parameter
             | bc    | yes    |
             | cd    | yes    |
             | da    | yes    |
+            | be    | yes    |
+            | fc    | yes    |
+            | dg    | yes    |
+            | ha    | yes    |
 
         When I route I should get
             | from | to | bearings | route       | bearing       |

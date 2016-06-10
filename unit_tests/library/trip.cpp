@@ -131,7 +131,8 @@ BOOST_AUTO_TEST_CASE(test_trip_response_for_locations_across_components)
 
     const auto &trips = result.values.at("trips").get<json::Array>().values;
     BOOST_CHECK_EQUAL(trips.size(), 1);
-    // ^ First snapping, then SCC decomposition (see plugins/trip.cpp). Therefore only a single trip.
+    // ^ First snapping, then SCC decomposition (see plugins/trip.cpp). Therefore only a single
+    // trip.
 
     for (const auto &waypoint : waypoints)
     {

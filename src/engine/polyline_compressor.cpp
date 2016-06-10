@@ -1,10 +1,10 @@
 #include "engine/polyline_compressor.hpp"
 
+#include <algorithm>
 #include <boost/assert.hpp>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
-#include <cmath>
-#include <algorithm>
 
 namespace osrm
 {
@@ -70,20 +70,19 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
     delta_numbers.reserve((size - 1) * 2);
     int current_lat = 0;
     int current_lon = 0;
-    std::for_each(begin, end,
-                  [&delta_numbers, &current_lat, &current_lon](const util::Coordinate loc)
-                  {
-                      const int lat_diff =
-                          std::round(static_cast<int>(loc.lat) * detail::COORDINATE_TO_POLYLINE) -
-                          current_lat;
-                      const int lon_diff =
-                          std::round(static_cast<int>(loc.lon) * detail::COORDINATE_TO_POLYLINE) -
-                          current_lon;
-                      delta_numbers.emplace_back(lat_diff);
-                      delta_numbers.emplace_back(lon_diff);
-                      current_lat += lat_diff;
-                      current_lon += lon_diff;
-                  });
+    std::for_each(
+        begin, end, [&delta_numbers, &current_lat, &current_lon](const util::Coordinate loc) {
+            const int lat_diff =
+                std::round(static_cast<int>(loc.lat) * detail::COORDINATE_TO_POLYLINE) -
+                current_lat;
+            const int lon_diff =
+                std::round(static_cast<int>(loc.lon) * detail::COORDINATE_TO_POLYLINE) -
+                current_lon;
+            delta_numbers.emplace_back(lat_diff);
+            delta_numbers.emplace_back(lon_diff);
+            current_lat += lat_diff;
+            current_lon += lon_diff;
+        });
     return encode(delta_numbers);
 }
 

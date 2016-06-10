@@ -11,18 +11,18 @@
 #include "util/typedefs.hpp"
 
 #include "engine/status.hpp"
-#include "util/json_container.hpp"
 #include "osrm/osrm.hpp"
+#include "util/json_container.hpp"
 
-#include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 
 #include <ctime>
 
 #include <algorithm>
-#include <iterator>
 #include <iostream>
+#include <iterator>
 #include <string>
 
 namespace osrm
@@ -50,35 +50,6 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         std::string request_string;
         util::URIDecode(current_request.uri, request_string);
 
-        // deactivated as GCC apparently does not implement that, not even in 4.9
-        // std::time_t t = std::time(nullptr);
-        // util::SimpleLogger().Write() << std::put_time(std::localtime(&t), "%m-%d-%Y %H:%M:%S") <<
-        //     " " << current_request.endpoint.to_string() << " " <<
-        //     current_request.referrer << ( 0 == current_request.referrer.length() ? "- " :" ") <<
-        //     current_request.agent << ( 0 == current_request.agent.length() ? "- " :" ") <<
-        //     request;
-
-        time_t ltime;
-        struct tm *time_stamp;
-
-        ltime = time(nullptr);
-        time_stamp = localtime(&ltime);
-
-        if (!std::getenv("DISABLE_ACCESS_LOGGING"))
-        {
-            // log timestamp
-            util::SimpleLogger().Write()
-                << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
-                << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
-                << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
-                << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
-                << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
-                << time_stamp->tm_sec << " " << current_request.endpoint.to_string() << " "
-                << current_request.referrer << (0 == current_request.referrer.length() ? "- " : " ")
-                << current_request.agent << (0 == current_request.agent.length() ? "- " : " ")
-                << request_string;
-        }
-
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
         ServiceHandler::ResultT result;
@@ -103,10 +74,11 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         {
             const auto position = std::distance(request_string.begin(), api_iterator);
             BOOST_ASSERT(position >= 0);
-            const auto context_begin = request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
+            const auto context_begin =
+                request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
             BOOST_ASSERT(context_begin >= request_string.begin());
-            const auto context_end =
-                request_string.begin() + std::min<std::size_t>(position + 3UL, request_string.size());
+            const auto context_end = request_string.begin() +
+                                     std::min<std::size_t>(position + 3UL, request_string.size());
             BOOST_ASSERT(context_end <= request_string.end());
             std::string context(context_begin, context_end);
 
@@ -133,7 +105,8 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         else
         {
             BOOST_ASSERT(result.is<std::string>());
-            std::copy(result.get<std::string>().cbegin(), result.get<std::string>().cend(),
+            std::copy(result.get<std::string>().cbegin(),
+                      result.get<std::string>().cend(),
                       std::back_inserter(current_reply.content));
 
             current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
@@ -142,6 +115,37 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         // set headers
         current_reply.headers.emplace_back("Content-Length",
                                            std::to_string(current_reply.content.size()));
+
+        if (!std::getenv("DISABLE_ACCESS_LOGGING"))
+        {
+            // deactivated as GCC apparently does not implement that, not even in 4.9
+            // std::time_t t = std::time(nullptr);
+            // util::SimpleLogger().Write() << std::put_time(std::localtime(&t), "%m-%d-%Y
+            // %H:%M:%S") <<
+            //     " " << current_request.endpoint.to_string() << " " <<
+            //     current_request.referrer << ( 0 == current_request.referrer.length() ? "- " :" ")
+            //     <<
+            //     current_request.agent << ( 0 == current_request.agent.length() ? "- " :" ") <<
+            //     request;
+
+            time_t ltime;
+            struct tm *time_stamp;
+
+            ltime = time(nullptr);
+            time_stamp = localtime(&ltime);
+            // log timestamp
+            util::SimpleLogger().Write()
+                << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
+                << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
+                << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
+                << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
+                << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
+                << time_stamp->tm_sec << " " << current_request.endpoint.to_string() << " "
+                << current_request.referrer << (0 == current_request.referrer.length() ? "- " : " ")
+                << current_request.agent << (0 == current_request.agent.length() ? "- " : " ")
+                << current_reply.status << " " //
+                << request_string;
+        }
     }
     catch (const std::exception &e)
     {

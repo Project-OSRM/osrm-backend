@@ -1,18 +1,18 @@
 #ifndef RASTER_SOURCE_HPP
 #define RASTER_SOURCE_HPP
 
-#include "util/exception.hpp"
 #include "util/coordinate.hpp"
+#include "util/exception.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/spirit/include/qi_int.hpp>
-#include <boost/spirit/include/qi.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/qi_int.hpp>
 
-#include <unordered_map>
 #include <iterator>
+#include <unordered_map>
 
 namespace osrm
 {

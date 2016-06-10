@@ -1,8 +1,8 @@
 #include "util/io.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <string>
 
@@ -21,8 +21,8 @@ BOOST_AUTO_TEST_CASE(io_flags)
     osrm::util::deserializeFlags(IO_TMP_FILE, flags_out);
 
     BOOST_REQUIRE_EQUAL(flags_in.size(), flags_out.size());
-    BOOST_CHECK_EQUAL_COLLECTIONS(flags_out.begin(), flags_out.end(), flags_in.begin(),
-                                  flags_in.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        flags_out.begin(), flags_out.end(), flags_in.begin(), flags_in.end());
 }
 
 BOOST_AUTO_TEST_CASE(io_data)

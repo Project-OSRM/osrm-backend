@@ -6,15 +6,15 @@
 #include "osrm/engine_config.hpp"
 #include "osrm/json_container.hpp"
 
-#include "osrm/status.hpp"
 #include "osrm/osrm.hpp"
+#include "osrm/status.hpp"
 
 #include <boost/assert.hpp>
 
+#include <exception>
+#include <iostream>
 #include <string>
 #include <utility>
-#include <iostream>
-#include <exception>
 
 #include <cstdlib>
 
@@ -222,8 +222,10 @@ int main(int argc, const char *argv[]) try
         }
     }
     TIMER_STOP(routes);
-    std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " <<  params.coordinates.size() << " coordinate" << std::endl;
-    std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate" << std::endl;
+    std::cout << (TIMER_MSEC(routes) / NUM) << "ms/req at " << params.coordinates.size()
+              << " coordinate" << std::endl;
+    std::cout << (TIMER_MSEC(routes) / NUM / params.coordinates.size()) << "ms/coordinate"
+              << std::endl;
 
     return EXIT_SUCCESS;
 }

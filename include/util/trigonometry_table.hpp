@@ -358,12 +358,11 @@ constexpr unsigned short atan_table[4096] = {
     0xffe0, 0xffea, 0xfff4, 0xffff};
 
 // max value is pi/4
-#ifdef _MSC_VER //TODO: remove as soon as boost allows C++14 features with Visual Studio
+#ifdef _MSC_VER // TODO: remove as soon as boost allows C++14 features with Visual Studio
 const constexpr double SCALING_FACTOR = 4. / M_PI * 0xFFFF;
 #else
 const constexpr double SCALING_FACTOR = 4. / boost::math::constants::pi<double>() * 0xFFFF;
 #endif
-
 
 inline double atan2_lookup(double y, double x)
 {

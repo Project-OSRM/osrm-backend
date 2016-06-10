@@ -17,19 +17,21 @@ Feature: Car - Oneway streets
 
     Scenario: Car - Implied oneways
         Then routability should be
-            | highway       | junction   | forw | backw |
-            | motorway      |            | x    |       |
-            | motorway_link |            | x    |       |
-            | primary       |            | x    | x     |
-            | motorway      | roundabout | x    |       |
-            | motorway_link | roundabout | x    |       |
-            | primary       | roundabout | x    |       |
+            | highway         | junction   | forw | backw | #                     |
+            | motorway        |            | x    |       |                       |
+            | motorway_link   |            | x    | x     | does not imply oneway |
+            | primary         |            | x    | x     |                       |
+            | motorway        | roundabout | x    |       |                       |
+            | motorway_link   | roundabout | x    |       |                       |
+            | primary         | roundabout | x    |       |                       |
 
     Scenario: Car - Overrule implied oneway
         Then routability should be
-            | highway       | oneway | forw | backw |
-            | motorway      | no     | x    | x     |
-            | motorway_link | no     | x    | x     |
+            | highway       | oneway | forw | backw | #                    |
+            | motorway      | no     | x    | x     |                      |
+            | motorway_link | no     | x    | x     |                      |
+            | motorway_link | yes    | x    |       |                      |
+            | motorway_link |        | x    | x     | does not imply onway |
 
     Scenario: Car - Around the Block
         Given the node map
@@ -66,7 +68,7 @@ Feature: Car - Oneway streets
 
     Scenario: Car - Two consecutive oneways
         Given the node map
-            | a | b | c |
+            | a | b |   | c |
 
         And the ways
             | nodes | oneway |

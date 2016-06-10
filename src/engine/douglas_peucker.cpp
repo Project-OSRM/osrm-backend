@@ -6,8 +6,8 @@
 
 #include <boost/assert.hpp>
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include <iterator>
 #include <stack>
 #include <utility>
@@ -24,8 +24,8 @@ std::uint64_t fastPerpendicularDistance(const util::FloatCoordinate &projected_s
 {
     util::FloatCoordinate projected_point_on_segment;
     std::tie(std::ignore, projected_point_on_segment) =
-        util::coordinate_calculation::projectPointOnSegment(projected_start, projected_target,
-                                                            projected);
+        util::coordinate_calculation::projectPointOnSegment(
+            projected_start, projected_target, projected);
     auto squared_distance = util::coordinate_calculation::squaredEuclideanDistance(
         projected, projected_point_on_segment);
     return squared_distance;
@@ -45,10 +45,9 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
     }
 
     std::vector<util::FloatCoordinate> projected_coordinates(size);
-    std::transform(begin, end, projected_coordinates.begin(), [](const util::Coordinate coord)
-                   {
-                       return util::web_mercator::fromWGS84(coord);
-                   });
+    std::transform(begin, end, projected_coordinates.begin(), [](const util::Coordinate coord) {
+        return util::web_mercator::fromWGS84(coord);
+    });
 
     std::vector<bool> is_necessary(size, false);
     BOOST_ASSERT(is_necessary.size() >= 2);

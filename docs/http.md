@@ -413,7 +413,8 @@ With `steps=false` and `annotations=true`:
   "steps": []
   "annotation": {
     "distance": [5,5,10,5,5],
-    "duration": [15,15,40,15,15]
+    "duration": [15,15,40,15,15],
+    "nodes": [49772551,49772552,49786799,49786800,49786801,49786802]
   }
 }
 ```
@@ -436,6 +437,8 @@ step.
   | geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) or [GeoJSON `Point`](http://geojson.org/geojson-spec.html#point) if it is only one coordinate (not wrapped by a GeoJSON feature)|
   
 - `name`: The name of the way along which travel proceeds.
+- `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
+- `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `mode`: A string signifying the mode of transportation.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
 - `intersections`: A list of `Intersections` that are passed along the segment, the very first belonging to the StepManeuver

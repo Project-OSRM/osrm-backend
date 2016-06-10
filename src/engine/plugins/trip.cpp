@@ -4,22 +4,22 @@
 
 #include "engine/api/trip_api.hpp"
 #include "engine/api/trip_parameters.hpp"
-#include "engine/trip/trip_nearest_neighbour.hpp"
-#include "engine/trip/trip_farthest_insertion.hpp"
 #include "engine/trip/trip_brute_force.hpp"
-#include "util/dist_table_wrapper.hpp"   // to access the dist table more easily
-#include "util/matrix_graph_wrapper.hpp" // wrapper to use tarjan scc on dist table
+#include "engine/trip/trip_farthest_insertion.hpp"
+#include "engine/trip/trip_nearest_neighbour.hpp"
+#include "util/dist_table_wrapper.hpp" // to access the dist table more easily
 #include "util/json_container.hpp"
+#include "util/matrix_graph_wrapper.hpp" // wrapper to use tarjan scc on dist table
 
 #include <boost/assert.hpp>
 
-#include <cstdlib>
 #include <algorithm>
+#include <cstdlib>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <iterator>
 
 namespace osrm
 {
@@ -210,8 +210,8 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
             }
             else
             {
-                scc_route = trip::FarthestInsertionTrip(route_begin, route_end, number_of_locations,
-                                                        result_table);
+                scc_route = trip::FarthestInsertionTrip(
+                    route_begin, route_end, number_of_locations, result_table);
             }
         }
         else

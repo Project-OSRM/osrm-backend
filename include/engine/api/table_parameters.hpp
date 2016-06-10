@@ -89,10 +89,7 @@ struct TableParameters : public BaseParameters
             return false;
 
         // 3/ 0 <= index < len(locations)
-        const auto not_in_range = [this](const std::size_t x)
-        {
-            return x >= coordinates.size();
-        };
+        const auto not_in_range = [this](const std::size_t x) { return x >= coordinates.size(); };
 
         if (std::any_of(begin(sources), end(sources), not_in_range))
             return false;

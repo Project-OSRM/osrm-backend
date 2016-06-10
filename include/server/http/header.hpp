@@ -1,8 +1,8 @@
 #ifndef HEADER_HPP
 #define HEADER_HPP
 
-#include <string>
 #include <algorithm>
+#include <string>
 
 namespace osrm
 {

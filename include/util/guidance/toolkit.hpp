@@ -3,9 +3,9 @@
 
 /* A set of tools required for guidance in both pre and post-processing */
 
+#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/phantom_node.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/simple_logger.hpp"
@@ -47,6 +47,22 @@ inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const doubl
     if (angle > 300 && angle < 360)
         return extractor::guidance::DirectionModifier::SharpLeft;
     return extractor::guidance::DirectionModifier::UTurn;
+}
+
+// swaps left <-> right modifier types
+inline extractor::guidance::DirectionModifier::Enum
+mirrorDirectionModifier(const extractor::guidance::DirectionModifier::Enum modifier)
+{
+    const constexpr extractor::guidance::DirectionModifier::Enum results[] = {
+        extractor::guidance::DirectionModifier::UTurn,
+        extractor::guidance::DirectionModifier::SharpLeft,
+        extractor::guidance::DirectionModifier::Left,
+        extractor::guidance::DirectionModifier::SlightLeft,
+        extractor::guidance::DirectionModifier::Straight,
+        extractor::guidance::DirectionModifier::SlightRight,
+        extractor::guidance::DirectionModifier::Right,
+        extractor::guidance::DirectionModifier::SharpRight};
+    return results[modifier];
 }
 
 } // namespace guidance

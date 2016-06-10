@@ -28,9 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STRONG_TYPEDEF_HPP
 #define STRONG_TYPEDEF_HPP
 
+#include <functional>
 #include <iostream>
 #include <type_traits>
-#include <functional>
 
 namespace osrm
 {

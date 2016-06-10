@@ -3,7 +3,6 @@
 
 #include <boost/filesystem/operations.hpp>
 
-
 namespace osrm
 {
 namespace storage

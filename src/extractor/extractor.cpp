@@ -46,9 +46,9 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <type_traits>
 
 namespace osrm
 {
@@ -174,7 +174,8 @@ int Extractor::run()
                             result_node.clear();
                             ++number_of_nodes;
                             luabind::call_function<void>(
-                                local_context.state, "node_function",
+                                local_context.state,
+                                "node_function",
                                 boost::cref(static_cast<const osmium::Node &>(*entity)),
                                 boost::ref(result_node));
                             resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
@@ -183,7 +184,8 @@ int Extractor::run()
                             result_way.clear();
                             ++number_of_ways;
                             luabind::call_function<void>(
-                                local_context.state, "way_function",
+                                local_context.state,
+                                "way_function",
                                 boost::cref(static_cast<const osmium::Way &>(*entity)),
                                 boost::ref(result_way));
                             resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
@@ -234,8 +236,10 @@ int Extractor::run()
             return 1;
         }
 
-        extraction_containers.PrepareData(config.output_file_name, config.restriction_file_name,
-                                          config.names_file_name, main_context.state);
+        extraction_containers.PrepareData(config.output_file_name,
+                                          config.restriction_file_name,
+                                          config.names_file_name,
+                                          main_context.state);
 
         WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
 
@@ -268,10 +272,14 @@ int Extractor::run()
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
-        auto graph_size = BuildEdgeExpandedGraph(
-            main_context.state, main_context.properties, internal_to_external_node_map,
-            edge_based_node_list, node_is_startpoint, edge_based_node_weights, edge_based_edge_list,
-            config.intersection_class_data_output_path);
+        auto graph_size = BuildEdgeExpandedGraph(main_context.state,
+                                                 main_context.properties,
+                                                 internal_to_external_node_map,
+                                                 edge_based_node_list,
+                                                 node_is_startpoint,
+                                                 edge_based_node_weights,
+                                                 edge_based_edge_list,
+                                                 config.intersection_class_data_output_path);
 
         auto number_of_node_based_nodes = graph_size.first;
         auto max_edge_id = graph_size.second;
@@ -290,7 +298,8 @@ int Extractor::run()
 
         FindComponents(max_edge_id, edge_based_edge_list, edge_based_node_list);
 
-        BuildRTree(std::move(edge_based_node_list), std::move(node_is_startpoint),
+        BuildRTree(std::move(edge_based_node_list),
+                   std::move(node_is_startpoint),
                    internal_to_external_node_map);
 
         TIMER_STOP(rtree);
@@ -485,7 +494,10 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     CompressedEdgeContainer compressed_edge_container;
     GraphCompressor graph_compressor;
-    graph_compressor.Compress(barrier_nodes, traffic_lights, *restriction_map, *node_based_graph,
+    graph_compressor.Compress(barrier_nodes,
+                              traffic_lights,
+                              *restriction_map,
+                              *node_based_graph,
                               compressed_edge_container);
 
     compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
@@ -493,12 +505,19 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
     util::NameTable name_table(config.names_file_name);
 
     EdgeBasedGraphFactory edge_based_graph_factory(
-        node_based_graph, compressed_edge_container, barrier_nodes, traffic_lights,
+        node_based_graph,
+        compressed_edge_container,
+        barrier_nodes,
+        traffic_lights,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
-        internal_to_external_node_map, profile_properties, name_table);
+        internal_to_external_node_map,
+        profile_properties,
+        name_table);
 
-    edge_based_graph_factory.Run(config.edge_output_path, lua_state,
-                                 config.edge_segment_lookup_path, config.edge_penalty_path,
+    edge_based_graph_factory.Run(config.edge_output_path,
+                                 lua_state,
+                                 config.edge_segment_lookup_path,
+                                 config.edge_penalty_path,
                                  config.generate_edge_lookup);
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
@@ -509,9 +528,10 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     const std::size_t number_of_node_based_nodes = node_based_graph->GetNumberOfNodes();
 
-    WriteIntersectionClassificationData(
-        intersection_class_output_file, edge_based_graph_factory.GetBearingClassIds(),
-        edge_based_graph_factory.GetBearingClasses(), edge_based_graph_factory.GetEntryClasses());
+    WriteIntersectionClassificationData(intersection_class_output_file,
+                                        edge_based_graph_factory.GetBearingClassIds(),
+                                        edge_based_graph_factory.GetBearingClasses(),
+                                        edge_based_graph_factory.GetEntryClasses());
 
     return std::make_pair(number_of_node_based_nodes, max_edge_id);
 }
@@ -568,9 +588,10 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
     node_based_edge_list.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode, std::vector<QueryNode>> rtree(
-        node_based_edge_list, config.rtree_nodes_output_path, config.rtree_leafs_output_path,
-        internal_to_external_node_map);
+    util::StaticRTree<EdgeBasedNode, std::vector<QueryNode>> rtree(node_based_edge_list,
+                                                                   config.rtree_nodes_output_path,
+                                                                   config.rtree_leafs_output_path,
+                                                                   internal_to_external_node_map);
 
     TIMER_STOP(construction);
     util::SimpleLogger().Write() << "finished r-tree construction in " << TIMER_SEC(construction)
@@ -630,8 +651,10 @@ void Extractor::WriteIntersectionClassificationData(
     std::vector<unsigned> bearing_counts;
     bearing_counts.reserve(bearing_classes.size());
     std::uint64_t total_bearings = 0;
-    for (const auto &bearing_class : bearing_classes){
-        bearing_counts.push_back(static_cast<unsigned>(bearing_class.getAvailableBearings().size()));
+    for (const auto &bearing_class : bearing_classes)
+    {
+        bearing_counts.push_back(
+            static_cast<unsigned>(bearing_class.getAvailableBearings().size()));
         total_bearings += bearing_class.getAvailableBearings().size();
     }
 
@@ -639,10 +662,11 @@ void Extractor::WriteIntersectionClassificationData(
     file_out_stream << bearing_class_range_table;
 
     file_out_stream << total_bearings;
-    for( const auto &bearing_class : bearing_classes)
+    for (const auto &bearing_class : bearing_classes)
     {
         const auto &bearings = bearing_class.getAvailableBearings();
-        file_out_stream.write( reinterpret_cast<const char*>(&bearings[0]), sizeof(bearings[0]) * bearings.size() );
+        file_out_stream.write(reinterpret_cast<const char *>(&bearings[0]),
+                              sizeof(bearings[0]) * bearings.size());
     }
 
     // FIXME

@@ -317,7 +317,7 @@ function way_function (way, result)
 
   -- direction
   local impliedOneway = false
-  if junction == "roundabout" or highway == "motorway_link" or highway == "motorway" then
+  if junction == "roundabout" or highway == "motorway" then
     impliedOneway = true
   end
 

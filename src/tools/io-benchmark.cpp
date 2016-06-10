@@ -40,8 +40,8 @@ void runStatistics(std::vector<double> &timings_vector, Statistics &stats)
     double primary_sum = std::accumulate(timings_vector.begin(), timings_vector.end(), 0.0);
     stats.mean = primary_sum / timings_vector.size();
 
-    double primary_sq_sum = std::inner_product(timings_vector.begin(), timings_vector.end(),
-                                               timings_vector.begin(), 0.0);
+    double primary_sq_sum = std::inner_product(
+        timings_vector.begin(), timings_vector.end(), timings_vector.begin(), 0.0);
     stats.dev = std::sqrt(primary_sq_sum / timings_vector.size() - (stats.mean * stats.mean));
 }
 }

@@ -194,8 +194,8 @@ module.exports = function () {
     this.extractData = (callback) => {
         this.logPreprocessInfo();
         this.log(util.format('== Extracting %s.osm...', this.osmData.osmFile), 'preprocess');
-        var cmd = util.format('%s%s/osrm-extract %s.osm %s --profile %s/%s.lua >>%s 2>&1',
-            this.LOAD_LIBRARIES, this.BIN_PATH, this.osmData.osmFile, this.extractArgs || '', this.PROFILES_PATH, this.profile, this.PREPROCESS_LOG_FILE);
+        var cmd = util.format('%s/osrm-extract %s.osm %s --profile %s/%s.lua >>%s 2>&1',
+            this.BIN_PATH, this.osmData.osmFile, this.extractArgs || '', this.PROFILES_PATH, this.profile, this.PREPROCESS_LOG_FILE);
         this.log(cmd);
         process.chdir(this.TEST_FOLDER);
         exec(cmd, (err) => {
@@ -242,8 +242,8 @@ module.exports = function () {
     this.contractData = (callback) => {
         this.logPreprocessInfo();
         this.log(util.format('== Contracting %s.osm...', this.osmData.extractedFile), 'preprocess');
-        var cmd = util.format('%s%s/osrm-contract %s %s.osrm >>%s 2>&1',
-            this.LOAD_LIBRARIES, this.BIN_PATH, this.contractArgs || '', this.osmData.extractedFile, this.PREPROCESS_LOG_FILE);
+        var cmd = util.format('%s/osrm-contract %s %s.osrm >>%s 2>&1',
+            this.BIN_PATH, this.contractArgs || '', this.osmData.extractedFile, this.PREPROCESS_LOG_FILE);
         this.log(cmd);
         process.chdir(this.TEST_FOLDER);
         exec(cmd, (err) => {

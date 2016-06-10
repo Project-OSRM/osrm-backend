@@ -1,12 +1,12 @@
 #include "engine/base64.hpp"
-#include "engine/hint.hpp"
 #include "mocks/mock_datafacade.hpp"
+#include "engine/hint.hpp"
 
-#include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
+#include <boost/test/unit_test.hpp>
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 // RFC 4648 "The Base16, Base32, and Base64 Data Encodings"
 BOOST_AUTO_TEST_SUITE(base64)

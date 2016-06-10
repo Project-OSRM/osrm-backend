@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/toolkit.hpp"
@@ -31,9 +31,67 @@ namespace guidance
 
 namespace
 {
+const constexpr double MAX_COLLAPSE_DISTANCE = 25;
+
+// List of types that can be collapsed, if all other restrictions pass
+bool isCollapsableInstruction(const TurnInstruction instruction)
+{
+    return instruction.type == TurnType::NewName ||
+           (instruction.type == TurnType::Suppressed &&
+            instruction.direction_modifier == DirectionModifier::Straight) ||
+           (instruction.type == TurnType::Turn &&
+            instruction.direction_modifier == DirectionModifier::Straight) ||
+           (instruction.type == TurnType::Merge);
+}
+
+// A check whether two instructions can be treated as one. This is only the case for very short
+// maneuvers that can, in some form, be seen as one. The additional in_step is to find out about
+// a possible u-turn.
+bool collapsable(const RouteStep &step)
+{
+
+    return step.distance < MAX_COLLAPSE_DISTANCE &&
+           isCollapsableInstruction(step.maneuver.instruction);
+}
+
+bool compatible(const RouteStep &lhs, const RouteStep &rhs) { return lhs.mode == rhs.mode; }
+
+double nameSegmentLength(std::size_t at, const std::vector<RouteStep> &steps)
+{
+    double result = steps[at].distance;
+    while (at + 1 < steps.size() && steps[at + 1].name_id == steps[at].name_id)
+    {
+        ++at;
+        result += steps[at].distance;
+    }
+
+    return result;
+}
 
 // invalidate a step and set its content to nothing
 void invalidateStep(RouteStep &step) { step = getInvalidRouteStep(); }
+
+void print(const RouteStep &step)
+{
+    std::cout << static_cast<int>(step.maneuver.instruction.type) << " "
+              << static_cast<int>(step.maneuver.instruction.direction_modifier) << "  "
+              << static_cast<int>(step.maneuver.waypoint_type) << " Duration: " << step.duration
+              << " Distance: " << step.distance << " Geometry: " << step.geometry_begin << " "
+              << step.geometry_end << " exit: " << step.maneuver.exit
+              << " Intersections: " << step.intersections.size() << " [";
+
+    for (const auto &intersection : step.intersections)
+    {
+        std::cout << "(bearings:";
+        for (auto bearing : intersection.bearings)
+            std::cout << " " << bearing;
+        std::cout << ", entry: ";
+        for (auto entry : intersection.entry)
+            std::cout << " " << entry;
+        std::cout << ")";
+    }
+    std::cout << "] name[" << step.name_id << "]: " << step.name;
+}
 
 void print(const std::vector<RouteStep> &steps)
 {
@@ -41,25 +99,9 @@ void print(const std::vector<RouteStep> &steps)
     int segment = 0;
     for (const auto &step : steps)
     {
-        std::cout << "\t[" << ++segment << "]: " << static_cast<int>(step.maneuver.instruction.type)
-                  << " " << static_cast<int>(step.maneuver.instruction.direction_modifier) << "  "
-                  << static_cast<int>(step.maneuver.waypoint_type) << " Duration: " << step.duration
-                  << " Distance: " << step.distance << " Geometry: " << step.geometry_begin << " "
-                  << step.geometry_end << " exit: " << step.maneuver.exit
-                  << " Intersections: " << step.intersections.size() << " [";
-
-        for (const auto &intersection : step.intersections)
-        {
-            std::cout << "(bearings:";
-            for (auto bearing : intersection.bearings)
-                std::cout << " " << bearing;
-            std::cout << ", entry: ";
-            for (auto entry : intersection.entry)
-                std::cout << " " << entry;
-            std::cout << ")";
-        }
-
-        std::cout << "] name[" << step.name_id << "]: " << step.name << std::endl;
+        std::cout << "\t[" << segment++ << "]: ";
+        print(step);
+        std::cout << std::endl;
     }
 }
 
@@ -104,12 +146,14 @@ RouteStep forwardInto(RouteStep destination, const RouteStep &source)
     if (destination.geometry_begin < source.geometry_begin)
     {
         destination.intersections.insert(destination.intersections.end(),
-                                         source.intersections.begin(), source.intersections.end());
+                                         source.intersections.begin(),
+                                         source.intersections.end());
     }
     else
     {
         destination.intersections.insert(destination.intersections.begin(),
-                                         source.intersections.begin(), source.intersections.end());
+                                         source.intersections.begin(),
+                                         source.intersections.end());
     }
 
     destination.geometry_begin = std::min(destination.geometry_begin, source.geometry_begin);
@@ -305,8 +349,8 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
 
         // if we elongate in the back, we only need to copy the intersections to the beginning.
         // the bearings remain the same, as the location of the turn doesn't change
-        step.intersections.insert(step.intersections.end(), by_step.intersections.begin(),
-                                  by_step.intersections.end());
+        step.intersections.insert(
+            step.intersections.end(), by_step.intersections.begin(), by_step.intersections.end());
     }
     // by_step comes before step -> we append at the front
     else
@@ -319,19 +363,10 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
         // elongating in the front changes the location of the maneuver
         step.maneuver = by_step.maneuver;
 
-        step.intersections.insert(step.intersections.begin(), by_step.intersections.begin(),
-                                  by_step.intersections.end());
+        step.intersections.insert(
+            step.intersections.begin(), by_step.intersections.begin(), by_step.intersections.end());
     }
     return step;
-}
-
-// A check whether two instructions can be treated as one. This is only the case for very short
-// maneuvers that can, in some form, be seen as one. The additional in_step is to find out about
-// a possible u-turn.
-bool collapsable(const RouteStep &step)
-{
-    const constexpr double MAX_COLLAPSE_DISTANCE = 25;
-    return step.distance < MAX_COLLAPSE_DISTANCE;
 }
 
 void collapseTurnAt(std::vector<RouteStep> &steps,
@@ -351,46 +386,72 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     };
 
     BOOST_ASSERT(!one_back_step.intersections.empty() && !current_step.intersections.empty());
-    const auto isCollapsableInstruction = [](const TurnInstruction instruction) {
-        return instruction.type == TurnType::NewName ||
-               (instruction.type == TurnType::Turn &&
-                instruction.direction_modifier == DirectionModifier::Straight);
-    };
     // Very Short New Name
-    if (isCollapsableInstruction(one_back_step.maneuver.instruction))
+    if (collapsable(one_back_step))
     {
         BOOST_ASSERT(two_back_index < steps.size());
-        if (one_back_step.mode == steps[two_back_index].mode)
+        if (compatible(one_back_step, steps[two_back_index]))
         {
+            BOOST_ASSERT(!one_back_step.intersections.empty());
+            if (TurnType::Continue == current_step.maneuver.instruction.type ||
+                TurnType::Suppressed == current_step.maneuver.instruction.type)
+                steps[step_index].maneuver.instruction.type = TurnType::Turn;
+            else if (TurnType::Merge == current_step.maneuver.instruction.type)
+            {
+                steps[step_index].maneuver.instruction.direction_modifier =
+                    util::guidance::mirrorDirectionModifier(
+                        steps[step_index].maneuver.instruction.direction_modifier);
+                steps[step_index].maneuver.instruction.type = TurnType::Turn;
+            }
+            else if (TurnType::NewName == current_step.maneuver.instruction.type &&
+                     current_step.maneuver.instruction.direction_modifier !=
+                         DirectionModifier::Straight &&
+                     one_back_step.intersections.front().bearings.size() > 2)
+                steps[step_index].maneuver.instruction.type = TurnType::Turn;
+
             steps[two_back_index] = elongate(std::move(steps[two_back_index]), one_back_step);
             // If the previous instruction asked to continue, the name change will have to
             // be changed into a turn
             invalidateStep(steps[one_back_index]);
-
-            if (TurnType::Continue == current_step.maneuver.instruction.type)
-                steps[step_index].maneuver.instruction.type = TurnType::Turn;
         }
     }
     // very short segment after turn
-    else if (isCollapsableInstruction(current_step.maneuver.instruction))
+    else if (one_back_step.distance <= MAX_COLLAPSE_DISTANCE &&
+             isCollapsableInstruction(current_step.maneuver.instruction))
     {
-        if (one_back_step.mode == current_step.mode)
+        if (compatible(one_back_step, current_step))
         {
-            steps[step_index] = elongate(std::move(steps[step_index]), steps[one_back_index]);
-            invalidateStep(steps[one_back_index]);
-
-            if (TurnType::Continue == current_step.maneuver.instruction.type)
+            steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
+            if ((TurnType::Continue == one_back_step.maneuver.instruction.type ||
+                 TurnType::Suppressed == one_back_step.maneuver.instruction.type) &&
+                current_step.name_id != steps[two_back_index].name_id)
             {
-                steps[step_index].maneuver.instruction.type = TurnType::Turn;
+                steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
             }
+            else if (TurnType::Turn == one_back_step.maneuver.instruction.type &&
+                     current_step.name_id == steps[two_back_index].name_id)
+            {
+                steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+            }
+            else if (TurnType::Merge == one_back_step.maneuver.instruction.type)
+            {
+                steps[one_back_index].maneuver.instruction.direction_modifier =
+                    util::guidance::mirrorDirectionModifier(
+                        steps[one_back_index].maneuver.instruction.direction_modifier);
+            }
+            steps[one_back_index].name = current_step.name;
+            steps[one_back_index].name_id = current_step.name_id;
+            invalidateStep(steps[step_index]);
         }
     }
     // Potential U-Turn
-    else if (bearingsAreReversed(util::bearing::reverseBearing(
+    else if (one_back_step.distance <= MAX_COLLAPSE_DISTANCE &&
+             bearingsAreReversed(util::bearing::reverseBearing(
                                      one_back_step.intersections.front()
                                          .bearings[one_back_step.intersections.front().in]),
                                  current_step.intersections.front()
-                                     .bearings[current_step.intersections.front().out]))
+                                     .bearings[current_step.intersections.front().out]) &&
+             compatible(one_back_step, current_step))
 
     {
         BOOST_ASSERT(two_back_index < steps.size());
@@ -403,8 +464,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             (step_index + 1 < steps.size()) &&
             isCollapsableInstruction(steps[step_index + 1].maneuver.instruction);
         const bool u_turn_with_name_change =
-            collapsable(current_step) && continues_with_name_change &&
-            steps[step_index + 1].name == steps[two_back_index].name;
+            continues_with_name_change && steps[step_index + 1].name == steps[two_back_index].name;
 
         if (direct_u_turn || u_turn_with_name_change)
         {
@@ -516,13 +576,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
             has_entered_roundabout = false;
             on_roundabout = false;
         }
-        else if (instruction.type == TurnType::Suppressed)
-        {
-            // count intersections. We cannot use exit, since intersections can follow directly
-            // after a roundabout
-            steps[last_valid_instruction] = elongate(steps[last_valid_instruction], step);
-            step.maneuver.instruction = TurnInstruction::NO_TURN();
-        }
         else if (!isSilent(instruction))
         {
             // Remember the last non silent instruction
@@ -562,59 +615,58 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         BOOST_ASSERT(index > 0);
         BOOST_ASSERT(index < steps.size());
         --index;
-        while (index > 0 && steps[index].maneuver.instruction == TurnInstruction::NO_TURN())
+        while (index > 0 && steps[index].maneuver.instruction.type == TurnType::NoTurn)
             --index;
 
         return index;
     };
 
-    // Check for an initial unwanted new-name
-    {
-        const auto &current_step = steps[1];
-        if (TurnType::NewName == current_step.maneuver.instruction.type &&
-            current_step.name == steps[0].name)
+    const auto getPreviousNameIndex = [&steps](std::size_t index) {
+        BOOST_ASSERT(index > 0);
+        BOOST_ASSERT(index < steps.size());
+        --index; // make sure to skip the current name
+        while (index > 0 && steps[index].name_id == EMPTY_NAMEID)
         {
-            steps[0] = elongate(std::move(steps[0]), steps[1]);
-            invalidateStep(steps[1]);
+            --index;
         }
-    }
-    const auto isCollapsableInstruction = [](const TurnInstruction instruction) {
-        return instruction.type == TurnType::NewName ||
-               (instruction.type == TurnType::Turn &&
-                instruction.direction_modifier == DirectionModifier::Straight);
+        return index;
     };
 
-    // Special case handling: if the phantomnode landed on a sliproad, we
-    // change this into a 'turn' instruction.  Sliproads are small ramps
-    // between roads, not ramps.
-    if (steps.size() >= 3 &&
-        steps[steps.size() - 2].maneuver.instruction.type == TurnType::Sliproad)
-    {
-        steps[steps.size() - 2].maneuver.instruction.type = TurnType::Turn;
-    }
+    // a series of turns is only possible to collapse if its only name changes and suppressed turns.
+    const auto canCollapseAll = [&steps](std::size_t index, const std::size_t end_index) {
+        BOOST_ASSERT(end_index <= steps.size());
+        for (; index < end_index; ++index)
+        {
+            if (steps[index].maneuver.instruction.type != TurnType::Suppressed &&
+                steps[index].maneuver.instruction.type != TurnType::NewName)
+                return false;
+        }
+        return true;
+    };
 
     // first and last instructions are waypoints that cannot be collapsed
-    for (std::size_t step_index = 2; step_index < steps.size(); ++step_index)
+    for (std::size_t step_index = 1; step_index + 1 < steps.size(); ++step_index)
     {
         const auto &current_step = steps[step_index];
         const auto one_back_index = getPreviousIndex(step_index);
         BOOST_ASSERT(one_back_index < steps.size());
 
-        // cannot collapse the depart instruction
-        if (one_back_index == 0 || current_step.maneuver.instruction == TurnInstruction::NO_TURN())
-            continue;
-
         const auto &one_back_step = steps[one_back_index];
-        const auto two_back_index = getPreviousIndex(one_back_index);
-        BOOST_ASSERT(two_back_index < steps.size());
+        // how long has a name change to be so that we announce it, even as a bridge?
+        const constexpr auto name_segment_cutoff_length = 100;
+        const auto isBasicNameChange = [](const RouteStep &step) {
+            return step.intersections.size() == 1 &&
+                   step.intersections.front().bearings.size() == 2 &&
+                   DirectionModifier::Straight == step.maneuver.instruction.direction_modifier;
+        };
 
-        // Handle sliproads from motorways in urban areas
+        // Handle sliproads from motorways in urban areas, save from modifying depart, since
+        // TurnType::Sliproad != TurnType::NoTurn
         if (one_back_step.maneuver.instruction.type == TurnType::Sliproad)
         {
-
             // Handle possible u-turns between highways that look like slip-roads
-            if (steps[two_back_index].name_id == steps[step_index].name_id &&
-                steps[step_index].name_id != INVALID_NAMEID)
+            if (steps[getPreviousIndex(one_back_index)].name_id == steps[step_index].name_id &&
+                steps[step_index].name_id != EMPTY_NAMEID)
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
             }
@@ -622,42 +674,57 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
             }
-            steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
-            steps[one_back_index].name_id = steps[step_index].name_id;
-            steps[one_back_index].name = steps[step_index].name;
+            if (compatible(one_back_step, current_step))
+            {
+                steps[one_back_index] =
+                    elongate(std::move(steps[one_back_index]), steps[step_index]);
+                steps[one_back_index].name_id = steps[step_index].name_id;
+                steps[one_back_index].name = steps[step_index].name;
 
-            const auto exit_intersection = steps[step_index].intersections.front();
-            const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
+                const auto exit_intersection = steps[step_index].intersections.front();
+                const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
 
-            const auto entry_intersection = steps[one_back_index].intersections.front();
-            const auto entry_bearing = entry_intersection.bearings[entry_intersection.in];
+                const auto entry_intersection = steps[one_back_index].intersections.front();
+                const auto entry_bearing = entry_intersection.bearings[entry_intersection.in];
 
-            const double angle =
-                turn_angle(util::bearing::reverseBearing(entry_bearing), exit_bearing);
-            steps[one_back_index].maneuver.instruction.direction_modifier =
-                ::osrm::util::guidance::getTurnDirection(angle);
-            invalidateStep(steps[step_index]);
+                const double angle =
+                    turn_angle(util::bearing::reverseBearing(entry_bearing), exit_bearing);
+                steps[one_back_index].maneuver.instruction.direction_modifier =
+                    ::osrm::util::guidance::getTurnDirection(angle);
+                invalidateStep(steps[step_index]);
+            }
         }
         // Due to empty segments, we can get name-changes from A->A
         // These have to be handled in post-processing
         else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
-                 current_step.name == steps[one_back_index].name)
+                 current_step.maneuver.instruction.type != TurnType::Suppressed &&
+                 steps[getPreviousNameIndex(step_index)].name == current_step.name &&
+                 canCollapseAll(getPreviousNameIndex(step_index) + 1, step_index + 1))
         {
-            steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
-            invalidateStep(steps[step_index]);
+            BOOST_ASSERT(step_index > 0);
+            const std::size_t last_available_name_index = getPreviousNameIndex(step_index);
+
+            for (std::size_t index = last_available_name_index + 1; index <= step_index; ++index)
+            {
+                steps[last_available_name_index] =
+                    elongate(std::move(steps[last_available_name_index]), steps[index]);
+                invalidateStep(steps[index]);
+            }
         }
         // If we look at two consecutive name changes, we can check for a name oszillation.
         // A name oszillation changes from name A shortly to name B and back to A.
         // In these cases, the name change will be suppressed.
-        else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
+        else if (one_back_index > 0 && compatible(current_step, one_back_step) &&
+                 isCollapsableInstruction(current_step.maneuver.instruction) &&
                  isCollapsableInstruction(one_back_step.maneuver.instruction))
         {
-            // valid due to step_index starting at 2
+            const auto two_back_index = getPreviousIndex(one_back_index);
+            BOOST_ASSERT(two_back_index < steps.size());
+            // valid, since one_back is collapsable:
             const auto &coming_from_name = steps[two_back_index].name;
             if (current_step.name == coming_from_name)
             {
-                if (current_step.mode == one_back_step.mode &&
-                    one_back_step.mode == steps[two_back_index].mode)
+                if (compatible(one_back_step, steps[two_back_index]))
                 {
                     steps[two_back_index] =
                         elongate(elongate(std::move(steps[two_back_index]), steps[one_back_index]),
@@ -668,12 +735,42 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 // TODO discuss: we could think about changing the new-name to a pure notification
                 // about mode changes
             }
+            else if (nameSegmentLength(one_back_index, steps) < name_segment_cutoff_length &&
+                     isBasicNameChange(one_back_step) && isBasicNameChange(current_step))
+            {
+                steps[two_back_index] =
+                    elongate(std::move(steps[two_back_index]), steps[one_back_index]);
+                invalidateStep(steps[one_back_index]);
+                if (nameSegmentLength(step_index, steps) < name_segment_cutoff_length)
+                {
+                    steps[two_back_index] =
+                        elongate(std::move(steps[two_back_index]), steps[step_index]);
+                    invalidateStep(steps[step_index]);
+                }
+            }
+            else if (one_back_step.distance <= MAX_COLLAPSE_DISTANCE)
+            {
+                // check for one of the multiple collapse scenarios and, if possible, collapse the
+                // turn
+                const auto two_back_index = getPreviousIndex(one_back_index);
+                BOOST_ASSERT(two_back_index < steps.size());
+                collapseTurnAt(steps, two_back_index, one_back_index, step_index);
+            }
         }
-        else if (collapsable(one_back_step))
+        else if (one_back_index > 0 && one_back_step.distance <= MAX_COLLAPSE_DISTANCE)
         {
             // check for one of the multiple collapse scenarios and, if possible, collapse the turn
+            const auto two_back_index = getPreviousIndex(one_back_index);
+            BOOST_ASSERT(two_back_index < steps.size());
             collapseTurnAt(steps, two_back_index, one_back_index, step_index);
         }
+    }
+
+    // handle final sliproad
+    if (steps.size() >= 3 &&
+        steps[steps.size() - 2].maneuver.instruction.type == TurnType::Sliproad)
+    {
+        steps[steps.size() - 2].maneuver.instruction.type = TurnType::Turn;
     }
 
     BOOST_ASSERT(steps.front().intersections.size() >= 1);
@@ -698,7 +795,6 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 // usually not be as relevant.
 void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
 {
-
     if (steps.size() < 2 || geometry.locations.size() <= 2)
         return;
 
@@ -727,6 +823,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // fixup the coordinate
         geometry.locations.erase(geometry.locations.begin());
         geometry.annotations.erase(geometry.annotations.begin());
+        geometry.osm_node_ids.erase(geometry.osm_node_ids.begin());
 
         // remove the initial distance value
         geometry.segment_distances.erase(geometry.segment_distances.begin());
@@ -738,7 +835,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             BOOST_ASSERT(geometry.segment_offsets[1] == 1);
             // geometry offsets have to be adjusted. Move all offsets to the front and reduce by
             // one. (This is an inplace forward one and reduce by one)
-            std::transform(geometry.segment_offsets.begin() + 1, geometry.segment_offsets.end(),
+            std::transform(geometry.segment_offsets.begin() + 1,
+                           geometry.segment_offsets.end(),
                            geometry.segment_offsets.begin(),
                            [](const std::size_t val) { return val - 1; });
 
@@ -772,7 +870,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             steps.front().geometry_begin = 1;
 
             // reduce all offsets by one (inplace)
-            std::transform(geometry.segment_offsets.begin(), geometry.segment_offsets.end(),
+            std::transform(geometry.segment_offsets.begin(),
+                           geometry.segment_offsets.end(),
                            geometry.segment_offsets.begin(),
                            [](const std::size_t val) { return val - 1; });
         }
@@ -814,6 +913,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     {
         geometry.locations.pop_back();
         geometry.annotations.pop_back();
+        geometry.osm_node_ids.pop_back();
         geometry.segment_offsets.pop_back();
         BOOST_ASSERT(geometry.segment_distances.back() < 1);
         geometry.segment_distances.pop_back();
@@ -947,6 +1047,29 @@ LegGeometry resyncGeometry(LegGeometry leg_geometry, const std::vector<RouteStep
     leg_geometry.segment_distances.pop_back();
 
     return leg_geometry;
+}
+
+std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
+{
+    std::size_t last_valid_instruction = 0;
+    for (std::size_t step_index = 0; step_index < steps.size(); ++step_index)
+    {
+        auto &step = steps[step_index];
+        const auto instruction = step.maneuver.instruction;
+        if (instruction.type == TurnType::Suppressed)
+        {
+            // count intersections. We cannot use exit, since intersections can follow directly
+            // after a roundabout
+            steps[last_valid_instruction] = elongate(steps[last_valid_instruction], step);
+            step.maneuver.instruction = TurnInstruction::NO_TURN();
+        }
+        else if (!isSilent(instruction))
+        {
+            // Remember the last non silent instruction
+            last_valid_instruction = step_index;
+        }
+    }
+    return removeNoTurnInstructions(std::move(steps));
 }
 
 } // namespace guidance

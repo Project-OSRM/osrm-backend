@@ -101,7 +101,9 @@ struct TurnInstruction
                                             const DirectionModifier::Enum modifier)
     {
         const constexpr TurnType::Enum enter_instruction[] = {
-            TurnType::Invalid, TurnType::EnterRoundabout, TurnType::EnterRotary,
+            TurnType::Invalid,
+            TurnType::EnterRoundabout,
+            TurnType::EnterRotary,
             TurnType::EnterRoundaboutIntersection};
         return {enter_instruction[static_cast<int>(roundabout_type)], modifier};
     }
@@ -109,9 +111,10 @@ struct TurnInstruction
     static TurnInstruction EXIT_ROUNDABOUT(const RoundaboutType roundabout_type,
                                            const DirectionModifier::Enum modifier)
     {
-        const constexpr TurnType::Enum exit_instruction[] = {
-            TurnType::Invalid, TurnType::ExitRoundabout, TurnType::ExitRotary,
-            TurnType::ExitRoundaboutIntersection};
+        const constexpr TurnType::Enum exit_instruction[] = {TurnType::Invalid,
+                                                             TurnType::ExitRoundabout,
+                                                             TurnType::ExitRotary,
+                                                             TurnType::ExitRoundaboutIntersection};
         return {exit_instruction[static_cast<int>(roundabout_type)], modifier};
     }
 
@@ -119,7 +122,9 @@ struct TurnInstruction
                                                      const DirectionModifier::Enum modifier)
     {
         const constexpr TurnType::Enum exit_instruction[] = {
-            TurnType::Invalid, TurnType::EnterAndExitRoundabout, TurnType::EnterAndExitRotary,
+            TurnType::Invalid,
+            TurnType::EnterAndExitRoundabout,
+            TurnType::EnterAndExitRotary,
             TurnType::EnterAndExitRoundaboutIntersection};
         return {exit_instruction[static_cast<int>(roundabout_type)], modifier};
     }
@@ -128,7 +133,9 @@ struct TurnInstruction
                                                     const DirectionModifier::Enum modifier)
     {
         const constexpr TurnType::Enum enter_instruction[] = {
-            TurnType::Invalid, TurnType::EnterRoundaboutAtExit, TurnType::EnterRotaryAtExit,
+            TurnType::Invalid,
+            TurnType::EnterRoundaboutAtExit,
+            TurnType::EnterRotaryAtExit,
             TurnType::EnterRoundaboutIntersectionAtExit};
         return {enter_instruction[static_cast<int>(roundabout_type)], modifier};
     }

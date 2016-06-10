@@ -10,11 +10,8 @@
 #include <type_traits>
 
 BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL,
-    (std::string, service)
-    (unsigned, version)
-    (std::string, profile)
-    (std::string, query)
-)
+                          (std::string, service)(unsigned, version)(std::string,
+                                                                    profile)(std::string, query))
 
 // Keep impl. TU local
 namespace
@@ -40,14 +37,10 @@ struct URLParser final : qi::grammar<Iterator, Into>
 
         // Example input: /route/v1/driving/7.416351,43.731205;7.420363,43.736189
 
-        start
-            = qi::lit('/') > service
-            > qi::lit('/') > qi::lit('v') > version
-            > qi::lit('/') > profile
-            > qi::lit('/')
-            > qi::omit[iter_pos[ph::bind(&osrm::server::api::ParsedURL::prefix_length, qi::_val) = qi::_1 - qi::_r1]]
-            > query
-            ;
+        start = qi::lit('/') > service > qi::lit('/') > qi::lit('v') > version > qi::lit('/') >
+                profile > qi::lit('/') >
+                qi::omit[iter_pos[ph::bind(&osrm::server::api::ParsedURL::prefix_length, qi::_val) =
+                                      qi::_1 - qi::_r1]] > query;
 
         BOOST_SPIRIT_DEBUG_NODES((start)(service)(version)(profile)(query))
     }

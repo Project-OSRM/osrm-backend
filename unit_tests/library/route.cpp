@@ -55,19 +55,20 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                 json::Array{{json::Object{
                     {{"distance", 0.},
                      {"duration", 0.},
-                     {"summary", ""},
+                     {"summary", "Boulevard du Larvotto"},
                      {"steps",
                       json::Array{{{json::Object{{{"duration", 0.},
                                                   {"distance", 0.},
                                                   {"geometry", "yw_jGupkl@??"},
                                                   {"name", "Boulevard du Larvotto"},
                                                   {"mode", "driving"},
-                                                  {"maneuver", json::Object{{
-                                                                   {"location", location},
-                                                                   {"bearing_before", 0},
-                                                                   {"bearing_after", 0},
-                                                                   {"type", "depart"},
-                                                               }}},
+                                                  {"maneuver",
+                                                   json::Object{{
+                                                       {"location", location},
+                                                       {"bearing_before", 0},
+                                                       {"bearing_after", 0},
+                                                       {"type", "depart"},
+                                                   }}},
                                                   {"intersections",
                                                    json::Array{{json::Object{
                                                        {{"location", location},
@@ -80,7 +81,11 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                                  {"geometry", "yw_jGupkl@"},
                                                  {"name", "Boulevard du Larvotto"},
                                                  {"mode", "driving"},
-                                                 {"maneuver", json::Object{{{"location", location}, {"bearing_before", 0}, {"bearing_after", 0}, {"type", "arrive"}}}},
+                                                 {"maneuver",
+                                                  json::Object{{{"location", location},
+                                                                {"bearing_before", 0},
+                                                                {"bearing_after", 0},
+                                                                {"type", "arrive"}}}},
                                                  {"intersections",
                                                   json::Array{{json::Object{
                                                       {{"location", location},
@@ -206,26 +211,29 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
                 for (auto &intersection : intersections)
                 {
                     const auto &intersection_object = intersection.get<json::Object>().values;
-                    const auto location = intersection_object.at("location").get<json::Array>().values;
+                    const auto location =
+                        intersection_object.at("location").get<json::Array>().values;
                     const auto longitude = location[0].get<json::Number>().value;
                     const auto latitude = location[1].get<json::Number>().value;
                     BOOST_CHECK(longitude >= -180. && longitude <= 180.);
                     BOOST_CHECK(latitude >= -90. && latitude <= 90.);
 
-                    const auto &bearings = intersection_object.at("bearings").get<json::Array>().values;
+                    const auto &bearings =
+                        intersection_object.at("bearings").get<json::Array>().values;
                     BOOST_CHECK(!bearings.empty());
                     const auto &entries = intersection_object.at("entry").get<json::Array>().values;
                     BOOST_CHECK(bearings.size() == entries.size());
 
-                    for( const auto bearing : bearings )
-                        BOOST_CHECK( 0. <= bearing.get<json::Number>().value && bearing.get<json::Number>().value <= 360. );
+                    for (const auto bearing : bearings)
+                        BOOST_CHECK(0. <= bearing.get<json::Number>().value &&
+                                    bearing.get<json::Number>().value <= 360.);
 
-                    if( step_count > 0 )
+                    if (step_count > 0)
                     {
                         const auto in = intersection_object.at("in").get<json::Number>().value;
                         BOOST_CHECK(in < bearings.size());
                     }
-                    if( step_count + 1 < steps.size() )
+                    if (step_count + 1 < steps.size())
                     {
                         const auto out = intersection_object.at("out").get<json::Number>().value;
                         BOOST_CHECK(out < bearings.size());

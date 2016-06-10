@@ -5,10 +5,10 @@
 #include "util/range_table.hpp"
 
 #include "util/exception.hpp"
-#include "util/simple_logger.hpp"
-#include "util/timing_util.hpp"
 #include "util/fingerprint.hpp"
 #include "util/lua_util.hpp"
+#include "util/simple_logger.hpp"
+#include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -47,7 +47,9 @@ ExtractionContainers::ExtractionContainers()
 {
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
-    // Insert the empty string, it has no data and is zero length
+    // Insert three empty strings for name, destination and pronunciation
+    name_lengths.push_back(0);
+    name_lengths.push_back(0);
     name_lengths.push_back(0);
 }
 
@@ -133,8 +135,8 @@ void ExtractionContainers::PrepareNodes()
 {
     std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
     TIMER_START(sorting_used_nodes);
-    stxxl::sort(used_node_id_list.begin(), used_node_id_list.end(), OSMNodeIDSTXXLLess(),
-                stxxl_memory);
+    stxxl::sort(
+        used_node_id_list.begin(), used_node_id_list.end(), OSMNodeIDSTXXLLess(), stxxl_memory);
     TIMER_STOP(sorting_used_nodes);
     std::cout << "ok, after " << TIMER_SEC(sorting_used_nodes) << "s" << std::endl;
 
@@ -147,7 +149,9 @@ void ExtractionContainers::PrepareNodes()
 
     std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
     TIMER_START(sorting_nodes);
-    stxxl::sort(all_nodes_list.begin(), all_nodes_list.end(), ExternalMemoryNodeSTXXLCompare(),
+    stxxl::sort(all_nodes_list.begin(),
+                all_nodes_list.end(),
+                ExternalMemoryNodeSTXXLCompare(),
                 stxxl_memory);
     TIMER_STOP(sorting_nodes);
     std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
@@ -250,8 +254,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
     // Remove all remaining edges. They are invalid because there are no corresponding nodes for
     // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
-    auto markSourcesInvalid = [](InternalExtractorEdge &edge)
-    {
+    auto markSourcesInvalid = [](InternalExtractorEdge &edge) {
         util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
                                                          << edge.result.source;
         edge.result.source = SPECIAL_NODEID;
@@ -315,13 +318,15 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         if (has_segment_function)
         {
-            luabind::call_function<void>(
-                segment_state, "segment_function", boost::cref(edge_iterator->source_coordinate),
-                boost::cref(*node_iterator), distance, boost::ref(edge_iterator->weight_data));
+            luabind::call_function<void>(segment_state,
+                                         "segment_function",
+                                         boost::cref(edge_iterator->source_coordinate),
+                                         boost::cref(*node_iterator),
+                                         distance,
+                                         boost::ref(edge_iterator->weight_data));
         }
 
-        const double weight = [distance](const InternalExtractorEdge::WeightData &data)
-        {
+        const double weight = [distance](const InternalExtractorEdge::WeightData &data) {
             switch (data.type)
             {
             case InternalExtractorEdge::WeightType::EDGE_DURATION:
@@ -361,8 +366,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
     // Remove all remaining edges. They are invalid because there are no corresponding nodes for
     // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
-    auto markTargetsInvalid = [](InternalExtractorEdge &edge)
-    {
+    auto markTargetsInvalid = [](InternalExtractorEdge &edge) {
         util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
                                                          << edge.result.target;
         edge.result.target = SPECIAL_NODEID;
@@ -374,8 +378,10 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by renumbered start ... " << std::flush;
     TIMER_START(sort_edges_by_renumbered_start);
-    stxxl::sort(all_edges_list.begin(), all_edges_list.end(),
-                CmpEdgeByInternalStartThenInternalTargetID(), stxxl_memory);
+    stxxl::sort(all_edges_list.begin(),
+                all_edges_list.end(),
+                CmpEdgeByInternalStartThenInternalTargetID(),
+                stxxl_memory);
     TIMER_STOP(sort_edges_by_renumbered_start);
     std::cout << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s" << std::endl;
 
@@ -582,15 +588,19 @@ void ExtractionContainers::PrepareRestrictions()
 {
     std::cout << "[extractor] Sorting used ways         ... " << std::flush;
     TIMER_START(sort_ways);
-    stxxl::sort(way_start_end_id_list.begin(), way_start_end_id_list.end(),
-                FirstAndLastSegmentOfWayStxxlCompare(), stxxl_memory);
+    stxxl::sort(way_start_end_id_list.begin(),
+                way_start_end_id_list.end(),
+                FirstAndLastSegmentOfWayStxxlCompare(),
+                stxxl_memory);
     TIMER_STOP(sort_ways);
     std::cout << "ok, after " << TIMER_SEC(sort_ways) << "s" << std::endl;
 
     std::cout << "[extractor] Sorting " << restrictions_list.size() << " restriction. by from... "
               << std::flush;
     TIMER_START(sort_restrictions);
-    stxxl::sort(restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByFrom(),
+    stxxl::sort(restrictions_list.begin(),
+                restrictions_list.end(),
+                CmpRestrictionContainerByFrom(),
                 stxxl_memory);
     TIMER_STOP(sort_restrictions);
     std::cout << "ok, after " << TIMER_SEC(sort_restrictions) << "s" << std::endl;
@@ -682,7 +692,9 @@ void ExtractionContainers::PrepareRestrictions()
 
     std::cout << "[extractor] Sorting restrictions. by to  ... " << std::flush;
     TIMER_START(sort_restrictions_to);
-    stxxl::sort(restrictions_list.begin(), restrictions_list.end(), CmpRestrictionContainerByTo(),
+    stxxl::sort(restrictions_list.begin(),
+                restrictions_list.end(),
+                CmpRestrictionContainerByTo(),
                 stxxl_memory);
     TIMER_STOP(sort_restrictions_to);
     std::cout << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s" << std::endl;

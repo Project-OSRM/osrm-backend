@@ -1,10 +1,10 @@
 #ifndef NODE_BASED_GRAPH_HPP
 #define NODE_BASED_GRAPH_HPP
 
-#include "util/dynamic_graph.hpp"
-#include "extractor/node_based_edge.hpp"
-#include "util/graph_utils.hpp"
 #include "extractor/guidance/classification_data.hpp"
+#include "extractor/node_based_edge.hpp"
+#include "util/dynamic_graph.hpp"
+#include "util/graph_utils.hpp"
 
 #include <tbb/parallel_sort.h>
 
@@ -68,9 +68,9 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
                                const std::vector<extractor::NodeBasedEdge> &input_edge_list)
 {
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(
-        input_edge_list, [](NodeBasedDynamicGraph::InputEdge &output_edge,
-                            const extractor::NodeBasedEdge &input_edge)
-        {
+        input_edge_list,
+        [](NodeBasedDynamicGraph::InputEdge &output_edge,
+           const extractor::NodeBasedEdge &input_edge) {
             output_edge.data.distance = static_cast<int>(input_edge.weight);
             BOOST_ASSERT(output_edge.data.distance > 0);
 

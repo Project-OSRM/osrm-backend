@@ -345,3 +345,169 @@ Feature: Collapse
             | a,d       | first,first,first,first | depart,continue left,continue right,arrive |
             | a,e       | first,second,second     | depart,turn left,arrive                    |
             | a,f       | first,third,third       | depart,turn straight,arrive                |
+
+     Scenario: Bridge on unnamed road
+        Given the node map
+            | a | b |   |   |   | c | d |
+
+        And the ways
+            | nodes | highway | name   |
+            | ab    | primary |        |
+            | bc    | primary | Bridge |
+            | cd    | primary |        |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,d       | ,     | depart,arrive |
+
+     Scenario: Crossing Bridge into Segregated Turn
+        Given the node map
+            |   |   |   |   |   | f |
+            | i | h |   |   | g | e |
+            | a | b |   |   | c | d |
+
+        And the ways
+            | nodes | highway | oneway | name        |
+            | ab    | primary | yes    | to_bridge   |
+            | bc    | primary | yes    | bridge      |
+            | cd    | primary | yes    | off_bridge  |
+            | de    | primary | yes    |             |
+            | ef    | primary | no     | target_road |
+            | eg    | primary | yes    | off_bridge  |
+            | gh    | primary | yes    | bridge      |
+            | hi    | primary | yes    | to_bridge   |
+
+        When I route I should get
+            | waypoints | route                             | turns                   |
+            | a,f       | to_bridge,target_road,target_road | depart,turn left,arrive |
+
+    Scenario: Pankenbruecke
+        Given the node map
+            | h |   |   |   |   |   | i |   |   |   |   |   |   |
+            |   |   | b | c | d | e | f |   |   |   |   |   | g |
+            | a |   |   |   |   |   |   |   |   |   |   |   |   |
+
+        And the ways
+            | nodes | highway | name    | oneway |
+            | abh   | primary | inroad  | yes    |
+            | bc    | primary | inroad  | no     |
+            | cd    | primary | bridge  | no     |
+            | defg  | primary | outroad | no     |
+            | fi    | primary | cross   | no     |
+
+       When I route I should get
+            | waypoints | route                  | turns                           |
+            | a,g       | inroad,outroad,outroad | depart,new name straight,arrive |
+            | a,i       | inroad,cross,cross     | depart,turn left,arrive         |
+
+     Scenario: Close Turns - Don't Collapse
+        Given the node map
+            |   | g | d |   |
+            |   |   |   |   |
+            | e | b | c | f |
+            |   |   |   |   |
+            |   | a | h |   |
+
+        And the ways
+            | nodes | highway | name     |
+            | ab    | primary | in       |
+            | ebcf  | primary | cross    |
+            | cd    | primary | out      |
+            | bg    | primary | straight |
+            | ch    | primary | reverse  |
+
+        When I route I should get
+            | waypoints | route                    | turns                               |
+            | a,d       | in,cross,out,out         | depart,turn right,turn left,arrive  |
+            | a,h       | in,cross,reverse,reverse | depart,turn right,turn right,arrive |
+            | g,d       | straight,cross,out,out   | depart,turn left,turn left,arrive   |
+
+     Scenario: No Name During Turns
+        Given the node map
+            | a | b |   |
+            |   | c | d |
+
+        And the ways
+            | nodes | highway  | name |
+            | ab    | tertiary | road |
+            | bc    | tertiary |      |
+            | cd    | tertiary | road |
+
+        When I route I should get
+            | waypoints | route     | turns         |
+            | a,d       | road,road | depart,arrive |
+
+    Scenario: No Name During Turns, Random Oneway
+        Given the node map
+            | a | b |   |
+            |   | c | d |
+
+        And the ways
+            | nodes | highway  | name | oneway |
+            | ab    | tertiary | road | no     |
+            | bc    | tertiary |      | yes    |
+            | cd    | tertiary | road | no     |
+
+        When I route I should get
+            | waypoints | route     | turns         |
+            | a,d       | road,road | depart,arrive |
+
+    Scenario: Pulled Back Turn
+        Given the node map
+            |   |   | d |
+            | a | b | c |
+            |   | e |   |
+
+        And the ways
+            | nodes | highway  | name  |
+            | abc   | tertiary | road  |
+            | cd    | tertiary | left  |
+            | be    | tertiary | right |
+
+        When I route I should get
+            | waypoints | route            | turns                    |
+            | a,d       | road,left,left   | depart,turn left,arrive  |
+            | a,e       | road,right,right | depart,turn right,arrive |
+
+    Scenario: No Name During Turns, keep important turns
+        Given the node map
+            | a | b | e |
+            |   | c | d |
+
+        And the ways
+            | nodes | highway  | name  |
+            | ab    | tertiary | road  |
+            | bc    | tertiary |       |
+            | cd    | tertiary | road  |
+            | be    | tertiary | other |
+
+        When I route I should get
+            | waypoints | route          | turns                        |
+            | a,d       | road,road,road | depart,continue right,arrive |
+
+    Scenario: Segregated Intersection into Slight Turn
+        Given the node map
+            | h |   |   |   |   |   |   |
+            | a |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   | g |   |   |   |   |
+            |   |   | b | f |   |   |   |
+            |   |   |   | c |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | e |
+            |   |   |   |   |   |   | d |
+            |   |   | j | i |   |   |   |
+
+        And the ways
+            | nodes | highway   | name | oneway |
+            | abcd  | primary   | road | yes    |
+            | efgh  | primary   | road | yes    |
+            | icf   | secondary | in   | yes    |
+            | gbj   | secondary | out  | yes    |
+
+        When I route I should get
+            | waypoints | route        | turns                           |
+            | i,h       | in,road,road | depart,turn slight left,arrive  |
+            | a,d       | road,road    | depart,arrive                   |
+            | a,j       | road,out,out | depart,turn slight right,arrive |

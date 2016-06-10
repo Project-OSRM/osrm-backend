@@ -7,10 +7,10 @@
 
 #include "osrm/coordinate.hpp"
 
-#include <iomanip>
 #include <algorithm>
-#include <utility>
+#include <iomanip>
 #include <limits>
+#include <utility>
 
 #include <cstdint>
 
@@ -136,20 +136,20 @@ struct RectangleInt2D
                 location, Coordinate(max_lon, location.lat));
             break;
         case NORTH_EAST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(max_lon, max_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(max_lon, max_lat));
             break;
         case NORTH_WEST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(min_lon, max_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(min_lon, max_lat));
             break;
         case SOUTH_EAST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(max_lon, min_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(max_lon, min_lat));
             break;
         case SOUTH_WEST:
-            min_dist =
-                coordinate_calculation::squaredEuclideanDistance(location, Coordinate(min_lon, min_lat));
+            min_dist = coordinate_calculation::squaredEuclideanDistance(
+                location, Coordinate(min_lon, min_lat));
             break;
         default:
             break;
@@ -165,6 +165,14 @@ struct RectangleInt2D
         const bool lons_contained = (location.lon >= min_lon) && (location.lon <= max_lon);
         const bool lats_contained = (location.lat >= min_lat) && (location.lat <= max_lat);
         return lons_contained && lats_contained;
+    }
+
+    bool IsValid() const
+    {
+        return min_lon != FixedLongitude(std::numeric_limits<std::int32_t>::max()) &&
+               max_lon != FixedLongitude(std::numeric_limits<std::int32_t>::min()) &&
+               min_lat != FixedLatitude(std::numeric_limits<std::int32_t>::max()) &&
+               max_lat != FixedLatitude(std::numeric_limits<std::int32_t>::min());
     }
 
     friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect);

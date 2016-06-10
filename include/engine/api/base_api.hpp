@@ -37,11 +37,10 @@ class BaseAPI
         waypoints.values[0] = MakeWaypoint(segment_end_coordinates.front().source_phantom);
 
         auto out_iter = std::next(waypoints.values.begin());
-        boost::range::transform(segment_end_coordinates, out_iter,
-                                [this](const PhantomNodes &phantom_pair)
-                                {
-                                    return MakeWaypoint(phantom_pair.target_phantom);
-                                });
+        boost::range::transform(
+            segment_end_coordinates, out_iter, [this](const PhantomNodes &phantom_pair) {
+                return MakeWaypoint(phantom_pair.target_phantom);
+            });
         return waypoints;
     }
 
@@ -49,7 +48,8 @@ class BaseAPI
     //  protected:
     util::json::Object MakeWaypoint(const PhantomNode &phantom) const
     {
-        return json::makeWaypoint(phantom.location, facade.GetNameForID(phantom.name_id),
+        return json::makeWaypoint(phantom.location,
+                                  facade.GetNameForID(phantom.name_id),
                                   Hint{phantom, facade.GetCheckSum()});
     }
 

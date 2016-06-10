@@ -1,8 +1,8 @@
 #ifndef OSRM_UNIT_TEST_ARGS
 #define OSRM_UNIT_TEST_ARGS
 
-#include <vector>
 #include <string>
+#include <vector>
 
 inline std::vector<std::string> get_args()
 {

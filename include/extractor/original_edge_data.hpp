@@ -27,8 +27,7 @@ struct OriginalEdgeData
 
     OriginalEdgeData()
         : via_node(std::numeric_limits<unsigned>::max()),
-          name_id(std::numeric_limits<unsigned>::max()),
-          entry_classid(INVALID_ENTRY_CLASSID),
+          name_id(std::numeric_limits<unsigned>::max()), entry_classid(INVALID_ENTRY_CLASSID),
           turn_instruction(guidance::TurnInstruction::INVALID()),
           travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {

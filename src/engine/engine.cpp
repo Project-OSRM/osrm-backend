@@ -5,9 +5,9 @@
 
 #include "engine/plugins/table.hpp"
 #include "engine/plugins/nearest.hpp"
+#include "engine/plugins/match.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
-#include "engine/plugins/match.hpp"
 #include "engine/plugins/tile.hpp"
 #include "engine/plugins/isochrone.hpp"
 
@@ -138,8 +138,7 @@ Engine::Engine(EngineConfig &config)
         {
             throw util::exception("Invalid file paths given!");
         }
-        query_data_facade =
-            util::make_unique<datafacade::InternalDataFacade>(config.storage_config);
+        query_data_facade = util::make_unique<datafacade::InternalDataFacade>(config.storage_config);
     }
 
     // Register plugins

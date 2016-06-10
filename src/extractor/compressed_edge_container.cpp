@@ -159,8 +159,8 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
             m_compressed_geometries[list_to_remove_index];
 
         // found an existing list, append it to the list of edge_id_1
-        edge_bucket_list1.insert(edge_bucket_list1.end(), edge_bucket_list2.begin(),
-                                 edge_bucket_list2.end());
+        edge_bucket_list1.insert(
+            edge_bucket_list1.end(), edge_bucket_list2.begin(), edge_bucket_list2.end());
 
         // remove the list of edge_id_2
         m_edge_id_to_list_index_map.erase(edge_id_2);

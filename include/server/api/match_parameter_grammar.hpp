@@ -1,8 +1,8 @@
 #ifndef MATCH_PARAMETERS_GRAMMAR_HPP
 #define MATCH_PARAMETERS_GRAMMAR_HPP
 
-#include "engine/api/match_parameters.hpp"
 #include "server/api/route_parameters_grammar.hpp"
+#include "engine/api/match_parameters.hpp"
 
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
@@ -28,15 +28,13 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
 
     MatchParametersGrammar() : BaseGrammar(root_rule)
     {
-        timestamps_rule
-            = qi::lit("timestamps=")
-            > (qi::uint_ % ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1]
-            ;
+        timestamps_rule =
+            qi::lit("timestamps=") >
+            (qi::uint_ %
+             ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
 
-        root_rule
-            = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json")
-            > -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&')
-            ;
+        root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
+                    -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
     }
 
   private:

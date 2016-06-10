@@ -1,7 +1,7 @@
+#include "extractor/guidance/turn_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
-#include "extractor/guidance/turn_handler.hpp"
 
 #include "util/guidance/toolkit.hpp"
 
@@ -68,9 +68,6 @@ Intersection TurnHandler::handleTwoWayTurn(const EdgeID via_edge, Intersection i
     BOOST_ASSERT(intersection[0].turn.angle < 0.001);
     intersection[1].turn.instruction =
         getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
-
-    if (intersection[1].turn.instruction.type == TurnType::Suppressed)
-        intersection[1].turn.instruction.type = TurnType::NoTurn;
 
     return intersection;
 }
@@ -257,9 +254,11 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
     // check whether the obvious choice is actually a through street
     if (obvious_index != 0)
     {
-        intersection[obvious_index].turn.instruction = getInstructionForObvious(
-            intersection.size(), via_edge, isThroughStreet(obvious_index, intersection),
-            intersection[obvious_index]);
+        intersection[obvious_index].turn.instruction =
+            getInstructionForObvious(intersection.size(),
+                                     via_edge,
+                                     isThroughStreet(obvious_index, intersection),
+                                     intersection[obvious_index]);
         if (has_same_name_turn &&
             node_based_graph.GetEdgeData(intersection[obvious_index].turn.eid).name_id !=
                 in_data.name_id &&
@@ -314,8 +313,10 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
         }
         else if (fork_range.second - fork_range.first == 2)
         {
-            assignFork(via_edge, intersection[fork_range.second],
-                       intersection[fork_range.first + 1], intersection[fork_range.first]);
+            assignFork(via_edge,
+                       intersection[fork_range.second],
+                       intersection[fork_range.first + 1],
+                       intersection[fork_range.first]);
         }
         // assign left/right turns
         intersection = assignLeftTurns(via_edge, std::move(intersection), fork_range.second + 1);

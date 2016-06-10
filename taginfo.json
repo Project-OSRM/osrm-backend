@@ -57,6 +57,7 @@
         {"key": "maxspeed:advisory"},
         {"key": "maxspeed:advisory:forward"},
         {"key": "maxspeed:advisory:backward"},
+        {"key": "name:pronunciation", "description": "Pronunciation hint for names", "object_types": ["way"]},
         {"key": "bridge", "value": "movable", "description": "uses capacity and duration"},
         {"key": "capacity:car", "description": "used for movable bridges"},
         {"key": "side_road", "value": "yes", "description": "gets speed penalty"},

@@ -4,8 +4,8 @@
 
 #include <boost/assert.hpp>
 
-#include <iterator>
 #include <algorithm>
+#include <iterator>
 #include <ostream>
 #include <tuple>
 

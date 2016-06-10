@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/motorway_handler.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"
@@ -129,7 +129,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         {
             const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
             if (road.turn.angle != 0 && in_data.name_id == out_data.name_id &&
-                in_data.name_id != INVALID_NAME_ID &&
+                in_data.name_id != EMPTY_NAMEID &&
                 detail::isMotorwayClass(out_data.road_classification.road_class))
                 return road.turn.angle;
         }
@@ -233,8 +233,10 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                 BOOST_ASSERT(!detail::isRampClass(intersection[1].turn.eid, node_based_graph));
 
                 intersection[1].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_eid,
-                                             isThroughStreet(1, intersection), intersection[1]);
+                    getInstructionForObvious(intersection.size(),
+                                             via_eid,
+                                             isThroughStreet(1, intersection),
+                                             intersection[1]);
             }
             else
             {
@@ -275,8 +277,10 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             if (exiting_motorways == 2 && intersection.size() == 2)
             {
                 intersection[1].turn.instruction =
-                    getInstructionForObvious(intersection.size(), via_eid,
-                                             isThroughStreet(1, intersection), intersection[1]);
+                    getInstructionForObvious(intersection.size(),
+                                             via_eid,
+                                             isThroughStreet(1, intersection),
+                                             intersection[1]);
                 util::SimpleLogger().Write(logDEBUG) << "Disabled U-Turn on a freeway";
                 intersection[0].entry_allowed = false; // UTURN on the freeway
             }
@@ -329,7 +333,9 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                         }
                     }
                 }
-                assignFork(via_eid, intersection[third_valid], intersection[second_valid],
+                assignFork(via_eid,
+                           intersection[third_valid],
+                           intersection[second_valid],
                            intersection[first_valid]);
             }
             else
@@ -373,7 +379,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
             {
                 if (detail::isMotorwayClass(intersection[1].turn.eid, node_based_graph) &&
                     node_based_graph.GetEdgeData(intersection[2].turn.eid).name_id !=
-                        INVALID_NAME_ID &&
+                        EMPTY_NAMEID &&
                     node_based_graph.GetEdgeData(intersection[2].turn.eid).name_id ==
                         node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id)
                 {
@@ -389,8 +395,10 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 else // passing by the end of a motorway
                 {
                     intersection[1].turn.instruction =
-                        getInstructionForObvious(intersection.size(), via_eid,
-                                                 isThroughStreet(1, intersection), intersection[1]);
+                        getInstructionForObvious(intersection.size(),
+                                                 via_eid,
+                                                 isThroughStreet(1, intersection),
+                                                 intersection[1]);
                 }
             }
             else
@@ -398,7 +406,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 BOOST_ASSERT(intersection[2].entry_allowed);
                 if (detail::isMotorwayClass(intersection[2].turn.eid, node_based_graph) &&
                     node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id !=
-                        INVALID_NAME_ID &&
+                        EMPTY_NAMEID &&
                     node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id ==
                         node_based_graph.GetEdgeData(intersection[0].turn.eid).name_id)
                 {
@@ -414,8 +422,10 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 else // passing the end of a highway
                 {
                     intersection[2].turn.instruction =
-                        getInstructionForObvious(intersection.size(), via_eid,
-                                                 isThroughStreet(2, intersection), intersection[2]);
+                        getInstructionForObvious(intersection.size(),
+                                                 via_eid,
+                                                 isThroughStreet(2, intersection),
+                                                 intersection[2]);
                 }
             }
         }
@@ -472,8 +482,8 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
             }
             else if (detail::isMotorwayClass(edge_data.road_classification.road_class))
             {
-                road.turn.instruction = {TurnType::Merge, passed_highway_entry
-                                                              ? DirectionModifier::SlightRight
+                road.turn.instruction = {TurnType::Merge,
+                                         passed_highway_entry ? DirectionModifier::SlightRight
                                                               : DirectionModifier::SlightLeft};
             }
             else
@@ -516,16 +526,18 @@ Intersection MotorwayHandler::fallback(Intersection intersection) const
                 road.turn.instruction = {type, DirectionModifier::Straight};
             else
             {
-                road.turn.instruction = {type, road.turn.angle > STRAIGHT_ANGLE
-                                                   ? DirectionModifier::SlightLeft
-                                                   : DirectionModifier::SlightRight};
+                road.turn.instruction = {type,
+                                         road.turn.angle > STRAIGHT_ANGLE
+                                             ? DirectionModifier::SlightLeft
+                                             : DirectionModifier::SlightRight};
             }
         }
         else
         {
-            road.turn.instruction = {type, road.turn.angle < STRAIGHT_ANGLE
-                                               ? DirectionModifier::SlightLeft
-                                               : DirectionModifier::SlightRight};
+            road.turn.instruction = {type,
+                                     road.turn.angle < STRAIGHT_ANGLE
+                                         ? DirectionModifier::SlightLeft
+                                         : DirectionModifier::SlightRight};
         }
     }
     return intersection;

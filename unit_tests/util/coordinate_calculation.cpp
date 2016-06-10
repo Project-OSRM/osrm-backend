@@ -1,5 +1,5 @@
-#include <boost/test/unit_test.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include "util/coordinate_calculation.hpp"
 
@@ -180,9 +180,11 @@ BOOST_AUTO_TEST_CASE(regression_point_on_segment)
     FloatCoordinate diff{target.lon - start.lon, target.lat - start.lat};
 
     BOOST_CHECK_CLOSE(static_cast<double>(start.lon + FloatLongitude(ratio) * diff.lon),
-                      static_cast<double>(nearest.lon), 0.1);
+                      static_cast<double>(nearest.lon),
+                      0.1);
     BOOST_CHECK_CLOSE(static_cast<double>(start.lat + FloatLatitude(ratio) * diff.lat),
-                      static_cast<double>(nearest.lat), 0.1);
+                      static_cast<double>(nearest.lat),
+                      0.1);
 }
 
 BOOST_AUTO_TEST_CASE(point_on_segment)
@@ -192,9 +194,10 @@ BOOST_AUTO_TEST_CASE(point_on_segment)
     //  |---- i
     //  |
     //  s
-    auto result_1 = coordinate_calculation::projectPointOnSegment(
-        {FloatLongitude{0}, FloatLatitude{0}}, {FloatLongitude{0}, FloatLatitude{2}},
-        {FloatLongitude{2}, FloatLatitude{1}});
+    auto result_1 =
+        coordinate_calculation::projectPointOnSegment({FloatLongitude{0}, FloatLatitude{0}},
+                                                      {FloatLongitude{0}, FloatLatitude{2}},
+                                                      {FloatLongitude{2}, FloatLatitude{1}});
     auto reference_ratio_1 = 0.5;
     auto reference_point_1 = FloatCoordinate{FloatLongitude{0}, FloatLatitude{1}};
     BOOST_CHECK_EQUAL(result_1.first, reference_ratio_1);
@@ -208,9 +211,10 @@ BOOST_AUTO_TEST_CASE(point_on_segment)
     //  |
     //  |
     //  s
-    auto result_2 = coordinate_calculation::projectPointOnSegment(
-        {FloatLongitude{0.}, FloatLatitude{0.}}, {FloatLongitude{0}, FloatLatitude{2}},
-        {FloatLongitude{0}, FloatLatitude{3}});
+    auto result_2 =
+        coordinate_calculation::projectPointOnSegment({FloatLongitude{0.}, FloatLatitude{0.}},
+                                                      {FloatLongitude{0}, FloatLatitude{2}},
+                                                      {FloatLongitude{0}, FloatLatitude{3}});
     auto reference_ratio_2 = 1.;
     auto reference_point_2 = FloatCoordinate{FloatLongitude{0}, FloatLatitude{2}};
     BOOST_CHECK_EQUAL(result_2.first, reference_ratio_2);
@@ -224,9 +228,10 @@ BOOST_AUTO_TEST_CASE(point_on_segment)
     //  s
     //  :
     //  i
-    auto result_3 = coordinate_calculation::projectPointOnSegment(
-        {FloatLongitude{0.}, FloatLatitude{0.}}, {FloatLongitude{0}, FloatLatitude{2}},
-        {FloatLongitude{0}, FloatLatitude{-1}});
+    auto result_3 =
+        coordinate_calculation::projectPointOnSegment({FloatLongitude{0.}, FloatLatitude{0.}},
+                                                      {FloatLongitude{0}, FloatLatitude{2}},
+                                                      {FloatLongitude{0}, FloatLatitude{-1}});
     auto reference_ratio_3 = 0.;
     auto reference_point_3 = FloatCoordinate{FloatLongitude{0}, FloatLatitude{0}};
     BOOST_CHECK_EQUAL(result_3.first, reference_ratio_3);
@@ -240,7 +245,8 @@ BOOST_AUTO_TEST_CASE(point_on_segment)
     // s
     //
     auto result_4 = coordinate_calculation::projectPointOnSegment(
-        {FloatLongitude{0}, FloatLatitude{0}}, {FloatLongitude{1}, FloatLatitude{1}},
+        {FloatLongitude{0}, FloatLatitude{0}},
+        {FloatLongitude{1}, FloatLatitude{1}},
         {FloatLongitude{0.5 + 0.1}, FloatLatitude{0.5 - 0.1}});
     auto reference_ratio_4 = 0.5;
     auto reference_point_4 = FloatCoordinate{FloatLongitude{0.5}, FloatLatitude{0.5}};

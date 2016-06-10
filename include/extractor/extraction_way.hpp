@@ -31,6 +31,8 @@ struct ExtractionWay
         is_startpoint = true;
         is_access_restricted = false;
         name.clear();
+        pronunciation.clear();
+        destinations.clear();
         forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
     }
@@ -46,6 +48,8 @@ struct ExtractionWay
     double backward_speed;
     double duration;
     std::string name;
+    std::string pronunciation;
+    std::string destinations;
     bool roundabout;
     bool is_access_restricted;
     bool is_startpoint;

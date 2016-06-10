@@ -11,24 +11,19 @@ namespace extractor
 struct ProfileProperties
 {
     ProfileProperties()
-        : traffic_signal_penalty(0), u_turn_penalty(0), continue_straight_at_waypoint(true), use_turn_restrictions(false)
+        : traffic_signal_penalty(0), u_turn_penalty(0), continue_straight_at_waypoint(true),
+          use_turn_restrictions(false)
     {
     }
 
-    double GetUturnPenalty() const
-    {
-        return u_turn_penalty / 10.;
-    }
+    double GetUturnPenalty() const { return u_turn_penalty / 10.; }
 
     void SetUturnPenalty(const double u_turn_penalty_)
     {
         u_turn_penalty = boost::numeric_cast<int>(u_turn_penalty_ * 10.);
     }
 
-    double GetTrafficSignalPenalty() const
-    {
-        return traffic_signal_penalty / 10.;
-    }
+    double GetTrafficSignalPenalty() const { return traffic_signal_penalty / 10.; }
 
     void SetTrafficSignalPenalty(const double traffic_signal_penalty_)
     {

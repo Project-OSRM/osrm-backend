@@ -1,9 +1,9 @@
 #ifndef ROUTING_BASE_HPP
 #define ROUTING_BASE_HPP
 
+#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/typedefs.hpp"
 
@@ -228,8 +228,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         BOOST_ASSERT(*packed_path_begin == phantom_node_pair.source_phantom.forward_segment_id.id ||
                      *packed_path_begin == phantom_node_pair.source_phantom.reverse_segment_id.id);
-        BOOST_ASSERT(*std::prev(packed_path_end) == phantom_node_pair.target_phantom.forward_segment_id.id ||
-                     *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
+        BOOST_ASSERT(
+            *std::prev(packed_path_end) == phantom_node_pair.target_phantom.forward_segment_id.id ||
+            *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
 
         std::pair<NodeID, NodeID> edge;
         while (!recursion_stack.empty())
@@ -322,8 +323,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 for (std::size_t i = start_index; i < end_index; ++i)
                 {
                     unpacked_path.push_back(
-                        PathData{id_vector[i], name_index, weight_vector[i],
-                                 extractor::guidance::TurnInstruction::NO_TURN(), travel_mode,
+                        PathData{id_vector[i],
+                                 name_index,
+                                 weight_vector[i],
+                                 extractor::guidance::TurnInstruction::NO_TURN(),
+                                 travel_mode,
                                  INVALID_ENTRY_CLASSID});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
@@ -381,7 +385,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             BOOST_ASSERT(i < id_vector.size());
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
             unpacked_path.push_back(PathData{
-                id_vector[i], phantom_node_pair.target_phantom.name_id, weight_vector[i],
+                id_vector[i],
+                phantom_node_pair.target_phantom.name_id,
+                weight_vector[i],
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
                                             : phantom_node_pair.target_phantom.forward_travel_mode,
@@ -544,13 +550,27 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         {
             if (!forward_heap.Empty())
             {
-                RoutingStep(forward_heap, reverse_heap, middle, distance, min_edge_offset, true,
-                            STALLING_ENABLED, force_loop_forward, force_loop_reverse);
+                RoutingStep(forward_heap,
+                            reverse_heap,
+                            middle,
+                            distance,
+                            min_edge_offset,
+                            true,
+                            STALLING_ENABLED,
+                            force_loop_forward,
+                            force_loop_reverse);
             }
             if (!reverse_heap.Empty())
             {
-                RoutingStep(reverse_heap, forward_heap, middle, distance, min_edge_offset, false,
-                            STALLING_ENABLED, force_loop_reverse, force_loop_forward);
+                RoutingStep(reverse_heap,
+                            forward_heap,
+                            middle,
+                            distance,
+                            min_edge_offset,
+                            false,
+                            STALLING_ENABLED,
+                            force_loop_reverse,
+                            force_loop_forward);
             }
         }
 
@@ -622,8 +642,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 }
                 else
                 {
-                    RoutingStep(forward_heap, reverse_heap, middle, distance, min_edge_offset, true,
-                                STALLING_ENABLED, force_loop_forward, force_loop_reverse);
+                    RoutingStep(forward_heap,
+                                reverse_heap,
+                                middle,
+                                distance,
+                                min_edge_offset,
+                                true,
+                                STALLING_ENABLED,
+                                force_loop_forward,
+                                force_loop_reverse);
                 }
             }
             if (!reverse_heap.Empty())
@@ -636,8 +663,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 }
                 else
                 {
-                    RoutingStep(reverse_heap, forward_heap, middle, distance, min_edge_offset,
-                                false, STALLING_ENABLED, force_loop_reverse, force_loop_forward);
+                    RoutingStep(reverse_heap,
+                                forward_heap,
+                                middle,
+                                distance,
+                                min_edge_offset,
+                                false,
+                                STALLING_ENABLED,
+                                force_loop_reverse,
+                                force_loop_forward);
                 }
             }
         }
@@ -690,12 +724,24 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         while (0 < forward_core_heap.Size() && 0 < reverse_core_heap.Size() &&
                distance > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
         {
-            RoutingStep(forward_core_heap, reverse_core_heap, middle, distance,
-                        min_core_edge_offset, true, STALLING_DISABLED, force_loop_forward,
+            RoutingStep(forward_core_heap,
+                        reverse_core_heap,
+                        middle,
+                        distance,
+                        min_core_edge_offset,
+                        true,
+                        STALLING_DISABLED,
+                        force_loop_forward,
                         force_loop_reverse);
 
-            RoutingStep(reverse_core_heap, forward_core_heap, middle, distance,
-                        min_core_edge_offset, false, STALLING_DISABLED, force_loop_reverse,
+            RoutingStep(reverse_core_heap,
+                        forward_core_heap,
+                        middle,
+                        distance,
+                        min_core_edge_offset,
+                        false,
+                        STALLING_DISABLED,
+                        force_loop_reverse,
                         force_loop_forward);
         }
 
@@ -724,8 +770,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             else
             {
                 std::vector<NodeID> packed_core_leg;
-                RetrievePackedPathFromHeap(forward_core_heap, reverse_core_heap, middle,
-                                           packed_core_leg);
+                RetrievePackedPathFromHeap(
+                    forward_core_heap, reverse_core_heap, middle, packed_core_leg);
                 BOOST_ASSERT(packed_core_leg.size() > 0);
                 RetrievePackedPathFromSingleHeap(forward_heap, packed_core_leg.front(), packed_leg);
                 std::reverse(packed_leg.begin(), packed_leg.end());
@@ -872,8 +918,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         int duration = INVALID_EDGE_WEIGHT;
         std::vector<NodeID> packed_path;
-        SearchWithCore(forward_heap, reverse_heap, forward_core_heap, reverse_core_heap, duration,
-                       packed_path, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS, duration_upper_bound);
+        SearchWithCore(forward_heap,
+                       reverse_heap,
+                       forward_core_heap,
+                       reverse_core_heap,
+                       duration,
+                       packed_path,
+                       DO_NOT_FORCE_LOOPS,
+                       DO_NOT_FORCE_LOOPS,
+                       duration_upper_bound);
 
         double distance = std::numeric_limits<double>::max();
         if (duration != INVALID_EDGE_WEIGHT)
@@ -926,8 +979,13 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
         int duration = INVALID_EDGE_WEIGHT;
         std::vector<NodeID> packed_path;
-        Search(forward_heap, reverse_heap, duration, packed_path, DO_NOT_FORCE_LOOPS,
-               DO_NOT_FORCE_LOOPS, duration_upper_bound);
+        Search(forward_heap,
+               reverse_heap,
+               duration,
+               packed_path,
+               DO_NOT_FORCE_LOOPS,
+               DO_NOT_FORCE_LOOPS,
+               duration_upper_bound);
 
         if (duration == INVALID_EDGE_WEIGHT)
         {

@@ -1,9 +1,9 @@
 #ifndef CAST_HPP
 #define CAST_HPP
 
-#include <string>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
+#include <string>
 #include <type_traits>
 
 #include <boost/algorithm/string/classification.hpp>

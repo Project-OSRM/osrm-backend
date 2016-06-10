@@ -3,8 +3,8 @@
 
 #include <cmath>
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <boost/math/constants/constants.hpp>
 

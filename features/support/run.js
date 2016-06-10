@@ -25,7 +25,7 @@ module.exports = function () {
             opts = opts.replace('{profile}', [this.PROFILES_PATH, this.profile + '.lua'].join('/'));
         }
 
-        var cmd = util.format('%s%s%s/%s%s%s %s 2>%s', this.QQ, this.LOAD_LIBRARIES, this.BIN_PATH, bin, this.EXE, this.QQ, opts, this.ERROR_LOG_FILE);
+        var cmd = util.format('%s%s/%s%s%s %s 2>%s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ, opts, this.ERROR_LOG_FILE);
         process.chdir(this.TEST_FOLDER);
         exec(cmd, (err, stdout, stderr) => {
             this.stdout = stdout.toString();

@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/roundabout_handler.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -52,8 +52,11 @@ operator()(const NodeID from_nid, const EdgeID via_eid, Intersection intersectio
     const auto flags = getRoundaboutFlags(from_nid, via_eid, intersection);
     const auto roundabout_type = getRoundaboutType(node_based_graph.GetTarget(via_eid));
     // find the radius of the roundabout
-    return handleRoundabouts(roundabout_type, via_eid, flags.on_roundabout,
-                             flags.can_exit_separately, std::move(intersection));
+    return handleRoundabouts(roundabout_type,
+                             via_eid,
+                             flags.on_roundabout,
+                             flags.can_exit_separately,
+                             std::move(intersection));
 }
 
 detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
@@ -169,9 +172,13 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
 
                 // there is a single non-roundabout edge
                 const auto src_coordinate = getCoordinate(node);
-                const auto next_coordinate = getRepresentativeCoordinate(
-                    node, node_based_graph.GetTarget(edge), edge, edge_data.reversed,
-                    compressed_edge_container, node_info_list);
+                const auto next_coordinate =
+                    getRepresentativeCoordinate(node,
+                                                node_based_graph.GetTarget(edge),
+                                                edge,
+                                                edge_data.reversed,
+                                                compressed_edge_container,
+                                                node_info_list);
                 result.push_back(
                     util::coordinate_calculation::bearing(src_coordinate, next_coordinate));
                 break;
@@ -206,40 +213,40 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     unsigned roundabout_name_id = 0;
     std::unordered_set<unsigned> connected_names;
 
-    const auto getNextOnRoundabout = [this, &roundabout_name_id,
-                                      &connected_names](const NodeID node) {
-        EdgeID continue_edge = SPECIAL_EDGEID;
-        for (const auto edge : node_based_graph.GetAdjacentEdgeRange(node))
-        {
-            const auto &edge_data = node_based_graph.GetEdgeData(edge);
-            if (!edge_data.reversed && edge_data.roundabout)
+    const auto getNextOnRoundabout =
+        [this, &roundabout_name_id, &connected_names](const NodeID node) {
+            EdgeID continue_edge = SPECIAL_EDGEID;
+            for (const auto edge : node_based_graph.GetAdjacentEdgeRange(node))
             {
-                if (SPECIAL_EDGEID != continue_edge)
+                const auto &edge_data = node_based_graph.GetEdgeData(edge);
+                if (!edge_data.reversed && edge_data.roundabout)
                 {
-                    // fork in roundabout
-                    return SPECIAL_EDGEID;
+                    if (SPECIAL_EDGEID != continue_edge)
+                    {
+                        // fork in roundabout
+                        return SPECIAL_EDGEID;
+                    }
+                    // roundabout does not keep its name
+                    if (roundabout_name_id != 0 && roundabout_name_id != edge_data.name_id &&
+                        requiresNameAnnounced(name_table.GetNameForID(roundabout_name_id),
+                                              name_table.GetNameForID(edge_data.name_id),
+                                              street_name_suffix_table))
+                    {
+                        return SPECIAL_EDGEID;
+                    }
+
+                    roundabout_name_id = edge_data.name_id;
+
+                    continue_edge = edge;
                 }
-                // roundabout does not keep its name
-                if (roundabout_name_id != 0 && roundabout_name_id != edge_data.name_id &&
-                    requiresNameAnnounced(name_table.GetNameForID(roundabout_name_id),
-                                          name_table.GetNameForID(edge_data.name_id),
-                                          street_name_suffix_table))
+                else if (!edge_data.roundabout)
                 {
-                    return SPECIAL_EDGEID;
+                    // remember all connected road names
+                    connected_names.insert(edge_data.name_id);
                 }
-
-                roundabout_name_id = edge_data.name_id;
-
-                continue_edge = edge;
             }
-            else if (!edge_data.roundabout)
-            {
-                // remember all connected road names
-                connected_names.insert(edge_data.name_id);
-            }
-        }
-        return continue_edge;
-    };
+            return continue_edge;
+        };
     // the roundabout radius has to be the same for all locations we look at it from
     // to guarantee this, we search the full roundabout for its vertices
     // and select the three smalles ids

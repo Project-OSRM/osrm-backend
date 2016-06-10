@@ -57,10 +57,11 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4.json?nooptions"), 13);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4..json?nooptions"), 14);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4.0.json?nooptions"), 15);
-    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,4"} + '\0' + ".json"), 7);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,4"} + '\0' + ".json"),
+                      7);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,"} + '\0'), 6);
 
-    //BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(), );
+    // BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(), );
 }
 
 BOOST_AUTO_TEST_CASE(invalid_table_urls)
@@ -98,8 +99,9 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     reference_2.steps = true;
     reference_2.annotations = true;
     reference_2.coordinates = coords_1;
-    auto result_2 = parseParameters<RouteParameters>(
-        "1,2;3,4?steps=true&alternatives=true&geometries=polyline&overview=simplified&annotations=true");
+    auto result_2 =
+        parseParameters<RouteParameters>("1,2;3,4?steps=true&alternatives=true&geometries=polyline&"
+                                         "overview=simplified&annotations=true");
     BOOST_CHECK(result_2);
     BOOST_CHECK_EQUAL(reference_2.steps, result_2->steps);
     BOOST_CHECK_EQUAL(reference_2.alternatives, result_2->alternatives);
@@ -112,8 +114,12 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
     CHECK_EQUAL_RANGE(reference_2.hints, result_2->hints);
 
-    RouteParameters reference_3{false, false, false, RouteParameters::GeometriesType::GeoJSON,
-                                RouteParameters::OverviewType::False, true};
+    RouteParameters reference_3{false,
+                                false,
+                                false,
+                                RouteParameters::GeometriesType::GeoJSON,
+                                RouteParameters::OverviewType::False,
+                                true};
     reference_3.coordinates = coords_1;
     auto result_3 = api::parseParameters<engine::api::RouteParameters>(
         "1,2;3,4?steps=false&alternatives=false&geometries=geojson&overview=false&continue_"
@@ -215,7 +221,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     auto result_7 = parseParameters<RouteParameters>("1,2;3,4?radiuses=;unlimited");
     RouteParameters reference_7{};
     reference_7.coordinates = coords_1;
-    reference_7.radiuses = {boost::none, boost::make_optional(std::numeric_limits<double>::infinity())};
+    reference_7.radiuses = {boost::none,
+                            boost::make_optional(std::numeric_limits<double>::infinity())};
     BOOST_CHECK(result_7);
     BOOST_CHECK_EQUAL(reference_7.steps, result_7->steps);
     BOOST_CHECK_EQUAL(reference_7.alternatives, result_7->alternatives);
@@ -257,19 +264,20 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                  "IFAAEBl-Umfg=="),
         boost::none};
     RouteParameters reference_10{false,
-                                false,
-                                false,
-                                RouteParameters::GeometriesType::Polyline,
-                                RouteParameters::OverviewType::Simplified,
-                                boost::optional<bool>{},
-                                coords_3,
-                                hints_10,
-                                std::vector<boost::optional<double>>{},
-                                std::vector<boost::optional<engine::Bearing>>{}};
+                                 false,
+                                 false,
+                                 RouteParameters::GeometriesType::Polyline,
+                                 RouteParameters::OverviewType::Simplified,
+                                 boost::optional<bool>{},
+                                 coords_3,
+                                 hints_10,
+                                 std::vector<boost::optional<double>>{},
+                                 std::vector<boost::optional<engine::Bearing>>{}};
     auto result_10 = parseParameters<RouteParameters>(
         "1,2;3,4;5,6;7,8?steps=false&hints="
         "DAIAgP___38AAAAAAAAAAAIAAAAAAAAAEAAAAOgDAAD0AwAAGwAAAOUacQBQP5sCshpxAB0_mwIAAAEBl-Umfg==;;"
-        "cgAAgP___39jAAAADgAAACIAAABeAAAAkQAAANoDAABOAgAAGwAAAFVGcQCiRJsCR0VxAOZFmwIFAAEBl-Umfg==;");
+        "cgAAgP___39jAAAADgAAACIAAABeAAAAkQAAANoDAABOAgAAGwAAAFVGcQCiRJsCR0VxAOZFmwIFAAEBl-Umfg=="
+        ";");
     BOOST_CHECK(result_10);
     BOOST_CHECK_EQUAL(reference_10.steps, result_10->steps);
     BOOST_CHECK_EQUAL(reference_10.alternatives, result_10->alternatives);

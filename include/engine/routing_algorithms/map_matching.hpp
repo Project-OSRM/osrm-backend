@@ -4,12 +4,12 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 
 #include "engine/map_matching/hidden_markov_model.hpp"
-#include "engine/map_matching/sub_matching.hpp"
 #include "engine/map_matching/matching_confidence.hpp"
+#include "engine/map_matching/sub_matching.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/json_logger.hpp"
 #include "util/for_each_pair.hpp"
+#include "util/json_logger.hpp"
 
 #include <cstddef>
 
@@ -86,8 +86,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
         const bool use_timestamps = trace_timestamps.size() > 1;
 
-        const auto median_sample_time = [&]
-        {
+        const auto median_sample_time = [&] {
             if (use_timestamps)
             {
                 return std::max(1u, GetMedianSampleTime(trace_timestamps));
@@ -98,8 +97,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             }
         }();
         const auto max_broken_time = median_sample_time * MAX_BROKEN_STATES;
-        const auto max_distance_delta = [&]
-        {
+        const auto max_distance_delta = [&] {
             if (use_timestamps)
             {
                 return median_sample_time * MAX_SPEED;
@@ -116,10 +114,10 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             for (auto t = 0UL; t < candidates_list.size(); ++t)
             {
                 emission_log_probabilities[t].resize(candidates_list[t].size());
-                std::transform(candidates_list[t].begin(), candidates_list[t].end(),
+                std::transform(candidates_list[t].begin(),
+                               candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
-                               [this](const PhantomNodeWithDistance &candidate)
-                               {
+                               [this](const PhantomNodeWithDistance &candidate) {
                                    return default_emission_log_probability(candidate.distance);
                                });
             }
@@ -134,19 +132,19 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     map_matching::EmissionLogProbability emission_log_probability(
                         *trace_gps_precision[t]);
                     std::transform(
-                        candidates_list[t].begin(), candidates_list[t].end(),
+                        candidates_list[t].begin(),
+                        candidates_list[t].end(),
                         emission_log_probabilities[t].begin(),
-                        [&emission_log_probability](const PhantomNodeWithDistance &candidate)
-                        {
+                        [&emission_log_probability](const PhantomNodeWithDistance &candidate) {
                             return emission_log_probability(candidate.distance);
                         });
                 }
                 else
                 {
-                    std::transform(candidates_list[t].begin(), candidates_list[t].end(),
+                    std::transform(candidates_list[t].begin(),
+                                   candidates_list[t].end(),
                                    emission_log_probabilities[t].begin(),
-                                   [this](const PhantomNodeWithDistance &candidate)
-                                   {
+                                   [this](const PhantomNodeWithDistance &candidate) {
                                        return default_emission_log_probability(candidate.distance);
                                    });
                 }
@@ -269,14 +267,19 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         forward_core_heap.Clear();
                         reverse_core_heap.Clear();
                         network_distance = super::GetNetworkDistanceWithCore(
-                            forward_heap, reverse_heap, forward_core_heap, reverse_core_heap,
+                            forward_heap,
+                            reverse_heap,
+                            forward_core_heap,
+                            reverse_core_heap,
                             prev_unbroken_timestamps_list[s].phantom_node,
-                            current_timestamps_list[s_prime].phantom_node, duration_uppder_bound);
+                            current_timestamps_list[s_prime].phantom_node,
+                            duration_uppder_bound);
                     }
                     else
                     {
                         network_distance = super::GetNetworkDistance(
-                            forward_heap, reverse_heap,
+                            forward_heap,
+                            reverse_heap,
                             prev_unbroken_timestamps_list[s].phantom_node,
                             current_timestamps_list[s_prime].phantom_node);
                     }
@@ -398,10 +401,10 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 matching_distance += model.path_distances[timestamp_index][location_index];
             }
             util::for_each_pair(
-                reconstructed_indices, [&trace_distance, &trace_coordinates](
-                                           const std::pair<std::size_t, std::size_t> &prev,
-                                           const std::pair<std::size_t, std::size_t> &curr)
-                {
+                reconstructed_indices,
+                [&trace_distance,
+                 &trace_coordinates](const std::pair<std::size_t, std::size_t> &prev,
+                                     const std::pair<std::size_t, std::size_t> &curr) {
                     trace_distance += util::coordinate_calculation::haversineDistance(
                         trace_coordinates[prev.first], trace_coordinates[curr.first]);
                 });

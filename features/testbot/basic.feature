@@ -56,7 +56,7 @@ Feature: Basic Routing
 
     Scenario: Two ways connected in a straight line
         Given the node map
-            | a | b | c |
+            | a |   | b |   | c |
 
         And the ways
             | nodes |

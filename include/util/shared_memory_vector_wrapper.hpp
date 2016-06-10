@@ -3,13 +3,15 @@
 
 #include <boost/assert.hpp>
 
+#include "util/simple_logger.hpp"
+
 #include <cstddef>
 
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace osrm
 {

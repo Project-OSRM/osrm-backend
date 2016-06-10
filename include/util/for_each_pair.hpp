@@ -1,8 +1,8 @@
 #ifndef FOR_EACH_PAIR_HPP
 #define FOR_EACH_PAIR_HPP
 
-#include <numeric>
 #include <iterator>
+#include <numeric>
 
 namespace osrm
 {

@@ -1,5 +1,5 @@
-#include "extractor/guidance/discrete_angle.hpp"
 #include "util/guidance/bearing_class.hpp"
+#include "extractor/guidance/discrete_angle.hpp"
 #include "util/guidance/toolkit.hpp"
 
 #include <algorithm>
@@ -44,10 +44,7 @@ bool BearingClass::operator<(const BearingClass &other) const
     return false;
 }
 
-void BearingClass::add(const DiscreteBearing bearing)
-{
-    available_bearings.push_back(bearing);
-}
+void BearingClass::add(const DiscreteBearing bearing) { available_bearings.push_back(bearing); }
 
 const std::vector<DiscreteBearing> &BearingClass::getAvailableBearings() const
 {
@@ -69,7 +66,8 @@ std::size_t BearingClass::findMatchingBearing(const double bearing) const
     // the small size of the intersections allows a linear compare
     auto discrete_bearing = static_cast<DiscreteBearing>(bearing);
     auto max_element =
-        std::max_element(available_bearings.begin(), available_bearings.end(),
+        std::max_element(available_bearings.begin(),
+                         available_bearings.end(),
                          [&](const DiscreteBearing first, const DiscreteBearing second) {
                              return angularDeviation(first, discrete_bearing) >
                                     angularDeviation(second, discrete_bearing);

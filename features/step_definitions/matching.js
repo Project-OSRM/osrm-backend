@@ -34,7 +34,8 @@ module.exports = function () {
                         turns = '',
                         route = '',
                         duration = '',
-                        annotation = '';
+                        annotation = '',
+                        OSMIDs = '';
 
 
                     if (res.statusCode === 200) {
@@ -61,6 +62,11 @@ module.exports = function () {
                             if (json.matchings.length != 1) throw new Error('*** Checking annotation only supported for matchings with one subtrace');
                             annotation = this.annotationList(json.matchings[0]);
                         }
+
+                        if (headers.has('OSM IDs')) {
+                            if (json.matchings.length != 1) throw new Error('*** CHecking annotation only supported for matchings with one subtrace');
+                            OSMIDs = this.OSMIDList(json.matchings[0]);
+                        }
                     }
 
                     if (headers.has('turns')) {
@@ -77,6 +83,10 @@ module.exports = function () {
 
                     if (headers.has('annotation')) {
                         got.annotation = annotation.toString();
+                    }
+
+                    if (headers.has('OSM IDs')) {
+                        got['OSM IDs'] = OSMIDs;
                     }
 
                     var ok = true;

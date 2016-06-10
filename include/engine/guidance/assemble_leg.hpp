@@ -35,11 +35,12 @@ struct NamedSegment
 
 template <std::size_t SegmentNumber>
 
-std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathData> &route_data)
+std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathData> &route_data,
+                                                        const PhantomNode &target_node,
+                                                        const bool target_traversed_in_reverse)
 {
     // merges segments with same name id
-    const auto collapse_segments = [](std::vector<NamedSegment> &segments)
-    {
+    const auto collapse_segments = [](std::vector<NamedSegment> &segments) {
         auto out = segments.begin();
         auto end = segments.end();
 
@@ -69,47 +70,48 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
     std::vector<NamedSegment> segments(route_data.size());
     std::uint32_t index = 0;
     std::transform(
-        route_data.begin(), route_data.end(), segments.begin(), [&index](const PathData &point)
-        {
+        route_data.begin(), route_data.end(), segments.begin(), [&index](const PathData &point) {
             return NamedSegment{point.duration_until_turn, index++, point.name_id};
         });
+    const auto target_duration =
+        target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
+    if (target_duration > 1)
+        segments.push_back({target_duration, index++, target_node.name_id});
     // this makes sure that the segment with the lowest position comes first
-    std::sort(segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs)
-              {
-                  return lhs.name_id < rhs.name_id ||
-                         (lhs.name_id == rhs.name_id && lhs.position < rhs.position);
-              });
+    std::sort(
+        segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
+            return lhs.name_id < rhs.name_id ||
+                   (lhs.name_id == rhs.name_id && lhs.position < rhs.position);
+        });
     auto new_end = collapse_segments(segments);
     segments.resize(new_end - segments.begin());
 
     // Filter out segments with an empty name (name_id == 0)
-    new_end = std::remove_if(segments.begin(), segments.end(), [](const NamedSegment &segment)
-              {
-                  return segment.name_id == 0;
-              });
+    new_end = std::remove_if(segments.begin(), segments.end(), [](const NamedSegment &segment) {
+        return segment.name_id == 0;
+    });
     segments.resize(new_end - segments.begin());
 
     // sort descending
-    std::sort(segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs)
-              {
-                  return lhs.duration > rhs.duration ||
-                         (lhs.duration == rhs.duration && lhs.position < rhs.position);
-              });
+    std::sort(
+        segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
+            return lhs.duration > rhs.duration ||
+                   (lhs.duration == rhs.duration && lhs.position < rhs.position);
+        });
 
     // make sure the segments are sorted by position
     segments.resize(std::min(segments.size(), SegmentNumber));
-    std::sort(segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs)
-              {
-                  return lhs.position < rhs.position;
-              });
+    std::sort(
+        segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
+            return lhs.position < rhs.position;
+        });
 
     std::array<std::uint32_t, SegmentNumber> summary;
     std::fill(summary.begin(), summary.end(), 0);
-    std::transform(segments.begin(), segments.end(), summary.begin(),
-                   [](const NamedSegment &segment)
-                   {
-                       return segment.name_id;
-                   });
+    std::transform(segments.begin(),
+                   segments.end(),
+                   summary.begin(),
+                   [](const NamedSegment &segment) { return segment.name_id; });
     return summary;
 }
 }
@@ -126,9 +128,11 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight) /
         10.;
 
-    auto distance = std::accumulate(leg_geometry.segment_distances.begin(),
-                                    leg_geometry.segment_distances.end(), 0.);
-    auto duration = std::accumulate(route_data.begin(), route_data.end(), 0.,
+    auto distance = std::accumulate(
+        leg_geometry.segment_distances.begin(), leg_geometry.segment_distances.end(), 0.);
+    auto duration = std::accumulate(route_data.begin(),
+                                    route_data.end(),
+                                    0.,
                                     [](const double sum, const PathData &data) {
                                         return sum + data.duration_until_turn;
                                     }) /
@@ -166,14 +170,17 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     std::string summary;
     if (needs_summary)
     {
-        auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(route_data);
+        auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(
+            route_data, target_node, target_traversed_in_reverse);
+        if (route_data.empty())
+            summary_array[0] = source_node.name_id;
 
         BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
         BOOST_ASSERT(summary_array.begin() != summary_array.end());
-        summary = std::accumulate(std::next(summary_array.begin()), summary_array.end(),
+        summary = std::accumulate(std::next(summary_array.begin()),
+                                  summary_array.end(),
                                   facade.GetNameForID(summary_array.front()),
-                                  [&facade](std::string previous, const std::uint32_t name_id)
-                                  {
+                                  [&facade](std::string previous, const std::uint32_t name_id) {
                                       if (name_id != 0)
                                       {
                                           previous += ", " + facade.GetNameForID(name_id);

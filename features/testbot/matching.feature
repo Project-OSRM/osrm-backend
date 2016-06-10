@@ -122,3 +122,9 @@ Feature: Basic Map Matching
             | trace | matchings | annotation                                                                     |
             | abeh  | abcedgh   | 1:9.897633,0:0,1:10.008842,1:10.008842,1:10.008842,0:0,2:20.017685,1:10.008842 |
             | abci  | abc,ci    | 1:9.897633,0:0,1:10.008842,0:0.111209,1:10.010367                              |
+
+        # The following is the same as the above, but separated for readability (line length)
+        When I match I should get
+            | trace | matchings | OSM IDs               |
+            | abeh  | abcedgh   | 1,2,3,2,3,4,5,4,5,6,7 |
+            | abci  | abc,ci    | 1,2,3,2,3,8,3,8       |

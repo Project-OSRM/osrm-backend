@@ -1,5 +1,5 @@
+#include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/original_edge_data.hpp"
@@ -9,11 +9,12 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "storage/storage.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
+#include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/simple_logger.hpp"
@@ -244,6 +245,10 @@ int Storage::Run()
     nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
                                                       coordinate_list_size);
+    // we'll read a list of OSM node IDs from the same data, so set the block size for the same
+    // number of items:
+    shared_layout_ptr->SetBlockSize<OSMNodeID>(SharedDataLayout::OSM_NODE_ID_LIST,
+                                               util::PackedVectorSize(coordinate_list_size));
 
     // load geometries sizes
     boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
@@ -258,8 +263,8 @@ int Storage::Run()
     geometry_input_stream.read((char *)&number_of_geometries_indices, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::GEOMETRIES_INDEX,
                                               number_of_geometries_indices);
-    boost::iostreams::seek(geometry_input_stream, number_of_geometries_indices * sizeof(unsigned),
-                           BOOST_IOS::cur);
+    boost::iostreams::seek(
+        geometry_input_stream, number_of_geometries_indices * sizeof(unsigned), BOOST_IOS::cur);
     geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<extractor::CompressedEdgeContainer::CompressedEdge>(
         SharedDataLayout::GEOMETRIES_LIST, number_of_compressed_geometries);
@@ -300,7 +305,8 @@ int Storage::Run()
         while (std::getline(datasource_names_input_stream, name))
         {
             m_datasource_name_offsets.push_back(m_datasource_name_data.size());
-            std::copy(name.c_str(), name.c_str() + name.size(),
+            std::copy(name.c_str(),
+                      name.c_str() + name.size(),
                       std::back_inserter(m_datasource_name_data));
             m_datasource_name_lengths.push_back(name.size());
         }
@@ -394,7 +400,8 @@ int Storage::Run()
               file_index_path_ptr +
                   shared_layout_ptr->GetBlockSize(SharedDataLayout::FILE_INDEX_PATH),
               0);
-    std::copy(absolute_file_index_path.string().begin(), absolute_file_index_path.string().end(),
+    std::copy(absolute_file_index_path.string().begin(),
+              absolute_file_index_path.string().end(),
               file_index_path_ptr);
 
     // Loading street names
@@ -508,15 +515,16 @@ int Storage::Run()
     {
         std::cout << "Copying " << (m_datasource_name_data.end() - m_datasource_name_data.begin())
                   << " chars into name data ptr\n";
-        std::copy(m_datasource_name_data.begin(), m_datasource_name_data.end(),
-                  datasource_name_data_ptr);
+        std::copy(
+            m_datasource_name_data.begin(), m_datasource_name_data.end(), datasource_name_data_ptr);
     }
 
     auto datasource_name_offsets_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_OFFSETS);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_OFFSETS) > 0)
     {
-        std::copy(m_datasource_name_offsets.begin(), m_datasource_name_offsets.end(),
+        std::copy(m_datasource_name_offsets.begin(),
+                  m_datasource_name_offsets.end(),
                   datasource_name_offsets_ptr);
     }
 
@@ -524,19 +532,26 @@ int Storage::Run()
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_LENGTHS);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_LENGTHS) > 0)
     {
-        std::copy(m_datasource_name_lengths.begin(), m_datasource_name_lengths.end(),
+        std::copy(m_datasource_name_lengths.begin(),
+                  m_datasource_name_lengths.end(),
                   datasource_name_lengths_ptr);
     }
 
     // Loading list of coordinates
     util::Coordinate *coordinates_ptr = shared_layout_ptr->GetBlockPtr<util::Coordinate, true>(
         shared_memory_ptr, SharedDataLayout::COORDINATE_LIST);
+    OSMNodeID *osmnodeid_ptr = shared_layout_ptr->GetBlockPtr<OSMNodeID, true>(
+        shared_memory_ptr, SharedDataLayout::OSM_NODE_ID_LIST);
+    util::PackedVector<OSMNodeID, true> osmnodeid_list;
+    osmnodeid_list.reset(
+        osmnodeid_ptr, shared_layout_ptr->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
 
     extractor::QueryNode current_node;
     for (unsigned i = 0; i < coordinate_list_size; ++i)
     {
         nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
         coordinates_ptr[i] = util::Coordinate(current_node.lon, current_node.lat);
+        osmnodeid_list.push_back(OSMNodeID(current_node.node_id));
     }
     nodes_input_stream.close();
 

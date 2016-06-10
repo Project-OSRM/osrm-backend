@@ -1,9 +1,9 @@
 #ifndef STATIC_GRAPH_HPP
 #define STATIC_GRAPH_HPP
 
+#include "util/integer_range.hpp"
 #include "util/percent.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
-#include "util/integer_range.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>

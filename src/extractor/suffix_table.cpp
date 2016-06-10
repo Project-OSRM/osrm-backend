@@ -26,8 +26,8 @@ SuffixTable::SuffixTable(lua_State *lua_state)
     try
     {
         // call lua profile to compute turn penalty
-        luabind::call_function<void>(lua_state, "get_name_suffix_list",
-                                     boost::ref(suffixes_vector));
+        luabind::call_function<void>(
+            lua_state, "get_name_suffix_list", boost::ref(suffixes_vector));
     }
     catch (const luabind::error &er)
     {

@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"
@@ -38,12 +38,13 @@ IntersectionHandler::~IntersectionHandler() {}
 
 std::size_t IntersectionHandler::countValid(const Intersection &intersection) const
 {
-    return std::count_if(intersection.begin(), intersection.end(),
-                         [](const ConnectedRoad &road) { return road.entry_allowed; });
+    return std::count_if(intersection.begin(), intersection.end(), [](const ConnectedRoad &road) {
+        return road.entry_allowed;
+    });
 }
 
 TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
-                                                const ConnectedRoad &road) const
+                                                      const ConnectedRoad &road) const
 {
 
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
@@ -56,7 +57,7 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     if (!on_ramp && onto_ramp)
         return TurnType::OnRamp;
 
-    if (in_data.name_id == out_data.name_id && in_data.name_id != INVALID_NAME_ID)
+    if (in_data.name_id == out_data.name_id && in_data.name_id != EMPTY_NAMEID)
     {
         return TurnType::Continue;
     }
@@ -94,9 +95,9 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
             // obvious turn onto a through street is a merge
             if (through_street)
             {
-                return {TurnType::Merge, road.turn.angle > STRAIGHT_ANGLE
-                                             ? DirectionModifier::SlightRight
-                                             : DirectionModifier::SlightLeft};
+                return {TurnType::Merge,
+                        road.turn.angle > STRAIGHT_ANGLE ? DirectionModifier::SlightRight
+                                                         : DirectionModifier::SlightLeft};
             }
             else
             {
@@ -305,7 +306,7 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
 bool IntersectionHandler::isThroughStreet(const std::size_t index,
                                           const Intersection &intersection) const
 {
-    if (node_based_graph.GetEdgeData(intersection[index].turn.eid).name_id == INVALID_NAME_ID)
+    if (node_based_graph.GetEdgeData(intersection[index].turn.eid).name_id == EMPTY_NAMEID)
         return false;
     for (const auto &road : intersection)
     {

@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include <algorithm>
@@ -176,7 +176,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
         const auto &first_data = node_based_graph.GetEdgeData(intersection[first].turn.eid);
         const auto &second_data = node_based_graph.GetEdgeData(intersection[second].turn.eid);
 
-        return first_data.name_id != INVALID_NAME_ID && first_data.name_id == second_data.name_id &&
+        return first_data.name_id != EMPTY_NAMEID && first_data.name_id == second_data.name_id &&
                !first_data.roundabout && !second_data.roundabout &&
                first_data.travel_mode == second_data.travel_mode &&
                first_data.road_classification == second_data.road_classification &&
@@ -240,14 +240,16 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 
         if (is_connected_to_roundabout)
         {
-            // We are merging a u-turn against the direction of a roundabout
-            //
-            //    -----------> roundabout
-            //       /    \
-            //    out      in
-            //
-            // These cases have to be disabled, even if they are not forbidden specifically by a
-            // relation
+            /*
+             * We are merging a u-turn against the direction of a roundabout
+             *
+             *     -----------> roundabout
+             *        /    \
+             *     out      in
+             *
+             * These cases have to be disabled, even if they are not forbidden specifically by a
+             * relation
+             */
             intersection[0].entry_allowed = false;
         }
 

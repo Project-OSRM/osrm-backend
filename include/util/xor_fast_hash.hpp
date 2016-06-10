@@ -3,8 +3,8 @@
 
 #include <boost/assert.hpp>
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <iterator>
 #include <numeric>
 #include <random>

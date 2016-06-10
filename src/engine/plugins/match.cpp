@@ -1,9 +1,9 @@
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/plugins/match.hpp"
+#include "engine/plugins/plugin_base.hpp"
 
-#include "engine/map_matching/bayes_classifier.hpp"
-#include "engine/api/match_parameters.hpp"
 #include "engine/api/match_api.hpp"
+#include "engine/api/match_parameters.hpp"
+#include "engine/map_matching/bayes_classifier.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_logger.hpp"
@@ -34,9 +34,10 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
 
         if (coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
         {
-            double turn_angle = util::coordinate_calculation::computeAngle(
-                coordinates[current_coordinate - 1], coordinates[current_coordinate],
-                coordinates[current_coordinate + 1]);
+            double turn_angle =
+                util::coordinate_calculation::computeAngle(coordinates[current_coordinate - 1],
+                                                           coordinates[current_coordinate],
+                                                           coordinates[current_coordinate + 1]);
 
             // sharp turns indicate a possible uturn
             if (turn_angle <= 90.0 || turn_angle >= 270.0)
@@ -52,24 +53,29 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         }
 
         // sort by forward id, then by reverse id and then by distance
-        std::sort(
-            candidates.begin(), candidates.end(),
-            [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-            {
-                return lhs.phantom_node.forward_segment_id.id < rhs.phantom_node.forward_segment_id.id ||
-                       (lhs.phantom_node.forward_segment_id.id == rhs.phantom_node.forward_segment_id.id &&
-                        (lhs.phantom_node.reverse_segment_id.id < rhs.phantom_node.reverse_segment_id.id ||
-                         (lhs.phantom_node.reverse_segment_id.id == rhs.phantom_node.reverse_segment_id.id &&
-                          lhs.distance < rhs.distance)));
-            });
+        std::sort(candidates.begin(),
+                  candidates.end(),
+                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
+                      return lhs.phantom_node.forward_segment_id.id <
+                                 rhs.phantom_node.forward_segment_id.id ||
+                             (lhs.phantom_node.forward_segment_id.id ==
+                                  rhs.phantom_node.forward_segment_id.id &&
+                              (lhs.phantom_node.reverse_segment_id.id <
+                                   rhs.phantom_node.reverse_segment_id.id ||
+                               (lhs.phantom_node.reverse_segment_id.id ==
+                                    rhs.phantom_node.reverse_segment_id.id &&
+                                lhs.distance < rhs.distance)));
+                  });
 
-        auto new_end = std::unique(
-            candidates.begin(), candidates.end(),
-            [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-            {
-                return lhs.phantom_node.forward_segment_id.id == rhs.phantom_node.forward_segment_id.id &&
-                       lhs.phantom_node.reverse_segment_id.id == rhs.phantom_node.reverse_segment_id.id;
-            });
+        auto new_end =
+            std::unique(candidates.begin(),
+                        candidates.end(),
+                        [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
+                            return lhs.phantom_node.forward_segment_id.id ==
+                                       rhs.phantom_node.forward_segment_id.id &&
+                                   lhs.phantom_node.reverse_segment_id.id ==
+                                       rhs.phantom_node.reverse_segment_id.id;
+                        });
         candidates.resize(new_end - candidates.begin());
 
         if (!allow_uturn)
@@ -92,9 +98,9 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         }
 
         // sort by distance to make pruning effective
-        std::sort(candidates.begin(), candidates.end(),
-                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs)
-                  {
+        std::sort(candidates.begin(),
+                  candidates.end(),
+                  [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
                       return lhs.distance < rhs.distance;
                   });
     }
@@ -129,9 +135,10 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     else
     {
         search_radiuses.resize(parameters.coordinates.size());
-        std::transform(parameters.radiuses.begin(), parameters.radiuses.end(),
-                       search_radiuses.begin(), [](const boost::optional<double> &maybe_radius)
-                       {
+        std::transform(parameters.radiuses.begin(),
+                       parameters.radiuses.end(),
+                       search_radiuses.begin(),
+                       [](const boost::optional<double> &maybe_radius) {
                            if (maybe_radius)
                            {
                                return *maybe_radius * RADIUS_MULTIPLIER;
@@ -147,9 +154,9 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     auto candidates_lists = GetPhantomNodesInRange(parameters, search_radiuses);
 
     filterCandidates(parameters.coordinates, candidates_lists);
-    if (std::all_of(candidates_lists.begin(), candidates_lists.end(),
-                    [](const std::vector<PhantomNodeWithDistance> &candidates)
-                    {
+    if (std::all_of(candidates_lists.begin(),
+                    candidates_lists.end(),
+                    [](const std::vector<PhantomNodeWithDistance> &candidates) {
                         return candidates.empty();
                     }))
     {
@@ -159,8 +166,8 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     }
 
     // call the actual map matching
-    SubMatchingList sub_matchings = map_matching(candidates_lists, parameters.coordinates,
-                                                 parameters.timestamps, parameters.radiuses);
+    SubMatchingList sub_matchings = map_matching(
+        candidates_lists, parameters.coordinates, parameters.timestamps, parameters.radiuses);
 
     if (sub_matchings.size() == 0)
     {
@@ -183,7 +190,8 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
             BOOST_ASSERT(current_phantom_node_pair.target_phantom.IsValid());
             sub_routes[index].segment_end_coordinates.emplace_back(current_phantom_node_pair);
         }
-        // force uturns to be on, since we split the phantom nodes anyway and only have bi-directional
+        // force uturns to be on, since we split the phantom nodes anyway and only have
+        // bi-directional
         // phantom nodes for possible uturns
         shortest_path(sub_routes[index].segment_end_coordinates, {false}, sub_routes[index]);
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);

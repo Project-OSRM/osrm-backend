@@ -12,8 +12,7 @@ namespace extractor
 
 struct TurnRestriction
 {
-    union WayOrNode
-    {
+    union WayOrNode {
         OSMNodeID_weak node;
         OSMEdgeID_weak way;
     };

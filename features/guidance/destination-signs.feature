@@ -29,13 +29,13 @@ Feature: Destination Signs
           | qr    | QR   |     |                | A1;A2           | yes    |                                      |
 
         When I route I should get
-          | from | to | route                                                     | #                         |
-          | a    | b  | AB (E1),AB (E1)                                           |                           |
-          | c    | d  | CD (Berlin),CD (Berlin)                                   |                           |
-          | e    | f  | EF (A1: Berlin),EF (A1: Berlin)                           |                           |
-          | g    | h  | ,                                                         |                           |
-          | i    | j  | ,                                                         |                           |
-          | k    | l  | KL (E1),KL (E1)                                           |                           |
-          | m    | n  | MN (A1, A2: Berlin, Hamburg),MN (A1, A2: Berlin, Hamburg) |                           |
-          | o    | p  | OP,OP                                                     | guard against mis-tagging |
-          | q    | r  | QR (A1, A2),QR (A1, A2)                                   |                           |
+          | from | to | route                                                     | destinations                                    | #                         |
+          | a    | b  | AB (E1),AB (E1)                                           | ,                                               |                           |
+          | c    | d  | CD (Berlin),CD (Berlin)                                   | Berlin,Berlin                                   |                           |
+          | e    | f  | EF (A1: Berlin),EF (A1: Berlin)                           | A1: Berlin,A1: Berlin                           |                           |
+          | g    | h  | ,                                                         | A1: Berlin,A1: Berlin                           |                           |
+          | i    | j  | ,                                                         | Berlin,Berlin                                   |                           |
+          | k    | l  | KL (E1),KL (E1)                                           | A1: Berlin,A1: Berlin                           |                           |
+          | m    | n  | MN (A1, A2: Berlin, Hamburg),MN (A1, A2: Berlin, Hamburg) | A1, A2: Berlin, Hamburg,A1, A2: Berlin, Hamburg |                           |
+          | o    | p  | OP,OP                                                     | ,                                               | guard against mis-tagging |
+          | q    | r  | QR (A1, A2),QR (A1, A2)                                   | A1, A2,A1, A2                                   |                           |

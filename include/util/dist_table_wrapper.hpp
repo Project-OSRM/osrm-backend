@@ -1,11 +1,11 @@
 #ifndef DIST_TABLE_WRAPPER_H
 #define DIST_TABLE_WRAPPER_H
 
-#include <vector>
-#include <utility>
+#include <algorithm>
 #include <boost/assert.hpp>
 #include <cstddef>
-#include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace osrm
 {

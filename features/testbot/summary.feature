@@ -3,11 +3,12 @@ Feature: Basic Routing
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 200 meters
 
     @smallest
-    Scenario: Checking 
+    Scenario: Checking
         Given the node map
-            | a | b |  | c | d | e |
+            | a | b | 1 | c | d | e |
 
         And the ways
             | nodes |
@@ -22,6 +23,7 @@ Feature: Basic Routing
             | e    | a  | de,cd,bc,ab,ab | de, bc   |
             | a    | b  | ab,ab          | ab       |
             | b    | d  | bc,cd,cd       | bc, cd   |
+            | 1    | c  | bc,bc          | bc       |
 
     @smallest
     Scenario: Check handling empty values

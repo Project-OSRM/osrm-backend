@@ -70,7 +70,8 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
     };
 
     for (auto compressed_geometry_itr = compressed_geometry_begin;
-         compressed_geometry_itr != compressed_geometry_end; ++compressed_geometry_itr)
+         compressed_geometry_itr != compressed_geometry_end;
+         ++compressed_geometry_itr)
     {
         const auto next_coordinate =
             extractCoordinateFromNode(query_nodes[compressed_geometry_itr->node_id]);
@@ -82,7 +83,8 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
         if (distance_to_next_coordinate >= detail::DESIRED_SEGMENT_LENGTH)
             return util::coordinate_calculation::interpolateLinear(
                 getFactor(distance_to_current_coordinate, distance_to_next_coordinate),
-                current_coordinate, next_coordinate);
+                current_coordinate,
+                next_coordinate);
 
         // prepare for next iteration
         current_coordinate = next_coordinate;
@@ -98,7 +100,8 @@ getCoordinateFromCompressedRange(util::Coordinate current_coordinate,
         distance_to_next_coordinate >= detail::DESIRED_SEGMENT_LENGTH)
         return util::coordinate_calculation::interpolateLinear(
             getFactor(distance_to_current_coordinate, distance_to_next_coordinate),
-            current_coordinate, final_coordinate);
+            current_coordinate,
+            final_coordinate);
     else
         return final_coordinate;
 }
@@ -277,16 +280,6 @@ inline double getTurnConfidence(const double angle, TurnInstruction instruction)
     return 1.0 - (difference / max_deviation) * (difference / max_deviation);
 }
 
-// swaps left <-> right modifier types
-inline DirectionModifier::Enum mirrorDirectionModifier(const DirectionModifier::Enum modifier)
-{
-    const constexpr DirectionModifier::Enum results[] = {
-        DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
-        DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
-        DirectionModifier::Right,      DirectionModifier::SharpRight};
-    return results[modifier];
-}
-
 inline bool canBeSuppressed(const TurnType::Enum type)
 {
     if (type == TurnType::Turn)
@@ -380,8 +373,10 @@ inline bool requiresNameAnnounced(const std::string &from,
                     return false;
                 if (!checkTable(first_prefix_and_suffixes.first))
                     return false;
-                return !first.compare(first_prefix_and_suffixes.first.length(), std::string::npos,
-                                      second, second_prefix_and_suffixes.first.length(),
+                return !first.compare(first_prefix_and_suffixes.first.length(),
+                                      std::string::npos,
+                                      second,
+                                      second_prefix_and_suffixes.first.length(),
                                       std::string::npos);
             }();
 
@@ -390,8 +385,10 @@ inline bool requiresNameAnnounced(const std::string &from,
                     return false;
                 if (!checkTable(first_prefix_and_suffixes.second))
                     return false;
-                return !first.compare(0, first.length() - first_prefix_and_suffixes.second.length(),
-                                      second, 0,
+                return !first.compare(0,
+                                      first.length() - first_prefix_and_suffixes.second.length(),
+                                      second,
+                                      0,
                                       second.length() - second_prefix_and_suffixes.second.length());
             }();
 
@@ -421,8 +418,8 @@ inline int getPriority(const FunctionalRoadClass road_class)
     // The road priorities indicate which roads can bee seen as more or less equal.
     // They are used in Fork-Discovery. Possibly should be moved to profiles post v5?
     // A fork can happen between road types that are at most 1 priority apart from each other
-    const constexpr int road_priority[] = {10, 0, 10, 2,  10, 4,  10, 6,
-                                           10, 8, 10, 11, 10, 12, 10, 14};
+    const constexpr int road_priority[] = {
+        10, 0, 10, 2, 10, 4, 10, 6, 10, 8, 10, 11, 10, 12, 10, 14};
     return road_priority[static_cast<int>(road_class)];
 }
 
@@ -441,10 +438,14 @@ inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoa
 // turn and vice versa.
 inline ConnectedRoad mirror(ConnectedRoad road)
 {
-    const constexpr DirectionModifier::Enum mirrored_modifiers[] = {
-        DirectionModifier::UTurn,      DirectionModifier::SharpLeft, DirectionModifier::Left,
-        DirectionModifier::SlightLeft, DirectionModifier::Straight,  DirectionModifier::SlightRight,
-        DirectionModifier::Right,      DirectionModifier::SharpRight};
+    const constexpr DirectionModifier::Enum mirrored_modifiers[] = {DirectionModifier::UTurn,
+                                                                    DirectionModifier::SharpLeft,
+                                                                    DirectionModifier::Left,
+                                                                    DirectionModifier::SlightLeft,
+                                                                    DirectionModifier::Straight,
+                                                                    DirectionModifier::SlightRight,
+                                                                    DirectionModifier::Right,
+                                                                    DirectionModifier::SharpRight};
 
     if (angularDeviation(road.turn.angle, 0) > std::numeric_limits<double>::epsilon())
     {

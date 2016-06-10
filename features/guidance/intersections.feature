@@ -117,9 +117,9 @@ Feature: Intersections Data
             | cf     | corner        |
 
        When I route I should get
-            | waypoints | route                        | turns                          | intersections                                                        |
-            | a,d       | through,through              | depart,arrive                  | true:90,true:0 true:90 false:270,true:90 true:180 false:270;true:270 |
-            | f,a       | corner,throughbridge,through | depart,end of road left,arrive | true:0;true:90 false:180 true:270,true:0 false:90 true:270;true:90   |
+            | waypoints | route                  | turns                          | intersections                                                        |
+            | a,d       | through,through        | depart,arrive                  | true:90,true:0 true:90 false:270,true:90 true:180 false:270;true:270 |
+            | f,a       | corner,through,through | depart,end of road left,arrive | true:0;true:90 false:180 true:270,true:0 false:90 true:270;true:90   |
 
     Scenario: Roundabouts
         Given the node map

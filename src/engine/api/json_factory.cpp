@@ -32,8 +32,14 @@ namespace json
 namespace detail
 {
 
-const constexpr char *modifier_names[] = {"uturn",    "sharp right", "right", "slight right",
-                                          "straight", "slight left", "left",  "sharp left"};
+const constexpr char *modifier_names[] = {"uturn",
+                                          "sharp right",
+                                          "right",
+                                          "slight right",
+                                          "straight",
+                                          "slight left",
+                                          "left",
+                                          "sharp left"};
 
 // translations of TurnTypes. Not all types are exposed to the outside world.
 // invalid types should never be returned as part of the API
@@ -158,12 +164,15 @@ util::json::Object makeIntersection(const guidance::Intersection &intersection)
     util::json::Array entry;
 
     bearings.values.reserve(intersection.bearings.size());
-    std::copy(intersection.bearings.begin(), intersection.bearings.end(),
+    std::copy(intersection.bearings.begin(),
+              intersection.bearings.end(),
               std::back_inserter(bearings.values));
 
     entry.values.reserve(intersection.entry.size());
-    std::transform(intersection.entry.begin(), intersection.entry.end(),
-                   std::back_inserter(entry.values), [](const bool has_entry) -> util::json::Value {
+    std::transform(intersection.entry.begin(),
+                   intersection.entry.end(),
+                   std::back_inserter(entry.values),
+                   [](const bool has_entry) -> util::json::Value {
                        if (has_entry)
                            return util::json::True();
                        else
@@ -187,6 +196,10 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["distance"] = std::round(step.distance * 10) / 10.;
     route_step.values["duration"] = std::round(step.duration * 10) / 10.;
     route_step.values["name"] = std::move(step.name);
+    if (!step.pronunciation.empty())
+        route_step.values["pronunciation"] = std::move(step.pronunciation);
+    if (!step.destinations.empty())
+        route_step.values["destinations"] = std::move(step.destinations);
     if (!step.rotary_name.empty())
         route_step.values["rotary_name"] = std::move(step.rotary_name);
 
@@ -196,8 +209,10 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
 
     util::json::Array intersections;
     intersections.values.reserve(step.intersections.size());
-    std::transform(step.intersections.begin(), step.intersections.end(),
-                   std::back_inserter(intersections.values), makeIntersection);
+    std::transform(step.intersections.begin(),
+                   step.intersections.end(),
+                   std::back_inserter(intersections.values),
+                   makeIntersection);
     route_step.values["intersections"] = std::move(intersections);
 
     return route_step;
@@ -237,7 +252,8 @@ util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
     return route_leg;
 }
 
-util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps, util::json::Object annotation)
+util::json::Object
+makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps, util::json::Object annotation)
 {
     util::json::Object route_leg = makeRouteLeg(std::move(leg), std::move(steps));
     route_leg.values["annotation"] = std::move(annotation);
@@ -255,14 +271,16 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
         auto leg = std::move(legs[idx]);
         util::json::Array json_steps;
         json_steps.values.reserve(leg.steps.size());
-        std::transform(
-            std::make_move_iterator(leg.steps.begin()), std::make_move_iterator(leg.steps.end()),
-            std::back_inserter(json_steps.values), [&step_geometry_iter](guidance::RouteStep step) {
-                return makeRouteStep(std::move(step), std::move(*step_geometry_iter++));
-            });
+        std::transform(std::make_move_iterator(leg.steps.begin()),
+                       std::make_move_iterator(leg.steps.end()),
+                       std::back_inserter(json_steps.values),
+                       [&step_geometry_iter](guidance::RouteStep step) {
+                           return makeRouteStep(std::move(step), std::move(*step_geometry_iter++));
+                       });
         if (annotations.size() > 0)
         {
-            json_legs.values.push_back(makeRouteLeg(std::move(leg), std::move(json_steps), annotations[idx]));
+            json_legs.values.push_back(
+                makeRouteLeg(std::move(leg), std::move(json_steps), annotations[idx]));
         }
         else
         {

@@ -11,9 +11,9 @@ Feature: Motorway Guidance
             |   |   |   | f | g |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | bfg    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | bfg   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route         | turns                                |
@@ -27,9 +27,9 @@ Feature: Motorway Guidance
             |   |   |   | g | e |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | bfg    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | bfg   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route         | turns                         |
@@ -44,9 +44,9 @@ Feature: Motorway Guidance
 
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | cfg    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | cfg   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route         | turns                                |
@@ -60,9 +60,9 @@ Feature: Motorway Guidance
             | a | b | c | d | e |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | bfg    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | bfg   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route         | turns                               |
@@ -76,9 +76,9 @@ Feature: Motorway Guidance
             | a | b | c |   |   |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | bfg    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | bfg   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route         | turns                        |
@@ -92,9 +92,9 @@ Feature: Motorway Guidance
             |   |   |   |   | e |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | cfg    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | cfg   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route         | turns                               |
@@ -107,9 +107,9 @@ Feature: Motorway Guidance
             | f | g |   |   |   |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | fgd    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | fgd   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route           | turns                           |
@@ -122,9 +122,9 @@ Feature: Motorway Guidance
             | a | b | c | d | e |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | fgd    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | fgd   | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route           | turns                            |
@@ -154,10 +154,10 @@ Feature: Motorway Guidance
             |   |   |   |   | f | g |
 
         And the ways
-            | nodes  | highway       |
-            | abc    | motorway_link |
-            | cde    | motorway      |
-            | cfg    | motorway      |
+            | nodes | highway       | oneway |
+            | abc   | motorway_link | yes    |
+            | cde   | motorway      |        |
+            | cfg   | motorway      |        |
 
        When I route I should get
             | waypoints | route       | turns                           |
@@ -170,17 +170,17 @@ Feature: Motorway Guidance
             | f | g |   |   |   | h | i |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | fgc    | motorway_link |
-            | chi    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | fgc   | motorway_link | yes    |
+            | chi   | motorway_link | yes    |
 
        When I route I should get
-            | waypoints | route           | turns                                |
-            | a,e       | abcde,abcde     | depart,arrive                        |
-            | f,e       | fgc,abcde,abcde | depart,merge slight left,arrive      |
+            | waypoints | route           | turns                              |
+            | a,e       | abcde,abcde     | depart,arrive                      |
+            | f,e       | fgc,abcde,abcde | depart,merge slight left,arrive    |
             | a,i       | abcde,chi,chi   | depart,off ramp slight right,arrive |
-            | f,i       | fgc,chi,chi     | depart,off ramp right,arrive        |
+            | f,i       | fgc,chi,chi     | depart,off ramp right,arrive       |
 
     Scenario: On And Off Ramp Left
        Given the node map
@@ -188,17 +188,17 @@ Feature: Motorway Guidance
             | a | b |   | c |   | d | e |
 
         And the ways
-            | nodes  | highway       |
-            | abcde  | motorway      |
-            | fgc    | motorway_link |
-            | chi    | motorway_link |
+            | nodes | highway       | oneway |
+            | abcde | motorway      |        |
+            | fgc   | motorway_link | yes    |
+            | chi   | motorway_link | yes    |
 
        When I route I should get
-            | waypoints | route           | turns                               |
-            | a,e       | abcde,abcde     | depart,arrive                       |
-            | f,e       | fgc,abcde,abcde | depart,merge slight right,arrive    |
+            | waypoints | route           | turns                             |
+            | a,e       | abcde,abcde     | depart,arrive                     |
+            | f,e       | fgc,abcde,abcde | depart,merge slight right,arrive  |
             | a,i       | abcde,chi,chi   | depart,off ramp slight left,arrive |
-            | f,i       | fgc,chi,chi     | depart,off ramp left,arrive        |
+            | f,i       | fgc,chi,chi     | depart,off ramp left,arrive       |
 
     Scenario: Merging Motorways
         Given the node map

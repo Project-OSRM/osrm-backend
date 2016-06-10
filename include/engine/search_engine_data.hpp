@@ -3,8 +3,8 @@
 
 #include <boost/thread/tss.hpp>
 
-#include "util/typedefs.hpp"
 #include "util/binary_heap.hpp"
+#include "util/typedefs.hpp"
 
 namespace osrm
 {

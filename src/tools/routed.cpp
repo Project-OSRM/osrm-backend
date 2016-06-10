@@ -112,7 +112,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     boost::program_options::options_description cmdline_options;
     cmdline_options.add(generic_options).add(config_options).add(hidden_options);
 
-    const auto *executable = argv[0];
+    const auto* executable = argv[0];
     boost::program_options::options_description visible_options(
         boost::filesystem::path(executable).filename().string() + " <base.osrm> [<options>]");
     visible_options.add(generic_options).add(config_options);
@@ -149,8 +149,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     }
     else if (use_shared_memory && option_variables.count("base"))
     {
-        util::SimpleLogger().Write(logWARNING)
-            << "Shared memory settings conflict with path settings.";
+        util::SimpleLogger().Write(logWARNING) << "Shared memory settings conflict with path settings.";
     }
 
     util::SimpleLogger().Write() << visible_options;
@@ -184,7 +183,7 @@ int main(int argc, const char *argv[]) try
     {
         config.storage_config = storage::StorageConfig(base_path);
     }
-    if (!config.IsValid())
+    if(!config.IsValid())
     {
         if (base_path.empty() != config.use_shared_memory)
         {
@@ -192,65 +191,53 @@ int main(int argc, const char *argv[]) try
         }
         else
         {
-            if (!boost::filesystem::is_regular_file(config.storage_config.ram_index_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.ram_index_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.ram_index_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.ram_index_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.file_index_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.file_index_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.file_index_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.file_index_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.hsgr_data_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.hsgr_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.hsgr_data_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.hsgr_data_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.nodes_data_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.nodes_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.nodes_data_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.nodes_data_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.edges_data_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.edges_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.edges_data_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.edges_data_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.core_data_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.core_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.core_data_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.core_data_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.geometries_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.geometries_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.geometries_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.geometries_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.timestamp_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.timestamp_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.timestamp_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.timestamp_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.datasource_names_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.datasource_names_path))
             {
-                util::SimpleLogger().Write(logWARNING)
-                    << config.storage_config.datasource_names_path << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.datasource_names_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.datasource_indexes_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.datasource_indexes_path))
             {
-                util::SimpleLogger().Write(logWARNING)
-                    << config.storage_config.datasource_indexes_path << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.datasource_indexes_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.names_data_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.names_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.names_data_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.names_data_path << " is not found";
             }
-            if (!boost::filesystem::is_regular_file(config.storage_config.properties_path))
+            if(!boost::filesystem::is_regular_file(config.storage_config.properties_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.properties_path
-                                                       << " is not found";
+                util::SimpleLogger().Write(logWARNING) << config.storage_config.properties_path << " is not found";
             }
         }
         return EXIT_FAILURE;
@@ -322,8 +309,7 @@ int main(int argc, const char *argv[]) try
         sigaddset(&wait_mask, SIGTERM);
         pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);
         util::SimpleLogger().Write() << "running and waiting for requests";
-        if (std::getenv("SIGNAL_PARENT_WHEN_READY"))
-        {
+        if(std::getenv("SIGNAL_PARENT_WHEN_READY")) {
             kill(getppid(), SIGUSR1);
         }
         sigwait(&wait_mask, &sig);

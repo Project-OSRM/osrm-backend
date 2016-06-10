@@ -32,10 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <cstddef>
 #include <iosfwd> //for std::ostream
 #include <string>
 #include <type_traits>
-#include <cstddef>
 
 namespace osrm
 {
@@ -200,8 +200,10 @@ bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs);
 std::ostream &operator<<(std::ostream &out, const Coordinate coordinate);
 std::ostream &operator<<(std::ostream &out, const FloatCoordinate coordinate);
 
-inline Coordinate::Coordinate(const FloatCoordinate &other) : Coordinate(toFixed(other.lon), toFixed(other.lat)) {}
-
+inline Coordinate::Coordinate(const FloatCoordinate &other)
+    : Coordinate(toFixed(other.lon), toFixed(other.lat))
+{
+}
 }
 }
 

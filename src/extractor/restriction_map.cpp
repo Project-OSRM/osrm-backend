@@ -48,8 +48,8 @@ RestrictionMap::RestrictionMap(const std::vector<TurnRestriction> &restriction_l
         }
         ++m_count;
         BOOST_ASSERT(restriction.to.node < std::numeric_limits<NodeID>::max());
-        m_restriction_bucket_list.at(index)
-            .emplace_back(restriction.to.node, restriction.flags.is_only);
+        m_restriction_bucket_list.at(index).emplace_back(restriction.to.node,
+                                                         restriction.flags.is_only);
     }
 }
 

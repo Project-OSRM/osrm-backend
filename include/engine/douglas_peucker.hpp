@@ -3,8 +3,8 @@
 
 #include "util/coordinate.hpp"
 
-#include <vector>
 #include <iterator>
+#include <vector>
 
 namespace osrm
 {

@@ -18,6 +18,23 @@ Feature: Car - Street names in instructions
             | from | to | route                              |
             | a    | c  | My Way,Your Way (A1),Your Way (A1) |
 
+    Scenario: Car - A named street with pronunciation
+        Given the node map
+            | a | b | d |
+            |   | 1 |   |
+            |   | c |   |
+
+        And the ways
+            | nodes | name     |name:pronunciation | ref |
+            | ab    | My Way   |                    |     |
+            | bd    | My Way   | meyeway            | A1  |
+            | cd    | Your Way | yourewaye          |     |
+
+        When I route I should get
+            | from | to | route              | pronunciations      |
+            | a    | d  | My Way,My Way (A1) | ,meyeway             |
+            | 1    | c  | Your Way,Your Way  | yourewaye,yourewaye  |
+
     @todo
     Scenario: Car - Use way type to describe unnamed ways
         Given the node map
