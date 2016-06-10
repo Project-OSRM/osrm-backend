@@ -385,7 +385,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 {
                     // circular order indicates a merge to the left (0-3 onto 4
                     if (angularDeviation(intersection[1].turn.angle, STRAIGHT_ANGLE) <
-                        NARROW_TURN_ANGLE)
+                        2*NARROW_TURN_ANGLE)
                         intersection[1].turn.instruction = {TurnType::Merge,
                                                             DirectionModifier::SlightLeft};
                     else // fallback
@@ -407,12 +407,12 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                 if (detail::isMotorwayClass(intersection[2].turn.eid, node_based_graph) &&
                     node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id !=
                         EMPTY_NAMEID &&
-                    node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id ==
-                        node_based_graph.GetEdgeData(intersection[0].turn.eid).name_id)
+                    node_based_graph.GetEdgeData(intersection[2].turn.eid).name_id ==
+                        node_based_graph.GetEdgeData(intersection[1].turn.eid).name_id)
                 {
                     // circular order (5-0) onto 4
                     if (angularDeviation(intersection[2].turn.angle, STRAIGHT_ANGLE) <
-                        NARROW_TURN_ANGLE)
+                        2 * NARROW_TURN_ANGLE)
                         intersection[2].turn.instruction = {TurnType::Merge,
                                                             DirectionModifier::SlightRight};
                     else // fallback

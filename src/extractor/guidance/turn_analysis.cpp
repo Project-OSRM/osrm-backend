@@ -1,5 +1,5 @@
-#include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -127,15 +127,15 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
     auto intersection_node_id = node_based_graph.GetTarget(source_edge_id);
 
     const auto linkTest = [this](const ConnectedRoad &road) {
-        return isLinkClass(
-                   node_based_graph.GetEdgeData(road.turn.eid).road_classification.road_class) &&
-               road.entry_allowed &&
-               angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE;
+        return // isLinkClass(
+            //    node_based_graph.GetEdgeData(road.turn.eid).road_classification.road_class) &&
+            !node_based_graph.GetEdgeData(road.turn.eid).roundabout && road.entry_allowed &&
+            angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <= 2 * NARROW_TURN_ANGLE;
     };
 
-    bool hasRamp =
+    bool hasNarrow =
         std::find_if(intersection.begin(), intersection.end(), linkTest) != intersection.end();
-    if (!hasRamp)
+    if (!hasNarrow)
         return intersection;
 
     const auto source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
@@ -171,6 +171,8 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
     const auto next_road_next_intersection =
         intersection_generator(intersection_node_id, next_road->turn.eid);
 
+    const auto next_intersection_node = node_based_graph.GetTarget(next_road->turn.eid);
+
     std::unordered_set<NameID> target_road_names;
 
     for (const auto &road : next_road_next_intersection)
@@ -187,12 +189,37 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
             for (const auto &candidate_road : target_intersection)
             {
                 const auto &candidate_data = node_based_graph.GetEdgeData(candidate_road.turn.eid);
-                if (target_road_names.count(candidate_data.name_id) > 0)
+                if (target_road_names.count(candidate_data.name_id) > 0 &&
+                    node_based_graph.GetTarget(candidate_road.turn.eid) == next_intersection_node)
                 {
                     road.turn.instruction.type = TurnType::Sliproad;
                     break;
                 }
             }
+        }
+    }
+
+    if (next_road->turn.instruction.type == TurnType::Fork)
+    {
+        const auto &next_data = node_based_graph.GetEdgeData(next_road->turn.eid);
+        if (next_data.name_id == source_edge_data.name_id)
+        {
+            if (angularDeviation(next_road->turn.angle, STRAIGHT_ANGLE) < 5)
+                next_road->turn.instruction.type = TurnType::Suppressed;
+            else
+                next_road->turn.instruction.type = TurnType::Continue;
+            next_road->turn.instruction.direction_modifier =
+                getTurnDirection(next_road->turn.angle);
+        }
+        else if (next_data.name_id != EMPTY_NAMEID)
+        {
+            next_road->turn.instruction.type = TurnType::NewName;
+            next_road->turn.instruction.direction_modifier =
+                getTurnDirection(next_road->turn.angle);
+        }
+        else
+        {
+            next_road->turn.instruction.type = TurnType::Suppressed;
         }
     }
 
