@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
         std::tie(value_begin, value_end) = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 8);
+        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 10);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
         BOOST_CHECK_LT(*iter++, 128);  // speed value
@@ -67,6 +67,9 @@ BOOST_AUTO_TEST_CASE(test_tile)
         *iter++;                       // skip value check, can be valud uint32
         BOOST_CHECK_EQUAL(*iter++, 3); // duration key
         BOOST_CHECK_GT(*iter++, 130);  // duration value
+        // name
+        BOOST_CHECK_EQUAL(*iter++, 4);
+        BOOST_CHECK_GT(*iter++, 130);
         BOOST_CHECK(iter == value_end);
         // geometry
         feature_message.next();
@@ -128,7 +131,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
         }
     }
 
-    BOOST_CHECK_EQUAL(number_of_keys, 4);
+    BOOST_CHECK_EQUAL(number_of_keys, 5);
     BOOST_CHECK_GT(number_of_values, 128); // speed value resolution
 }
 
