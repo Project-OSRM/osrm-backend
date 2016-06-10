@@ -485,7 +485,7 @@ step.
   | `type`            | Description                                                  |
   |-------------------|--------------------------------------------------------------|
   | turn              | a basic turn into direction of the `modifier`                |
-  | new name          | no turn is taken, but the road name changes. The Road can take a turn itself, following `modifier`                  |
+  | new name          | no turn is taken/possible, but the road name changes. The road can take a turn itself, following `modifier`.                  |
   | depart            | indicates the departure of the leg                           |
   | arrive            | indicates the destination of the leg                         |
   | merge             | merge onto a street (e.g. getting on the highway from a ramp, the `modifier specifies the direction of the merge`) |
