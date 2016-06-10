@@ -171,13 +171,13 @@ class SharedDataFacade final : public BaseDataFacade
             coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
-        auto osmnodeid_list_ptr = data_layout->GetBlockPtr<OSMNodeID>(
+        auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
             shared_memory, storage::SharedDataLayout::OSM_NODE_ID_LIST);
         m_osmnodeid_list.reset(
             osmnodeid_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
-        m_osmnodeid_list.set_number_of_entries(util::PackedVectorCapacity(
-            data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]));
+        // We (ab)use the number of coordinates here because we know we have the same amount of ids
+        m_osmnodeid_list.set_number_of_entries(data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
