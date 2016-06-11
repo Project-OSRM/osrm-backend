@@ -475,7 +475,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
 /**
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
-std::pair<std::size_t, std::size_t>
+std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
                                   const ProfileProperties &profile_properties,
                                   std::vector<QueryNode> &internal_to_external_node_map,
@@ -600,7 +600,7 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
 
 void Extractor::WriteEdgeBasedGraph(
     std::string const &output_file_filename,
-    size_t const max_edge_id,
+    EdgeID const max_edge_id,
     util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
 {
 
@@ -613,9 +613,9 @@ void Extractor::WriteEdgeBasedGraph(
                                  << std::flush;
     TIMER_START(write_edges);
 
-    size_t number_of_used_edges = edge_based_edge_list.size();
-    file_out_stream.write((char *)&number_of_used_edges, sizeof(size_t));
-    file_out_stream.write((char *)&max_edge_id, sizeof(size_t));
+    std::uint64_t number_of_used_edges = edge_based_edge_list.size();
+    file_out_stream.write((char *)&number_of_used_edges, sizeof(number_of_used_edges));
+    file_out_stream.write((char *)&max_edge_id, sizeof(max_edge_id));
 
     for (const auto &edge : edge_based_edge_list)
     {

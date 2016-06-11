@@ -104,7 +104,7 @@ class EdgeBasedGraphFactory
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
-    unsigned m_max_edge_id;
+    EdgeID m_max_edge_id;
 
     const std::vector<QueryNode> &m_node_info_list;
     std::shared_ptr<util::NodeBasedDynamicGraph> m_node_based_graph;

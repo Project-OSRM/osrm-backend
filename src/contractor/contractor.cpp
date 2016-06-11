@@ -93,17 +93,17 @@ int Contractor::Run()
 
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
-    std::size_t max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
-                                                    edge_based_edge_list,
-                                                    config.edge_segment_lookup_path,
-                                                    config.edge_penalty_path,
-                                                    config.segment_speed_lookup_paths,
-                                                    config.turn_penalty_lookup_paths,
-                                                    config.node_based_graph_path,
-                                                    config.geometry_path,
-                                                    config.datasource_names_path,
-                                                    config.datasource_indexes_path,
-                                                    config.rtree_leaf_path);
+    EdgeID max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
+                                               edge_based_edge_list,
+                                               config.edge_segment_lookup_path,
+                                               config.edge_penalty_path,
+                                               config.segment_speed_lookup_paths,
+                                               config.turn_penalty_lookup_paths,
+                                               config.node_based_graph_path,
+                                               config.geometry_path,
+                                               config.datasource_names_path,
+                                               config.datasource_indexes_path,
+                                               config.rtree_leaf_path);
 
     // Contracting the edge-expanded graph
 
@@ -349,7 +349,7 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
 }
 } // anon ns
 
-std::size_t Contractor::LoadEdgeExpandedGraph(
+EdgeID Contractor::LoadEdgeExpandedGraph(
     std::string const &edge_based_graph_filename,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
     const std::string &edge_segment_lookup_filename,
@@ -392,12 +392,10 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
     input_stream.read((char *)&fingerprint_loaded, sizeof(util::FingerPrint));
     fingerprint_loaded.TestContractor(fingerprint_valid);
 
-    // TODO std::size_t can vary on systems. Our files are not transferable, but we might want to
-    // consider using a fixed size type for I/O
-    std::size_t number_of_edges = 0;
-    std::size_t max_edge_id = SPECIAL_EDGEID;
-    input_stream.read((char *)&number_of_edges, sizeof(std::size_t));
-    input_stream.read((char *)&max_edge_id, sizeof(std::size_t));
+    std::uint64_t number_of_edges = 0;
+    EdgeID max_edge_id = SPECIAL_EDGEID;
+    input_stream.read((char *)&number_of_edges, sizeof(number_of_edges));
+    input_stream.read((char *)&max_edge_id, sizeof(max_edge_id));
 
     edge_based_edge_list.resize(number_of_edges);
     util::SimpleLogger().Write() << "Reading " << number_of_edges
@@ -686,7 +684,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         {
             throw util::exception("Failed to open " + datasource_indexes_filename + " for writing");
         }
-        auto number_of_datasource_entries = m_geometry_datasource.size();
+        std::uint64_t number_of_datasource_entries = m_geometry_datasource.size();
         datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
                                 sizeof(number_of_datasource_entries));
         if (number_of_datasource_entries > 0)
@@ -861,8 +859,8 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
-    const unsigned max_used_node_id = [&contracted_edge_list] {
-        unsigned tmp_max = 0;
+    const NodeID max_used_node_id = [&contracted_edge_list] {
+        NodeID tmp_max = 0;
         for (const QueryEdge &edge : contracted_edge_list)
         {
             BOOST_ASSERT(SPECIAL_NODEID != edge.source);
@@ -928,7 +926,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
 
     // serialize all edges
     util::SimpleLogger().Write() << "Building edge array";
-    int number_of_used_edges = 0;
+    std::size_t number_of_used_edges = 0;
 
     util::StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
     for (const auto edge : util::irange<std::size_t>(0UL, contracted_edge_list.size()))
@@ -970,7 +968,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
  \brief Build contracted graph.
  */
 void Contractor::ContractGraph(
-    const unsigned max_edge_id,
+    const EdgeID max_edge_id,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
     util::DeallocatingVector<QueryEdge> &contracted_edge_list,
     std::vector<EdgeWeight> &&node_weights,

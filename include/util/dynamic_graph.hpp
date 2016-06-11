@@ -24,8 +24,8 @@ template <typename EdgeDataT> class DynamicGraph
 {
   public:
     using EdgeData = EdgeDataT;
-    using NodeIterator = unsigned;
-    using EdgeIterator = unsigned;
+    using NodeIterator = std::uint32_t;
+    using EdgeIterator = std::uint32_t;
     using EdgeRange = range<EdgeIterator>;
 
     class InputEdge

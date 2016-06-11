@@ -251,9 +251,9 @@ class InternalDataFacade final : public BaseDataFacade
         }
         BOOST_ASSERT(datasources_stream);
 
-        std::size_t number_of_datasources = 0;
+        std::uint64_t number_of_datasources = 0;
         datasources_stream.read(reinterpret_cast<char *>(&number_of_datasources),
-                                sizeof(std::size_t));
+                                sizeof(number_of_datasources));
         if (number_of_datasources > 0)
         {
             m_datasource_list.resize(number_of_datasources);

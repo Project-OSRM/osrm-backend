@@ -54,10 +54,10 @@ static const OSMWayID MIN_OSM_WAYID = OSMWayID(std::numeric_limits<std::uint32_t
 using OSMNodeID_weak = std::uint64_t;
 using OSMEdgeID_weak = std::uint64_t;
 
-using NodeID = unsigned int;
-using EdgeID = unsigned int;
+using NodeID = std::uint32_t;
+using EdgeID = std::uint32_t;
 using NameID = std::uint32_t;
-using EdgeWeight = int;
+using EdgeWeight = std::int32_t;
 
 using BearingClassID = std::uint32_t;
 static const BearingClassID INVALID_BEARING_CLASSID = std::numeric_limits<std::uint32_t>::max();
@@ -67,13 +67,13 @@ using DiscreteBearing = std::uint16_t;
 using EntryClassID = std::uint16_t;
 static const EntryClassID INVALID_ENTRY_CLASSID = std::numeric_limits<std::uint16_t>::max();
 
-static const NodeID SPECIAL_NODEID = std::numeric_limits<unsigned>::max();
-static const NodeID SPECIAL_SEGMENTID = std::numeric_limits<int>::max();
-static const EdgeID SPECIAL_EDGEID = std::numeric_limits<unsigned>::max();
-static const unsigned INVALID_NAMEID = std::numeric_limits<unsigned>::max();
-static const unsigned EMPTY_NAMEID = 0;
+static const NodeID SPECIAL_NODEID = std::numeric_limits<NodeID>::max();
+static const NodeID SPECIAL_SEGMENTID = std::numeric_limits<NodeID>::max() >> 1;
+static const EdgeID SPECIAL_EDGEID = std::numeric_limits<EdgeID>::max();
+static const NameID INVALID_NAMEID = std::numeric_limits<NameID>::max();
+static const NameID EMPTY_NAMEID = 0;
 static const unsigned INVALID_COMPONENTID = 0;
-static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<int>::max();
+static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::max();
 
 struct SegmentID
 {

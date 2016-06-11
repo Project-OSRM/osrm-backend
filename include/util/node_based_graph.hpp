@@ -64,7 +64,7 @@ using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 /// Since DynamicGraph expects directed edges, we need to insert
 /// two edges for undirected edges.
 inline std::shared_ptr<NodeBasedDynamicGraph>
-NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
+NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
                                const std::vector<extractor::NodeBasedEdge> &input_edge_list)
 {
     auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(
@@ -84,8 +84,7 @@ NodeBasedDynamicGraphFromEdges(std::size_t number_of_nodes,
 
     tbb::parallel_sort(edges_list.begin(), edges_list.end());
 
-    auto graph = std::make_shared<NodeBasedDynamicGraph>(
-        static_cast<NodeBasedDynamicGraph::NodeIterator>(number_of_nodes), edges_list);
+    auto graph = std::make_shared<NodeBasedDynamicGraph>(number_of_nodes, edges_list);
 
     return graph;
 }
