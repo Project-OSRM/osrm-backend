@@ -14,7 +14,7 @@ namespace storage
 {
 
 // Added at the start and end of each block as sanity check
-const constexpr char CANARY[] = "OSRM";
+const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
 
 struct SharedDataLayout
 {
@@ -63,15 +63,20 @@ struct SharedDataLayout
         entry_size[bid] = sizeof(T);
     }
 
+    inline uint64_t AlignBlockSize(uint64_t block_size) const
+    {
+        const uint64_t alignment = 4;
+        return (block_size + (alignment - 1)) & ~(alignment - 1);
+    }
+
     inline uint64_t GetBlockSize(BlockID bid) const
     {
         // special bit encoding
         if (bid == CORE_MARKER)
         {
-            return (num_entries[bid] / 32 + 1) * entry_size[bid];
+            return AlignBlockSize((num_entries[bid] / 32 + 1) * entry_size[bid]);
         }
-
-        return num_entries[bid] * entry_size[bid];
+        return AlignBlockSize(num_entries[bid] * entry_size[bid]);
     }
 
     inline uint64_t GetSizeOfLayout() const
