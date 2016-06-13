@@ -83,40 +83,6 @@ double nameSegmentLength(std::size_t at, const std::vector<RouteStep> &steps)
 // invalidate a step and set its content to nothing
 void invalidateStep(RouteStep &step) { step = getInvalidRouteStep(); }
 
-void print(const RouteStep &step)
-{
-    std::cout << static_cast<int>(step.maneuver.instruction.type) << " "
-              << static_cast<int>(step.maneuver.instruction.direction_modifier) << "  "
-              << static_cast<int>(step.maneuver.waypoint_type) << " Duration: " << step.duration
-              << " Distance: " << step.distance << " Geometry: " << step.geometry_begin << " "
-              << step.geometry_end << " exit: " << step.maneuver.exit
-              << " Intersections: " << step.intersections.size() << " [";
-
-    for (const auto &intersection : step.intersections)
-    {
-        std::cout << "(bearings:";
-        for (auto bearing : intersection.bearings)
-            std::cout << " " << bearing;
-        std::cout << ", entry: ";
-        for (auto entry : intersection.entry)
-            std::cout << " " << entry;
-        std::cout << ")";
-    }
-    std::cout << "] name[" << step.name_id << "]: " << step.name;
-}
-
-void print(const std::vector<RouteStep> &steps)
-{
-    std::cout << "Path\n";
-    int segment = 0;
-    for (const auto &step : steps)
-    {
-        std::cout << "\t[" << segment++ << "]: ";
-        print(step);
-        std::cout << std::endl;
-    }
-}
-
 // Compute the angle between two bearings on a normal turn circle
 //
 //      Bearings                      Angles
