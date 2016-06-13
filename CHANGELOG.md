@@ -1,3 +1,7 @@
+# 5.2.1
+  Changes from 5.2.0
+  Bugfixes:
+    - Removed debug statement that was spamming the console
 # 5.2.0
   Changes form 5.2.0 RC2
    - Bugfixes:
