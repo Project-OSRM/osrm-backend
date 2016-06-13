@@ -13,6 +13,7 @@ notifications:
 branches:
   only:
     - master
+    - "5.2"
 
 cache:
   ccache: true
