@@ -1,9 +1,15 @@
 # 5.2.2
-  - Bugfix
-    - buffer overrun in tile plugin response handling
+  Changes from 5.2.1
+  - Bugfixes:
+    - Buffer overrun in tile plugin response handling
+
+# 5.2.1
+  Changes from 5.2.0
+  - Bugfixes:
+    - Removed debug statement that was spamming the console
 
 # 5.2.0
-  Changes form 5.2.0 RC2
+  Changes from 5.2.0 RC2
    - Bugfixes:
      - Fixed crash when loading shared memory caused by invalid OSM IDs segment size.
      - Various small instructions handling fixes
