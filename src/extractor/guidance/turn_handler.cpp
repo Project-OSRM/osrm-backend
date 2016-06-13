@@ -109,8 +109,12 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 
         const bool is_much_narrower_than_other =
             angularDeviation(other.turn.angle, STRAIGHT_ANGLE) /
-                angularDeviation(road.turn.angle, STRAIGHT_ANGLE) >
-            INCREASES_BY_FOURTY_PERCENT;
+                    angularDeviation(road.turn.angle, STRAIGHT_ANGLE) >
+                INCREASES_BY_FOURTY_PERCENT &&
+            angularDeviation(angularDeviation(other.turn.angle, STRAIGHT_ANGLE),
+                             angularDeviation(road.turn.angle, STRAIGHT_ANGLE)) >
+                FUZZY_ANGLE_DIFFERENCE;
+
         return is_much_narrower_than_other;
     };
 
@@ -129,13 +133,9 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                                         .road_classification.road_class;
             const auto right_class = node_based_graph.GetEdgeData(intersection[1].turn.eid)
                                          .road_classification.road_class;
-            if (canBeSeenAsFork(left_class, right_class))
-            {
-                assignFork(via_edge, intersection[2], intersection[1]);
-            }
-            else if (isObviousOfTwo(intersection[1], intersection[2]) &&
-                     (second_data.name_id != in_data.name_id ||
-                      first_data.name_id == second_data.name_id))
+            if (isObviousOfTwo(intersection[1], intersection[2]) &&
+                (second_data.name_id != in_data.name_id ||
+                 first_data.name_id == second_data.name_id))
             {
                 intersection[1].turn.instruction =
                     getInstructionForObvious(intersection.size(), via_edge, false, intersection[1]);
@@ -150,6 +150,10 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                     getInstructionForObvious(intersection.size(), via_edge, false, intersection[2]);
                 intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
                                                     DirectionModifier::SlightRight};
+            }
+            else if (canBeSeenAsFork(left_class, right_class))
+            {
+                assignFork(via_edge, intersection[2], intersection[1]);
             }
             else
             {

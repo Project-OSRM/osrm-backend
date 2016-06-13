@@ -281,3 +281,18 @@ Feature: Fork Instructions
             | a,c       | abd,bc,bc | depart,turn slight left,arrive  |
             | a,d       | abd,abd   | depart,arrive                   |
             | a,e       | abd,be,be | depart,turn slight right,arrive |
+
+    Scenario: Don't Fork when leaving Road
+        Given the node map
+            | a |   | b |   | c |
+            |   |   |   |   | d |
+
+        And the ways
+            | nodes  | highway   |
+            | abc    | secondary |
+            | bd     | secondary |
+
+       When I route I should get
+            | waypoints | route     | turns                           |
+            | a,c       | abc,abc   | depart,arrive                   |
+            | a,d       | abc,bd,bd | depart,turn slight right,arrive |
