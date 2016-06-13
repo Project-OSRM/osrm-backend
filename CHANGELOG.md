@@ -1,3 +1,7 @@
+# 5.2.2
+  - Bugfix
+    - buffer overrun in tile plugin response handling
+
 # 5.2.0
   Changes form 5.2.0 RC2
    - Bugfixes:
