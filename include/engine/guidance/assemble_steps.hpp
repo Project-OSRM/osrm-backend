@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
@@ -34,14 +35,13 @@ std::pair<short, short> getIntermediateBearings(const LegGeometry &leg_geometry,
                                                 const std::size_t segment_index);
 } // ns detail
 
-template <typename DataFacadeT>
-std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
-                                     const std::vector<PathData> &leg_data,
-                                     const LegGeometry &leg_geometry,
-                                     const PhantomNode &source_node,
-                                     const PhantomNode &target_node,
-                                     const bool source_traversed_in_reverse,
-                                     const bool target_traversed_in_reverse)
+inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &facade,
+                                            const std::vector<PathData> &leg_data,
+                                            const LegGeometry &leg_geometry,
+                                            const PhantomNode &source_node,
+                                            const PhantomNode &target_node,
+                                            const bool source_traversed_in_reverse,
+                                            const bool target_traversed_in_reverse)
 {
     const double constexpr ZERO_DURATION = 0., ZERO_DISTANCE = 0.;
     const constexpr char *NO_ROTARY_NAME = "";

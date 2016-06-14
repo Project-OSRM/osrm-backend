@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/toolkit.hpp"
@@ -31,11 +32,10 @@ namespace guidance
 //             |---| segment 1
 //                 |---| segment 2
 //                     |---| segment 3
-template <typename DataFacadeT>
-LegGeometry assembleGeometry(const DataFacadeT &facade,
-                             const std::vector<PathData> &leg_data,
-                             const PhantomNode &source_node,
-                             const PhantomNode &target_node)
+inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
+                                    const std::vector<PathData> &leg_data,
+                                    const PhantomNode &source_node,
+                                    const PhantomNode &target_node)
 {
     LegGeometry geometry;
 
