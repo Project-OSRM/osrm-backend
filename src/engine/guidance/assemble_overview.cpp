@@ -85,12 +85,12 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
     std::vector<util::Coordinate> overview_geometry;
     overview_geometry.reserve(overview_size);
 
-    auto leg_index = 0UL;
+    auto leg_reverse_index = leg_geometries.size();
     for (const auto &geometry : leg_geometries)
     {
         auto begin = geometry.locations.begin();
         auto end = geometry.locations.end();
-        if (leg_index < leg_geometries.size() - 1)
+        if (--leg_reverse_index > 0)
         {
             end = std::prev(end);
         }
