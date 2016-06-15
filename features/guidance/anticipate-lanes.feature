@@ -263,7 +263,7 @@ Feature: Turn Lane Guidance
             | waypoints | route                 | turns                                                   | lanes     |
             | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,1,1,1,1, |
 
-    @anticipate
+    @anticipate @bug @todo
     Scenario: Tripple Right keeping Left
         Given the node map
             | a |   |   |   | b |   | i |
@@ -288,7 +288,7 @@ Feature: Turn Lane Guidance
             | a,f       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,end of road left,arrive  | ,2,2,2,2,         |
             | a,g       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,end of road right,arrive | ,0 1,0 1,0 1,0 1, |
 
-    @anticipate
+    @anticipate @bug @todo
     Scenario: Tripple Left keeping Right
         Given the node map
             | i |   | b |   |   |   | a |

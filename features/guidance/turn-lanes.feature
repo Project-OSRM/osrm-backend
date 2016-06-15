@@ -108,7 +108,7 @@ Feature: Turn Lane Guidance
             | a,c       | road,road,road | depart,use lane straight,arrive | ,1,   |
 
     #turn lanes are often drawn at the incoming road, even though the actual turn requires crossing the intersection first
-    @TODO @WORKAROUND-FIXME
+    @todo @WORKAROUND-FIXME @bug
     Scenario: Turn Lanes at Segregated Road
         Given the node map
             |   |   | i | l |   |   |
@@ -150,6 +150,42 @@ Feature: Turn Lane Guidance
             | i,h       | cross,road,road   | depart,turn right,arrive        | ,,    |                            |
             | i,j       | cross,cross,cross | depart,use lane straight,arrive | ,0,   |                            |
             | i,d       | cross,road,road   | depart,turn left,arrive         | ,1,   |                            |
+            | i,l       | cross,cross,cross | depart,continue uturn,arrive    | ,1,   |                            |
+
+    #copy of former case to prevent further regression
+    Scenario: Turn Lanes at Segregated Road
+        Given the node map
+            |   |   | i | l |   |   |
+            |   |   |   |   |   |   |
+            | h |   | g | f |   | e |
+            | a |   | b | c |   | d |
+            |   |   |   |   |   |   |
+            |   |   | j | k |   |   |
+
+        And the ways
+            | nodes | name  | turn:lanes:forward      | oneway |
+            | ab    | road  | left\|through&right     | yes    |
+            | bc    | road  | left\|through           | yes    |
+            | cd    | road  |                         | yes    |
+            | ef    | road  | \|through&through;right | yes    |
+            | fg    | road  | left;through\|through&  | yes    |
+            | gh    | road  |                         | yes    |
+            | ig    | cross |                         | yes    |
+            | gb    | cross | left\|through           | yes    |
+            | bj    | cross |                         | yes    |
+            | kc    | cross | left\|through;right     | yes    |
+            | cf    | cross | left\|through           | yes    |
+            | fl    | cross |                         | yes    |
+
+        When I route I should get
+            | waypoints | route             | turns                           | lanes | #                          |
+            | a,j       | road,cross,cross  | depart,turn right,arrive        | ,0,   |                            |
+            | k,d       | cross,road,road   | depart,turn right,arrive        | ,0,   |                            |
+            | k,l       | cross,cross,cross | depart,use lane straight,arrive | ,0,   |                            |
+            | e,l       | road,cross,cross  | depart,turn right,arrive        | ,0,   |                            |
+            | e,d       | road,road,road    | depart,continue uturn,arrive    | ,2,   |                            |
+            | i,h       | cross,road,road   | depart,turn right,arrive        | ,,    |                            |
+            | i,j       | cross,cross,cross | depart,use lane straight,arrive | ,0,   |                            |
             | i,l       | cross,cross,cross | depart,continue uturn,arrive    | ,1,   |                            |
 
     Scenario: Turn Lanes at Segregated Road
@@ -268,7 +304,8 @@ Feature: Turn Lane Guidance
             | a,f       | road,turn,turn   | depart,turn left,arrive  | ,1,   |
             | a,g       | road,right,right | depart,turn right,arrive | ,0,   |
 
-     Scenario: Narrowing Turn Lanes
+    @todo @bug
+    Scenario: Narrowing Turn Lanes
         Given the node map
             |   |   |   |   | g |   |
             |   |   |   |   |   |   |
@@ -290,7 +327,7 @@ Feature: Turn Lane Guidance
             | a,e       | road,through,through | depart,new name straight,arrive | ,1,   |
             | a,f       | road,right,right     | depart,turn right,arrive        | ,0,   |
 
-     Scenario: Turn at a traffic light
+    Scenario: Turn at a traffic light
         Given the node map
             | a | b | c | d |
             |   |   | e |   |
@@ -311,8 +348,8 @@ Feature: Turn Lane Guidance
             | a,d       | road,road,road | depart,use lane straight,arrive | ,1,   |
             | a,e       | road,turn,turn | depart,turn right,arrive        | ,0,   |
 
-
-     Scenario: Theodor Heuss Platz
+    @bug @todo
+    Scenario: Theodor Heuss Platz
         Given the node map
             |   |   |   | i | o |   |   | l |   |
             |   |   | b |   |   |   | a |   | m |
@@ -424,7 +461,8 @@ Feature: Turn Lane Guidance
             | a,e       | road,road,road         | depart,turn uturn,arrive        | ,4,     |
             | a,g       | road,straight,straight | depart,new name straight,arrive | ,0 1,   |
 
-     Scenario: Passing Through a Roundabout
+    @bug @todo
+    Scenario: Passing Through a Roundabout
         Given the node map
             |   |   | h |   | g |   |   |
             |   | a |   |   |   | f | k |
@@ -486,7 +524,8 @@ Feature: Turn Lane Guidance
             | a,d       | hwy,hwy,hwy   | depart,use lane straight,arrive     | ,1 2 3, |
             | a,e       | hwy,ramp,ramp | depart,off ramp slight right,arrive | ,0 1,   |
 
-     Scenario: Turning Off Ramp
+    @bug @todo
+    Scenario: Turning Off Ramp
         Given the node map
             |   | a |   |
             | d | c | b |
@@ -507,7 +546,7 @@ Feature: Turn Lane Guidance
             | a,g       | off,road,road | depart,turn_left,arrive  | ,1,   |
             | a,h       |               |                          |       |
 
-     Scenario: Off Ramp In a Turn
+    Scenario: Off Ramp In a Turn
         Given the node map
             | a |   |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |   |   |
@@ -525,7 +564,7 @@ Feature: Turn Lane Guidance
             | a,c       | hwy,hwy,hwy   | depart,use lane slight left,arrive  | ,1 2, |
             | a,d       | hwy,ramp,ramp | depart,off ramp slight right,arrive | ,0,   |
 
-     Scenario: Reverse Lane in Segregated Road
+    Scenario: Reverse Lane in Segregated Road
         Given the node map
             | h |   |   |   |   | g |   |   |   |   |   | f |
             |   |   |   |   |   |   |   | e |   |   |   |   |
@@ -600,7 +639,7 @@ Feature: Turn Lane Guidance
             | a,d       | depart,continue right,end of road right,arrive | road,road,road,road | ,0,,  |
             | d,a       | depart,continue left,end of road left,arrive   | road,road,road,road | ,1,,  |
 
-     Scenario: Merge Lanes Onto Freeway
+    Scenario: Merge Lanes Onto Freeway
         Given the node map
             | a |   |   | b | c |
             |   | d |   |   |   |
@@ -614,7 +653,7 @@ Feature: Turn Lane Guidance
             | waypoints | turns                           | route        | lanes |
             | d,c       | depart,merge slight left,arrive | ramp,Hwy,Hwy | ,0 1, |
 
-     Scenario: Fork on motorway links - don't fork on through but use lane
+    Scenario: Fork on motorway links - don't fork on through but use lane
         Given the node map
             | i |   |   |   |   | a |
             | j |   | c | b |   | x |
