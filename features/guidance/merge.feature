@@ -50,3 +50,27 @@ Feature: Merging
             | waypoints | route      | turns                           |
             | d,c       | db,abc,abc | depart,merge slight left,arrive |
 
+    Scenario: Merge onto a turning road
+        Given the node map
+            |   |   |   |   |   |   | e |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   | d |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   | c |   |   |
+            |   |   |   | b |   |   |   |
+            | a |   |   |   |   |   | f |
+
+        And the ways
+            | nodes | highway     | name |
+            | abcde | primary     | road |
+            | fd    | residential | in   |
+
+        When I route I should get
+            | waypoints | turns                           | route        |
+            | f,e       | depart,merge slight left,arrive | in,road,road |
+            | f,a       | depart,turn sharp left,arrive  | in,road,road |

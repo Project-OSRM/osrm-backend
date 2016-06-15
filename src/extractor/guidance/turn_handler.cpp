@@ -180,7 +180,9 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 I
                 I
      */
-    else if (isEndOfRoad(intersection[0], intersection[1], intersection[2]))
+    else if (isEndOfRoad(intersection[0], intersection[1], intersection[2]) &&
+             !isObviousOfTwo(intersection[1], intersection[2]) &&
+             !isObviousOfTwo(intersection[2], intersection[1]))
     {
         if (intersection[1].entry_allowed)
         {

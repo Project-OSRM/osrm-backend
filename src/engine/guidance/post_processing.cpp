@@ -419,6 +419,20 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                      current_step.name_id == steps[two_back_index].name_id)
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+
+                const auto getBearing = [](bool in, const RouteStep &step)
+                {
+                    const auto index =
+                        in ? step.intersections.front().in : step.intersections.front().out;
+                    return step.intersections.front().bearings[index];
+                };
+
+                // If we Merge onto the same street, we end up with a u-turn in some cases
+                if (bearingsAreReversed(
+                        util::bearing::reverseBearing(getBearing(true, one_back_step)),
+                        getBearing(false, current_step)))
+                    steps[one_back_index].maneuver.instruction.direction_modifier =
+                        DirectionModifier::UTurn;
             }
             else if (TurnType::Merge == one_back_step.maneuver.instruction.type &&
                      current_step.maneuver.instruction.type !=

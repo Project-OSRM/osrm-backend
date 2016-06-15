@@ -833,3 +833,23 @@ Feature: Simple Turns
             | a,d       | road,road        | depart,arrive           |
             | d,i       | road,cross,cross | depart,turn left,arrive |
             | d,g       | road,road        | depart,arrive           |
+
+     Scenario: Go onto turning major road
+        Given the node map
+            |   |   |   | c |
+            |   |   |   |   |
+            |   |   |   |   |
+            | a |   |   | b |
+            |   |   |   |   |
+            |   |   |   | d |
+
+        And the ways
+            | nodes | highway     | name |
+            | abc   | primary     | road |
+            | bd    | residential | in   |
+
+        When I route I should get
+            | waypoints | turns                           | route        |
+            | a,c       | depart,arrive                   | road,road    |
+            | d,a       | depart,turn left,arrive         | in,road,road |
+            | d,c       | depart,new name straight,arrive | in,road,road |
