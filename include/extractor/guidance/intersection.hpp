@@ -22,6 +22,7 @@ struct TurnOperation final
     EdgeID eid;
     double angle;
     TurnInstruction instruction;
+    LaneDataID lane_data_id;
 };
 
 // A Connected Road is the internal representation of a potential turn. Internally, we require

@@ -35,7 +35,7 @@ inline void printTurnAssignmentData(const NodeID at,
     for (const auto &road)
         std::cout << "\t" << toString(road) << "\n";
 
-    //flushes as well
+    // flushes as well
     print(turn_lane_data);
 }
 

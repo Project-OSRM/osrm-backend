@@ -1,8 +1,11 @@
-#include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
+#include "extractor/guidance/toolkit.hpp"
 #include "util/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+
+#include <functional>
 
 namespace osrm
 {
@@ -169,9 +172,27 @@ bool canMatchTrivially(const Intersection &intersection, const LaneDataVector &l
 
 Intersection triviallyMatchLanesToTurns(Intersection intersection,
                                         const LaneDataVector &lane_data,
-                                        const util::NodeBasedDynamicGraph &node_based_graph)
+                                        const util::NodeBasedDynamicGraph &node_based_graph,
+                                        const LaneStringID lane_string_id,
+                                        LaneDataIdMap &lane_data_to_id)
 {
     std::size_t road_index = 1, lane = 0;
+
+    const auto matchRoad = [&](ConnectedRoad &road, const TurnLaneData &data) {
+        LaneTupelIdPair key{{LaneID(data.to - data.from + 1), data.from}, lane_string_id};
+
+        auto lane_data_id = boost::numeric_cast<LaneDataID>(lane_data_to_id.size());
+        const auto it = lane_data_to_id.find(key);
+
+        if (it == lane_data_to_id.end())
+            lane_data_to_id.insert({key, lane_data_id});
+        else
+            lane_data_id = it->second;
+
+        // set lane id instead after the switch:
+        road.turn.lane_data_id = lane_data_id;
+    };
+
     for (; road_index < intersection.size() && lane < lane_data.size(); ++road_index)
     {
         if (intersection[road_index].entry_allowed)
@@ -185,8 +206,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             if (TurnType::Suppressed == intersection[road_index].turn.instruction.type)
                 intersection[road_index].turn.instruction.type = TurnType::UseLane;
 
-            intersection[road_index].turn.instruction.lane_tupel = {
-                LaneID(lane_data[lane].to - lane_data[lane].from + 1), lane_data[lane].from};
+            matchRoad(intersection[road_index], lane_data[lane]);
             ++lane;
         }
     }
@@ -209,8 +229,8 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
         intersection[u_turn].entry_allowed = true;
         intersection[u_turn].turn.instruction.type = TurnType::Turn;
         intersection[u_turn].turn.instruction.direction_modifier = DirectionModifier::UTurn;
-        intersection[u_turn].turn.instruction.lane_tupel = {
-            LaneID(lane_data.back().to - lane_data.back().from + 1), lane_data.back().from};
+
+        matchRoad(intersection[u_turn], lane_data.back());
     }
     return std::move(intersection);
 }

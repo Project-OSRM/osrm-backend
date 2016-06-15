@@ -12,6 +12,7 @@
 #include "engine/guidance/assemble_overview.hpp"
 #include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_steps.hpp"
+#include "engine/guidance/lane_processing.hpp"
 #include "engine/guidance/post_processing.hpp"
 
 #include "engine/internal_route_result.hpp"

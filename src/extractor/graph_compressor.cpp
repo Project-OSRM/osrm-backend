@@ -113,7 +113,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             // traffic signals in the `traffic_lights` list, which EdgeData
             // doesn't have access to.
             const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
-            if( has_node_penalty )
+            if (has_node_penalty)
                 continue;
 
             // Get distances before graph is modified
@@ -168,10 +168,10 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                     return front;
                 return back;
             };
-            graph.GetEdgeData(forward_e1).lane_string_id =
-                selectLaneID(graph.GetEdgeData(forward_e1).lane_string_id, fwd_edge_data2.lane_string_id);
-            graph.GetEdgeData(reverse_e1).lane_string_id =
-                selectLaneID(graph.GetEdgeData(reverse_e1).lane_string_id, rev_edge_data2.lane_string_id);
+            graph.GetEdgeData(forward_e1).lane_string_id = selectLaneID(
+                graph.GetEdgeData(forward_e1).lane_string_id, fwd_edge_data2.lane_string_id);
+            graph.GetEdgeData(reverse_e1).lane_string_id = selectLaneID(
+                graph.GetEdgeData(reverse_e1).lane_string_id, rev_edge_data2.lane_string_id);
 
             // remove e2's (if bidir, otherwise only one)
             graph.DeleteEdge(node_v, forward_e2);

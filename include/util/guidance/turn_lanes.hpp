@@ -65,21 +65,18 @@ class LaneTupel
     LaneID lanes_in_turn;
     LaneID first_lane_from_the_right;
 
-    friend std::size_t std::hash<LaneTupel>::operator()(const LaneTupel &) const;
+    friend std::size_t hash_value(const LaneTupel &tup)
+    {
+        std::size_t seed{0};
+        boost::hash_combine(seed, tup.lanes_in_turn);
+        boost::hash_combine(seed, tup.first_lane_from_the_right);
+        return seed;
+    }
 };
 
+using LaneTupelIdPair = std::pair<util::guidance::LaneTupel, LaneStringID>;
 } // namespace guidance
 } // namespace util
 } // namespace osrm
-
-// make Bearing Class hasbable
-namespace std
-{
-inline size_t hash<::osrm::util::guidance::LaneTupel>::
-operator()(const ::osrm::util::guidance::LaneTupel &lane_tupel) const
-{
-    return boost::hash_value(*reinterpret_cast<const std::uint16_t *>(&lane_tupel));
-}
-} // namespace std
 
 #endif /* OSRM_UTIL_GUIDANCE_TURN_LANES_HPP */

@@ -16,6 +16,7 @@
 #include "storage/storage_config.hpp"
 #include "engine/geospatial_query.hpp"
 #include "util/graph_loader.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/io.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
@@ -78,8 +79,11 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<NodeID, false>::vector m_via_node_list;
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;
+    util::ShM<LaneDataID, false>::vector m_lane_data_id;
+    util::ShM<util::guidance::LaneTupelIdPair, false>::vector m_lane_tupel_id_pairs;
     util::ShM<extractor::TravelMode, false>::vector m_travel_mode_list;
     util::ShM<char, false>::vector m_names_char_list;
+    util::ShM<char, false>::vector m_lanes_char_list;
     util::ShM<unsigned, false>::vector m_geometry_indices;
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, false>::vector m_geometry_list;
     util::ShM<bool, false>::vector m_is_core_node;
@@ -93,6 +97,7 @@ class InternalDataFacade final : public BaseDataFacade
     boost::filesystem::path ram_index_path;
     boost::filesystem::path file_index_path;
     util::RangeTable<16, false> m_name_table;
+    util::RangeTable<16, false> m_lane_string_table;
 
     // bearing classes by node based node
     util::ShM<BearingClassID, false>::vector m_bearing_class_id_table;
@@ -116,6 +121,20 @@ class InternalDataFacade final : public BaseDataFacade
 
         in_stream.read(reinterpret_cast<char *>(&m_profile_properties),
                        sizeof(m_profile_properties));
+    }
+
+    void LoadLaneTupelIdPairs(const boost::filesystem::path &lane_data_path)
+    {
+        boost::filesystem::ifstream in_stream(lane_data_path);
+        if (!in_stream)
+        {
+            throw util::exception("Could not open " + lane_data_path.string() + " for reading.");
+        }
+        std::uint64_t size;
+        in_stream.read(reinterpret_cast<char *>(&size), sizeof(size));
+        m_lane_tupel_id_pairs.resize(size);
+        in_stream.read(reinterpret_cast<char *>(&m_lane_tupel_id_pairs[0]),
+                       sizeof(m_lane_tupel_id_pairs) * size);
     }
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
@@ -173,6 +192,7 @@ class InternalDataFacade final : public BaseDataFacade
         m_via_node_list.resize(number_of_edges);
         m_name_ID_list.resize(number_of_edges);
         m_turn_instruction_list.resize(number_of_edges);
+        m_lane_data_id.resize(number_of_edges);
         m_travel_mode_list.resize(number_of_edges);
         m_entry_class_id_list.resize(number_of_edges);
 
@@ -184,6 +204,7 @@ class InternalDataFacade final : public BaseDataFacade
             m_via_node_list[i] = current_edge_data.via_node;
             m_name_ID_list[i] = current_edge_data.name_id;
             m_turn_instruction_list[i] = current_edge_data.turn_instruction;
+            m_lane_data_id[i] = current_edge_data.lane_data_id;
             m_travel_mode_list[i] = current_edge_data.travel_mode;
             m_entry_class_id_list[i] = current_edge_data.entry_classid;
         }
@@ -282,6 +303,20 @@ class InternalDataFacade final : public BaseDataFacade
         m_static_rtree.reset(new InternalRTree(ram_index_path, file_index_path, m_coordinate_list));
         m_geospatial_query.reset(
             new InternalGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
+    }
+
+    void LoadLaneStrings(const boost::filesystem::path &lane_string_file)
+    {
+        boost::filesystem::ifstream lane_stream(lane_string_file, std::ios::binary);
+
+        lane_stream >> m_lane_string_table;
+
+        unsigned number_of_chars = 0;
+        lane_stream.read((char *)&number_of_chars, sizeof(unsigned));
+        m_lanes_char_list.resize(number_of_chars + 1); //+1 gives sentinel element
+        if( number_of_chars )
+            lane_stream.read((char *)&m_lanes_char_list[0], number_of_chars * sizeof(char));
+        m_lanes_char_list[number_of_chars] = '\0';
     }
 
     void LoadStreetNames(const boost::filesystem::path &names_file)
@@ -386,11 +421,17 @@ class InternalDataFacade final : public BaseDataFacade
         util::SimpleLogger().Write() << "loading street names";
         LoadStreetNames(config.names_data_path);
 
+        util::SimpleLogger().Write() << "loading lane tags";
+        LoadLaneStrings(config.turn_lane_string_path);
+
         util::SimpleLogger().Write() << "loading rtree";
         LoadRTree();
 
         util::SimpleLogger().Write() << "loading intersection class data";
         LoadIntersectionClasses(config.intersection_class_path);
+
+        util::SimpleLogger().Write() << "Loading Lane Data Pairs";
+        LoadLaneTupelIdPairs(config.turn_lane_data_path);
     }
 
     // search graph access
@@ -740,6 +781,37 @@ class InternalDataFacade final : public BaseDataFacade
     util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
     {
         return m_entry_class_table.at(entry_class_id);
+    }
+
+    bool hasLaneData(const EdgeID id) const override final
+    {
+        return m_lane_data_id[id] != INVALID_LANE_DATAID;
+    }
+
+    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID id) const override final
+    {
+        BOOST_ASSERT(hasLaneData(id));
+        return m_lane_tupel_id_pairs[m_lane_data_id[id]];
+    }
+
+    std::string GetTurnStringForID(const LaneStringID lane_string_id) const override final
+    {
+        if (INVALID_LANE_STRINGID == lane_string_id)
+        {
+            return "";
+        }
+        auto range = m_lane_string_table.GetRange(lane_string_id);
+
+        std::string result;
+        result.reserve(range.size());
+        if (range.begin() != range.end())
+        {
+            result.resize(range.back() - range.front() + 1);
+            std::copy(m_lanes_char_list.begin() + range.front(),
+                      m_lanes_char_list.begin() + range.back() + 1,
+                      result.begin());
+        }
+        return result;
     }
 };
 }

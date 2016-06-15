@@ -51,7 +51,7 @@ class TurnAnalysis
     std::vector<TurnOperation>
     transformIntersectionIntoTurns(const Intersection &intersection) const;
 
-    const IntersectionGenerator& getGenerator() const;
+    const IntersectionGenerator &getGenerator() const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;

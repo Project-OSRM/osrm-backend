@@ -22,12 +22,9 @@ std::string toString(const ConnectedRoad &road)
     result += " angle: ";
     result += std::to_string(road.turn.angle);
     result += " instruction: ";
-    result +=
-        std::to_string(static_cast<std::int32_t>(road.turn.instruction.type)) + " " +
-        std::to_string(static_cast<std::int32_t>(road.turn.instruction.direction_modifier)) + " " +
-        std::to_string(static_cast<std::int32_t>(road.turn.instruction.lane_tupel.lanes_in_turn)) +
-        " " + std::to_string(static_cast<std::int32_t>(
-                  road.turn.instruction.lane_tupel.first_lane_from_the_right));
+    result += std::to_string(static_cast<std::int32_t>(road.turn.instruction.type)) + " " +
+              std::to_string(static_cast<std::int32_t>(road.turn.instruction.direction_modifier)) +
+              " " + std::to_string(static_cast<std::int32_t>(road.turn.lane_data_id));
     return result;
 }
 

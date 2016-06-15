@@ -20,7 +20,8 @@ struct NodeBasedEdgeData
     NodeBasedEdgeData()
         : distance(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), access_restricted(false), reversed(false),
-          roundabout(false), travel_mode(TRAVEL_MODE_INACCESSIBLE), lane_string_id(INVALID_LANE_STRINGID)
+          roundabout(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          lane_string_id(INVALID_LANE_STRINGID)
     {
     }
 

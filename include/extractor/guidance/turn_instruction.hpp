@@ -77,16 +77,14 @@ struct TurnInstruction
 {
     using LaneTupel = util::guidance::LaneTupel;
     TurnInstruction(const TurnType::Enum type = TurnType::Invalid,
-                    const DirectionModifier::Enum direction_modifier = DirectionModifier::Straight,
-                    const LaneTupel lane_tupel = {0, INVALID_LANEID})
-        : type(type), direction_modifier(direction_modifier), lane_tupel(lane_tupel)
+                    const DirectionModifier::Enum direction_modifier = DirectionModifier::UTurn)
+        : type(type), direction_modifier(direction_modifier)
     {
     }
 
     TurnType::Enum type : 5;
     DirectionModifier::Enum direction_modifier : 3;
     // the lane tupel that is used for the turn
-    LaneTupel lane_tupel;
 
     static TurnInstruction INVALID() { return {TurnType::Invalid, DirectionModifier::UTurn}; }
 
@@ -147,18 +145,16 @@ struct TurnInstruction
     }
 };
 
-static_assert(sizeof(TurnInstruction) == 3, "TurnInstruction does not fit three byte");
+static_assert(sizeof(TurnInstruction) == 1, "TurnInstruction does not fit a byte");
 
 inline bool operator!=(const TurnInstruction lhs, const TurnInstruction rhs)
 {
-    return lhs.type != rhs.type || lhs.direction_modifier != rhs.direction_modifier ||
-           lhs.lane_tupel != rhs.lane_tupel;
+    return lhs.type != rhs.type || lhs.direction_modifier != rhs.direction_modifier;
 }
 
 inline bool operator==(const TurnInstruction lhs, const TurnInstruction rhs)
 {
-    return lhs.type == rhs.type && lhs.direction_modifier == rhs.direction_modifier &&
-           lhs.lane_tupel == rhs.lane_tupel;
+    return lhs.type == rhs.type && lhs.direction_modifier == rhs.direction_modifier;
 }
 
 } // namespace guidance

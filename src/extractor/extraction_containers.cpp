@@ -51,8 +51,6 @@ ExtractionContainers::ExtractionContainers()
     name_lengths.push_back(0);
     name_lengths.push_back(0);
     name_lengths.push_back(0);
-    name_lengths.push_back(0);
-    name_lengths.push_back(0);
     turn_lane_lengths.push_back(0);
 }
 
@@ -87,8 +85,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteCharData(name_file_name,name_lengths,name_char_data);
-        WriteCharData(turn_lane_file_name,turn_lane_lengths,turn_lane_char_data);
+        WriteCharData(name_file_name, name_lengths, name_char_data);
+        WriteCharData(turn_lane_file_name, turn_lane_lengths, turn_lane_char_data);
     }
     catch (const std::exception &e)
     {

@@ -327,10 +327,14 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                  name_index,
                                  weight_vector[i],
                                  extractor::guidance::TurnInstruction::NO_TURN(),
+                                 {{0, INVALID_LANEID}, INVALID_LANE_STRINGID},
                                  travel_mode,
                                  INVALID_ENTRY_CLASSID});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
+                if (facade->hasLaneData(ed.id))
+                    unpacked_path.back().lane_data = facade->GetLaneData(ed.id);
+
                 unpacked_path.back().entry_classid = facade->GetEntryClassID(ed.id);
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
@@ -389,6 +393,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 phantom_node_pair.target_phantom.name_id,
                 weight_vector[i],
                 extractor::guidance::TurnInstruction::NO_TURN(),
+                {{0, INVALID_LANEID}, INVALID_LANE_STRINGID},
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
                                             : phantom_node_pair.target_phantom.forward_travel_mode,
                 INVALID_ENTRY_CLASSID});

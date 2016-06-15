@@ -437,11 +437,16 @@ step.
   | geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) or [GeoJSON `Point`](http://geojson.org/geojson-spec.html#point) if it is only one coordinate (not wrapped by a GeoJSON feature)|
   
 - `name`: The name of the way along which travel proceeds.
+- `lanes`: the available turn lanes at the turn
+  - `marked`: markings on the road, following the OSM scheme (e.g. left, slight_right, or through)
+  - `take`: a boolean flag indicating whether the lane is a possible choice in the maneuver
 - `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `mode`: A string signifying the mode of transportation.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
 - `intersections`: A list of `Intersections` that are passed along the segment, the very first belonging to the StepManeuver
+
+Currently, the supported lane tags are: `sharp_left, left, slight_left, sharp_right, right, slight_right, through, reverse, none`.
 
 #### Example
 
@@ -450,17 +455,24 @@ step.
  "distance":152.3,
  "duration":15.6,
  "name":"Lortzingstraße",
+ "lanes":{
+     {"marked":"left",
+     "take":"false"},
+     {"marked":"right",
+     "take":"true"}
+ },
  "maneuver":{
-     "type":"depart",
-     "modifier":"left"
+     "type":"turn",
+     "modifier":"right"
  },
  "geometry":"{lu_IypwpAVrAvAdI",
  "mode":"driving",
  "intersections":[
     {"location":[13.39677,52.54366],
+    "in":2,
     "out":1,
-    "bearings":[66,246],
-    "entry":["true","true"]},
+    "bearings":[10,184,270],
+    "entry":[false,"true","true"]},
     {"location":[13.394718,52.543096],
     "in":0,
     "out":2,
