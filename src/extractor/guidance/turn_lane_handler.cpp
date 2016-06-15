@@ -62,7 +62,7 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
 {
     // initialize to invalid
     for (auto &road : intersection)
-        road.turn.instruction.lane_tupel = {0, INVALID_LANEID};
+        road.turn.instruction.lane_tupel = {LaneID{0}, INVALID_LANEID};
 
     const auto &data = node_based_graph.GetEdgeData(via_edge);
     const auto turn_lane_string = data.lane_string_id != INVALID_LANE_STRINGID
