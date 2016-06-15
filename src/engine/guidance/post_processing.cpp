@@ -1030,7 +1030,7 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps)
                step.maneuver.instruction.type != TurnType::Notification;
     };
 
-    const auto is_quick = [](const RouteStep &step) {
+    const auto is_quick = [MIN_DURATION_NEEDED_FOR_LANE_CHANGE](const RouteStep &step) {
         return step.duration < MIN_DURATION_NEEDED_FOR_LANE_CHANGE;
     };
 
