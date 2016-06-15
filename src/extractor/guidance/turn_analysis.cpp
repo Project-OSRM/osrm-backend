@@ -1,5 +1,6 @@
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/guidance/classification_data.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -83,6 +84,15 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const E
 
     // Handle sliproads
     intersection = handleSliproads(via_eid, std::move(intersection));
+
+    // Turn On Ramps Into Off Ramps, if we come from a motorway-like road
+    if (isMotorwayClass(node_based_graph.GetEdgeData(via_eid).road_classification.road_class))
+    {
+        std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
+            if (road.turn.instruction.type == TurnType::OnRamp)
+                road.turn.instruction.type = TurnType::OffRamp;
+        });
+    }
 
     std::vector<TurnOperation> turns;
     for (auto road : intersection)
