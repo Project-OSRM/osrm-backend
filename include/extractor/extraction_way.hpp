@@ -2,8 +2,8 @@
 #define EXTRACTION_WAY_HPP
 
 #include "extractor/travel_mode.hpp"
-#include "util/typedefs.hpp"
 #include "util/guidance/turn_lanes.hpp"
+#include "util/typedefs.hpp"
 
 #include <string>
 #include <vector>

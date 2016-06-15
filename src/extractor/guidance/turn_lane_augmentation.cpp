@@ -2,9 +2,9 @@
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
+#include <boost/assert.hpp>
 #include <cstddef>
 #include <utility>
-#include <boost/assert.hpp>
 
 namespace osrm
 {
@@ -170,7 +170,6 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
         has_left |= modifier == DirectionModifier::SlightLeft;
         has_left |= modifier == DirectionModifier::SharpLeft;
     }
-
 
     // find missing tag and augment neighboring, if possible
     if (none_index == 0)

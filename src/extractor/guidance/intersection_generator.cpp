@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include <algorithm>
@@ -114,9 +114,12 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
                 has_uturn_edge = true;
         }
 
-        intersection.push_back(ConnectedRoad(
-            TurnOperation{onto_edge, angle, {TurnType::Invalid, DirectionModifier::UTurn}},
-            turn_is_valid));
+        intersection.push_back(
+            ConnectedRoad(TurnOperation{onto_edge,
+                                        angle,
+                                        {TurnType::Invalid, DirectionModifier::UTurn},
+                                        INVALID_LANE_DATAID},
+                          turn_is_valid));
     }
 
     // We hit the case of a street leading into nothing-ness. Since the code here assumes that this
@@ -124,7 +127,9 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     if (!has_uturn_edge)
     {
         intersection.push_back(
-            {TurnOperation{via_eid, 0., {TurnType::Invalid, DirectionModifier::UTurn}}, false});
+            {TurnOperation{
+                 via_eid, 0., {TurnType::Invalid, DirectionModifier::UTurn}, INVALID_LANE_DATAID},
+             false});
     }
 
     const auto ByAngle = [](const ConnectedRoad &first, const ConnectedRoad second) {

@@ -11,6 +11,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -63,7 +64,7 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
 
 inline bool hasValidLanes(const guidance::StepManeuver maneuver)
 {
-    return maneuver.instruction.lane_tupel.lanes_in_turn > 0;
+    return maneuver.lanes.lanes_in_turn > 0;
 }
 
 std::string instructionTypeToString(const TurnType::Enum type)
@@ -71,12 +72,31 @@ std::string instructionTypeToString(const TurnType::Enum type)
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
-util::json::Array laneArrayFromLaneTupe(const util::guidance::LaneTupel lane_tupel)
+util::json::Array lanesFromManeuver(const guidance::StepManeuver &maneuver)
 {
-    BOOST_ASSERT(lane_tupel.lanes_in_turn >= 1);
+    BOOST_ASSERT(maneuver.lanes.lanes_in_turn >= 1);
     util::json::Array result;
-    for (LaneID i = 0; i < lane_tupel.lanes_in_turn; ++i)
-        result.values.push_back(lane_tupel.first_lane_from_the_right + i);
+    LaneID lane_id = 0;
+    typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+    boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
+    tokenizer tokens(maneuver.turn_lane_string, sep);
+
+    lane_id = std::distance(tokens.begin(), tokens.end());
+
+    for (auto iter = tokens.begin(); iter != tokens.end(); ++iter)
+    {
+        --lane_id;
+        util::json::Object lane;
+        lane.values["marked"] = (iter->empty() ? "none" : *iter);
+        if (lane_id >= maneuver.lanes.first_lane_from_the_right &&
+            lane_id < maneuver.lanes.first_lane_from_the_right + maneuver.lanes.lanes_in_turn)
+            lane.values["take"] = util::json::True();
+        else
+            lane.values["take"] = util::json::False();
+
+        result.values.push_back(lane);
+    }
+
     return result;
 }
 
@@ -162,8 +182,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
 
     if (detail::hasValidLanes(maneuver))
-        step_maneuver.values["lanes"] =
-            detail::laneArrayFromLaneTupe(maneuver.instruction.lane_tupel);
+        step_maneuver.values["lanes"] = detail::lanesFromManeuver(maneuver);
 
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);

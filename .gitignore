@@ -43,7 +43,6 @@ Thumbs.db
 /example/build/
 /test/data/monaco*
 /cmake/postinst
-.bundle/
 
 # Eclipse related files #
 #########################

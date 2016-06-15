@@ -180,6 +180,10 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; };
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
 
+    bool hasLaneData(const EdgeID /*id*/) const { return true; };
+    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID /*id*/) const { return {{0, 0}, 0}; }
+    std::string GetTurnStringForID(const LaneStringID /*lane_string_id*/) const { return ""; };
+
     util::guidance::BearingClass
     GetBearingClass(const BearingClassID /*bearing_class_id*/) const override
     {

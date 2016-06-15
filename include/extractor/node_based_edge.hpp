@@ -90,8 +90,8 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     guidance::RoadClassificationData road_classification)
     : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
       backward(backward), roundabout(roundabout), access_restricted(access_restricted),
-      startpoint(startpoint), is_split(is_split), travel_mode(travel_mode), lane_string_id(lane_string_id),
-      road_classification(std::move(road_classification))
+      startpoint(startpoint), is_split(is_split), travel_mode(travel_mode),
+      lane_string_id(lane_string_id), road_classification(std::move(road_classification))
 {
 }
 

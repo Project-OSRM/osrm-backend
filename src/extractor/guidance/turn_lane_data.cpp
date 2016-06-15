@@ -52,8 +52,7 @@ LaneDataVector laneDataFromString(std::string turn_lane_string)
     // count the number of lanes
     const auto num_lanes = [](const std::string &turn_lane_string) {
         return boost::numeric_cast<LaneID>(
-            std::count(turn_lane_string.begin(), turn_lane_string.end(), '|') + 1 +
-            std::count(turn_lane_string.begin(), turn_lane_string.end(), '&'));
+            std::count(turn_lane_string.begin(), turn_lane_string.end(), '|') + 1);
     }(turn_lane_string);
 
     const auto getNextTag = [](std::string &string, const char *separators) {
@@ -103,7 +102,7 @@ LaneDataVector laneDataFromString(std::string turn_lane_string)
         // FIXME this is a cucumber workaround, since escaping does not work properly in
         // cucumber.js (see https://github.com/cucumber/cucumber-js/issues/417). Needs to be
         // changed to "|" only, when the bug is fixed
-        auto lane = getNextTag(turn_lane_string, "|&");
+        auto lane = getNextTag(turn_lane_string, "|");
         setLaneData(lane_map, lane, lane_nr);
         ++lane_nr;
     } while (lane_nr < num_lanes);
@@ -135,8 +134,9 @@ LaneDataVector::const_iterator findTag(const std::string &tag, const LaneDataVec
     });
 }
 
-bool hasTag(const std::string &tag, const LaneDataVector &data){
-    return findTag(tag,data) != data.cend();
+bool hasTag(const std::string &tag, const LaneDataVector &data)
+{
+    return findTag(tag, data) != data.cend();
 }
 
 } // namespace lanes

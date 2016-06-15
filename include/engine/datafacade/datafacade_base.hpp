@@ -138,6 +138,10 @@ class BaseDataFacade
                                                       const int bearing,
                                                       const int bearing_range) const = 0;
 
+    virtual bool hasLaneData(const EdgeID id) const = 0;
+    virtual util::guidance::LaneTupelIdPair GetLaneData(const EdgeID id) const = 0;
+    virtual std::string GetTurnStringForID(const LaneStringID lane_string_id) const = 0;
+
     virtual unsigned GetCheckSum() const = 0;
 
     virtual bool IsCoreNode(const NodeID id) const = 0;

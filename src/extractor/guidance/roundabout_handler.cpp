@@ -373,11 +373,12 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                 if (1 == node_based_graph.GetDirectedOutDegree(node_v))
                 {
                     // No turn possible.
-                    if( intersection.size() == 2 )
+                    if (intersection.size() == 2)
                         turn.instruction = TurnInstruction::NO_TURN();
                     else
                     {
-                        turn.instruction.type = TurnType::Suppressed;   //make sure to report intersection
+                        turn.instruction.type =
+                            TurnType::Suppressed; // make sure to report intersection
                         turn.instruction.direction_modifier = getTurnDirection(turn.angle);
                     }
                 }

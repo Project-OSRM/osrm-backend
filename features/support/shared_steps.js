@@ -33,7 +33,8 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        let destinations, pronunciations, instructions, bearings, turns, modes, times, distances, summary, intersections, lanes;
+                        let destinations, pronunciations, instructions, bearings, turns, modes, times,
+                            distances, summary, intersections, lanes;
 
                         let json = JSON.parse(body);
 
@@ -103,11 +104,9 @@ module.exports = function () {
                                 got.time = instructions ? util.format('%ds', time) : '';
                             }
 
-
                             if (headers.has('lanes')) {
                                 got.lanes = (lanes || '').trim();
                             }
-
 
                             if (headers.has('speed')) {
                                 if (row.speed !== '' && instructions) {

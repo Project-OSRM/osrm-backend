@@ -12,6 +12,7 @@
 #include "extractor/profile_properties.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/guidance/turn_lanes.hpp"
 
 #include "engine/geospatial_query.hpp"
 #include "util/make_unique.hpp"
@@ -79,10 +80,14 @@ class SharedDataFacade final : public BaseDataFacade
     util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
+    util::ShM<LaneDataID, true>::vector m_lane_data_id;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, true>::vector m_travel_mode_list;
     util::ShM<char, true>::vector m_names_char_list;
+    util::ShM<char, true>::vector m_turn_string_char_list;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
+    util::ShM<char, true>::vector m_lane_string_char_list;
+    util::ShM<unsigned, true>::vector m_lane_string_begin_indices;
     util::ShM<unsigned, true>::vector m_geometry_indices;
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector m_geometry_list;
     util::ShM<bool, true>::vector m_is_core_node;
@@ -91,12 +96,14 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<char, true>::vector m_datasource_name_data;
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
     util::ShM<std::size_t, true>::vector m_datasource_name_lengths;
+    util::ShM<util::guidance::LaneTupelIdPair, true>::vector m_lane_tupel_id_pairs;
 
     std::unique_ptr<SharedRTree> m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     boost::filesystem::path file_index_path;
 
     std::shared_ptr<util::RangeTable<16, true>> m_name_table;
+    std::shared_ptr<util::RangeTable<16, true>> m_turn_string_table;
 
     // bearing classes by node based node
     util::ShM<BearingClassID, true>::vector m_bearing_class_id_table;
@@ -186,6 +193,19 @@ class SharedDataFacade final : public BaseDataFacade
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
+        auto lane_data_id_ptr = data_layout->GetBlockPtr<LaneDataID>(
+            shared_memory, storage::SharedDataLayout::LANE_DATA_ID);
+        util::ShM<LaneDataID, true>::vector lane_data_id(
+            lane_data_id_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DATA_ID]);
+        m_lane_data_id = std::move(lane_data_id);
+
+        auto lane_tupel_id_pair_ptr = data_layout->GetBlockPtr<util::guidance::LaneTupelIdPair>(
+            shared_memory, storage::SharedDataLayout::TURN_LANE_DATA);
+        util::ShM<util::guidance::LaneTupelIdPair, true>::vector lane_tupel_id_pair(
+            lane_tupel_id_pair_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::TURN_LANE_DATA]);
+        m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
+
         auto turn_instruction_list_ptr =
             data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
                 shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
@@ -238,6 +258,29 @@ class SharedDataFacade final : public BaseDataFacade
         m_names_char_list = std::move(names_char_list);
     }
 
+    void LoadTurnLaneStrings()
+    {
+        auto offsets_ptr = data_layout->GetBlockPtr<unsigned>(
+            shared_memory, storage::SharedDataLayout::TURN_STRING_OFFSETS);
+        auto blocks_ptr = data_layout->GetBlockPtr<IndexBlock>(
+            shared_memory, storage::SharedDataLayout::TURN_STRING_BLOCKS);
+        util::ShM<unsigned, true>::vector turn_string_offsets(
+            offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::TURN_STRING_OFFSETS]);
+        util::ShM<IndexBlock, true>::vector turn_string_blocks(
+            blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::TURN_STRING_BLOCKS]);
+
+        auto turn_strings_list_ptr = data_layout->GetBlockPtr<char>(
+            shared_memory, storage::SharedDataLayout::TURN_STRING_CHAR_LIST);
+        util::ShM<char, true>::vector turn_strings_char_list(
+            turn_strings_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::TURN_STRING_CHAR_LIST]);
+        m_turn_string_table = util::make_unique<util::RangeTable<16, true>>(
+            turn_string_offsets,
+            turn_string_blocks,
+            static_cast<unsigned>(turn_strings_char_list.size()));
+
+        m_turn_string_char_list = std::move(turn_strings_char_list);
+    }
     void LoadCoreInformation()
     {
         if (data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER] <= 0)
@@ -416,6 +459,7 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadTimestamp();
                 LoadViaNodeList();
                 LoadNames();
+                LoadTurnLaneStrings();
                 LoadCoreInformation();
                 LoadProfileProperties();
                 LoadRTree();
@@ -782,6 +826,37 @@ class SharedDataFacade final : public BaseDataFacade
     util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
     {
         return m_entry_class_table.at(entry_class_id);
+    }
+
+    bool hasLaneData(const EdgeID id) const override final
+    {
+        return INVALID_LANE_DATAID != m_lane_data_id.at(id);
+    }
+
+    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID id) const override final
+    {
+        BOOST_ASSERT(hasLaneData(id));
+        return m_lane_tupel_id_pairs.at(m_lane_data_id.at(id));
+    }
+
+    std::string GetTurnStringForID(const LaneStringID lane_string_id) const override final
+    {
+        if (INVALID_LANE_STRINGID == lane_string_id)
+        {
+            return "";
+        }
+        auto range = m_turn_string_table->GetRange(lane_string_id);
+
+        std::string result;
+        result.reserve(range.size());
+        if (range.begin() != range.end())
+        {
+            result.resize(range.back() - range.front() + 1);
+            std::copy(m_turn_string_char_list.begin() + range.front(),
+                      m_turn_string_char_list.begin() + range.back() + 1,
+                      result.begin());
+        }
+        return result;
     }
 };
 }

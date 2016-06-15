@@ -11,8 +11,7 @@ namespace util
 {
 namespace guidance
 {
-LaneTupel::LaneTupel()
-    : lanes_in_turn(0), first_lane_from_the_right(INVALID_LANEID)
+LaneTupel::LaneTupel() : lanes_in_turn(0), first_lane_from_the_right(INVALID_LANEID)
 {
     // basic constructor, set everything to zero
 }
