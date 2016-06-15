@@ -1,8 +1,8 @@
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_discovery.hpp"
+#include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
-#include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 
@@ -40,7 +40,7 @@ TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_g
 }
 
 /*
-    Turn lanes are given in the form of strings that closely correspond to the direction modifiers
+   Turn lanes are given in the form of strings that closely correspond to the direction modifiers
    we use for our turn types. However, we still cannot simply perform a 1:1 assignment.
 
    This function parses the turn_lane_strings of a format that describes an intersection as:
@@ -89,17 +89,15 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
     const std::size_t possible_entries = getNumberOfTurns(intersection);
 
     // merge does not justify an instruction
-    const bool has_merge_lane = (hasTag("merge_to_left", lane_data) ||
-                                 hasTag("merge_to_right", lane_data));
+    const bool has_merge_lane =
+        (hasTag("merge_to_left", lane_data) || hasTag("merge_to_right", lane_data));
 
     // Dead end streets that don't have any left-tag. This can happen due to the fallbacks for
     // broken data/barriers.
     const bool has_non_usable_u_turn =
         (intersection[0].entry_allowed && !hasTag("none", lane_data) &&
-         !hasTag("left", lane_data) &&
-         !hasTag("sharp_left", lane_data) &&
-         !hasTag("reverse", lane_data) &&
-         lane_data.size() + 1 == possible_entries);
+         !hasTag("left", lane_data) && !hasTag("sharp_left", lane_data) &&
+         !hasTag("reverse", lane_data) && lane_data.size() + 1 == possible_entries);
 
     if (has_merge_lane || has_non_usable_u_turn)
         return std::move(intersection);
@@ -234,7 +232,6 @@ Intersection TurnLaneHandler::handleTurnAtPreviousIntersection(const NodeID at,
     return std::move(intersection);
 }
 
-
 /* A simple intersection does not depend on the next intersection coming up. This is important
  * for turn lanes, since traffic signals and/or segregated a intersection can influence the
  * interpretation of turn-lanes at a given turn.
@@ -296,7 +293,7 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
     }
 
     if (num_turns > lane_data.size() && intersection[0].entry_allowed &&
-        !( hasTag("reverse", lane_data) ||
+        !(hasTag("reverse", lane_data) ||
           (lane_data.back().tag != "left" && lane_data.back().tag != "sharp_left")))
     {
         return false;
@@ -417,7 +414,7 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
             return {turn_lane_data, {}};
     }
 
-    std::size_t none_index = std::distance(turn_lane_data.begin(),findTag("none", turn_lane_data));
+    std::size_t none_index = std::distance(turn_lane_data.begin(), findTag("none", turn_lane_data));
 
     // if the turn lanes are pull forward, we might have to add an additional straight tag
     // did we find something that matches against the straightmost road?
