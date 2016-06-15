@@ -88,6 +88,10 @@ struct TurnInstruction
     // the lane tupel that is used for the turn
     LaneTupel lane_tupel;
 
+    // id into the lane_tupel,lane_string_id map
+    // TODO: remove lane_tupel above and assert on size == 3 below
+    std::uint16_t lane_tupel_id;
+
     static TurnInstruction INVALID() { return {TurnType::Invalid, DirectionModifier::UTurn}; }
 
     static TurnInstruction NO_TURN() { return {TurnType::NoTurn, DirectionModifier::UTurn}; }
@@ -147,7 +151,8 @@ struct TurnInstruction
     }
 };
 
-static_assert(sizeof(TurnInstruction) == 3, "TurnInstruction does not fit three byte");
+// TODO: should be 3 after the switch to ids
+static_assert(sizeof(TurnInstruction) == 6, "TurnInstruction does not fit three bytes");
 
 inline bool operator!=(const TurnInstruction lhs, const TurnInstruction rhs)
 {

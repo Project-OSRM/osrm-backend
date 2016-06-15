@@ -5,6 +5,7 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/typedefs.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
@@ -20,10 +21,12 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace osrm
 {
@@ -31,6 +34,10 @@ namespace extractor
 {
 namespace guidance
 {
+
+using LaneTupelIdPair = std::pair<util::guidance::LaneTupel, LaneStringID>;
+using LaneTupelIdMap =
+    std::unordered_map<LaneTupelIdPair, std::uint16_t, boost::hash<LaneTupelIdPair>>;
 
 using util::guidance::angularDeviation;
 
