@@ -5,6 +5,7 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
@@ -35,9 +36,8 @@ namespace extractor
 namespace guidance
 {
 
-using LaneTupelIdPair = std::pair<util::guidance::LaneTupel, LaneStringID>;
-using LaneTupelIdMap =
-    std::unordered_map<LaneTupelIdPair, std::uint16_t, boost::hash<LaneTupelIdPair>>;
+using util::guidance::LaneTupelIdPair;
+using LaneDataIdMap = std::unordered_map<LaneTupelIdPair, LaneDataID, boost::hash<LaneTupelIdPair>>;
 
 using util::guidance::angularDeviation;
 

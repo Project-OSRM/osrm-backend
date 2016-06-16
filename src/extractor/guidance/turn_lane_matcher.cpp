@@ -174,7 +174,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
                                         const LaneDataVector &lane_data,
                                         const util::NodeBasedDynamicGraph &node_based_graph,
                                         const LaneStringID lane_string_id,
-                                        LaneTupelIdMap &lane_tupel_to_string_id)
+                                        LaneDataIdMap &lane_data_to_id)
 {
     std::size_t road_index = 1, lane = 0;
     for (; road_index < intersection.size() && lane < lane_data.size(); ++road_index)
@@ -194,19 +194,18 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
                 {LaneID(lane_data[lane].to - lane_data[lane].from + 1), lane_data[lane].from},
                 lane_string_id};
 
-            auto lane_tupel_id = boost::numeric_cast<std::uint16_t>(lane_tupel_to_string_id.size());
-            const auto it = lane_tupel_to_string_id.find(key);
+            auto lane_data_id = boost::numeric_cast<LaneDataID>(lane_data_to_id.size());
+            const auto it = lane_data_to_id.find(key);
 
-            if (it == lane_tupel_to_string_id.end())
-                lane_tupel_to_string_id.insert({key, lane_tupel_id});
+            if (it == lane_data_to_id.end())
+                lane_data_to_id.insert({key, lane_data_id});
             else
-                lane_tupel_id = it->second;
-
-            // TODO: remove when we're done with the switch to ids
-            intersection[road_index].turn.instruction.lane_tupel = key.first;
+                lane_data_id = it->second;
 
             // set lane id instead after the switch:
-            intersection[road_index].turn.instruction.lane_tupel_id = lane_tupel_id;
+            intersection[road_index].turn.lane_data_id = lane_data_id;
+
+            std::cout << "Hashed: " << (int)lane_data[lane].from << " " << (int)lane_data[lane].to << " " << (int)lane_string_id << " to " << (int)lane_data_id << std::endl;
 
             ++lane;
         }
@@ -236,19 +235,18 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             {LaneID(lane_data.back().to - lane_data.back().from + 1), lane_data.back().from},
             lane_string_id};
 
-        auto lane_tupel_id = boost::numeric_cast<std::uint16_t>(lane_tupel_to_string_id.size());
-        const auto it = lane_tupel_to_string_id.find(key);
+        auto lane_data_id = boost::numeric_cast<std::uint16_t>(lane_data_to_id.size());
+        const auto it = lane_data_to_id.find(key);
 
-        if (it == lane_tupel_to_string_id.end())
-            lane_tupel_to_string_id.insert({key, lane_tupel_id});
+        if (it == lane_data_to_id.end())
+            lane_data_to_id.insert({key, lane_data_id});
         else
-            lane_tupel_id = it->second;
+            lane_data_id = it->second;
 
-        // TODO: remove when we're done with the switch to ids
-        intersection[u_turn].turn.instruction.lane_tupel = key.first;
+        std::cout << "Hashed: " << (int)lane_data[lane].from << " " << (int)lane_data[lane].to << " " << (int)lane_string_id << " to " << (int)lane_data_id << std::endl;
 
         // set lane id instead after the switch:
-        intersection[road_index].turn.instruction.lane_tupel_id = lane_tupel_id;
+        intersection[u_turn].turn.lane_data_id = lane_data_id;
     }
     return std::move(intersection);
 }

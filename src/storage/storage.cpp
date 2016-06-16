@@ -1,4 +1,3 @@
-#include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -9,6 +8,7 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
+#include "storage/storage.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
@@ -143,9 +143,31 @@ int Storage::Run()
     util::SimpleLogger().Write() << "name offsets size: " << name_blocks;
     BOOST_ASSERT_MSG(0 != name_blocks, "name file broken");
 
+    boost::filesystem::ifstream turn_string_stream(config.turn_lane_string_path,
+                                                   std::ios::binary);
+    if (!turn_string_stream)
+    {
+        throw util::exception("Could not open " + config.turn_lane_string_path.string() +
+                              " for reading.");
+    }
+
+    unsigned turn_string_blocks = 0;
+    turn_string_stream.read((char *)&turn_string_blocks, sizeof(unsigned));
+    shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::TURN_STRING_OFFSETS,
+                                              turn_string_blocks);
+    shared_layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
+        SharedDataLayout::TURN_STRING_BLOCKS, turn_string_blocks);
+    util::SimpleLogger().Write() << "turn_string offsets size: " << turn_string_blocks;
+    BOOST_ASSERT_MSG(0 != turn_string_blocks, "turn string file broken");
+
     unsigned number_of_chars = 0;
     name_stream.read((char *)&number_of_chars, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::NAME_CHAR_LIST, number_of_chars);
+
+    unsigned number_of_turn_string_chars = 0;
+    turn_string_stream.read((char *)&number_of_turn_string_chars, sizeof(unsigned));
+    shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TURN_STRING_CHAR_LIST,
+                                          number_of_turn_string_chars);
 
     // Loading information for original edges
     boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
@@ -164,6 +186,8 @@ int Storage::Run()
                                               number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::TravelMode>(SharedDataLayout::TRAVEL_MODE,
                                                            number_of_original_edges);
+    shared_layout_ptr->SetBlockSize<LaneDataID>(SharedDataLayout::LANE_DATA_ID,
+                                                number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::guidance::TurnInstruction>(
         SharedDataLayout::TURN_INSTRUCTION, number_of_original_edges);
     shared_layout_ptr->SetBlockSize<EntryClassID>(SharedDataLayout::ENTRY_CLASSID,
@@ -247,8 +271,9 @@ int Storage::Run()
                                                       coordinate_list_size);
     // we'll read a list of OSM node IDs from the same data, so set the block size for the same
     // number of items:
-    shared_layout_ptr->SetBlockSize<std::uint64_t>(SharedDataLayout::OSM_NODE_ID_LIST,
-                                                   util::PackedVector<OSMNodeID>::elements_to_blocks(coordinate_list_size));
+    shared_layout_ptr->SetBlockSize<std::uint64_t>(
+        SharedDataLayout::OSM_NODE_ID_LIST,
+        util::PackedVector<OSMNodeID>::elements_to_blocks(coordinate_list_size));
 
     // load geometries sizes
     boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
@@ -379,6 +404,11 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<util::guidance::EntryClass>(SharedDataLayout::ENTRY_CLASS,
                                                                 entry_class_table.size());
 
+    boost::filesystem::ifstream lane_data_stream(config.turn_lane_data_path, std::ios::binary);
+    std::uint64_t lane_tupel_count = 0;
+    lane_data_stream.read(reinterpret_cast<char*>(&lane_tupel_count),sizeof(lane_tupel_count));
+    shared_layout_ptr->SetBlockSize<util::guidance::LaneTupelIdPair>(SharedDataLayout::TURN_LANE_DATA,lane_tupel_count);
+
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
                                  << shared_layout_ptr->GetSizeOfLayout() << " bytes";
@@ -435,8 +465,54 @@ int Storage::Run()
         name_stream.read(name_char_ptr,
                          shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST));
     }
-
     name_stream.close();
+
+    // Loading turn lane strings
+    unsigned *turn_string_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+        shared_memory_ptr, SharedDataLayout::TURN_STRING_OFFSETS);
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_OFFSETS) > 0)
+    {
+        turn_string_stream.read(
+            (char *)turn_string_offsets_ptr,
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_OFFSETS));
+    }
+
+    if( shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_LANE_DATA)>0)
+    {
+        lane_data_stream.read(
+            reinterpret_cast<char *>(
+                shared_layout_ptr->GetBlockPtr<util::guidance::LaneTupelIdPair, true>(
+                    shared_memory_ptr, SharedDataLayout::TURN_LANE_DATA)),
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_LANE_DATA));
+    }
+    lane_data_stream.close();
+
+    unsigned *turn_string_blocks_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
+        shared_memory_ptr, SharedDataLayout::TURN_STRING_BLOCKS);
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_BLOCKS) > 0)
+    {
+        turn_string_stream.read(
+            (char *)turn_string_blocks_ptr,
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_BLOCKS));
+    }
+
+    char *turn_string_char_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
+        shared_memory_ptr, SharedDataLayout::TURN_STRING_CHAR_LIST);
+    turn_string_stream.read((char *)&temp_length, sizeof(unsigned));
+
+    BOOST_ASSERT_MSG(temp_length ==
+                         shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_CHAR_LIST),
+                     "turn string file corrupted!");
+
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_CHAR_LIST) > 0)
+    {
+        turn_string_stream.read(
+            turn_string_char_ptr,
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_CHAR_LIST));
+    }
+    turn_string_stream.close();
+
+
 
     // load original edge information
     NodeID *via_node_ptr = shared_layout_ptr->GetBlockPtr<NodeID, true>(
@@ -448,6 +524,9 @@ int Storage::Run()
     extractor::TravelMode *travel_mode_ptr =
         shared_layout_ptr->GetBlockPtr<extractor::TravelMode, true>(shared_memory_ptr,
                                                                     SharedDataLayout::TRAVEL_MODE);
+
+    LaneDataID *lane_data_id_ptr = shared_layout_ptr->GetBlockPtr<LaneDataID, true>(
+        shared_memory_ptr, SharedDataLayout::LANE_DATA_ID);
 
     extractor::guidance::TurnInstruction *turn_instructions_ptr =
         shared_layout_ptr->GetBlockPtr<extractor::guidance::TurnInstruction, true>(
@@ -463,6 +542,7 @@ int Storage::Run()
         via_node_ptr[i] = current_edge_data.via_node;
         name_id_ptr[i] = current_edge_data.name_id;
         travel_mode_ptr[i] = current_edge_data.travel_mode;
+        lane_data_id_ptr[i] = current_edge_data.lane_data_id;
         turn_instructions_ptr[i] = current_edge_data.turn_instruction;
         entry_class_id_ptr[i] = current_edge_data.entry_classid;
     }

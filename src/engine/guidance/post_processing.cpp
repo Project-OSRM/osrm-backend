@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/toolkit.hpp"
@@ -7,6 +7,7 @@
 #include "util/for_each_pair.hpp"
 #include "util/group_by.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/guidance/turn_lanes.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -849,6 +850,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             designated_depart.maneuver.instruction = TurnInstruction::NO_TURN();
             // we need to make this conform with the intersection format for the first intersection
             auto &first_intersection = designated_depart.intersections.front();
+            designated_depart.maneuver.lanes = util::guidance::LaneTupel();
+            designated_depart.maneuver.turn_lane_string = "";
             first_intersection.bearings = {first_intersection.bearings[first_intersection.out]};
             first_intersection.entry = {true};
             first_intersection.in = Intersection::NO_INDEX;
@@ -915,6 +918,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.maneuver.waypoint_type = WaypointType::Arrive;
         next_to_last_step.maneuver.instruction = TurnInstruction::NO_TURN();
         next_to_last_step.maneuver.bearing_after = 0;
+        next_to_last_step.maneuver.lanes = util::guidance::LaneTupel();
+        next_to_last_step.maneuver.turn_lane_string = "";
         BOOST_ASSERT(next_to_last_step.intersections.size() == 1);
         auto &last_intersection = next_to_last_step.intersections.back();
         last_intersection.bearings = {last_intersection.bearings[last_intersection.in]};
@@ -1061,11 +1066,11 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps)
         // the current turn lanes constrain the lanes we have to take in the previous turn.
         util::for_each_pair(rev_first, rev_last, [](RouteStep &current, RouteStep &previous) {
             const auto current_inst = current.maneuver.instruction;
-            const auto current_lanes = current_inst.lane_tupel;
+            const auto current_lanes = current.maneuver.lanes;
 
             // Constrain the previous turn's lanes
             auto &previous_inst = previous.maneuver.instruction;
-            auto &previous_lanes = previous_inst.lane_tupel;
+            auto &previous_lanes = previous.maneuver.lanes;
 
             // Lane mapping (N:M) from previous lanes (N) to current lanes (M), with:
             //  N > M, N > 1   fan-in situation, constrain N lanes to min(N,M) shared lanes
@@ -1104,7 +1109,6 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps)
     };
 
     std::for_each(begin(subsequent_quick_turns), end(subsequent_quick_turns), constrain_lanes);
-
     return steps;
 }
 

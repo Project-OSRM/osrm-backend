@@ -149,9 +149,17 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     // Otherwise fetches the id based on the name and returns it without insertion.
 
     const constexpr auto MAX_STRING_LENGTH = 255u;
-    const auto requestId = [this,MAX_STRING_LENGTH](const std::string turn_lane_string) {
-        if( turn_lane_string == "" )
+    const auto requestId = [this,MAX_STRING_LENGTH](const std::string &turn_lane_string_) {
+        if( turn_lane_string_ == "" )
             return INVALID_LANE_STRINGID;
+
+        //requires https://github.com/cucumber/cucumber-js/issues/417
+        //remove this handling when the issue is contained
+        std::string turn_lane_string = turn_lane_string_;
+        for( auto & val : turn_lane_string )
+            if( val == '&' )
+                val = '|';
+
         const auto &lane_map_iterator = lane_map.find(turn_lane_string);
         if (lane_map.end() == lane_map_iterator)
         {

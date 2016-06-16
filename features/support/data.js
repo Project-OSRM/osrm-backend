@@ -223,7 +223,7 @@ module.exports = function () {
             };
 
             ['osrm', 'osrm.ebg', 'osrm.edges', 'osrm.enw', 'osrm.fileIndex', 'osrm.geometry', 'osrm.icd',
-             'osrm.names', 'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions'].forEach(file => {
+             'osrm.names', 'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions', 'osrm.tld', 'osrm.tls'].forEach(file => {
                  q.defer(rename, file);
              });
 
@@ -283,7 +283,7 @@ module.exports = function () {
 
             ['osrm', 'osrm.core', 'osrm.datasource_indexes', 'osrm.datasource_names', 'osrm.ebg','osrm.edges',
              'osrm.enw', 'osrm.fileIndex', 'osrm.geometry', 'osrm.hsgr', 'osrm.icd','osrm.level', 'osrm.names',
-             'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions'].forEach((file) => {
+             'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions', 'osrm.tld', 'osrm.tls'].forEach((file) => {
                  q.defer(rename, file);
              });
 

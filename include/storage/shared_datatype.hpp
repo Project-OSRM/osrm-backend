@@ -29,6 +29,7 @@ struct SharedDataLayout
         GRAPH_EDGE_LIST,
         COORDINATE_LIST,
         OSM_NODE_ID_LIST,
+        LANE_DATA_ID,
         TURN_INSTRUCTION,
         ENTRY_CLASSID,
         TRAVEL_MODE,
@@ -49,6 +50,10 @@ struct SharedDataLayout
         BEARING_BLOCKS,
         BEARING_VALUES,
         ENTRY_CLASS,
+        TURN_LANE_DATA,
+        TURN_STRING_OFFSETS,
+        TURN_STRING_BLOCKS,
+        TURN_STRING_CHAR_LIST,
         NUM_BLOCKS
     };
 
