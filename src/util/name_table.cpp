@@ -2,6 +2,8 @@
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
+#include "util/compat.hpp"
+
 #include <algorithm>
 #include <fstream>
 #include <limits>

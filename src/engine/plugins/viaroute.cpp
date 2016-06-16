@@ -7,6 +7,8 @@
 #include "util/integer_range.hpp"
 #include "util/json_container.hpp"
 
+#include "util/compat.hpp"
+
 #include <cstdlib>
 
 #include <algorithm>

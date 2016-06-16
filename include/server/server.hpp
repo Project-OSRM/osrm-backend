@@ -8,6 +8,8 @@
 #include "util/integer_range.hpp"
 #include "util/simple_logger.hpp"
 
+#include "util/compat.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 

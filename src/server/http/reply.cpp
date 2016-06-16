@@ -1,5 +1,7 @@
 #include "server/http/reply.hpp"
 
+#include "util/compat.hpp"
+
 #include <string>
 
 namespace osrm

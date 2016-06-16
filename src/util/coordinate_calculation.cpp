@@ -3,6 +3,8 @@
 #include "util/trigonometry_table.hpp"
 #include "util/web_mercator.hpp"
 
+#include "util/compat.hpp"
+
 #include <boost/assert.hpp>
 
 #include <cmath>

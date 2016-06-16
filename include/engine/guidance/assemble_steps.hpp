@@ -15,6 +15,7 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/toolkit.hpp"
 #include "util/typedefs.hpp"
+#include "util/compat.hpp"
 
 #include <boost/optional.hpp>
 #include <cstddef>

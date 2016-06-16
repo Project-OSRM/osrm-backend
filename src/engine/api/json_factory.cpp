@@ -7,6 +7,7 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/compat.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
