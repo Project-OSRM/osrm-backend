@@ -405,10 +405,10 @@ inline bool requiresNameAnnounced(const std::string &from,
         (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
     const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
 
-    const auto obvious_change = (names_are_empty && refs_are_empty) ||
-                                (names_are_equal && ref_is_contained) ||
-                                (names_are_equal && refs_are_empty) || name_is_removed ||
-                                ref_is_removed || is_suffix_change;
+    const auto obvious_change =
+        (names_are_empty && refs_are_empty) || (names_are_equal && ref_is_contained) ||
+        (names_are_equal && refs_are_empty) || (ref_is_contained && name_is_removed) ||
+        (names_are_equal && ref_is_removed) || is_suffix_change;
 
     return !obvious_change;
 }
