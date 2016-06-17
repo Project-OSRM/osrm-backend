@@ -1,3 +1,7 @@
+# 5.2.3
+  - Bugfixes:
+    - Fixed an issue with name changes in roundabouts that could result in crashes
+
 # 5.2.2
   Changes from 5.2.1
   - Bugfixes:

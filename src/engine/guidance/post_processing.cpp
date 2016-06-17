@@ -265,7 +265,9 @@ void closeOffRoundabout(const bool on_roundabout,
         // instruction and move it right to the beginning to make sure to immediately announce the
         // exit.
         BOOST_ASSERT(leavesRoundabout(steps[1].maneuver.instruction) ||
-                     steps[1].maneuver.instruction.type == TurnType::StayOnRoundabout);
+                     steps[1].maneuver.instruction.type == TurnType::StayOnRoundabout ||
+                     steps[1].maneuver.instruction.type == TurnType::Suppressed ||
+                     steps[1].maneuver.instruction.type == TurnType::NoTurn);
         steps[0].geometry_end = 1;
         steps[1] = forwardInto(steps[1], steps[0]);
         steps[0].duration = 0;
@@ -661,7 +663,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     for (std::size_t step_index = 1; step_index + 1 < steps.size(); ++step_index)
     {
         const auto &current_step = steps[step_index];
-        if( current_step.maneuver.instruction.type == TurnType::NoTurn )
+        if (current_step.maneuver.instruction.type == TurnType::NoTurn)
             continue;
         const auto one_back_index = getPreviousIndex(step_index);
         BOOST_ASSERT(one_back_index < steps.size());

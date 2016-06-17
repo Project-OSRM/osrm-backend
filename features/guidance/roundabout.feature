@@ -361,3 +361,40 @@ Feature: Basic Roundabout
            | a,f       | ab,ef,ef | depart,roundabout-exit-2,arrive | 0->180,180->270,180->0 |
            | a,h       | ab,gh,gh | depart,roundabout-exit-1,arrive | 0->180,180->270,270->0 |
 
+    Scenario: Motorway Roundabout
+    #See 39.933742 -75.082345
+    Given the node map
+        |   |   |   |   | l |   |   |   | a |   | i |
+        |   |   |   |   |   |   |   |   |   |   |   |
+        |   |   |   |   |   |   |   |   |   |   |   |
+        |   |   |   |   |   |   | b |   |   |   |   |
+        |   |   |   | c |   |   |   |   |   |   |   |
+        |   |   |   |   |   |   |   |   |   |   |   |
+        |   |   |   |   |   |   |   |   | h |   |   |
+        | n |   |   |   |   |   |   |   |   |   |   |
+        |   |   |   |   |   |   |   |   |   |   |   |
+        |   |   | d |   |   |   |   |   |   |   | j |
+        |   |   |   |   |   |   |   |   |   |   |   |
+        |   |   |   |   | m |   |   | g |   |   |   |
+        |   |   |   |   |   |   |   |   |   |   |   |
+        |   |   |   |   |   |   |   |   |   |   |   |
+        |   |   | e |   | f |   |   |   |   |   |   |
+
+    And the ways
+        | nodes | junction   | name     | highway    | oneway | ref    |
+        | ab    |            | crescent | trunk      | yes    | US 130 |
+        | bcd   | roundabout | crescent | trunk      | yes    | US 130 |
+        | de    |            | crescent | trunk      | yes    | US 130 |
+        | fg    |            | crescent | trunk      | yes    | US 130 |
+        | gh    | roundabout | crescent | trunk      | yes    | US 130 |
+        | hi    |            | crescent | trunk      | yes    | US 130 |
+        | jh    |            |          | trunk_link | yes    | NJ 38  |
+        | hb    | roundabout |          | trunk_link | yes    | NJ 38  |
+        | bl    |            |          | trunk_link | yes    | NJ 38  |
+        | cnd   |            | kaighns  | trunk_link | yes    |        |
+        | dmg   | roundabout |          | trunk_link | yes    |        |
+
+    When I route I should get
+        | waypoints | route                                                 | turns                           |
+        | a,e       | crescent (US 130),crescent (US 130),crescent (US 130) | depart,roundabout-exit-3,arrive |
+        | j,l       | NJ 38,NJ 38,NJ 38                                     | depart,roundabout-exit-2,arrive |
