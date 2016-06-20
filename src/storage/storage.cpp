@@ -426,7 +426,7 @@ int Storage::Run()
     unsigned temp_length;
     name_stream.read((char *)&temp_length, sizeof(unsigned));
 
-    BOOST_ASSERT_MSG(temp_length ==
+    BOOST_ASSERT_MSG(shared_layout_ptr->AlignBlockSize(temp_length) ==
                          shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST),
                      "Name file corrupted!");
 

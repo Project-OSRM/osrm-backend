@@ -78,7 +78,7 @@ class Contractor
   private:
     ContractorConfig config;
 
-    std::size_t
+    EdgeID
     LoadEdgeExpandedGraph(const std::string &edge_based_graph_path,
                           util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                           const std::string &edge_segment_lookup_path,

@@ -54,7 +54,7 @@ class Extractor
   private:
     ExtractorConfig config;
 
-    std::pair<std::size_t, std::size_t>
+    std::pair<std::size_t, EdgeID>
     BuildEdgeExpandedGraph(lua_State *lua_state,
                            const ProfileProperties &profile_properties,
                            std::vector<QueryNode> &internal_to_external_node_map,
@@ -79,7 +79,7 @@ class Extractor
                        std::vector<QueryNode> &internal_to_external_node_map);
 
     void WriteEdgeBasedGraph(const std::string &output_file_filename,
-                             const size_t max_edge_id,
+                             const EdgeID max_edge_id,
                              util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list);
 
     void WriteIntersectionClassificationData(

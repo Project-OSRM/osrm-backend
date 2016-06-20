@@ -71,6 +71,14 @@ matrix:
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
 
+    - os: linux
+      compiler: "gcc-5-release-i686"
+      env: TARGET_ARCH='i686' CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
+
+    - os: linux
+      compiler: "gcc-4.8-release-armhf"
+      env: TARGET_ARCH='armhf' CCOMPILER='arm-linux-gnueabihf-gcc-4.8' CXXCOMPILER='arm-linux-gnueabihf-g++-4.8' BUILD_TYPE='Release'
+
       # Disabled because of CI slowness
       #- os: linux
       #- compiler: gcc
@@ -114,6 +122,7 @@ matrix:
       #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 before_install:
+  - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - if [[ $(uname -s) == 'Darwin' ]]; then sudo mdutil -i off /; fi;
   - source ./scripts/install_node.sh 4
   - npm install
@@ -161,6 +170,7 @@ install:
   - popd
 
 script:
+  - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
   - echo "travis_fold:start:BENCHMARK"
   - make -C test/data benchmark
   - echo "travis_fold:end:BENCHMARK"

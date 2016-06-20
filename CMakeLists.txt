@@ -39,7 +39,7 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(bitness 64)
   message(STATUS "Building on a 64 bit system")
 else()
-  message(WARNING "Building on a 32 bit system is unsupported")
+  message(STATUS "Building on a 32 bit system")
 endif()
 
 if(WIN32 AND MSVC_VERSION LESS 1900)

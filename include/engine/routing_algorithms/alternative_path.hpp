@@ -546,8 +546,8 @@ class AlternativeRouting final
             }
         }
 
-        via_path_index = partially_unpacked_via_path.size() - 1;
-        shortest_path_index = partially_unpacked_shortest_path.size() - 1;
+        via_path_index = static_cast<int64_t>(partially_unpacked_via_path.size()) - 1;
+        shortest_path_index = static_cast<int64_t>(partially_unpacked_shortest_path.size()) - 1;
         for (; via_path_index > 0 && shortest_path_index > 0;
              --via_path_index, --shortest_path_index)
         {

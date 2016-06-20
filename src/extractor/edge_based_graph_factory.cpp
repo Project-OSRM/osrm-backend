@@ -83,7 +83,7 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &out
     swap(m_edge_based_node_weights, output_node_weights);
 }
 
-unsigned EdgeBasedGraphFactory::GetHighestEdgeID() { return m_max_edge_id; }
+EdgeID EdgeBasedGraphFactory::GetHighestEdgeID() { return m_max_edge_id; }
 
 void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v)
 {

@@ -167,7 +167,7 @@ void ExtractionContainers::PrepareNodes()
     // handle > uint32_t actual usable nodes.  This should be OK for a while
     // because we usually route on a *lot* less than 2^32 of the OSM
     // graph nodes.
-    std::size_t internal_id = 0;
+    std::uint64_t internal_id = 0;
 
     // compute the intersection of nodes that were referenced and nodes we actually have
     while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
@@ -479,11 +479,11 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
     std::cout << "[extractor] Writing used edges       ... " << std::flush;
     TIMER_START(write_edges);
     // Traverse list of edges and nodes in parallel and set target coord
-    std::size_t used_edges_counter = 0;
-    unsigned used_edges_counter_buffer = 0;
+    std::uint64_t used_edges_counter = 0;
+    std::uint32_t used_edges_counter_buffer = 0;
 
     auto start_position = file_out_stream.tellp();
-    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(unsigned));
+    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(used_edges_counter_buffer));
 
     for (const auto &edge : all_edges_list)
     {
@@ -508,10 +508,10 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
 
     std::cout << "[extractor] setting number of edges   ... " << std::flush;
 
-    used_edges_counter_buffer = boost::numeric_cast<unsigned>(used_edges_counter);
+    used_edges_counter_buffer = boost::numeric_cast<std::uint32_t>(used_edges_counter);
 
     file_out_stream.seekp(start_position);
-    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(unsigned));
+    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(used_edges_counter_buffer));
     std::cout << "ok" << std::endl;
 
     util::SimpleLogger().Write() << "Processed " << used_edges_counter << " edges";
