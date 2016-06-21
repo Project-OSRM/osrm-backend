@@ -1,6 +1,9 @@
 # 5.2.4
+  Changes from 5.2.3:
   - Bugfixes:
-    - Fixed in issue that arised on roundabouts in combination with intermediate intersections and sliproads
+    - Fixed a crash that arised on roundabouts in combination with intermediate intersections and sliproads
+    - Fixed #2518: Invalid bilinear interpolation when using raster data
+    - Fixed #2546: The geometry returned by the match service was missing the last coordinate.
 
 # 5.2.3
   - Bugfixes:
