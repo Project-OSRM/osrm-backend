@@ -456,6 +456,26 @@ inline ConnectedRoad mirror(ConnectedRoad road)
     return road;
 }
 
+inline bool hasRoundaboutType(const TurnInstruction instruction)
+{
+    using namespace extractor::guidance::TurnType;
+    const constexpr TurnType::Enum valid_types[] = {TurnType::EnterRoundabout,
+                                                    TurnType::EnterAndExitRoundabout,
+                                                    TurnType::EnterRotary,
+                                                    TurnType::EnterAndExitRotary,
+                                                    TurnType::EnterRoundaboutIntersection,
+                                                    TurnType::EnterAndExitRoundaboutIntersection,
+                                                    TurnType::EnterRoundaboutAtExit,
+                                                    TurnType::ExitRoundabout,
+                                                    TurnType::EnterRotaryAtExit,
+                                                    TurnType::ExitRotary,
+                                                    TurnType::EnterRoundaboutIntersectionAtExit,
+                                                    TurnType::ExitRoundaboutIntersection,
+                                                    TurnType::StayOnRoundabout};
+    const auto valid_end = valid_types + 13;
+    return std::find(valid_types, valid_end, instruction.type) != valid_end;
+};
+
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm

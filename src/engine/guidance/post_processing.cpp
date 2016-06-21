@@ -154,7 +154,7 @@ RouteStep forwardInto(RouteStep destination, const RouteStep &source)
     // Overwrites turn instruction and increases exit NR
     destination.duration += source.duration;
     destination.distance += source.distance;
-
+    destination.maneuver.exit = source.maneuver.exit;
     if (destination.geometry_begin < source.geometry_begin)
     {
         destination.intersections.insert(destination.intersections.end(),
@@ -170,8 +170,6 @@ RouteStep forwardInto(RouteStep destination, const RouteStep &source)
 
     destination.geometry_begin = std::min(destination.geometry_begin, source.geometry_begin);
     destination.geometry_end = std::max(destination.geometry_end, source.geometry_end);
-    destination.maneuver.exit = destination.intersections.size() - 1;
-
     return destination;
 }
 
@@ -184,7 +182,6 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
         if (entersRoundabout(propagation_step.maneuver.instruction))
         {
             propagation_step.maneuver.exit = 0;
-            propagation_step.geometry_end = steps.back().geometry_begin;
 
             // remember the current name as rotary name in tha case we end in a rotary
             if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
@@ -269,7 +266,12 @@ void closeOffRoundabout(const bool on_roundabout,
                      steps[1].maneuver.instruction.type == TurnType::Suppressed ||
                      steps[1].maneuver.instruction.type == TurnType::NoTurn);
         steps[0].geometry_end = 1;
+        steps[1].geometry_begin = 0;
         steps[1] = forwardInto(steps[1], steps[0]);
+        steps[1].intersections.erase(steps[1].intersections.begin()); // otherwise we copy the
+                                                                      // source
+        if (leavesRoundabout(steps[1].maneuver.instruction))
+            steps[1].maneuver.exit = 1;
         steps[0].duration = 0;
         steps[0].distance = 0;
         const auto exitToEnter = [](const TurnType::Enum type) {
@@ -307,7 +309,6 @@ void closeOffRoundabout(const bool on_roundabout,
             if (entersRoundabout(propagation_step.maneuver.instruction))
             {
                 propagation_step.maneuver.exit = step.maneuver.exit;
-                propagation_step.geometry_end = step.geometry_end;
                 const auto entry_intersection = propagation_step.intersections.front();
 
                 // remember rotary name
@@ -337,8 +338,10 @@ void closeOffRoundabout(const bool on_roundabout,
             }
             else
             {
-                BOOST_ASSERT(propagation_step.maneuver.instruction.type =
-                                 TurnType::StayOnRoundabout);
+                BOOST_ASSERT(propagation_step.maneuver.instruction.type ==
+                                 TurnType::StayOnRoundabout ||
+                             propagation_step.maneuver.instruction.type == TurnType::Suppressed ||
+                             propagation_step.maneuver.instruction.type == TurnType::NoTurn);
                 propagation_step.maneuver.instruction =
                     TurnInstruction::NO_TURN(); // mark intermediate instructions invalid
             }
@@ -475,7 +478,6 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                                  current_step.intersections.front()
                                      .bearings[current_step.intersections.front().out]) &&
              compatible(one_back_step, current_step))
-
     {
         BOOST_ASSERT(two_back_index < steps.size());
         // the simple case is a u-turn that changes directly into the in-name again
@@ -586,12 +588,10 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
         }
         else if (leavesRoundabout(instruction))
         {
-            if (!has_entered_roundabout)
-            {
-                // in case the we are not on a roundabout, the very first instruction
-                // after the depart will be transformed into a roundabout and become
-                // the first valid instruction
-            }
+            // if (!has_entered_roundabout)
+            // in case the we are not on a roundabout, the very first instruction
+            // after the depart will be transformed into a roundabout and become
+            // the first valid instruction
             closeOffRoundabout(has_entered_roundabout, steps, step_index);
             has_entered_roundabout = false;
             on_roundabout = false;
