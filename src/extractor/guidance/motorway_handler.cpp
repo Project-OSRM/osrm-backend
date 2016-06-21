@@ -1,6 +1,6 @@
+#include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"

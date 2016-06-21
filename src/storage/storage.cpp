@@ -247,8 +247,9 @@ int Storage::Run()
                                                       coordinate_list_size);
     // we'll read a list of OSM node IDs from the same data, so set the block size for the same
     // number of items:
-    shared_layout_ptr->SetBlockSize<std::uint64_t>(SharedDataLayout::OSM_NODE_ID_LIST,
-                                                   util::PackedVector<OSMNodeID>::elements_to_blocks(coordinate_list_size));
+    shared_layout_ptr->SetBlockSize<std::uint64_t>(
+        SharedDataLayout::OSM_NODE_ID_LIST,
+        util::PackedVector<OSMNodeID>::elements_to_blocks(coordinate_list_size));
 
     // load geometries sizes
     boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);

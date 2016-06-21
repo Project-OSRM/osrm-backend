@@ -12,7 +12,6 @@ namespace osrm
 namespace util
 {
 
-
 /**
  * Since OSM node IDs are (at the time of writing) not quite yet overflowing 32 bits, and
  * will predictably be containable within 33 bits for a long time, the following packs
@@ -21,16 +20,16 @@ namespace util
  * NOTE: this type is templated for future use, but will require a slight refactor to
  * configure BITSIZE and ELEMSIZE
  */
-template <typename T, bool UseSharedMemory=false> class PackedVector
+template <typename T, bool UseSharedMemory = false> class PackedVector
 {
     static const constexpr std::size_t BITSIZE = 33;
     static const constexpr std::size_t ELEMSIZE = 64;
     static const constexpr std::size_t PACKSIZE = BITSIZE * ELEMSIZE;
 
   public:
-
     /**
-     * Returns the size of the packed vector datastructure with `elements` packed elements (the size of
+     * Returns the size of the packed vector datastructure with `elements` packed elements (the size
+     * of
      * its underlying uint64 vector)
      */
     inline static std::size_t elements_to_blocks(std::size_t elements)

@@ -244,8 +244,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
         if (name_offsets.find(name) == name_offsets.end())
         {
-          names.push_back(name);
-          name_offsets[name] = names.size() - 1;
+            names.push_back(name);
+            name_offsets[name] = names.size() - 1;
         }
     }
 
@@ -328,14 +328,17 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 max_datasource_id = std::max(max_datasource_id, forward_datasource);
                 max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
-                const auto encode_tile_line = [&layer_writer, &edge, &id, &max_datasource_id, &used_weights](
-                    const detail::FixedLine &tile_line,
-                    const std::uint32_t speed_kmh,
-                    const std::size_t duration,
-                    const std::uint8_t datasource,
-                    const std::size_t name,
-                    std::int32_t &start_x,
-                    std::int32_t &start_y) {
+                const auto encode_tile_line = [&layer_writer,
+                                               &edge,
+                                               &id,
+                                               &max_datasource_id,
+                                               &used_weights](const detail::FixedLine &tile_line,
+                                                              const std::uint32_t speed_kmh,
+                                                              const std::size_t duration,
+                                                              const std::uint8_t datasource,
+                                                              const std::size_t name,
+                                                              std::int32_t &start_x,
+                                                              std::int32_t &start_y) {
                     // Here, we save the two attributes for our feature: the speed and the
                     // is_small
                     // boolean.  We onl serve up speeds from 0-139, so all we do is save the
@@ -369,10 +372,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         field.add_element(3);                // "duration" tag key offset
                         field.add_element(130 + max_datasource_id + 1 +
                                           duration); // duration value offset
-                        field.add_element(4); // "name" tag key offset
+                        field.add_element(4);        // "name" tag key offset
 
-                        field.add_element(130 + max_datasource_id + 1 +
-                                          used_weights.size() + name); // name value offset
+                        field.add_element(130 + max_datasource_id + 1 + used_weights.size() +
+                                          name); // name value offset
                     }
                     {
 
@@ -479,7 +482,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
             values_writer.add_double(util::vector_tile::VARIANT_TYPE_DOUBLE, weight / 10.);
         }
 
-        for (const auto& name : names)
+        for (const auto &name : names)
         {
             // Writing field type 4 == variant type
             protozero::pbf_writer values_writer(layer_writer, util::vector_tile::VARIANT_TAG);
