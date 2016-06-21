@@ -16,8 +16,7 @@ bool generateDataStoreOptions(const int argc,
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "springclean,s", "Remove all regions in shared memory");
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message");
 
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
