@@ -54,7 +54,9 @@ RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) con
     }
 
     const auto xthP = (lon - xmin) / xstep;
-    const auto ythP = (ymax - lat) / ystep;
+    const auto ythP =
+        (ymax - lat) /
+        ystep; // the raster texture uses a different coordinate system with y pointing downwards
 
     const std::size_t top = static_cast<std::size_t>(fmax(floor(ythP), 0));
     const std::size_t bottom = static_cast<std::size_t>(fmin(ceil(ythP), height - 1));
@@ -62,8 +64,8 @@ RasterDatum RasterSource::GetRasterInterpolate(const int lon, const int lat) con
     const std::size_t right = static_cast<std::size_t>(fmin(ceil(xthP), width - 1));
 
     // Calculate distances from corners for bilinear interpolation
-    const float fromLeft = (lon - left * xstep + xmin) / xstep;
-    const float fromTop = (ymax - top * ystep - lat) / ystep;
+    const float fromLeft = xthP - left; // this is the fraction part of xthP
+    const float fromTop = ythP - top;   // this is the fraction part of ythP
     const float fromRight = 1 - fromLeft;
     const float fromBottom = 1 - fromTop;
 
