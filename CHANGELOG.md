@@ -5,6 +5,8 @@
     - Fixed #2518: Invalid bilinear interpolation when using raster data
     - Fixed #2546: The geometry returned by the match service was missing the last coordinate.
 
+  BREAKING: The data format changed between 5.2.3 and 5.2.4, you need to reprocess.
+
 # 5.2.3
   - Bugfixes:
     - Fixed an issue with name changes in roundabouts that could result in crashes
