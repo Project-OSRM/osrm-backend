@@ -50,7 +50,7 @@ struct InternalExtractorEdge
                  true,
                  TRAVEL_MODE_INACCESSIBLE,
                  false,
-                 INVALID_LANE_STRINGID,
+                 guidance::TurnLaneType::empty,
                  guidance::RoadClassificationData())
     {
     }
@@ -66,7 +66,7 @@ struct InternalExtractorEdge
                                    bool startpoint,
                                    TravelMode travel_mode,
                                    bool is_split,
-                                   const LaneStringID lane_id,
+                                   LaneDescriptionID lane_description,
                                    guidance::RoadClassificationData road_classification)
         : result(OSMNodeID(source),
                  OSMNodeID(target),
@@ -79,7 +79,7 @@ struct InternalExtractorEdge
                  startpoint,
                  travel_mode,
                  is_split,
-                 lane_id,
+                 lane_description,
                  std::move(road_classification)),
           weight_data(std::move(weight_data))
     {
@@ -106,7 +106,7 @@ struct InternalExtractorEdge
                                      true,
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
-                                     INVALID_LANE_STRINGID,
+                                     INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassificationData());
     }
     static InternalExtractorEdge max_osm_value()
@@ -122,7 +122,7 @@ struct InternalExtractorEdge
                                      true,
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
-                                     INVALID_LANE_STRINGID,
+                                     INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassificationData());
     }
 

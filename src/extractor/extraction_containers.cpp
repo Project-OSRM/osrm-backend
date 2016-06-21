@@ -6,6 +6,7 @@
 
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
+#include "util/io.hpp"
 #include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
@@ -51,7 +52,11 @@ ExtractionContainers::ExtractionContainers()
     name_lengths.push_back(0);
     name_lengths.push_back(0);
     name_lengths.push_back(0);
-    turn_lane_lengths.push_back(0);
+
+    // the offsets have to be initialized with two values, since we have the empty turn string for
+    // the first id
+    turn_lane_offsets.push_back(0);
+    turn_lane_offsets.push_back(0);
 }
 
 /**
@@ -86,12 +91,38 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         WriteRestrictions(restrictions_file_name);
 
         WriteCharData(name_file_name, name_lengths, name_char_data);
-        WriteCharData(turn_lane_file_name, turn_lane_lengths, turn_lane_char_data);
+        WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
     }
     catch (const std::exception &e)
     {
         std::cerr << "Caught Execption:" << e.what() << std::endl;
     }
+}
+
+void ExtractionContainers::WriteTurnLaneMasks(
+    const std::string &file_name,
+    const stxxl::vector<std::uint32_t> &offsets,
+    const stxxl::vector<guidance::TurnLaneType::Mask> &masks) const
+{
+    util::SimpleLogger().Write() << "Writing turn lane masks...";
+    TIMER_START(turn_lane_timer);
+
+    std::ofstream ofs(file_name, std::ios::binary);
+
+    if (!util::serializeVector(ofs, offsets))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
+    }
+
+    if (!util::serializeVector(ofs, masks))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
+    }
+
+    TIMER_STOP(turn_lane_timer);
+    util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
 }
 
 void ExtractionContainers::WriteCharData(const std::string &file_name,

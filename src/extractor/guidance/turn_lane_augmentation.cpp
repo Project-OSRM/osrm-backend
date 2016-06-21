@@ -1,4 +1,5 @@
 #include "extractor/guidance/turn_lane_augmentation.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
@@ -18,14 +19,14 @@ namespace lanes
 namespace
 {
 
-const constexpr char *tag_by_modifier[] = {"reverse",
-                                           "sharp_right",
-                                           "right",
-                                           "slight_right",
-                                           "through",
-                                           "slight_left",
-                                           "left",
-                                           "sharp_left"};
+const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::uturn,
+                                                        TurnLaneType::sharp_right,
+                                                        TurnLaneType::right,
+                                                        TurnLaneType::slight_right,
+                                                        TurnLaneType::straight,
+                                                        TurnLaneType::slight_left,
+                                                        TurnLaneType::left,
+                                                        TurnLaneType::sharp_left};
 
 std::size_t getNumberOfTurns(const Intersection &intersection)
 {
@@ -126,7 +127,6 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
 // This handles situations like "left | | | right".
 LaneDataVector mergeNoneTag(const std::size_t none_index, LaneDataVector lane_data)
 {
-
     if (none_index == 0 || none_index + 1 == lane_data.size())
     {
         if (none_index == 0)
@@ -175,11 +175,11 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
     if (none_index == 0)
     {
         if (has_right &&
-            (lane_data.size() == 1 || (lane_data[none_index + 1].tag != "sharp_right" &&
-                                       lane_data[none_index + 1].tag != "right")))
+            (lane_data.size() == 1 || (lane_data[none_index + 1].tag != TurnLaneType::sharp_right &&
+                                       lane_data[none_index + 1].tag != TurnLaneType::right)))
         {
-            lane_data[none_index].tag = "right";
-            if (lane_data.size() > 1 && lane_data[none_index + 1].tag == "through")
+            lane_data[none_index].tag = TurnLaneType::right;
+            if (lane_data.size() > 1 && lane_data[none_index + 1].tag == TurnLaneType::straight)
             {
                 lane_data[none_index + 1].from = lane_data[none_index].from;
                 // turning right through a possible through lane is not possible
@@ -187,39 +187,39 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
             }
         }
         else if (has_through &&
-                 (lane_data.size() == 1 || lane_data[none_index + 1].tag != "through"))
+                 (lane_data.size() == 1 || lane_data[none_index + 1].tag != TurnLaneType::straight))
         {
-            lane_data[none_index].tag = "through";
+            lane_data[none_index].tag = TurnLaneType::straight;
         }
     }
     else if (none_index + 1 == lane_data.size())
     {
-        if (has_left && ((lane_data[none_index - 1].tag != "sharp_left" &&
-                          lane_data[none_index - 1].tag != "left")))
+        if (has_left && ((lane_data[none_index - 1].tag != TurnLaneType::sharp_left &&
+                          lane_data[none_index - 1].tag != TurnLaneType::left)))
         {
-            lane_data[none_index].tag = "left";
-            if (lane_data[none_index - 1].tag == "through")
+            lane_data[none_index].tag = TurnLaneType::left;
+            if (lane_data[none_index - 1].tag == TurnLaneType::straight)
             {
                 lane_data[none_index - 1].to = lane_data[none_index].to;
                 // turning left through a possible through lane is not possible
                 lane_data[none_index].from = lane_data[none_index].to;
             }
         }
-        else if (has_through && lane_data[none_index - 1].tag != "through")
+        else if (has_through && lane_data[none_index - 1].tag != TurnLaneType::straight)
         {
-            lane_data[none_index].tag = "through";
+            lane_data[none_index].tag = TurnLaneType::straight;
         }
     }
     else
     {
-        if ((lane_data[none_index + 1].tag == "left" ||
-             lane_data[none_index + 1].tag == "slight_left" ||
-             lane_data[none_index + 1].tag == "sharp_left") &&
-            (lane_data[none_index - 1].tag == "right" ||
-             lane_data[none_index - 1].tag == "slight_right" ||
-             lane_data[none_index - 1].tag == "sharp_right"))
+        if ((lane_data[none_index + 1].tag == TurnLaneType::left ||
+             lane_data[none_index + 1].tag == TurnLaneType::slight_left ||
+             lane_data[none_index + 1].tag == TurnLaneType::sharp_left) &&
+            (lane_data[none_index - 1].tag == TurnLaneType::right ||
+             lane_data[none_index - 1].tag == TurnLaneType::slight_right ||
+             lane_data[none_index - 1].tag == TurnLaneType::sharp_right))
         {
-            lane_data[none_index].tag = "through";
+            lane_data[none_index].tag = TurnLaneType::straight;
         }
     }
     return std::move(lane_data);
@@ -236,7 +236,7 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
                                            const Intersection &intersection)
 {
     const bool needs_no_processing =
-        (intersection.empty() || lane_data.empty() || !hasTag("none", lane_data));
+        (intersection.empty() || lane_data.empty() || !hasTag(TurnLaneType::none, lane_data));
 
     if (needs_no_processing)
         return std::move(lane_data);
@@ -265,10 +265,10 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
 
     const std::size_t connection_count =
         getNumberOfTurns(intersection) -
-        ((intersection[0].entry_allowed && lane_data.back().tag != "reverse") ? 1 : 0);
+        ((intersection[0].entry_allowed && lane_data.back().tag != TurnLaneType::uturn) ? 1 : 0);
 
     // TODO check for impossible turns to see whether the turn lane is at the correct place
-    const std::size_t none_index = std::distance(lane_data.begin(), findTag("none", lane_data));
+    const std::size_t none_index = std::distance(lane_data.begin(), findTag(TurnLaneType::none, lane_data));
     BOOST_ASSERT(none_index != lane_data.size());
     // we have to create multiple turns
     if (connection_count > lane_data.size())
@@ -279,7 +279,7 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     // we have to reduce it, assigning it to neighboring turns
     else if (connection_count < lane_data.size())
     {
-        // a prerequisite is simple turns. Larger differences should not end up here
+        // a pgerequisite is simple turns. Larger differences should not end up here
         // an additional line at the side is only reasonable if it is targeting public
         // service vehicles. Otherwise, we should not have it
         BOOST_ASSERT(connection_count + 1 == lane_data.size());

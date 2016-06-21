@@ -140,8 +140,6 @@ RouteStep forwardInto(RouteStep destination, const RouteStep &source)
 
     destination.geometry_begin = std::min(destination.geometry_begin, source.geometry_begin);
     destination.geometry_end = std::max(destination.geometry_end, source.geometry_end);
-    destination.maneuver.exit = source.maneuver.exit;
-
     return destination;
 }
 
@@ -224,6 +222,7 @@ void closeOffRoundabout(const bool on_roundabout,
                         const std::size_t step_index)
 {
     auto &step = steps[step_index];
+    step.maneuver.exit += 1;
     if (!on_roundabout)
     {
         // We reached a special case that requires the addition of a special route step in the
@@ -257,7 +256,6 @@ void closeOffRoundabout(const bool on_roundabout,
         if (steps[1].maneuver.instruction.type == TurnType::EnterRotary)
             steps[1].rotary_name = steps[0].name;
     }
-    step.maneuver.exit += 1;
 
     // Normal exit from the roundabout, or exit from a previously fixed roundabout. Propagate the
     // index back to the entering location and prepare the current silent set of instructions for
@@ -280,7 +278,6 @@ void closeOffRoundabout(const bool on_roundabout,
             propagation_step = forwardInto(propagation_step, steps[propagation_index + 1]);
             if (entersRoundabout(propagation_step.maneuver.instruction))
             {
-                propagation_step.maneuver.exit = step.maneuver.exit;
                 const auto entry_intersection = propagation_step.intersections.front();
 
                 // remember rotary name
@@ -412,7 +409,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     else if (one_back_step.distance <= MAX_COLLAPSE_DISTANCE &&
              isCollapsableInstruction(current_step.maneuver.instruction))
     {
-        // TODO check for lanes
+        // TODO check for lanes (https://github.com/Project-OSRM/osrm-backend/issues/2553)
         if (compatible(one_back_step, current_step))
         {
             steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
@@ -583,8 +580,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
             has_entered_roundabout = false;
             on_roundabout = false;
         }
-        else if (has_entered_roundabout)
-            steps[step_index + 1].maneuver.exit = step.maneuver.exit;
     }
 
     // unterminated roundabout
@@ -864,7 +859,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             // we need to make this conform with the intersection format for the first intersection
             auto &first_intersection = designated_depart.intersections.front();
             designated_depart.maneuver.lanes = util::guidance::LaneTupel();
-            designated_depart.maneuver.turn_lane_string = "";
+            designated_depart.maneuver.lane_description.clear();
             first_intersection.bearings = {first_intersection.bearings[first_intersection.out]};
             first_intersection.entry = {true};
             first_intersection.in = Intersection::NO_INDEX;
@@ -932,7 +927,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.maneuver.instruction = TurnInstruction::NO_TURN();
         next_to_last_step.maneuver.bearing_after = 0;
         next_to_last_step.maneuver.lanes = util::guidance::LaneTupel();
-        next_to_last_step.maneuver.turn_lane_string = "";
+        next_to_last_step.maneuver.lane_description.clear();
         BOOST_ASSERT(next_to_last_step.intersections.size() == 1);
         auto &last_intersection = next_to_last_step.intersections.back();
         last_intersection.bearings = {last_intersection.bearings[last_intersection.in]};

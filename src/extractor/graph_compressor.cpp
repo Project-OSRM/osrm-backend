@@ -160,18 +160,18 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
              * turn-lanes. Without this,we would have to treat any turn-lane beginning/ending just
              * like a barrier.
              */
-            const auto selectLaneID = [](const LaneStringID front, const LaneStringID back) {
+            const auto selectLaneID = [](const LaneDescriptionID front, const LaneDescriptionID back) {
                 // A lane has tags: u - (front) - v - (back) - w
                 // During contraction, we keep only one of the tags. Usually the one closer to the
                 // intersection is preferred. If its empty, however, we keep the non-empty one
-                if (back == INVALID_LANE_STRINGID)
+                if (back == INVALID_LANE_DESCRIPTIONID)
                     return front;
                 return back;
             };
-            graph.GetEdgeData(forward_e1).lane_string_id = selectLaneID(
-                graph.GetEdgeData(forward_e1).lane_string_id, fwd_edge_data2.lane_string_id);
-            graph.GetEdgeData(reverse_e1).lane_string_id = selectLaneID(
-                graph.GetEdgeData(reverse_e1).lane_string_id, rev_edge_data2.lane_string_id);
+            graph.GetEdgeData(forward_e1).lane_description_id = selectLaneID(
+                graph.GetEdgeData(forward_e1).lane_description_id, fwd_edge_data2.lane_description_id);
+            graph.GetEdgeData(reverse_e1).lane_description_id = selectLaneID(
+                graph.GetEdgeData(reverse_e1).lane_description_id, rev_edge_data2.lane_description_id);
 
             // remove e2's (if bidir, otherwise only one)
             graph.DeleteEdge(node_v, forward_e2);

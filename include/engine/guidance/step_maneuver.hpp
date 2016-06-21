@@ -2,6 +2,7 @@
 #define ENGINE_GUIDANCE_STEP_MANEUVER_HPP
 
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "util/coordinate.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
@@ -34,7 +35,7 @@ struct StepManeuver
     unsigned exit;
 
     util::guidance::LaneTupel lanes;
-    std::string turn_lane_string;
+    extractor::guidance::TurnLaneDescription lane_description;
 };
 
 inline StepManeuver getInvalidStepManeuver()
@@ -46,7 +47,7 @@ inline StepManeuver getInvalidStepManeuver()
             WaypointType::None,
             0,
             util::guidance::LaneTupel(),
-            ""};
+            {}};
 }
 
 } // namespace guidance

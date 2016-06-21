@@ -59,12 +59,12 @@ using EdgeID = std::uint32_t;
 using NameID = std::uint32_t;
 using EdgeWeight = std::int32_t;
 
-using LaneStringID = std::uint16_t;
-static const LaneStringID INVALID_LANE_STRINGID = std::numeric_limits<LaneStringID>::max();
 using LaneID = std::uint8_t;
 static const LaneID INVALID_LANEID = std::numeric_limits<LaneID>::max();
 using LaneDataID = std::uint16_t;
-static const LaneDataID INVALID_LANE_DATAID = std::numeric_limits<LaneStringID>::max();
+static const LaneDataID INVALID_LANE_DATAID = std::numeric_limits<LaneDataID>::max();
+using LaneDescriptionID = std::uint16_t;
+static const LaneDescriptionID INVALID_LANE_DESCRIPTIONID = std::numeric_limits<LaneDescriptionID>::max();
 
 using BearingClassID = std::uint32_t;
 static const BearingClassID INVALID_BEARING_CLASSID = std::numeric_limits<BearingClassID>::max();

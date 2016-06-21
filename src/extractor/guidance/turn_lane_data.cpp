@@ -30,54 +30,68 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
     if (to > other.to)
         return false;
 
-    const constexpr char *tag_by_modifier[] = {"sharp_right",
-                                               "right",
-                                               "slight_right",
-                                               "through",
-                                               "slight_left",
-                                               "left",
-                                               "sharp_left",
-                                               "reverse"};
+    const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::sharp_right,
+                                                            TurnLaneType::right,
+                                                            TurnLaneType::slight_right,
+                                                            TurnLaneType::straight,
+                                                            TurnLaneType::slight_left,
+                                                            TurnLaneType::left,
+                                                            TurnLaneType::sharp_left,
+                                                            TurnLaneType::uturn};
     return std::find(tag_by_modifier, tag_by_modifier + 8, this->tag) <
            std::find(tag_by_modifier, tag_by_modifier + 8, other.tag);
 }
 
-LaneDataVector laneDataFromString(std::string turn_lane_string)
+LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
 {
-    typedef std::unordered_map<std::string, std::pair<LaneID, LaneID>> LaneMap;
+    typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
 
     // FIXME this is a workaround due to https://github.com/cucumber/cucumber-js/issues/417,
     // need to switch statements when fixed
     // const auto num_lanes = std::count(turn_lane_string.begin(), turn_lane_string.end(), '|') + 1;
     // count the number of lanes
-    const auto num_lanes = [](const std::string &turn_lane_string) {
-        return boost::numeric_cast<LaneID>(
-            std::count(turn_lane_string.begin(), turn_lane_string.end(), '|') + 1);
-    }(turn_lane_string);
+    const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
+    const auto setLaneData = [&](
+        LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {
+        const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool {
+            return (test_mask & full_mask) == test_mask;
+        };
 
-    const auto getNextTag = [](std::string &string, const char *separators) {
-        auto pos = string.find_last_of(separators);
-        auto result = pos != std::string::npos ? string.substr(pos + 1) : string;
-
-        string.resize(pos == std::string::npos ? 0 : pos);
-        return result;
-    };
-
-    const auto setLaneData = [&](LaneMap &map, std::string lane, const LaneID current_lane) {
-        do
+        for (std::size_t shift = 0; shift < TurnLaneType::detail::num_supported_lane_types; ++shift)
         {
-            auto identifier = getNextTag(lane, ";");
-            if (identifier.empty())
-                identifier = "none";
-            auto map_iterator = map.find(identifier);
-            if (map_iterator == map.end())
-                map[identifier] = std::make_pair(current_lane, current_lane);
-            else
+            TurnLaneType::Mask mask = 1 << shift;
+            if (isSet(mask))
             {
-                map_iterator->second.second = current_lane;
+                auto map_iterator = map.find(mask);
+                if (map_iterator == map.end())
+                    map[mask] = std::make_pair(current_lane, current_lane);
+                else
+                {
+                    map_iterator->second.first = current_lane;
+                }
             }
-        } while (!lane.empty());
+        }
     };
+
+    LaneMap lane_map;
+    LaneID lane_nr = num_lanes - 1;
+    if (turn_lane_description.empty())
+        return {};
+
+    for (auto full_mask : turn_lane_description)
+    {
+        setLaneData(lane_map, full_mask, lane_nr);
+        --lane_nr;
+    }
+
+    // transform the map into the lane data vector
+    LaneDataVector lane_data;
+    for (const auto tag : lane_map)
+    {
+        lane_data.push_back({tag.first, tag.second.first, tag.second.second});
+    }
+
+    std::sort(lane_data.begin(), lane_data.end());
 
     // check whether a given turn lane string resulted in valid lane data
     const auto hasValidOverlaps = [](const LaneDataVector &lane_data) {
@@ -91,50 +105,26 @@ LaneDataVector laneDataFromString(std::string turn_lane_string)
         return true;
     };
 
-    LaneMap lane_map;
-    LaneID lane_nr = 0;
-    LaneDataVector lane_data;
-    if (turn_lane_string.empty())
-        return lane_data;
-
-    do
-    {
-        // FIXME this is a cucumber workaround, since escaping does not work properly in
-        // cucumber.js (see https://github.com/cucumber/cucumber-js/issues/417). Needs to be
-        // changed to "|" only, when the bug is fixed
-        auto lane = getNextTag(turn_lane_string, "|");
-        setLaneData(lane_map, lane, lane_nr);
-        ++lane_nr;
-    } while (lane_nr < num_lanes);
-
-    for (const auto tag : lane_map)
-    {
-        lane_data.push_back({tag.first, tag.second.first, tag.second.second});
-    }
-
-    std::sort(lane_data.begin(), lane_data.end());
     if (!hasValidOverlaps(lane_data))
-    {
         lane_data.clear();
-    }
 
     return lane_data;
 }
 
-LaneDataVector::iterator findTag(const std::string &tag, LaneDataVector &data)
+LaneDataVector::iterator findTag(const TurnLaneType::Mask tag, LaneDataVector &data)
 {
     return std::find_if(data.begin(), data.end(), [&](const TurnLaneData &lane_data) {
-        return tag == lane_data.tag;
+        return (tag & lane_data.tag) != TurnLaneType::empty;
     });
 }
-LaneDataVector::const_iterator findTag(const std::string &tag, const LaneDataVector &data)
+LaneDataVector::const_iterator findTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
 {
     return std::find_if(data.cbegin(), data.cend(), [&](const TurnLaneData &lane_data) {
-        return tag == lane_data.tag;
+        return (tag & lane_data.tag) != TurnLaneType::empty;
     });
 }
 
-bool hasTag(const std::string &tag, const LaneDataVector &data)
+bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
 {
     return findTag(tag, data) != data.cend();
 }

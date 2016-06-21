@@ -74,7 +74,7 @@ class LaneTupel
     }
 };
 
-using LaneTupelIdPair = std::pair<util::guidance::LaneTupel, LaneStringID>;
+using LaneTupelIdPair = std::pair<util::guidance::LaneTupel, LaneDescriptionID>;
 } // namespace guidance
 } // namespace util
 } // namespace osrm
