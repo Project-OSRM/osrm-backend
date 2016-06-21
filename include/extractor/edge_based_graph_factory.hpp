@@ -13,6 +13,7 @@
 
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
@@ -48,15 +49,17 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
     EdgeBasedGraphFactory &operator=(const EdgeBasedGraphFactory &) = delete;
 
-    explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-                                   const CompressedEdgeContainer &compressed_edge_container,
-                                   const std::unordered_set<NodeID> &barrier_nodes,
-                                   const std::unordered_set<NodeID> &traffic_lights,
-                                   std::shared_ptr<const RestrictionMap> restriction_map,
-                                   const std::vector<QueryNode> &node_info_list,
-                                   ProfileProperties profile_properties,
-                                   const util::NameTable &name_table,
-                                   const util::NameTable &turn_lanes);
+    explicit EdgeBasedGraphFactory(
+        std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
+        const CompressedEdgeContainer &compressed_edge_container,
+        const std::unordered_set<NodeID> &barrier_nodes,
+        const std::unordered_set<NodeID> &traffic_lights,
+        std::shared_ptr<const RestrictionMap> restriction_map,
+        const std::vector<QueryNode> &node_info_list,
+        ProfileProperties profile_properties,
+        const util::NameTable &name_table,
+        const std::vector<std::uint32_t> &turn_lane_offsets,
+        const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks);
 
     void Run(const std::string &original_edge_data_filename,
              const std::string &turn_lane_data_filename,
@@ -119,7 +122,8 @@ class EdgeBasedGraphFactory
     ProfileProperties profile_properties;
 
     const util::NameTable &name_table;
-    const util::NameTable &turn_lanes;
+    const std::vector<std::uint32_t> &turn_lane_offsets;
+    const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks;
 
     void CompressGeometry();
     unsigned RenumberEdges();

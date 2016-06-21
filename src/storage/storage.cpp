@@ -1,4 +1,3 @@
-#include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -9,6 +8,7 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
+#include "storage/storage.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
@@ -147,25 +147,17 @@ int Storage::Run()
     name_stream.read((char *)&number_of_chars, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::NAME_CHAR_LIST, number_of_chars);
 
-    boost::filesystem::ifstream turn_string_stream(config.turn_lane_string_path, std::ios::binary);
-    if (!turn_string_stream)
-    {
-        throw util::exception("Could not open " + config.turn_lane_string_path.string() +
-                              " for reading.");
-    }
-
-    unsigned turn_string_blocks = 0;
-    turn_string_stream.read((char *)&turn_string_blocks, sizeof(unsigned));
-    shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::TURN_STRING_OFFSETS,
-                                              turn_string_blocks);
-    shared_layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
-        SharedDataLayout::TURN_STRING_BLOCKS, turn_string_blocks);
-    BOOST_ASSERT_MSG(0 != turn_string_blocks, "turn string file broken");
-
-    unsigned number_of_turn_string_chars = 0;
-    turn_string_stream.read((char *)&number_of_turn_string_chars, sizeof(unsigned));
-    shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TURN_STRING_CHAR_LIST,
-                                          number_of_turn_string_chars);
+    std::vector<std::uint32_t> lane_description_offsets;
+    std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
+    if (!util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
+                                         lane_description_offsets,
+                                         lane_description_masks))
+        throw util::exception("Could not open read lane descriptions from: " +
+                              config.turn_lane_description_path.string());
+    shared_layout_ptr->SetBlockSize<std::uint32_t>(SharedDataLayout::LANE_DESCRIPTION_OFFSETS,
+                                                   lane_description_offsets.size());
+    shared_layout_ptr->SetBlockSize<extractor::guidance::TurnLaneType::Mask>(
+        SharedDataLayout::LANE_DESCRIPTION_MASKS, lane_description_masks.size());
 
     // Loading information for original edges
     boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
@@ -454,7 +446,7 @@ int Storage::Run()
 
     char *name_char_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
         shared_memory_ptr, SharedDataLayout::NAME_CHAR_LIST);
-    unsigned temp_length;
+    unsigned temp_length = 0;
     name_stream.read((char *)&temp_length, sizeof(unsigned));
 
     BOOST_ASSERT_MSG(shared_layout_ptr->AlignBlockSize(temp_length) ==
@@ -468,16 +460,6 @@ int Storage::Run()
     }
     name_stream.close();
 
-    // Loading turn lane strings
-    unsigned *turn_string_offsets_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
-        shared_memory_ptr, SharedDataLayout::TURN_STRING_OFFSETS);
-    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_OFFSETS) > 0)
-    {
-        turn_string_stream.read(
-            (char *)turn_string_offsets_ptr,
-            shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_OFFSETS));
-    }
-
     // make sure do write canary...
     auto *turn_lane_data_ptr =
         shared_layout_ptr->GetBlockPtr<util::guidance::LaneTupelIdPair, true>(
@@ -489,30 +471,29 @@ int Storage::Run()
     }
     lane_data_stream.close();
 
-    unsigned *turn_string_blocks_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
-        shared_memory_ptr, SharedDataLayout::TURN_STRING_BLOCKS);
-    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_BLOCKS) > 0)
+    auto *turn_lane_offset_ptr = shared_layout_ptr->GetBlockPtr<std::uint32_t, true>(
+        shared_memory_ptr, SharedDataLayout::LANE_DESCRIPTION_OFFSETS);
+    if (!lane_description_offsets.empty())
     {
-        turn_string_stream.read(
-            (char *)turn_string_blocks_ptr,
-            shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_BLOCKS));
+        BOOST_ASSERT(shared_layout_ptr->GetBlockSize(SharedDataLayout::LANE_DESCRIPTION_OFFSETS) >=
+                     sizeof(lane_description_offsets[0]) * lane_description_offsets.size());
+        std::copy(
+            lane_description_offsets.begin(), lane_description_offsets.end(), turn_lane_offset_ptr);
+        std::vector<std::uint32_t> tmp;
+        lane_description_offsets.swap(tmp);
     }
 
-    char *turn_string_char_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
-        shared_memory_ptr, SharedDataLayout::TURN_STRING_CHAR_LIST);
-    turn_string_stream.read((char *)&temp_length, sizeof(unsigned));
-
-    BOOST_ASSERT_MSG(temp_length ==
-                         shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_CHAR_LIST),
-                     "turn string file corrupted!");
-
-    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_CHAR_LIST) > 0)
+    auto *turn_lane_mask_ptr =
+        shared_layout_ptr->GetBlockPtr<extractor::guidance::TurnLaneType::Mask, true>(
+            shared_memory_ptr, SharedDataLayout::LANE_DESCRIPTION_MASKS);
+    if (!lane_description_masks.empty())
     {
-        turn_string_stream.read(
-            turn_string_char_ptr,
-            shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_STRING_CHAR_LIST));
+        BOOST_ASSERT(shared_layout_ptr->GetBlockSize(SharedDataLayout::LANE_DESCRIPTION_MASKS) >=
+                     sizeof(lane_description_masks[0]) * lane_description_masks.size());
+        std::copy(lane_description_masks.begin(), lane_description_masks.end(), turn_lane_mask_ptr);
+        std::vector<extractor::guidance::TurnLaneType::Mask> tmp;
+        lane_description_masks.swap(tmp);
     }
-    turn_string_stream.close();
 
     // load original edge information
     NodeID *via_node_ptr = shared_layout_ptr->GetBlockPtr<NodeID, true>(
@@ -595,7 +576,7 @@ int Storage::Run()
     {
         util::SimpleLogger().Write()
             << "Copying " << (m_datasource_name_data.end() - m_datasource_name_data.begin())
-            << " chars into name data ptr\n";
+            << " chars into name data ptr";
         std::copy(
             m_datasource_name_data.begin(), m_datasource_name_data.end(), datasource_name_data_ptr);
     }

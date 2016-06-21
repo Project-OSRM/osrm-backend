@@ -5,6 +5,7 @@
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_data.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/guidance/turn_lanes.hpp"
@@ -12,6 +13,7 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <utility>
@@ -34,7 +36,8 @@ class TurnLaneHandler
     typedef std::vector<TurnLaneData> LaneDataVector;
 
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                    const util::NameTable &turn_lane_strings,
+                    const std::vector<std::uint32_t> &turn_lane_offsets,
+                    const std::vector<TurnLaneType::Mask> &turn_lane_masks,
                     const std::vector<QueryNode> &node_info_list,
                     const TurnAnalysis &turn_analysis);
 
@@ -47,7 +50,8 @@ class TurnLaneHandler
     // we need to be able to look at previous intersections to, in some cases, find the correct turn
     // lanes for a turn
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const util::NameTable &turn_lane_strings;
+    const std::vector<std::uint32_t> &turn_lane_offsets;
+    const std::vector<TurnLaneType::Mask> &turn_lane_masks;
     const std::vector<QueryNode> &node_info_list;
     const TurnAnalysis &turn_analysis;
 
@@ -58,7 +62,7 @@ class TurnLaneHandler
     // in case of a simple intersection, assign the lane entries
     Intersection simpleMatchTuplesToTurns(Intersection intersection,
                                           const LaneDataVector &lane_data,
-                                          const LaneStringID lane_string_id,
+                                          const LaneDescriptionID lane_string_id,
                                           LaneDataIdMap &id_map) const;
 
     // partition lane data into lane data relevant at current turn and at next turn

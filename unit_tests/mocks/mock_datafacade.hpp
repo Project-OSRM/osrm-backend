@@ -5,6 +5,7 @@
 
 #include "contractor/query_edge.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -180,9 +181,16 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; };
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
 
-    bool hasLaneData(const EdgeID /*id*/) const { return true; };
-    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID /*id*/) const { return {{0, 0}, 0}; }
-    std::string GetTurnStringForID(const LaneStringID /*lane_string_id*/) const { return ""; };
+    bool hasLaneData(const EdgeID /*id*/) const override final { return true; };
+    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID /*id*/) const override final
+    {
+        return {{0, 0}, 0};
+    }
+    extractor::guidance::TurnLaneDescription
+    GetTurnDescription(const LaneDescriptionID /*lane_description_id*/) const override final
+    {
+        return {};
+    }
 
     util::guidance::BearingClass
     GetBearingClass(const BearingClassID /*bearing_class_id*/) const override

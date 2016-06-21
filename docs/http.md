@@ -437,16 +437,11 @@ step.
   | geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) or [GeoJSON `Point`](http://geojson.org/geojson-spec.html#point) if it is only one coordinate (not wrapped by a GeoJSON feature)|
   
 - `name`: The name of the way along which travel proceeds.
-- `lanes`: the available turn lanes at the turn
-  - `marked`: markings on the road, following the OSM scheme (e.g. left, slight_right, or through)
-  - `take`: a boolean flag indicating whether the lane is a possible choice in the maneuver
 - `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `mode`: A string signifying the mode of transportation.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
 - `intersections`: A list of `Intersections` that are passed along the segment, the very first belonging to the StepManeuver
-
-Currently, the supported lane tags are: `sharp_left, left, slight_left, sharp_right, right, slight_right, through, reverse, none`.
 
 #### Example
 
@@ -455,16 +450,13 @@ Currently, the supported lane tags are: `sharp_left, left, slight_left, sharp_ri
  "distance":152.3,
  "duration":15.6,
  "name":"Lortzingstraße",
- "lanes":{
-     {"marked":"left",
-     "take":"false"},
-     {"marked":"right",
-     "take":"true"}
- },
  "maneuver":{
      "type":"turn",
-     "modifier":"right"
- },
+     "modifier":"right",
+     "lanes":[
+         {"indication":"left", "valid":"false"},
+         {"indication":"right", "valid":"true"}
+     ]},
  "geometry":"{lu_IypwpAVrAvAdI",
  "mode":"driving",
  "intersections":[
@@ -493,6 +485,10 @@ Currently, the supported lane tags are: `sharp_left, left, slight_left, sharp_ri
   direction of travel immediately after the maneuver.
 - `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
    Types  unknown to the client should be handled like the `turn` type, the existance of correct `modifier` values is guranteed.
+- `lanes`: the available turn lanes at the turn
+  - `indication`: a indication (e.g. marking on the road) specifying the turn lane. Multiple indications may be combined with `;` (e.g. straight;left).
+  - `valid`: a boolean flag indicating whether the lane is a valid choice in the maneuver
+
   
   | `type`            | Description                                                  |
   |-------------------|--------------------------------------------------------------|
@@ -547,6 +543,20 @@ Currently, the supported lane tags are: `sharp_left, left, slight_left, sharp_ri
   | else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
   
 
+- `indication`
+  
+  | `value`                | Description                                                                                                               |
+  |------------------------|---------------------------------------------------------------------------------------------------------------------------|
+  | `none`                 | No dedicated indication is shown.                                                                                         |
+  | `sharp right`          | An indication indicating a sharp right turn (i.e. strongly bend arrow).                                                   |
+  | `right`                | An indication indicating a right turn (i.e. bend arrow).                                                                  |
+  | `sharp right`          | An indication indicating a slight right turn (i.e. slightly bend arrow).                                                  |
+  | `straight`             | No dedicated indication is shown (i.e. straight arrow).                                                                   |
+  | `sharp left`           | An indication indicating a sharp left turn (i.e. strongly bend arrow).                                                    |
+  | `left`                 | An indication indicating a left turn (i.e. bend arrow).                                                                   |
+  | `sharp left`           | An indication indicating a slight left turn (i.e. slightly bend arrow).                                                   |
+  | `uturn`                | An indication signaling the possibility to reverse (i.e. fully bend arrow).                                               |
+  
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.
 
 ### Intersections

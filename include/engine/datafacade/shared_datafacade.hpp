@@ -9,6 +9,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/profile_properties.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -84,14 +85,13 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, true>::vector m_travel_mode_list;
     util::ShM<char, true>::vector m_names_char_list;
-    util::ShM<char, true>::vector m_turn_string_char_list;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
-    util::ShM<char, true>::vector m_lane_string_char_list;
-    util::ShM<unsigned, true>::vector m_lane_string_begin_indices;
     util::ShM<unsigned, true>::vector m_geometry_indices;
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector m_geometry_list;
     util::ShM<bool, true>::vector m_is_core_node;
     util::ShM<uint8_t, true>::vector m_datasource_list;
+    util::ShM<std::uint32_t, true>::vector m_lane_description_offsets;
+    util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector m_lane_description_masks;
 
     util::ShM<char, true>::vector m_datasource_name_data;
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
@@ -103,7 +103,6 @@ class SharedDataFacade final : public BaseDataFacade
     boost::filesystem::path file_index_path;
 
     std::shared_ptr<util::RangeTable<16, true>> m_name_table;
-    std::shared_ptr<util::RangeTable<16, true>> m_turn_string_table;
 
     // bearing classes by node based node
     util::ShM<BearingClassID, true>::vector m_bearing_class_id_table;
@@ -258,29 +257,23 @@ class SharedDataFacade final : public BaseDataFacade
         m_names_char_list = std::move(names_char_list);
     }
 
-    void LoadTurnLaneStrings()
+    void LoadTurnLaneDescriptions()
     {
-        auto offsets_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, storage::SharedDataLayout::TURN_STRING_OFFSETS);
-        auto blocks_ptr = data_layout->GetBlockPtr<IndexBlock>(
-            shared_memory, storage::SharedDataLayout::TURN_STRING_BLOCKS);
-        util::ShM<unsigned, true>::vector turn_string_offsets(
-            offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::TURN_STRING_OFFSETS]);
-        util::ShM<IndexBlock, true>::vector turn_string_blocks(
-            blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::TURN_STRING_BLOCKS]);
+        auto offsets_ptr = data_layout->GetBlockPtr<std::uint32_t>(
+            shared_memory, storage::SharedDataLayout::LANE_DESCRIPTION_OFFSETS);
+        util::ShM<std::uint32_t, true>::vector offsets(
+            offsets_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::LANE_DESCRIPTION_OFFSETS]);
+        m_lane_description_offsets = std::move(offsets);
 
-        auto turn_strings_list_ptr = data_layout->GetBlockPtr<char>(
-            shared_memory, storage::SharedDataLayout::TURN_STRING_CHAR_LIST);
-        util::ShM<char, true>::vector turn_strings_char_list(
-            turn_strings_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::TURN_STRING_CHAR_LIST]);
-        m_turn_string_table = util::make_unique<util::RangeTable<16, true>>(
-            turn_string_offsets,
-            turn_string_blocks,
-            static_cast<unsigned>(turn_strings_char_list.size()));
+        auto masks_ptr = data_layout->GetBlockPtr<extractor::guidance::TurnLaneType::Mask>(
+            shared_memory, storage::SharedDataLayout::LANE_DESCRIPTION_MASKS);
 
-        m_turn_string_char_list = std::move(turn_strings_char_list);
+        util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector masks(
+            masks_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DESCRIPTION_MASKS]);
+        m_lane_description_masks = std::move(masks);
     }
+
     void LoadCoreInformation()
     {
         if (data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER] <= 0)
@@ -459,7 +452,7 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadTimestamp();
                 LoadViaNodeList();
                 LoadNames();
-                LoadTurnLaneStrings();
+                LoadTurnLaneDescriptions();
                 LoadCoreInformation();
                 LoadProfileProperties();
                 LoadRTree();
@@ -839,24 +832,15 @@ class SharedDataFacade final : public BaseDataFacade
         return m_lane_tupel_id_pairs.at(m_lane_data_id.at(id));
     }
 
-    std::string GetTurnStringForID(const LaneStringID lane_string_id) const override final
+    extractor::guidance::TurnLaneDescription
+    GetTurnDescription(const LaneDescriptionID lane_description_id) const override final
     {
-        if (INVALID_LANE_STRINGID == lane_string_id)
-        {
-            return "";
-        }
-        auto range = m_turn_string_table->GetRange(lane_string_id);
-
-        std::string result;
-        result.reserve(range.size());
-        if (range.begin() != range.end())
-        {
-            result.resize(range.back() - range.front() + 1);
-            std::copy(m_turn_string_char_list.begin() + range.front(),
-                      m_turn_string_char_list.begin() + range.back() + 1,
-                      result.begin());
-        }
-        return result;
+        if (lane_description_id == INVALID_LANE_DESCRIPTIONID)
+            return {};
+        else
+            return extractor::guidance::TurnLaneDescription(
+                m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id],
+                m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id + 1]);
     }
 };
 }

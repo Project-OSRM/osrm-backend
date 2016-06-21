@@ -25,9 +25,9 @@ Feature: Turn Lane Guidance
             | de    |                            |
 
        When I route I should get
-            | waypoints | route          | turns                                         | lanes                                                                                                          | #      |
-            | a,d       | ab,bc,cd,cd    | depart,turn right,turn left,arrive            | ,through:false right:true right:true right:false,left:true left:true through:false,                            | 2 hops |
-            | a,e       | ab,bc,cd,de,de | depart,turn right,turn left,turn right,arrive | ,through:false right:false right:true right:false,left:false left:true through:false,through:false right:true, | 3 hops |
+            | waypoints | route          | turns                                         | lanes                                                                                                             | #      |
+            | a,d       | ab,bc,cd,cd    | depart,turn right,turn left,arrive            | ,straight:false right:true right:true right:false,left:true left:true straight:false,                             | 2 hops |
+            | a,e       | ab,bc,cd,de,de | depart,turn right,turn left,turn right,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true, | 3 hops |
 
     @anticipate
     Scenario: Anticipate Lane Change for quick same direction turns, staying on the same street
@@ -48,9 +48,9 @@ Feature: Turn Lane Guidance
             | dy    |                      |                     | YSt  |
 
        When I route I should get
-            | waypoints | route               | turns                                          | lanes                                                        |
-            | a,e       | MySt,MySt,MySt,MySt | depart,continue right,end of road right,arrive | ,through:false right:false right:true,left:false right:true, |
-            | e,a       | MySt,MySt,MySt,MySt | depart,continue left,end of road left,arrive   | ,left:true left:false through:false,left:true right:false,   |
+            | waypoints | route               | turns                                          | lanes                                                         |
+            | a,e       | MySt,MySt,MySt,MySt | depart,continue right,end of road right,arrive | ,straight:false right:false right:true,left:false right:true, |
+            | e,a       | MySt,MySt,MySt,MySt | depart,continue left,end of road left,arrive   | ,left:true left:false straight:false,left:true right:false,   |
 
     @anticipate
     Scenario: Anticipate Lane Change for quick same direction turns, changing between streets
@@ -71,9 +71,9 @@ Feature: Turn Lane Guidance
             | dy    |                      |                     | EYSt |
 
        When I route I should get
-            | waypoints | route               | turns                                      | lanes                                                        |
-            | a,e       | AXSt,BDSt,EYSt,EYSt | depart,turn right,end of road right,arrive | ,through:false right:false right:true,left:false right:true, |
-            | e,a       | EYSt,BDSt,AXSt,AXSt | depart,turn left,end of road left,arrive   | ,left:true left:false through:false,left:true right:false,   |
+            | waypoints | route               | turns                                      | lanes                                                         |
+            | a,e       | AXSt,BDSt,EYSt,EYSt | depart,turn right,end of road right,arrive | ,straight:false right:false right:true,left:false right:true, |
+            | e,a       | EYSt,BDSt,AXSt,AXSt | depart,turn left,end of road left,arrive   | ,left:true left:false straight:false,left:true right:false,   |
 
 
     @anticipate
@@ -92,8 +92,8 @@ Feature: Turn Lane Guidance
             | cy    |                          | Hwy  | motorway      |        |
 
        When I route I should get
-            | waypoints | route          | turns                                           | lanes                                                                |
-            | a,d       | On,Hwy,Off,Off | depart,merge slight right,off ramp right,arrive | ,slight_left:false slight_left:true,through:false slight_right:true, |
+            | waypoints | route          | turns                                           | lanes                                                                 |
+            | a,d       | On,Hwy,Off,Off | depart,merge slight right,off ramp right,arrive | ,slight left:false slight left:true,straight:false slight right:true, |
 
 
     @anticipate
@@ -115,8 +115,8 @@ Feature: Turn Lane Guidance
 
        When I route I should get
             | waypoints | route         | turns                                          | lanes                                                                                                                                    |
-            | a,i       | abx,bcd,di,di | depart,off ramp right,fork slight left,arrive  | ,none:false none:false none:false slight_right:true slight_right:true,slight_left:true slight_left;slight_right:true slight_right:false, |
-            | a,j       | abx,bcd,dj,dj | depart,off ramp right,fork slight right,arrive | ,none:false none:false none:false slight_right:true slight_right:true,slight_left:false slight_left;slight_right:true slight_right:true, |
+            | a,i       | abx,bcd,di,di | depart,off ramp right,fork slight left,arrive  | ,none:false none:false none:false slight right:true slight right:true,slight left:true slight left;slight right:true slight right:false, |
+            | a,j       | abx,bcd,dj,dj | depart,off ramp right,fork slight right,arrive | ,none:false none:false none:false slight right:true slight right:true,slight left:false slight left;slight right:true slight right:true, |
 
 
     @anticipate
@@ -136,8 +136,8 @@ Feature: Turn Lane Guidance
 
        When I route I should get
             | waypoints | route             | turns                                             | lanes                           |
-            | a,i       | ab,xbcj,ci,ci     | depart,merge slight left,turn slight right,arrive | ,,none:false slight_right:true, |
-            | a,j       | ab,xbcj,xbcj,xbcj | depart,merge slight left,use lane straight,arrive | ,,none:true slight_right:false, |
+            | a,i       | ab,xbcj,ci,ci     | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
+            | a,j       | ab,xbcj,xbcj,xbcj | depart,merge slight left,use lane straight,arrive | ,,none:true slight right:false, |
 
 
     @anticipate
@@ -160,8 +160,8 @@ Feature: Turn Lane Guidance
             | de    |                            | de   |
 
        When I route I should get
-            | waypoints | route             | turns                                         | lanes                                                                                                          |
-            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,through:false right:false right:true right:false,left:false left:true through:false,through:false right:true, |
+            | waypoints | route             | turns                                         | lanes                                                                                                             |
+            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true, |
 
     @anticipate
     Scenario: Lane anticipation for fan-out
@@ -183,8 +183,8 @@ Feature: Turn Lane Guidance
             | de    |                            | de   |
 
        When I route I should get
-            | waypoints | route             | turns                                         | lanes                                                                                                       |
-            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,through:false right:true,left:true left:true through:false,through:false right:true right:true right:true, |
+            | waypoints | route             | turns                                         | lanes                                                                                                          |
+            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,straight:false right:true,left:true left:true straight:false,straight:false right:true right:true right:true, |
 
     @anticipate
     Scenario: Lane anticipation for fan-in followed by fan-out
@@ -206,8 +206,8 @@ Feature: Turn Lane Guidance
             | de    |                            | de   |
 
        When I route I should get
-            | waypoints | route             | turns                                         | lanes                                                                                                                              |
-            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,through:false right:true right:true right:false,left:true left:true through:false,through:false right:true right:true right:true, |
+            | waypoints | route             | turns                                         | lanes                                                                                                                                 |
+            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,straight:false right:true right:true right:false,left:true left:true straight:false,straight:false right:true right:true right:true, |
 
     @anticipate
     Scenario: Lane anticipation for fan-out followed by fan-in
@@ -229,8 +229,8 @@ Feature: Turn Lane Guidance
             | de    |                            | de   |
 
        When I route I should get
-            | waypoints | route             | turns                                         | lanes                                                                                  |
-            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,through:false right:true,left:false left:true through:false,through:false right:true, |
+            | waypoints | route             | turns                                         | lanes                                                                                     |
+            | a,e       | abx,bcy,cdz,de,de | depart,turn right,turn left,turn right,arrive | ,straight:false right:true,left:false left:true straight:false,straight:false right:true, |
 
     @anticipate
     Scenario: Lane anticipation for multiple hops with same number of lanes
@@ -256,8 +256,8 @@ Feature: Turn Lane Guidance
             | ef    |                            | ef   |
 
        When I route I should get
-            | waypoints | route                 | turns                                                   | lanes                                                                                                                                              |
-            | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,through:false right:false right:true right:false,left:false left:true through:false,through:false right:true right:false,left:true through:false, |
+            | waypoints | route                 | turns                                                   | lanes                                                                                                                                                  |
+            | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true right:false,left:true straight:false, |
 
     @anticipate @bug @todo
     Scenario: Tripple Right keeping Left

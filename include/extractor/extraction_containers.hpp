@@ -3,12 +3,14 @@
 
 #include "extractor/external_memory_node.hpp"
 #include "extractor/first_and_last_segment_of_way.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
 #include <stxxl/vector>
 #include <unordered_map>
+#include <cstdint>
 
 namespace osrm
 {
@@ -40,6 +42,9 @@ class ExtractionContainers
     void WriteCharData(const std::string &file_name,
                        const stxxl::vector<unsigned> &offests,
                        const stxxl::vector<char> &char_data) const;
+    void WriteTurnLaneMasks(const std::string &file_name,
+                            const stxxl::vector<std::uint32_t> &turn_lane_offsets,
+                            const stxxl::vector<guidance::TurnLaneType::Mask> &turn_lane_masks) const;
 
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
@@ -53,8 +58,9 @@ class ExtractionContainers
     STXXLEdgeVector all_edges_list;
     stxxl::vector<char> name_char_data;
     stxxl::vector<unsigned> name_lengths;
-    stxxl::vector<char> turn_lane_char_data;
-    stxxl::vector<unsigned> turn_lane_lengths;
+    // an adjacency array containing all turn lane masks
+    stxxl::vector<std::uint32_t> turn_lane_offsets;
+    stxxl::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;

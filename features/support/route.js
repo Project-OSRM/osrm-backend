@@ -172,7 +172,7 @@ module.exports = function () {
         return this.extractInstructionList(instructions, instruction => {
             if( 'lanes' in instruction.maneuver )
             {
-                return instruction.maneuver.lanes.map( p => { return p.marked + ':' + p.take; } ).join(' ');
+                return instruction.maneuver.lanes.map( p => { return p.indication + ':' + p.valid; } ).join(' ');
             } else
             {
                 return '';

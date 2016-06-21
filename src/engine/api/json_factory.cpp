@@ -11,7 +11,6 @@
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
-#include <boost/tokenizer.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -76,23 +75,18 @@ util::json::Array lanesFromManeuver(const guidance::StepManeuver &maneuver)
 {
     BOOST_ASSERT(maneuver.lanes.lanes_in_turn >= 1);
     util::json::Array result;
-    LaneID lane_id = 0;
-    typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-    boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
-    tokenizer tokens(maneuver.turn_lane_string, sep);
+    LaneID lane_id = maneuver.lane_description.size();
 
-    lane_id = std::distance(tokens.begin(), tokens.end());
-
-    for (auto iter = tokens.begin(); iter != tokens.end(); ++iter)
+    for (const auto &lane_desc : maneuver.lane_description)
     {
         --lane_id;
         util::json::Object lane;
-        lane.values["marked"] = (iter->empty() ? "none" : *iter);
+        lane.values["indication"] = extractor::guidance::TurnLaneType::toString(lane_desc);
         if (lane_id >= maneuver.lanes.first_lane_from_the_right &&
             lane_id < maneuver.lanes.first_lane_from_the_right + maneuver.lanes.lanes_in_turn)
-            lane.values["take"] = util::json::True();
+            lane.values["valid"] = util::json::True();
         else
-            lane.values["take"] = util::json::False();
+            lane.values["valid"] = util::json::False();
 
         result.values.push_back(lane);
     }
