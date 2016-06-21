@@ -1,3 +1,7 @@
+# 5.2.4
+  - Bugfixes:
+    - Fixed in issue that arised on roundabouts in combination with intermediate intersections and sliproads
+
 # 5.2.3
   - Bugfixes:
     - Fixed an issue with name changes in roundabouts that could result in crashes

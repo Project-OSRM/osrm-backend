@@ -1,6 +1,6 @@
+#include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
-#include "extractor/guidance/classification_data.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -133,14 +133,12 @@ TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection int
 Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
                                            Intersection intersection) const
 {
-
     auto intersection_node_id = node_based_graph.GetTarget(source_edge_id);
 
     const auto linkTest = [this](const ConnectedRoad &road) {
-        return // isLinkClass(
-            //    node_based_graph.GetEdgeData(road.turn.eid).road_classification.road_class) &&
-            !node_based_graph.GetEdgeData(road.turn.eid).roundabout && road.entry_allowed &&
-            angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <= 2 * NARROW_TURN_ANGLE;
+        return !node_based_graph.GetEdgeData(road.turn.eid).roundabout && road.entry_allowed &&
+               angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <= 2 * NARROW_TURN_ANGLE &&
+               !hasRoundaboutType(road.turn.instruction);
     };
 
     bool hasNarrow =
