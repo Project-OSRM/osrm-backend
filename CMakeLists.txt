@@ -53,6 +53,7 @@ option(BUILD_COMPONENTS "Build osrm-components" OFF)
 option(ENABLE_ASSERTIONS OFF)
 option(COVERAGE OFF)
 option(SANITIZER OFF)
+option(ENABLE_LTO "Use LTO if available" ON)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -118,7 +119,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
   # Check if LTO is available
   check_cxx_compiler_flag("-flto" LTO_AVAILABLE)
-  if(LTO_AVAILABLE)
+  if(ENABLE_LTO AND LTO_AVAILABLE)
     set(OLD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     # GCC in addition allows parallelizing LTO
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
