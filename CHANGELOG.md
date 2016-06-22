@@ -1,3 +1,7 @@
+# 5.2.5
+  - Bugfixes
+    - Fixes a segfault caused by incorrect trimming logic for very short steps.
+
 # 5.2.4
   Changes from 5.2.3:
   - Bugfixes:
