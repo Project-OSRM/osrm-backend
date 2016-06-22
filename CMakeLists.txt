@@ -10,7 +10,7 @@ endif()
 project(OSRM C CXX)
 set(OSRM_VERSION_MAJOR 5)
 set(OSRM_VERSION_MINOR 2)
-set(OSRM_VERSION_PATCH 0)
+set(OSRM_VERSION_PATCH 4)
 
 # these two functions build up custom variables:
 #   OSRM_INCLUDE_PATHS and OSRM_DEFINES
