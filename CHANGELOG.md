@@ -1,3 +1,7 @@
+# 5.2.5
+  - Bugfixes
+    - Fixes a segfault caused by incorrect trimming logic for very short steps.
+
 # 5.2.4
   - Bugfixes:
     - Fixed in issue that arised on roundabouts in combination with intermediate intersections and sliproads

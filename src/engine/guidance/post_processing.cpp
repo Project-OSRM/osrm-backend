@@ -894,13 +894,13 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     auto &next_to_last_step = *(steps.end() - 2);
     // in the end, the situation with the roundabout cannot occur. As a result, we can remove
     // all zero-length instructions
-    if (next_to_last_step.distance <= 1)
+    if (next_to_last_step.distance <= 1 && steps.size() > 2)
     {
         geometry.locations.pop_back();
         geometry.annotations.pop_back();
         geometry.osm_node_ids.pop_back();
         geometry.segment_offsets.pop_back();
-        BOOST_ASSERT(geometry.segment_distances.back() < 1);
+        BOOST_ASSERT(geometry.segment_distances.back() <= 1);
         geometry.segment_distances.pop_back();
 
         next_to_last_step.maneuver.waypoint_type = WaypointType::Arrive;
