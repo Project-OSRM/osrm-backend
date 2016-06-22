@@ -474,7 +474,7 @@ inline bool hasRoundaboutType(const TurnInstruction instruction)
                                                     TurnType::StayOnRoundabout};
     const auto valid_end = valid_types + 13;
     return std::find(valid_types, valid_end, instruction.type) != valid_end;
-};
+}
 
 } // namespace guidance
 } // namespace extractor
