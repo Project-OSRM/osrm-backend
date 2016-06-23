@@ -5,7 +5,6 @@
 #include "engine/api/isochrone_parameters.hpp"
 #include "osrm/json_container.hpp"
 #include "util/static_graph.hpp"
-#include "util/coordinate.hpp"
 #include "util/binary_heap.hpp"
 
 #include <boost/bind.hpp>
@@ -16,10 +15,7 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <map>
-#include <unordered_set>
 #include <utility>
-#include <set>
 #include <vector>
 
 
@@ -55,6 +51,13 @@ struct IsochroneNode
     osrm::extractor::QueryNode predecessor;
     double distance;
     int duration;
+
+    bool operator==(const IsochroneNode &n) const {
+        if (n.node.node_id == node.node_id)
+            return true;
+        else
+            return false;
+    }
 };
 
 
@@ -75,6 +78,7 @@ class IsochronePlugin final : public BasePlugin
     std::size_t number_of_nodes;
     IsochroneVector isochroneVector;
     IsochroneVector convexhull;
+    IsochroneVector concavehull;
 
     std::size_t loadGraph(const std::string &path,
                           std::vector<extractor::QueryNode> &coordinate_list,

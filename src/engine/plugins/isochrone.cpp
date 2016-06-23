@@ -3,6 +3,7 @@
 #include "engine/plugins/isochrone.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/graph_loader.hpp"
+#include "util/concave_hull.hpp"
 #include "util/monotone_chain.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
@@ -48,6 +49,10 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     if (params.distance != 0 && params.duration != 0)
     {
         return Error("InvalidOptions", "Only distance or duration should be set", json_result);
+    }
+
+    if (params.concavehull == true && params.convexhull == false) {
+        return Error("InvalidOptions", "If concavehull is set, convexhull must be set too", json_result);
     }
 
     auto phantomnodes = GetPhantomNodes(params, 1);
@@ -99,16 +104,21 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     util::SimpleLogger().Write() << "Nodes Found: " << isochroneVector.size();
 
     convexhull.clear();
+    concavehull.clear();
 
     // Optional param for calculating Convex Hull
     if (params.convexhull)
     {
         convexhull = util::monotoneChain(isochroneVector);
+
+    }
+    if(params.concavehull && params.convexhull) {
+        concavehull = util::concavehull(convexhull, params.threshold, isochroneVector);
     }
 
     TIMER_START(RESPONSE);
     api::IsochroneAPI isochroneAPI(facade, params);
-    isochroneAPI.MakeResponse(isochroneVector, convexhull, json_result);
+    isochroneAPI.MakeResponse(isochroneVector, convexhull, concavehull, json_result);
     TIMER_STOP(RESPONSE);
     util::SimpleLogger().Write() << "RESPONSE took: " << TIMER_MSEC(RESPONSE) << "ms";
 

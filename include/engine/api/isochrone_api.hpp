@@ -26,6 +26,7 @@ class IsochroneAPI final : public BaseAPI
 
     void MakeResponse(const std::vector<engine::plugins::IsochroneNode> isochroneNodes,
                       const std::vector<engine::plugins::IsochroneNode> convexhull,
+                      const std::vector<engine::plugins::IsochroneNode> concavehull,
                       util::json::Object &response) const
     {
         util::json::Array isochroneJson;
@@ -66,6 +67,19 @@ class IsochroneAPI final : public BaseAPI
                 convexhullArray.values.push_back(point);
             }
             response.values["convexhull"] = std::move(convexhullArray);
+        }
+
+        if (!concavehull.empty())
+        {
+            util::json::Array concavehullArray;
+            for (engine::plugins::IsochroneNode n : concavehull)
+            {
+                util::json::Object point;
+                point.values["lat"] = static_cast<double>(util::toFloating(n.node.lat));
+                point.values["lon"] = static_cast<double>(util::toFloating(n.node.lon));
+                concavehullArray.values.push_back(point);
+            }
+            response.values["concavehull"] = std::move(concavehullArray);
         }
     }
 };
