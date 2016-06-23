@@ -38,8 +38,33 @@ class NearestAPI final : public BaseAPI
                        phantom_nodes.front().end(),
                        waypoints.values.begin(),
                        [this](const PhantomNodeWithDistance &phantom_with_distance) {
-                           auto waypoint = MakeWaypoint(phantom_with_distance.phantom_node);
+                           auto& phantom_node = phantom_with_distance.phantom_node;
+                           auto waypoint = MakeWaypoint(phantom_node);
                            waypoint.values["distance"] = phantom_with_distance.distance;
+
+                           util::json::Array nodes;
+
+                           std::vector<NodeID> reverse_geometry;
+                           facade.GetUncompressedGeometry(phantom_node.reverse_packed_geometry_id, reverse_geometry);
+                           auto from_node = facade.GetOSMNodeIDOfNode(reverse_geometry[reverse_geometry.size() - phantom_node.fwd_segment_position - 1]);
+
+                           std::vector<NodeID> forward_geometry;
+                           facade.GetUncompressedGeometry(phantom_with_distance.phantom_node.forward_packed_geometry_id, forward_geometry);
+                           auto to_node = facade.GetOSMNodeIDOfNode(forward_geometry[phantom_with_distance.phantom_node.fwd_segment_position]);
+
+                           if (!phantom_node.forward_segment_id.enabled)
+                           {
+                               nodes.values.push_back(static_cast<std::uint64_t>(to_node));
+                               nodes.values.push_back(static_cast<std::uint64_t>(from_node));
+                           }
+                           else
+                           {
+                               nodes.values.push_back(static_cast<std::uint64_t>(from_node));
+                               nodes.values.push_back(static_cast<std::uint64_t>(to_node));
+                           }
+
+                           waypoint.values["nodes"] = std::move(nodes);
+
                            return waypoint;
                        });
 
