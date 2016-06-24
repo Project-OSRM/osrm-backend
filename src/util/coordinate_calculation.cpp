@@ -258,7 +258,10 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
                             C2C1_slope * (C2_x + C3_x)) /
                            (2 * (C3C2_slope - C2C1_slope));
         const double lat = (0.5 * (C1_x + C2_x) - lon) / C2C1_slope + 0.5 * (C1_y + C2_y);
-        return Coordinate(FloatLongitude(lon), FloatLatitude(lat));
+        if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
+            return boost::none;
+        else
+            return Coordinate(FloatLongitude(lon), FloatLatitude(lat));
     }
 }
 
