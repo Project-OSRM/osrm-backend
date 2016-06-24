@@ -1,7 +1,7 @@
 #ifndef NODE_BASED_GRAPH_HPP
 #define NODE_BASED_GRAPH_HPP
 
-#include "extractor/guidance/classification_data.hpp"
+#include "extractor/guidance/road_classification.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "util/dynamic_graph.hpp"
 #include "util/graph_utils.hpp"
@@ -49,7 +49,7 @@ struct NodeBasedEdgeData
     bool startpoint : 1;
     extractor::TravelMode travel_mode : 4;
     LaneDescriptionID lane_description_id;
-    extractor::guidance::RoadClassificationData road_classification;
+    extractor::guidance::RoadClassification road_classification;
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {

@@ -1,7 +1,8 @@
 -- Car profile
-
 local find_access_tag = require("lib/access").find_access_tag
 local get_destination = require("lib/destination").get_destination
+local set_classification = require("lib/guidance").set_classification
+local get_turn_lanes = require("lib/guidance").get_turn_lanes
 
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
@@ -166,62 +167,6 @@ function get_exceptions(vector)
   end
 end
 
--- returns forward,backward psv lane count
-local function getPSVCounts(way)
-    local psv = way:get_value_by_key("lanes:psv")
-    local psv_forward = way:get_value_by_key("lanes:psv:forward");
-    local psv_backward = way:get_value_by_key("lanes:psv:backward");
-
-    local fw = 0;
-    local bw = 0;
-    if( psv and psv ~= "" ) then
-        fw = tonumber(psv)
-        if( fw == nil ) then
-            fw = 0
-        end
-    end
-    if( psv_forward and psv_forward ~= "" ) then
-        fw = tonumber(psv_forward)
-        if( fw == nil ) then
-            fw = 0
-        end
-    end
-    if( psv_backward and psv_backward ~= "" ) then
-        bw = tonumber(psv_backward);
-        if( bw == nil ) then
-            bw = 0
-        end
-    end
-    return fw, bw
-end
-
--- this is broken for left-sided driving. It needs to switch left and right in case of left-sided driving
-local function getTurnLanes(way)
-    local fw_psv = 0
-    local bw_psv = 0
-    fw_psv, bw_psv = getPSVCounts(way)
-
-    local turn_lanes = way:get_value_by_key("turn:lanes")
-    local turn_lanes_fw = way:get_value_by_key("turn:lanes:forward")
-    local turn_lanes_bw = way:get_value_by_key("turn:lanes:backward")
-
-    if( fw_psv ~= 0 or bw_psv ~= 0 ) then
-        if  turn_lanes and turn_lanes ~= "" then
-            turn_lanes = trimLaneString(turn_lanes, bw_psv, fw_psv )
-        end
-        if  turn_lanes_fw and turn_lanes_fw ~= ""  then
-            turn_lanes_fw = trimLaneString(turn_lanes_fw, bw_psv, fw_psv )
-        end
-        --backwards turn lanes need to treat bw_psv as fw_psv and vice versa
-        if  turn_lanes_bw and turn_lanes_bw ~= ""  then
-            turn_lanes_bw = trimLaneString(turn_lanes_bw, fw_psv, bw_psv )
-        end
-    end
-
-    return turn_lanes, turn_lanes_fw, turn_lanes_bw
-end
-
-
 local function parse_maxspeed(source)
   if not source then
     return 0
@@ -340,7 +285,7 @@ function way_function (way, result)
     result.backward_speed = bridge_speed
   end
 
-  -- leave early of this way is not accessible
+  -- leave early if this way is not accessible
   if "" == highway then
     return
   end
@@ -402,6 +347,9 @@ function way_function (way, result)
     result.backward_speed = math.min(smoothness_speeds[smoothness], result.backward_speed)
   end
 
+  -- set the road classification based on guidance globals configuration
+  set_classification(highway,result)
+
   -- parse the remaining tags
   local name = way:get_value_by_key("name")
   local pronunciation = way:get_value_by_key("name:pronunciation")
@@ -432,7 +380,7 @@ function way_function (way, result)
   local turn_lanes_forward = ""
   local turn_lanes_backward = ""
 
-  turn_lanes, turn_lanes_forward, turn_lanes_backward = getTurnLanes(way)
+  turn_lanes, turn_lanes_forward, turn_lanes_backward = get_turn_lanes(way)
   if  turn_lanes and turn_lanes ~= "" then
     result.turn_lanes_forward = turn_lanes;
     result.turn_lanes_backward = turn_lanes;

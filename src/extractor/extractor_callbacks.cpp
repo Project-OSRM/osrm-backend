@@ -1,8 +1,9 @@
-#include "extractor/extractor_callbacks.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
+#include "extractor/extractor_callbacks.hpp"
+#include "extractor/guidance/road_classification.hpp"
 #include "extractor/restriction.hpp"
 
 #include "util/for_each_pair.hpp"
@@ -140,13 +141,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     }
 
     // FIXME this need to be moved into the profiles
-    const char *data = input_way.get_value_by_key("highway");
-    guidance::RoadClassificationData road_classification;
-    if (data)
-    {
-        road_classification.road_class = guidance::functionalRoadClassFromTag(data);
-    }
-
+    const guidance::RoadClassification road_classification = parsed_way.road_classification;
     const auto laneStringToDescription = [](std::string lane_string) -> TurnLaneDescription {
         if (lane_string.empty())
             return {};

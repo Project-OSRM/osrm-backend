@@ -7,7 +7,7 @@
 
 #include <boost/assert.hpp>
 
-#include "extractor/guidance/classification_data.hpp"
+#include "extractor/guidance/road_classification.hpp"
 #include "osrm/coordinate.hpp"
 #include <utility>
 
@@ -51,7 +51,7 @@ struct InternalExtractorEdge
                  TRAVEL_MODE_INACCESSIBLE,
                  false,
                  guidance::TurnLaneType::empty,
-                 guidance::RoadClassificationData())
+                 guidance::RoadClassification())
     {
     }
 
@@ -67,7 +67,7 @@ struct InternalExtractorEdge
                                    TravelMode travel_mode,
                                    bool is_split,
                                    LaneDescriptionID lane_description,
-                                   guidance::RoadClassificationData road_classification)
+                                   guidance::RoadClassification road_classification)
         : result(source,
                  target,
                  name_id,
@@ -107,7 +107,7 @@ struct InternalExtractorEdge
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
                                      INVALID_LANE_DESCRIPTIONID,
-                                     guidance::RoadClassificationData());
+                                     guidance::RoadClassification());
     }
     static InternalExtractorEdge max_osm_value()
     {
@@ -123,7 +123,7 @@ struct InternalExtractorEdge
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
                                      INVALID_LANE_DESCRIPTIONID,
-                                     guidance::RoadClassificationData());
+                                     guidance::RoadClassification());
     }
 
     static InternalExtractorEdge min_internal_value()

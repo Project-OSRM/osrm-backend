@@ -1,4 +1,4 @@
-#include "extractor/guidance/classification_data.hpp"
+#include "extractor/guidance/road_classification.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 
@@ -86,7 +86,8 @@ Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
     intersection = sliproad_handler(from_nid, via_eid, std::move(intersection));
 
     // Turn On Ramps Into Off Ramps, if we come from a motorway-like road
-    if (isMotorwayClass(node_based_graph.GetEdgeData(via_eid).road_classification.road_class))
+    if (node_based_graph.GetEdgeData(via_eid)
+            .road_classification.IsMotorwayClass())
     {
         std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
             if (road.turn.instruction.type == TurnType::OnRamp)

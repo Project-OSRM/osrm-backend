@@ -425,7 +425,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 const int32_t turn_penalty = scripting_environment.GetTurnPenalty(180. - turn.angle);
                 const auto turn_instruction = turn.instruction;
 
-                if (guidance::isUturn(turn_instruction))
+                if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
                 {
                     distance += profile_properties.u_turn_penalty;
                 }
