@@ -54,6 +54,15 @@ inline void print(const std::vector<engine::guidance::RouteStep> &steps)
     }
 }
 
+inline void print( const extractor::guidance::Intersection & intersection )
+{
+    std::cout << "  Intersection:\n";
+    for (const auto &road : intersection)
+        std::cout << "\t" << toString(road) << "\n";
+    std::cout << std::flush;
+}
+
+
 inline void print(const extractor::guidance::lanes::LaneDataVector &turn_lane_data)
 {
     std::cout << " Tags:\n";
@@ -76,10 +85,7 @@ printTurnAssignmentData(const NodeID at,
     std::cout << std::setprecision(12) << toFloating(coordinate.lat) << " "
               << toFloating(coordinate.lon) << "\n";
 
-    std::cout << "  Intersection:\n";
-    for (const auto &road : intersection)
-        std::cout << "\t" << toString(road) << "\n";
-
+    print(intersection);
     // flushes as well
     print(turn_lane_data);
 }

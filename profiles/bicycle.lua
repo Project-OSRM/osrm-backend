@@ -2,6 +2,7 @@
 
 local find_access_tag = require("lib/access").find_access_tag
 local limit = require("lib/maxspeed").limit
+local set_classification = require("lib/guidance").set_classification
 
 -- Begin of globals
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["block"] = true }
@@ -391,6 +392,9 @@ function way_function (way, result)
     result.forward_speed = math.min(surface_speeds[surface], result.forward_speed)
     result.backward_speed = math.min(surface_speeds[surface], result.backward_speed)
   end
+
+  -- set the road classification based on guidance globals configuration
+  set_classification(highway,result)
 
   -- maxspeed
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )

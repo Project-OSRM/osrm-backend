@@ -1,3 +1,7 @@
+# 5.4.0
+    - Profiles
+      - includes library guidance.lua that offers preliminary configuration on guidance.
+
 # 5.3.0 RC3
   Changes from 5.3.0-rc.2
     - Guidance

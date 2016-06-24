@@ -271,20 +271,20 @@ Feature: Turn Lane Guidance
             |   |   | i |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward                      | highway | junction   | #   |
+            | nodes | turn:lanes:forward                       | highway | junction   | #   |
             | ab    | slight_right\|slight_right\|slight_right | primary |            |     |
             | bc    | slight_left\|slight_right\|slight_right  | primary | roundabout | top |
-            | cd    |                                         | primary | roundabout | top |
-            | de    |                                         | primary | roundabout | top |
-            | eb    |                                         | primary | roundabout | top |
-            | df    |                                         | primary |            |     |
-            | cg    | slight_right\|slight_right              | primary |            |     |
-            | gh    | slight_left\|slight_right               | primary | roundabout | bot |
-            | hi    |                                         | primary | roundabout | bot |
-            | ij    | slight_left\|slight_right               | primary | roundabout | bot |
-            | jg    |                                         | primary | roundabout | bot |
-            | hk    |                                         | primary |            |     |
-            | jl    |                                         | primary |            |     |
+            | cd    |                                          | primary | roundabout | top |
+            | de    |                                          | primary | roundabout | top |
+            | eb    |                                          | primary | roundabout | top |
+            | df    |                                          | primary |            |     |
+            | cg    | slight_right\|slight_right               | primary |            |     |
+            | gh    | slight_left\|slight_right                | primary | roundabout | bot |
+            | hi    |                                          | primary | roundabout | bot |
+            | ij    | slight_left\|slight_right                | primary | roundabout | bot |
+            | jg    |                                          | primary | roundabout | bot |
+            | hk    |                                          | primary |            |     |
+            | jl    |                                          | primary |            |     |
 
         When I route I should get
             | #           | waypoints | route       | turns                                             | lanes                                                                                          |
@@ -301,13 +301,13 @@ Feature: Turn Lane Guidance
             |   |   | c |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward                    | highway | junction   |
-            | ab    |                                       | primary |            |
-            | bc    |                                       | primary | roundabout |
+            | nodes | turn:lanes:forward                     | highway | junction   |
+            | ab    |                                        | primary |            |
+            | bc    |                                        | primary | roundabout |
             | cd    | slight_left\|slight_left\|slight_right | primary | roundabout |
-            | de    |                                       | primary | roundabout |
-            | eb    |                                       | primary | roundabout |
-            | df    |                                       | primary |            |
+            | de    |                                        | primary | roundabout |
+            | eb    |                                        | primary | roundabout |
+            | df    |                                        | primary |            |
 
         When I route I should get
             | waypoints | route    | turns                                                 | lanes                                                    |

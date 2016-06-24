@@ -431,7 +431,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     use_turn_function ? GetTurnPenalty(turn_angle, lua_state) : 0;
                 const auto turn_instruction = turn.instruction;
 
-                if (guidance::isUturn(turn_instruction))
+                if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
                 {
                     distance += profile_properties.u_turn_penalty;
                 }
