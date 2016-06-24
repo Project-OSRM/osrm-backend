@@ -525,9 +525,9 @@ Feature: Collapse
             | cf    | secondary | bottom |
 
         When I route I should get
-            | waypoints | turns                                          | route               |
-            | a,d       | depart,continue right,end of road right,arrive | road,road,road,road |
-            | d,a       | depart,continue left,end of road left,arrive   | road,road,road,road |
+            | waypoints | turns                                   | route               |
+            | a,d       | depart,continue right,turn right,arrive | road,road,road,road |
+            | d,a       | depart,continue left,turn left,arrive   | road,road,road,road |
 
     Scenario: Forking before a turn
         Given the node map

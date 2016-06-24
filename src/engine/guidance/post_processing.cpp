@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/toolkit.hpp"
@@ -32,6 +32,7 @@ namespace guidance
 namespace
 {
 const constexpr double MAX_COLLAPSE_DISTANCE = 25;
+const constexpr std::size_t MIN_END_OF_ROAD_INTERSECTIONS = std::size_t{2};
 
 inline bool choiceless(const RouteStep &step, const RouteStep &previous)
 {
@@ -420,8 +421,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
 
-                const auto getBearing = [](bool in, const RouteStep &step)
-                {
+                const auto getBearing = [](bool in, const RouteStep &step) {
                     const auto index =
                         in ? step.intersections.front().in : step.intersections.front().out;
                     return step.intersections.front().bearings[index];
@@ -1064,6 +1064,22 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
         }
         else if (!isSilent(instruction))
         {
+
+            // End of road is a turn that helps to identify the location of a turn. If the turn does
+            // not pass by any oter intersections, the end-of-road characteristic does not improve
+            // the instructions.
+            // Here we reduce the verbosity of our output by reducing end-of-road emissions in cases
+            // where no intersections have been passed in between.
+            // Since the instruction is located at the beginning of a step, we need to check the
+            // previous instruction.
+            if (instruction.type == TurnType::EndOfRoad)
+            {
+                BOOST_ASSERT(step_index > 0 && step_index < step_index + 1 < steps.size());
+                const auto &previous_step = steps[last_valid_instruction];
+                if (previous_step.intersections.size() < MIN_END_OF_ROAD_INTERSECTIONS)
+                    step.maneuver.instruction.type = TurnType::Turn;
+            }
+
             // Remember the last non silent instruction
             last_valid_instruction = step_index;
         }
