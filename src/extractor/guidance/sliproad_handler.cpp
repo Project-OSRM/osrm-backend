@@ -74,8 +74,8 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     const auto check_valid = [this, source_edge_data](const ConnectedRoad &road) {
         const auto road_edge_data = node_based_graph.GetEdgeData(road.turn.eid);
         // Test to see if the source edge and the one we're looking at are the same road
-        return road_edge_data.road_classification.road_class ==
-                   source_edge_data.road_classification.road_class &&
+        return road_edge_data.road_classification ==
+                   source_edge_data.road_classification &&
                road_edge_data.name_id != EMPTY_NAMEID &&
                road_edge_data.name_id == source_edge_data.name_id && road.entry_allowed;
     };
