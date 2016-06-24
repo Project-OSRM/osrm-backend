@@ -16,6 +16,8 @@ namespace util
 //   group_by(first, last, even, print);
 //   >>> 2,2,2
 //   >>> 4,4
+//
+// Note: this mimics Python's itertools.groupby
 template <typename Iter, typename Pred, typename Fn>
 Fn group_by(Iter first, Iter last, Pred pred, Fn fn)
 {
