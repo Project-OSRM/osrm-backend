@@ -302,6 +302,13 @@ BOOST_AUTO_TEST_CASE(circleCenter)
     c = Coordinate(FloatLongitude(-112.096419), FloatLatitude(41.147259));
     result = coordinate_calculation::circleCenter(a, b, c);
     BOOST_CHECK(!result);
+
+    // Out of bounds
+    a = Coordinate(FloatLongitude(-112.096234), FloatLatitude(41.147258));
+    b = Coordinate(FloatLongitude(-112.106606), FloatLatitude(41.147259));
+    c = Coordinate(FloatLongitude(-113.096419), FloatLatitude(41.147258));
+    result = coordinate_calculation::circleCenter(a, b, c);
+    BOOST_CHECK(!result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
