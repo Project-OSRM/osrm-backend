@@ -613,7 +613,7 @@ int Storage::Run()
     {
         nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
         coordinates_ptr[i] = util::Coordinate(current_node.lon, current_node.lat);
-        osmnodeid_list.push_back(OSMNodeID(current_node.node_id));
+        osmnodeid_list.push_back(current_node.node_id);
     }
     nodes_input_stream.close();
 

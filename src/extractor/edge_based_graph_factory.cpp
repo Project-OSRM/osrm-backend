@@ -480,19 +480,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 // updates to the edge-expanded-edge based directly on its ID.
                 if (generate_edge_lookup)
                 {
-                    unsigned fixed_penalty = distance - edge_data1.distance;
-                    edge_penalty_file.write(reinterpret_cast<const char *>(&fixed_penalty),
-                                            sizeof(fixed_penalty));
                     const auto node_based_edges =
                         m_compressed_edge_container.GetBucketReference(edge_from_u);
                     NodeID previous = node_u;
 
                     const unsigned node_count = node_based_edges.size() + 1;
-                    edge_segment_file.write(reinterpret_cast<const char *>(&node_count),
-                                            sizeof(node_count));
                     const QueryNode &first_node = m_node_info_list[previous];
-                    edge_segment_file.write(reinterpret_cast<const char *>(&first_node.node_id),
-                                            sizeof(first_node.node_id));
+
+                    lookup::SegmentHeaderBlock header = {node_count, first_node.node_id};
+
+                    edge_segment_file.write(reinterpret_cast<const char *>(&header),
+                                            sizeof(header));
 
                     for (auto target_node : node_based_edges)
                     {
@@ -501,12 +499,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         const double segment_length =
                             util::coordinate_calculation::greatCircleDistance(from, to);
 
-                        edge_segment_file.write(reinterpret_cast<const char *>(&to.node_id),
-                                                sizeof(to.node_id));
-                        edge_segment_file.write(reinterpret_cast<const char *>(&segment_length),
-                                                sizeof(segment_length));
-                        edge_segment_file.write(reinterpret_cast<const char *>(&target_node.weight),
-                                                sizeof(target_node.weight));
+                        lookup::SegmentBlock nodeblock = {
+                            to.node_id, segment_length, target_node.weight};
+
+                        edge_segment_file.write(reinterpret_cast<const char *>(&nodeblock),
+                                                sizeof(nodeblock));
                         previous = target_node.node_id;
                     }
 
@@ -533,12 +530,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
                             turn.eid)];
 
-                    edge_penalty_file.write(reinterpret_cast<const char *>(&from_node.node_id),
-                                            sizeof(from_node.node_id));
-                    edge_penalty_file.write(reinterpret_cast<const char *>(&via_node.node_id),
-                                            sizeof(via_node.node_id));
-                    edge_penalty_file.write(reinterpret_cast<const char *>(&to_node.node_id),
-                                            sizeof(to_node.node_id));
+                    const unsigned fixed_penalty = distance - edge_data1.distance;
+                    lookup::PenaltyBlock penaltyblock = {
+                        fixed_penalty, from_node.node_id, via_node.node_id, to_node.node_id};
+                    edge_penalty_file.write(reinterpret_cast<const char *>(&penaltyblock),
+                                            sizeof(penaltyblock));
                 }
             }
         }

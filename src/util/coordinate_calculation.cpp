@@ -115,8 +115,8 @@ Coordinate centroid(const Coordinate lhs, const Coordinate rhs)
     Coordinate centroid;
     // The coordinates of the midpoints are given by:
     // x = (x1 + x2) /2 and y = (y1 + y2) /2.
-    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude(2);
-    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude(2);
+    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude{2};
+    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude{2};
     return centroid;
 }
 
@@ -261,7 +261,7 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
         if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
             return boost::none;
         else
-            return Coordinate(FloatLongitude(lon), FloatLatitude(lat));
+            return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
     }
 }
 
@@ -284,8 +284,8 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
     const auto to_lon = static_cast<std::int32_t>(to.lon);
     const auto to_lat = static_cast<std::int32_t>(to.lat);
 
-    FixedLongitude interpolated_lon(from_lon + factor * (to_lon - from_lon));
-    FixedLatitude interpolated_lat(from_lat + factor * (to_lat - from_lat));
+    FixedLongitude interpolated_lon{static_cast<std::int32_t>(from_lon + factor * (to_lon - from_lon))};
+    FixedLatitude interpolated_lat{static_cast<std::int32_t>(from_lat + factor * (to_lat - from_lat))};
 
     return {std::move(interpolated_lon), std::move(interpolated_lat)};
 }

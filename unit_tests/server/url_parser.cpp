@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(valid_urls)
 
     // one coordinate
     std::vector<util::Coordinate> coords_3 = {
-        util::Coordinate(util::FloatLongitude(0), util::FloatLatitude(1)),
+        util::Coordinate{util::FloatLongitude{0}, util::FloatLatitude{1}},
     };
     api::ParsedURL reference_3{"route", 1, "profile", "0,1", 18UL};
     auto result_3 = api::parseURL("/route/v1/profile/0,1");

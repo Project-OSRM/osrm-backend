@@ -128,7 +128,7 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
     for (auto const &pt : geo_line)
     {
         double px_merc = pt.x * util::web_mercator::DEGREE_TO_PX;
-        double py_merc = util::web_mercator::latToY(util::FloatLatitude(pt.y)) *
+        double py_merc = util::web_mercator::latToY(util::FloatLatitude{pt.y}) *
                          util::web_mercator::DEGREE_TO_PX;
         // convert lon/lat to tile coordinates
         const auto px = std::round(
@@ -174,8 +174,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     util::web_mercator::xyzToWGS84(
         parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
 
-    util::Coordinate southwest{util::FloatLongitude(min_lon), util::FloatLatitude(min_lat)};
-    util::Coordinate northeast{util::FloatLongitude(max_lon), util::FloatLatitude(max_lat)};
+    util::Coordinate southwest{util::FloatLongitude{min_lon}, util::FloatLatitude{min_lat}};
+    util::Coordinate northeast{util::FloatLongitude{max_lon}, util::FloatLatitude{max_lat}};
 
     // Fetch all the segments that are in our bounding box.
     // This hits the OSRM StaticRTree

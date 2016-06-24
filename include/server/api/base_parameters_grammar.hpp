@@ -115,8 +115,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
             (double_ > qi::lit(',') >
              double_)[qi::_val = ph::bind(
                           [](double lon, double lat) {
-                              return util::Coordinate(util::toFixed(util::FloatLongitude(lon)),
-                                                      util::toFixed(util::FloatLatitude(lat)));
+                              return util::Coordinate(util::toFixed(util::FloatLongitude{lon}),
+                                                      util::toFixed(util::FloatLatitude{lat}));
                           },
                           qi::_1,
                           qi::_2)];

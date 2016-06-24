@@ -95,14 +95,14 @@ template <typename T, bool UseSharedMemory = false> class PackedVector
         if (left_index == 0)
         {
             // ID is at the far left side of this element
-            return static_cast<T>(elem >> (ELEMSIZE - BITSIZE));
+            return T{elem >> (ELEMSIZE - BITSIZE)};
         }
         else if (left_index >= BITSIZE)
         {
             // ID is entirely contained within this element
             const std::uint64_t at_right = elem >> (left_index - BITSIZE);
             const std::uint64_t left_mask = static_cast<std::uint64_t>(pow(2, BITSIZE)) - 1;
-            return static_cast<T>(at_right & left_mask);
+            return T{at_right & left_mask};
         }
         else
         {
@@ -114,7 +114,7 @@ template <typename T, bool UseSharedMemory = false> class PackedVector
             const std::uint64_t next_elem = static_cast<std::uint64_t>(vec.at(index + 1));
 
             const std::uint64_t right_side = next_elem >> (ELEMSIZE - (BITSIZE - left_index));
-            return static_cast<T>(left_side | right_side);
+            return T{left_side | right_side};
         }
     }
 

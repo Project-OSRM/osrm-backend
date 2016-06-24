@@ -43,6 +43,34 @@ namespace osrm
 namespace extractor
 {
 
+namespace lookup
+{
+// Set to 1 byte alignment
+struct SegmentHeaderBlock
+{
+    std::uint32_t num_osm_nodes;
+    OSMNodeID previous_osm_node_id;
+} __attribute ((packed));
+static_assert(sizeof(SegmentHeaderBlock) == 12, "SegmentHeaderBlock is not packed correctly");
+
+struct SegmentBlock
+{
+    OSMNodeID this_osm_node_id;
+    double segment_length;
+    std::int32_t segment_weight;
+} __attribute ((packed));
+static_assert(sizeof(SegmentBlock) == 20, "SegmentBlock is not packed correctly");
+
+struct PenaltyBlock
+{
+    std::uint32_t fixed_penalty;
+    OSMNodeID from_id;
+    OSMNodeID via_id;
+    OSMNodeID to_id;
+} __attribute ((packed));
+static_assert(sizeof(PenaltyBlock) == 28, "PenaltyBlock is not packed correctly");
+}
+
 class EdgeBasedGraphFactory
 {
   public:

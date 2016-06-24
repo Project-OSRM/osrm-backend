@@ -35,7 +35,7 @@ inline FloatLatitude yToLat(const double y)
     const double normalized_lat =
         detail::RAD_TO_DEGREE * 2. * std::atan(std::exp(clamped_y * detail::DEGREE_TO_RAD));
 
-    return FloatLatitude(normalized_lat - 90.);
+    return FloatLatitude{normalized_lat - 90.};
 }
 
 inline double latToY(const FloatLatitude latitude)
@@ -56,7 +56,7 @@ template <typename T, typename... U> constexpr double horner(double x, T an, U..
 
 inline double latToYapprox(const FloatLatitude latitude)
 {
-    if (latitude < FloatLatitude(-70.) || latitude > FloatLatitude(70.))
+    if (latitude < FloatLatitude{-70.} || latitude > FloatLatitude{70.})
         return latToY(latitude);
 
     // Approximate the inverse Gudermannian function with the Padé approximant [11/11]: deg → deg
@@ -93,14 +93,14 @@ inline double latToYapprox(const FloatLatitude latitude)
 
 inline FloatLatitude clamp(const FloatLatitude lat)
 {
-    return std::max(std::min(lat, FloatLatitude(detail::MAX_LATITUDE)),
-                    FloatLatitude(-detail::MAX_LATITUDE));
+    return std::max(std::min(lat, FloatLatitude{detail::MAX_LATITUDE}),
+                    FloatLatitude{-detail::MAX_LATITUDE});
 }
 
 inline FloatLongitude clamp(const FloatLongitude lon)
 {
-    return std::max(std::min(lon, FloatLongitude(detail::MAX_LONGITUDE)),
-                    FloatLongitude(-detail::MAX_LONGITUDE));
+    return std::max(std::min(lon, FloatLongitude{detail::MAX_LONGITUDE}),
+                    FloatLongitude{-detail::MAX_LONGITUDE});
 }
 
 inline void pixelToDegree(const double shift, double &x, double &y)
@@ -159,10 +159,10 @@ inline void xyzToMercator(
 {
     xyzToWGS84(x, y, z, minx, miny, maxx, maxy);
 
-    minx = static_cast<double>(clamp(util::FloatLongitude(minx))) * DEGREE_TO_PX;
-    miny = latToY(clamp(util::FloatLatitude(miny))) * DEGREE_TO_PX;
-    maxx = static_cast<double>(clamp(util::FloatLongitude(maxx))) * DEGREE_TO_PX;
-    maxy = latToY(clamp(util::FloatLatitude(maxy))) * DEGREE_TO_PX;
+    minx = static_cast<double>(clamp(util::FloatLongitude{minx})) * DEGREE_TO_PX;
+    miny = latToY(clamp(util::FloatLatitude{miny})) * DEGREE_TO_PX;
+    maxx = static_cast<double>(clamp(util::FloatLongitude{maxx})) * DEGREE_TO_PX;
+    maxy = latToY(clamp(util::FloatLatitude{maxy})) * DEGREE_TO_PX;
 }
 }
 }

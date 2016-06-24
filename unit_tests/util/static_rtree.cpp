@@ -117,7 +117,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
         {
             int lon = lon_udist(g);
             int lat = lat_udist(g);
-            coords.emplace_back(Coordinate(FixedLongitude(lon), FixedLatitude(lat)));
+            coords.emplace_back(Coordinate(FixedLongitude{lon}, FixedLatitude{lat}));
         }
 
         std::uniform_int_distribution<> edge_udist(0, coords.size() - 1);
@@ -216,7 +216,7 @@ void sampling_verify_rtree(RTreeT &rtree,
     std::vector<Coordinate> queries;
     for (unsigned i = 0; i < num_samples; i++)
     {
-        queries.emplace_back(FixedLongitude(lon_udist(g)), FixedLatitude(lat_udist(g)));
+        queries.emplace_back(FixedLongitude{lon_udist(g)}, FixedLatitude{lat_udist(g)});
     }
 
     for (const auto &q : queries)
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(regression_test)
     LinearSearchNN<TestData> lsnn(fixture.coords, fixture.edges);
 
     // query a node just right of the center of the gap
-    Coordinate input(FloatLongitude(55.1), FloatLatitude(20.0));
+    Coordinate input(FloatLongitude{55.1}, FloatLatitude{20.0});
     auto result_rtree = rtree.Nearest(input, 1);
     auto result_ls = lsnn.Nearest(input, 1);
 
@@ -342,8 +342,8 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
-            Coord(FloatLongitude(10.0), FloatLatitude(10.0)),
+            Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
+            Coord(FloatLongitude{10.0}, FloatLatitude{10.0}),
         },
         {Edge(0, 1), Edge(1, 0)});
 
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
     engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(
         rtree, fixture.coords, mockfacade);
 
-    Coordinate input(FloatLongitude(5.2), FloatLatitude(5.0));
+    Coordinate input(FloatLongitude{5.2}, FloatLatitude{5.0});
 
     {
         auto results = query.NearestPhantomNodesInRange(input, 0.01);
@@ -369,8 +369,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     using Edge = std::pair<unsigned, unsigned>;
     GraphFixture fixture(
         {
-            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
-            Coord(FloatLongitude(10.0), FloatLatitude(10.0)),
+            Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
+            Coord(FloatLongitude{10.0}, FloatLatitude{10.0}),
         },
         {Edge(0, 1), Edge(1, 0)});
 
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     engine::GeospatialQuery<MiniStaticRTree, MockDataFacade> query(
         rtree, fixture.coords, mockfacade);
 
-    Coordinate input(FloatLongitude(5.1), FloatLatitude(5.0));
+    Coordinate input(FloatLongitude{5.1}, FloatLatitude{5.0});
 
     {
         auto results = query.NearestPhantomNodes(input, 5);
@@ -440,11 +440,11 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
 
     GraphFixture fixture(
         {
-            Coord(FloatLongitude(0.0), FloatLatitude(0.0)),
-            Coord(FloatLongitude(1.0), FloatLatitude(1.0)),
-            Coord(FloatLongitude(2.0), FloatLatitude(2.0)),
-            Coord(FloatLongitude(3.0), FloatLatitude(3.0)),
-            Coord(FloatLongitude(4.0), FloatLatitude(4.0)),
+            Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
+            Coord(FloatLongitude{1.0}, FloatLatitude{1.0}),
+            Coord(FloatLongitude{2.0}, FloatLatitude{2.0}),
+            Coord(FloatLongitude{3.0}, FloatLatitude{3.0}),
+            Coord(FloatLongitude{4.0}, FloatLatitude{4.0}),
         },
         {Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4)});
 
@@ -458,14 +458,14 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
 
     {
         RectangleInt2D bbox = {
-            FloatLongitude(0.5), FloatLongitude(1.5), FloatLatitude(0.5), FloatLatitude(1.5)};
+            FloatLongitude{0.5}, FloatLongitude{1.5}, FloatLatitude{0.5}, FloatLatitude{1.5}};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 2);
     }
 
     {
         RectangleInt2D bbox = {
-            FloatLongitude(1.5), FloatLongitude(3.5), FloatLatitude(1.5), FloatLatitude(3.5)};
+            FloatLongitude{1.5}, FloatLongitude{3.5}, FloatLatitude{1.5}, FloatLatitude{3.5}};
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 3);
     }

@@ -68,8 +68,8 @@ struct InternalExtractorEdge
                                    bool is_split,
                                    LaneDescriptionID lane_description,
                                    guidance::RoadClassificationData road_classification)
-        : result(OSMNodeID(source),
-                 OSMNodeID(target),
+        : result(source,
+                 target,
                  name_id,
                  0,
                  forward,

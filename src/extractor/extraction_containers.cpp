@@ -344,9 +344,9 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
         BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
         BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
-                     util::FixedLatitude(std::numeric_limits<int>::min()));
+                     util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
         BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
-                     util::FixedLongitude(std::numeric_limits<int>::min()));
+                     util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
 
         const double distance = util::coordinate_calculation::greatCircleDistance(
             edge_iterator->source_coordinate,
@@ -652,14 +652,14 @@ void ExtractionContainers::PrepareRestrictions()
            restrictions_iterator != restrictions_list_end)
     {
         if (way_start_and_end_iterator->way_id <
-            OSMWayID(restrictions_iterator->restriction.from.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
         {
             ++way_start_and_end_iterator;
             continue;
         }
 
         if (way_start_and_end_iterator->way_id >
-            OSMWayID(restrictions_iterator->restriction.from.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
         {
             util::SimpleLogger().Write(LogLevel::logWARNING)
                 << "Restriction references invalid way: "
@@ -670,9 +670,9 @@ void ExtractionContainers::PrepareRestrictions()
         }
 
         BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID(restrictions_iterator->restriction.from.way));
+                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
         // we do not remap the via id yet, since we will need it for the to node as well
-        const OSMNodeID via_node_id = OSMNodeID(restrictions_iterator->restriction.via.node);
+        const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
         // check if via is actually valid, if not invalidate
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
@@ -686,11 +686,11 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
 
-        if (OSMNodeID(way_start_and_end_iterator->first_segment_source_id) == via_node_id)
+        if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
         {
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
+                way_start_and_end_iterator->first_segment_target_id);
             if (id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)
@@ -703,11 +703,11 @@ void ExtractionContainers::PrepareRestrictions()
             }
             restrictions_iterator->restriction.from.node = id_iter->second;
         }
-        else if (OSMNodeID(way_start_and_end_iterator->last_segment_target_id) == via_node_id)
+        else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
         {
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
+                way_start_and_end_iterator->last_segment_source_id);
             if (id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)
@@ -746,7 +746,7 @@ void ExtractionContainers::PrepareRestrictions()
            restrictions_iterator != restrictions_list_end_)
     {
         if (way_start_and_end_iterator->way_id <
-            OSMWayID(restrictions_iterator->restriction.to.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
         {
             ++way_start_and_end_iterator;
             continue;
@@ -758,7 +758,7 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
         if (way_start_and_end_iterator->way_id >
-            OSMWayID(restrictions_iterator->restriction.to.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
         {
             util::SimpleLogger().Write(LogLevel::logDEBUG)
                 << "Restriction references invalid way: "
@@ -768,18 +768,18 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
         BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID(restrictions_iterator->restriction.to.way));
-        const OSMNodeID via_node_id = OSMNodeID(restrictions_iterator->restriction.via.node);
+                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
+        const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
         // assign new via node id
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
         BOOST_ASSERT(via_id_iter != external_to_internal_node_id_map.end());
         restrictions_iterator->restriction.via.node = via_id_iter->second;
 
-        if (OSMNodeID(way_start_and_end_iterator->first_segment_source_id) == via_node_id)
+        if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
+                way_start_and_end_iterator->first_segment_target_id);
             if (to_id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)
@@ -792,10 +792,10 @@ void ExtractionContainers::PrepareRestrictions()
             }
             restrictions_iterator->restriction.to.node = to_id_iter->second;
         }
-        else if (OSMNodeID(way_start_and_end_iterator->last_segment_target_id) == via_node_id)
+        else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
+                way_start_and_end_iterator->last_segment_source_id);
             if (to_id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)
