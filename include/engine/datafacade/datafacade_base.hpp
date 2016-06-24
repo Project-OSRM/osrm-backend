@@ -7,6 +7,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/exception.hpp"
 #include "util/guidance/bearing_class.hpp"
@@ -137,6 +138,11 @@ class BaseDataFacade
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const int bearing,
                                                       const int bearing_range) const = 0;
+
+    virtual bool hasLaneData(const EdgeID id) const = 0;
+    virtual util::guidance::LaneTupelIdPair GetLaneData(const EdgeID id) const = 0;
+    virtual extractor::guidance::TurnLaneDescription
+    GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;
 
     virtual unsigned GetCheckSum() const = 0;
 

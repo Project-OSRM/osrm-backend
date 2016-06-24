@@ -61,6 +61,8 @@ struct ExtractorConfig
         output_file_name = basepath + ".osrm";
         restriction_file_name = basepath + ".osrm.restrictions";
         names_file_name = basepath + ".osrm.names";
+        turn_lane_descriptions_file_name = basepath + ".osrm.tls";
+        turn_lane_data_file_name = basepath + ".osrm.tld";
         timestamp_file_name = basepath + ".osrm.timestamp";
         geometry_output_path = basepath + ".osrm.geometry";
         node_output_path = basepath + ".osrm.nodes";
@@ -82,6 +84,8 @@ struct ExtractorConfig
     std::string output_file_name;
     std::string restriction_file_name;
     std::string names_file_name;
+    std::string turn_lane_data_file_name;
+    std::string turn_lane_descriptions_file_name;
     std::string timestamp_file_name;
     std::string geometry_output_path;
     std::string edge_output_path;

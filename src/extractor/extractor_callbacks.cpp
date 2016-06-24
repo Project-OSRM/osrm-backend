@@ -1,14 +1,17 @@
+#include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
-
-#include "extractor/external_memory_node.hpp"
+#include "extractor/extractor_callbacks.hpp"
 #include "extractor/restriction.hpp"
+
 #include "util/for_each_pair.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/simple_logger.hpp"
 
-#include "extractor/extractor_callbacks.hpp"
+#include <boost/numeric/conversion/cast.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <osmium/osm.hpp>
 
@@ -24,11 +27,15 @@ namespace osrm
 namespace extractor
 {
 
+using TurnLaneDescription = guidance::TurnLaneDescription;
+namespace TurnLaneType = guidance::TurnLaneType;
+
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
     : external_memory(extraction_containers)
 {
     // we reserved 0, 1, 2 for the empty case
     string_map[MapKey("", "")] = 0;
+    lane_description_map[TurnLaneDescription()] = 0;
 }
 
 /**
@@ -140,12 +147,109 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         road_classification.road_class = guidance::functionalRoadClassFromTag(data);
     }
 
+    const auto laneStringToDescription = [](std::string lane_string) -> TurnLaneDescription {
+        if (lane_string.empty())
+            return {};
+
+        TurnLaneDescription lane_description;
+
+        typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+        boost::char_separator<char> sep("|&", "", boost::keep_empty_tokens);
+        boost::char_separator<char> inner_sep(";", "");
+        tokenizer tokens(lane_string, sep);
+
+        const constexpr std::size_t num_osm_tags = 11;
+        const constexpr char *osm_lane_strings[num_osm_tags] = {"none",
+                                                                "through",
+                                                                "sharp_left",
+                                                                "left",
+                                                                "slight_left",
+                                                                "slight_right",
+                                                                "right",
+                                                                "sharp_right",
+                                                                "reverse",
+                                                                "merge_to_left",
+                                                                "merge_to_right"};
+        const constexpr TurnLaneType::Mask masks_by_osm_string[num_osm_tags + 1] = {
+            TurnLaneType::none,
+            TurnLaneType::straight,
+            TurnLaneType::sharp_left,
+            TurnLaneType::left,
+            TurnLaneType::slight_left,
+            TurnLaneType::slight_right,
+            TurnLaneType::right,
+            TurnLaneType::sharp_right,
+            TurnLaneType::uturn,
+            TurnLaneType::merge_to_left,
+            TurnLaneType::merge_to_right,
+            TurnLaneType::empty}; // fallback, if string not found
+
+        for (auto iter = tokens.begin(); iter != tokens.end(); ++iter)
+        {
+            tokenizer inner_tokens(*iter, inner_sep);
+            guidance::TurnLaneType::Mask lane_mask = inner_tokens.begin() == inner_tokens.end()
+                                                         ? TurnLaneType::none
+                                                         : TurnLaneType::empty;
+            for (auto token_itr = inner_tokens.begin(); token_itr != inner_tokens.end();
+                 ++token_itr)
+            {
+                auto position = std::find(osm_lane_strings, osm_lane_strings + num_osm_tags, *token_itr);
+                const auto translated_mask =
+                    masks_by_osm_string[std::distance(osm_lane_strings, position)];
+                if (translated_mask == TurnLaneType::empty)
+                {
+                    // if we have unsupported tags, don't handle them
+                    util::SimpleLogger().Write(logDEBUG) << "Unsupported lane tag found: \""
+                                                         << *token_itr << "\"";
+                    return {};
+                }
+                BOOST_ASSERT((lane_mask & translated_mask) == 0); // make sure the mask is valid
+                lane_mask |= translated_mask;
+            }
+            // add the lane to the description
+            lane_description.push_back(lane_mask);
+        }
+        return lane_description;
+    };
+
+    // convert the lane description into an ID and, if necessary, remembr the description in the
+    // description_map
+    const auto requestId = [&](std::string lane_string) {
+        if( lane_string.empty() )
+            return INVALID_LANE_DESCRIPTIONID;
+        TurnLaneDescription lane_description = laneStringToDescription(std::move(lane_string));
+
+        const auto lane_description_itr = lane_description_map.find(lane_description);
+        if (lane_description_itr == lane_description_map.end())
+        {
+            const LaneDescriptionID new_id =
+                boost::numeric_cast<LaneDescriptionID>(lane_description_map.size());
+            lane_description_map[lane_description] = new_id;
+
+            // since we are getting a new ID, we can augment the current offsets
+
+            // and store the turn lane masks, sadly stxxl does not support insert
+            for (const auto mask : lane_description)
+                external_memory.turn_lane_masks.push_back(mask);
+
+            external_memory.turn_lane_offsets.push_back(external_memory.turn_lane_offsets.back() +
+                                                        lane_description.size());
+
+            return new_id;
+        }
+        else
+        {
+            return lane_description_itr->second;
+        }
+    };
+
     // Deduplicates street names and street destination names based on the street_map map.
     // In case we do not already store the name, inserts (name, id) tuple and return id.
     // Otherwise fetches the id based on the name and returns it without insertion.
+    const auto turn_lane_id_forward = requestId(parsed_way.turn_lanes_forward);
+    const auto turn_lane_id_backward = requestId(parsed_way.turn_lanes_backward);
 
     const constexpr auto MAX_STRING_LENGTH = 255u;
-
     // Get the unique identifier for the street name
     // Get the unique identifier for the street name and destination
     const auto name_iterator = string_map.find(MapKey(parsed_way.name, parsed_way.destinations));
@@ -191,7 +295,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                             (parsed_way.backward_speed > 0) &&
                             (TRAVEL_MODE_INACCESSIBLE != parsed_way.backward_travel_mode) &&
                             ((parsed_way.forward_speed != parsed_way.backward_speed) ||
-                             (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode));
+                             (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode) ||
+                             (turn_lane_id_forward != turn_lane_id_backward));
 
     external_memory.used_node_id_list.reserve(external_memory.used_node_id_list.size() +
                                               input_way.nodes().size());
@@ -224,6 +329,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                           parsed_way.is_startpoint,
                                           parsed_way.backward_travel_mode,
                                           false,
+                                          turn_lane_id_backward,
                                           road_classification));
             });
 
@@ -254,6 +360,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                           parsed_way.is_startpoint,
                                           parsed_way.forward_travel_mode,
                                           split_edge,
+                                          turn_lane_id_forward,
                                           road_classification));
             });
         if (split_edge)
@@ -275,6 +382,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                               parsed_way.is_startpoint,
                                               parsed_way.backward_travel_mode,
                                               true,
+                                              turn_lane_id_backward,
                                               road_classification));
                 });
         }

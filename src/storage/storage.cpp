@@ -1,4 +1,3 @@
-#include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -9,6 +8,7 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
+#include "storage/storage.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
@@ -147,6 +147,18 @@ int Storage::Run()
     name_stream.read((char *)&number_of_chars, sizeof(unsigned));
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::NAME_CHAR_LIST, number_of_chars);
 
+    std::vector<std::uint32_t> lane_description_offsets;
+    std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
+    if (!util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
+                                         lane_description_offsets,
+                                         lane_description_masks))
+        throw util::exception("Could not open read lane descriptions from: " +
+                              config.turn_lane_description_path.string());
+    shared_layout_ptr->SetBlockSize<std::uint32_t>(SharedDataLayout::LANE_DESCRIPTION_OFFSETS,
+                                                   lane_description_offsets.size());
+    shared_layout_ptr->SetBlockSize<extractor::guidance::TurnLaneType::Mask>(
+        SharedDataLayout::LANE_DESCRIPTION_MASKS, lane_description_masks.size());
+
     // Loading information for original edges
     boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
     if (!edges_input_stream)
@@ -166,6 +178,8 @@ int Storage::Run()
                                                            number_of_original_edges);
     shared_layout_ptr->SetBlockSize<extractor::guidance::TurnInstruction>(
         SharedDataLayout::TURN_INSTRUCTION, number_of_original_edges);
+    shared_layout_ptr->SetBlockSize<LaneDataID>(SharedDataLayout::LANE_DATA_ID,
+                                                number_of_original_edges);
     shared_layout_ptr->SetBlockSize<EntryClassID>(SharedDataLayout::ENTRY_CLASSID,
                                                   number_of_original_edges);
 
@@ -368,6 +382,14 @@ int Storage::Run()
                              sizeof(bearing_class_table[0]) * num_bearings);
     shared_layout_ptr->SetBlockSize<DiscreteBearing>(SharedDataLayout::BEARING_VALUES,
                                                      num_bearings);
+
+    // Loading turn lane data
+    boost::filesystem::ifstream lane_data_stream(config.turn_lane_data_path, std::ios::binary);
+    std::uint64_t lane_tupel_count = 0;
+    lane_data_stream.read(reinterpret_cast<char *>(&lane_tupel_count), sizeof(lane_tupel_count));
+    shared_layout_ptr->SetBlockSize<util::guidance::LaneTupelIdPair>(
+        SharedDataLayout::TURN_LANE_DATA, lane_tupel_count);
+
     if (!static_cast<bool>(intersection_stream))
         throw util::exception("Failed to read bearing values from " +
                               config.intersection_class_path.string());
@@ -424,7 +446,7 @@ int Storage::Run()
 
     char *name_char_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
         shared_memory_ptr, SharedDataLayout::NAME_CHAR_LIST);
-    unsigned temp_length;
+    unsigned temp_length = 0;
     name_stream.read((char *)&temp_length, sizeof(unsigned));
 
     BOOST_ASSERT_MSG(shared_layout_ptr->AlignBlockSize(temp_length) ==
@@ -436,8 +458,42 @@ int Storage::Run()
         name_stream.read(name_char_ptr,
                          shared_layout_ptr->GetBlockSize(SharedDataLayout::NAME_CHAR_LIST));
     }
-
     name_stream.close();
+
+    // make sure do write canary...
+    auto *turn_lane_data_ptr =
+        shared_layout_ptr->GetBlockPtr<util::guidance::LaneTupelIdPair, true>(
+            shared_memory_ptr, SharedDataLayout::TURN_LANE_DATA);
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_LANE_DATA) > 0)
+    {
+        lane_data_stream.read(reinterpret_cast<char *>(turn_lane_data_ptr),
+                              shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_LANE_DATA));
+    }
+    lane_data_stream.close();
+
+    auto *turn_lane_offset_ptr = shared_layout_ptr->GetBlockPtr<std::uint32_t, true>(
+        shared_memory_ptr, SharedDataLayout::LANE_DESCRIPTION_OFFSETS);
+    if (!lane_description_offsets.empty())
+    {
+        BOOST_ASSERT(shared_layout_ptr->GetBlockSize(SharedDataLayout::LANE_DESCRIPTION_OFFSETS) >=
+                     sizeof(lane_description_offsets[0]) * lane_description_offsets.size());
+        std::copy(
+            lane_description_offsets.begin(), lane_description_offsets.end(), turn_lane_offset_ptr);
+        std::vector<std::uint32_t> tmp;
+        lane_description_offsets.swap(tmp);
+    }
+
+    auto *turn_lane_mask_ptr =
+        shared_layout_ptr->GetBlockPtr<extractor::guidance::TurnLaneType::Mask, true>(
+            shared_memory_ptr, SharedDataLayout::LANE_DESCRIPTION_MASKS);
+    if (!lane_description_masks.empty())
+    {
+        BOOST_ASSERT(shared_layout_ptr->GetBlockSize(SharedDataLayout::LANE_DESCRIPTION_MASKS) >=
+                     sizeof(lane_description_masks[0]) * lane_description_masks.size());
+        std::copy(lane_description_masks.begin(), lane_description_masks.end(), turn_lane_mask_ptr);
+        std::vector<extractor::guidance::TurnLaneType::Mask> tmp;
+        lane_description_masks.swap(tmp);
+    }
 
     // load original edge information
     NodeID *via_node_ptr = shared_layout_ptr->GetBlockPtr<NodeID, true>(
@@ -449,6 +505,9 @@ int Storage::Run()
     extractor::TravelMode *travel_mode_ptr =
         shared_layout_ptr->GetBlockPtr<extractor::TravelMode, true>(shared_memory_ptr,
                                                                     SharedDataLayout::TRAVEL_MODE);
+
+    LaneDataID *lane_data_id_ptr = shared_layout_ptr->GetBlockPtr<LaneDataID, true>(
+        shared_memory_ptr, SharedDataLayout::LANE_DATA_ID);
 
     extractor::guidance::TurnInstruction *turn_instructions_ptr =
         shared_layout_ptr->GetBlockPtr<extractor::guidance::TurnInstruction, true>(
@@ -464,6 +523,7 @@ int Storage::Run()
         via_node_ptr[i] = current_edge_data.via_node;
         name_id_ptr[i] = current_edge_data.name_id;
         travel_mode_ptr[i] = current_edge_data.travel_mode;
+        lane_data_id_ptr[i] = current_edge_data.lane_data_id;
         turn_instructions_ptr[i] = current_edge_data.turn_instruction;
         entry_class_id_ptr[i] = current_edge_data.entry_classid;
     }
@@ -514,8 +574,9 @@ int Storage::Run()
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_DATA);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_DATA) > 0)
     {
-        std::cout << "Copying " << (m_datasource_name_data.end() - m_datasource_name_data.begin())
-                  << " chars into name data ptr\n";
+        util::SimpleLogger().Write()
+            << "Copying " << (m_datasource_name_data.end() - m_datasource_name_data.begin())
+            << " chars into name data ptr";
         std::copy(
             m_datasource_name_data.begin(), m_datasource_name_data.end(), datasource_name_data_ptr);
     }

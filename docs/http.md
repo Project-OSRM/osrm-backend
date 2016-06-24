@@ -451,16 +451,20 @@ step.
  "duration":15.6,
  "name":"Lortzingstraße",
  "maneuver":{
-     "type":"depart",
-     "modifier":"left"
- },
+     "type":"turn",
+     "modifier":"right",
+     "lanes":[
+         {"indication":"left", "valid":"false"},
+         {"indication":"right", "valid":"true"}
+     ]},
  "geometry":"{lu_IypwpAVrAvAdI",
  "mode":"driving",
  "intersections":[
     {"location":[13.39677,52.54366],
+    "in":2,
     "out":1,
-    "bearings":[66,246],
-    "entry":["true","true"]},
+    "bearings":[10,184,270],
+    "entry":[false,"true","true"]},
     {"location":[13.394718,52.543096],
     "in":0,
     "out":2,
@@ -481,6 +485,10 @@ step.
   direction of travel immediately after the maneuver.
 - `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
    Types  unknown to the client should be handled like the `turn` type, the existance of correct `modifier` values is guranteed.
+- `lanes`: the available turn lanes at the turn
+  - `indication`: a indication (e.g. marking on the road) specifying the turn lane. Multiple indications may be combined with `;` (e.g. straight;left).
+  - `valid`: a boolean flag indicating whether the lane is a valid choice in the maneuver
+
   
   | `type`            | Description                                                  |
   |-------------------|--------------------------------------------------------------|
@@ -535,6 +543,20 @@ step.
   | else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
   
 
+- `indication`
+  
+  | `value`                | Description                                                                                                               |
+  |------------------------|---------------------------------------------------------------------------------------------------------------------------|
+  | `none`                 | No dedicated indication is shown.                                                                                         |
+  | `sharp right`          | An indication indicating a sharp right turn (i.e. strongly bend arrow).                                                   |
+  | `right`                | An indication indicating a right turn (i.e. bend arrow).                                                                  |
+  | `sharp right`          | An indication indicating a slight right turn (i.e. slightly bend arrow).                                                  |
+  | `straight`             | No dedicated indication is shown (i.e. straight arrow).                                                                   |
+  | `sharp left`           | An indication indicating a sharp left turn (i.e. strongly bend arrow).                                                    |
+  | `left`                 | An indication indicating a left turn (i.e. bend arrow).                                                                   |
+  | `sharp left`           | An indication indicating a slight left turn (i.e. slightly bend arrow).                                                   |
+  | `uturn`                | An indication signaling the possibility to reverse (i.e. fully bend arrow).                                               |
+  
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.
 
 ### Intersections

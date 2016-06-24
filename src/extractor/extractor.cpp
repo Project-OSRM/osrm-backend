@@ -239,6 +239,7 @@ int Extractor::run()
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,
+                                          config.turn_lane_descriptions_file_name,
                                           main_context.state);
 
         WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
@@ -504,6 +505,14 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     util::NameTable name_table(config.names_file_name);
 
+    std::vector<std::uint32_t> turn_lane_offsets;
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
+    if( !util::deserializeAdjacencyArray(
+        config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks) )
+    {
+        util::SimpleLogger().Write(logWARNING) << "Reading Turn Lane Masks failed.";
+    }
+
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
         compressed_edge_container,
@@ -512,9 +521,12 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
         internal_to_external_node_map,
         profile_properties,
-        name_table);
+        name_table,
+        turn_lane_offsets,
+        turn_lane_masks);
 
     edge_based_graph_factory.Run(config.edge_output_path,
+                                 config.turn_lane_data_file_name,
                                  lua_state,
                                  config.edge_segment_lookup_path,
                                  config.edge_penalty_path,

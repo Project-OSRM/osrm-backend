@@ -48,19 +48,15 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                          compressed_edge_container,
                          name_table,
                          street_name_suffix_table),
-      motorway_handler(node_based_graph,
-                       node_info_list,
-                       name_table,
-                       street_name_suffix_table,
-                       intersection_generator),
+      motorway_handler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
       turn_handler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
 {
 }
 
-std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const EdgeID via_eid) const
+Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
+                                           const EdgeID via_eid,
+                                           Intersection intersection) const
 {
-    auto intersection = intersection_generator(from_nid, via_eid);
-
     // Roundabouts are a main priority. If there is a roundabout instruction present, we process the
     // turn as a roundabout
     if (roundabout_handler.canProcess(from_nid, via_eid, intersection))
@@ -81,7 +77,6 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const E
             intersection = turn_handler(from_nid, via_eid, std::move(intersection));
         }
     }
-
     // Handle sliproads
     intersection = handleSliproads(via_eid, std::move(intersection));
 
@@ -94,6 +89,12 @@ std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const E
         });
     }
 
+    return intersection;
+}
+
+std::vector<TurnOperation>
+TurnAnalysis::transformIntersectionIntoTurns(const Intersection &intersection) const
+{
     std::vector<TurnOperation> turns;
     for (auto road : intersection)
         if (road.entry_allowed)
@@ -233,6 +234,8 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
 
     return intersection;
 }
+
+const IntersectionGenerator &TurnAnalysis::getGenerator() const { return intersection_generator; }
 
 } // namespace guidance
 } // namespace extractor

@@ -145,14 +145,16 @@ Feature: Estimation of travel time
 
     Scenario: Time of travel on a series of ways
         Given the node map
-            | a | b |   |
-            |   | c | d |
+            | a | b | e |
+            | f | c | d |
 
         And the ways
             | nodes | highway |
             | ab    | primary |
             | bc    | primary |
             | cd    | primary |
+            | be    | primary |
+            | cf    | primary |
 
         When I route I should get
             | from | to | route       | time    |

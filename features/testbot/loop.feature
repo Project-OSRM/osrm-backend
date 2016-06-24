@@ -75,12 +75,12 @@ Feature: Avoid weird loops caused by rounding errors
         And the node map
             | a |   |   |
             | b | e |   |
-            |   |   | 1 |
+            | h |   | 1 |
             |   |   |   |
             |   |   | 2 |
-            |   |   |   |
+            | g |   |   |
             |   | c | f |
-            |   | d |   |
+            | d |   |   |
 
         And the ways
             | nodes | highway     |
@@ -90,6 +90,8 @@ Feature: Avoid weird loops caused by rounding errors
             | be    | primary     |
             | ef    | primary     |
             | cf    | primary     |
+            | cg    | primary     |
+            | bh    | primary     |
 
         When I route I should get
             | waypoints | route                   |

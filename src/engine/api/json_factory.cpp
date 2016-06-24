@@ -7,6 +7,7 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -47,7 +48,7 @@ const constexpr char *turn_type_names[] = {
     "invalid",         "new name",   "continue", "turn",        "merge",
     "on ramp",         "off ramp",   "fork",     "end of road", "notification",
     "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
-    "roundabout turn", "invalid",    "invalid",  "invalid",     "invalid",
+    "roundabout turn", "use lane",   "invalid",  "invalid",     "invalid",
     "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
     "invalid"};
 
@@ -56,15 +57,41 @@ const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 // Check whether to include a modifier in the result of the API
 inline bool isValidModifier(const guidance::StepManeuver maneuver)
 {
-    if (maneuver.waypoint_type != guidance::WaypointType::None &&
-        maneuver.instruction.direction_modifier == DirectionModifier::UTurn)
-        return false;
-    return true;
+    return (maneuver.waypoint_type == guidance::WaypointType::None ||
+            maneuver.instruction.direction_modifier != DirectionModifier::UTurn);
+}
+
+inline bool hasValidLanes(const guidance::StepManeuver maneuver)
+{
+    return maneuver.lanes.lanes_in_turn > 0;
 }
 
 std::string instructionTypeToString(const TurnType::Enum type)
 {
     return turn_type_names[static_cast<std::size_t>(type)];
+}
+
+util::json::Array lanesFromManeuver(const guidance::StepManeuver &maneuver)
+{
+    BOOST_ASSERT(maneuver.lanes.lanes_in_turn >= 1);
+    util::json::Array result;
+    LaneID lane_id = maneuver.lane_description.size();
+
+    for (const auto &lane_desc : maneuver.lane_description)
+    {
+        --lane_id;
+        util::json::Object lane;
+        lane.values["indication"] = extractor::guidance::TurnLaneType::toString(lane_desc);
+        if (lane_id >= maneuver.lanes.first_lane_from_the_right &&
+            lane_id < maneuver.lanes.first_lane_from_the_right + maneuver.lanes.lanes_in_turn)
+            lane.values["valid"] = util::json::True();
+        else
+            lane.values["valid"] = util::json::False();
+
+        result.values.push_back(lane);
+    }
+
+    return result;
 }
 
 std::string instructionModifierToString(const DirectionModifier::Enum modifier)
@@ -147,6 +174,9 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     if (detail::isValidModifier(maneuver))
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
+
+    if (detail::hasValidLanes(maneuver))
+        step_maneuver.values["lanes"] = detail::lanesFromManeuver(maneuver);
 
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);

@@ -1,5 +1,5 @@
-#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
@@ -11,6 +11,7 @@
 
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include <boost/assert.hpp>
@@ -39,12 +40,15 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<const RestrictionMap> restriction_map,
     const std::vector<QueryNode> &node_info_list,
     ProfileProperties profile_properties,
-    const util::NameTable &name_table)
+    const util::NameTable &name_table,
+    const std::vector<std::uint32_t> &turn_lane_offsets,
+    const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks)
     : m_max_edge_id(0), m_node_info_list(node_info_list),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
-      profile_properties(std::move(profile_properties)), name_table(name_table)
+      profile_properties(std::move(profile_properties)), name_table(name_table),
+      turn_lane_offsets(turn_lane_offsets), turn_lane_masks(turn_lane_masks)
 {
 }
 
@@ -179,6 +183,7 @@ void EdgeBasedGraphFactory::FlushVectorToStream(
 }
 
 void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
+                                const std::string &turn_lane_data_filename,
                                 lua_State *lua_state,
                                 const std::string &edge_segment_lookup_filename,
                                 const std::string &edge_penalty_filename,
@@ -195,6 +200,7 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
 
     TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(original_edge_data_filename,
+                              turn_lane_data_filename,
                               lua_state,
                               edge_segment_lookup_filename,
                               edge_penalty_filename,
@@ -293,6 +299,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 /// Actually it also generates OriginalEdgeData and serializes them...
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const std::string &original_edge_data_filename,
+    const std::string &turn_lane_data_filename,
     lua_State *lua_state,
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_fixed_penalties_filename,
@@ -339,10 +346,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          m_compressed_edge_container,
                                          name_table,
                                          street_name_suffix_table);
+    guidance::lanes::TurnLaneHandler turn_lane_handler(
+        *m_node_based_graph, turn_lane_offsets, turn_lane_masks, m_node_info_list, turn_analysis);
 
     bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
 
+    guidance::LaneDataIdMap lane_data_map;
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         progress.PrintStatus(node_u);
@@ -353,19 +363,23 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 continue;
             }
 
-            ++node_based_edge_counter;
-            auto possible_turns = turn_analysis.getTurns(node_u, edge_from_u);
-
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
+            ++node_based_edge_counter;
+            auto intersection = turn_analysis.getIntersection(node_u, edge_from_u);
+            intersection =
+                turn_analysis.assignTurnTypes(node_u, edge_from_u, std::move(intersection));
+
+            intersection = turn_lane_handler.assignTurnLanes(
+                node_u, edge_from_u, std::move(intersection), lane_data_map);
+            const auto possible_turns = turn_analysis.transformIntersectionIntoTurns(intersection);
 
             // the entry class depends on the turn, so we have to classify the interesction for
             // every edge
-            const auto turn_classification =
-                classifyIntersection(node_v,
-                                     turn_analysis.getIntersection(node_u, edge_from_u),
-                                     *m_node_based_graph,
-                                     m_compressed_edge_container,
-                                     m_node_info_list);
+            const auto turn_classification = classifyIntersection(node_v,
+                                                                  intersection,
+                                                                  *m_node_based_graph,
+                                                                  m_compressed_edge_container,
+                                                                  m_node_info_list);
 
             const auto entry_class_id = [&](const util::guidance::EntryClass entry_class) {
                 if (0 == entry_class_hash.count(entry_class))
@@ -428,6 +442,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 original_edge_data_vector.emplace_back(
                     m_compressed_edge_container.GetPositionForID(edge_from_u),
                     edge_data1.name_id,
+                    turn.lane_data_id,
                     turn_instruction,
                     entry_class_id,
                     edge_data1.travel_mode);
@@ -531,6 +546,22 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     util::SimpleLogger().Write() << "Created " << entry_class_hash.size() << " entry classes and "
                                  << bearing_class_hash.size() << " Bearing Classes";
+
+    util::SimpleLogger().Write() << "Writing Turn Lane Data to File...";
+    std::ofstream turn_lane_data_file(turn_lane_data_filename.c_str(), std::ios::binary);
+    std::vector<util::guidance::LaneTupelIdPair> lane_data(lane_data_map.size());
+    // extract lane data sorted by ID
+    for (auto itr : lane_data_map)
+        lane_data[itr.second] = itr.first;
+
+    std::uint64_t size = lane_data.size();
+    turn_lane_data_file.write(reinterpret_cast<const char *>(&size), sizeof(size));
+
+    if (!lane_data.empty())
+        turn_lane_data_file.write(reinterpret_cast<const char *>(&lane_data[0]),
+                                  sizeof(util::guidance::LaneTupelIdPair) * lane_data.size());
+
+    util::SimpleLogger().Write() << "done.";
 
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
