@@ -207,7 +207,6 @@ function way_function (way, result)
   local foot = way:get_value_by_key("foot")
   local foot_forward = way:get_value_by_key("foot:forward")
   local foot_backward = way:get_value_by_key("foot:backward")
-  local surface = way:get_value_by_key("surface")
   local bicycle = way:get_value_by_key("bicycle")
 
   -- name
@@ -385,17 +384,12 @@ function way_function (way, result)
     result.backward_speed = walking_speed
   end
 
-  -- surfaces
-  if surface then
-    surface_speed = surface_speeds[surface]
-    if surface_speed then
-      if result.forward_speed > 0 then
-        result.forward_speed = surface_speed
-      end
-      if result.backward_speed > 0 then
-        result.backward_speed  = surface_speed
-      end
-    end
+  -- reduce speed on bad surfaces
+  local surface = way:get_value_by_key("surface")
+
+  if surface and surface_speeds[surface] then
+    result.forward_speed = math.min(surface_speeds[surface], result.forward_speed)
+    result.backward_speed = math.min(surface_speeds[surface], result.backward_speed)
   end
 
   -- maxspeed
