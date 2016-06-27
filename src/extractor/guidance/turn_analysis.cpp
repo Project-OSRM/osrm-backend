@@ -1,6 +1,6 @@
-#include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -164,7 +164,6 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
         });
 
     const bool hasNext = next_road != intersection.end();
-
     if (!hasNext)
     {
         return intersection;
@@ -177,10 +176,21 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
         return intersection;
     }
 
-    const auto next_road_next_intersection =
-        intersection_generator(intersection_node_id, next_road->turn.eid);
+    auto next_intersection_node = node_based_graph.GetTarget(next_road->turn.eid);
 
-    const auto next_intersection_node = node_based_graph.GetTarget(next_road->turn.eid);
+    const auto next_road_next_intersection = [&]() {
+        auto intersection = intersection_generator(intersection_node_id, next_road->turn.eid);
+        auto in_edge = next_road->turn.eid;
+        //skip over traffic lights
+        if(intersection.size() == 2)
+        {
+            const auto node = node_based_graph.GetTarget(in_edge);
+            in_edge = intersection[1].turn.eid;
+            next_intersection_node = node_based_graph.GetTarget(in_edge);
+            intersection = intersection_generator(node, in_edge);
+        }
+        return intersection;
+    }();
 
     std::unordered_set<NameID> target_road_names;
 
@@ -194,7 +204,18 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
     {
         if (linkTest(road))
         {
-            auto target_intersection = intersection_generator(intersection_node_id, road.turn.eid);
+            const auto target_intersection = [&](NodeID node, EdgeID eid) {
+                auto intersection = intersection_generator(node, eid);
+                //skip over traffic lights
+                if(intersection.size() == 2)
+                {
+                    node = node_based_graph.GetTarget(eid);
+                    eid = intersection[1].turn.eid;
+                    intersection = intersection_generator(node, eid);
+                }
+                return intersection;
+            }(intersection_node_id, road.turn.eid);
+
             for (const auto &candidate_road : target_intersection)
             {
                 const auto &candidate_data = node_based_graph.GetEdgeData(candidate_road.turn.eid);
