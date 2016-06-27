@@ -47,6 +47,7 @@ template <class T> double lonToDouble(T const &object)
 // Luabind does not like memr funs: instead of casting to the function's signature (mem fun ptr) we
 // simply wrap it
 auto get_nodes_for_way(const osmium::Way &way) -> decltype(way.nodes()) { return way.nodes(); }
+auto printID(const osmium::object_id_type &id) -> std::string{ return std::to_string(id); }
 
 // Error handler
 int luaErrorCallback(lua_State *state)
@@ -90,6 +91,9 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                       luabind::value("river_up", TRAVEL_MODE_RIVER_UP),
                       luabind::value("river_down", TRAVEL_MODE_RIVER_DOWN),
                       luabind::value("route", TRAVEL_MODE_ROUTE)],
+         luabind::class_<osmium::object_id_type>("ID")
+             .def(luabind::constructor<>())
+             .def("print",printID),
          luabind::class_<SourceContainer>("sources")
              .def(luabind::constructor<>())
              .def("load", &SourceContainer::LoadRasterSource)
@@ -158,6 +162,7 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
              .def("get_value_by_key", &osmium::Way::get_value_by_key)
              .def("get_value_by_key", &get_value_by_key<osmium::Way>)
              .def("id", &osmium::Way::id)
+             .def("printID",&printID)
              .def("get_nodes", get_nodes_for_way, luabind::return_stl_iterator),
          luabind::class_<InternalExtractorEdge>("EdgeSource")
              .def_readonly("source_coordinate", &InternalExtractorEdge::source_coordinate)
