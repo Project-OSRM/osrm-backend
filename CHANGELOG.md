@@ -1,5 +1,7 @@
 # 5.3.0 RC2
-    - Includes a bugfix for broken profiles on lane-extraction
+    Changes from 5.3.0-rc.1
+        - Bugfixes
+            - Fixes invalid checks in the lane-extraction part of the car profile
 
 # 5.3.0 RC1
     - API
