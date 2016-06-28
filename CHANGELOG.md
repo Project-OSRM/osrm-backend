@@ -1,4 +1,7 @@
-# 5.3.0
+# 5.3.0 RC2
+    - Includes a bugfix for broken profiles on lane-extraction
+
+# 5.3.0 RC1
     - API
      - Introduces new `TurnType` in the form of `use lane`. The type indicates that you have to stick to a lane without turning
      - Introduces lanes to the route response. The lane data contains both the markings at the intersection and a flag indicating their involvement in the turn
