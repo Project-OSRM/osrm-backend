@@ -498,6 +498,7 @@ step.
   | `off ramp`       | take a ramp to exit a highway (direction given my `modifier`)  |
   | `fork`           | take the left/right side at a fork depending on `modifier`   |
   | `end of road`    | road ends in a T intersection turn in direction of `modifier`|
+  | `use lane`       | going straight on a specific lane                            |
   | `continue`       | Turn in direction of `modifier` to stay on the same road     |
   | `roundabout`     | traverse roundabout, has additional field `exit` with NR if the roundabout is left. `the modifier specifies the direction of entering the roundabout` |
   | `rotary`         | a larger version of a roundabout, can offer `rotary_name` in addition to the `exit` parameter.  |
