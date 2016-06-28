@@ -55,6 +55,7 @@ option(COVERAGE OFF)
 option(SANITIZER OFF)
 option(ENABLE_LTO "Use LTO if available" ON)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
+option(ENABLE_GOLD_LINKER "Use ld.gold if available" ON)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -116,6 +117,12 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 
   endif()
 endif()
+
+check_cxx_compiler_flag("-Wl,-fuse-ld=gold" GOLD_AVAILABLE)
+if (ENABLE_GOLD_LINKER AND GOLD_AVAILABLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-fuse-ld=gold")
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
   # Check if LTO is available
