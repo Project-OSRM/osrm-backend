@@ -107,6 +107,24 @@ Feature: Turn Lane Guidance
             | a,d       | road,turn,turn | depart,turn right,arrive        | ,straight:false right:true, |
             | a,c       | road,road,road | depart,use lane straight,arrive | ,straight:true right:false, |
 
+    @PROFILE @LANES
+    Scenario: Turn with Bus-Lane but without lanes
+        Given the node map
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   | d |   |   |
+
+        And the ways
+            | nodes | name | lanes:psv |
+            | ab    | road | 1         |
+            | bc    | road | yes       |
+            | bd    | turn |           |
+
+        When I route I should get
+            | waypoints | route          | turns                    |
+            | a,d       | road,turn,turn | depart,turn right,arrive |
+            | a,c       | road,road      | depart,arrive            |
+
     #turn lanes are often drawn at the incoming road, even though the actual turn requires crossing the intersection first
     @todo @WORKAROUND-FIXME @bug
     Scenario: Turn Lanes at Segregated Road

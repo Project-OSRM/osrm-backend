@@ -189,7 +189,7 @@ local function getPSVCounts(way)
     if( psv_backward and psv_backward ~= "" ) then
         bw = tonumber(psv_backward);
         if( bw == nil ) then
-            fw = 0
+            bw = 0
         end
     end
     return fw, bw
@@ -206,10 +206,16 @@ local function getTurnLanes(way)
     local turn_lanes_bw = way:get_value_by_key("turn:lanes:backward")
 
     if( fw_psv ~= 0 or bw_psv ~= 0 ) then
-        turn_lanes = trimLaneString(turn_lanes, bw_psv, fw_psv )
-        turn_lanes_fw = trimLaneString(turn_lanes_fw, bw_psv, fw_psv )
+        if  turn_lanes and turn_lanes ~= "" then
+            turn_lanes = trimLaneString(turn_lanes, bw_psv, fw_psv )
+        end
+        if  turn_lanes_fw and turn_lanes_fw ~= ""  then
+            turn_lanes_fw = trimLaneString(turn_lanes_fw, bw_psv, fw_psv )
+        end
         --backwards turn lanes need to treat bw_psv as fw_psv and vice versa
-        turn_lanes_bw = trimLaneString(turn_lanes_bw, fw_psv, bw_psv )
+        if  turn_lanes_bw and turn_lanes_bw ~= ""  then
+            turn_lanes_bw = trimLaneString(turn_lanes_bw, fw_psv, bw_psv )
+        end
     end
 
     return turn_lanes, turn_lanes_fw, turn_lanes_bw
@@ -427,15 +433,15 @@ function way_function (way, result)
   local turn_lanes_backward = ""
 
   turn_lanes, turn_lanes_forward, turn_lanes_backward = getTurnLanes(way)
-  if( turn_lanes ~= "" ) then
+  if  turn_lanes and turn_lanes ~= "" then
     result.turn_lanes_forward = turn_lanes;
     result.turn_lanes_backward = turn_lanes;
   else
-    if( turn_lanes_forward ~= "" ) then
+    if turn_lanes_forward and turn_lanes_forward ~= ""  then
         result.turn_lanes_forward = turn_lanes_forward;
     end
 
-    if( turn_lanes_backward ~= "" ) then
+    if turn_lanes_backward and turn_lanes_backward ~= "" then
         result.turn_lanes_backward = turn_lanes_backward;
     end
   end
