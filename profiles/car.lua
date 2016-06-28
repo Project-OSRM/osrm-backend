@@ -268,6 +268,8 @@ function node_function (node, result)
 end
 
 function way_function (way, result)
+  local id = way:id()
+  io.write(id:print(), "\n")
   local highway = way:get_value_by_key("highway")
   local route = way:get_value_by_key("route")
   local bridge = way:get_value_by_key("bridge")
