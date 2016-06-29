@@ -111,15 +111,15 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                                                 qi::_1,
                                                 qi::_2)];
 
-        location_rule = (double_ > qi::lit(',') >
-                         double_)[qi::_val = ph::bind(
-                                      [](double lon, double lat) {
-                                          return util::Coordinate(
-                                              util::FixedLongitude(lon * COORDINATE_PRECISION),
-                                              util::FixedLatitude(lat * COORDINATE_PRECISION));
-                                      },
-                                      qi::_1,
-                                      qi::_2)];
+        location_rule =
+            (double_ > qi::lit(',') >
+             double_)[qi::_val = ph::bind(
+                          [](double lon, double lat) {
+                              return util::Coordinate(util::toFixed(util::FloatLongitude{lon}),
+                                                      util::toFixed(util::FloatLatitude{lat}));
+                          },
+                          qi::_1,
+                          qi::_2)];
 
         polyline_rule = qi::as_string[qi::lit("polyline(") > +polyline_chars > ')']
                                      [qi::_val = ph::bind(

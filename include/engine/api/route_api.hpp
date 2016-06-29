@@ -12,6 +12,7 @@
 #include "engine/guidance/assemble_overview.hpp"
 #include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_steps.hpp"
+#include "engine/guidance/lane_processing.hpp"
 #include "engine/guidance/post_processing.hpp"
 
 #include "engine/internal_route_result.hpp"
@@ -149,6 +150,7 @@ class RouteAPI : public BaseAPI
                                                               leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
+                leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
             }
 
@@ -173,6 +175,9 @@ class RouteAPI : public BaseAPI
         for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
         {
             auto &leg_geometry = leg_geometries[idx];
+
+            step_geometries.reserve(step_geometries.size() + legs[idx].steps.size());
+
             std::transform(
                 legs[idx].steps.begin(),
                 legs[idx].steps.end(),
@@ -201,6 +206,11 @@ class RouteAPI : public BaseAPI
                 util::json::Array distances;
                 util::json::Array nodes;
                 auto &leg_geometry = leg_geometries[idx];
+
+                durations.values.reserve(leg_geometry.annotations.size());
+                distances.values.reserve(leg_geometry.annotations.size());
+                nodes.values.reserve(leg_geometry.osm_node_ids.size());
+
                 std::for_each(
                     leg_geometry.annotations.begin(),
                     leg_geometry.annotations.end(),

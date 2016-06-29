@@ -58,6 +58,12 @@ inline bool isLinkClass(const FunctionalRoadClass road_class)
            road_class == FunctionalRoadClass::TERTIARY_LINK;
 }
 
+// check wheter a class is a motorway like class
+inline bool isMotorwayClass(const FunctionalRoadClass road_class)
+{
+    return road_class == FunctionalRoadClass::MOTORWAY || road_class == FunctionalRoadClass::TRUNK;
+}
+
 // TODO augment this with all data required for guidance generation
 struct RoadClassificationData
 {

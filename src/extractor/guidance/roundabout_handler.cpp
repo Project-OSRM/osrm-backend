@@ -210,11 +210,11 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         return util::Coordinate(node_info_list[node].lon, node_info_list[node].lat);
     };
 
-    unsigned roundabout_name_id = 0;
+    std::unordered_set<unsigned> roundabout_name_ids;
     std::unordered_set<unsigned> connected_names;
 
     const auto getNextOnRoundabout =
-        [this, &roundabout_name_id, &connected_names](const NodeID node) {
+        [this, &roundabout_name_ids, &connected_names](const NodeID node) {
             EdgeID continue_edge = SPECIAL_EDGEID;
             for (const auto edge : node_based_graph.GetAdjacentEdgeRange(node))
             {
@@ -226,16 +226,24 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
                         // fork in roundabout
                         return SPECIAL_EDGEID;
                     }
-                    // roundabout does not keep its name
-                    if (roundabout_name_id != 0 && roundabout_name_id != edge_data.name_id &&
-                        requiresNameAnnounced(name_table.GetNameForID(roundabout_name_id),
-                                              name_table.GetNameForID(edge_data.name_id),
-                                              street_name_suffix_table))
-                    {
-                        return SPECIAL_EDGEID;
-                    }
 
-                    roundabout_name_id = edge_data.name_id;
+                    if (EMPTY_NAMEID != edge_data.name_id)
+                    {
+                        bool add = true;
+                        for (auto name_id : roundabout_name_ids)
+                        {
+
+                            if (!requiresNameAnnounced(name_table.GetNameForID(name_id),
+                                                       name_table.GetNameForID(edge_data.name_id),
+                                                       street_name_suffix_table))
+                            {
+                                add = false;
+                                break;
+                            }
+                        }
+                        if (add)
+                            roundabout_name_ids.insert(edge_data.name_id);
+                    }
 
                     continue_edge = edge;
                 }
@@ -320,7 +328,8 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         // used with a reference and without. This will be fixed automatically
         // when we handle references separately or if the useage is more consistent
 
-        if (0 != roundabout_name_id && 0 == connected_names.count(roundabout_name_id))
+        if (1 == roundabout_name_ids.size() &&
+            0 == connected_names.count(*roundabout_name_ids.begin()))
             return RoundaboutType::Rotary;
         else
             return RoundaboutType::Roundabout;
@@ -364,7 +373,14 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                 if (1 == node_based_graph.GetDirectedOutDegree(node_v))
                 {
                     // No turn possible.
-                    turn.instruction = TurnInstruction::NO_TURN();
+                    if (intersection.size() == 2)
+                        turn.instruction = TurnInstruction::NO_TURN();
+                    else
+                    {
+                        turn.instruction.type =
+                            TurnType::Suppressed; // make sure to report intersection
+                        turn.instruction.direction_modifier = getTurnDirection(turn.angle);
+                    }
                 }
                 else
                 {

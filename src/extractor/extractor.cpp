@@ -239,6 +239,7 @@ int Extractor::run()
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,
+                                          config.turn_lane_descriptions_file_name,
                                           main_context.state);
 
         WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
@@ -475,7 +476,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
 /**
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
-std::pair<std::size_t, std::size_t>
+std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
                                   const ProfileProperties &profile_properties,
                                   std::vector<QueryNode> &internal_to_external_node_map,
@@ -504,6 +505,14 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
 
     util::NameTable name_table(config.names_file_name);
 
+    std::vector<std::uint32_t> turn_lane_offsets;
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
+    if( !util::deserializeAdjacencyArray(
+        config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks) )
+    {
+        util::SimpleLogger().Write(logWARNING) << "Reading Turn Lane Masks failed.";
+    }
+
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
         compressed_edge_container,
@@ -512,9 +521,12 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
         internal_to_external_node_map,
         profile_properties,
-        name_table);
+        name_table,
+        turn_lane_offsets,
+        turn_lane_masks);
 
     edge_based_graph_factory.Run(config.edge_output_path,
+                                 config.turn_lane_data_file_name,
                                  lua_state,
                                  config.edge_segment_lookup_path,
                                  config.edge_penalty_path,
@@ -600,7 +612,7 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
 
 void Extractor::WriteEdgeBasedGraph(
     std::string const &output_file_filename,
-    size_t const max_edge_id,
+    EdgeID const max_edge_id,
     util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
 {
 
@@ -613,9 +625,9 @@ void Extractor::WriteEdgeBasedGraph(
                                  << std::flush;
     TIMER_START(write_edges);
 
-    size_t number_of_used_edges = edge_based_edge_list.size();
-    file_out_stream.write((char *)&number_of_used_edges, sizeof(size_t));
-    file_out_stream.write((char *)&max_edge_id, sizeof(size_t));
+    std::uint64_t number_of_used_edges = edge_based_edge_list.size();
+    file_out_stream.write((char *)&number_of_used_edges, sizeof(number_of_used_edges));
+    file_out_stream.write((char *)&max_edge_id, sizeof(max_edge_id));
 
     for (const auto &edge : edge_based_edge_list)
     {

@@ -4,12 +4,14 @@
 #include "util/simple_logger.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include <cstddef>
 #include <cstdint>
 
 #include <bitset>
 #include <fstream>
+#include <stxxl/vector>
 #include <vector>
 
 #include "util/fingerprint.hpp"
@@ -86,6 +88,84 @@ bool deserializeVector(std::istream &stream, std::vector<simple_type> &data)
     if (count)
         stream.read(reinterpret_cast<char *>(&data[0]), sizeof(simple_type) * count);
     return static_cast<bool>(stream);
+}
+
+// serializes a vector of vectors into an adjacency array (creates a copy of the data internally)
+template <typename simple_type>
+bool serializeVectorIntoAdjacencyArray(const std::string &filename,
+                                       const std::vector<std::vector<simple_type>> &data)
+{
+    std::ofstream out_stream(filename, std::ios::binary);
+    std::vector<std::uint32_t> offsets;
+    offsets.reserve(data.size() + 1);
+    std::uint64_t current_offset = 0;
+    offsets.push_back(current_offset);
+    for (auto const &vec : data)
+    {
+        current_offset += vec.size();
+        offsets.push_back(boost::numeric_cast<std::uint32_t>(current_offset));
+    }
+    if (!serializeVector(out_stream, offsets))
+        return false;
+
+    std::vector<simple_type> all_data;
+    all_data.reserve(offsets.back());
+    for (auto const &vec : data)
+        all_data.insert(all_data.end(), vec.begin(), vec.end());
+
+    if (!serializeVector(out_stream, all_data))
+        return false;
+
+    return static_cast<bool>(out_stream);
+}
+
+template <typename simple_type, std::size_t WRITE_BLOCK_BUFFER_SIZE = 1024>
+bool serializeVector(std::ofstream &out_stream, const stxxl::vector<simple_type> &data)
+{
+    const std::uint64_t size = data.size();
+    out_stream.write(reinterpret_cast<const char *>(&size), sizeof(size));
+
+    simple_type write_buffer[WRITE_BLOCK_BUFFER_SIZE];
+    std::size_t buffer_len = 0;
+
+    for (const auto entry : data)
+    {
+        write_buffer[buffer_len++] = entry;
+
+        if (buffer_len >= WRITE_BLOCK_BUFFER_SIZE)
+        {
+            out_stream.write(reinterpret_cast<const char *>(write_buffer),
+                             WRITE_BLOCK_BUFFER_SIZE * sizeof(simple_type));
+            buffer_len = 0;
+        }
+    }
+
+    // write remaining entries
+    if (buffer_len > 0)
+        out_stream.write(reinterpret_cast<const char *>(write_buffer),
+                         buffer_len * sizeof(simple_type));
+
+    return static_cast<bool>(out_stream);
+}
+
+template <typename simple_type>
+bool deserializeAdjacencyArray(const std::string &filename,
+                               std::vector<std::uint32_t> &offsets,
+                               std::vector<simple_type>& data)
+{
+    std::ifstream in_stream(filename, std::ios::binary);
+
+    if (!deserializeVector(in_stream, offsets))
+        return false;
+
+    if (!deserializeVector(in_stream, data))
+        return false;
+
+    // offsets have to match up with the size of the data
+    if (offsets.empty() || (offsets.back() != boost::numeric_cast<std::uint32_t>(data.size())))
+        return false;
+
+    return static_cast<bool>(in_stream);
 }
 
 inline bool serializeFlags(const boost::filesystem::path &path, const std::vector<bool> &flags)

@@ -357,7 +357,7 @@ Three input coordinates, `geometry=geojson`, `steps=false`:
 {
   "distance": 90.0,
   "duration": 300.0,
-  "geometry": {"type": "LineString", "coordinates": [[120., 10.], [120.1, 10.], [120.2, 10.], [120.3, 10.]]},
+  "geometry": {"type": "LineString", "coordinates": [[120.0, 10.0], [120.1, 10.0], [120.2, 10.0], [120.3, 10.0]]},
   "legs": [
     {
       "distance": 30.0,
@@ -410,7 +410,7 @@ With `steps=false` and `annotations=true`:
 {
   "distance": 30.0,
   "duration": 100.0,
-  "steps": []
+  "steps": [],
   "annotation": {
     "distance": [5,5,10,5,5],
     "duration": [15,15,40,15,15],
@@ -441,7 +441,7 @@ step.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `mode`: A string signifying the mode of transportation.
 - `maneuver`: A `StepManeuver` object representing the maneuver.
-- `intersections`: A list of `Intersections` that are passed along the segment, the very first belonging to the StepManeuver
+- `intersections`: A list of `Intersection` objects that are passed along the segment, the very first belonging to the StepManeuver
 
 #### Example
 
@@ -451,16 +451,20 @@ step.
  "duration":15.6,
  "name":"Lortzingstraße",
  "maneuver":{
-     "type":"depart",
-     "modifier":"left"
- },
+     "type":"turn",
+     "modifier":"right",
+     "lanes":[
+         {"indications":["left","straight"], "valid":"false"},
+         {"indications":["right"], "valid":"true"}
+     ]},
  "geometry":"{lu_IypwpAVrAvAdI",
  "mode":"driving",
  "intersections":[
     {"location":[13.39677,52.54366],
+    "in":3,
     "out":1,
-    "bearings":[66,246],
-    "entry":["true","true"]},
+    "bearings":[10,92,184,270],
+    "entry":[false,"true","true"]},
     {"location":[13.394718,52.543096],
     "in":0,
     "out":2,
@@ -482,51 +486,50 @@ step.
 - `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
    Types  unknown to the client should be handled like the `turn` type, the existance of correct `modifier` values is guranteed.
   
-  | `type`            | Description                                                  |
-  |-------------------|--------------------------------------------------------------|
-  | turn              | a basic turn into direction of the `modifier`                |
-  | new name          | no turn is taken, but the road name changes. The Road can take a turn itself, following `modifier`                  |
-  | depart            | indicates the departure of the leg                           |
-  | arrive            | indicates the destination of the leg                         |
-  | merge             | merge onto a street (e.g. getting on the highway from a ramp, the `modifier specifies the direction of the merge`) |
-  | ramp              | **Deprecated**. Replaced by `on_ramp` and `off_ramp`.        |
-  | on ramp           | take a ramp to enter a highway (direction given my `modifier`) |
-  | off ramp          | take a ramp to exit a highway (direction given my `modifier`)  |
-  | fork              | take the left/right side at a fork depending on `modifier`   |
-  | end of road       | road ends in a T intersection turn in direction of `modifier`|
-  | continue          | Turn in direction of `modifier` to stay on the same road     |
-  | roundabout        | traverse roundabout, has additional field `exit` with NR if the roundabout is left. `the modifier specifies the direction of entering the roundabout` |
-  | rotary            | a larger version of a roundabout, can offer `rotary_name` in addition to the `exit` parameter.  |
-  | roundabout turn   | Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
-  | notification      | not an actual turn but a change in the driving conditions. For example the travel mode.  If the road takes a turn itself, the `modifier` describes the direction |
+  | `type`           | Description                                                  |
+  |------------------|--------------------------------------------------------------|
+  | `turn`           | a basic turn into direction of the `modifier`                |
+  | `new name`       | no turn is taken/possible, but the road name changes. The road can take a turn itself, following `modifier`.                  |
+  | `depart`         | indicates the departure of the leg                           |
+  | `arrive`         | indicates the destination of the leg                         |
+  | `merge`          | merge onto a street (e.g. getting on the highway from a ramp, the `modifier specifies the direction of the merge`) |
+  | `ramp`           | **Deprecated**. Replaced by `on_ramp` and `off_ramp`.        |
+  | `on ramp`        | take a ramp to enter a highway (direction given my `modifier`) |
+  | `off ramp`       | take a ramp to exit a highway (direction given my `modifier`)  |
+  | `fork`           | take the left/right side at a fork depending on `modifier`   |
+  | `end of road`    | road ends in a T intersection turn in direction of `modifier`|
+  | `use lane`       | going straight on a specific lane                            |
+  | `continue`       | Turn in direction of `modifier` to stay on the same road     |
+  | `roundabout`     | traverse roundabout, has additional field `exit` with NR if the roundabout is left. `the modifier specifies the direction of entering the roundabout` |
+  | `rotary`         | a larger version of a roundabout, can offer `rotary_name` in addition to the `exit` parameter.  |
+  | `roundabout turn`| Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
+  | `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode.  If the road takes a turn itself, the `modifier` describes the direction |
 
   Please note that even though there are `new name` and `notification` instructions, the `mode` and `name` can change
   between all instructions. They only offer a fallback in case nothing else is to report.
 
-
 - `modifier` An optional `string` indicating the direction change of the maneuver.
-
+  
   | `modifier`        | Description                               |
   |-------------------|-------------------------------------------|
-  | uturn             | indicates  reversal of direction          |
-  | sharp right       | a sharp right turn                        |
-  | right             | a normal turn to the right                |
-  | slight right      | a slight turn to the right                |
-  | straight          | no relevant change in direction           |
-  | slight left       | a slight turn to the left                 |
-  | left              | a normal turn to the left                 |
-  | sharp left        | a sharp turn to the left                  |
-
- The list of turns without a modifier is limited to: `depart/arrive`. If the source/target location is close enough to the `depart/arrive` location, no modifier will be given.
+  | `uturn`           | indicates  reversal of direction          |
+  | `sharp right`     | a sharp right turn                        |
+  | `right`           | a normal turn to the right                |
+  | `slight right`    | a slight turn to the right                |
+  | `straight`        | no relevant change in direction           |
+  | `slight left`     | a slight turn to the left                 |
+  | `left`            | a normal turn to the left                 |
+  | `sharp left`      | a sharp turn to the left                  |
+  
+  The list of turns without a modifier is limited to: `depart/arrive`. If the source/target location is close enough to the `depart/arrive` location, no modifier will be given.
   
   The meaning depends on the `type` field.
-    
+  
   | `type`                 | Description                                                                                                               |
   |------------------------|---------------------------------------------------------------------------------------------------------------------------|
   | `turn`                 | `modifier` indicates the change in direction accomplished through the turn                                                |
   | `depart`/`arrive`      | `modifier` indicates the position of departure point and arrival point in relation to the current direction of travel      |
- 
-
+  
 - `exit` An optional `integer` indicating number of the exit to take. The field exists for the following `type` field:
   
   | `type`                 | Description                                                                                                               |
@@ -534,10 +537,42 @@ step.
   | `roundabout`           | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
   | else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
   
+- `lanes`: Array of `Lane` objects that denote the available turn lanes at the turn location
 
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.
 
-### Intersections
+### Lane
+
+A `Lane` represents a turn lane at the corresponding turn location.
+
+#### Properties
+
+- `indications`: a indication (e.g. marking on the road) specifying the turn lane. A road can have multiple indications (e.g. an arrow pointing straight and left). The indications are given in an array, each containing one of the following types. Further indications might be added on without an API version change.
+  
+  | `value`                | Description                                                                                                               |
+  |------------------------|---------------------------------------------------------------------------------------------------------------------------|
+  | `none`                 | No dedicated indication is shown.                                                                                         |
+  | `uturn`                | An indication signaling the possibility to reverse (i.e. fully bend arrow).                                               |
+  | `sharp right`          | An indication indicating a sharp right turn (i.e. strongly bend arrow).                                                   |
+  | `right`                | An indication indicating a right turn (i.e. bend arrow).                                                                  |
+  | `slight right`         | An indication indicating a slight right turn (i.e. slightly bend arrow).                                                  |
+  | `straight`             | No dedicated indication is shown (i.e. straight arrow).                                                                   |
+  | `slight left`          | An indication indicating a slight left turn (i.e. slightly bend arrow).                                                   |
+  | `left`                 | An indication indicating a left turn (i.e. bend arrow).                                                                   |
+  | `sharp left`           | An indication indicating a sharp left turn (i.e. strongly bend arrow).                                                    |
+  
+- `valid`: a boolean flag indicating whether the lane is a valid choice in the current maneuver
+
+#### Example
+
+```json
+{
+    "indications": ["left", "straight"],
+    "valid": "false"
+}
+ ```
+
+### Intersection
 
 An intersection gives a full representation of any cross-way the path passes bay. For every step, the very first intersection (`intersections[0]`) corresponds to the
 location of the StepManeuver. Further intersections are listed for every cross-way until the next turn instruction.

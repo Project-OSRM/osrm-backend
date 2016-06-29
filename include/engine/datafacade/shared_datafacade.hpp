@@ -9,9 +9,11 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/profile_properties.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/guidance/turn_lanes.hpp"
 
 #include "engine/geospatial_query.hpp"
 #include "util/make_unique.hpp"
@@ -79,6 +81,7 @@ class SharedDataFacade final : public BaseDataFacade
     util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
     util::ShM<NodeID, true>::vector m_via_node_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
+    util::ShM<LaneDataID, true>::vector m_lane_data_id;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, true>::vector m_travel_mode_list;
     util::ShM<char, true>::vector m_names_char_list;
@@ -87,10 +90,13 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector m_geometry_list;
     util::ShM<bool, true>::vector m_is_core_node;
     util::ShM<uint8_t, true>::vector m_datasource_list;
+    util::ShM<std::uint32_t, true>::vector m_lane_description_offsets;
+    util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector m_lane_description_masks;
 
     util::ShM<char, true>::vector m_datasource_name_data;
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
     util::ShM<std::size_t, true>::vector m_datasource_name_lengths;
+    util::ShM<util::guidance::LaneTupelIdPair, true>::vector m_lane_tupel_id_pairs;
 
     std::unique_ptr<SharedRTree> m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
@@ -171,19 +177,33 @@ class SharedDataFacade final : public BaseDataFacade
             coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
-        auto osmnodeid_list_ptr = data_layout->GetBlockPtr<OSMNodeID>(
+        auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
             shared_memory, storage::SharedDataLayout::OSM_NODE_ID_LIST);
         m_osmnodeid_list.reset(
             osmnodeid_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
-        m_osmnodeid_list.set_number_of_entries(util::PackedVectorCapacity(
-            data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]));
+        // We (ab)use the number of coordinates here because we know we have the same amount of ids
+        m_osmnodeid_list.set_number_of_entries(
+            data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
         auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
         util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
+
+        auto lane_data_id_ptr = data_layout->GetBlockPtr<LaneDataID>(
+            shared_memory, storage::SharedDataLayout::LANE_DATA_ID);
+        util::ShM<LaneDataID, true>::vector lane_data_id(
+            lane_data_id_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DATA_ID]);
+        m_lane_data_id = std::move(lane_data_id);
+
+        auto lane_tupel_id_pair_ptr = data_layout->GetBlockPtr<util::guidance::LaneTupelIdPair>(
+            shared_memory, storage::SharedDataLayout::TURN_LANE_DATA);
+        util::ShM<util::guidance::LaneTupelIdPair, true>::vector lane_tupel_id_pair(
+            lane_tupel_id_pair_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::TURN_LANE_DATA]);
+        m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
 
         auto turn_instruction_list_ptr =
             data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
@@ -235,6 +255,23 @@ class SharedDataFacade final : public BaseDataFacade
             name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
 
         m_names_char_list = std::move(names_char_list);
+    }
+
+    void LoadTurnLaneDescriptions()
+    {
+        auto offsets_ptr = data_layout->GetBlockPtr<std::uint32_t>(
+            shared_memory, storage::SharedDataLayout::LANE_DESCRIPTION_OFFSETS);
+        util::ShM<std::uint32_t, true>::vector offsets(
+            offsets_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::LANE_DESCRIPTION_OFFSETS]);
+        m_lane_description_offsets = std::move(offsets);
+
+        auto masks_ptr = data_layout->GetBlockPtr<extractor::guidance::TurnLaneType::Mask>(
+            shared_memory, storage::SharedDataLayout::LANE_DESCRIPTION_MASKS);
+
+        util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector masks(
+            masks_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DESCRIPTION_MASKS]);
+        m_lane_description_masks = std::move(masks);
     }
 
     void LoadCoreInformation()
@@ -415,6 +452,7 @@ class SharedDataFacade final : public BaseDataFacade
                 LoadTimestamp();
                 LoadViaNodeList();
                 LoadNames();
+                LoadTurnLaneDescriptions();
                 LoadCoreInformation();
                 LoadProfileProperties();
                 LoadRTree();
@@ -781,6 +819,28 @@ class SharedDataFacade final : public BaseDataFacade
     util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final
     {
         return m_entry_class_table.at(entry_class_id);
+    }
+
+    bool hasLaneData(const EdgeID id) const override final
+    {
+        return INVALID_LANE_DATAID != m_lane_data_id.at(id);
+    }
+
+    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID id) const override final
+    {
+        BOOST_ASSERT(hasLaneData(id));
+        return m_lane_tupel_id_pairs.at(m_lane_data_id.at(id));
+    }
+
+    extractor::guidance::TurnLaneDescription
+    GetTurnDescription(const LaneDescriptionID lane_description_id) const override final
+    {
+        if (lane_description_id == INVALID_LANE_DESCRIPTIONID)
+            return {};
+        else
+            return extractor::guidance::TurnLaneDescription(
+                m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id],
+                m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id + 1]);
     }
 };
 }

@@ -57,6 +57,7 @@ function way_function (way, result)
   if name then
     result.name = name
   end
+
   result.forward_mode = mode.driving
   result.backward_mode = mode.driving
 

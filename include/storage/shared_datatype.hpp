@@ -14,7 +14,41 @@ namespace storage
 {
 
 // Added at the start and end of each block as sanity check
-const constexpr char CANARY[] = "OSRM";
+const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
+
+const constexpr char *block_id_to_name[] = {"NAME_OFFSETS",
+                                            "NAME_BLOCKS",
+                                            "NAME_CHAR_LIST",
+                                            "NAME_ID_LIST",
+                                            "VIA_NODE_LIST",
+                                            "GRAPH_NODE_LIST",
+                                            "GRAPH_EDGE_LIST",
+                                            "COORDINATE_LIST",
+                                            "OSM_NODE_ID_LIST",
+                                            "TURN_INSTRUCTION",
+                                            "TRAVEL_MODE",
+                                            "ENTRY_CLASSID",
+                                            "R_SEARCH_TREE",
+                                            "GEOMETRIES_INDEX",
+                                            "GEOMETRIES_LIST",
+                                            "HSGR_CHECKSUM",
+                                            "TIMESTAMP",
+                                            "FILE_INDEX_PATH",
+                                            "CORE_MARKER",
+                                            "DATASOURCES_LIST",
+                                            "DATASOURCE_NAME_DATA",
+                                            "DATASOURCE_NAME_OFFSETS",
+                                            "DATASOURCE_NAME_LENGTHS",
+                                            "PROPERTIES",
+                                            "BEARING_CLASSID",
+                                            "BEARING_OFFSETS",
+                                            "BEARING_BLOCKS",
+                                            "BEARING_VALUES",
+                                            "ENTRY_CLASS",
+                                            "LANE_DATA_ID",
+                                            "TURN_LANE_DATA",
+                                            "LANE_DESCRIPTION_OFFSETS",
+                                            "LANE_DESCRIPTION_MASKS"};
 
 struct SharedDataLayout
 {
@@ -30,8 +64,8 @@ struct SharedDataLayout
         COORDINATE_LIST,
         OSM_NODE_ID_LIST,
         TURN_INSTRUCTION,
-        ENTRY_CLASSID,
         TRAVEL_MODE,
+        ENTRY_CLASSID,
         R_SEARCH_TREE,
         GEOMETRIES_INDEX,
         GEOMETRIES_LIST,
@@ -49,6 +83,10 @@ struct SharedDataLayout
         BEARING_BLOCKS,
         BEARING_VALUES,
         ENTRY_CLASS,
+        LANE_DATA_ID,
+        TURN_LANE_DATA,
+        LANE_DESCRIPTION_OFFSETS,
+        LANE_DESCRIPTION_MASKS,
         NUM_BLOCKS
     };
 
@@ -63,15 +101,20 @@ struct SharedDataLayout
         entry_size[bid] = sizeof(T);
     }
 
+    inline uint64_t AlignBlockSize(uint64_t block_size) const
+    {
+        const uint64_t alignment = 4;
+        return (block_size + (alignment - 1)) & ~(alignment - 1);
+    }
+
     inline uint64_t GetBlockSize(BlockID bid) const
     {
         // special bit encoding
         if (bid == CORE_MARKER)
         {
-            return (num_entries[bid] / 32 + 1) * entry_size[bid];
+            return AlignBlockSize((num_entries[bid] / 32 + 1) * entry_size[bid]);
         }
-
-        return num_entries[bid] * entry_size[bid];
+        return AlignBlockSize(num_entries[bid] * entry_size[bid]);
     }
 
     inline uint64_t GetSizeOfLayout() const
@@ -108,11 +151,13 @@ struct SharedDataLayout
             bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
             if (!start_canary_alive)
             {
-                throw util::exception("Start canary of block corrupted.");
+                throw util::exception(std::string("Start canary of block corrupted. (") +
+                                      block_id_to_name[bid] + ")");
             }
             if (!end_canary_alive)
             {
-                throw util::exception("End canary of block corrupted.");
+                throw util::exception(std::string("End canary of block corrupted. (") +
+                                      block_id_to_name[bid] + ")");
             }
         }
 
@@ -137,6 +182,9 @@ struct SharedDataTimestamp
     SharedDataType data;
     unsigned timestamp;
 };
+
+static_assert(sizeof(block_id_to_name) / sizeof(*block_id_to_name) == SharedDataLayout::NUM_BLOCKS,
+              "Number of blocks needs to match the number of Block names.");
 }
 }
 

@@ -2,6 +2,7 @@
 #define EXTRACTION_WAY_HPP
 
 #include "extractor/travel_mode.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 
 #include <string>
@@ -35,6 +36,8 @@ struct ExtractionWay
         destinations.clear();
         forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
+        turn_lanes_forward.clear();
+        turn_lanes_backward.clear();
     }
 
     // These accessors exists because it's not possible to take the address of a bitfield,
@@ -50,6 +53,8 @@ struct ExtractionWay
     std::string name;
     std::string pronunciation;
     std::string destinations;
+    std::string turn_lanes_forward;
+    std::string turn_lanes_backward;
     bool roundabout;
     bool is_access_restricted;
     bool is_startpoint;

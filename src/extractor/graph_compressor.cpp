@@ -114,9 +114,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             // doesn't have access to.
             const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();
             if (has_node_penalty)
-            {
                 continue;
-            }
 
             // Get distances before graph is modified
             const int forward_weight1 = graph.GetEdgeData(forward_e1).distance;
@@ -138,6 +136,42 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             // extend e1's to targets of e2's
             graph.SetTarget(forward_e1, node_w);
             graph.SetTarget(reverse_e1, node_u);
+
+            /*
+             * Remember Lane Data for compressed parts. This handles scenarios where lane-data is
+             * only kept up until a traffic light.
+             *
+             *                |    |
+             * ----------------    |
+             *         -^ |        |
+             * -----------         |
+             *         -v |        |
+             * ---------------     |
+             *                |    |
+             *
+             *  u ------- v ---- w
+             *
+             * Since the edge is compressable, we can transfer:
+             * "left|right" (uv) and "" (uw) into a string with "left|right" (uw) for the compressed
+             * edge.
+             * Doing so, we might mess up the point from where the lanes are shown. It should be
+             * reasonable, since the announcements have to come early anyhow. So there is a
+             * potential danger in here, but it saves us from adding a lot of additional edges for
+             * turn-lanes. Without this,we would have to treat any turn-lane beginning/ending just
+             * like a barrier.
+             */
+            const auto selectLaneID = [](const LaneDescriptionID front, const LaneDescriptionID back) {
+                // A lane has tags: u - (front) - v - (back) - w
+                // During contraction, we keep only one of the tags. Usually the one closer to the
+                // intersection is preferred. If its empty, however, we keep the non-empty one
+                if (back == INVALID_LANE_DESCRIPTIONID)
+                    return front;
+                return back;
+            };
+            graph.GetEdgeData(forward_e1).lane_description_id = selectLaneID(
+                graph.GetEdgeData(forward_e1).lane_description_id, fwd_edge_data2.lane_description_id);
+            graph.GetEdgeData(reverse_e1).lane_description_id = selectLaneID(
+                graph.GetEdgeData(reverse_e1).lane_description_id, rev_edge_data2.lane_description_id);
 
             // remove e2's (if bidir, otherwise only one)
             graph.DeleteEdge(node_v, forward_e2);

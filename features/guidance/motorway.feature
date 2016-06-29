@@ -216,3 +216,21 @@ Feature: Motorway Guidance
             | waypoints | route      | turns                            |
             | d,c       | db,abc,abc | depart,merge slight left,arrive  |
             | e,c       | eb,abc,abc | depart,merge slight right,arrive |
+
+    Scenario: Handle 90 degree off ramps correctly
+        Given the node map
+            | a |   |   |   |   |
+            | x | b |   | c | y |
+            |   |   |   | d |   |
+
+        And the ways
+            | nodes | name | highway       | oneway |
+            | ab    | On   | motorway_link | yes    |
+            | xb    | Hwy  | motorway      |        |
+            | bc    | Hwy  | motorway      |        |
+            | cd    | Off  | motorway_link | yes    |
+            | cy    | Hwy  | motorway      |        |
+
+       When I route I should get
+            | waypoints | route               | turns                                           |
+            | a,d       | On,Hwy,Off,Off      | depart,merge slight right,off ramp right,arrive |

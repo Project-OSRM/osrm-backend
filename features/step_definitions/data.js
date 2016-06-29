@@ -17,7 +17,7 @@ module.exports = function () {
         this.setContractArgs(args, callback);
     });
 
-    this.Given(/^a grid size of (\d+) meters$/, (meters, callback) => {
+    this.Given(/^a grid size of ([0-9.]+) meters$/, (meters, callback) => {
         this.setGridSize(meters);
         callback();
     });

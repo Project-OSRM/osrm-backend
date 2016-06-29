@@ -63,12 +63,6 @@ inline extractor::guidance::DirectionModifier::Enum angleToDirectionModifier(con
     return extractor::guidance::DirectionModifier::Left;
 }
 
-inline double angularDeviation(const double angle, const double from)
-{
-    const double deviation = std::abs(angle - from);
-    return std::min(360 - deviation, deviation);
-}
-
 } // namespace guidance
 } // namespace engine
 } // namespace osrm
