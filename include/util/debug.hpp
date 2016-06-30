@@ -21,10 +21,13 @@ inline void print(const engine::guidance::RouteStep &step)
 {
     std::cout << static_cast<int>(step.maneuver.instruction.type) << " "
               << static_cast<int>(step.maneuver.instruction.direction_modifier) << "  "
-              << static_cast<int>(step.maneuver.waypoint_type) << " Duration: " << step.duration
-              << " Distance: " << step.distance << " Geometry: " << step.geometry_begin << " "
-              << step.geometry_end << " exit: " << step.maneuver.exit
-              << " Intersections: " << step.intersections.size() << " [";
+              << static_cast<int>(step.maneuver.waypoint_type) << " "
+              << " Lanes: (" << static_cast<int>(step.maneuver.lanes.lanes_in_turn) << ", "
+              << static_cast<int>(step.maneuver.lanes.first_lane_from_the_right) << ")"
+              << " Duration: " << step.duration << " Distance: " << step.distance
+              << " Geometry: " << step.geometry_begin << " " << step.geometry_end
+              << " exit: " << step.maneuver.exit << " Intersections: " << step.intersections.size()
+              << " [";
 
     for (const auto &intersection : step.intersections)
     {

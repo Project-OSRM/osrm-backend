@@ -1,7 +1,8 @@
-#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
+#include "engine/guidance/lane_processing.hpp"
 #include "engine/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"
@@ -498,11 +499,49 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     }
 }
 
+// Works on steps including silent and invalid instructions in order to do lane anticipation for
+// roundabouts which later on get collapsed into a single multi-hop instruction.
+std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep> steps)
+{
+    using namespace util::guidance;
+
+    using StepIter = decltype(steps)::iterator;
+    using StepIterRange = std::pair<StepIter, StepIter>;
+
+    const auto anticipate_lanes_in_roundabout = [&](StepIterRange roundabout) {
+        // We do lane anticipation on the roundabout's enter and leave step only.
+        // TODO: This means, lanes _inside_ the roundabout are ignored at the moment.
+
+        auto enter = *roundabout.first;
+        const auto leave = *roundabout.second;
+
+        // Although the enter instruction may be a left/right turn, for right-sided driving the
+        // roundabout is counter-clockwise and therefore we need to always set it to a left turn.
+        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
+        const auto enter_direction = enter.maneuver.instruction.direction_modifier;
+
+        if (util::guidance::isRightTurn(enter.maneuver.instruction))
+            enter.maneuver.instruction.direction_modifier =
+                mirrorDirectionModifier(enter_direction);
+
+        auto enterAndLeave = anticipateLaneChange({enter, leave});
+
+        // Undo flipping direction on a right turn in a right-sided counter-clockwise roundabout.
+        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
+        enterAndLeave[0].maneuver.instruction.direction_modifier = enter_direction;
+
+        std::swap(*roundabout.first, enterAndLeave[0]);
+        std::swap(*roundabout.second, enterAndLeave[1]);
+    };
+
+    forEachRoundabout(begin(steps), end(steps), anticipate_lanes_in_roundabout);
+
+    return steps;
+}
 } // namespace
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
 // is turned into exit counts. These instructions are removed by the following function
-
 std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 {
     // finally clean up the post-processed instructions.
@@ -517,6 +556,9 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
     };
 
     boost::remove_erase_if(steps, not_is_valid);
+
+    // the steps should still include depart and arrive at least
+    BOOST_ASSERT(steps.size() >= 2);
 
     BOOST_ASSERT(steps.front().intersections.size() >= 1);
     BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
@@ -544,6 +586,11 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     if (steps.size() == 2)
         return steps;
 
+    // Before we invalidate and remove silent instructions, we handle roundabouts (before they're
+    // getting collapsed into a single multi-hop instruction) by back-propagating exit lane
+    // constraints already to a roundabout's enter instruction.
+    steps = anticipateLaneChangeForRoundabouts(std::move(steps));
+
     // Count Street Exits forward
     bool on_roundabout = false;
     bool has_entered_roundabout = false;
@@ -551,7 +598,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // count the exits forward. if enter/exit roundabout happen both, no further treatment is
     // required. We might end up with only one of them (e.g. starting within a roundabout)
     // or having a via-point in the roundabout.
-    // In this case, exits are numbered from the start of the lag.
+    // In this case, exits are numbered from the start of the leg.
     for (std::size_t step_index = 0; step_index < steps.size(); ++step_index)
     {
         auto &step = steps[step_index];
