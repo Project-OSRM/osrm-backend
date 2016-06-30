@@ -319,8 +319,6 @@ void closeOffRoundabout(const bool on_roundabout,
 // elongate a step by another. the data is added either at the front, or the back
 RouteStep elongate(RouteStep step, const RouteStep &by_step)
 {
-    BOOST_ASSERT(step.mode == by_step.mode);
-
     step.duration += by_step.duration;
     step.distance += by_step.distance;
 
@@ -398,6 +396,11 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                 steps[step_index].maneuver.instruction.type = TurnType::Turn;
             }
             else if (TurnType::NewName == current_step.maneuver.instruction.type &&
+                     current_step.maneuver.instruction.direction_modifier !=
+                         DirectionModifier::Straight &&
+                     one_back_step.intersections.front().bearings.size() > 2)
+                steps[step_index].maneuver.instruction.type = TurnType::Turn;
+            else if (TurnType::UseLane == current_step.maneuver.instruction.type &&
                      current_step.maneuver.instruction.direction_modifier !=
                          DirectionModifier::Straight &&
                      one_back_step.intersections.front().bearings.size() > 2)
@@ -719,7 +722,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             if (current_step.maneuver.instruction.type == TurnType::Suppressed &&
                 compatible(one_back_step, current_step))
             {
-                // Traffic light on the sliproad
+                // Traffic light on the sliproad, the road itself will be handled in the next
+                // iteration, when one-back-index again points to the sliproad.
                 steps[one_back_index] =
                     elongate(std::move(steps[one_back_index]), steps[step_index]);
                 invalidateStep(steps[step_index]);
@@ -742,6 +746,12 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                         elongate(std::move(steps[one_back_index]), steps[step_index]);
                     steps[one_back_index].name_id = steps[step_index].name_id;
                     steps[one_back_index].name = steps[step_index].name;
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
+                    // the turn lanes for this turn are on the sliproad itself, so we have to
+                    // remember  them
+                    steps[one_back_index].maneuver.lanes = current_step.maneuver.lanes;
+                    steps[one_back_index].maneuver.lane_description =
+                        current_step.maneuver.lane_description;
 
                     const auto exit_intersection = steps[step_index].intersections.front();
                     const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];

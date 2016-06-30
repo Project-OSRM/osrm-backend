@@ -140,7 +140,6 @@ ExtractionContainers::ExtractionContainers()
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
-                                       const std::string &turn_lane_file_name,
                                        lua_State *segment_state)
 {
     try
@@ -158,8 +157,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteCharData(name_file_name);
-        WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
+        WriteCharData(name_file_name, name_lengths, name_char_data);
     }
     catch (const std::exception &e)
     {
@@ -167,33 +165,9 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     }
 }
 
-void ExtractionContainers::WriteTurnLaneMasks(
-    const std::string &file_name,
-    const stxxl::vector<std::uint32_t> &offsets,
-    const stxxl::vector<guidance::TurnLaneType::Mask> &masks) const
-{
-    util::SimpleLogger().Write() << "Writing turn lane masks...";
-    TIMER_START(turn_lane_timer);
-
-    std::ofstream ofs(file_name, std::ios::binary);
-
-    if (!util::serializeVector(ofs, offsets))
-    {
-        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
-        return;
-    }
-
-    if (!util::serializeVector(ofs, masks))
-    {
-        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
-        return;
-    }
-
-    TIMER_STOP(turn_lane_timer);
-    util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
-}
-
-void ExtractionContainers::WriteCharData(const std::string &file_name)
+void ExtractionContainers::WriteCharData(const std::string &file_name,
+                                         const stxxl::vector<unsigned> &offsets,
+                                         const stxxl::vector<char> &char_data) const
 {
     std::cout << "[extractor] writing street name index ... " << std::flush;
     TIMER_START(write_index);
