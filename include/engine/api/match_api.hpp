@@ -27,15 +27,50 @@ class MatchAPI final : public RouteAPI
     }
 
     void MakeResponse(const std::vector<map_matching::SubMatching> &sub_matchings,
-                      const std::vector<InternalRouteResult> &sub_routes,
+                      std::vector<InternalRouteResult> &sub_routes,
+                      const std::vector<unsigned int> & timestamps,
                       util::json::Object &response) const
     {
         auto number_of_routes = sub_matchings.size();
         util::json::Array routes;
         routes.values.reserve(number_of_routes);
         BOOST_ASSERT(sub_matchings.size() == sub_routes.size());
-        for (auto index : util::irange<std::size_t>(0UL, sub_matchings.size()))
+        for (auto index : util::irange<std::size_t>(0UL, number_of_routes))
         {
+            if (!timestamps.empty())
+            {
+                // Reannotate segments duration.
+                for (auto path_segments_index : util::irange<std::size_t>(0UL, sub_routes[index].unpacked_path_segments.size()))
+                {
+                    int & source_weight =
+                        sub_routes[index].source_traversed_in_reverse[path_segments_index] ? sub_routes[index].segment_end_coordinates[path_segments_index].source_phantom.reverse_weight
+                                                                                           : sub_routes[index].segment_end_coordinates[path_segments_index].source_phantom.forward_weight;
+                    int & target_weight =
+                        sub_routes[index].target_traversed_in_reverse[path_segments_index] ? sub_routes[index].segment_end_coordinates[path_segments_index].target_phantom.reverse_weight
+                                                                                           : sub_routes[index].segment_end_coordinates[path_segments_index].target_phantom.forward_weight;
+
+                    int real_duration = timestamps[sub_matchings[index].indices[path_segments_index] + 1] - timestamps[sub_matchings[index].indices[path_segments_index]];
+
+                    auto & path_segments = sub_routes[index].unpacked_path_segments[path_segments_index];
+                    if (path_segments.empty())
+                    {
+                        source_weight = 0;
+                        target_weight = real_duration * 10;
+                    }
+                    else
+                    {
+                        EdgeWeight path_duration = target_weight;
+                        for (auto const & segment : path_segments)
+                            path_duration += segment.duration_until_turn;
+
+                        float time_multiplier = real_duration * 10.0 / path_duration;
+                        target_weight *= time_multiplier;
+                        for (auto & segment : path_segments)
+                            segment.duration_until_turn *= time_multiplier;
+                    }
+                }
+            }
+
             auto route = MakeRoute(sub_routes[index].segment_end_coordinates,
                                    sub_routes[index].unpacked_path_segments,
                                    sub_routes[index].source_traversed_in_reverse,

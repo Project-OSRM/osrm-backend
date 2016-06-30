@@ -198,7 +198,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     }
 
     api::MatchAPI match_api{BasePlugin::facade, parameters};
-    match_api.MakeResponse(sub_matchings, sub_routes, json_result);
+    match_api.MakeResponse(sub_matchings, sub_routes, parameters.timestamps, json_result);
 
     return Status::Ok;
 }
