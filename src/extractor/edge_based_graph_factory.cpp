@@ -1,5 +1,5 @@
-#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
@@ -41,14 +41,16 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::vector<QueryNode> &node_info_list,
     ProfileProperties profile_properties,
     const util::NameTable &name_table,
-    const std::vector<std::uint32_t> &turn_lane_offsets,
-    const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks)
+    std::vector<std::uint32_t> &turn_lane_offsets,
+    std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks,
+    guidance::LaneDescriptionMap &lane_description_map)
     : m_max_edge_id(0), m_node_info_list(node_info_list),
       m_node_based_graph(std::move(node_based_graph)),
       m_restriction_map(std::move(restriction_map)), m_barrier_nodes(barrier_nodes),
       m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
       profile_properties(std::move(profile_properties)), name_table(name_table),
-      turn_lane_offsets(turn_lane_offsets), turn_lane_masks(turn_lane_masks)
+      turn_lane_offsets(turn_lane_offsets), turn_lane_masks(turn_lane_masks),
+      lane_description_map(lane_description_map)
 {
 }
 
@@ -344,13 +346,19 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          name_table,
                                          street_name_suffix_table,
                                          profile_properties);
-    guidance::lanes::TurnLaneHandler turn_lane_handler(
-        *m_node_based_graph, turn_lane_offsets, turn_lane_masks, turn_analysis);
+
+    guidance::LaneDataIdMap lane_data_map;
+    guidance::lanes::TurnLaneHandler turn_lane_handler(*m_node_based_graph,
+                                                       turn_lane_offsets,
+                                                       turn_lane_masks,
+                                                       lane_description_map,
+                                                       m_node_info_list,
+                                                       turn_analysis,
+                                                       lane_data_map);
 
     bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
 
-    guidance::LaneDataIdMap lane_data_map;
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
         progress.PrintStatus(node_u);
@@ -367,8 +375,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             intersection =
                 turn_analysis.assignTurnTypes(node_u, edge_from_u, std::move(intersection));
 
-            intersection = turn_lane_handler.assignTurnLanes(
-                node_u, edge_from_u, std::move(intersection), lane_data_map);
+            intersection =
+                turn_lane_handler.assignTurnLanes(node_u, edge_from_u, std::move(intersection));
             const auto possible_turns = turn_analysis.transformIntersectionIntoTurns(intersection);
 
             // the entry class depends on the turn, so we have to classify the interesction for

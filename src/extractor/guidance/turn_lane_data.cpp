@@ -64,10 +64,12 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
            std::find(tag_by_modifier, tag_by_modifier + 8, other.tag);
 }
 
-LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
+LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description)
 {
     typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
+    //TODO need to handle cases that have none-in between two identical values
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
+
     const auto setLaneData = [&](
         LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {
         const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool {
@@ -149,6 +151,27 @@ LaneDataVector::const_iterator findTag(const TurnLaneType::Mask tag, const LaneD
 bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
 {
     return findTag(tag, data) != data.cend();
+}
+
+bool isSubsetOf(const LaneDataVector &subset_candidate, const LaneDataVector &superset_candidate)
+{
+    auto location = superset_candidate.begin();
+    for (const auto entry : subset_candidate)
+    {
+        location =
+            std::find_if(location, superset_candidate.end(), [entry](const TurnLaneData &lane_data) {
+                return lane_data.tag == entry.tag;
+            });
+
+        if (location == superset_candidate.end())
+            return false;
+
+        // compare the number of lanes TODO this might have be to be revisited for situations where
+        // a sliproad widens into multiple lanes
+        if ((location->to - location->from) != (entry.to - entry.from))
+            return false;
+    }
+    return true;
 }
 
 } // namespace lanes

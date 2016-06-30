@@ -45,6 +45,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <numeric> //partial_sum
 #include <thread>
 #include <type_traits>
 #include <unordered_map>
@@ -93,7 +94,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         util::SimpleLogger().Write() << "Threads: " << number_of_threads;
 
         ExtractionContainers extraction_containers;
-        auto extractor_callbacks = util::make_unique<ExtractorCallbacks>(extraction_containers);
+        auto extractor_callbacks =
+            util::make_unique<ExtractorCallbacks>(extraction_containers, turn_lane_map);
 
         const osmium::io::File input_file(config.input_path.string());
         osmium::io::Reader reader(input_file);
@@ -194,8 +196,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         extraction_containers.PrepareData(scripting_environment,
                                           config.output_file_name,
                                           config.restriction_file_name,
-                                          config.names_file_name,
-                                          config.turn_lane_descriptions_file_name);
+                                          config.names_file_name);
 
         WriteProfileProperties(config.profile_properties_output_path,
                                scripting_environment.GetProfileProperties());
@@ -444,13 +445,21 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     util::NameTable name_table(config.names_file_name);
 
-    std::vector<std::uint32_t> turn_lane_offsets;
-    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
-    if (!util::deserializeAdjacencyArray(
-            config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks))
-    {
-        util::SimpleLogger().Write(logWARNING) << "Reading Turn Lane Masks failed.";
-    }
+    // could use some additional capacity? To avoid a copy during processing, though small data so
+    // probably not that important.
+    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.size() + 2); // empty ID + sentinel
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        turn_lane_offsets[entry->second + 1] = entry->first.size();
+
+    // inplace prefix sum
+    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
+
+    // allocate the current masks
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        std::copy(entry->first.begin(),
+                  entry->first.end(),
+                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
 
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
@@ -462,7 +471,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         scripting_environment.GetProfileProperties(),
         name_table,
         turn_lane_offsets,
-        turn_lane_masks);
+        turn_lane_masks,
+        turn_lane_map);
 
     edge_based_graph_factory.Run(scripting_environment,
                                  config.edge_output_path,
@@ -470,6 +480,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                  config.edge_segment_lookup_path,
                                  config.edge_penalty_path,
                                  config.generate_edge_lookup);
+
+    WriteTurnLaneData(config.turn_lane_descriptions_file_name);
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
@@ -633,5 +645,44 @@ void Extractor::WriteIntersectionClassificationData(
                                  << entry_classes.size() << " entry classes and " << total_bearings
                                  << " bearing values." << std::endl;
 }
+
+void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
+{
+    // Write the turn lane data to file
+    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.size() + 2); // empty ID + sentinel
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        turn_lane_offsets[entry->second + 1] = entry->first.size();
+
+    // inplace prefix sum
+    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
+
+    // allocate the current masks
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        std::copy(entry->first.begin(),
+                  entry->first.end(),
+                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
+
+    util::SimpleLogger().Write() << "Writing turn lane masks...";
+    TIMER_START(turn_lane_timer);
+
+    std::ofstream ofs(turn_lane_file, std::ios::binary);
+
+    if (!util::serializeVector(ofs, turn_lane_offsets))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
+    }
+
+    if (!util::serializeVector(ofs, turn_lane_masks))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
+    }
+
+    TIMER_STOP(turn_lane_timer);
+    util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
 }
-}
+
+} // namespace extractor
+} // namespace osrm

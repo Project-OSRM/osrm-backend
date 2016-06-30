@@ -25,8 +25,7 @@ inline void print(const engine::guidance::RouteStep &step)
               << static_cast<int>(step.maneuver.waypoint_type) << " "
               << " Duration: " << step.duration << " Distance: " << step.distance
               << " Geometry: " << step.geometry_begin << " " << step.geometry_end
-              << " exit: " << step.maneuver.exit << " Intersections: " << step.intersections.size()
-              << " [";
+              << "\n\tIntersections: " << step.intersections.size() << " [";
 
     for (const auto &intersection : step.intersections)
     {
@@ -36,9 +35,9 @@ inline void print(const engine::guidance::RouteStep &step)
         std::cout << ", entry: ";
         for (auto entry : intersection.entry)
             std::cout << " " << (entry ? "true" : "false");
-        std::cout << " Lanes: (" << static_cast<int>(intersection.lanes.lanes_in_turn) << ", "
-                  << static_cast<int>(intersection.lanes.first_lane_from_the_right) << ")";
-        std::cout << ")";
+        const auto lanes = intersection.lanes;
+        std::cout<< " Lanes: (" << static_cast<int>(lanes.lanes_in_turn) << ", "
+              << static_cast<int>(lanes.first_lane_from_the_right) << "))";
     }
     std::cout << "] name[" << step.name_id << "]: " << step.name;
 }

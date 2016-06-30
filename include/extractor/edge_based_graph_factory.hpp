@@ -92,8 +92,9 @@ class EdgeBasedGraphFactory
         const std::vector<QueryNode> &node_info_list,
         ProfileProperties profile_properties,
         const util::NameTable &name_table,
-        const std::vector<std::uint32_t> &turn_lane_offsets,
-        const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks);
+        std::vector<std::uint32_t> &turn_lane_offsets,
+        std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks,
+        guidance::LaneDescriptionMap &lane_description_map);
 
     void Run(ScriptingEnvironment &scripting_environment,
              const std::string &original_edge_data_filename,
@@ -154,8 +155,9 @@ class EdgeBasedGraphFactory
     ProfileProperties profile_properties;
 
     const util::NameTable &name_table;
-    const std::vector<std::uint32_t> &turn_lane_offsets;
-    const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks;
+    std::vector<std::uint32_t> &turn_lane_offsets;
+    std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks;
+    guidance::LaneDescriptionMap &lane_description_map;
 
     void CompressGeometry();
     unsigned RenumberEdges();

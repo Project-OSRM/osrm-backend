@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/assert.hpp>
@@ -94,6 +95,11 @@ struct TurnLaneDescription_hash
         return seed;
     }
 };
+
+typedef std::unordered_map<guidance::TurnLaneDescription,
+                           LaneDescriptionID,
+                           guidance::TurnLaneDescription_hash>
+    LaneDescriptionMap;
 
 } // guidance
 } // extractor

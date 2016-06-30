@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/guidance/turn_lanes.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -87,6 +88,16 @@ class Extractor
         const std::vector<std::uint32_t> &node_based_intersection_classes,
         const std::vector<util::guidance::BearingClass> &bearing_classes,
         const std::vector<util::guidance::EntryClass> &entry_classes) const;
+
+    void WriteTurnLaneData(const std::string &turn_lane_file) const;
+
+    // globals persisting during the extraction process and the graph generation process
+
+    // during turn lane analysis, we might have to combine lanes for roads that are modelled as two
+    // but are more or less experienced as one. This can be due to solid lines in between lanes, for
+    // example, that genereate a small separation between them. As a result, we might have to
+    // augment the turn lane map during processing, further adding more types.
+    guidance::LaneDescriptionMap turn_lane_map;
 };
 }
 }

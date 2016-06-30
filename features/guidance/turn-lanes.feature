@@ -277,6 +277,7 @@ Feature: Turn Lane Guidance
             | a,j       | road,cross,cross  | depart,turn right,arrive        | ,left:false straight:false right:true, |
 
     #this can happen due to traffic lights / lanes not drawn up to the intersection itself
+    @2654
     Scenario: Turn Lanes Given earlier than actual turn
         Given the node map
             | a |   | b | c |   | d |
@@ -295,6 +296,7 @@ Feature: Turn Lane Guidance
             | a,e       | road,turn,turn | depart,turn right,arrive | ,none:false right:true, |
             | a,d       | road,road      | depart,arrive            | ,                       |
 
+    @2654
     Scenario: Turn Lanes Given earlier than actual turn
         Given the node map
             | a |   | b | c | d |   | e |   | f | g | h |   | i |
@@ -462,17 +464,19 @@ Feature: Turn Lane Guidance
             |   |   |   | f |   |
 
         And the ways
-            | nodes | name  | turn:lanes:forward           | oneway | highway   |
-            | ab    | road  | left\|left\|through\|through | yes    | primary   |
-            | bd    | road  | through\|through             | yes    | primary   |
-            | bc    | road  | left\|left                   | yes    | primary   |
-            | de    | road  |                              | yes    | primary   |
-            | fdcg  | cross |                              |        | secondary |
+            | nodes | name  | turn:lanes:forward                  | oneway | highway   |
+            | ab    | road  | left\|left\|through\|through\|right | yes    | primary   |
+            | bd    | road  | through\|through                    | yes    | primary   |
+            | bc    | road  | left\|left                          | yes    | primary   |
+            | de    | road  |                                     | yes    | primary   |
+            | fd    | cross |                                  |        | secondary |
+            |  dc   | cross |                                  |        | secondary |
+            |   cg  | cross |                                  |        | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | fdcg   | d        | no_left_turn  |
-            | restriction | bc       | fdcg   | c        | no_right_turn |
+            | restriction | bd       | dc     | d        | no_left_turn  |
+            | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
             | waypoints | route            | turns                   | lanes                                               |
@@ -729,6 +733,7 @@ Feature: Turn Lane Guidance
             | waypoints | turns                           | route        | lanes                                 |
             | d,c       | depart,merge slight left,arrive | ramp,Hwy,Hwy | ,slight right:true slight right:true, |
 
+    @2654
     Scenario: Fork on motorway links - don't fork on through but use lane
         Given the node map
             | i |   |   |   |   | a |
@@ -798,6 +803,27 @@ Feature: Turn Lane Guidance
             | waypoints | route     | turns         | lanes |
             | x,d       | road,road | depart,arrive | ,     |
 
+    @partition
+    Scenario: Partitioned turn, Slight Curve
+        Given the node map
+            |   |   | f |   | e |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   | c |
+            | a |   | b |   |   |
+            |   |   | g |   | d |
+
+        And the ways
+            | nodes | name  | highway | oneway | turn:lanes:forward |
+            | ab    | road  | primary | yes    | left\|right        |
+            | bc    | cross | primary | yes    |                    |
+            | fbg   | cross | primary | yes    |                    |
+            | dce   | cross | primary | yes    |                    |
+
+        When I route I should get
+            | waypoints | route            | turns                    | lanes                   |
+            | a,g       | road,cross,cross | depart,turn right,arrive | ,left:false right:true, |
+            | a,e       | road,cross,cross | depart,turn left,arrive  | ,left:true right:false, |
 
     Scenario: Lane Parsing Issue #2694
         Given the node map
@@ -930,3 +956,31 @@ Feature: Turn Lane Guidance
             | a,c       | in,left,left       | depart,turn left,arrive         | ,left:true straight:false right;uturn:false, |
             | a,d       | in,through,through | depart,new name straight,arrive | ,left:false straight:true right;uturn:false, |
             | a,e       | in,right,right     | depart,turn right,arrive        | ,left:false straight:false right;uturn:true, |
+
+    @todo @2654
+    #https://github.com/Project-OSRM/osrm-backend/issues/2645
+    #http://www.openstreetmap.org/export#map=19/52.56054/13.32152
+    Scenario: Kurt-Schuhmacher-Damm
+        Given the node map
+            |   |   |   | g |   | f |
+            |   |   |   |   |   |   |
+            | j |   |   | h |   | e |
+            |   |   |   |   |   |   |
+            | a |   |   | b |   | c |
+            |   |   |   | i |   | d |
+
+        And the ways
+            | nodes | name | highway        | oneway | turn:lanes        |
+            | ab    |      | motorway_link  | yes    | left\|none\|right |
+            | bc    |      | primary_link   | yes    |                   |
+            | cd    | ksd  | secondary      | yes    |                   |
+            | cef   | ksd  | primary        | yes    |                   |
+            | hj    |      | motorway_link  | yes    |                   |
+            | eh    |      | secondary_link | yes    |                   |
+            | gh    | ksd  | primary        | yes    |                   |
+            | hbi   | ksd  | secondary      | yes    |                   |
+
+        When I route I should get
+            | waypoints | route    | turns                    | lanes                             |
+            | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, |
+            | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
