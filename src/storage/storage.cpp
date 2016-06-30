@@ -152,7 +152,7 @@ int Storage::Run()
     if (!util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
                                          lane_description_offsets,
                                          lane_description_masks))
-        throw util::exception("Could not open read lane descriptions from: " +
+        throw util::exception("Failed to read lane descriptions from: " +
                               config.turn_lane_description_path.string());
     shared_layout_ptr->SetBlockSize<std::uint32_t>(SharedDataLayout::LANE_DESCRIPTION_OFFSETS,
                                                    lane_description_offsets.size());

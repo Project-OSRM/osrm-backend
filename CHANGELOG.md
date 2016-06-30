@@ -10,7 +10,7 @@
 
     - Infrastructure
      - BREAKING: The new turn type changes the turn-type order. This breaks the **data format**.
-     - BREAKING: Turn lane data introduces a new file (osrm.tld). This breaks the fileformat for older versions.
+     - BREAKING: Turn lane data introduces two new files (osrm.tld,osrm.tls). This breaks the fileformat for older versions.
 
 # 5.2.5
   - Bugfixes
