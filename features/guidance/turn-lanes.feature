@@ -411,22 +411,24 @@ Feature: Turn Lane Guidance
             |   |   |   | f |   |
 
         And the ways
-            | nodes | name  | turn:lanes:forward         | oneway | highway   |
-            | ab    | road  | left\|left&through&through | yes    | primary   |
-            | bd    | road  | through\|through           | yes    | primary   |
-            | bc    | road  | left\|left                 | yes    | primary   |
-            | de    | road  |                            | yes    | primary   |
-            | fdcg  | cross |                            |        | secondary |
+            | nodes | name  | turn:lanes:forward               | oneway | highway   |
+            | ab    | road  | left\|left&through&through&right | yes    | primary   |
+            | bd    | road  | through\|through&right           | yes    | primary   |
+            | bc    | road  | left\|left                       | yes    | primary   |
+            | de    | road  |                                  | yes    | primary   |
+            | fd    | cross |                                  |        | secondary |
+            |  dc   | cross |                                  |        | secondary |
+            |   cg  | cross |                                  |        | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | fdcg   | d        | no_left_turn  |
-            | restriction | bc       | fdcg   | c        | no_right_turn |
+            | restriction | bd       | dc     | d        | no_left_turn  |
+            | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-            | waypoints | route            | turns                           | lanes                                               |
-            | a,g       | road,cross,cross | depart,turn left,arrive         | ,left:true left:true straight:false straight:false, |
-            | a,e       | road,road,road   | depart,use lane straight,arrive | ,left:false left:false straight:true straight:true, |
+            | waypoints | route            | turns                           | lanes                                                           |
+            | a,g       | road,cross,cross | depart,turn left,arrive         | ,left:true left:true straight:false straight:false right:false, |
+            | a,e       | road,road,road   | depart,use lane straight,arrive | ,left:false left:false straight:true straight:true right:false, |
 
     Scenario: U-Turn Road at Intersection
         Given the node map

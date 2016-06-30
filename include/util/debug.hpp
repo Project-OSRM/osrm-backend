@@ -24,7 +24,9 @@ inline void print(const engine::guidance::RouteStep &step)
               << static_cast<int>(step.maneuver.waypoint_type) << " Duration: " << step.duration
               << " Distance: " << step.distance << " Geometry: " << step.geometry_begin << " "
               << step.geometry_end << " exit: " << step.maneuver.exit
-              << " Intersections: " << step.intersections.size() << " [";
+              << " Lanes: " << static_cast<int>(step.maneuver.lanes.lanes_in_turn) << " "
+              << static_cast<int>(step.maneuver.lanes.first_lane_from_the_right)
+              << "\n\tIntersections: " << step.intersections.size() << " [";
 
     for (const auto &intersection : step.intersections)
     {

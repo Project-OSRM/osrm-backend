@@ -1,8 +1,8 @@
 #ifndef EXTRACTOR_CALLBACKS_HPP
 #define EXTRACTOR_CALLBACKS_HPP
 
-#include "util/typedefs.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/functional/hash.hpp>
 #include <boost/optional/optional_fwd.hpp>
@@ -40,11 +40,12 @@ class ExtractorCallbacks
     using MapKey = std::pair<std::string, std::string>;
     using MapVal = unsigned;
     std::unordered_map<MapKey, MapVal, boost::hash<MapKey>> string_map;
-    std::unordered_map<guidance::TurnLaneDescription,LaneDescriptionID,guidance::TurnLaneDescription_hash> lane_description_map;
+    guidance::LaneDescriptionMap &lane_description_map;
     ExtractionContainers &external_memory;
 
   public:
-    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers);
+    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
+                                guidance::LaneDescriptionMap &lane_description_map);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
     ExtractorCallbacks &operator=(const ExtractorCallbacks &) = delete;
