@@ -101,6 +101,34 @@ inline bool isRightTurn(const extractor::guidance::TurnInstruction instruction)
     }
 }
 
+inline bool entersRoundabout(const extractor::guidance::TurnInstruction instruction)
+{
+    return (instruction.type == extractor::guidance::TurnType::EnterRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersection ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
+}
+
+inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruction)
+{
+    return (instruction.type == extractor::guidance::TurnType::ExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::ExitRotary ||
+            instruction.type == extractor::guidance::TurnType::ExitRoundaboutIntersection ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection);
+}
+
+inline bool staysOnRoundabout(const extractor::guidance::TurnInstruction instruction)
+{
+    return instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
+}
+
 } // namespace guidance
 } // namespace util
 } // namespace osrm

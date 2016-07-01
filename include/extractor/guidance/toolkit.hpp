@@ -40,6 +40,8 @@ using util::guidance::LaneTupelIdPair;
 using LaneDataIdMap = std::unordered_map<LaneTupelIdPair, LaneDataID, boost::hash<LaneTupelIdPair>>;
 
 using util::guidance::angularDeviation;
+using util::guidance::entersRoundabout;
+using util::guidance::leavesRoundabout;
 
 namespace detail
 {
@@ -529,29 +531,6 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
             lane_string.resize(lane_string.size() - count_right);
     }
     return lane_string;
-}
-
-inline bool entersRoundabout(const extractor::guidance::TurnInstruction instruction)
-{
-    return (instruction.type == extractor::guidance::TurnType::EnterRoundabout ||
-            instruction.type == extractor::guidance::TurnType::EnterRotary ||
-            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersection ||
-            instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
-            instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
-            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
-}
-
-inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruction)
-{
-    return (instruction.type == extractor::guidance::TurnType::ExitRoundabout ||
-            instruction.type == extractor::guidance::TurnType::ExitRotary ||
-            instruction.type == extractor::guidance::TurnType::ExitRoundaboutIntersection ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection);
 }
 
 } // namespace guidance
