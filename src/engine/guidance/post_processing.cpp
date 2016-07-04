@@ -716,34 +716,45 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         // TurnType::Sliproad != TurnType::NoTurn
         if (one_back_step.maneuver.instruction.type == TurnType::Sliproad)
         {
-            // Handle possible u-turns between highways that look like slip-roads
-            if (steps[getPreviousIndex(one_back_index)].name_id == steps[step_index].name_id &&
-                steps[step_index].name_id != EMPTY_NAMEID)
+            if (current_step.maneuver.instruction.type == TurnType::Suppressed &&
+                compatible(one_back_step, current_step))
             {
-                steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+                // Traffic light on the sliproad
+                steps[one_back_index] =
+                    elongate(std::move(steps[one_back_index]), steps[step_index]);
+                invalidateStep(steps[step_index]);
             }
             else
             {
-                steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
-            }
-            if (compatible(one_back_step, current_step))
-            {
-                steps[one_back_index] =
-                    elongate(std::move(steps[one_back_index]), steps[step_index]);
-                steps[one_back_index].name_id = steps[step_index].name_id;
-                steps[one_back_index].name = steps[step_index].name;
+                // Handle possible u-turns between highways that look like slip-roads
+                if (steps[getPreviousIndex(one_back_index)].name_id == steps[step_index].name_id &&
+                    steps[step_index].name_id != EMPTY_NAMEID)
+                {
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+                }
+                else
+                {
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
+                }
+                if (compatible(one_back_step, current_step))
+                {
+                    steps[one_back_index] =
+                        elongate(std::move(steps[one_back_index]), steps[step_index]);
+                    steps[one_back_index].name_id = steps[step_index].name_id;
+                    steps[one_back_index].name = steps[step_index].name;
 
-                const auto exit_intersection = steps[step_index].intersections.front();
-                const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
+                    const auto exit_intersection = steps[step_index].intersections.front();
+                    const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
 
-                const auto entry_intersection = steps[one_back_index].intersections.front();
-                const auto entry_bearing = entry_intersection.bearings[entry_intersection.in];
+                    const auto entry_intersection = steps[one_back_index].intersections.front();
+                    const auto entry_bearing = entry_intersection.bearings[entry_intersection.in];
 
-                const double angle =
-                    turn_angle(util::bearing::reverseBearing(entry_bearing), exit_bearing);
-                steps[one_back_index].maneuver.instruction.direction_modifier =
-                    ::osrm::util::guidance::getTurnDirection(angle);
-                invalidateStep(steps[step_index]);
+                    const double angle =
+                        turn_angle(util::bearing::reverseBearing(entry_bearing), exit_bearing);
+                    steps[one_back_index].maneuver.instruction.direction_modifier =
+                        ::osrm::util::guidance::getTurnDirection(angle);
+                    invalidateStep(steps[step_index]);
+                }
             }
         }
         // Due to empty segments, we can get name-changes from A->A

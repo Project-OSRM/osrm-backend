@@ -167,3 +167,34 @@ Feature: Slipways and Dedicated Turn Lanes
         When I route I should get
             | waypoints | route                                                     | turns                    |
             | a,o       | Schwarzwaldstrasse (L561),Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive |
+
+    Scenario: Traffic Lights everywhere
+        #http://map.project-osrm.org/?z=18&center=48.995336%2C8.383813&loc=48.995467%2C8.384548&loc=48.995115%2C8.382761&hl=en&alt=0
+        Given the node map
+            | a |   |   | k | l |   |   | j |   |
+            |   |   |   |   |   | d | b | c | i |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | e | g |   |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   | h |   |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   | f |   |
+
+        And the nodes
+            | node | highway         |
+            | b    | traffic_signals |
+            | e    | traffic_signals |
+            | g    | traffic_signals |
+
+        And the ways
+            | nodes  | highway        | name          | oneway |
+            | aklbci | secondary      | Ebertstrasse  | yes    |
+            | kdeh   | secondary_link |               | yes    |
+            | jcghf  | primary        | Brauerstrasse | yes    |
+
+        When I route I should get
+            | waypoints | route                                    | turns                    |
+            | a,i       | Ebertstrasse,Ebertstrasse                | depart,arrive            |
+            | a,l       | Ebertstrasse,Ebertstrasse                | depart,arrive            |
+            | a,f       | Ebertstrasse,Brauerstrasse,Brauerstrasse | depart,turn right,arrive |

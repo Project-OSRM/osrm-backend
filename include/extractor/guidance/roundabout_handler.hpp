@@ -44,7 +44,7 @@ class RoundaboutHandler : public IntersectionHandler
                       const util::NameTable &name_table,
                       const SuffixTable &street_name_suffix_table);
 
-    ~RoundaboutHandler() override final;
+    ~RoundaboutHandler() override final = default;
 
     // check whether the handler can actually handle the intersection
     bool canProcess(const NodeID from_nid,
