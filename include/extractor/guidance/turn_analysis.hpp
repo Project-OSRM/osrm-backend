@@ -6,6 +6,7 @@
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/roundabout_handler.hpp"
+#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_classification.hpp"
 #include "extractor/guidance/turn_handler.hpp"
@@ -59,13 +60,11 @@ class TurnAnalysis
     const RoundaboutHandler roundabout_handler;
     const MotorwayHandler motorway_handler;
     const TurnHandler turn_handler;
+    const SliproadHandler sliproad_handler;
 
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     Intersection
     setTurnTypes(const NodeID from, const EdgeID via_edge, Intersection intersection) const;
-
-    Intersection handleSliproads(const NodeID intersection_node_id,
-                                 Intersection intersection) const;
 }; // class TurnAnalysis
 
 } // namespace guidance
