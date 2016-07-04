@@ -10,11 +10,6 @@ namespace extractor
 namespace guidance
 {
 
-// possible fork
-bool isFork(const ConnectedRoad &uturn,
-            const ConnectedRoad &possible_right_fork,
-            const ConnectedRoad &possible_left_fork);
-
 // Ending in a T-Intersection
 bool isEndOfRoad(const ConnectedRoad &uturn,
                  const ConnectedRoad &possible_right_turn,
