@@ -41,6 +41,9 @@ class TurnHandler : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
+    bool isObviousOfTwo(const EdgeID via_edge,
+                        const ConnectedRoad &road,
+                        const ConnectedRoad &other) const;
     // Dead end.
     Intersection handleOneWayTurn(Intersection intersection) const;
 
@@ -57,7 +60,7 @@ class TurnHandler : public IntersectionHandler
     handleDistinctConflict(const EdgeID via_edge, ConnectedRoad &left, ConnectedRoad &right) const;
 
     // Classification
-    std::pair<std::size_t, std::size_t> findFork(const Intersection &intersection) const;
+    std::pair<std::size_t, std::size_t> findFork(const EdgeID via_edge, const Intersection &intersection) const;
 
     Intersection assignLeftTurns(const EdgeID via_edge,
                                  Intersection intersection,

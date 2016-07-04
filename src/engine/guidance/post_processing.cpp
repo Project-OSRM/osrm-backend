@@ -607,8 +607,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 // Post Processing to collapse unnecessary sets of combined instructions into a single one
 std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 {
-    util::guidance::print(steps);
-
     if (steps.size() <= 2)
         return steps;
 
