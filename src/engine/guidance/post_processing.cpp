@@ -385,7 +385,9 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         {
             BOOST_ASSERT(!one_back_step.intersections.empty());
             if (TurnType::Continue == current_step.maneuver.instruction.type ||
-                TurnType::Suppressed == current_step.maneuver.instruction.type)
+                (TurnType::Suppressed == current_step.maneuver.instruction.type &&
+                 current_step.maneuver.instruction.direction_modifier !=
+                     DirectionModifier::Straight))
                 steps[step_index].maneuver.instruction.type = TurnType::Turn;
             else if (TurnType::Merge == current_step.maneuver.instruction.type)
             {
@@ -399,6 +401,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                          DirectionModifier::Straight &&
                      one_back_step.intersections.front().bearings.size() > 2)
                 steps[step_index].maneuver.instruction.type = TurnType::Turn;
+
             steps[two_back_index] = elongate(std::move(steps[two_back_index]), one_back_step);
             // If the previous instruction asked to continue, the name change will have to
             // be changed into a turn
@@ -416,9 +419,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             if ((TurnType::Continue == one_back_step.maneuver.instruction.type ||
                  TurnType::Suppressed == one_back_step.maneuver.instruction.type) &&
                 current_step.name_id != steps[two_back_index].name_id)
-            {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
-            }
             else if (TurnType::Turn == one_back_step.maneuver.instruction.type &&
                      current_step.name_id == steps[two_back_index].name_id)
             {

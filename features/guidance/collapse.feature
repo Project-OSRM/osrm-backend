@@ -606,13 +606,13 @@ Feature: Collapse
             | restriction | bc       | fdcg   | c        | no_right_turn |
 
         When I route I should get
-          | waypoints | route                 | turns                                          |
-          | a,g       | road,cross,cross      | depart,turn left,arrive                        |
-          | a,e       | road,road,road        | depart,continue slight right,arrive            |
-          # We should discuss whether the next item should be collapsed to depart,turn right,arrive.
-          | a,f       | road,road,cross,cross | depart,continue slight right,turn right,arrive |
+            | waypoints | route                 | turns                                          |
+            | a,g       | road,cross,cross      | depart,turn left,arrive                        |
+            | a,e       | road,road,road        | depart,continue slight right,arrive            |
+            # We should discuss whether the next item should be collapsed to depart,turn right,arrive.
+            | a,f       | road,road,cross,cross | depart,continue slight right,turn right,arrive |
 
-     Scenario: On-Off on Highway
+    Scenario: On-Off on Highway
         Given the node map
             | f |   |   |   |
             | a | b | c | d |

@@ -1,3 +1,8 @@
+# 5.3.0
+    Changes from 5.3.0-rc.2
+        - Guidance
+            - Improved detection of obvious turns
+
 # 5.3.0 RC2
     Changes from 5.3.0-rc.1
         - Bugfixes

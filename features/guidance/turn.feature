@@ -853,3 +853,29 @@ Feature: Simple Turns
             | a,c       | depart,arrive                   | road,road    |
             | d,a       | depart,turn left,arrive         | in,road,road |
             | d,c       | depart,new name straight,arrive | in,road,road |
+
+    Scenario: Channing Street
+        Given the node map
+            |   |   | g | f |   |
+            |   |   |   |   |   |
+            | d |   | c | b | a |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   | h | e |   |
+
+        And the nodes
+            | node | highway         |
+            | c    | traffic_signals |
+            | b    | traffic_signals |
+
+        And the ways
+            | nodes | name                           | highway     | oneway |
+            | ab    | Channing Street Northeast      | residential | no     |
+            | bcd   | Channing Street Northwest      | residential | yes    |
+            | ebf   | North Capitol Street Northeast | primary     | yes    |
+            | gch   | North Capitol Street Northeast | primary     | yes    |
+
+        When I route I should get
+            | waypoints | turns                   | route                                                                                   |
+            | a,d       | depart,arrive           | Channing Street Northeast,Channing Street Northwest                                     |
+            | a,h       | depart,turn left,arrive | Channing Street Northeast,North Capitol Street Northeast,North Capitol Street Northeast |

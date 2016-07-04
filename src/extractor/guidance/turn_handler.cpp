@@ -1,7 +1,7 @@
-#include "extractor/guidance/turn_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_handler.hpp"
 
 #include "util/guidance/toolkit.hpp"
 
@@ -88,18 +88,20 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 
         const bool is_ramp = isRampClass(first_class);
         const bool is_obvious_by_road_class =
-            (!is_ramp && (2 * getPriority(first_class) < getPriority(second_class))) ||
+            (!is_ramp && (2 * getPriority(first_class) < getPriority(second_class)) &&
+             in_data.road_classification.road_class == first_class) ||
             (!isLowPriorityRoadClass(first_class) && isLowPriorityRoadClass(second_class));
 
         if (is_obvious_by_road_class)
             return true;
 
-        const bool other_is_obvious_by_road_flass =
+        const bool other_is_obvious_by_road_class =
             (!isRampClass(second_class) &&
-             (2 * getPriority(second_class) < getPriority(first_class))) ||
+             (2 * getPriority(second_class) < getPriority(first_class)) &&
+             in_data.road_classification.road_class == second_class) ||
             (!isLowPriorityRoadClass(second_class) && isLowPriorityRoadClass(first_class));
 
-        if (other_is_obvious_by_road_flass)
+        if (other_is_obvious_by_road_class)
             return false;
 
         const bool turn_is_perfectly_straight = angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <
@@ -375,6 +377,7 @@ std::size_t TurnHandler::findObviousTurn(const EdgeID via_edge,
     double best_continue_deviation = 180;
 
     const EdgeData &in_data = node_based_graph.GetEdgeData(via_edge);
+    const auto in_class = in_data.road_classification.road_class;
     for (std::size_t i = 1; i < intersection.size(); ++i)
     {
         const double deviation = angularDeviation(intersection[i].turn.angle, STRAIGHT_ANGLE);
@@ -388,9 +391,11 @@ std::size_t TurnHandler::findObviousTurn(const EdgeID via_edge,
         auto continue_class = node_based_graph.GetEdgeData(intersection[best_continue].turn.eid)
                                   .road_classification.road_class;
         if (intersection[i].entry_allowed && out_data.name_id == in_data.name_id &&
-            (best_continue == 0 || continue_class > out_data.road_classification.road_class ||
+            (best_continue == 0 || (continue_class > out_data.road_classification.road_class &&
+                                    in_class != continue_class) ||
              (deviation < best_continue_deviation &&
-              out_data.road_classification.road_class == continue_class)))
+              (out_data.road_classification.road_class == continue_class ||
+               in_class == out_data.road_classification.road_class))))
         {
             best_continue_deviation = deviation;
             best_continue = i;
