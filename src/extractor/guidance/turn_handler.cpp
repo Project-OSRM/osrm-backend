@@ -657,11 +657,11 @@ std::pair<std::size_t, std::size_t> TurnHandler::findFork(const EdgeID via_edge,
 
         const bool has_compatible_classes = [&]() {
             const bool ramp_class =
-                isRampClass(node_based_graph.GetEdgeData(intersection[right].turn.eid)
+                isLinkClass(node_based_graph.GetEdgeData(intersection[right].turn.eid)
                                 .road_classification.road_class);
             for (std::size_t index = right + 1; index <= left; ++index)
                 if (ramp_class !=
-                    isRampClass(node_based_graph.GetEdgeData(intersection[index].turn.eid)
+                    isLinkClass(node_based_graph.GetEdgeData(intersection[index].turn.eid)
                                     .road_classification.road_class))
                     return false;
             return true;
