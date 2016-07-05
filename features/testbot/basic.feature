@@ -266,3 +266,24 @@ Feature: Basic Routing
             | from | to | route | time |
             | a    | b  | ,     | 10s  |
             | b    | a  | ,     | 10s  |
+
+    Scenario: Ambiguous edge names - Use lexicographically smallest name
+        Given the node map
+            | a | b | c |
+
+        And the ways
+            | nodes | highway | name |
+            | ab    | primary |      |
+            | ab    | primary | Αβγ  |
+            | ab    | primary |      |
+            | ab    | primary | Abc  |
+            | ab    | primary |      |
+            | ab    | primary | Абв  |
+            | bc    | primary | Ηθι  |
+            | bc    | primary | Δεζ  |
+            | bc    | primary | Где  |
+
+        When I route I should get
+            | from | to | route       |
+            | a    | c  | Abc,Δεζ,Δεζ |
+            | c    | a  | Δεζ,Abc,Abc |

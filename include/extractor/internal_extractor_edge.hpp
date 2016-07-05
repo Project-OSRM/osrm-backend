@@ -142,43 +142,6 @@ struct InternalExtractorEdge
     }
 };
 
-struct CmpEdgeByInternalStartThenInternalTargetID
-{
-    using value_type = InternalExtractorEdge;
-    bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
-    {
-        return (lhs.result.source < rhs.result.source) ||
-               ((lhs.result.source == rhs.result.source) &&
-                (lhs.result.target < rhs.result.target));
-    }
-
-    value_type max_value() { return InternalExtractorEdge::max_internal_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_internal_value(); }
-};
-
-struct CmpEdgeByOSMStartID
-{
-    using value_type = InternalExtractorEdge;
-    bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
-    {
-        return lhs.result.osm_source_id < rhs.result.osm_source_id;
-    }
-
-    value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
-};
-
-struct CmpEdgeByOSMTargetID
-{
-    using value_type = InternalExtractorEdge;
-    bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
-    {
-        return lhs.result.osm_target_id < rhs.result.osm_target_id;
-    }
-
-    value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
-};
 }
 }
 

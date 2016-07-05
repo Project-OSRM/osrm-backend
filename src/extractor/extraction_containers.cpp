@@ -26,6 +26,8 @@
 
 namespace
 {
+namespace oe = osrm::extractor;
+
 // Needed for STXXL comparison - STXXL requires max_value(), min_value(), so we can not use
 // std::less<OSMNodeId>{}. Anonymous namespace to keep translation unit local.
 struct OSMNodeIDSTXXLLess
@@ -35,6 +37,69 @@ struct OSMNodeIDSTXXLLess
     value_type max_value() { return MAX_OSM_NODEID; }
     value_type min_value() { return MIN_OSM_NODEID; }
 };
+
+struct CmpEdgeByOSMStartID
+{
+    using value_type = oe::InternalExtractorEdge;
+    bool operator()(const value_type &lhs, const value_type &rhs) const
+    {
+        return lhs.result.osm_source_id < rhs.result.osm_source_id;
+    }
+
+    value_type max_value() { return value_type::max_osm_value(); }
+    value_type min_value() { return value_type::min_osm_value(); }
+};
+
+struct CmpEdgeByOSMTargetID
+{
+    using value_type = oe::InternalExtractorEdge;
+    bool operator()(const value_type &lhs, const value_type &rhs) const
+    {
+        return lhs.result.osm_target_id < rhs.result.osm_target_id;
+    }
+
+    value_type max_value() { return value_type::max_osm_value(); }
+    value_type min_value() { return value_type::min_osm_value(); }
+};
+
+struct CmpEdgeByInternalSourceTargetAndName
+{
+    using value_type = oe::InternalExtractorEdge;
+    bool operator()(const value_type &lhs, const value_type &rhs) const
+    {
+        if (lhs.result.source != rhs.result.source)
+            return lhs.result.source < rhs.result.source;
+
+        if (lhs.result.target != rhs.result.target)
+            return lhs.result.target < rhs.result.target;
+
+        if (lhs.result.source == SPECIAL_NODEID)
+            return false;
+
+        if (lhs.result.name_id == rhs.result.name_id)
+            return false;
+
+        if (lhs.result.name_id == EMPTY_NAMEID)
+            return false;
+
+        if (rhs.result.name_id == EMPTY_NAMEID)
+            return true;
+
+        BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
+        const oe::ExtractionContainers::STXXLNameCharData::const_iterator data = name_data.begin();
+        return std::lexicographical_compare(data + name_offsets[lhs.result.name_id],
+                                            data + name_offsets[lhs.result.name_id + 1],
+                                            data + name_offsets[rhs.result.name_id],
+                                            data + name_offsets[rhs.result.name_id + 1]);
+    }
+
+    value_type max_value() { return value_type::max_internal_value(); }
+    value_type min_value() { return value_type::min_internal_value(); }
+
+    const oe::ExtractionContainers::STXXLNameCharData &name_data;
+    const oe::ExtractionContainers::STXXLNameOffsets &name_offsets;
+};
+
 }
 
 namespace osrm
@@ -48,10 +113,13 @@ ExtractionContainers::ExtractionContainers()
 {
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
-    // Insert three empty strings for name, destination and pronunciation
-    name_lengths.push_back(0);
-    name_lengths.push_back(0);
-    name_lengths.push_back(0);
+
+    // Insert three empty strings offsets for name, destination and pronunciation
+    name_offsets.push_back(0);
+    name_offsets.push_back(0);
+    name_offsets.push_back(0);
+    // Insert the total length sentinel (corresponds to the next name string offset)
+    name_offsets.push_back(0);
 
     // the offsets have to be initialized with two values, since we have the empty turn string for
     // the first id
@@ -90,7 +158,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteCharData(name_file_name, name_lengths, name_char_data);
+        WriteCharData(name_file_name);
         WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
     }
     catch (const std::exception &e)
@@ -125,23 +193,26 @@ void ExtractionContainers::WriteTurnLaneMasks(
     util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
 }
 
-void ExtractionContainers::WriteCharData(const std::string &file_name,
-                                         const stxxl::vector<unsigned> &offsets,
-                                         const stxxl::vector<char> &char_data) const
+void ExtractionContainers::WriteCharData(const std::string &file_name)
 {
     std::cout << "[extractor] writing street name index ... " << std::flush;
     TIMER_START(write_index);
     boost::filesystem::ofstream file_stream(file_name, std::ios::binary);
 
-    unsigned total_length = 0;
-
-    for (const auto length : offsets)
+    // transforms in-place name offsets to name lengths
+    BOOST_ASSERT(!name_offsets.empty());
+    for (auto curr = name_offsets.begin(), next = name_offsets.begin() + 1;
+         next != name_offsets.end(); ++curr, ++next)
     {
-        total_length += length;
+        *curr = *next - *curr;
     }
 
+    // removes the total length sentinel
+    unsigned total_length = name_offsets.back();
+    name_offsets.pop_back();
+
     // builds and writes the index
-    util::RangeTable<> index_range(offsets);
+    util::RangeTable<> index_range(name_offsets);
     file_stream << index_range;
 
     file_stream.write((char *)&total_length, sizeof(unsigned));
@@ -150,7 +221,7 @@ void ExtractionContainers::WriteCharData(const std::string &file_name,
     char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
     unsigned buffer_len = 0;
 
-    for (const auto c : char_data)
+    for (const auto c : name_char_data)
     {
         write_buffer[buffer_len++] = c;
 
@@ -416,7 +487,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     TIMER_START(sort_edges_by_renumbered_start);
     stxxl::sort(all_edges_list.begin(),
                 all_edges_list.end(),
-                CmpEdgeByInternalStartThenInternalTargetID(),
+                CmpEdgeByInternalSourceTargetAndName{name_char_data, name_offsets},
                 stxxl_memory);
     TIMER_STOP(sort_edges_by_renumbered_start);
     std::cout << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s" << std::endl;
