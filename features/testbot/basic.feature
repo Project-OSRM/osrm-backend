@@ -233,7 +233,7 @@ Feature: Basic Routing
             | d    | a  | abcd,abcd  |
             | a    | m  | aeim,aeim  |
             | m    | a  | aeim,aeim  |
-    
+
     Scenario: Testbot - Triangle challenge
         Given the node map
             |   |   |   | d |
@@ -251,3 +251,18 @@ Feature: Basic Routing
             | from | to | route |
             | d    | c  | de,ce,ce |
             | e    | d  | de,de    |
+
+    Scenario: Ambiguous edge weights - Use minimal edge weight
+        Given the node map
+            | a | b |
+
+        And the ways
+            | nodes | highway   | name |
+            | ab    | tertiary  |      |
+            | ab    | primary   |      |
+            | ab    | secondary |      |
+
+        When I route I should get
+            | from | to | route | time |
+            | a    | b  | ,     | 10s  |
+            | b    | a  | ,     | 10s  |
