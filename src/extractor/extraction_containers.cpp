@@ -453,11 +453,13 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
                 all_edges_list[i].result.weight < min_forward_weight)
             {
                 min_forward_idx = i;
+                min_forward_weight = all_edges_list[i].result.weight;
             }
             if (all_edges_list[i].result.backward &&
                 all_edges_list[i].result.weight < min_backward_weight)
             {
                 min_backward_idx = i;
+                min_backward_weight = all_edges_list[i].result.weight;
             }
 
             // this also increments the outer loop counter!
