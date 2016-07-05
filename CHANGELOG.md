@@ -4,6 +4,7 @@
       - Fixed an issue that would result in segfaults for viaroutes with an invalid intermediate segment when u-turns were allowed at the via-location
       - Fixed an issue that could result in segfaults when querying roads that could require looping back to the start of a way while using a core factor
       - Fixed an issue that could break some testcases when using a core factor
+      - Fixed an issue with parallel edges that could result in weird routes
 
 # 5.3.2
   Changes from 5.3.1
