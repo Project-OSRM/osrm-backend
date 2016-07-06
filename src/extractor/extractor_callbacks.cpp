@@ -231,16 +231,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             const LaneDescriptionID new_id =
                 boost::numeric_cast<LaneDescriptionID>(lane_description_map.size());
             lane_description_map[lane_description] = new_id;
-
-            // since we are getting a new ID, we can augment the current offsets
-
-            // and store the turn lane masks, sadly stxxl does not support insert
-            for (const auto mask : lane_description)
-                external_memory.turn_lane_masks.push_back(mask);
-
-            external_memory.turn_lane_offsets.push_back(external_memory.turn_lane_offsets.back() +
-                                                        lane_description.size());
-
             return new_id;
         }
         else

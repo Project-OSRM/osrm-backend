@@ -31,7 +31,7 @@ Feature: Turn Lane Guidance
             | restriction | bc       | cd     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route                | turns                       | lanes                                  |
-            | a,e       | in,cross,cross       | depart,turn left,arrive     | ,left:true straight:false right:false, |
-            | a,g       | in,straight,straight | depart,turn straight,arrive | ,left:false straight:true right:false, |
-            | a,f       | in,cross,cross       | depart,turn right,arrive    | ,left:false straight:false right:true, |
+            | waypoints | route                | turns                           | lanes                                  |
+            | a,e       | in,cross,cross       | depart,turn left,arrive         | ,left:true straight:false right:false, |
+            | a,g       | in,straight,straight | depart,new name straight,arrive | ,left:false straight:true right:false, |
+            | a,f       | in,cross,cross       | depart,turn right,arrive        | ,left:false straight:false right:true, |
