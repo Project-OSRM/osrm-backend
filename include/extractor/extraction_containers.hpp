@@ -42,9 +42,6 @@ class ExtractionContainers
     void WriteCharData(const std::string &file_name,
                        const stxxl::vector<unsigned> &offests,
                        const stxxl::vector<char> &char_data) const;
-    void WriteTurnLaneMasks(const std::string &file_name,
-                            const stxxl::vector<std::uint32_t> &turn_lane_offsets,
-                            const stxxl::vector<guidance::TurnLaneType::Mask> &turn_lane_masks) const;
 
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
@@ -59,8 +56,6 @@ class ExtractionContainers
     stxxl::vector<char> name_char_data;
     stxxl::vector<unsigned> name_lengths;
     // an adjacency array containing all turn lane masks
-    stxxl::vector<std::uint32_t> turn_lane_offsets;
-    stxxl::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
@@ -71,7 +66,6 @@ class ExtractionContainers
     void PrepareData(const std::string &output_file_name,
                      const std::string &restrictions_file_name,
                      const std::string &names_file_name,
-                     const std::string &turn_lane_file_name,
                      lua_State *segment_state);
 };
 }

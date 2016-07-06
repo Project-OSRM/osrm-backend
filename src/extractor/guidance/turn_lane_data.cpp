@@ -129,6 +129,33 @@ bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
     return findTag(tag, data) != data.cend();
 }
 
+bool isSubsetOf(const LaneDataVector &subset_candidate, const LaneDataVector &superset_candidate)
+{
+    auto location = superset_candidate.begin();
+    for (const auto entry : subset_candidate)
+    {
+        location =
+            std::find_if(location, superset_candidate.end(), [entry](const TurnLaneData &lane_data) {
+                return lane_data.tag == entry.tag;
+            });
+
+        if (location == superset_candidate.end())
+        {
+            std::cout << "Failed to find tag" << std::endl;
+            return false;
+        }
+
+        // compare the number of lanes TODO this might have be to be revisited for situations where
+        // a sliproad widens into multiple lanes
+        if ((location->to - location->from) != (entry.to - entry.from))
+        {
+            std::cout << "Lane missmatch" << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
 } // namespace lanes
 } // namespace guidance
 } // namespace extractor

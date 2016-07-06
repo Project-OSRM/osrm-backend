@@ -241,7 +241,6 @@ int Extractor::run()
         extraction_containers.PrepareData(config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,
-                                          config.turn_lane_descriptions_file_name,
                                           main_context.state);
 
         WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
@@ -543,6 +542,8 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
                                  config.edge_penalty_path,
                                  config.generate_edge_lookup);
 
+    WriteTurnLaneData(config.turn_lane_descriptions_file_name);
+
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
     edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
@@ -708,6 +709,39 @@ void Extractor::WriteIntersectionClassificationData(
 void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
 {
     // Write the turn lane data to file
+    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.size() + 2); // empty ID + sentinel
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        turn_lane_offsets[entry->second + 1] = entry->first.size();
+
+    // inplace prefix sum
+    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
+
+    // allocate the current masks
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        std::copy(entry->first.begin(),
+                  entry->first.end(),
+                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
+
+    util::SimpleLogger().Write() << "Writing turn lane masks...";
+    TIMER_START(turn_lane_timer);
+
+    std::ofstream ofs(turn_lane_file, std::ios::binary);
+
+    if (!util::serializeVector(ofs, turn_lane_offsets))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
+    }
+
+    if (!util::serializeVector(ofs, turn_lane_masks))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
+    }
+
+    TIMER_STOP(turn_lane_timer);
+    util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
 }
 
 } // namespace extractor
