@@ -34,8 +34,6 @@ IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node
 {
 }
 
-IntersectionHandler::~IntersectionHandler() = default;
-
 std::size_t IntersectionHandler::countValid(const Intersection &intersection) const
 {
     return std::count_if(intersection.begin(), intersection.end(), [](const ConnectedRoad &road) {

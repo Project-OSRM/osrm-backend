@@ -31,8 +31,6 @@ SliproadHandler::SliproadHandler(const IntersectionGenerator &intersection_gener
 {
 }
 
-SliproadHandler::~SliproadHandler() {}
-
 // included for interface reasons only
 bool SliproadHandler::canProcess(const NodeID /*nid*/,
                                  const EdgeID /*via_eid*/,

@@ -29,8 +29,6 @@ TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
 {
 }
 
-TurnHandler::~TurnHandler() = default;
-
 bool TurnHandler::canProcess(const NodeID, const EdgeID, const Intersection &) const
 {
     return true;

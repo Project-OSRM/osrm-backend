@@ -29,7 +29,8 @@ class IntersectionHandler
                         const std::vector<QueryNode> &node_info_list,
                         const util::NameTable &name_table,
                         const SuffixTable &street_name_suffix_table);
-    virtual ~IntersectionHandler();
+
+    virtual ~IntersectionHandler() = default;
 
     // check whether the handler can actually handle the intersection
     virtual bool

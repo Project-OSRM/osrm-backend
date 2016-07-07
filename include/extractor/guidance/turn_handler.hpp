@@ -28,7 +28,8 @@ class TurnHandler : public IntersectionHandler
                 const std::vector<QueryNode> &node_info_list,
                 const util::NameTable &name_table,
                 const SuffixTable &street_name_suffix_table);
-    ~TurnHandler() override final;
+
+    ~TurnHandler() override final = default;
 
     // check whether the handler can actually handle the intersection
     bool canProcess(const NodeID nid,
