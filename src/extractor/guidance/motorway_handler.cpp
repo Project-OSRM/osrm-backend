@@ -47,7 +47,7 @@ MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_g
 {
 }
 
-MotorwayHandler::~MotorwayHandler() {}
+MotorwayHandler::~MotorwayHandler() = default;
 
 bool MotorwayHandler::canProcess(const NodeID,
                                  const EdgeID via_eid,

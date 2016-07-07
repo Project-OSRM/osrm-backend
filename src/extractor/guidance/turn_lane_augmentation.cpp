@@ -120,7 +120,7 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
         }
     }
     lane_data.erase(lane_data.begin() + none_index);
-    return std::move(lane_data);
+    return lane_data;
 }
 
 // Merging none-tag into its neighboring fields
@@ -146,7 +146,7 @@ LaneDataVector mergeNoneTag(const std::size_t none_index, LaneDataVector lane_da
 
         lane_data.erase(lane_data.begin() + none_index);
     }
-    return std::move(lane_data);
+    return lane_data;
 }
 
 LaneDataVector handleRenamingSituations(const std::size_t none_index,
@@ -222,7 +222,7 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
             lane_data[none_index].tag = TurnLaneType::straight;
         }
     }
-    return std::move(lane_data);
+    return lane_data;
 }
 
 } // namespace
@@ -239,7 +239,7 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
         (intersection.empty() || lane_data.empty() || !hasTag(TurnLaneType::none, lane_data));
 
     if (needs_no_processing)
-        return std::move(lane_data);
+        return lane_data;
 
     // FIXME all this needs to consider the number of lanes at the target to ensure that we
     // augment lanes correctly, if the target lane allows for more turns
@@ -294,7 +294,7 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     }
     // finally make sure we are still sorted
     std::sort(lane_data.begin(), lane_data.end());
-    return std::move(lane_data);
+    return lane_data;
 }
 
 } // namespace lanes

@@ -65,7 +65,7 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
 {
     //if only a uturn exists, there is nothing we can do
     if( intersection.size() == 1 )
-        return std::move(intersection);
+        return intersection;
 
     const auto &data = node_based_graph.GetEdgeData(via_edge);
     // Extract a lane description for the ID
@@ -85,19 +85,19 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
           data.lane_description_id ==
               node_based_graph.GetEdgeData(intersection[1].turn.eid).lane_description_id) ||
          angularDeviation(intersection[1].turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE))
-        return std::move(intersection);
+        return intersection;
 
     auto lane_data = laneDataFromDescription(turn_lane_description);
 
     // if we see an invalid conversion, we stop immediately
     if (!turn_lane_description.empty() && lane_data.empty())
-        return std::move(intersection);
+        return intersection;
 
     // might be reasonable to handle multiple turns, if we know of a sequence of lanes
     // e.g. one direction per lane, if three lanes and right, through, left available
     if (!turn_lane_description.empty() && lane_data.size() == 1 &&
         lane_data[0].tag == TurnLaneType::none)
-        return std::move(intersection);
+        return intersection;
 
     const std::size_t possible_entries = getNumberOfTurns(intersection);
 
@@ -114,7 +114,7 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
                                         lane_data.size() + 1 == possible_entries);
 
     if (has_merge_lane || has_non_usable_u_turn)
-        return std::move(intersection);
+        return intersection;
 
     if (!lane_data.empty() && canMatchTrivially(intersection, lane_data) &&
         lane_data.size() !=
@@ -165,7 +165,7 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
         return handleTurnAtPreviousIntersection(at, via_edge, std::move(intersection), id_map);
     }
 
-    return std::move(intersection);
+    return intersection;
 }
 
 // At segregated intersections, turn lanes will often only be specified up until the first turn. To
@@ -221,11 +221,11 @@ Intersection TurnLaneHandler::handleTurnAtPreviousIntersection(const NodeID at,
 
     // no lane string, no problems
     if (previous_lane_description.empty())
-        return std::move(intersection);
+        return intersection;
 
     // stop on invalid lane data conversion
     if (lane_data.empty())
-        return std::move(intersection);
+        return intersection;
 
     const auto &previous_data = node_based_graph.GetEdgeData(previous_id);
     const auto is_simple = isSimpleIntersection(lane_data, intersection);
@@ -257,7 +257,7 @@ Intersection TurnLaneHandler::handleTurnAtPreviousIntersection(const NodeID at,
             }
         }
     }
-    return std::move(intersection);
+    return intersection;
 }
 
 /* A simple intersection does not depend on the next intersection coming up. This is important
@@ -522,7 +522,7 @@ Intersection TurnLaneHandler::simpleMatchTuplesToTurns(Intersection intersection
                                                        LaneDataIdMap &id_map) const
 {
     if (lane_data.empty() || !canMatchTrivially(intersection, lane_data))
-        return std::move(intersection);
+        return intersection;
 
     BOOST_ASSERT(
         !hasTag(TurnLaneType::none | TurnLaneType::merge_to_left | TurnLaneType::merge_to_right,

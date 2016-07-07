@@ -31,7 +31,7 @@ RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_bas
 {
 }
 
-RoundaboutHandler::~RoundaboutHandler() {}
+RoundaboutHandler::~RoundaboutHandler() = default;
 
 bool RoundaboutHandler::canProcess(const NodeID from_nid,
                                    const EdgeID via_eid,

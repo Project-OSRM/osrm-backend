@@ -236,7 +236,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
                     DirectionModifier::SharpLeft)
             {
                 // cannot match u-turn in a valid way
-                return std::move(intersection);
+                return intersection;
             }
             u_turn = intersection.size() - 1;
         }
@@ -246,7 +246,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
 
         matchRoad(intersection[u_turn], lane_data.back());
     }
-    return std::move(intersection);
+    return intersection;
 }
 
 } // namespace lane_matching
