@@ -16,8 +16,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
-#include <iostream>
 #include <limits>
 #include <utility>
 
@@ -72,13 +70,23 @@ bool isCollapsableInstruction(const TurnInstruction instruction)
 }
 
 // A check whether two instructions can be treated as one. This is only the case for very short
-// maneuvers that can, in some form, be seen as one. The additional in_step is to find out about
-// a possible u-turn.
-bool collapsable(const RouteStep &step)
+// maneuvers that can, in some form, be seen as one. Lookahead of one step.
+bool collapsable(const RouteStep &step, const RouteStep &next)
 {
-    return step.distance < MAX_COLLAPSE_DISTANCE &&
-           (step.maneuver.instruction.type == TurnType::UseLane ||
-            isCollapsableInstruction(step.maneuver.instruction));
+    const auto is_short_step = step.distance < MAX_COLLAPSE_DISTANCE;
+    const auto instruction_can_be_collapsed = isCollapsableInstruction(step.maneuver.instruction);
+
+    const auto is_use_lane = step.maneuver.instruction.type == TurnType::UseLane;
+    const auto lanes_dont_change = step.maneuver.lanes == next.maneuver.lanes;
+
+    if (is_short_step && instruction_can_be_collapsed)
+        return true;
+
+    // Prevent collapsing away important lane change steps
+    if (is_short_step && is_use_lane && lanes_dont_change)
+        return true;
+
+    return false;
 }
 
 bool compatible(const RouteStep &lhs, const RouteStep &rhs) { return lhs.mode == rhs.mode; }
@@ -369,10 +377,9 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     BOOST_ASSERT(step_index < steps.size());
     BOOST_ASSERT(one_back_index < steps.size());
     const auto &current_step = steps[step_index];
-
     const auto &one_back_step = steps[one_back_index];
 
-    // This function assumes driving on the right hand side of the streat
+    // FIXME: this function assumes driving on the right hand side of the streat
     const auto bearingsAreReversed = [](const double bearing_in, const double bearing_out) {
         // Nearly perfectly reversed angles have a difference close to 180 degrees (straight)
         const double left_turn_angle = [&]() {
@@ -389,7 +396,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         return;
 
     // Very Short New Name
-    if (((collapsable(one_back_step) ||
+    if (((collapsable(one_back_step, current_step) ||
           (isCollapsableInstruction(one_back_step.maneuver.instruction) &&
            choiceless(current_step, one_back_step))) &&
          !(one_back_step.maneuver.instruction.type == TurnType::Merge)))
