@@ -154,7 +154,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         TurnLaneDescription lane_description;
 
         typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
-        boost::char_separator<char> sep("|&", "", boost::keep_empty_tokens);
+        boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
         boost::char_separator<char> inner_sep(";", "");
         tokenizer tokens(lane_string, sep);
 

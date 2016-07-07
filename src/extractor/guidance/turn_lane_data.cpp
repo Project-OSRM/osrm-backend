@@ -45,11 +45,6 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
 LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
 {
     typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
-
-    // FIXME this is a workaround due to https://github.com/cucumber/cucumber-js/issues/417,
-    // need to switch statements when fixed
-    // const auto num_lanes = std::count(turn_lane_string.begin(), turn_lane_string.end(), '|') + 1;
-    // count the number of lanes
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
     const auto setLaneData = [&](
         LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {

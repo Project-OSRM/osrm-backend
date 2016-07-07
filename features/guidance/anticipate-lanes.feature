@@ -15,14 +15,14 @@ Feature: Turn Lane Guidance
             |   |   | y |   | e |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward         |
-            | ab    | through\|right&right&right |
-            | bx    |                            |
-            | bc    | left\|left&through         |
-            | cd    | through\|right             |
-            | cy    |                            |
-            | dz    |                            |
-            | de    |                            |
+            | nodes | turn:lanes:forward           |
+            | ab    | through\|right\|right\|right |
+            | bx    |                              |
+            | bc    | left\|left\|through          |
+            | cd    | through\|right               |
+            | cy    |                              |
+            | dz    |                              |
+            | de    |                              |
 
        When I route I should get
             | waypoints | route          | turns                                         | lanes                                                                                                             | #      |
@@ -39,13 +39,13 @@ Feature: Turn Lane Guidance
             | e |   | d | y |
 
         And the ways
-            | nodes | turn:lanes:forward   | turn:lanes:backward | name |
-            | ab    | through\|right&right |                     | MySt |
-            | bx    |                      |                     | XSt  |
-            | bc    |                      | left\|right         | MySt |
-            | cd    | left\|right          | through\|through    | MySt |
-            | de    |                      | left\|left&through  | MySt |
-            | dy    |                      |                     | YSt  |
+            | nodes | turn:lanes:forward    | turn:lanes:backward | name |
+            | ab    | through\|right\|right |                     | MySt |
+            | bx    |                       |                     | XSt  |
+            | bc    |                       | left\|right         | MySt |
+            | cd    | left\|right           | through\|through    | MySt |
+            | de    |                       | left\|left\|through | MySt |
+            | dy    |                       |                     | YSt  |
 
        When I route I should get
             | waypoints | route               | turns                                   | lanes                                                         |
@@ -62,13 +62,13 @@ Feature: Turn Lane Guidance
             | e |   | d | y |
 
         And the ways
-            | nodes | turn:lanes:forward   | turn:lanes:backward | name |
-            | ab    | through\|right&right |                     | AXSt |
-            | bx    |                      |                     | AXSt |
-            | bc    |                      | left\|right         | BDSt |
-            | cd    | left\|right          | through\|through    | BDSt |
-            | de    |                      | left\|left&through  | EYSt |
-            | dy    |                      |                     | EYSt |
+            | nodes | turn:lanes:forward    | turn:lanes:backward | name |
+            | ab    | through\|right\|right |                     | AXSt |
+            | bx    |                       |                     | AXSt |
+            | bc    |                       | left\|right         | BDSt |
+            | cd    | left\|right           | through\|through    | BDSt |
+            | de    |                       | left\|left\|through | EYSt |
+            | dy    |                       |                     | EYSt |
 
        When I route I should get
             | waypoints | route               | turns                               | lanes                                                         |
@@ -105,13 +105,13 @@ Feature: Turn Lane Guidance
             |   |   |   |   |   | j |
 
         And the ways
-            | nodes | turn:lanes:forward                                 | lanes | highway       | oneway | name |
-            | ab    | none\|none&none&slight_right&slight_right          |   5   | motorway      |        | abx  |
-            | bx    |                                                    |   3   | motorway      |        | abx  |
-            | bc    |                                                    |   2   | motorway_link | yes    | bcd  |
-            | cd    | slight_left\|slight_left;slight_right&slight_right |   3   | motorway_link | yes    | bcd  |
-            | di    | slight_left\|slight_right                          |   2   | motorway_link | yes    | di   |
-            | dj    |                                                    |   2   | motorway_link | yes    | dj   |
+            | nodes | turn:lanes:forward                                  | lanes | highway       | oneway | name |
+            | ab    | none\|none\|none\|slight_right\|slight_right        |   5   | motorway      |        | abx  |
+            | bx    |                                                     |   3   | motorway      |        | abx  |
+            | bc    |                                                     |   2   | motorway_link | yes    | bcd  |
+            | cd    | slight_left\|slight_left;slight_right\|slight_right |   3   | motorway_link | yes    | bcd  |
+            | di    | slight_left\|slight_right                           |   2   | motorway_link | yes    | di   |
+            | dj    |                                                     |   2   | motorway_link | yes    | dj   |
 
        When I route I should get
             | waypoints | route         | turns                                          | lanes                                                                                                                                    |
@@ -150,14 +150,14 @@ Feature: Turn Lane Guidance
             |   |   | y |   | e |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward         | name |
-            | ab    | through\|right&right&right | abx  |
-            | bx    |                            | abx  |
-            | bc    | left\|left&through         | bcy  |
-            | cy    |                            | bcy  |
-            | cd    | through\|right             | cdz  |
-            | dz    |                            | cdz  |
-            | de    |                            | de   |
+            | nodes | turn:lanes:forward           | name |
+            | ab    | through\|right\|right\|right | abx  |
+            | bx    |                              | abx  |
+            | bc    | left\|left\|through          | bcy  |
+            | cy    |                              | bcy  |
+            | cd    | through\|right               | cdz  |
+            | dz    |                              | cdz  |
+            | de    |                              | de   |
 
        When I route I should get
             | waypoints | route             | turns                                         | lanes                                                                                                             |
@@ -173,14 +173,14 @@ Feature: Turn Lane Guidance
             |   |   | y |   | e |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward         | name |
-            | ab    | through\|right             | abx  |
-            | bx    |                            | abx  |
-            | bc    | left\|left&through         | bcy  |
-            | cy    |                            | bcy  |
-            | cd    | through\|right&right&right | cdz  |
-            | dz    |                            | cdz  |
-            | de    |                            | de   |
+            | nodes | turn:lanes:forward           | name |
+            | ab    | through\|right               | abx  |
+            | bx    |                              | abx  |
+            | bc    | left\|left\|through          | bcy  |
+            | cy    |                              | bcy  |
+            | cd    | through\|right\|right\|right | cdz  |
+            | dz    |                              | cdz  |
+            | de    |                              | de   |
 
        When I route I should get
             | waypoints | route             | turns                                         | lanes                                                                                                          |
@@ -196,14 +196,14 @@ Feature: Turn Lane Guidance
             |   |   | y |   | e |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward         | name |
-            | ab    | through\|right&right&right | abx  |
-            | bx    |                            | abx  |
-            | bc    | left\|left&through         | bcy  |
-            | cy    |                            | bcy  |
-            | cd    | through\|right&right&right | cdz  |
-            | dz    |                            | cdz  |
-            | de    |                            | de   |
+            | nodes | turn:lanes:forward           | name |
+            | ab    | through\|right\|right\|right | abx  |
+            | bx    |                              | abx  |
+            | bc    | left\|left\|through          | bcy  |
+            | cy    |                              | bcy  |
+            | cd    | through\|right\|right\|right | cdz  |
+            | dz    |                              | cdz  |
+            | de    |                              | de   |
 
        When I route I should get
             | waypoints | route             | turns                                         | lanes                                                                                                                                 |
@@ -219,14 +219,14 @@ Feature: Turn Lane Guidance
             |   |   | y |   | e |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward         | name |
-            | ab    | through\|right             | abx  |
-            | bx    |                            | abx  |
-            | bc    | left\|left&through         | bcy  |
-            | cy    |                            | bcy  |
-            | cd    | through\|right             | cdz  |
-            | dz    |                            | cdz  |
-            | de    |                            | de   |
+            | nodes | turn:lanes:forward  | name |
+            | ab    | through\|right      | abx  |
+            | bx    |                     | abx  |
+            | bc    | left\|left\|through | bcy  |
+            | cy    |                     | bcy  |
+            | cd    | through\|right      | cdz  |
+            | dz    |                     | cdz  |
+            | de    |                     | de   |
 
        When I route I should get
             | waypoints | route             | turns                                         | lanes                                                                                     |
@@ -244,16 +244,16 @@ Feature: Turn Lane Guidance
             |   |   |   |   | w |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward         | name |
-            | ab    | through\|right&right&right | abx  |
-            | bx    |                            | abx  |
-            | bc    | left\|left&through         | bcy  |
-            | cy    |                            | bcy  |
-            | cd    | through\|right&right       | cdz  |
-            | dz    |                            | cdz  |
-            | de    | left\|through              | dew  |
-            | ew    |                            | dew  |
-            | ef    |                            | ef   |
+            | nodes | turn:lanes:forward           | name |
+            | ab    | through\|right\|right\|right | abx  |
+            | bx    |                              | abx  |
+            | bc    | left\|left\|through          | bcy  |
+            | cy    |                              | bcy  |
+            | cd    | through\|right\|right        | cdz  |
+            | dz    |                              | cdz  |
+            | de    | left\|through                | dew  |
+            | ew    |                              | dew  |
+            | ef    |                              | ef   |
 
        When I route I should get
             | waypoints | route                 | turns                                                   | lanes                                                                                                                                                  |
@@ -407,10 +407,10 @@ Feature: Turn Lane Guidance
 
         And the ways
             | nodes | turn:lanes:forward | highway   | name   |
-            | abi   | \|&right&right     | primary   | start  |
-            | bch   | \|&right&right     | primary   | first  |
-            | cdj   | \|&right&right     | primary   | second |
-            | de    | left\|right&right  | secondary | third  |
+            | abi   | \|\|right\|right   | primary   | start  |
+            | bch   | \|\|right\|right   | primary   | first  |
+            | cdj   | \|\|right\|right   | primary   | second |
+            | de    | left\|right\|right | secondary | third  |
             | feg   |                    | tertiary  | fourth |
 
         When I route I should get
@@ -432,10 +432,10 @@ Feature: Turn Lane Guidance
 
         And the ways
             | nodes | turn:lanes:forward | highway   | name   |
-            | abi   | left\|left&&       | primary   | start  |
-            | bch   | left\|left&&       | primary   | first  |
-            | cdj   | left\|left&&       | primary   | second |
-            | de    | left\|left&right   | secondary | third  |
+            | abi   | left\|left\|\|     | primary   | start  |
+            | bch   | left\|left\|\|     | primary   | first  |
+            | cdj   | left\|left\|\|     | primary   | second |
+            | de    | left\|left\|right  | secondary | third  |
             | feg   |                    | tertiary  | fourth |
 
         When I route I should get

@@ -5,9 +5,7 @@ Feature: Turn Lane Guidance
         Given the profile "car"
         Given a grid size of 20 meters
 
-    #requires https://github.com/cucumber/cucumber-js/issues/417
-    #Due to this, we use & as a pipe character. Switch them out for \| when 417 is fixed
-    @bug @WORKAROUND-FIXME
+    @bug
     Scenario: Basic Turn Lane 3-way Turn with empty lanes
         Given the node map
             | a |   | b |   | c |
@@ -16,7 +14,7 @@ Feature: Turn Lane Guidance
         And the ways
             | nodes  | turn:lanes     | turn:lanes:forward | turn:lanes:backward | name     |
             | ab     |                | through\|right     |                     | in       |
-            | bc     |                |                    | left\|through&&     | straight |
+            | bc     |                |                    | left\|through\|\|   | straight |
             | bd     |                |                    | left\|right         | right    |
 
        When I route I should get
@@ -89,7 +87,7 @@ Feature: Turn Lane Guidance
 
 
     #this next test requires decision on how to announce lanes for going straight if there is no turn
-    @TODO @WORKAROUND-FIXME
+    @TODO
     Scenario: Turn with Bus-Lane
         Given the node map
             | a |   | b |   | c |
@@ -98,7 +96,7 @@ Feature: Turn Lane Guidance
 
         And the ways
             | nodes | name | turn:lanes:forward | lanes:psv:forward |
-            | ab    | road | through\|right&    | 1                 |
+            | ab    | road | through\|right\|   | 1                 |
             | bc    | road |                    |                   |
             | bd    | turn |                    |                   |
 
@@ -126,7 +124,7 @@ Feature: Turn Lane Guidance
             | a,c       | road,road      | depart,arrive            |
 
     #turn lanes are often drawn at the incoming road, even though the actual turn requires crossing the intersection first
-    @todo @WORKAROUND-FIXME @bug
+    @todo @bug
     Scenario: Turn Lanes at Segregated Road
         Given the node map
             |   |   | i | l |   |   |
@@ -137,19 +135,19 @@ Feature: Turn Lane Guidance
             |   |   | j | k |   |   |
 
         And the ways
-            | nodes | name  | turn:lanes:forward      | oneway |
-            | ab    | road  | left\|through&right     | yes    |
-            | bc    | road  | left\|through           | yes    |
-            | cd    | road  |                         | yes    |
-            | ef    | road  | \|through&through;right | yes    |
-            | fg    | road  | left;through\|through&  | yes    |
-            | gh    | road  |                         | yes    |
-            | ig    | cross |                         | yes    |
-            | gb    | cross | left\|through           | yes    |
-            | bj    | cross |                         | yes    |
-            | kc    | cross | left\|through;right     | yes    |
-            | cf    | cross | left\|through           | yes    |
-            | fl    | cross |                         | yes    |
+            | nodes | name  | turn:lanes:forward       | oneway |
+            | ab    | road  | left\|through\|right     | yes    |
+            | bc    | road  | left\|through            | yes    |
+            | cd    | road  |                          | yes    |
+            | ef    | road  | \|through\|through;right | yes    |
+            | fg    | road  | left;through\|through\|  | yes    |
+            | gh    | road  |                          | yes    |
+            | ig    | cross |                          | yes    |
+            | gb    | cross | left\|through            | yes    |
+            | bj    | cross |                          | yes    |
+            | kc    | cross | left\|through;right      | yes    |
+            | cf    | cross | left\|through            | yes    |
+            | fl    | cross |                          | yes    |
 
         When I route I should get
             | waypoints | route             | turns                           | lanes                                           |
@@ -181,19 +179,19 @@ Feature: Turn Lane Guidance
             |   |   | j | k |   |   |
 
         And the ways
-            | nodes | name  | turn:lanes:forward      | oneway |
-            | ab    | road  | left\|through&right     | yes    |
-            | bc    | road  | left\|through           | yes    |
-            | cd    | road  |                         | yes    |
-            | ef    | road  | \|through&through;right | yes    |
-            | fg    | road  | left;through\|through&  | yes    |
-            | gh    | road  |                         | yes    |
-            | ig    | cross |                         | yes    |
-            | gb    | cross | left\|through           | yes    |
-            | bj    | cross |                         | yes    |
-            | kc    | cross | left\|through;right     | yes    |
-            | cf    | cross | left\|through           | yes    |
-            | fl    | cross |                         | yes    |
+            | nodes | name  | turn:lanes:forward       | oneway |
+            | ab    | road  | left\|through\|right     | yes    |
+            | bc    | road  | left\|through            | yes    |
+            | cd    | road  |                          | yes    |
+            | ef    | road  | \|through\|through;right | yes    |
+            | fg    | road  | left;through\|through\|  | yes    |
+            | gh    | road  |                          | yes    |
+            | ig    | cross |                          | yes    |
+            | gb    | cross | left\|through            | yes    |
+            | bj    | cross |                          | yes    |
+            | kc    | cross | left\|through;right      | yes    |
+            | cf    | cross | left\|through            | yes    |
+            | fl    | cross |                          | yes    |
 
         When I route I should get
             | waypoints | route             | turns                           | lanes                                           |
@@ -212,14 +210,14 @@ Feature: Turn Lane Guidance
             |   |   | j | k |   |   |
 
         And the ways
-            | nodes | name  | turn:lanes:forward      | oneway |
-            | ab    | road  | left\|through&right     | yes    |
-            | bc    | road  |                         | yes    |
-            | cd    | road  |                         | yes    |
-            | gb    | cross |                         | yes    |
-            | bj    | cross |                         | yes    |
-            | kc    | cross |                         | yes    |
-            | cf    | cross |                         | yes    |
+            | nodes | name  | turn:lanes:forward   | oneway |
+            | ab    | road  | left\|through\|right | yes    |
+            | bc    | road  |                      | yes    |
+            | cd    | road  |                      | yes    |
+            | gb    | cross |                      | yes    |
+            | bj    | cross |                      | yes    |
+            | kc    | cross |                      | yes    |
+            | cf    | cross |                      | yes    |
 
         When I route I should get
             | waypoints | route             | turns                           | lanes                                  |
@@ -329,13 +327,13 @@ Feature: Turn Lane Guidance
             |   |   |   | f |   |   |
 
         And the ways
-            | nodes | name    | turn:lanes:forward  |
-            | ab    | road    | left\|through&right |
-            | bc    | road    |                     |
-            | cd    | road    | left\|through       |
-            | de    | through |                     |
-            | dg    | left    |                     |
-            | cf    | right   |                     |
+            | nodes | name    | turn:lanes:forward   |
+            | ab    | road    | left\|through\|right |
+            | bc    | road    |                      |
+            | cd    | road    | left\|through        |
+            | de    | through |                      |
+            | dg    | left    |                      |
+            | cf    | right   |                      |
 
         When I route I should get
             | waypoints | route                | turns                           | lanes                                  |
@@ -384,16 +382,16 @@ Feature: Turn Lane Guidance
             | g    | traffic_signals |
 
         And the ways
-            | nodes         | name          | turn:lanes:forward                                              | junction   | oneway | highway   |
-            | abcdef        | roundabout    |                                                                 | roundabout | yes    | primary   |
-            | gha           | roundabout    |                                                                 | roundabout | yes    | primary   |
-            | fg            | roundabout    | slight_left\|slight_left;slight_right&slight_right&slight_right | roundabout | yes    | primary   |
-            | aoib          | top           |                                                                 |            | yes    | primary   |
-            | cjd           | left          |                                                                 |            | yes    | primary   |
-            | ekf           | bottom        |                                                                 |            | yes    | primary   |
-            | fng           | bottom-right  |                                                                 |            | yes    | primary   |
-            | hma           | top-right     |                                                                 |            | yes    | primary   |
-            | hl            | top-right-out |                                                                 |            | yes    | secondary |
+            | nodes         | name          | turn:lanes:forward                                                | junction   | oneway | highway   |
+            | abcdef        | roundabout    |                                                                   | roundabout | yes    | primary   |
+            | gha           | roundabout    |                                                                   | roundabout | yes    | primary   |
+            | fg            | roundabout    | slight_left\|slight_left;slight_right\|slight_right\|slight_right | roundabout | yes    | primary   |
+            | aoib          | top           |                                                                   |            | yes    | primary   |
+            | cjd           | left          |                                                                   |            | yes    | primary   |
+            | ekf           | bottom        |                                                                   |            | yes    | primary   |
+            | fng           | bottom-right  |                                                                   |            | yes    | primary   |
+            | hma           | top-right     |                                                                   |            | yes    | primary   |
+            | hl            | top-right-out |                                                                   |            | yes    | secondary |
 
         When I route I should get
             | waypoints | route                           | turns                           | lanes                                                                                  |
@@ -411,12 +409,12 @@ Feature: Turn Lane Guidance
             |   |   |   | f |   |
 
         And the ways
-            | nodes | name  | turn:lanes:forward         | oneway | highway   |
-            | ab    | road  | left\|left&through&through | yes    | primary   |
-            | bd    | road  | through\|through           | yes    | primary   |
-            | bc    | road  | left\|left                 | yes    | primary   |
-            | de    | road  |                            | yes    | primary   |
-            | fdcg  | cross |                            |        | secondary |
+            | nodes | name  | turn:lanes:forward           | oneway | highway   |
+            | ab    | road  | left\|left\|through\|through | yes    | primary   |
+            | bd    | road  | through\|through             | yes    | primary   |
+            | bc    | road  | left\|left                   | yes    | primary   |
+            | de    | road  |                              | yes    | primary   |
+            | fdcg  | cross |                              |        | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -440,8 +438,8 @@ Feature: Turn Lane Guidance
             | nodes | name  | turn:lanes:forward | oneway | highway  |
             | ab    | road  |                    | no     | primary  |
             | di    | road  |                    | yes    | primary  |
-            | bc    | road  | \|through&right    | yes    | primary  |
-            | cd    | road  | \|through&right    | yes    | primary  |
+            | bc    | road  | \|through\|right   | yes    | primary  |
+            | cd    | road  | \|through\|right   | yes    | primary  |
             | fc    | road  |                    | no     | tertiary |
             | jefb  | road  |                    | yes    | primary  |
             | gdeh  | cross |                    | no     | primary  |
@@ -464,12 +462,12 @@ Feature: Turn Lane Guidance
             |   |   |   |   |   | h |   |
 
         And the ways
-            | nodes | name     | turn:lanes:forward              | oneway | highway   |
-            | abc   | road     | left\|left&left&through&through | yes    | primary   |
-            | cde   | road     |                                 | yes    | primary   |
-            | hc    | cross    |                                 | yes    | secondary |
-            | cg    | straight |                                 | no     | tertiary  |
-            | cf    | left     |                                 | yes    | primary   |
+            | nodes | name     | turn:lanes:forward                 | oneway | highway   |
+            | abc   | road     | left\|left\|left\|through\|through | yes    | primary   |
+            | cde   | road     |                                    | yes    | primary   |
+            | hc    | cross    |                                    | yes    | secondary |
+            | cg    | straight |                                    | no     | tertiary  |
+            | cf    | left     |                                    | yes    | primary   |
 
         When I route I should get
             | waypoints | route                  | turns                           | lanes                                                           |
@@ -489,15 +487,15 @@ Feature: Turn Lane Guidance
             |   |   |   |   | j |   |   |
 
         And the ways
-            | nodes | name   | turn:lanes:forward                    | oneway | highway   | junction   |
-            | efgha | round  |                                       | yes    | primary   | roundabout |
-            | ab    | round  |                                       | yes    | primary   | roundabout |
-            | bc    | round  | slight_left\|slight_left&slight_right | yes    | primary   | roundabout |
-            | cd    | round  |                                       | yes    | primary   | roundabout |
-            | de    | round  | slight_left\|slight_right             | yes    | primary   | roundabout |
-            | ib    | left   | slight_left\|slight_left&slight_right | yes    | primary   |            |
-            | cj    | bottom |                                       | yes    | primary   |            |
-            | ek    | right  |                                       | yes    | primary   |            |
+            | nodes | name   | turn:lanes:forward                     | oneway | highway   | junction   |
+            | efgha | round  |                                        | yes    | primary   | roundabout |
+            | ab    | round  |                                        | yes    | primary   | roundabout |
+            | bc    | round  | slight_left\|slight_left\|slight_right | yes    | primary   | roundabout |
+            | cd    | round  |                                        | yes    | primary   | roundabout |
+            | de    | round  | slight_left\|slight_right              | yes    | primary   | roundabout |
+            | ib    | left   | slight_left\|slight_left\|slight_right | yes    | primary   |            |
+            | cj    | bottom |                                        | yes    | primary   |            |
+            | ek    | right  |                                        | yes    | primary   |            |
 
         When I route I should get
             | waypoints | route              | turns                      | lanes |
@@ -514,10 +512,10 @@ Feature: Turn Lane Guidance
             | b    | traffic_signals |
 
         And the ways
-            | nodes | name  | turn:lanes:forward                                 | highway |
-            | abc   | road  | through\|through&through;slight_right&slight_right | primary |
-            | cd    | road  |                                                    | primary |
-            | ce    | cross |                                                    | primary |
+            | nodes | name  | turn:lanes:forward                                   | highway |
+            | abc   | road  | through\|through\|through;slight_right\|slight_right | primary |
+            | cd    | road  |                                                      | primary |
+            | ce    | cross |                                                      | primary |
 
         When I route I should get
             | waypoints | route            | turns                           | lanes                                                                        |
@@ -530,10 +528,10 @@ Feature: Turn Lane Guidance
             |   |   |   |   |   |   | e |
 
         And the ways
-            | nodes | name | turn:lanes:forward                                 | highway       |
-            | abc   | hwy  | through\|through&through;slight_right&slight_right | motorway      |
-            | cd    | hwy  |                                                    | motorway      |
-            | ce    | ramp |                                                    | motorway_link |
+            | nodes | name | turn:lanes:forward                                   | highway       |
+            | abc   | hwy  | through\|through\|through;slight_right\|slight_right | motorway      |
+            | cd    | hwy  |                                                      | motorway      |
+            | ce    | ramp |                                                      | motorway_link |
 
         When I route I should get
             | waypoints | route         | turns                               | lanes                                                                        |
@@ -570,10 +568,10 @@ Feature: Turn Lane Guidance
             |   |   |   |   |   |   |   |   |   |   | d |   |
 
         And the ways
-            | nodes | name | turn:lanes:forward            | highway       | oneway |
-            | ab    | hwy  | through\|through&slight_right | motorway      | yes    |
-            | bc    | hwy  |                               | motorway      | yes    |
-            | bd    | ramp |                               | motorway_link | yes    |
+            | nodes | name | turn:lanes:forward             | highway       | oneway |
+            | ab    | hwy  | through\|through\|slight_right | motorway      | yes    |
+            | bc    | hwy  |                                | motorway      | yes    |
+            | bd    | ramp |                                | motorway_link | yes    |
 
         When I route I should get
             | waypoints | route         | turns                               | lanes                                             |
@@ -588,11 +586,11 @@ Feature: Turn Lane Guidance
             | a |   |   |   |   | b |   |   |   |   |   | c |
 
         And the ways
-            | nodes | name | turn:lanes:forward       | highway      | oneway |
-            | ab    | road | reverse\|through&through | primary      | yes    |
-            | bc    | road |                          | primary      | yes    |
-            | bdeg  | road |                          | primary_link | yes    |
-            | fgh   | road |                          | primary      | yes    |
+            | nodes | name | turn:lanes:forward        | highway      | oneway |
+            | ab    | road | reverse\|through\|through | primary      | yes    |
+            | bc    | road |                           | primary      | yes    |
+            | bdeg  | road |                           | primary_link | yes    |
+            | fgh   | road |                           | primary      | yes    |
 
         When I route I should get
             | waypoints | route          | turns                        | lanes                                     |
@@ -606,11 +604,11 @@ Feature: Turn Lane Guidance
             | a |   |   |   |   | b |   |   |   |   |   | c |
 
         And the ways
-            | nodes | name | turn:lanes:forward    | highway      | oneway |
-            | ab    | road | reverse\|through&none | primary      | yes    |
-            | bc    | road |                       | primary      | yes    |
-            | bdeg  | road |                       | primary_link | yes    |
-            | fgh   | road |                       | primary      | yes    |
+            | nodes | name | turn:lanes:forward     | highway      | oneway |
+            | ab    | road | reverse\|through\|none | primary      | yes    |
+            | bc    | road |                        | primary      | yes    |
+            | bdeg  | road |                        | primary_link | yes    |
+            | fgh   | road |                        | primary      | yes    |
 
         When I route I should get
             | waypoints | route          | turns                        | lanes                                  |
@@ -625,12 +623,12 @@ Feature: Turn Lane Guidance
             |   |   | i |   |   |   |   |   |   |   |   |   |
 
         And the ways
-            | nodes | name | turn:lanes:forward    | highway      | oneway |
-            | ajb   | road | reverse\|through&none | primary      | yes    |
-            | bc    | road |                       | primary      | yes    |
-            | bdeg  | road |                       | primary_link | yes    |
-            | fgh   | road |                       | primary      | yes    |
-            | ji    | park |                       | service      | no     |
+            | nodes | name | turn:lanes:forward     | highway      | oneway |
+            | ajb   | road | reverse\|through\|none | primary      | yes    |
+            | bc    | road |                        | primary      | yes    |
+            | bdeg  | road |                        | primary_link | yes    |
+            | fgh   | road |                        | primary      | yes    |
+            | ji    | park |                        | service      | no     |
 
         When I route I should get
             | waypoints | route          | turns                        | lanes                                  |

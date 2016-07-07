@@ -4,13 +4,13 @@
   "private": true,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++11 designed to run on OpenStreetMap data.",
   "dependencies": {
-    "cucumber": "^0.9.4",
+    "chalk": "^1.1.3",
+    "cucumber": "^1.2.1",
     "d3-queue": "^2.0.3",
     "node-timeout": "0.0.4",
+    "polyline": "^0.2.0",
     "request": "^2.69.0",
-    "xmlbuilder": "^4.2.1",
-    "chalk": "^1.1.3",
-    "polyline": "^0.2.0"
+    "xmlbuilder": "^4.2.1"
   },
   "bin": {
     "cucumber": "./node_modules/cucumber/bin/cucumber.js"
