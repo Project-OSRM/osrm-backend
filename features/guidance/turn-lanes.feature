@@ -297,9 +297,10 @@ Feature: Turn Lane Guidance
             | bg    | right |                     | no     |
 
         When I route I should get
-            | waypoints | route            | turns                    | lanes                            |
-            | a,f       | road,turn,turn   | depart,turn left,arrive  | ,left:true straight;right:false, |
-            | a,g       | road,right,right | depart,turn right,arrive | ,left:false straight;right:true, |
+            | waypoints | route            | turns                           | lanes                            |
+            | a,f       | road,turn,turn   | depart,turn left,arrive         | ,left:true straight;right:false, |
+            | a,d       | road,road,road   | depart,use lane straight,arrive | ,left:false straight;right:true, |
+            | a,g       | road,right,right | depart,turn right,arrive        | ,left:false straight;right:true, |
 
     Scenario: Passing a one-way street, partly pulled back lanes, no through
         Given the node map
