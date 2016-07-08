@@ -5,9 +5,7 @@ Feature: Turn Lane Guidance
         Given the profile "car"
         Given a grid size of 3 meters
 
-    #requires https://github.com/cucumber/cucumber-js/issues/417
-    #Due to this, we use & as a pipe character. Switch them out for \| when 417 is fixed
-    @bug @WORKAROUND-FIXME
+    @sliproads
     Scenario: Separate Turn Lanes
         Given the node map
             |   |   |   |   |   |   |   | e |   |
@@ -36,86 +34,7 @@ Feature: Turn Lane Guidance
             | a,g       | in,straight,straight | depart,new name straight,arrive | ,left:false straight:true right:false, |
             | a,f       | in,cross,cross       | depart,turn right,arrive        | ,left:false straight:false right:true, |
 
-    @TODO @2650 @bug
-    Scenario: Sliproad with through lane
-        Given the node map
-            |   |   |   |   |   |   |   |   |   | f |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   | g |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   | e |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   | d |   |   |   |
-            | a |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   | b |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   | c |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | h |   |   |   |   | i |   |   |   |
-
-        And the ways
-            | nodes | name   | oneway | turn:lanes:forward |
-            | ab    | ghough | yes    |                    |
-            | bc    | ghough | yes    | through\|none      |
-            | bd    | ghough | yes    | none\|through      |
-            | de    | ghough | yes    |                    |
-            | fgb   | haight | yes    |                    |
-            | bh    | haight | yes    | left\|none         |
-            | fd    | market | yes    |                    |
-            | dc    | market | yes    |                    |
-            | ci    | market | yes    |                    |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction   |
-            | restriction | fgb      | bd     | b        | no_left_turn  |
-            | restriction | fgb      | bc     | b        | no_left_turn  |
-
-        When I route I should get
-            | waypoints | route                | turns                              | lanes |
-            | a,h       | ghough,haight,haight | depart,turn right,arrive           |       |
-            | a,i       | ghough,market,market | depart,turn right,arrive           |       |
-            | a,e       | ghough,ghough,ghough | depart,continue slight left,arrive |       |
-
-    @TODO @2650 @bug
-    Scenario: Sliproad with through lane
-        Given the node map
-            |   |   |   |   |   |   |   | f |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | g |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   | e |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   | d |   |   |
-            | a |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | b |   |   |   |   |   |
-            |   |   |   |   |   |   |   | c |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   | h |   |   |   | i |   |   |
-
-        And the ways
-            | nodes | name   | oneway | turn:lanes:forward |
-            | ab    | ghough | yes    |                    |
-            | bc    | ghough | yes    | through\|none      |
-            | bd    | ghough | yes    | none\|through      |
-            | fgb   | haight | yes    |                    |
-            | bh    | haight | yes    | left\|none         |
-            | fd    | market | yes    |                    |
-            | dc    | market | yes    |                    |
-            | ci    | market | yes    |                    |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | dc     | d        | no_right_turn |
-            | restriction | fgb      | bd     | b        | no_left_turn  |
-            | restriction | fgb      | bc     | b        | no_left_turn  |
-
-        When I route I should get
-            | waypoints | route                | turns                              | lanes |
-            | a,h       | ghough,haight,haight | depart,turn right,arrive           |       |
-            | a,i       | ghough,market,market | depart,turn right,arrive           |       |
-            | a,e       | ghough,ghough,ghough | depart,continue slight left,arrive |       |
-
+    @sliproads
     Scenario: Separate Turn Lanes
         Given the node map
             |   |   |   |   |   |   |   | e |   |
@@ -144,7 +63,7 @@ Feature: Turn Lane Guidance
             | a,g       | in,straight,straight | depart,new name straight,arrive | ,left:false straight:true right:false, |
             | a,f       | in,cross,cross       | depart,turn right,arrive        | ,left:false straight:false right:true, |
 
-    @guidance @lanes @sliproads
+    @sliproads
     Scenario: Separate Turn Lanes Next to other turns
         Given the node map
             |   |   |   |   |   |   |   | e |   |
@@ -184,3 +103,166 @@ Feature: Turn Lane Guidance
             | a,j       | in,turn,other,other  | depart,turn right,turn left,arrive  | ,,left:true right:false,               |
             | a,i       | in,turn,other,other  | depart,turn right,turn right,arrive | ,,left:false right:true,               |
 
+    @todo @bug @2654 @none
+    #https://github.com/Project-OSRM/osrm-backend/issues/2645
+    #http://www.openstreetmap.org/export#map=19/52.56054/13.32152
+    Scenario: Kurt-Schuhmacher-Damm
+        Given the node map
+            |   |   |   | g |   | f |
+            |   |   |   |   |   |   |
+            | j |   |   | h |   | e |
+            |   |   |   |   |   |   |
+            | a |   |   | b |   | c |
+            |   |   |   | i |   | d |
+
+        And the ways
+            | nodes | name | highway        | oneway | turn:lanes        |
+            | ab    |      | motorway_link  | yes    | left\|none\|right |
+            | bc    |      | primary_link   | yes    |                   |
+            | cd    | ksd  | secondary      | yes    |                   |
+            | cef   | ksd  | primary        | yes    |                   |
+            | hj    |      | motorway_link  | yes    |                   |
+            | eh    |      | secondary_link | yes    |                   |
+            | gh    | ksd  | primary        | yes    |                   |
+            | hbi   | ksd  | secondary      | yes    |                   |
+
+        When I route I should get
+            | waypoints | route    | turns                    | lanes                             |
+            | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, |
+            | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
+
+    @todo @bug @2650 @sliproads
+    #market and haight in SF
+    #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
+    Scenario: Through Street Crossing Mid-Turn
+        Given the node map
+            |   |   |   |   |   |   |   | g | j |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | k |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   |   |   |   |   | e |   |
+            |   |   |   |   |   |   |   | d |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            | a |   |   | b |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   | c |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   | l |   |   |   |   | h | i |   |
+
+        And the ways
+            | nodes | name   | highway     | oneway | turn:lanes:forward |
+            | ab    | ghough | secondary   | yes    |                    |
+            | bc    | ghough | secondary   | yes    | through\|through   |
+            | bd    | ghough | secondary   | yes    | none\|through      |
+            | def   | ghough | secondary   | yes    |                    |
+            | gd    | market | primary     | yes    |                    |
+            |  dc   | market | primary     | yes    |                    |
+            |   ch  | market | primary     | yes    |                    |
+            | iej   | market | primary     | yes    |                    |
+            | gkb   | haight | residential | yes    |                    |
+            | bl    | haight | residential | yes    | left\|none         |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | relation    | bd       | dc     | d        | no_right_turn |
+
+        When I route I should get
+            | waypoints | route                | turns                              | lanes                                                    |
+            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, |
+            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
+            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
+            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
+
+    @todo @bug @2650 @sliproads
+    #market and haight in SF
+    #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
+    Scenario: Market/Haight without Through Street
+        Given the node map
+            |   |   |   |   |   |   |   | g | j |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   |   |   |   |   | e |   |
+            |   |   |   |   |   |   |   | d |   |   |
+            | a |   |   |   |   |   | b | c |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | l |   |   | h | i |   |
+
+        And the ways
+            | nodes | name   | highway     | oneway | turn:lanes:forward |
+            | ab    | ghough | secondary   | yes    |                    |
+            | bc    | ghough | secondary   | yes    | through\|through   |
+            | bd    | ghough | secondary   | yes    | none\|through      |
+            | def   | ghough | secondary   | yes    |                    |
+            | gd    | market | primary     | yes    |                    |
+            |  dc   | market | primary     | yes    |                    |
+            |   ch  | market | primary     | yes    |                    |
+            | iej   | market | primary     | yes    |                    |
+            | bl    | haight | residential | yes    | left\|none         |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | relation    | bd       | dc     | d        | no_right_turn |
+
+        When I route I should get
+            | waypoints | route                | turns                              | lanes                                                    |
+            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, |
+            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
+            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
+            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
+
+    @todo @2650 @bug @sliproads
+    #market and haight in SF
+    #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
+    Scenario: Market/Haight without Through Street
+        Given the node map
+            |   |   |   |   |   |   |   | g | j |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   |   |   |   |   | e |   |
+            |   |   |   |   |   |   |   | d |   |   |
+            | a |   |   |   |   |   | b | c |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | l |   |   | h | i |   |
+
+        And the ways
+            | nodes | name   | highway     | oneway | turn:lanes:forward |
+            | ab    | ghough | secondary   | yes    |                    |
+            | bc    | ghough | secondary   | yes    | through\|through   |
+            | bd    | ghough | secondary   | yes    | none\|through      |
+            | def   | ghough | secondary   | yes    |                    |
+            | gd    | market | primary     | yes    |                    |
+            |  dc   | market | primary     | yes    |                    |
+            |   ch  | market | primary     | yes    |                    |
+            | iej   | market | primary     | yes    |                    |
+            | bl    | haight | residential | yes    | left\|none         |
+
+        When I route I should get
+            | waypoints | route                | turns                              | lanes                                                    |
+            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, |
+            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
+            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
+            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |

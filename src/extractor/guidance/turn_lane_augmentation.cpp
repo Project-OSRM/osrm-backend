@@ -118,7 +118,8 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
             lane_data.push_back({tag_by_modifier[intersection[intersection_index]
                                                      .turn.instruction.direction_modifier],
                                  lane_data[none_index].from,
-                                 lane_data[none_index].to});
+                                 lane_data[none_index].to,
+                                 false});
         }
     }
     lane_data.erase(lane_data.begin() + none_index);

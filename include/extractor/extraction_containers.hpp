@@ -43,9 +43,11 @@ class ExtractionContainers
     WriteTurnLaneMasks(const std::string &file_name,
                        const stxxl::vector<std::uint32_t> &turn_lane_offsets,
                        const stxxl::vector<guidance::TurnLaneType::Mask> &turn_lane_masks) const;
+
+    //converts the offset data into length data
     void WriteCharData(const std::string &file_name,
-                       const stxxl::vector<unsigned> &offests,
-                       const stxxl::vector<char> &char_data) const;
+                       stxxl::vector<unsigned> &offests_to_be_turned_into_length,
+                       const stxxl::vector<unsigned char> &char_data) const;
 
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
