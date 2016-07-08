@@ -139,7 +139,7 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag
 // possible that it is forbidden. In addition, the best u-turn angle does not necessarily represent
 // the u-turn, since it could be a sharp-left turn instead on a road with a middle island.
 typename Intersection::const_iterator
-findBestMatchForReverse(const TurnLaneType::Mask &neighbor_tag, const Intersection &intersection)
+findBestMatchForReverse(const TurnLaneType::Mask neighbor_tag, const Intersection &intersection)
 {
     const auto neighbor_itr = findBestMatch(neighbor_tag, intersection);
     if (neighbor_itr + 1 == intersection.cend())

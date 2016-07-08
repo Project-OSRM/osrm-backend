@@ -29,15 +29,15 @@ inline void print(const engine::guidance::RouteStep &step)
 
     for (const auto &intersection : step.intersections)
     {
-        std::cout << "(bearings:";
+        std::cout << "(Lanes: " << static_cast<int>(intersection.lanes.lanes_in_turn) << " "
+                  << static_cast<int>(intersection.lanes.first_lane_from_the_right)
+                  << " bearings:";
         for (auto bearing : intersection.bearings)
             std::cout << " " << bearing;
         std::cout << ", entry: ";
         for (auto entry : intersection.entry)
             std::cout << " " << (entry ? "true" : "false");
-        const auto lanes = intersection.lanes;
-        std::cout<< " Lanes: (" << static_cast<int>(lanes.lanes_in_turn) << ", "
-              << static_cast<int>(lanes.first_lane_from_the_right) << "))";
+        std::cout << ")";
     }
     std::cout << "] name[" << step.name_id << "]: " << step.name;
 }
