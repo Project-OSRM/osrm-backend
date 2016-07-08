@@ -8,6 +8,7 @@
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 
+#include <cstddef>
 #include <cstdint>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -106,8 +107,6 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                                          previous_lane_data,
                                          previous_description_id);
 
-    std::cout << "[turn lane] " << scenario_names[scenario] << std::endl;
-
     if (scenario != TurnLaneHandler::NONE)
         (*count_called)++;
 
@@ -132,9 +131,7 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
         return handleSliproadTurn(std::move(intersection),
                                   lane_description_id,
                                   std::move(lane_data),
-                                  previous_intersection,
-                                  previous_description_id,
-                                  previous_lane_data);
+                                  previous_intersection);
     case TurnLaneScenario::MERGE:
         return intersection;
     default:
@@ -290,7 +287,7 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                                                                              : 0) +
                 possible_entries &&
         intersection[0].entry_allowed && !hasTag(TurnLaneType::none, lane_data))
-        lane_data.push_back({TurnLaneType::uturn, lane_data.back().to, lane_data.back().to});
+        lane_data.push_back({TurnLaneType::uturn, lane_data.back().to, lane_data.back().to, false});
 
     bool is_simple = isSimpleIntersection(lane_data, intersection);
 
@@ -645,6 +642,8 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
         if (lane == straightmost_tag_index)
         {
             augmentEntry(turn_lane_data[straightmost_tag_index]);
+            // disable this turn for assignment if it is a -use lane only
+            turn_lane_data[straightmost_tag_index].suppress_assignment = true;
         }
 
         if (matched_at_first[lane])
@@ -656,7 +655,7 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
             std::count(matched_at_second.begin(), matched_at_second.end(), true)) ==
             getNumberOfTurns(next_intersection))
     {
-        TurnLaneData data = {TurnLaneType::straight, 255, 0};
+        TurnLaneData data = {TurnLaneType::straight, 255, 0, true};
         augmentEntry(data);
         first.push_back(data);
         std::sort(first.begin(), first.end());
@@ -683,22 +682,21 @@ Intersection TurnLaneHandler::simpleMatchTuplesToTurns(Intersection intersection
         std::move(intersection), lane_data, node_based_graph, lane_description_id, id_map);
 }
 
-Intersection
-TurnLaneHandler::handleSliproadTurn(Intersection intersection,
-                                    const LaneDescriptionID lane_description_id,
-                                    LaneDataVector lane_data,
-                                    const Intersection &previous_intersection,
-                                    const LaneDescriptionID &previous_lane_description_id,
-                                    const LaneDataVector &previous_lane_data)
+Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
+                                                 const LaneDescriptionID lane_description_id,
+                                                 LaneDataVector lane_data,
+                                                 const Intersection &previous_intersection)
 {
-    const auto sliproad_index = std::distance(previous_intersection.begin(),std::find_if(
-        previous_intersection.begin(), previous_intersection.end(), [](const ConnectedRoad &road) {
-            return road.turn.instruction.type == TurnType::Sliproad;
-        }));
+    const std::size_t sliproad_index =
+        std::distance(previous_intersection.begin(),
+                      std::find_if(previous_intersection.begin(),
+                                   previous_intersection.end(),
+                                   [](const ConnectedRoad &road) {
+                                       return road.turn.instruction.type == TurnType::Sliproad;
+                                   }));
 
     BOOST_ASSERT(sliproad_index <= previous_intersection.size());
     const auto &sliproad = previous_intersection[sliproad_index];
-
 
     // code duplicatino with deduceScenario: TODO refactor
     const auto &main_road = [&]() {
@@ -743,7 +741,7 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
             turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id],
             turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id + 1]);
 
-        //if we handle the main road, we have to adjust the lane-data
+        // if we handle the main road, we have to adjust the lane-data
         if (main_description_id == lane_description_id)
         {
             const auto offset = turn_lane_offsets[sliproad_description_id + 1] -
@@ -767,18 +765,17 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
             turn_lane_masks.begin() + turn_lane_offsets[main_description_id],
             turn_lane_masks.begin() + turn_lane_offsets[main_description_id + 1]);
 
-        //if we are handling the sliproad, we have to adjust its lane data
+        // if we are handling the sliproad, we have to adjust its lane data
         if (sliproad_description_id == lane_description_id)
         {
-            const auto offset = turn_lane_offsets[main_description_id + 1] -
-                                turn_lane_offsets[main_description_id];
+            const auto offset =
+                turn_lane_offsets[main_description_id + 1] - turn_lane_offsets[main_description_id];
             for (auto &item : lane_data)
             {
                 item.from += offset;
                 item.to += offset;
             }
         }
-
     }
 
     const auto combined_id = [&]() {
