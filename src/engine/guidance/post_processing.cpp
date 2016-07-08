@@ -77,7 +77,8 @@ bool collapsable(const RouteStep &step, const RouteStep &next)
     const auto instruction_can_be_collapsed = isCollapsableInstruction(step.maneuver.instruction);
 
     const auto is_use_lane = step.maneuver.instruction.type == TurnType::UseLane;
-    const auto lanes_dont_change = step.maneuver.lanes == next.maneuver.lanes;
+    const auto lanes_dont_change =
+        step.intersections.front().lanes == next.intersections.front().lanes;
 
     if (is_short_step && instruction_can_be_collapsed)
         return true;

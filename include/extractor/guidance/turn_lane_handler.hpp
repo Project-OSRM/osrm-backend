@@ -125,9 +125,7 @@ class TurnLaneHandler
     Intersection handleSliproadTurn(Intersection intersection,
                                     const LaneDescriptionID lane_description_id,
                                     LaneDataVector lane_data,
-                                    const Intersection &previous_intersection,
-                                    const LaneDescriptionID &previous_lane_description_id,
-                                    const LaneDataVector &previous_lane_data);
+                                    const Intersection &previous_intersection);
 
     // get the lane data for an intersection
     void extractLaneData(const EdgeID via_edge,

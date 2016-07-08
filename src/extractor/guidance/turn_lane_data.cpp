@@ -30,6 +30,7 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
     if (to > other.to)
         return false;
 
+    // the suppress-assignment flag is ignored, since it does not influence the order
     const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::sharp_right,
                                                             TurnLaneType::right,
                                                             TurnLaneType::slight_right,
@@ -67,7 +68,7 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
 LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description)
 {
     typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
-    //TODO need to handle cases that have none-in between two identical values
+    // TODO need to handle cases that have none-in between two identical values
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
 
     const auto setLaneData = [&](
@@ -106,7 +107,7 @@ LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description
     // transform the map into the lane data vector
     LaneDataVector lane_data;
     for (const auto tag : lane_map)
-        lane_data.push_back({tag.first, tag.second.first, tag.second.second});
+        lane_data.push_back({tag.first, tag.second.first, tag.second.second, false});
 
     std::sort(lane_data.begin(), lane_data.end());
 
@@ -158,8 +159,8 @@ bool isSubsetOf(const LaneDataVector &subset_candidate, const LaneDataVector &su
     auto location = superset_candidate.begin();
     for (const auto entry : subset_candidate)
     {
-        location =
-            std::find_if(location, superset_candidate.end(), [entry](const TurnLaneData &lane_data) {
+        location = std::find_if(
+            location, superset_candidate.end(), [entry](const TurnLaneData &lane_data) {
                 return lane_data.tag == entry.tag;
             });
 

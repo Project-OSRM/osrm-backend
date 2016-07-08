@@ -756,15 +756,15 @@ Feature: Collapse
             |   |   |   | h | i |   |
 
         And the ways
-            | nodes | turn:lanes:forward                  | name |
-            | ab    |                                     | main |
-            | bc    | left\|through&through&through&right | main |
-            | cd    | left\|through&right                 | main |
-            | de    |                                     | main |
-            | cf    |                                     | off  |
-            | ch    |                                     | off  |
-            | dg    |                                     | off  |
-            | di    |                                     | off  |
+            | nodes | turn:lanes:forward                     | name |
+            | ab    |                                        | main |
+            | bc    | left\|through\|through\|through\|right | main |
+            | cd    | left\|through\|right                   | main |
+            | de    |                                        | main |
+            | cf    |                                        | off  |
+            | ch    |                                        | off  |
+            | dg    |                                        | off  |
+            | di    |                                        | off  |
 
        When I route I should get
             | waypoints | route               | turns                                             |
@@ -779,15 +779,15 @@ Feature: Collapse
             |   |   |   | h | i |   |
 
         And the ways
-            | nodes | turn:lanes:forward                  | name |
-            | ab    |                                     | main |
-            | bc    | left\|through&through&through&right | main |
-            | cd    | left\|through&through&through&right | main |
-            | de    |                                     | main |
-            | cf    |                                     | off  |
-            | ch    |                                     | off  |
-            | dg    |                                     | off  |
-            | di    |                                     | off  |
+            | nodes | turn:lanes:forward                     | name |
+            | ab    |                                        | main |
+            | bc    | left\|through\|through\|through\|right | main |
+            | cd    | left\|through\|through\|through\|right | main |
+            | de    |                                        | main |
+            | cf    |                                        | off  |
+            | ch    |                                        | off  |
+            | dg    |                                        | off  |
+            | di    |                                        | off  |
 
        When I route I should get
             | waypoints | route          | turns                           |
