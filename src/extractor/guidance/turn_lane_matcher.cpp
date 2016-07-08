@@ -220,7 +220,8 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             BOOST_ASSERT(findBestMatch(lane_data[lane].tag, intersection) ==
                          intersection.begin() + road_index);
 
-            if (TurnType::Suppressed == intersection[road_index].turn.instruction.type)
+            if (TurnType::Suppressed == intersection[road_index].turn.instruction.type &&
+                !lane_data[lane].suppress_assignment)
                 intersection[road_index].turn.instruction.type = TurnType::UseLane;
 
             matchRoad(intersection[road_index], lane_data[lane]);
