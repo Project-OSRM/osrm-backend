@@ -27,6 +27,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/tokenizer.hpp>
 
 namespace osrm
 {
@@ -347,6 +348,46 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
             lane_string.resize(lane_string.size() - count_right);
     }
     return lane_string;
+}
+
+// https://github.com/Project-OSRM/osrm-backend/issues/2638
+// It can happen that some lanes are not drivable by car. Here we handle this tagging scheme
+// (vehicle:lanes) to filter out not-allowed roads
+// lanes=3
+// turn:lanes=left|through|through|right
+// vehicle:lanes=yes|yes|no|yes
+// bicycle:lanes=yes|no|designated|yes
+
+inline std::string trimLaneString(std::string lane_string, const std::string &access_tokens)
+{
+    typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
+    boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
+    tokenizer tokens(lane_string, sep);
+    tokenizer access(access_tokens, sep);
+
+    // strings don't match, don't do anything
+    if (std::distance(std::begin(tokens), std::end(tokens)) !=
+        std::distance(std::begin(access), std::end(access)))
+        return lane_string;
+
+    std::string result_string = "";
+    const static std::string yes = "yes";
+
+    for (auto token_itr = std::begin(tokens), access_itr = std::begin(access);
+         token_itr != std::end(tokens);
+         ++token_itr, ++access_itr)
+    {
+        if (*access_itr == yes)
+        {
+            // we have to add this in front, because the next token could be invalid. Doing this on
+            // non-empty strings makes sure that the token string will be valid in the end
+            if (!result_string.empty())
+                result_string += '|';
+
+            result_string += *token_itr;
+        }
+    }
+    return result_string;
 }
 
 } // namespace guidance

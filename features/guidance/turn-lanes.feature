@@ -24,6 +24,22 @@ Feature: Turn Lane Guidance
             | c,a       | straight,in,in       | depart,new name straight,arrive | ,left:false straight:true none:true none:true,   |
             | c,d       | straight,right,right | depart,turn left,arrive         | ,left:true straight:false none:false none:false, |
 
+    Scenario: Basic Turn Lane 3-way Turn with designated lane
+        Given the node map
+            | a |   | b |   | c |
+            |   |   | d |   |   |
+
+        And the ways
+            | nodes  | turn:lanes     | turn:lanes:forward      | name     | vehicle:lanes:forward |
+            | ab     |                | through\|through\|right | in       | yes\|no\|yes          |
+            | bc     |                |                         | straight |                       |
+            | bd     |                |                         | right    |                       |
+
+       When I route I should get
+            | waypoints | route                | turns                           | lanes                       |
+            | a,c       | in,straight,straight | depart,new name straight,arrive | ,straight:true right:false, |
+            | a,d       | in,right,right       | depart,turn right,arrive        | ,straight:false right:true, |
+
     Scenario: Basic Turn Lane 4-Way Turn
         Given the node map
             |   |   | e |   |   |

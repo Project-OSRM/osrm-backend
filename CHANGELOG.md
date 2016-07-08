@@ -1,6 +1,8 @@
 # 5.4.0
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
+    - Guidance
+      - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
 
 # 5.3.0
   Changes from 5.3.0-rc.3
