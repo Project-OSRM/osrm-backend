@@ -259,6 +259,30 @@ Feature: Turn Lane Guidance
             | waypoints | route                 | turns                                                   | lanes                                                                                                                                                  |
             | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true right:false,left:true straight:false, |
 
+       @anticipate
+       Scenario: Anticipate Lanes for through, through with lanes
+           Given the node map
+               |   |   |   | f | g |   |
+               |   |   |   |   |   |   |
+               | a | b | c | d |   | e |
+               |   |   |   |   |   |   |
+               |   |   |   | h | i |   |
+
+           And the ways
+               | nodes | turn:lanes:forward                  | name |
+               | ab    |                                     | main |
+               | bc    | left\|through&through&through&right | main |
+               | cd    | left\|through&right                 | main |
+               | de    |                                     | main |
+               | cf    |                                     | off  |
+               | ch    |                                     | off  |
+               | dg    |                                     | off  |
+               | di    |                                     | off  |
+
+          When I route I should get
+               | waypoints | route               | turns                                             | lanes                                                                                                     |
+               | a,e       | main,main,main,main | depart,use lane straight,use lane straight,arrive | ,left:false straight:false straight:false straight:true right:false,left:false straight:true right:false, |
+
     @anticipate @bug @todo
     Scenario: Tripple Right keeping Left
         Given the node map
