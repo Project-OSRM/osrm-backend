@@ -130,7 +130,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
     if (parameters.radiuses.empty())
     {
         search_radiuses.resize(parameters.coordinates.size(),
-                               DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER);
+                               DEFAULT_GPS_PRECISION * parameters.search_radius_multiplier);
     }
     else
     {
@@ -138,14 +138,14 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
         std::transform(parameters.radiuses.begin(),
                        parameters.radiuses.end(),
                        search_radiuses.begin(),
-                       [](const boost::optional<double> &maybe_radius) {
+                       [&](const boost::optional<double> &maybe_radius) {
                            if (maybe_radius)
                            {
-                               return *maybe_radius * RADIUS_MULTIPLIER;
+                               return *maybe_radius * parameters.search_radius_multiplier;
                            }
                            else
                            {
-                               return DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
+                               return DEFAULT_GPS_PRECISION * parameters.search_radius_multiplier;
                            }
 
                        });

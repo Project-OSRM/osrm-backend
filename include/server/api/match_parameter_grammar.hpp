@@ -33,13 +33,21 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
             (qi::uint_ %
              ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
 
+        search_radius_multiplier_rule =
+            qi::lit("search_radius_multiplier=") > qi::double_[
+                ph::bind(&engine::api::MatchParameters::search_radius_multiplier, qi::_r1) = qi::_1];
+
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
-                    -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
+                    -('?' > (timestamps_rule(qi::_r1) |
+                             search_radius_multiplier_rule(qi::_r1) |
+                             BaseGrammar::base_rule(qi::_r1))
+                            % '&');
     }
 
   private:
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> timestamps_rule;
+    qi::rule<Iterator, Signature> search_radius_multiplier_rule;
 };
 }
 }
