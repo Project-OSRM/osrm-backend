@@ -297,8 +297,11 @@ inline bool hasRoundaboutType(const TurnInstruction instruction)
                                                     TurnType::EnterRoundaboutIntersectionAtExit,
                                                     TurnType::ExitRoundaboutIntersection,
                                                     TurnType::StayOnRoundabout};
-    const auto valid_end = valid_types + 13;
-    return std::find(valid_types, valid_end, instruction.type) != valid_end;
+
+    const auto *first = valid_types;
+    const auto *last = first + sizeof(valid_types) / sizeof(valid_types[0]);
+
+    return std::find(first, last, instruction.type) != last;
 }
 
 // Public service vehicle lanes and similar can introduce additional lanes into the lane string that
