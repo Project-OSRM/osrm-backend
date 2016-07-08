@@ -1,5 +1,5 @@
-#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -58,26 +58,6 @@ bool isCollapsableInstruction(const TurnInstruction instruction)
            (instruction.type == TurnType::Continue &&
             instruction.direction_modifier == DirectionModifier::Straight) ||
            (instruction.type == TurnType::Merge);
-}
-
-// A check whether two instructions can be treated as one. This is only the case for very short
-// maneuvers that can, in some form, be seen as one. Lookahead of one step.
-bool collapsable(const RouteStep &step, const RouteStep &next)
-{
-    const auto is_short_step = step.distance < MAX_COLLAPSE_DISTANCE;
-    const auto instruction_can_be_collapsed = isCollapsableInstruction(step.maneuver.instruction);
-
-    const auto is_use_lane = step.maneuver.instruction.type == TurnType::UseLane;
-    const auto lanes_dont_change = step.maneuver.lanes == next.maneuver.lanes;
-
-    if (is_short_step && instruction_can_be_collapsed)
-        return true;
-
-    // Prevent collapsing away important lane change steps
-    if (is_short_step && is_use_lane && lanes_dont_change)
-        return true;
-
-    return false;
 }
 
 bool compatible(const RouteStep &lhs, const RouteStep &rhs) { return lhs.mode == rhs.mode; }
@@ -325,39 +305,6 @@ void closeOffRoundabout(const bool on_roundabout,
     }
 }
 
-// elongate a step by another. the data is added either at the front, or the back
-RouteStep elongate(RouteStep step, const RouteStep &by_step)
-{
-    step.duration += by_step.duration;
-    step.distance += by_step.distance;
-
-    // by_step comes after step -> we append at the end
-    if (step.geometry_end == by_step.geometry_begin + 1)
-    {
-        step.geometry_end = by_step.geometry_end;
-
-        // if we elongate in the back, we only need to copy the intersections to the beginning.
-        // the bearings remain the same, as the location of the turn doesn't change
-        step.intersections.insert(
-            step.intersections.end(), by_step.intersections.begin(), by_step.intersections.end());
-    }
-    // by_step comes before step -> we append at the front
-    else
-    {
-        BOOST_ASSERT(step.maneuver.waypoint_type == WaypointType::None &&
-                     by_step.maneuver.waypoint_type == WaypointType::None);
-        BOOST_ASSERT(by_step.geometry_end == step.geometry_begin + 1);
-        step.geometry_begin = by_step.geometry_begin;
-
-        // elongating in the front changes the location of the maneuver
-        step.maneuver = by_step.maneuver;
-
-        step.intersections.insert(
-            step.intersections.begin(), by_step.intersections.begin(), by_step.intersections.end());
-    }
-    return step;
-}
-
 void collapseTurnAt(std::vector<RouteStep> &steps,
                     const std::size_t two_back_index,
                     const std::size_t one_back_index,
@@ -556,6 +503,62 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
 // is turned into exit counts. These instructions are removed by the following function
+
+// A check whether two instructions can be treated as one. This is only the case for very short
+// maneuvers that can, in some form, be seen as one. Lookahead of one step.
+bool collapsable(const RouteStep &step, const RouteStep &next)
+{
+    const auto is_short_step = step.distance < MAX_COLLAPSE_DISTANCE;
+    const auto instruction_can_be_collapsed = isCollapsableInstruction(step.maneuver.instruction);
+
+    const auto is_use_lane = step.maneuver.instruction.type == TurnType::UseLane;
+    const auto lanes_dont_change = step.maneuver.lanes == next.maneuver.lanes;
+
+    if (is_short_step && instruction_can_be_collapsed)
+        return true;
+
+    // Prevent collapsing away important lane change steps
+    if (is_short_step && is_use_lane && lanes_dont_change)
+        return true;
+
+    return false;
+}
+
+// Elongate a step by another. the data is added either at the front, or the back
+RouteStep elongate(RouteStep step, const RouteStep &by_step)
+{
+    BOOST_ASSERT(step.mode == by_step.mode);
+
+    step.duration += by_step.duration;
+    step.distance += by_step.distance;
+
+    // by_step comes after step -> we append at the end
+    if (step.geometry_end == by_step.geometry_begin + 1)
+    {
+        step.geometry_end = by_step.geometry_end;
+
+        // if we elongate in the back, we only need to copy the intersections to the beginning.
+        // the bearings remain the same, as the location of the turn doesn't change
+        step.intersections.insert(
+            step.intersections.end(), by_step.intersections.begin(), by_step.intersections.end());
+    }
+    // by_step comes before step -> we append at the front
+    else
+    {
+        BOOST_ASSERT(step.maneuver.waypoint_type == WaypointType::None &&
+                     by_step.maneuver.waypoint_type == WaypointType::None);
+        BOOST_ASSERT(by_step.geometry_end == step.geometry_begin + 1);
+        step.geometry_begin = by_step.geometry_begin;
+
+        // elongating in the front changes the location of the maneuver
+        step.maneuver = by_step.maneuver;
+
+        step.intersections.insert(
+            step.intersections.begin(), by_step.intersections.begin(), by_step.intersections.end());
+    }
+    return step;
+}
+
 std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 {
     // finally clean up the post-processed instructions.
