@@ -4,7 +4,6 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
 #include "util/integer_range.hpp"
-#include "util/lua_util.hpp"
 #include "util/percent.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
@@ -12,6 +11,7 @@
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
+#include "extractor/scripting_environment.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include <boost/assert.hpp>
@@ -182,9 +182,9 @@ void EdgeBasedGraphFactory::FlushVectorToStream(
     original_edge_data_vector.clear();
 }
 
-void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
+void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
+                                const std::string &original_edge_data_filename,
                                 const std::string &turn_lane_data_filename,
-                                lua_State *lua_state,
                                 const std::string &edge_segment_lookup_filename,
                                 const std::string &edge_penalty_filename,
                                 const bool generate_edge_lookup)
@@ -199,9 +199,9 @@ void EdgeBasedGraphFactory::Run(const std::string &original_edge_data_filename,
     TIMER_STOP(generate_nodes);
 
     TIMER_START(generate_edges);
-    GenerateEdgeExpandedEdges(original_edge_data_filename,
+    GenerateEdgeExpandedEdges(scripting_environment,
+                              original_edge_data_filename,
                               turn_lane_data_filename,
-                              lua_state,
                               edge_segment_lookup_filename,
                               edge_penalty_filename,
                               generate_edge_lookup);
@@ -298,17 +298,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
 /// Actually it also generates OriginalEdgeData and serializes them...
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
+    ScriptingEnvironment &scripting_environment,
     const std::string &original_edge_data_filename,
     const std::string &turn_lane_data_filename,
-    lua_State *lua_state,
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_fixed_penalties_filename,
     const bool generate_edge_lookup)
 {
     util::SimpleLogger().Write() << "generating edge-expanded edges";
-
-    BOOST_ASSERT(lua_state != nullptr);
-    const bool use_turn_function = util::luaFunctionExists(lua_state, "turn_function");
 
     std::size_t node_based_edge_counter = 0;
     std::size_t original_edges_counter = 0;
@@ -338,7 +335,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
-    SuffixTable street_name_suffix_table(lua_state);
+    SuffixTable street_name_suffix_table(scripting_environment);
     guidance::TurnAnalysis turn_analysis(*m_node_based_graph,
                                          m_node_info_list,
                                          *m_restriction_map,
@@ -410,8 +407,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             for (const auto turn : possible_turns)
             {
-                const double turn_angle = turn.angle;
-
                 // only add an edge if turn is not prohibited
                 const EdgeData &edge_data1 = m_node_based_graph->GetEdgeData(edge_from_u);
                 const EdgeData &edge_data2 = m_node_based_graph->GetEdgeData(turn.eid);
@@ -427,8 +422,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.traffic_signal_penalty;
                 }
 
-                const int turn_penalty =
-                    use_turn_function ? GetTurnPenalty(turn_angle, lua_state) : 0;
+                const int32_t turn_penalty = scripting_environment.GetTurnPenalty(180. - turn.angle);
                 const auto turn_instruction = turn.instruction;
 
                 if (guidance::isUturn(turn_instruction))
@@ -613,24 +607,6 @@ std::vector<util::guidance::EntryClass> EdgeBasedGraphFactory::GetEntryClasses()
         result[pair.second] = pair.first;
     }
     return result;
-}
-
-int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) const
-{
-    BOOST_ASSERT(lua_state != nullptr);
-    try
-    {
-        // call lua profile to compute turn penalty
-        double penalty = luabind::call_function<double>(lua_state, "turn_function", 180. - angle);
-        BOOST_ASSERT(penalty < std::numeric_limits<int>::max());
-        BOOST_ASSERT(penalty > std::numeric_limits<int>::min());
-        return boost::numeric_cast<int>(penalty);
-    }
-    catch (const luabind::error &er)
-    {
-        util::SimpleLogger().Write(logWARNING) << er.what();
-    }
-    return 0;
 }
 
 } // namespace extractor
