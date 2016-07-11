@@ -140,18 +140,12 @@ bool isSubsetOf(const LaneDataVector &subset_candidate, const LaneDataVector &su
             });
 
         if (location == superset_candidate.end())
-        {
-            std::cout << "Failed to find tag" << std::endl;
             return false;
-        }
 
         // compare the number of lanes TODO this might have be to be revisited for situations where
         // a sliproad widens into multiple lanes
         if ((location->to - location->from) != (entry.to - entry.from))
-        {
-            std::cout << "Lane missmatch" << std::endl;
             return false;
-        }
     }
     return true;
 }
