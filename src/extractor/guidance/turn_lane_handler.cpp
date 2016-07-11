@@ -559,11 +559,13 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
             isValidMatch(turn_lane_data[lane].tag,
                          best_match_at_next_intersection->turn.instruction))
         {
-            if (!matched_at_first[lane] ||
+            if (!matched_at_first[lane] || turn_lane_data[lane].tag == TurnLaneType::straight ||
                 getMatchingQuality(turn_lane_data[lane].tag, *best_match) >
                     getMatchingQuality(turn_lane_data[lane].tag, *best_match_at_next_intersection))
             {
-                matched_at_first[lane] = false;
+                if (turn_lane_data[lane].tag != TurnLaneType::straight)
+                    matched_at_first[lane] = false;
+
                 matched_at_second[lane] = true;
             }
         }
