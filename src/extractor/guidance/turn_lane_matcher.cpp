@@ -17,7 +17,7 @@ namespace lanes
 {
 
 // Translate Turn Tags into a Matching Direction Modifier
-DirectionModifier::Enum getMatchingModifier(const TurnLaneType::Mask &tag)
+DirectionModifier::Enum getMatchingModifier(const TurnLaneType::Mask tag)
 {
     const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::uturn,
                                                             TurnLaneType::sharp_right,
@@ -51,7 +51,7 @@ DirectionModifier::Enum getMatchingModifier(const TurnLaneType::Mask &tag)
 }
 
 // check whether a match of a given tag and a turn instruction can be seen as valid
-bool isValidMatch(const TurnLaneType::Mask &tag, const TurnInstruction instruction)
+bool isValidMatch(const TurnLaneType::Mask tag, const TurnInstruction instruction)
 {
     using util::guidance::hasLeftModifier;
     using util::guidance::hasRightModifier;
@@ -102,29 +102,34 @@ bool isValidMatch(const TurnLaneType::Mask &tag, const TurnInstruction instructi
     return false;
 }
 
+double getMatchingQuality( const TurnLaneType::Mask tag, const ConnectedRoad &road)
+{
+    const constexpr double idealized_turn_angles[] = {0, 35, 90, 135, 180, 225, 270, 315};
+    const auto idealized_angle = idealized_turn_angles[getMatchingModifier(tag)];
+    return angularDeviation(idealized_angle,road.turn.angle);
+}
+
 // Every tag is somewhat idealized in form of the expected angle. A through lane should go straight
 // (or follow a 180 degree turn angle between in/out segments.) The following function tries to find
 // the best possible match for every tag in a given intersection, considering a few corner cases
 // introduced to OSRM handling u-turns
-typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask &tag,
+typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag,
                                                     const Intersection &intersection)
 {
-    const constexpr double idealized_turn_angles[] = {0, 35, 90, 135, 180, 225, 270, 315};
-    const auto idealized_angle = idealized_turn_angles[getMatchingModifier(tag)];
     return std::min_element(
         intersection.begin(),
         intersection.end(),
-        [idealized_angle, &tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
+        [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
             // prefer valid matches
             if (isValidMatch(tag, lhs.turn.instruction) != isValidMatch(tag, rhs.turn.instruction))
                 return isValidMatch(tag, lhs.turn.instruction);
+
             // if the entry allowed flags don't match, we select the one with
             // entry allowed set to true
             if (lhs.entry_allowed != rhs.entry_allowed)
                 return lhs.entry_allowed;
 
-            return angularDeviation(idealized_angle, lhs.turn.angle) <
-                   angularDeviation(idealized_angle, rhs.turn.angle);
+            return getMatchingQuality(tag,lhs) < getMatchingQuality(tag,rhs);
         });
 }
 
@@ -134,29 +139,27 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask &ta
 // possible that it is forbidden. In addition, the best u-turn angle does not necessarily represent
 // the u-turn, since it could be a sharp-left turn instead on a road with a middle island.
 typename Intersection::const_iterator
-findBestMatchForReverse(const TurnLaneType::Mask &leftmost_tag, const Intersection &intersection)
+findBestMatchForReverse(const TurnLaneType::Mask leftmost_tag, const Intersection &intersection)
 {
     const auto leftmost_itr = findBestMatch(leftmost_tag, intersection);
     if (leftmost_itr + 1 == intersection.cend())
         return intersection.begin();
 
-    const constexpr double idealized_turn_angles[] = {0, 35, 90, 135, 180, 225, 270, 315};
     const TurnLaneType::Mask tag = TurnLaneType::uturn;
-    const auto idealized_angle = idealized_turn_angles[getMatchingModifier(tag)];
     return std::min_element(
         intersection.begin() + std::distance(intersection.begin(), leftmost_itr),
         intersection.end(),
-        [idealized_angle, &tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
+        [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
             // prefer valid matches
             if (isValidMatch(tag, lhs.turn.instruction) != isValidMatch(tag, rhs.turn.instruction))
                 return isValidMatch(tag, lhs.turn.instruction);
+
             // if the entry allowed flags don't match, we select the one with
             // entry allowed set to true
             if (lhs.entry_allowed != rhs.entry_allowed)
                 return lhs.entry_allowed;
 
-            return angularDeviation(idealized_angle, lhs.turn.angle) <
-                   angularDeviation(idealized_angle, rhs.turn.angle);
+            return getMatchingQuality(tag,lhs) < getMatchingQuality(tag,rhs);
         });
 }
 
@@ -175,7 +178,10 @@ bool canMatchTrivially(const Intersection &intersection, const LaneDataVector &l
 
             if (findBestMatch(lane_data[lane].tag, intersection) !=
                 intersection.begin() + road_index)
+            {
+                std::cout << "Best Match does not line up" << std::endl;
                 return false;
+            }
 
             ++lane;
         }
