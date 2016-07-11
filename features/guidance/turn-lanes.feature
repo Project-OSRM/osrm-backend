@@ -688,3 +688,25 @@ Feature: Turn Lane Guidance
             | waypoints | route             | turns                                             | lanes                           |
             | a,j       | on,xbcj,xbcj,xbcj | depart,merge slight left,use lane straight,arrive | ,,none:true slight right:false, |
             | a,i       | on,xbcj,off,off   | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
+
+     Scenario: Partitioned turn, Slight Curve
+        Given the node map
+            |   |   | f |   | e |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   | c |
+            | a |   | b |   |   |
+            |   |   | g |   | d |
+
+        And the ways
+            | nodes | name  | highway | oneway | turn:lanes:forward |
+            | ab    | road  | primary | yes    | left\|right        |
+            | bc    | cross | primary | yes    |                    |
+            | fbg   | cross | primary | yes    |                    |
+            | dce   | cross | primary | yes    |                    |
+
+        When I route I should get
+            | waypoints | route            | turns                    | lanes                   |
+            | a,g       | road,cross,cross | depart,turn right,arrive | ,left:false right:true, |
+            | a,e       | road,cross,cross | depart,turn left,arrive  | ,left:true right:false, |
+
