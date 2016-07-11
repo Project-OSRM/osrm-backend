@@ -49,6 +49,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
     {
         std::string request_string;
         util::URIDecode(current_request.uri, request_string);
+        util::SimpleLogger().Write(logDEBUG) << "req: " << request_string;
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
