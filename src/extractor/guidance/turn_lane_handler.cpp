@@ -142,6 +142,7 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
         // case TurnLaneScenario::NONE:
         // case TurnLaneScenario::INVALID:
         {
+            /*
             static int print_count = 0;
             if (TurnLaneScenario::NONE != scenario && print_count++ < 10)
             {
@@ -155,6 +156,7 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                     util::guidance::printTurnAssignmentData(
                         previous_node, previous_lane_data, previous_intersection, node_info_list);
             }
+            */
         }
         return intersection;
     }
@@ -174,7 +176,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                 LaneDataVector &previous_lane_data,
                                 LaneDescriptionID &previous_description_id)
 {
-    std::cout << "Checking For Lanes" << std::endl;
     // if only a uturn exists, there is nothing we can do
     if (intersection.size() == 1)
         return TurnLaneHandler::NONE;
@@ -265,8 +266,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
 
     bool is_simple = isSimpleIntersection(lane_data, intersection);
 
-    std::cout << "Check for simple: " << (is_simple ? "true" : "false") << std::endl;
-
     if (is_simple)
         return TurnLaneScenario::SIMPLE;
 
@@ -321,7 +320,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     if (previous_has_merge_lane)
         return TurnLaneScenario::MERGE;
 
-    std::cout << "Checking Previous" << std::endl;
     const auto is_simple_previous = isSimpleIntersection(previous_lane_data, intersection);
     if (is_simple_previous)
         return TurnLaneScenario::SIMPLE_PREVIOUS;
@@ -330,7 +328,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     if (previous_lane_data.size() >= getNumberOfTurns(previous_intersection) &&
         previous_intersection.size() != 2)
     {
-        std::cout << "Checking Partition" << std::endl;
         previous_lane_data = partitionLaneData(node_based_graph.GetTarget(previous_via_edge),
                                                std::move(previous_lane_data),
                                                previous_intersection)
@@ -338,10 +335,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
 
         std::sort(previous_lane_data.begin(), previous_lane_data.end());
 
-        std::cout << "Checking Intersection " << previous_lane_data.size()
-                  << " Entries: " << possible_entries
-                  << " Simple: " << isSimpleIntersection(previous_lane_data, intersection)
-                  << std::endl;
         // check if we were successfull in trimming
         if ((previous_lane_data.size() == possible_entries) &&
             isSimpleIntersection(previous_lane_data, intersection))
@@ -613,8 +606,6 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
     LaneDataVector first, second;
     for (std::size_t lane = 0; lane < turn_lane_data.size(); ++lane)
     {
-        std::cout << "Lane: " << matched_at_first[lane] << " " << matched_at_second[lane]
-                  << std::endl;
         if (matched_at_second[lane])
             second.push_back(turn_lane_data[lane]);
 
@@ -647,14 +638,8 @@ Intersection TurnLaneHandler::simpleMatchTuplesToTurns(Intersection intersection
                                                        const LaneDataVector &lane_data,
                                                        const LaneDescriptionID lane_description_id)
 {
-    std::cout << "Assigning" << std::endl;
     if (lane_data.empty() || !canMatchTrivially(intersection, lane_data))
         return intersection;
-
-    util::guidance::printTurnAssignmentData(node_based_graph.GetTarget(intersection[0].turn.eid),
-                                            lane_data,
-                                            intersection,
-                                            node_info_list);
 
     BOOST_ASSERT(
         !hasTag(TurnLaneType::none | TurnLaneType::merge_to_left | TurnLaneType::merge_to_right,

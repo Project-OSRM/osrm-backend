@@ -178,10 +178,7 @@ bool canMatchTrivially(const Intersection &intersection, const LaneDataVector &l
 
             if (findBestMatch(lane_data[lane].tag, intersection) !=
                 intersection.begin() + road_index)
-            {
-                std::cout << "Best Match does not line up" << std::endl;
                 return false;
-            }
 
             ++lane;
         }

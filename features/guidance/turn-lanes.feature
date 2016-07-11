@@ -226,6 +226,7 @@ Feature: Turn Lane Guidance
             | a,j       | road,cross,cross  | depart,turn right,arrive        | ,left:false straight:false right:true, |
 
     #this can happen due to traffic lights / lanes not drawn up to the intersection itself
+    @2654
     Scenario: Turn Lanes Given earlier than actual turn
         Given the node map
             | a |   | b | c |   | d |
@@ -244,6 +245,7 @@ Feature: Turn Lane Guidance
             | a,e       | road,turn,turn | depart,turn right,arrive        | ,none:false right:true, |
             | a,d       | road,road,road | depart,use lane straight,arrive | ,none:true right:false, |
 
+    @2654
     Scenario: Turn Lanes Given earlier than actual turn
         Given the node map
             | a |   | b | c | d |   | e |   | f | g | h |   | i |
@@ -671,6 +673,7 @@ Feature: Turn Lane Guidance
             | waypoints | turns                           | route        | lanes                                 |
             | d,c       | depart,merge slight left,arrive | ramp,Hwy,Hwy | ,slight right:true slight right:true, |
 
+    @2654
     Scenario: Fork on motorway links - don't fork on through but use lane
         Given the node map
             | i |   |   |   |   | a |
@@ -710,3 +713,30 @@ Feature: Turn Lane Guidance
             | a,g       | road,cross,cross | depart,turn right,arrive | ,left:false right:true, |
             | a,e       | road,cross,cross | depart,turn left,arrive  | ,left:true right:false, |
 
+    @TODO @2654
+    #https://github.com/Project-OSRM/osrm-backend/issues/2645
+    #http://www.openstreetmap.org/export#map=19/52.56054/13.32152
+    Scenario: Kurt-Schuhmacher-Damm
+        Given the node map
+            |   |   |   | g |   | f |
+            |   |   |   |   |   |   |
+            | j |   |   | h |   | e |
+            |   |   |   |   |   |   |
+            | a |   |   | b |   | c |
+            |   |   |   | i |   | d |
+
+        And the ways
+            | nodes | name | highway        | oneway | turn:lanes       |
+            | ab    |      | motorway_link  | yes    | left\|none&right |
+            | bc    |      | primary_link   | yes    |                  |
+            | cd    | ksd  | secondary      | yes    |                  |
+            | cef   | ksd  | primary        | yes    |                  |
+            | hj    |      | motorway_link  | yes    |                  |
+            | eh    |      | secondary_link | yes    |                  |
+            | gh    | ksd  | primary        | yes    |                  |
+            | hbi   | ksd  | secondary      | yes    |                  |
+
+        When I route I should get
+            | waypoints | route    | turns                    | lanes                             |
+            | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, |
+            | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
