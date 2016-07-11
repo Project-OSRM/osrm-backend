@@ -558,7 +558,15 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
         if (best_match_at_next_intersection->entry_allowed &&
             isValidMatch(turn_lane_data[lane].tag,
                          best_match_at_next_intersection->turn.instruction))
-            matched_at_second[lane] = true;
+        {
+            if (!matched_at_first[lane] ||
+                getMatchingQuality(turn_lane_data[lane].tag, *best_match) >
+                    getMatchingQuality(turn_lane_data[lane].tag, *best_match_at_next_intersection))
+            {
+                matched_at_first[lane] = false;
+                matched_at_second[lane] = true;
+            }
+        }
 
         // we need to match all items to either the current or the next intersection
         if (!(matched_at_first[lane] || matched_at_second[lane]))

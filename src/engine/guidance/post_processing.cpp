@@ -1,3 +1,5 @@
+#include "util/debug.hpp"
+
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
 
@@ -401,6 +403,10 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                          DirectionModifier::Straight &&
                      one_back_step.intersections.front().bearings.size() > 2)
                 steps[step_index].maneuver.instruction.type = TurnType::Turn;
+            else if (TurnType::UseLane == current_step.maneuver.instruction.type &&
+                    current_step.maneuver.instruction.direction_modifier != DirectionModifier::Straight &&
+                    one_back_step.intersections.front().bearings.size() > 2 )
+                steps[step_index].maneuver.instruction.type = TurnType::Turn;
 
             steps[two_back_index] = elongate(std::move(steps[two_back_index]), one_back_step);
             // If the previous instruction asked to continue, the name change will have to
@@ -539,6 +545,7 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 // that we come across.
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 {
+    util::guidance::print(steps);
     // the steps should always include the first/last step in form of a location
     BOOST_ASSERT(steps.size() >= 2);
     if (steps.size() == 2)
