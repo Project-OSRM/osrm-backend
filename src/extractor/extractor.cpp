@@ -11,7 +11,6 @@
 #include "extractor/raster_source.hpp"
 #include "util/graph_loader.hpp"
 #include "util/io.hpp"
-#include "util/lua_util.hpp"
 #include "util/make_unique.hpp"
 #include "util/name_table.hpp"
 #include "util/range_table.hpp"
@@ -29,12 +28,11 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/optional/optional.hpp>
 
-#include <luabind/luabind.hpp>
-
 #include <osmium/io/any_input.hpp>
 
 #include <tbb/parallel_for.h>
 #include <tbb/task_scheduler_init.h>
+#include <tbb/concurrent_vector.h>
 
 #include <cstdlib>
 
@@ -74,11 +72,8 @@ namespace extractor
  * graph
  *
  */
-int Extractor::run()
+int Extractor::run(ScriptingEnvironment& scripting_environment)
 {
-    // setup scripting environment
-    ScriptingEnvironment scripting_environment(config.profile_path.string().c_str());
-
     try
     {
         util::LogPolicy::GetInstance().Unmute();
@@ -108,13 +103,10 @@ int Extractor::run()
         util::SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
-        auto &main_context = scripting_environment.GetContex();
+        auto &main_context = scripting_environment.GetContext();
 
         // setup raster sources
-        if (util::luaFunctionExists(main_context.state, "source_function"))
-        {
-            luabind::call_function<void>(main_context.state, "source_function");
-        }
+        main_context.setupSources();
 
         std::string generator = header.get("generator");
         if (generator.empty())
@@ -140,7 +132,7 @@ int Extractor::run()
         tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
         // setup restriction parser
-        const RestrictionParser restriction_parser(main_context.state, main_context.properties);
+        const RestrictionParser restriction_parser(main_context);
 
         while (const osmium::memory::Buffer buffer = reader.read())
         {
@@ -162,7 +154,7 @@ int Extractor::run()
                 [&](const tbb::blocked_range<std::size_t> &range) {
                     ExtractionNode result_node;
                     ExtractionWay result_way;
-                    auto &local_context = scripting_environment.GetContex();
+                    auto &local_context = scripting_environment.GetContext();
 
                     for (auto x = range.begin(), end = range.end(); x != end; ++x)
                     {
@@ -173,21 +165,15 @@ int Extractor::run()
                         case osmium::item_type::node:
                             result_node.clear();
                             ++number_of_nodes;
-                            luabind::call_function<void>(
-                                local_context.state,
-                                "node_function",
-                                boost::cref(static_cast<const osmium::Node &>(*entity)),
-                                boost::ref(result_node));
+                            local_context.processNode(static_cast<const osmium::Node &>(*entity),
+                                                      result_node);
                             resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
                             break;
                         case osmium::item_type::way:
                             result_way.clear();
                             ++number_of_ways;
-                            luabind::call_function<void>(
-                                local_context.state,
-                                "way_function",
-                                boost::cref(static_cast<const osmium::Way &>(*entity)),
-                                boost::ref(result_way));
+                            local_context.processWay(static_cast<const osmium::Way &>(*entity),
+                                                     result_way);
                             resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
                             break;
                         case osmium::item_type::relation:
@@ -236,11 +222,11 @@ int Extractor::run()
             return 1;
         }
 
-        extraction_containers.PrepareData(config.output_file_name,
+        extraction_containers.PrepareData(main_context,
+                                          config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,
-                                          config.turn_lane_descriptions_file_name,
-                                          main_context.state);
+                                          config.turn_lane_descriptions_file_name);
 
         WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
 
@@ -262,7 +248,7 @@ int Extractor::run()
         // movement (e.g. turn from A->B, and B->A) becomes an edge
         //
 
-        auto &main_context = scripting_environment.GetContex();
+        auto &main_context = scripting_environment.GetContext();
 
         util::SimpleLogger().Write() << "Generating edge-expanded graph representation";
 
@@ -273,8 +259,7 @@ int Extractor::run()
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
-        auto graph_size = BuildEdgeExpandedGraph(main_context.state,
-                                                 main_context.properties,
+        auto graph_size = BuildEdgeExpandedGraph(main_context,
                                                  internal_to_external_node_map,
                                                  edge_based_node_list,
                                                  node_is_startpoint,
@@ -477,8 +462,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
 std::pair<std::size_t, EdgeID>
-Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
-                                  const ProfileProperties &profile_properties,
+Extractor::BuildEdgeExpandedGraph(ScriptingContext &scripting_context,
                                   std::vector<QueryNode> &internal_to_external_node_map,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,
@@ -520,14 +504,14 @@ Extractor::BuildEdgeExpandedGraph(lua_State *lua_state,
         traffic_lights,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
         internal_to_external_node_map,
-        profile_properties,
+        scripting_context.properties,
         name_table,
         turn_lane_offsets,
         turn_lane_masks);
 
-    edge_based_graph_factory.Run(config.edge_output_path,
+    edge_based_graph_factory.Run(scripting_context,
+                                 config.edge_output_path,
                                  config.turn_lane_data_file_name,
-                                 lua_state,
                                  config.edge_segment_lookup_path,
                                  config.edge_penalty_path,
                                  config.generate_edge_lookup);

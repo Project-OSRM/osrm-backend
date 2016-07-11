@@ -36,12 +36,12 @@
 
 #include <boost/filesystem/fstream.hpp>
 
-struct lua_State;
-
 namespace osrm
 {
 namespace extractor
 {
+
+struct ScriptingContext;
 
 namespace lookup
 {
@@ -89,9 +89,9 @@ class EdgeBasedGraphFactory
         const std::vector<std::uint32_t> &turn_lane_offsets,
         const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks);
 
-    void Run(const std::string &original_edge_data_filename,
+    void Run(ScriptingContext &scripting_context,
+             const std::string &original_edge_data_filename,
              const std::string &turn_lane_data_filename,
-             lua_State *lua_state,
              const std::string &edge_segment_lookup_filename,
              const std::string &edge_penalty_filename,
              const bool generate_edge_lookup);
@@ -120,8 +120,6 @@ class EdgeBasedGraphFactory
                                           const EdgeID e2,
                                           const NodeID w,
                                           const double angle) const;
-
-    std::int32_t GetTurnPenalty(double angle, lua_State *lua_state) const;
 
   private:
     using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
@@ -158,7 +156,7 @@ class EdgeBasedGraphFactory
     void GenerateEdgeExpandedNodes();
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    const std::string &turn_lane_data_filename,
-                                   lua_State *lua_state,
+                                   ScriptingContext &scripting_context,
                                    const std::string &edge_segment_lookup_filename,
                                    const std::string &edge_fixed_penalties_filename,
                                    const bool generate_edge_lookup);

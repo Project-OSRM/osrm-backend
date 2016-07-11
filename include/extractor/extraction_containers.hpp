@@ -17,6 +17,8 @@ namespace osrm
 namespace extractor
 {
 
+struct ScriptingContext;
+
 /**
  * Uses external memory containers from stxxl to store all the data that
  * is collected by the extractor callbacks.
@@ -34,7 +36,7 @@ class ExtractionContainers
 #endif
     void PrepareNodes();
     void PrepareRestrictions();
-    void PrepareEdges(lua_State *segment_state);
+    void PrepareEdges(ScriptingContext &scripting_context);
 
     void WriteNodes(std::ofstream &file_out_stream) const;
     void WriteRestrictions(const std::string &restrictions_file_name) const;
@@ -68,11 +70,11 @@ class ExtractionContainers
 
     ExtractionContainers();
 
-    void PrepareData(const std::string &output_file_name,
+    void PrepareData(ScriptingContext &scripting_context,
+                     const std::string &output_file_name,
                      const std::string &restrictions_file_name,
                      const std::string &names_file_name,
-                     const std::string &turn_lane_file_name,
-                     lua_State *segment_state);
+                     const std::string &turn_lane_file_name);
 };
 }
 }

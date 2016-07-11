@@ -1,10 +1,8 @@
 #include "extractor/restriction_parser.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/scripting_environment.hpp"
 
 #include "extractor/external_memory_node.hpp"
-#include "util/exception.hpp"
-#include "util/lua_util.hpp"
-#include "util/simple_logger.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -24,43 +22,12 @@ namespace osrm
 namespace extractor
 {
 
-namespace
-{
-int luaErrorCallback(lua_State *lua_state)
-{
-    std::string error_msg = lua_tostring(lua_state, -1);
-    throw util::exception("ERROR occurred in profile script:\n" + error_msg);
-}
-}
-
-RestrictionParser::RestrictionParser(lua_State *lua_state, const ProfileProperties &properties)
-    : use_turn_restrictions(properties.use_turn_restrictions)
+RestrictionParser::RestrictionParser(ScriptingContext &scripting_context)
+    : use_turn_restrictions(scripting_context.properties.use_turn_restrictions)
 {
     if (use_turn_restrictions)
     {
-        ReadRestrictionExceptions(lua_state);
-    }
-}
-
-void RestrictionParser::ReadRestrictionExceptions(lua_State *lua_state)
-{
-    if (util::luaFunctionExists(lua_state, "get_exceptions"))
-    {
-        luabind::set_pcall_callback(&luaErrorCallback);
-        // get list of turn restriction exceptions
-        luabind::call_function<void>(
-            lua_state, "get_exceptions", boost::ref(restriction_exceptions));
-        const unsigned exception_count = restriction_exceptions.size();
-        util::SimpleLogger().Write() << "Found " << exception_count
-                                     << " exceptions to turn restrictions:";
-        for (const std::string &str : restriction_exceptions)
-        {
-            util::SimpleLogger().Write() << "  " << str;
-        }
-    }
-    else
-    {
-        util::SimpleLogger().Write() << "Found no exceptions to turn restrictions";
+        restriction_exceptions = scripting_context.getExceptions();
     }
 }
 

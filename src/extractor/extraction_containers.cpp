@@ -7,7 +7,6 @@
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
-#include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 
@@ -16,8 +15,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/ref.hpp>
-
-#include <luabind/luabind.hpp>
 
 #include <stxxl/sort>
 
@@ -69,11 +66,11 @@ ExtractionContainers::ExtractionContainers()
  * - merge edges with nodes to include location of start/end points and serialize
  *
  */
-void ExtractionContainers::PrepareData(const std::string &output_file_name,
+void ExtractionContainers::PrepareData(ScriptingContext &scripting_context,
+                                       const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
-                                       const std::string &turn_lane_file_name,
-                                       lua_State *segment_state)
+                                       const std::string &turn_lane_file_name)
 {
     try
     {
@@ -84,7 +81,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
 
         PrepareNodes();
         WriteNodes(file_out_stream);
-        PrepareEdges(segment_state);
+        PrepareEdges(scripting_context);
         WriteEdges(file_out_stream);
 
         PrepareRestrictions();
@@ -233,7 +230,7 @@ void ExtractionContainers::PrepareNodes()
     std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
 }
 
-void ExtractionContainers::PrepareEdges(lua_State *segment_state)
+void ExtractionContainers::PrepareEdges(ScriptingContext &scripting_context)
 {
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
@@ -315,8 +312,6 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     const auto all_edges_list_end_ = all_edges_list.end();
     const auto all_nodes_list_end_ = all_nodes_list.end();
 
-    const auto has_segment_function = util::luaFunctionExists(segment_state, "segment_function");
-
     while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
     {
         // skip all invalid edges
@@ -352,15 +347,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
             edge_iterator->source_coordinate,
             util::Coordinate(node_iterator->lon, node_iterator->lat));
 
-        if (has_segment_function)
-        {
-            luabind::call_function<void>(segment_state,
-                                         "segment_function",
-                                         boost::cref(edge_iterator->source_coordinate),
-                                         boost::cref(*node_iterator),
-                                         distance,
-                                         boost::ref(edge_iterator->weight_data));
-        }
+        scripting_context.processSegment(
+            edge_iterator->source_coordinate, *node_iterator, distance, edge_iterator->weight_data);
 
         const double weight = [distance](const InternalExtractorEdge::WeightData &data) {
             switch (data.type)

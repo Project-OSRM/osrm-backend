@@ -1,4 +1,4 @@
-#include "extractor/scripting_environment.hpp"
+#include "extractor/scripting_environment_lua.hpp"
 
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_helper_functions.hpp"
@@ -58,12 +58,12 @@ int luaErrorCallback(lua_State *state)
 }
 }
 
-ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_name(file_name)
+LuaScriptingEnvironment::LuaScriptingEnvironment(const std::string &file_name) : file_name(file_name)
 {
     util::SimpleLogger().Write() << "Using script " << file_name;
 }
 
-void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
+void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 {
     typedef double (osmium::Location::*location_member_ptr_type)() const;
 
@@ -187,21 +187,131 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
         error_stream << error_msg;
         throw util::exception("ERROR occurred in profile script:\n" + error_stream.str());
     }
+
+    context.has_turn_penalty_function = util::luaFunctionExists(context.state, "turn_function");
+    context.has_segment_function = util::luaFunctionExists(context.state, "segment_function");
 }
 
-ScriptingEnvironment::Context &ScriptingEnvironment::GetContex()
+ScriptingContext &LuaScriptingEnvironment::GetContext()
 {
     std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = util::make_unique<Context>();
+        ref = util::make_unique<LuaScriptingContext>();
         InitContext(*ref);
     }
     luabind::set_pcall_callback(&luaErrorCallback);
 
     return *ref;
+}
+
+std::unordered_set<std::string> LuaScriptingContext::getNameSuffixList()
+{
+    BOOST_ASSERT(state != nullptr);
+    if (!util::luaFunctionExists(state, "get_name_suffix_list"))
+        return {};
+
+    std::vector<std::string> suffixes_vector;
+    try
+    {
+        // call lua profile to compute turn penalty
+        luabind::call_function<void>(state, "get_name_suffix_list", boost::ref(suffixes_vector));
+    }
+    catch (const luabind::error &er)
+    {
+        util::SimpleLogger().Write(logWARNING) << er.what();
+    }
+
+    for (auto &suffix : suffixes_vector)
+        boost::algorithm::to_lower(suffix);
+
+    std::unordered_set<std::string> suffix_set;
+    suffix_set.insert(std::begin(suffixes_vector), std::end(suffixes_vector));
+    return suffix_set;
+}
+
+std::vector<std::string> LuaScriptingContext::getExceptions()
+{
+    BOOST_ASSERT(state != nullptr);
+    std::vector<std::string> restriction_exceptions;
+    if (util::luaFunctionExists(state, "get_exceptions"))
+    {
+        // get list of turn restriction exceptions
+        luabind::call_function<void>(state, "get_exceptions", boost::ref(restriction_exceptions));
+        const unsigned exception_count = restriction_exceptions.size();
+        util::SimpleLogger().Write() << "Found " << exception_count
+                                     << " exceptions to turn restrictions:";
+        for (const std::string &str : restriction_exceptions)
+        {
+            util::SimpleLogger().Write() << "  " << str;
+        }
+    }
+    else
+    {
+        util::SimpleLogger().Write() << "Found no exceptions to turn restrictions";
+    }
+    return restriction_exceptions;
+}
+
+void LuaScriptingContext::setupSources()
+{
+    BOOST_ASSERT(state != nullptr);
+    if (util::luaFunctionExists(state, "source_function"))
+    {
+        luabind::call_function<void>(state, "source_function");
+    }
+}
+
+int LuaScriptingContext::getTurnPenalty(double angle)
+{
+    if (has_turn_penalty_function)
+    {
+        BOOST_ASSERT(state != nullptr);
+        try
+        {
+            // call lua profile to compute turn penalty
+            double penalty = luabind::call_function<double>(state, "turn_function", angle);
+            BOOST_ASSERT(penalty < std::numeric_limits<int>::max());
+            BOOST_ASSERT(penalty > std::numeric_limits<int>::min());
+            return boost::numeric_cast<int>(penalty);
+        }
+        catch (const luabind::error &er)
+        {
+            util::SimpleLogger().Write(logWARNING) << er.what();
+        }
+    }
+    return 0;
+}
+
+void LuaScriptingContext::processNode(const osmium::Node &node, ExtractionNode &result)
+{
+    BOOST_ASSERT(state != nullptr);
+    luabind::call_function<void>(state, "node_function", boost::cref(node), boost::ref(result));
+}
+
+void LuaScriptingContext::processWay(const osmium::Way &way, ExtractionWay &result)
+{
+    BOOST_ASSERT(state != nullptr);
+    luabind::call_function<void>(state, "way_function", boost::cref(way), boost::ref(result));
+}
+
+void LuaScriptingContext::processSegment(const osrm::util::Coordinate &source,
+                                         const osrm::util::Coordinate &target,
+                                         double distance,
+                                         InternalExtractorEdge::WeightData &weight)
+{
+    if (has_segment_function)
+    {
+        BOOST_ASSERT(state != nullptr);
+        luabind::call_function<void>(state,
+                                     "segment_function",
+                                     boost::cref(source),
+                                     boost::cref(target),
+                                     distance,
+                                     boost::ref(weight));
+    }
 }
 }
 }
