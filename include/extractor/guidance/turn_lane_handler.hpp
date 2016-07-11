@@ -42,6 +42,7 @@ class TurnLaneHandler
                             // shown again)
         SLIPROAD, // Sliproads are simple assignments that, for better visual representation should
                   // include turns from other roads in their listings
+        MERGE,    // Merging Lanes
         NONE,     // not a turn lane scenario at all
         INVALID,  // some error might have occurred
         UNKNOWN,  // UNKNOWN describes all cases that we are currently not able to handle
