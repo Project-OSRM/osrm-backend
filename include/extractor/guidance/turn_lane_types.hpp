@@ -5,14 +5,15 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/assert.hpp>
 #include <boost/functional/hash_fwd.hpp>
 
+#include "util/json_container.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
-#include "util/json_container.hpp"
 
 namespace osrm
 {
@@ -94,6 +95,11 @@ struct TurnLaneDescription_hash
         return seed;
     }
 };
+
+typedef std::unordered_map<guidance::TurnLaneDescription,
+                           LaneDescriptionID,
+                           guidance::TurnLaneDescription_hash>
+    LaneDescriptionMap;
 
 } // guidance
 } // extractor

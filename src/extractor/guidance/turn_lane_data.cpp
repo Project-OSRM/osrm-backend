@@ -30,6 +30,7 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
     if (to > other.to)
         return false;
 
+    //the suppress-assignment flag is ignored, since it does not influence the order
     const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::sharp_right,
                                                             TurnLaneType::right,
                                                             TurnLaneType::slight_right,
@@ -88,7 +89,7 @@ LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_desc
     LaneDataVector lane_data;
     for (const auto tag : lane_map)
     {
-        lane_data.push_back({tag.first, tag.second.first, tag.second.second});
+        lane_data.push_back({tag.first, tag.second.first, tag.second.second,false});
     }
 
     std::sort(lane_data.begin(), lane_data.end());
@@ -127,6 +128,33 @@ LaneDataVector::const_iterator findTag(const TurnLaneType::Mask tag, const LaneD
 bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
 {
     return findTag(tag, data) != data.cend();
+}
+
+bool isSubsetOf(const LaneDataVector &subset_candidate, const LaneDataVector &superset_candidate)
+{
+    auto location = superset_candidate.begin();
+    for (const auto entry : subset_candidate)
+    {
+        location =
+            std::find_if(location, superset_candidate.end(), [entry](const TurnLaneData &lane_data) {
+                return lane_data.tag == entry.tag;
+            });
+
+        if (location == superset_candidate.end())
+        {
+            std::cout << "Failed to find tag" << std::endl;
+            return false;
+        }
+
+        // compare the number of lanes TODO this might have be to be revisited for situations where
+        // a sliproad widens into multiple lanes
+        if ((location->to - location->from) != (entry.to - entry.from))
+        {
+            std::cout << "Lane missmatch" << std::endl;
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace lanes

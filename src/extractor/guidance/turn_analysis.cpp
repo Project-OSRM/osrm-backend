@@ -150,23 +150,32 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
     const auto source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
 
     // Find the continuation of the intersection we're on
-    auto next_road = std::find_if(
-        intersection.begin(),
-        intersection.end(),
-        [this, source_edge_data](const ConnectedRoad &road) {
-            const auto road_edge_data = node_based_graph.GetEdgeData(road.turn.eid);
-            // Test to see if the source edge and the one we're looking at are the same road
-            return road_edge_data.road_classification.road_class ==
-                       source_edge_data.road_classification.road_class &&
-                   road_edge_data.name_id != EMPTY_NAMEID &&
-                   road_edge_data.name_id == source_edge_data.name_id && road.entry_allowed &&
-                   angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE;
-        });
+    const auto check_valid_next = [this, source_edge_data](const ConnectedRoad &road) {
+        const auto road_edge_data = node_based_graph.GetEdgeData(road.turn.eid);
+        // Test to see if the source edge and the one we're looking at are the same road
+        return road_edge_data.road_classification.road_class ==
+                   source_edge_data.road_classification.road_class &&
+               road_edge_data.name_id != EMPTY_NAMEID &&
+               road_edge_data.name_id == source_edge_data.name_id && road.entry_allowed &&
+               angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE;
+    };
+
+    auto next_road = std::find_if(intersection.begin(), intersection.end(), check_valid_next);
 
     const bool hasNext = next_road != intersection.end();
     if (!hasNext)
     {
         return intersection;
+    }
+
+    const auto second_candidate = next_road + 1;
+    // It might be that we are looking at two nearly identical roads. We want to attach the sliproad
+    // to the branching turn
+    if (second_candidate != intersection.end() && check_valid_next(*second_candidate) &&
+        angularDeviation(second_candidate->turn.angle, STRAIGHT_ANGLE) <
+            angularDeviation(next_road->turn.angle, STRAIGHT_ANGLE))
+    {
+        next_road = second_candidate;
     }
 
     // Threshold check, if the intersection is too far away, don't bother continuing
@@ -181,8 +190,8 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
     const auto next_road_next_intersection = [&]() {
         auto intersection = intersection_generator(intersection_node_id, next_road->turn.eid);
         auto in_edge = next_road->turn.eid;
-        //skip over traffic lights
-        if(intersection.size() == 2)
+        // skip over traffic lights
+        if (intersection.size() == 2)
         {
             const auto node = node_based_graph.GetTarget(in_edge);
             in_edge = intersection[1].turn.eid;
@@ -206,8 +215,8 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
         {
             const auto target_intersection = [&](NodeID node, EdgeID eid) {
                 auto intersection = intersection_generator(node, eid);
-                //skip over traffic lights
-                if(intersection.size() == 2)
+                // skip over traffic lights
+                if (intersection.size() == 2)
                 {
                     node = node_based_graph.GetTarget(eid);
                     eid = intersection[1].turn.eid;

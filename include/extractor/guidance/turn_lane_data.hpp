@@ -1,8 +1,8 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_DATA_HPP_
 #define OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_DATA_HPP_
 
-#include "util/typedefs.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "util/typedefs.hpp"
 #include <string>
 #include <vector>
 
@@ -21,6 +21,10 @@ struct TurnLaneData
     LaneID from;
     LaneID to;
 
+    // a temporary data entry that does not need to be assigned to an entry.
+    // This is the case in situations that use partition and require the entry to perform the
+    // one-to-one mapping.
+    bool suppress_assignment;
     bool operator<(const TurnLaneData &other) const;
 };
 typedef std::vector<TurnLaneData> LaneDataVector;
@@ -34,6 +38,9 @@ LaneDataVector::iterator findTag(const TurnLaneType::Mask tag, LaneDataVector &d
 
 // Returns true if any of the queried tags is contained
 bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data);
+
+// Check if a set of lanes is a subset of a different set of lanes
+bool isSubsetOf(const LaneDataVector &subset_candidate, const LaneDataVector &superset_candidate);
 
 } // namespace lane_data_generation
 
