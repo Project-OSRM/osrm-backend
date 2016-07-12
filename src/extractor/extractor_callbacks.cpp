@@ -32,7 +32,7 @@ namespace TurnLaneType = guidance::TurnLaneType;
 
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers,
                                        guidance::LaneDescriptionMap &lane_description_map)
-    : external_memory(extraction_containers), lane_description_map(lane_description_map)
+    : lane_description_map(lane_description_map), external_memory(extraction_containers)
 {
     // we reserved 0, 1, 2 for the empty case
     string_map[MapKey("", "")] = 0;
