@@ -740,3 +740,97 @@ Feature: Turn Lane Guidance
             | waypoints | route    | turns                    | lanes                             |
             | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, |
             | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
+
+    @TODO @2650
+    #market and haight in SF
+    #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
+    Scenario: Through Street Crossing Mid-Turn
+        Given the node map
+            |   |   |   |   |   |   |   | g | j |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | k |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   |   |   |   |   | e |   |
+            |   |   |   |   |   |   |   | d |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            | a |   |   | b |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   | c |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   | l |   |   |   |   | h | i |   |
+
+        And the ways
+            | nodes | name   | highway     | oneway | turn:lanes:forward |
+            | ab    | ghough | secondary   | yes    |                    |
+            | bc    | ghough | secondary   | yes    | straight\|straight |
+            | bd    | ghough | secondary   | yes    | none\|straight     |
+            | def   | ghough | secondary   | yes    |                    |
+            | gd    | market | primary     | yes    |                    |
+            |  dc   | market | primary     | yes    |                    |
+            |   ch  | market | primary     | yes    |                    |
+            | iej   | market | primary     | yes    |                    |
+            | gkb   | haight | residential | yes    |                    |
+            | bl    | haight | residential | yes    | left\|none         |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | relation    | bd       | dc     | d        | no_right_turn |
+
+        When I route I should get
+            | waypoints | route                | turns                              | lanes                                                    |
+            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, |
+            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
+            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
+            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
+
+    @TODO @2650
+    #market and haight in SF
+    #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
+    Scenario: Market/Haight without Through Street
+        Given the node map
+            |   |   |   |   |   |   |   | g | j |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   |   |   |   |   | e |   |
+            |   |   |   |   |   |   |   | d |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            | a |   |   | b |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   | c |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   | l |   |   |   |   | h | i |   |
+
+        And the ways
+            | nodes | name   | highway     | oneway | turn:lanes:forward |
+            | ab    | ghough | secondary   | yes    |                    |
+            | bc    | ghough | secondary   | yes    | straight\|straight |
+            | bd    | ghough | secondary   | yes    | none\|straight     |
+            | def   | ghough | secondary   | yes    |                    |
+            | gd    | market | primary     | yes    |                    |
+            |  dc   | market | primary     | yes    |                    |
+            |   ch  | market | primary     | yes    |                    |
+            | iej   | market | primary     | yes    |                    |
+            | bl    | haight | residential | yes    | left\|none         |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | relation    | bd       | dc     | d        | no_right_turn |
+
+        When I route I should get
+            | waypoints | route                | turns                              | lanes                                                    |
+            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, |
+            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
+            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
+            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |

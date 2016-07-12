@@ -55,6 +55,7 @@ class TurnLaneHandler
         "Simple Previous",
         "Partition Previous",
         "Sliproad",
+        "Merge",
         "None",
         "Invalid",
         "Unknown"};
