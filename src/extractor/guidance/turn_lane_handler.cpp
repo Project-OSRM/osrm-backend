@@ -122,8 +122,6 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
     // Cases operating on data carried over from a previous lane
     case TurnLaneScenario::SIMPLE_PREVIOUS:
     case TurnLaneScenario::PARTITION_PREVIOUS:
-        std::cout << "Simple: " << isSimpleIntersection(previous_lane_data, intersection)
-                  << std::endl;
         previous_lane_data =
             handleNoneValueAtSimpleTurn(std::move(previous_lane_data), intersection);
         return simpleMatchTuplesToTurns(
@@ -180,10 +178,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                 LaneDataVector &previous_lane_data,
                                 LaneDescriptionID &previous_description_id)
 {
-    std::cout << "Scenario of:" << std::endl;
-    for (auto road : intersection)
-        std::cout << "\t" << toString(road) << std::endl;
-
     // if only a uturn exists, there is nothing we can do
     if (intersection.size() == 1)
         return TurnLaneHandler::NONE;
@@ -216,8 +210,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
         return TurnLaneHandler::NONE;
 
     // if we see an invalid conversion, we stop immediately
-    std::cout << "Description: " << lane_description_id << " Size: " << lane_data.size()
-              << std::endl;
     if (lane_description_id != INVALID_LANE_DESCRIPTIONID && lane_data.empty())
         return TurnLaneScenario::INVALID;
 
@@ -240,9 +232,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                  previous_intersection))
     {
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
-        std::cout << "Previous\n";
-        for (auto road : previous_intersection)
-            std::cout << "\t" << toString(road) << std::endl;
         if (getNumberOfTurns(intersection) == 2)
             for (const auto &road : previous_intersection)
                 if (road.turn.instruction.type == TurnType::Sliproad)

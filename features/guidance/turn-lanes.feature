@@ -799,18 +799,18 @@ Feature: Turn Lane Guidance
             |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   | f |
             |   |   |   |   |   |   |   |   | e |   |
             |   |   |   |   |   |   |   | d |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            | a |   |   | b |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   | c |   |   |
+            | a |   |   |   |   |   | b | c |   |   |
             |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |
-            |   |   | l |   |   |   |   | h | i |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | l |   |   | h | i |   |
 
         And the ways
             | nodes | name   | highway     | oneway | turn:lanes:forward |
@@ -827,6 +827,48 @@ Feature: Turn Lane Guidance
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
             | relation    | bd       | dc     | d        | no_right_turn |
+
+        When I route I should get
+            | waypoints | route                | turns                              | lanes                                                    |
+            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, |
+            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
+            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
+            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
+
+    @TODO @2650 @bug
+    #market and haight in SF
+    #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
+    Scenario: Market/Haight without Through Street
+        Given the node map
+            |   |   |   |   |   |   |   | g | j |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   |   |   |   |   | e |   |
+            |   |   |   |   |   |   |   | d |   |   |
+            | a |   |   |   |   |   | b | c |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | l |   |   | h | i |   |
+
+        And the ways
+            | nodes | name   | highway     | oneway | turn:lanes:forward |
+            | ab    | ghough | secondary   | yes    |                    |
+            | bc    | ghough | secondary   | yes    | through\|through   |
+            | bd    | ghough | secondary   | yes    | none\|through      |
+            | def   | ghough | secondary   | yes    |                    |
+            | gd    | market | primary     | yes    |                    |
+            |  dc   | market | primary     | yes    |                    |
+            |   ch  | market | primary     | yes    |                    |
+            | iej   | market | primary     | yes    |                    |
+            | bl    | haight | residential | yes    | left\|none         |
 
         When I route I should get
             | waypoints | route                | turns                              | lanes                                                    |

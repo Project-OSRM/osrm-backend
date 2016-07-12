@@ -42,15 +42,13 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
            std::find(tag_by_modifier, tag_by_modifier + 8, other.tag);
 }
 
-LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
+LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description)
 {
     typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
 
-    // FIXME this is a workaround due to https://github.com/cucumber/cucumber-js/issues/417,
-    // need to switch statements when fixed
-    // const auto num_lanes = std::count(turn_lane_string.begin(), turn_lane_string.end(), '|') + 1;
-    // count the number of lanes
+    //TODO need to handle cases that have none-in between two identical values
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
+
     const auto setLaneData = [&](
         LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {
         const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool {
