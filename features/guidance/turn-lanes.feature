@@ -768,8 +768,8 @@ Feature: Turn Lane Guidance
         And the ways
             | nodes | name   | highway     | oneway | turn:lanes:forward |
             | ab    | ghough | secondary   | yes    |                    |
-            | bc    | ghough | secondary   | yes    | straight\|straight |
-            | bd    | ghough | secondary   | yes    | none\|straight     |
+            | bc    | ghough | secondary   | yes    | through\|through   |
+            | bd    | ghough | secondary   | yes    | none\|through      |
             | def   | ghough | secondary   | yes    |                    |
             | gd    | market | primary     | yes    |                    |
             |  dc   | market | primary     | yes    |                    |
@@ -815,8 +815,8 @@ Feature: Turn Lane Guidance
         And the ways
             | nodes | name   | highway     | oneway | turn:lanes:forward |
             | ab    | ghough | secondary   | yes    |                    |
-            | bc    | ghough | secondary   | yes    | straight\|straight |
-            | bd    | ghough | secondary   | yes    | none\|straight     |
+            | bc    | ghough | secondary   | yes    | through\|through   |
+            | bd    | ghough | secondary   | yes    | none\|through      |
             | def   | ghough | secondary   | yes    |                    |
             | gd    | market | primary     | yes    |                    |
             |  dc   | market | primary     | yes    |                    |

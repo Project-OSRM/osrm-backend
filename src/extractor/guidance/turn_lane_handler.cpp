@@ -80,8 +80,8 @@ TurnLaneHandler::~TurnLaneHandler()
 Intersection
 TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Intersection intersection)
 {
-    //if only a uturn exists, there is nothing we can do
-    if( intersection.size() == 1 )
+    // if only a uturn exists, there is nothing we can do
+    if (intersection.size() == 1)
         return intersection;
 
     // A list of output parameters to be filled in during deduceScenario.
@@ -180,6 +180,10 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                 LaneDataVector &previous_lane_data,
                                 LaneDescriptionID &previous_description_id)
 {
+    std::cout << "Scenario of:" << std::endl;
+    for (auto road : intersection)
+        std::cout << "\t" << toString(road) << std::endl;
+
     // if only a uturn exists, there is nothing we can do
     if (intersection.size() == 1)
         return TurnLaneHandler::NONE;
@@ -212,6 +216,8 @@ TurnLaneHandler::deduceScenario(const NodeID at,
         return TurnLaneHandler::NONE;
 
     // if we see an invalid conversion, we stop immediately
+    std::cout << "Description: " << lane_description_id << " Size: " << lane_data.size()
+              << std::endl;
     if (lane_description_id != INVALID_LANE_DESCRIPTIONID && lane_data.empty())
         return TurnLaneScenario::INVALID;
 
@@ -219,7 +225,7 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     // e.g. one direction per lane, if three lanes and right, through, left available
     if (lane_description_id != INVALID_LANE_DESCRIPTIONID && lane_data.size() == 1 &&
         lane_data[0].tag == TurnLaneType::none)
-        return TurnLaneScenario::INVALID;
+        return TurnLaneScenario::NONE;
 
     // Due to sliproads, we might need access to the previous intersection at this point already;
     previous_node = SPECIAL_NODEID;
@@ -235,9 +241,9 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     {
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
         std::cout << "Previous\n";
-        for( auto road : previous_intersection )
+        for (auto road : previous_intersection)
             std::cout << "\t" << toString(road) << std::endl;
-        if( getNumberOfTurns(intersection) == 2 )
+        if (getNumberOfTurns(intersection) == 2)
             for (const auto &road : previous_intersection)
                 if (road.turn.instruction.type == TurnType::Sliproad)
                     return TurnLaneScenario::SLIPROAD;
@@ -710,11 +716,13 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
                 turn_lane_masks.begin() + turn_lane_offsets[this_lane_description_id + 1]);
         }
         auto combined_data = laneDataFromDescription(combined_description);
-        if( combined_data.empty() ){
-            std::cout << "Failed to extract lane data: " << combined_description.size() << std::endl;
+        if (combined_data.empty())
+        {
+            std::cout << "Failed to extract lane data: " << combined_description.size()
+                      << std::endl;
             std::cout << "Tags:";
-            for( auto description : combined_description )
-                std::cout << " " << (int) description;
+            for (auto description : combined_description)
+                std::cout << " " << (int)description;
             std::cout << std::endl;
             util::guidance::printTurnAssignmentData(
                 node_based_graph.GetTarget(intersection[0].turn.eid),

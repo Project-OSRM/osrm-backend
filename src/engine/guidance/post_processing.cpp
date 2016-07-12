@@ -1,3 +1,5 @@
+#include "util/debug.hpp"
+
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
 
@@ -318,6 +320,11 @@ void closeOffRoundabout(const bool on_roundabout,
 // elongate a step by another. the data is added either at the front, or the back
 RouteStep elongate(RouteStep step, const RouteStep &by_step)
 {
+    std::cout << "Elongate:\n\t";
+    util::guidance::print(step);
+    std::cout << "\n\t";
+    util::guidance::print(by_step);
+    std::cout << std::endl;
     BOOST_ASSERT(step.mode == by_step.mode);
 
     step.duration += by_step.duration;
@@ -543,6 +550,7 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 // that we come across.
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 {
+    util::guidance::print(steps);
     // the steps should always include the first/last step in form of a location
     BOOST_ASSERT(steps.size() >= 2);
     if (steps.size() == 2)

@@ -20,6 +20,9 @@ bool findPreviousIntersection(const NodeID node_v,
                               EdgeID &result_via_edge,
                               Intersection &result_intersection)
 {
+    std::cout << "Searching for previous of:\n";
+    for( auto road : intersection)
+        std::cout << "\t" << toString(road) << std::endl;
     /* We need to find the intersection that is located prior to via_edge.
 
      *
@@ -80,6 +83,8 @@ bool findPreviousIntersection(const NodeID node_v,
         std::find_if(result_intersection.begin(),
                      result_intersection.end(),
                      [via_edge](const ConnectedRoad &road) { return road.turn.eid == via_edge; });
+
+    std::cout << "At Via Check" << std::endl;
 
     if (!check_via_edge)
     {
