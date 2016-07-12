@@ -259,6 +259,63 @@ Feature: Turn Lane Guidance
             | waypoints | route                 | turns                                                   | lanes                                                                                                                                                  |
             | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true right:false,left:true straight:false, |
 
+       @anticipate
+       Scenario: Anticipate Lanes for through, through with lanes
+           Given the node map
+               |   |   |   | f | g |   |
+               |   |   |   |   |   |   |
+               | a | b | c | d |   | e |
+               |   |   |   |   |   |   |
+               |   |   |   | h | i |   |
+
+           And the ways
+               | nodes | turn:lanes:forward                  | name |
+               | ab    |                                     | main |
+               | bc    | left\|through&through&through&right | main |
+               | cd    | left\|through&right                 | main |
+               | de    |                                     | main |
+               | cf    |                                     | off  |
+               | ch    |                                     | off  |
+               | dg    |                                     | off  |
+               | di    |                                     | off  |
+
+          When I route I should get
+               | waypoints | route               | turns                                             | lanes                                                                                                     |
+               | a,e       | main,main,main,main | depart,use lane straight,use lane straight,arrive | ,left:false straight:false straight:false straight:true right:false,left:false straight:true right:false, |
+
+       @anticipate
+       Scenario: Anticipate Lanes for through with turn before / after
+           Given the node map
+               | a | b | c |
+               |   | d |   |
+               | f | e | g |
+               |   | h |   |
+               | j | i | l |
+
+           And the ways
+               | nodes | turn:lanes:forward                                     | name  | oneway |
+               | ab    | right\|right&right&right                               | ab    | yes    |
+               | cb    | left\|left&left&left                                   | cb    | yes    |
+               | bd    |                                                        | bdehi |        |
+               | de    | left\|left&through&through&through&through&right&right | bdehi |        |
+               | ef    |                                                        | ef    |        |
+               | eg    |                                                        | eg    |        |
+               | eh    |                                                        | bdehi |        |
+               | hi    | left\|left&right&right                                 | bdehi |        |
+               | ij    |                                                        | ij    |        |
+               | il    |                                                        | il    |        |
+
+          When I route I should get
+               | waypoints | route                | turns                                                 | lanes                                                                                                                                                                                               |
+               | a,f       | ab,bdehi,ef,ef       | depart,turn right,turn right,arrive                   | ,right:false right:false right:true right:true,left:false left:false straight:false straight:false straight:false straight:false right:true right:true,                                             |
+               | a,g       | ab,bdehi,eg,eg       | depart,turn right,turn left,arrive                    | ,right:true right:true right:false right:false,left:true left:true straight:false straight:false straight:false straight:false right:false right:false,                                             |
+               | a,j       | ab,bdehi,bdehi,ij,ij | depart,turn right,use lane straight,turn right,arrive | ,right:false right:false right:true right:true,left:false left:false straight:false straight:false straight:true straight:true right:false right:false,left:false left:false right:true right:true, |
+               | a,l       | ab,bdehi,bdehi,il,il | depart,turn right,use lane straight,turn left,arrive  | ,right:true right:true right:false right:false,left:false left:false straight:true straight:true straight:false straight:false right:false right:false,left:true left:true right:false right:false, |
+               | c,g       | cb,bdehi,eg,eg       | depart,turn left,turn left,arrive                     | ,left:true left:true left:false left:false,left:true left:true straight:false straight:false straight:false straight:false right:false right:false,                                                 |
+               | c,f       | cb,bdehi,ef,ef       | depart,turn left,turn right,arrive                    | ,left:false left:false left:true left:true,left:false left:false straight:false straight:false straight:false straight:false right:true right:true,                                                 |
+               | c,l       | cb,bdehi,bdehi,il,il | depart,turn left,use lane straight,turn left,arrive   | ,left:true left:true left:false left:false,left:false left:false straight:true straight:true straight:false straight:false right:false right:false,left:true left:true right:false right:false,     |
+               | c,j       | cb,bdehi,bdehi,ij,ij | depart,turn left,use lane straight,turn right,arrive  | ,left:false left:false left:true left:true,left:false left:false straight:false straight:false straight:true straight:true right:false right:false,left:false left:false right:true right:true,     |
+
     @anticipate @bug @todo
     Scenario: Tripple Right keeping Left
         Given the node map
