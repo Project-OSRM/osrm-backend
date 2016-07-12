@@ -723,6 +723,7 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
                 previous_lane_data,
                 previous_intersection,
                 node_info_list);
+            exit(-1);
         }
         for (auto &entry : lane_data)
         {

@@ -94,6 +94,10 @@ Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
         });
     }
 
+    std::cout << "Intersection\n";
+    for( auto road : intersection )
+        std::cout << toString(road) << std::endl;
+
     return intersection;
 }
 

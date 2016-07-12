@@ -51,9 +51,9 @@ bool findPreviousIntersection(const NodeID node_v,
     const auto straightmost_at_v_in_reverse =
         findClosestTurn(node_v_reverse_intersection, STRAIGHT_ANGLE);
 
-    //TODO evaluate if narrow turn is the right criterion here... Might be that other angles are valid
-    if (angularDeviation(straightmost_at_v_in_reverse->turn.angle, STRAIGHT_ANGLE) >
-        NARROW_TURN_ANGLE)
+    // TODO evaluate if narrow turn is the right criterion here... Might be that other angles are
+    // valid
+    if (angularDeviation(straightmost_at_v_in_reverse->turn.angle, STRAIGHT_ANGLE) > GROUP_ANGLE)
         return false;
 
     const auto node_u = node_based_graph.GetTarget(straightmost_at_v_in_reverse->turn.eid);
