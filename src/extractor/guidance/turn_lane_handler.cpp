@@ -182,11 +182,6 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     if (intersection.size() == 1)
         return TurnLaneHandler::NONE;
 
-    // Sliproads are handled using the previous intersection mechanig
-    for (const auto &road : intersection)
-        if (road.turn.instruction.type == TurnType::Sliproad)
-            return TurnLaneHandler::NONE;
-
     extractLaneData(via_edge, lane_description_id, lane_data);
 
     // traffic lights are not compressed during our preprocessing. Due to this *shortcoming*, we can
@@ -232,10 +227,40 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                  previous_intersection))
     {
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
-        if (getNumberOfTurns(intersection) == 2)
-            for (const auto &road : previous_intersection)
-                if (road.turn.instruction.type == TurnType::Sliproad)
+        for (std::size_t road_index = 0; road_index < previous_intersection.size(); ++road_index)
+        {
+            const auto &road = previous_intersection[road_index];
+            // in case of a sliproad that is connected to road of simlar angle, we handle the
+            // turn as a combined turn
+            if (road.turn.instruction.type == TurnType::Sliproad)
+            {
+                if (via_edge == road.turn.eid)
                     return TurnLaneScenario::SLIPROAD;
+
+                const auto &closest_road = [&]() {
+                    if (road_index + 1 == previous_intersection.size())
+                    {
+                        BOOST_ASSERT(road_index > 1);
+                        return previous_intersection[road_index - 1];
+                    }
+                    else if (road_index == 1)
+                    {
+                        BOOST_ASSERT(road_index + 1 < previous_intersection.size());
+                        return previous_intersection[road_index + 1];
+                    }
+                    else if (angularDeviation(road.turn.angle,
+                                              previous_intersection.at(road_index - 1).turn.angle) <
+                             angularDeviation(road.turn.angle,
+                                              previous_intersection.at(road_index + 1).turn.angle))
+                        return previous_intersection[road_index - 1];
+                    else
+                        return previous_intersection[road_index + 1];
+                }();
+
+                if (via_edge == closest_road.turn.eid)
+                    return TurnLaneScenario::SLIPROAD;
+            }
+        }
     }
 
     const std::size_t possible_entries = getNumberOfTurns(intersection);
@@ -283,11 +308,14 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     // While right obviously refers to a-b-d, through and left refer to a-b-c-f and a-b-c-e
     // respectively. While we are at a-b, we have to consider the right turn only.
     // The turn a-b-c gets assigned the lanes of both *left* and *through*.
-    // At b-c, we get access to either a new set of lanes, or -- via the previous intersection -- to
-    // the second part of | left | through | right |. Lane anticipation can then deduce which lanes
+    // At b-c, we get access to either a new set of lanes, or -- via the previous intersection
+    // -- to
+    // the second part of | left | through | right |. Lane anticipation can then deduce which
+    // lanes
     // correspond to what and suppress unnecessary instructions.
     //
-    // For our initial case, we consider only the turns that are available at the current location,
+    // For our initial case, we consider only the turns that are available at the current
+    // location,
     // which are given by partitioning the lane data and selecting the first part.
     if (!lane_data.empty())
     {
@@ -663,93 +691,82 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
                                     const LaneDescriptionID &previous_lane_description_id,
                                     const LaneDataVector &previous_lane_data)
 {
-    if (isSubsetOf(lane_data, previous_lane_data) && isSimpleIntersection(lane_data, intersection))
+    // We only get to this point if there is a sliproad in the turn types, so the direct
+    // dereferencation is valid
+    const auto &sliproad = *std::find_if(
+        previous_intersection.begin(), previous_intersection.end(), [](const ConnectedRoad &road) {
+            return road.turn.instruction.type == TurnType::Sliproad;
+        });
+
+    // code duplicatino with deduceScenario: TODO refactor
+    const auto &main_road = [&]() {
+        if (road_index + 1 == previous_intersection.size())
+        {
+            BOOST_ASSERT(road_index > 1);
+            return previous_intersection[road_index - 1];
+        }
+        else if (road_index == 1)
+        {
+            BOOST_ASSERT(road_index + 1 < previous_intersection.size());
+            return previous_intersection[road_index + 1];
+        }
+        else if (angularDeviation(road.turn.angle,
+                                  previous_intersection.at(road_index - 1).turn.angle) <
+                 angularDeviation(road.turn.angle,
+                                  previous_intersection.at(road_index + 1).turn.angle))
+            return previous_intersection[road_index - 1];
+        else
+            return previous_intersection[road_index + 1];
+    }();
+    const auto main_description_id =
+        node_based_graph.GetEdgeData(main_road.turn.eid).lane_description_id;
+    const auto sliproad_description_id =
+        node_based_graph.GetEdgeData(sliproad.turn.eid).lane_description_id;
+
+    if (main_description_id == INVALID_LANE_DESCRIPTIONID ||
+        sliproad_description_id == INVALID_LANE_DESCRIPTIONID)
+        return intersection;
+
+    TurnLaneDescription combined_description;
+    // is the sliproad going off to the right?
+    if (main_road.turn.angle > sliproad.turn.angle)
     {
-        // Adjust lane_data to represent the turn lanes at the previous intersection
-        for (auto &entry : lane_data)
-        {
-            const auto match = findTag(entry.tag, previous_lane_data);
-            BOOST_ASSERT(match != previous_lane_data.end());
-            entry.from = match->from;
-            entry.to = match->to;
-        }
-        return simpleMatchTuplesToTurns(
-            std::move(intersection), lane_data, previous_lane_description_id);
+        combined_description.insert(
+            combined_description.end(),
+            turn_lane_masks.begin() + turn_lane_offsets[main_description_id],
+            turn_lane_masks.begin() + turn_lane_offsets[main_description_id + 1]);
+        combined_description.insert(
+            combined_description.end(),
+            turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id],
+            turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id + 1]);
     }
-    else if (previous_lane_description_id == INVALID_LANE_DESCRIPTIONID &&
-             isSimpleIntersection(lane_data, intersection))
+    // or to the left?
+    else
     {
-        // check if we can combine lanes
-        TurnLaneDescription combined_description;
-        for (auto rev_road_itr = previous_intersection.rbegin();
-             rev_road_itr != previous_intersection.rend();
-             rev_road_itr = std::next(rev_road_itr))
-        {
-            const auto &previous_road = *rev_road_itr;
-
-            if (!previous_road.entry_allowed)
-                continue;
-
-            const auto &edge_data = node_based_graph.GetEdgeData(previous_road.turn.eid);
-            const auto this_lane_description_id = edge_data.lane_description_id;
-            if (this_lane_description_id == INVALID_LANE_DESCRIPTIONID)
-            {
-                // TODO here we might want to get back to a normal scenario?
-                // if not all turns offer lanes, we cannot handle the situation
-                return intersection;
-            }
-            // add data to combined description
-            combined_description.insert(
-                combined_description.end(),
-                turn_lane_masks.begin() + turn_lane_offsets[this_lane_description_id],
-                turn_lane_masks.begin() + turn_lane_offsets[this_lane_description_id + 1]);
-        }
-        auto combined_data = laneDataFromDescription(combined_description);
-        if (combined_data.empty())
-        {
-            std::cout << "Failed to extract lane data: " << combined_description.size()
-                      << std::endl;
-            std::cout << "Tags:";
-            for (auto description : combined_description)
-                std::cout << " " << (int)description;
-            std::cout << std::endl;
-            util::guidance::printTurnAssignmentData(
-                node_based_graph.GetTarget(intersection[0].turn.eid),
-                lane_data,
-                intersection,
-                node_info_list);
-            util::guidance::printTurnAssignmentData(
-                node_based_graph.GetTarget(previous_intersection[0].turn.eid),
-                previous_lane_data,
-                previous_intersection,
-                node_info_list);
-            exit(-1);
-        }
-        for (auto &entry : lane_data)
-        {
-            const auto match = findTag(entry.tag, combined_data);
-            BOOST_ASSERT(match != combined_data.end());
-            entry.from = match->from;
-            entry.to = match->to;
-        }
-
-        const auto combined_id = [&]() {
-            auto itr = lane_description_map.find(combined_description);
-            if (lane_description_map.find(combined_description) == lane_description_map.end())
-            {
-                const auto new_id =
-                    boost::numeric_cast<LaneDescriptionID>(lane_description_map.size());
-                lane_description_map[combined_description] = new_id;
-                return new_id;
-            }
-            else
-            {
-                return itr->second;
-            }
-        }();
-        return simpleMatchTuplesToTurns(std::move(intersection), lane_data, combined_id);
+        combined_description.insert(
+            combined_description.end(),
+            turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id],
+            turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id + 1]);
+        combined_description.insert(
+            combined_description.end(),
+            turn_lane_masks.begin() + turn_lane_offsets[main_description_id],
+            turn_lane_masks.begin() + turn_lane_offsets[main_description_id + 1]);
     }
-    return intersection;
+
+    const auto combined_id = [&]() {
+        auto itr = lane_description_map.find(combined_description);
+        if (lane_description_map.find(combined_description) == lane_description_map.end())
+        {
+            const auto new_id = boost::numeric_cast<LaneDescriptionID>(lane_description_map.size());
+            lane_description_map[combined_description] = new_id;
+            return new_id;
+        }
+        else
+        {
+            return itr->second;
+        }
+    }();
+    return simpleMatchTuplesToTurns(std::move(intersection), lane_data, combined_id);
 }
 
 } // namespace lanes
