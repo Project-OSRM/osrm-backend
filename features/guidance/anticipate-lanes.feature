@@ -272,8 +272,8 @@ Feature: Turn Lane Guidance
 
         And the ways
             | nodes | turn:lanes:forward                      | highway | junction   | #   |
-            | ab    | slight_right\|slight_right&slight_right | primary |            |     |
-            | bc    | slight_left\|slight_right&slight_right  | primary | roundabout | top |
+            | ab    | slight_right\|slight_right\|slight_right | primary |            |     |
+            | bc    | slight_left\|slight_right\|slight_right  | primary | roundabout | top |
             | cd    |                                         | primary | roundabout | top |
             | de    |                                         | primary | roundabout | top |
             | eb    |                                         | primary | roundabout | top |
@@ -304,7 +304,7 @@ Feature: Turn Lane Guidance
             | nodes | turn:lanes:forward                    | highway | junction   |
             | ab    |                                       | primary |            |
             | bc    |                                       | primary | roundabout |
-            | cd    | slight_left\|slight_left&slight_right | primary | roundabout |
+            | cd    | slight_left\|slight_left\|slight_right | primary | roundabout |
             | de    |                                       | primary | roundabout |
             | eb    |                                       | primary | roundabout |
             | df    |                                       | primary |            |
@@ -376,18 +376,18 @@ Feature: Turn Lane Guidance
             |   | y |   |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward                                | highway | junction   | name  |
-            | ab    | through\|right&right&right&right                  | primary |            | abx   |
-            | bx    |                                                   | primary |            | abx   |
-            | bc    | right\|right&right&right                          | primary |            | bc    |
-            | cd    |                                                   | primary | roundabout | cdefc |
-            | de    | slight_left\|slight_left&slight_left&slight_right | primary | roundabout | cdefc |
-            | ef    | left\|slight_right&slight_right                   | primary | roundabout | cdefc |
-            | fc    |                                                   | primary | roundabout | cdefc |
-            | ey    |                                                   | primary |            | ey    |
-            | fg    | through\|right                                    | primary |            | fg    |
-            | gz    |                                                   | primary |            | gz    |
-            | gh    |                                                   | primary |            | gh    |
+            | nodes | turn:lanes:forward                                 | highway | junction   | name  |
+            | ab    | through\|right\|right\|right\|right                | primary |            | abx   |
+            | bx    |                                                    | primary |            | abx   |
+            | bc    | right\|right\|right\|right                         | primary |            | bc    |
+            | cd    |                                                    | primary | roundabout | cdefc |
+            | de    | slight_left\|slight_left&slight_left\|slight_right | primary | roundabout | cdefc |
+            | ef    | left\|slight_right\|slight_right                   | primary | roundabout | cdefc |
+            | fc    |                                                    | primary | roundabout | cdefc |
+            | ey    |                                                    | primary |            | ey    |
+            | fg    | through\|right                                     | primary |            | fg    |
+            | gz    |                                                    | primary |            | gz    |
+            | gh    |                                                    | primary |            | gh    |
 
         When I route I should get
             | waypoints | route           | turns                                            | lanes                                                                                                                                    |
