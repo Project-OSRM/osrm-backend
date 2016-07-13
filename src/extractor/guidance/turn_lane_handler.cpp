@@ -691,32 +691,34 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
                                     const LaneDescriptionID &previous_lane_description_id,
                                     const LaneDataVector &previous_lane_data)
 {
-    // We only get to this point if there is a sliproad in the turn types, so the direct
-    // dereferencation is valid
-    const auto &sliproad = *std::find_if(
+    const auto sliproad_index = std::distance(previous_intersection.begin(),std::find_if(
         previous_intersection.begin(), previous_intersection.end(), [](const ConnectedRoad &road) {
             return road.turn.instruction.type == TurnType::Sliproad;
-        });
+        }));
+
+    BOOST_ASSERT(sliproad_index <= previous_intersection.size());
+    const auto &sliproad = previous_intersection[sliproad_index];
+
 
     // code duplicatino with deduceScenario: TODO refactor
     const auto &main_road = [&]() {
-        if (road_index + 1 == previous_intersection.size())
+        if (sliproad_index + 1 == previous_intersection.size())
         {
-            BOOST_ASSERT(road_index > 1);
-            return previous_intersection[road_index - 1];
+            BOOST_ASSERT(sliproad_index > 1);
+            return previous_intersection[sliproad_index - 1];
         }
-        else if (road_index == 1)
+        else if (sliproad_index == 1)
         {
-            BOOST_ASSERT(road_index + 1 < previous_intersection.size());
-            return previous_intersection[road_index + 1];
+            BOOST_ASSERT(sliproad_index + 1 < previous_intersection.size());
+            return previous_intersection[sliproad_index + 1];
         }
-        else if (angularDeviation(road.turn.angle,
-                                  previous_intersection.at(road_index - 1).turn.angle) <
-                 angularDeviation(road.turn.angle,
-                                  previous_intersection.at(road_index + 1).turn.angle))
-            return previous_intersection[road_index - 1];
+        else if (angularDeviation(sliproad.turn.angle,
+                                  previous_intersection.at(sliproad_index - 1).turn.angle) <
+                 angularDeviation(sliproad.turn.angle,
+                                  previous_intersection.at(sliproad_index + 1).turn.angle))
+            return previous_intersection[sliproad_index - 1];
         else
-            return previous_intersection[road_index + 1];
+            return previous_intersection[sliproad_index + 1];
     }();
     const auto main_description_id =
         node_based_graph.GetEdgeData(main_road.turn.eid).lane_description_id;
@@ -735,10 +737,23 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
             combined_description.end(),
             turn_lane_masks.begin() + turn_lane_offsets[main_description_id],
             turn_lane_masks.begin() + turn_lane_offsets[main_description_id + 1]);
+
         combined_description.insert(
             combined_description.end(),
             turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id],
             turn_lane_masks.begin() + turn_lane_offsets[sliproad_description_id + 1]);
+
+        //if we handle the main road, we have to adjust the lane-data
+        if (main_description_id == lane_description_id)
+        {
+            const auto offset = turn_lane_offsets[sliproad_description_id + 1] -
+                                turn_lane_offsets[sliproad_description_id];
+            for (auto &item : lane_data)
+            {
+                item.from += offset;
+                item.to += offset;
+            }
+        }
     }
     // or to the left?
     else
@@ -751,6 +766,19 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
             combined_description.end(),
             turn_lane_masks.begin() + turn_lane_offsets[main_description_id],
             turn_lane_masks.begin() + turn_lane_offsets[main_description_id + 1]);
+
+        //if we are handling the sliproad, we have to adjust its lane data
+        if (sliproad_description_id == lane_description_id)
+        {
+            const auto offset = turn_lane_offsets[main_description_id + 1] -
+                                turn_lane_offsets[main_description_id];
+            for (auto &item : lane_data)
+            {
+                item.from += offset;
+                item.to += offset;
+            }
+        }
+
     }
 
     const auto combined_id = [&]() {
