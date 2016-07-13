@@ -664,7 +664,6 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
         std::sort(first.begin(),first.end());
     }
 
-    std::cout << "[xxxxxxxxxxxxxxxxxx] Partitioning done." << std::endl;
     // TODO augment straightmost turn
     return {std::move(first), std::move(second)};
 }
@@ -781,7 +780,6 @@ TurnLaneHandler::handleSliproadTurn(Intersection intersection,
                 item.to += offset;
             }
         }
-
     }
 
     const auto combined_id = [&]() {
