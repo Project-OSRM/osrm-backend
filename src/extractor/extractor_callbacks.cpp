@@ -1,8 +1,8 @@
+#include "extractor/extractor_callbacks.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
-#include "extractor/extractor_callbacks.hpp"
 #include "extractor/restriction.hpp"
 
 #include "util/for_each_pair.hpp"
@@ -215,7 +215,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     // convert the lane description into an ID and, if necessary, remembr the description in the
     // description_map
     const auto requestId = [&](std::string lane_string) {
-        if( lane_string.empty() )
+        if (lane_string.empty())
             return INVALID_LANE_DESCRIPTIONID;
         TurnLaneDescription lane_description = laneStringToDescription(std::move(lane_string));
 
@@ -253,33 +253,35 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     // Get the unique identifier for the street name
     // Get the unique identifier for the street name and destination
     const auto name_iterator = string_map.find(MapKey(parsed_way.name, parsed_way.destinations));
-    unsigned name_id = external_memory.name_lengths.size();
+    unsigned name_id = EMPTY_NAMEID;
     if (string_map.end() == name_iterator)
     {
-        auto name_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.name.size());
-        auto destinations_length =
+        const auto name_length = std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.name.size());
+        const auto destinations_length =
             std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.destinations.size());
-        auto pronunciation_length =
+        const auto pronunciation_length =
             std::min<unsigned>(MAX_STRING_LENGTH, parsed_way.pronunciation.size());
 
-        external_memory.name_char_data.reserve(name_id + name_length + destinations_length +
-                                               pronunciation_length);
+        // name_offsets already has an offset of a new name, take the offset index as the name id
+        name_id = external_memory.name_offsets.size() - 1;
+
+        external_memory.name_char_data.reserve(external_memory.name_char_data.size() + name_length
+                                               + destinations_length + pronunciation_length);
 
         std::copy(parsed_way.name.c_str(),
                   parsed_way.name.c_str() + name_length,
                   std::back_inserter(external_memory.name_char_data));
+        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
         std::copy(parsed_way.destinations.c_str(),
                   parsed_way.destinations.c_str() + destinations_length,
                   std::back_inserter(external_memory.name_char_data));
+        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
         std::copy(parsed_way.pronunciation.c_str(),
                   parsed_way.pronunciation.c_str() + pronunciation_length,
                   std::back_inserter(external_memory.name_char_data));
-
-        external_memory.name_lengths.push_back(name_length);
-        external_memory.name_lengths.push_back(destinations_length);
-        external_memory.name_lengths.push_back(pronunciation_length);
+        external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
         auto k = MapKey{parsed_way.name, parsed_way.destinations};
         auto v = MapVal{name_id};
