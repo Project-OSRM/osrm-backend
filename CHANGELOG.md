@@ -1,12 +1,15 @@
-# 5.3.0
-    Changes from 5.3.0-rc.2
-        - Guidance
-            - Improved detection of obvious turns
+# 5.3.0 RC3
+  Changes from 5.3.0-rc.2
+    - Guidance
+      - Improved detection of obvious turns
+      - Improved turn lane detection
+    - Bugfixes
+      - Fix bug that didn't chose minimal weights on overlapping edges
 
 # 5.3.0 RC2
-    Changes from 5.3.0-rc.1
-        - Bugfixes
-            - Fixes invalid checks in the lane-extraction part of the car profile
+  Changes from 5.3.0-rc.1
+    - Bugfixes
+      - Fixes invalid checks in the lane-extraction part of the car profile
 
 # 5.3.0 RC1
     - API
