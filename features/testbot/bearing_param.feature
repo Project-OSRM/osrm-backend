@@ -104,12 +104,12 @@ Feature: Bearing parameter
             | ha    | yes    | ring |
 
         When I route I should get
-            | from | to | bearings | route                       | bearing                                   |
-            | 0    | q  | 0 90     | ia,ring,ring,ring,ring,ring | 0->0,0->90,180->270,270->0,0->90,90->0    |
-            | 0    | a  | 45 90    | jb,ring,ring,ring,ring,ring | 0->45,45->180,180->270,270->0,0->90,90->0 |
-            | 0    | q  | 90 90    | kc,ring,ring,ring,ring      | 0->90,90->180,270->0,0->90,90->0          |
-            | 0    | a  | 135 90   | ld,ring,ring,ring,ring      | 0->135,135->270,270->0,0->90,90->0        |
-            | 0    | a  | 180 90   | me,ring,ring,ring           | 0->180,180->270,0->90,90->0               |
-            | 0    | a  | 225 90   | nf,ring,ring,ring           | 0->225,225->0,0->90,90->0                 |
-            | 0    | a  | 270 90   | og,ring,ring                | 0->270,270->0,90->0                       |
-            | 0    | a  | 315 90   | ph,ring,ring                | 0->315,315->90,90->0                      |
+            | from | to | bearings | route        | bearing               |
+            | 0    | q  | 0 90     | ia,ring,ring | 0->0,0->90,90->0      |
+            | 0    | a  | 45 90    | jb,ring,ring | 0->45,45->180,90->0   |
+            | 0    | q  | 90 90    | kc,ring,ring | 0->90,90->180,90->0   |
+            | 0    | a  | 135 90   | ld,ring,ring | 0->135,135->270,90->0 |
+            | 0    | a  | 180 90   | me,ring,ring | 0->180,180->270,90->0 |
+            | 0    | a  | 225 90   | nf,ring,ring | 0->225,225->0,90->0   |
+            | 0    | a  | 270 90   | og,ring,ring | 0->270,270->0,90->0   |
+            | 0    | a  | 315 90   | ph,ring,ring | 0->315,315->90,90->0  |

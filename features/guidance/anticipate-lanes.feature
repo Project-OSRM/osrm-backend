@@ -135,9 +135,9 @@ Feature: Turn Lane Guidance
             | cj    |                    | 1     | motorway_link | yes    | xbcj |
 
        When I route I should get
-            | waypoints | route         | turns                                             | lanes                           |
-            | a,i       | ab,xbcj,ci,ci | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
-            | a,j       | ab,xbcj,xbcj  | depart,merge slight left,arrive                   | ,,                              |
+            | waypoints | route        | turns                           | lanes                          |
+            | a,i       | ab,ci,ci     | depart,turn slight right,arrive | ,none:false slight right:true, |
+            | a,j       | ab,xbcj      | depart,arrive                   | ,                              |
 
 
     @anticipate

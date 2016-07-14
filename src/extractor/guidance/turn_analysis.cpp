@@ -93,7 +93,6 @@ Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
                 road.turn.instruction.type = TurnType::OffRamp;
         });
     }
-
     return intersection;
 }
 

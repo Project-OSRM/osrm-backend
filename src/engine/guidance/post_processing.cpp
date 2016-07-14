@@ -37,6 +37,13 @@ namespace
 const constexpr std::size_t MIN_END_OF_ROAD_INTERSECTIONS = std::size_t{2};
 const constexpr double MAX_COLLAPSE_DISTANCE = 30;
 
+// check if at least one of the turns is actually a maneuver
+inline bool hasManeuver(const RouteStep &first, const RouteStep &second)
+{
+    return first.maneuver.instruction.type != TurnType::Suppressed ||
+           second.maneuver.instruction.type != TurnType::Suppressed;
+}
+
 inline bool choiceless(const RouteStep &step, const RouteStep &previous)
 {
     // if the next turn is choiceless, we consider longer turn roads collapsable than usually
@@ -375,6 +382,10 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     };
 
     BOOST_ASSERT(!one_back_step.intersections.empty() && !current_step.intersections.empty());
+
+    if (!hasManeuver(one_back_step, current_step))
+        return;
+
     // Very Short New Name
     if (((collapsable(one_back_step) ||
           (isCollapsableInstruction(one_back_step.maneuver.instruction) &&
@@ -661,6 +672,10 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         BOOST_ASSERT(one_back_index < steps.size());
 
         const auto &one_back_step = steps[one_back_index];
+
+        if (!hasManeuver(one_back_step, current_step))
+            continue;
+
         // how long has a name change to be so that we announce it, even as a bridge?
         const constexpr auto name_segment_cutoff_length = 100;
         const auto isBasicNameChange = [](const RouteStep &step) {
