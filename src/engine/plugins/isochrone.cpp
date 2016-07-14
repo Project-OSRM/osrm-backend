@@ -109,11 +109,17 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     // Optional param for calculating Convex Hull
     if (params.convexhull)
     {
-        convexhull = util::monotoneChain(isochroneVector);
 
+        TIMER_START(CONVEXHULL);
+        convexhull = util::monotoneChain(isochroneVector);
+        TIMER_STOP(CONVEXHULL);
+        util::SimpleLogger().Write() << "CONVEXHULL took: " << TIMER_MSEC(CONVEXHULL) << "ms";
     }
     if(params.concavehull && params.convexhull) {
+        TIMER_START(CONCAVEHULL);
         concavehull = util::concavehull(convexhull, params.threshold, isochroneVector);
+        TIMER_STOP(CONCAVEHULL);
+        util::SimpleLogger().Write() << "CONCAVEHULL took: " << TIMER_MSEC(CONCAVEHULL) << "ms";
     }
 
     TIMER_START(RESPONSE);
@@ -121,7 +127,12 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     isochroneAPI.MakeResponse(isochroneVector, convexhull, concavehull, json_result);
     TIMER_STOP(RESPONSE);
     util::SimpleLogger().Write() << "RESPONSE took: " << TIMER_MSEC(RESPONSE) << "ms";
-
+    isochroneVector.clear();
+    isochroneVector.shrink_to_fit();
+    convexhull.clear();
+    convexhull.shrink_to_fit();
+    concavehull.clear();
+    concavehull.shrink_to_fit();
     return Status::Ok;
 }
 

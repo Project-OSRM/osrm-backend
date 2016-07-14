@@ -42,7 +42,7 @@ struct IsochroneParametersGrammar final : public BaseParametersGrammar<Iterator,
              qi::bool_)[ph::bind(&engine::api::IsochroneParameters::concavehull, qi::_r1) = qi::_1];
         threshold_rule=
             (qi::lit("threshold=") >
-             qi::uint_)[ph::bind(&engine::api::IsochroneParameters::threshold, qi::_r1) = qi::_1];
+             qi::double_)[ph::bind(&engine::api::IsochroneParameters::threshold, qi::_r1) = qi::_1];
 
         root_rule =
             BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >

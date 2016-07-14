@@ -16,7 +16,7 @@ struct IsochroneParameters : public BaseParameters
     double distance = 0;
     bool convexhull = false;
     bool concavehull = false;
-    unsigned int threshold = 1; // max precision
+    double threshold = 1; // max precision
 
     bool IsValid() const { return BaseParameters::IsValid(); }
 };
