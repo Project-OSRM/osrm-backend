@@ -5,6 +5,8 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
+#include "extractor/suffix_table.hpp"
+
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -30,7 +32,9 @@ class IntersectionGenerator
                           const RestrictionMap &restriction_map,
                           const std::unordered_set<NodeID> &barrier_nodes,
                           const std::vector<QueryNode> &node_info_list,
-                          const CompressedEdgeContainer &compressed_edge_container);
+                          const CompressedEdgeContainer &compressed_edge_container,
+                          const util::NameTable &name_table,
+                          const SuffixTable &suffix_table);
 
     Intersection operator()(const NodeID nid, const EdgeID via_eid) const;
 
@@ -40,6 +44,8 @@ class IntersectionGenerator
     const std::unordered_set<NodeID> &barrier_nodes;
     const std::vector<QueryNode> &node_info_list;
     const CompressedEdgeContainer &compressed_edge_container;
+    const util::NameTable &name_table;
+    const SuffixTable &suffix_table;
 
     // Check for restrictions/barriers and generate a list of valid and invalid turns present at
     // the

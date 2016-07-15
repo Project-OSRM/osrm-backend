@@ -467,6 +467,36 @@ Feature: Turn Lane Guidance
             | a    | i  | 180,180 180,180 | road,road        | depart,arrive                | ,                                      |
             | b    | a  | 90,2 270,2      | road,road,road   | depart,continue uturn,arrive | ,none:true straight:false right:false, |
 
+    @reverse @previous-lanes
+    Scenario: U-Turn Road at Intersection, Traffic light
+        Given the node map
+            |   |   |   |   |   |   | h |   |
+            |   |   |   |   | f |   | e | j |
+            | a | b |   |   |   |   |   |   |
+            |   |   |   |   | c | k | d | i |
+            |   |   |   |   |   |   | g |   |
+
+        And the nodes
+            | node | highway         |
+            | k    | traffic_signals |
+
+        And the ways
+            | nodes | name  | turn:lanes:forward | oneway | highway  |
+            | ab    | road  |                    | no     | primary  |
+            | di    | road  |                    | yes    | primary  |
+            | bc    | road  | \|through\|right   | yes    | primary  |
+            | ckd   | road  | \|through\|right   | yes    | primary  |
+            | fc    | road  |                    | no     | tertiary |
+            | jefb  | road  |                    | yes    | primary  |
+            | gdeh  | cross |                    | no     | primary  |
+
+       When I route I should get
+            | from | to | bearings        | route            | turns                           | lanes                                  |
+            | a    | g  | 180,180 180,180 | road,cross,cross | depart,turn right,arrive        | ,none:false straight:false right:true, |
+            | a    | h  | 180,180 180,180 | road,cross,cross | depart,turn left,arrive         | ,none:true straight:false right:false, |
+            | a    | i  | 180,180 180,180 | road,road,road   | depart,use lane straight,arrive | ,none:true straight:true right:false,  |
+            | b    | a  | 90,2 270,2      | road,road,road   | depart,continue uturn,arrive    | ,none:true straight:false right:false, |
+
     @reverse
     Scenario: Segregated Intersection Merges With Lanes
         Given the node map

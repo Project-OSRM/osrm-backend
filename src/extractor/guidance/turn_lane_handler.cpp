@@ -141,21 +141,23 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
         // case TurnLaneScenario::NONE:
         // case TurnLaneScenario::INVALID:
         {
-            /*
             static int print_count = 0;
             if (TurnLaneScenario::NONE != scenario && print_count++ < 10)
             {
                 std::cout << "[Unhandled] " << (int)lane_description_id << " -- "
                           << (int)previous_description_id << "\n"
                           << std::endl;
+                std::cout << "This Intersection";
                 util::guidance::printTurnAssignmentData(
                     at, lane_data, intersection, node_info_list);
 
                 if (previous_node != SPECIAL_NODEID)
+                {
+                    std::cout << "Previous Intersection";
                     util::guidance::printTurnAssignmentData(
                         previous_node, previous_lane_data, previous_intersection, node_info_list);
+                }
             }
-            */
         }
         return intersection;
     }
@@ -223,6 +225,9 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                  previous_via_edge,
                                  previous_intersection))
     {
+        if (lane_description_id == INVALID_LANE_DESCRIPTIONID &&
+            previous_description_id == INVALID_LANE_DESCRIPTIONID)
+            return TurnLaneScenario::NONE;
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
         for (std::size_t road_index = 0; road_index < previous_intersection.size(); ++road_index)
         {
@@ -258,6 +263,10 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                     return TurnLaneScenario::SLIPROAD;
             }
         }
+    }
+    else if (lane_description_id == INVALID_LANE_DESCRIPTIONID)
+    {
+        return TurnLaneScenario::NONE;
     }
 
     const std::size_t possible_entries = getNumberOfTurns(intersection);

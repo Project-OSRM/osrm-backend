@@ -879,3 +879,22 @@ Feature: Simple Turns
             | waypoints | turns                   | route                                                                                   |
             | a,d       | depart,arrive           | Channing Street Northeast,Channing Street Northwest                                     |
             | a,h       | depart,turn left,arrive | Channing Street Northeast,North Capitol Street Northeast,North Capitol Street Northeast |
+
+    @turn @segregated
+    Scenario: OneSided Reference
+        Given the node map
+            | d |   |   |   |   |   |   |
+            |   |   | b |   |   |   | c |
+            | a |   |   |   |   |   |   |
+
+        And the ways
+            | nodes | name         | highway | ref   | oneway |
+            | ab    | Elsenstrasse | primary | B 96a | yes    |
+            | bd    | Elsenstrasse | primary |       | yes    |
+            | bc    | Elsenstrasse | primary |       | no     |
+
+        When I route I should get
+            | waypoints | route                                          | turns                    |
+            | a,d       | Elsenstrasse (B 96a),Elsenstrasse,Elsenstrasse | depart,turn uturn,arrive |
+            | a,c       | Elsenstrasse (B 96a),Elsenstrasse              | depart,arrive            |
+            | c,d       | Elsenstrasse,Elsenstrasse                      | depart,arrive            |
