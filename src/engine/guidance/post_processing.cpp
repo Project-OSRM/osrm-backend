@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -524,7 +524,10 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
             enter.maneuver.instruction.direction_modifier =
                 mirrorDirectionModifier(enter_direction);
 
-        auto enterAndLeave = anticipateLaneChange({enter, leave});
+        // a roundabout is a continuous maneuver. We don't switch lanes within a roundabout, as long
+        // as it can be avoided.
+        auto enterAndLeave =
+            anticipateLaneChange({enter, leave}, std::numeric_limits<double>::max());
 
         // Undo flipping direction on a right turn in a right-sided counter-clockwise roundabout.
         // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
