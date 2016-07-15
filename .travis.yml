@@ -18,6 +18,7 @@ cache:
   directories:
     - $HOME/.ccache
     - test/cache
+    - /var/cache/apt
 
 env:
   global:
