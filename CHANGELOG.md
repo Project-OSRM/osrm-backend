@@ -8,6 +8,7 @@
     - Guidance
       - Improved detection of obvious turns
       - Improved turn lane detection
+      - Improved lane anticipation for roundabouts
     - Bugfixes
       - Fix bug that didn't chose minimal weights on overlapping edges
 

@@ -1,3 +1,4 @@
+#include "util/debug.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/group_by.hpp"
 #include "util/guidance/toolkit.hpp"
@@ -20,18 +21,17 @@ namespace engine
 namespace guidance
 {
 
-std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps)
+std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
+                                            const double min_duration_needed_for_lane_change)
 {
-    const constexpr auto MIN_DURATION_NEEDED_FOR_LANE_CHANGE = 15.;
-
     // Postprocessing does not strictly guarantee for only turns
     const auto is_turn = [](const RouteStep &step) {
         return step.maneuver.instruction.type != TurnType::NewName &&
                step.maneuver.instruction.type != TurnType::Notification;
     };
 
-    const auto is_quick = [MIN_DURATION_NEEDED_FOR_LANE_CHANGE](const RouteStep &step) {
-        return step.duration < MIN_DURATION_NEEDED_FOR_LANE_CHANGE;
+    const auto is_quick = [min_duration_needed_for_lane_change](const RouteStep &step) {
+        return step.duration < min_duration_needed_for_lane_change;
     };
 
     const auto is_quick_turn = [&](const RouteStep &step) {
