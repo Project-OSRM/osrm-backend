@@ -182,7 +182,7 @@ void EdgeBasedGraphFactory::FlushVectorToStream(
     original_edge_data_vector.clear();
 }
 
-void EdgeBasedGraphFactory::Run(ScriptingContext &scripting_context,
+void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const std::string &original_edge_data_filename,
                                 const std::string &turn_lane_data_filename,
                                 const std::string &edge_segment_lookup_filename,
@@ -201,7 +201,7 @@ void EdgeBasedGraphFactory::Run(ScriptingContext &scripting_context,
     TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(original_edge_data_filename,
                               turn_lane_data_filename,
-                              scripting_context,
+                              scripting_environment,
                               edge_segment_lookup_filename,
                               edge_penalty_filename,
                               generate_edge_lookup);
@@ -300,7 +300,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const std::string &original_edge_data_filename,
     const std::string &turn_lane_data_filename,
-    ScriptingContext &scripting_context,
+    ScriptingEnvironment &scripting_environment,
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_fixed_penalties_filename,
     const bool generate_edge_lookup)
@@ -335,7 +335,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
-    SuffixTable street_name_suffix_table(scripting_context);
+    SuffixTable street_name_suffix_table(scripting_environment);
     guidance::TurnAnalysis turn_analysis(*m_node_based_graph,
                                          m_node_info_list,
                                          *m_restriction_map,
@@ -348,6 +348,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
+
+    // Store all turn angles and batch process the penalty at the end.
+    std::vector<float> turn_angles;
 
     guidance::LaneDataIdMap lane_data_map;
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
@@ -424,15 +427,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.traffic_signal_penalty;
                 }
 
-                const int turn_penalty = scripting_context.getTurnPenalty(180. - turn_angle);
                 const auto turn_instruction = turn.instruction;
 
                 if (guidance::isUturn(turn_instruction))
                 {
                     distance += profile_properties.u_turn_penalty;
                 }
-
-                distance += turn_penalty;
 
                 BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_from_u));
                 original_edge_data_vector.emplace_back(
@@ -461,6 +461,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                     distance,
                                                     true,
                                                     false);
+                turn_angles.emplace_back(180. - turn_angle);
 
                 // Here is where we write out the mapping between the edge-expanded edges, and
                 // the node-based edges that are originally used to calculate the `distance`
@@ -533,6 +534,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                             sizeof(penaltyblock));
                 }
             }
+        }
+    }
+
+    // Process turn penalties
+    {
+        BOOST_ASSERT(turn_angles.size() == m_edge_based_edge_list.size());
+        scripting_environment.ProcessTurnPenalties(turn_angles);
+        std::size_t i = 0;
+        for (auto& edge_based_edge : m_edge_based_edge_list) {
+            edge_based_edge.weight += turn_angles[i++];
         }
     }
 

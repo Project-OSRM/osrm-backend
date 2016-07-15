@@ -7,8 +7,8 @@ namespace osrm
 namespace extractor
 {
 
-SuffixTable::SuffixTable(ScriptingContext &scripting_context)
-    : suffix_set(scripting_context.getNameSuffixList())
+SuffixTable::SuffixTable(ScriptingEnvironment &scripting_environment)
+    : suffix_set(scripting_environment.GetNameSuffixList())
 {
 }
 

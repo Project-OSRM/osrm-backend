@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+
+var osrm = require('../lib/osrm-process');
+var os = require('os');
+var path = require('path');
+var program = require('commander');
+
+const concurrency = os.cpus().length;
+
+// TODO: Use osrm version
+program.version('0.0.1')
+    .option('-p, --profile <file>', 'Path to LUA routing profile [profile.lua]', 'profile.lua')
+    .option('-t, --threads <num>', 'Number of threads to use [' + concurrency + ']', concurrency)
+    .option('-i, --input <file>', 'Input file in .osm, .osm.bz2 or .osm.pbf format')
+    .option('--generate-edge-lookup',
+            'Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs')
+    .option(
+        '--small-component-size <size>',
+        'Number of nodes required before a strongly-connected-componennt is considered big (affects nearest neighbor snapping) [1000]',
+        parseInt,
+        1000)
+    .parse(process.argv);
+
+
+var inputPath;
+
+if (program.input) {
+    inputPath = program.input;
+} else if (program.args.length == 1) {
+    inputPath = program.args[0];
+} else {
+    program.outputHelp();
+    process.exit(1);
+}
+
+var options = {
+    inputPath: inputPath,
+    numThreads: program.numThreads,
+    smallComponentSize: program.smallComponentSize,
+    generateEdgeLookup: program.generateEdgeLookup
+};
+
+const profilePath = path.resolve(program.profile);
+const profileType = path.extname(profilePath);
+var profile = {};
+
+if (profileType == '.js') {
+    profile = require(profilePath);
+} else if (profileType == '.lua') {
+    options.profilePath = profilePath;
+} else {
+    throw new Error('Profile extension mus be .lua or .js');
+}
+
+osrm.extract(options, profile, function(err) {
+    if (err) {
+        throw err;
+    }
+});

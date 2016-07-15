@@ -57,7 +57,6 @@ struct ContractorConfig
         datasource_indexes_path = osrm_input_path.string() + ".datasource_indexes";
     }
 
-    boost::filesystem::path config_file_path;
     boost::filesystem::path osrm_input_path;
 
     std::string level_output_path;

@@ -66,7 +66,7 @@ ExtractionContainers::ExtractionContainers()
  * - merge edges with nodes to include location of start/end points and serialize
  *
  */
-void ExtractionContainers::PrepareData(ScriptingContext &scripting_context,
+void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environment,
                                        const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
@@ -81,7 +81,7 @@ void ExtractionContainers::PrepareData(ScriptingContext &scripting_context,
 
         PrepareNodes();
         WriteNodes(file_out_stream);
-        PrepareEdges(scripting_context);
+        PrepareEdges(scripting_environment);
         WriteEdges(file_out_stream);
 
         PrepareRestrictions();
@@ -230,7 +230,7 @@ void ExtractionContainers::PrepareNodes()
     std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
 }
 
-void ExtractionContainers::PrepareEdges(ScriptingContext &scripting_context)
+void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
 {
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
@@ -347,7 +347,7 @@ void ExtractionContainers::PrepareEdges(ScriptingContext &scripting_context)
             edge_iterator->source_coordinate,
             util::Coordinate(node_iterator->lon, node_iterator->lat));
 
-        scripting_context.processSegment(
+        scripting_environment.ProcessSegment(
             edge_iterator->source_coordinate, *node_iterator, distance, edge_iterator->weight_data);
 
         const double weight = [distance](const InternalExtractorEdge::WeightData &data) {

@@ -30,9 +30,8 @@
 
 #include <osmium/io/any_input.hpp>
 
-#include <tbb/parallel_for.h>
-#include <tbb/task_scheduler_init.h>
 #include <tbb/concurrent_vector.h>
+#include <tbb/task_scheduler_init.h>
 
 #include <cstdlib>
 
@@ -72,7 +71,7 @@ namespace extractor
  * graph
  *
  */
-int Extractor::run(ScriptingEnvironment& scripting_environment)
+int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
     try
     {
@@ -85,7 +84,9 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
         tbb::task_scheduler_init init(number_of_threads);
 
         util::SimpleLogger().Write() << "Input file: " << config.input_path.filename().string();
-        util::SimpleLogger().Write() << "Profile: " << config.profile_path.filename().string();
+        if (!config.profile_path.empty()) {
+            util::SimpleLogger().Write() << "Profile: " << config.profile_path.filename().string();
+        }
         util::SimpleLogger().Write() << "Threads: " << number_of_threads;
 
         ExtractionContainers extraction_containers;
@@ -95,18 +96,15 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
         osmium::io::Reader reader(input_file);
         const osmium::io::Header header = reader.header();
 
-        std::atomic<unsigned> number_of_nodes{0};
-        std::atomic<unsigned> number_of_ways{0};
-        std::atomic<unsigned> number_of_relations{0};
-        std::atomic<unsigned> number_of_others{0};
+        unsigned number_of_nodes = 0;
+        unsigned number_of_ways = 0;
+        unsigned number_of_relations = 0;
 
         util::SimpleLogger().Write() << "Parsing in progress..";
         TIMER_START(parsing);
 
-        auto &main_context = scripting_environment.GetContext();
-
         // setup raster sources
-        main_context.setupSources();
+        scripting_environment.SetupSources();
 
         std::string generator = header.get("generator");
         if (generator.empty())
@@ -132,7 +130,7 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
         tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
         // setup restriction parser
-        const RestrictionParser restriction_parser(main_context);
+        const RestrictionParser restriction_parser(scripting_environment);
 
         while (const osmium::memory::Buffer buffer = reader.read())
         {
@@ -148,46 +146,14 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
             resulting_ways.clear();
             resulting_restrictions.clear();
 
-            // parse OSM entities in parallel, store in resulting vectors
-            tbb::parallel_for(
-                tbb::blocked_range<std::size_t>(0, osm_elements.size()),
-                [&](const tbb::blocked_range<std::size_t> &range) {
-                    ExtractionNode result_node;
-                    ExtractionWay result_way;
-                    auto &local_context = scripting_environment.GetContext();
+            scripting_environment.ProcessElements(osm_elements,
+                                                  restriction_parser,
+                                                  resulting_nodes,
+                                                  resulting_ways,
+                                                  resulting_restrictions);
 
-                    for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                    {
-                        const auto entity = osm_elements[x];
 
-                        switch (entity->type())
-                        {
-                        case osmium::item_type::node:
-                            result_node.clear();
-                            ++number_of_nodes;
-                            local_context.processNode(static_cast<const osmium::Node &>(*entity),
-                                                      result_node);
-                            resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
-                            break;
-                        case osmium::item_type::way:
-                            result_way.clear();
-                            ++number_of_ways;
-                            local_context.processWay(static_cast<const osmium::Way &>(*entity),
-                                                     result_way);
-                            resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
-                            break;
-                        case osmium::item_type::relation:
-                            ++number_of_relations;
-                            resulting_restrictions.push_back(restriction_parser.TryParse(
-                                static_cast<const osmium::Relation &>(*entity)));
-                            break;
-                        default:
-                            ++number_of_others;
-                            break;
-                        }
-                    }
-                });
-
+            number_of_nodes += resulting_nodes.size();
             // put parsed objects thru extractor callbacks
             for (const auto &result : resulting_nodes)
             {
@@ -195,11 +161,13 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
                     static_cast<const osmium::Node &>(*(osm_elements[result.first])),
                     result.second);
             }
+            number_of_ways += resulting_ways.size();
             for (const auto &result : resulting_ways)
             {
                 extractor_callbacks->ProcessWay(
                     static_cast<const osmium::Way &>(*(osm_elements[result.first])), result.second);
             }
+            number_of_relations += resulting_restrictions.size();
             for (const auto &result : resulting_restrictions)
             {
                 extractor_callbacks->ProcessRestriction(result);
@@ -209,10 +177,9 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
         util::SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing)
                                      << " seconds";
 
-        util::SimpleLogger().Write() << "Raw input contains " << number_of_nodes.load()
-                                     << " nodes, " << number_of_ways.load() << " ways, and "
-                                     << number_of_relations.load() << " relations, and "
-                                     << number_of_others.load() << " unknown entities";
+        util::SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, "
+                                     << number_of_ways << " ways, and " << number_of_relations
+                                     << " relations";
 
         extractor_callbacks.reset();
 
@@ -222,13 +189,14 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
             return 1;
         }
 
-        extraction_containers.PrepareData(main_context,
+        extraction_containers.PrepareData(scripting_environment,
                                           config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name,
                                           config.turn_lane_descriptions_file_name);
 
-        WriteProfileProperties(config.profile_properties_output_path, main_context.properties);
+        WriteProfileProperties(config.profile_properties_output_path,
+                               scripting_environment.GetProfileProperties());
 
         TIMER_STOP(extracting);
         util::SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting)
@@ -247,9 +215,6 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
         // that is better for routing.  Every edge becomes a node, and every valid
         // movement (e.g. turn from A->B, and B->A) becomes an edge
         //
-
-        auto &main_context = scripting_environment.GetContext();
-
         util::SimpleLogger().Write() << "Generating edge-expanded graph representation";
 
         TIMER_START(expansion);
@@ -259,7 +224,7 @@ int Extractor::run(ScriptingEnvironment& scripting_environment)
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
-        auto graph_size = BuildEdgeExpandedGraph(main_context,
+        auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
                                                  internal_to_external_node_map,
                                                  edge_based_node_list,
                                                  node_is_startpoint,
@@ -462,7 +427,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
  \brief Building an edge-expanded graph from node-based input and turn restrictions
 */
 std::pair<std::size_t, EdgeID>
-Extractor::BuildEdgeExpandedGraph(ScriptingContext &scripting_context,
+Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   std::vector<QueryNode> &internal_to_external_node_map,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
                                   std::vector<bool> &node_is_startpoint,
@@ -491,8 +456,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingContext &scripting_context,
 
     std::vector<std::uint32_t> turn_lane_offsets;
     std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
-    if( !util::deserializeAdjacencyArray(
-        config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks) )
+    if (!util::deserializeAdjacencyArray(
+            config.turn_lane_descriptions_file_name, turn_lane_offsets, turn_lane_masks))
     {
         util::SimpleLogger().Write(logWARNING) << "Reading Turn Lane Masks failed.";
     }
@@ -504,12 +469,12 @@ Extractor::BuildEdgeExpandedGraph(ScriptingContext &scripting_context,
         traffic_lights,
         std::const_pointer_cast<RestrictionMap const>(restriction_map),
         internal_to_external_node_map,
-        scripting_context.properties,
+        scripting_environment.GetProfileProperties(),
         name_table,
         turn_lane_offsets,
         turn_lane_masks);
 
-    edge_based_graph_factory.Run(scripting_context,
+    edge_based_graph_factory.Run(scripting_environment,
                                  config.edge_output_path,
                                  config.turn_lane_data_file_name,
                                  config.edge_segment_lookup_path,

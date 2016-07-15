@@ -41,7 +41,7 @@ namespace osrm
 namespace extractor
 {
 
-struct ScriptingContext;
+class ScriptingEnvironment;
 
 namespace lookup
 {
@@ -89,7 +89,7 @@ class EdgeBasedGraphFactory
         const std::vector<std::uint32_t> &turn_lane_offsets,
         const std::vector<guidance::TurnLaneType::Mask> &turn_lane_masks);
 
-    void Run(ScriptingContext &scripting_context,
+    void Run(ScriptingEnvironment &scripting_environment,
              const std::string &original_edge_data_filename,
              const std::string &turn_lane_data_filename,
              const std::string &edge_segment_lookup_filename,
@@ -156,7 +156,7 @@ class EdgeBasedGraphFactory
     void GenerateEdgeExpandedNodes();
     void GenerateEdgeExpandedEdges(const std::string &original_edge_data_filename,
                                    const std::string &turn_lane_data_filename,
-                                   ScriptingContext &scripting_context,
+                                   ScriptingEnvironment &scripting_environment,
                                    const std::string &edge_segment_lookup_filename,
                                    const std::string &edge_fixed_penalties_filename,
                                    const bool generate_edge_lookup);

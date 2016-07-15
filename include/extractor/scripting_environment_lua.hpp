@@ -7,10 +7,11 @@
 
 #include "util/lua_util.hpp"
 
+#include <tbb/enumerable_thread_specific.h>
+
 #include <memory>
 #include <mutex>
 #include <string>
-#include <tbb/enumerable_thread_specific.h>
 
 struct lua_State;
 
@@ -19,22 +20,12 @@ namespace osrm
 namespace extractor
 {
 
-struct LuaScriptingContext final : public ScriptingContext
+struct LuaScriptingContext final
 {
-    LuaScriptingContext() = default;
-    ~LuaScriptingContext() override = default;
+    void processNode(const osmium::Node &, ExtractionNode &result);
+    void processWay(const osmium::Way &, ExtractionWay &result);
 
-    std::unordered_set<std::string> getNameSuffixList() override;
-    std::vector<std::string> getExceptions() override;
-    void setupSources() override;
-    int getTurnPenalty(double angle) override;
-    void processNode(const osmium::Node &, ExtractionNode &result) override;
-    void processWay(const osmium::Way &, ExtractionWay &result) override;
-    void processSegment(const osrm::util::Coordinate &source,
-                        const osrm::util::Coordinate &target,
-                        double distance,
-                        InternalExtractorEdge::WeightData &weight) override;
-
+    ProfileProperties properties;
     SourceContainer sources;
     util::LuaState state;
 
@@ -55,7 +46,25 @@ class LuaScriptingEnvironment final : public ScriptingEnvironment
     explicit LuaScriptingEnvironment(const std::string &file_name);
     ~LuaScriptingEnvironment() override = default;
 
-    ScriptingContext &GetContext() override;
+    const ProfileProperties& GetProfileProperties() override;
+
+    LuaScriptingContext &GetLuaContext();
+
+    std::unordered_set<std::string> GetNameSuffixList() override;
+    std::vector<std::string> GetExceptions() override;
+    void SetupSources() override;
+    void ProcessTurnPenalties(std::vector<float> &angles) override;
+    void ProcessSegment(const osrm::util::Coordinate &source,
+                        const osrm::util::Coordinate &target,
+                        double distance,
+                        InternalExtractorEdge::WeightData &weight) override;
+    void
+    ProcessElements(const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+                    const RestrictionParser &restriction_parser,
+                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
+                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
+                    tbb::concurrent_vector<boost::optional<InputRestrictionContainer>>
+                        &resulting_restrictions) override;
 
   private:
     void InitContext(LuaScriptingContext &context);

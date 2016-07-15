@@ -8,16 +8,14 @@
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
+#include <cstdint>
 #include <stxxl/vector>
 #include <unordered_map>
-#include <cstdint>
 
 namespace osrm
 {
 namespace extractor
 {
-
-struct ScriptingContext;
 
 /**
  * Uses external memory containers from stxxl to store all the data that
@@ -36,7 +34,7 @@ class ExtractionContainers
 #endif
     void PrepareNodes();
     void PrepareRestrictions();
-    void PrepareEdges(ScriptingContext &scripting_context);
+    void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
     void WriteNodes(std::ofstream &file_out_stream) const;
     void WriteRestrictions(const std::string &restrictions_file_name) const;
@@ -70,7 +68,7 @@ class ExtractionContainers
 
     ExtractionContainers();
 
-    void PrepareData(ScriptingContext &scripting_context,
+    void PrepareData(ScriptingEnvironment &scripting_environment,
                      const std::string &output_file_name,
                      const std::string &restrictions_file_name,
                      const std::string &names_file_name,

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.1)
 # we depend on 2.8.11 introducing target_include_directories
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
@@ -55,6 +55,16 @@ option(COVERAGE OFF)
 option(SANITIZER OFF)
 option(ENABLE_LTO "Use LTO if available" ON)
 
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/node_modules/node-cmake/FindNodeJS.cmake)
+    message(FATAL_ERROR "Can't find node-cmake")
+endif()
+
+set(NodeJS_CXX_STANDARD 14 CACHE INTERNAL "Use C++14" FORCE)
+set(NodeJS_DOWNLOAD ON CACHE INTERNAL "Download node.js sources" FORCE)
+set(NodeJS_USE_CLANG_STDLIB OFF CACHE BOOL "Don't use libc++ by default" FORCE)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/node_modules/node-cmake)
+find_package(NodeJS)
+
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
@@ -78,6 +88,7 @@ file(GLOB ContractorGlob src/contractor/*.cpp)
 file(GLOB StorageGlob src/storage/*.cpp)
 file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
 file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
+file(GLOB NodeGlob src/node/*.cpp src/node/**/*.cpp)
 
 add_library(UTIL OBJECT ${UtilGlob})
 add_library(EXTRACTOR OBJECT ${ExtractorGlob})
@@ -85,6 +96,7 @@ add_library(CONTRACTOR OBJECT ${ContractorGlob})
 add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
 add_library(SERVER OBJECT ${ServerGlob})
+add_nodejs_module(osrm-process ${NodeGlob} $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 
 add_dependencies(UTIL FingerPrintConfigure)
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
@@ -98,6 +110,11 @@ add_library(osrm_extract $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
+add_custom_command(
+    TARGET osrm-process
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:osrm-process> ${CMAKE_SOURCE_DIR}/lib/osrm-process.node
+)
 # Check the release mode
 if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_BUILD_TYPE Release)
@@ -368,6 +385,8 @@ target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
+target_link_libraries(osrm-process ${EXTRACTOR_LIBRARIES})
+
 
 if(BUILD_COMPONENTS)
   find_package(GDAL)

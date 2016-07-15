@@ -10,6 +10,9 @@
     "request": "^2.69.0",
     "xmlbuilder": "^4.2.1",
     "chalk": "^1.1.3",
+    "node-cmake": "^1.2.1",
+    "tape": "^4.6.0",
+    "commander": "^2.9.0",
     "polyline": "^0.2.0"
   },
   "bin": {

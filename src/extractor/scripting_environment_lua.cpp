@@ -7,6 +7,7 @@
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/raster_source.hpp"
+#include "extractor/restriction_parser.hpp"
 #include "util/exception.hpp"
 #include "util/lua_util.hpp"
 #include "util/make_unique.hpp"
@@ -18,6 +19,8 @@
 #include <luabind/tag_function.hpp>
 
 #include <osmium/osm.hpp>
+
+#include <tbb/parallel_for.h>
 
 #include <sstream>
 
@@ -58,7 +61,8 @@ int luaErrorCallback(lua_State *state)
 }
 }
 
-LuaScriptingEnvironment::LuaScriptingEnvironment(const std::string &file_name) : file_name(file_name)
+LuaScriptingEnvironment::LuaScriptingEnvironment(const std::string &file_name)
+    : file_name(file_name)
 {
     util::SimpleLogger().Write() << "Using script " << file_name;
 }
@@ -192,7 +196,12 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
     context.has_segment_function = util::luaFunctionExists(context.state, "segment_function");
 }
 
-ScriptingContext &LuaScriptingEnvironment::GetContext()
+const ProfileProperties &LuaScriptingEnvironment::GetProfileProperties()
+{
+    return GetLuaContext().properties;
+}
+
+LuaScriptingContext &LuaScriptingEnvironment::GetLuaContext()
 {
     std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
@@ -207,17 +216,62 @@ ScriptingContext &LuaScriptingEnvironment::GetContext()
     return *ref;
 }
 
-std::unordered_set<std::string> LuaScriptingContext::getNameSuffixList()
+void LuaScriptingEnvironment::ProcessElements(
+    const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+    const RestrictionParser &restriction_parser,
+    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
+    tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
+    tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
 {
-    BOOST_ASSERT(state != nullptr);
-    if (!util::luaFunctionExists(state, "get_name_suffix_list"))
+    // parse OSM entities in parallel, store in resulting vectors
+    tbb::parallel_for(
+        tbb::blocked_range<std::size_t>(0, osm_elements.size()),
+        [&](const tbb::blocked_range<std::size_t> &range) {
+            ExtractionNode result_node;
+            ExtractionWay result_way;
+            auto &local_context = this->GetLuaContext();
+
+            for (auto x = range.begin(), end = range.end(); x != end; ++x)
+            {
+                const auto entity = osm_elements[x];
+
+                switch (entity->type())
+                {
+                case osmium::item_type::node:
+                    result_node.clear();
+                    local_context.processNode(static_cast<const osmium::Node &>(*entity),
+                                              result_node);
+                    resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
+                    break;
+                case osmium::item_type::way:
+                    result_way.clear();
+                    local_context.processWay(static_cast<const osmium::Way &>(*entity), result_way);
+                    resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
+                    break;
+                case osmium::item_type::relation:
+                    resulting_restrictions.push_back(restriction_parser.TryParse(
+                        static_cast<const osmium::Relation &>(*entity)));
+                    break;
+                default:
+                    break;
+                }
+            }
+        });
+}
+
+std::unordered_set<std::string> LuaScriptingEnvironment::GetNameSuffixList()
+{
+    auto &context = GetLuaContext();
+    BOOST_ASSERT(context.state != nullptr);
+    if (!util::luaFunctionExists(context.state, "get_name_suffix_list"))
         return {};
 
     std::vector<std::string> suffixes_vector;
     try
     {
         // call lua profile to compute turn penalty
-        luabind::call_function<void>(state, "get_name_suffix_list", boost::ref(suffixes_vector));
+        luabind::call_function<void>(
+            context.state, "get_name_suffix_list", boost::ref(suffixes_vector));
     }
     catch (const luabind::error &er)
     {
@@ -232,57 +286,67 @@ std::unordered_set<std::string> LuaScriptingContext::getNameSuffixList()
     return suffix_set;
 }
 
-std::vector<std::string> LuaScriptingContext::getExceptions()
+std::vector<std::string> LuaScriptingEnvironment::GetExceptions()
 {
-    BOOST_ASSERT(state != nullptr);
+    auto &context = GetLuaContext();
+    BOOST_ASSERT(context.state != nullptr);
     std::vector<std::string> restriction_exceptions;
-    if (util::luaFunctionExists(state, "get_exceptions"))
+    if (util::luaFunctionExists(context.state, "get_exceptions"))
     {
         // get list of turn restriction exceptions
-        luabind::call_function<void>(state, "get_exceptions", boost::ref(restriction_exceptions));
-        const unsigned exception_count = restriction_exceptions.size();
-        util::SimpleLogger().Write() << "Found " << exception_count
-                                     << " exceptions to turn restrictions:";
-        for (const std::string &str : restriction_exceptions)
-        {
-            util::SimpleLogger().Write() << "  " << str;
-        }
-    }
-    else
-    {
-        util::SimpleLogger().Write() << "Found no exceptions to turn restrictions";
+        luabind::call_function<void>(
+            context.state, "get_exceptions", boost::ref(restriction_exceptions));
     }
     return restriction_exceptions;
 }
 
-void LuaScriptingContext::setupSources()
+void LuaScriptingEnvironment::SetupSources()
 {
-    BOOST_ASSERT(state != nullptr);
-    if (util::luaFunctionExists(state, "source_function"))
+    auto &context = GetLuaContext();
+    BOOST_ASSERT(context.state != nullptr);
+    if (util::luaFunctionExists(context.state, "source_function"))
     {
-        luabind::call_function<void>(state, "source_function");
+        luabind::call_function<void>(context.state, "source_function");
     }
 }
 
-int LuaScriptingContext::getTurnPenalty(double angle)
-{
-    if (has_turn_penalty_function)
+void LuaScriptingEnvironment::ProcessTurnPenalties(std::vector<float> &angles) {
+    auto &context = GetLuaContext();
+    if (context.has_turn_penalty_function)
     {
-        BOOST_ASSERT(state != nullptr);
-        try
-        {
-            // call lua profile to compute turn penalty
-            double penalty = luabind::call_function<double>(state, "turn_function", angle);
-            BOOST_ASSERT(penalty < std::numeric_limits<int>::max());
-            BOOST_ASSERT(penalty > std::numeric_limits<int>::min());
-            return boost::numeric_cast<int>(penalty);
-        }
-        catch (const luabind::error &er)
-        {
-            util::SimpleLogger().Write(logWARNING) << er.what();
+        BOOST_ASSERT(context.state != nullptr);
+        for (auto& angle : angles) {
+            try
+            {
+                // call lua profile to compute turn penalty
+                angle = luabind::call_function<double>(context.state, "turn_function", angle);
+                BOOST_ASSERT(angle < std::numeric_limits<int>::max());
+                BOOST_ASSERT(angle > std::numeric_limits<int>::min());
+            }
+            catch (const luabind::error &er)
+            {
+                util::SimpleLogger().Write(logWARNING) << er.what();
+            }
         }
     }
-    return 0;
+}
+
+void LuaScriptingEnvironment::ProcessSegment(const osrm::util::Coordinate &source,
+                                             const osrm::util::Coordinate &target,
+                                             double distance,
+                                             InternalExtractorEdge::WeightData &weight)
+{
+    auto &context = GetLuaContext();
+    if (context.has_segment_function)
+    {
+        BOOST_ASSERT(context.state != nullptr);
+        luabind::call_function<void>(context.state,
+                                     "segment_function",
+                                     boost::cref(source),
+                                     boost::cref(target),
+                                     distance,
+                                     boost::ref(weight));
+    }
 }
 
 void LuaScriptingContext::processNode(const osmium::Node &node, ExtractionNode &result)
@@ -295,23 +359,6 @@ void LuaScriptingContext::processWay(const osmium::Way &way, ExtractionWay &resu
 {
     BOOST_ASSERT(state != nullptr);
     luabind::call_function<void>(state, "way_function", boost::cref(way), boost::ref(result));
-}
-
-void LuaScriptingContext::processSegment(const osrm::util::Coordinate &source,
-                                         const osrm::util::Coordinate &target,
-                                         double distance,
-                                         InternalExtractorEdge::WeightData &weight)
-{
-    if (has_segment_function)
-    {
-        BOOST_ASSERT(state != nullptr);
-        luabind::call_function<void>(state,
-                                     "segment_function",
-                                     boost::cref(source),
-                                     boost::cref(target),
-                                     distance,
-                                     boost::ref(weight));
-    }
 }
 }
 }

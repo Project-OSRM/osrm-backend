@@ -4,6 +4,8 @@
 
 #include "extractor/external_memory_node.hpp"
 
+#include "util/simple_logger.hpp"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/regex.hpp>
@@ -22,12 +24,26 @@ namespace osrm
 namespace extractor
 {
 
-RestrictionParser::RestrictionParser(ScriptingContext &scripting_context)
-    : use_turn_restrictions(scripting_context.properties.use_turn_restrictions)
+RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment)
+    : use_turn_restrictions(scripting_environment.GetProfileProperties().use_turn_restrictions)
 {
     if (use_turn_restrictions)
     {
-        restriction_exceptions = scripting_context.getExceptions();
+        restriction_exceptions = scripting_environment.GetExceptions();
+        const unsigned exception_count = restriction_exceptions.size();
+        if (exception_count)
+        {
+            util::SimpleLogger().Write() << "Found " << exception_count
+                                         << " exceptions to turn restrictions:";
+            for (const std::string &str : restriction_exceptions)
+            {
+                util::SimpleLogger().Write() << "  " << str;
+            }
+        }
+        else
+        {
+            util::SimpleLogger().Write() << "Found no exceptions to turn restrictions";
+        }
     }
 }
 

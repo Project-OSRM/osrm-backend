@@ -18,7 +18,7 @@ namespace osrm
 namespace extractor
 {
 
-struct ScriptingContext;
+class ScriptingEnvironment;
 
 /**
  * Parses the relations that represents turn restrictions.
@@ -41,7 +41,7 @@ struct ScriptingContext;
 class RestrictionParser
 {
   public:
-    RestrictionParser(ScriptingContext &scripting_context);
+    RestrictionParser(ScriptingEnvironment &scripting_environment);
     boost::optional<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
 
   private:

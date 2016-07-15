@@ -9,7 +9,7 @@ namespace osrm
 namespace extractor
 {
 
-struct ScriptingContext;
+class ScriptingEnvironment;
 
 // A table containing suffixes.
 // At the moment, it is only a front for an unordered set. At some point we might want to make it
@@ -17,7 +17,7 @@ struct ScriptingContext;
 class SuffixTable final
 {
   public:
-    SuffixTable(ScriptingContext &scripting_context);
+    SuffixTable(ScriptingEnvironment &scripting_environment);
 
     // check whether a string is part of the know suffix list
     bool isSuffix(const std::string &possible_suffix) const;
