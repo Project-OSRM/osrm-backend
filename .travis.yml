@@ -15,14 +15,12 @@ branches:
     - master
 
 cache:
-  ccache: true
-  apt: true
   directories:
+    - $HOME/.ccache
     - test/cache
 
 env:
   global:
-   - CCACHE_TEMPDIR=/tmp/.ccache-temp
    - CCACHE_COMPRESS=1
    - JOBS=4
 
