@@ -259,8 +259,8 @@ Feature: Turn Lane Guidance
             | waypoints | route                 | turns                                                   | lanes                                                                                                                                                  |
             | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true right:false,left:true straight:false, |
 
-    @anticipate
-        Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
+    @anticipate @todo @bug @2661
+    Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
         Given the node map
             |   |   | e |   |   |
             | a | b |   | d | f |
