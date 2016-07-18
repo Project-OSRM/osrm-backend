@@ -765,7 +765,7 @@ Feature: Turn Lane Guidance
             | a,g       | road,cross,cross | depart,turn right,arrive | ,left:false right:true, |
             | a,e       | road,cross,cross | depart,turn left,arrive  | ,left:true right:false, |
 
-    @TODO @2654
+    @todo @2654
     #https://github.com/Project-OSRM/osrm-backend/issues/2645
     #http://www.openstreetmap.org/export#map=19/52.56054/13.32152
     Scenario: Kurt-Schuhmacher-Damm
