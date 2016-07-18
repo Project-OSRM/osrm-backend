@@ -4,6 +4,7 @@
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/phantom_node.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 
 #include <vector>
 

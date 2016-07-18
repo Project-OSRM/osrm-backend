@@ -42,7 +42,8 @@ class TurnAnalysis
                  const std::unordered_set<NodeID> &barrier_nodes,
                  const CompressedEdgeContainer &compressed_edge_container,
                  const util::NameTable &name_table,
-                 const SuffixTable &street_name_suffix_table);
+                 const SuffixTable &street_name_suffix_table,
+                 const ProfileProperties &profile_properties);
 
     // the entry into the turn analysis
     Intersection getIntersection(const NodeID from_node, const EdgeID via_eid) const;
