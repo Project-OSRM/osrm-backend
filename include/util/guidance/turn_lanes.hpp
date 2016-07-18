@@ -60,7 +60,6 @@ class LaneTupel
 
     bool operator==(const LaneTupel other) const;
     bool operator!=(const LaneTupel other) const;
-    bool operator<(const LaneTupel other) const;
 
     LaneID lanes_in_turn;
     LaneID first_lane_from_the_right;

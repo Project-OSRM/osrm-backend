@@ -31,13 +31,6 @@ bool LaneTupel::operator==(const LaneTupel other) const
 
 bool LaneTupel::operator!=(const LaneTupel other) const { return !(*this == other); }
 
-// comparation based on interpretation as unsigned 32bit integer
-bool LaneTupel::operator<(const LaneTupel other) const
-{
-    return std::tie(lanes_in_turn, first_lane_from_the_right) <
-           std::tie(other.lanes_in_turn, other.first_lane_from_the_right);
-}
-
 } // namespace guidance
 } // namespace util
 } // namespace osrm
