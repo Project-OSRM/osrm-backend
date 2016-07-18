@@ -225,9 +225,9 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                  previous_via_edge,
                                  previous_intersection))
     {
-        if (lane_description_id == INVALID_LANE_DESCRIPTIONID &&
-            previous_description_id == INVALID_LANE_DESCRIPTIONID)
-            return TurnLaneScenario::NONE;
+//        if (lane_description_id == INVALID_LANE_DESCRIPTIONID &&
+//            previous_description_id == INVALID_LANE_DESCRIPTIONID)
+//            return TurnLaneScenario::NONE;
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
         for (std::size_t road_index = 0; road_index < previous_intersection.size(); ++road_index)
         {
