@@ -4,6 +4,7 @@
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/phantom_node.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 
 #include <vector>
 
@@ -15,7 +16,7 @@ namespace guidance
 {
 
 // passed as none-reference to modify in-place and move out again
-std::vector<RouteStep> postProcess(std::vector<RouteStep> steps);
+std::vector<RouteStep> postProcess(std::vector<RouteStep> steps, const datafacade::BaseDataFacade &facade);
 
 // Multiple possible reasons can result in unnecessary/confusing instructions
 // A prime example would be a segregated intersection. Turning around at this

@@ -137,13 +137,14 @@ properties.u_turn_penalty                  = 20
 properties.traffic_signal_penalty          = 2
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
+properties.left_hand_driving               = false
 
 local side_road_speed_multiplier = 0.8
 
 local turn_penalty               = 10
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
-local turn_bias                  = 1.2
+local turn_bias                  = properties.left_hand_driving and 1/1.2 or 1.2
 
 local obey_oneway                = true
 local ignore_areas               = true

@@ -793,6 +793,11 @@ class SharedDataFacade final : public BaseDataFacade
         return m_profile_properties->continue_straight_at_waypoint;
     }
 
+    bool UseLeftSideDriving() const override final
+    {
+        return m_profile_properties->left_hand_driving;
+    }
+
     BearingClassID GetBearingClassID(const NodeID id) const override final
     {
         return m_bearing_class_id_table.at(id);

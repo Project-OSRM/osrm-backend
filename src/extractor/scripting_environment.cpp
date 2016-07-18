@@ -109,7 +109,8 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                        &ProfileProperties::SetUturnPenalty)
              .def_readwrite("use_turn_restrictions", &ProfileProperties::use_turn_restrictions)
              .def_readwrite("continue_straight_at_waypoint",
-                            &ProfileProperties::continue_straight_at_waypoint),
+                            &ProfileProperties::continue_straight_at_waypoint)
+             .def_readwrite("left_hand_driving", &ProfileProperties::left_hand_driving),
 
          luabind::class_<std::vector<std::string>>("vector").def(
              "Add",
