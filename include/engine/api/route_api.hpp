@@ -151,6 +151,7 @@ class RouteAPI : public BaseAPI
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
                 leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
+                leg.steps = guidance::collapseUseLane(std::move(leg.steps));
                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
             }
 

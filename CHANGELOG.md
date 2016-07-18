@@ -1,5 +1,7 @@
 # 5.3.0
   Changes from 5.3.0-rc.3
+    - Guidance
+      - Only announce `use lane` on required turns (not using all lanes to go straight)
     - Bugfixes
       - Fix BREAKING: bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
 
@@ -8,7 +10,6 @@
     - Guidance
       - Improved detection of obvious turns
       - Improved turn lane detection
-      - Improved lane anticipation for roundabouts
     - Bugfixes
       - Fix bug that didn't chose minimal weights on overlapping edges
 

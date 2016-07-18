@@ -1149,6 +1149,47 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
     return removeNoTurnInstructions(std::move(steps));
 }
 
+std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
+{
+    const auto containsTag = [](const extractor::guidance::TurnLaneType::Mask mask,
+                                const extractor::guidance::TurnLaneType::Mask tag) {
+        return (mask & tag) != extractor::guidance::TurnLaneType::empty;
+    };
+
+    const auto canCollapeUseLane =
+        [containsTag](const util::guidance::LaneTupel lanes,
+                      extractor::guidance::TurnLaneDescription lane_description) {
+            // the lane description is given left to right, lanes are counted from the right.
+            // Therefore we access the lane description yousing the reverse iterator
+            if (lanes.first_lane_from_the_right > 0 &&
+                containsTag(*(lane_description.rbegin() + (lanes.first_lane_from_the_right - 1)),
+                            (extractor::guidance::TurnLaneType::straight |
+                             extractor::guidance::TurnLaneType::none)))
+                return false;
+
+            const auto lane_to_the_right = lanes.first_lane_from_the_right + lanes.lanes_in_turn;
+            if (lane_to_the_right < lane_description.size() &&
+                containsTag(*(lane_description.rbegin() + lane_to_the_right),
+                            (extractor::guidance::TurnLaneType::straight |
+                             extractor::guidance::TurnLaneType::none)))
+                return false;
+
+            return true;
+        };
+
+    for (std::size_t step_index = 1; step_index < steps.size(); ++step_index)
+    {
+        const auto &step = steps[step_index];
+        if (step.maneuver.instruction.type == TurnType::UseLane &&
+            canCollapeUseLane(step.maneuver.lanes, step.maneuver.lane_description))
+        {
+            elongate(steps[step_index - 1], steps[step_index]);
+            invalidateStep(steps[step_index]);
+        }
+    }
+    return removeNoTurnInstructions(std::move(steps));
+}
+
 } // namespace guidance
 } // namespace engine
 } // namespace osrm
