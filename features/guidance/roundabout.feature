@@ -437,3 +437,42 @@ Feature: Basic Roundabout
         When I route I should get
             | waypoints | route                                                   | turns                                                     |
             | a,k       | massachusetts,massachusetts,massachusetts,massachusetts | depart,sheridan circle-exit-2,dupont circle-exit-1,arrive |
+
+    Scenario: Enter and Exit - Traffic Signals
+        Given the node map
+            |   |   | a |   |   |
+            |   | i | b | l |   |
+            | h | g |   | c | d |
+            |   | j | e | k |   |
+            |   |   | f |   |   |
+
+       And the nodes
+            | node | highway         |
+            | i    | traffic_signals |
+            | j    | traffic_signals |
+            | k    | traffic_signals |
+            | l    | traffic_signals |
+
+       And the ways
+            | nodes     | junction   |
+            | ab        |            |
+            | cd        |            |
+            | ef        |            |
+            | gh        |            |
+            | bigjekclb | roundabout |
+
+       When I route I should get
+           | waypoints | route    | turns                           |
+           | a,d       | ab,cd,cd | depart,roundabout-exit-3,arrive |
+           | a,f       | ab,ef,ef | depart,roundabout-exit-2,arrive |
+           | a,h       | ab,gh,gh | depart,roundabout-exit-1,arrive |
+           | d,f       | cd,ef,ef | depart,roundabout-exit-3,arrive |
+           | d,h       | cd,gh,gh | depart,roundabout-exit-2,arrive |
+           | d,a       | cd,ab,ab | depart,roundabout-exit-1,arrive |
+           | f,h       | ef,gh,gh | depart,roundabout-exit-3,arrive |
+           | f,a       | ef,ab,ab | depart,roundabout-exit-2,arrive |
+           | f,d       | ef,cd,cd | depart,roundabout-exit-1,arrive |
+           | h,a       | gh,ab,ab | depart,roundabout-exit-3,arrive |
+           | h,d       | gh,cd,cd | depart,roundabout-exit-2,arrive |
+           | h,f       | gh,ef,ef | depart,roundabout-exit-1,arrive |
+
