@@ -73,7 +73,6 @@ namespace extractor
  */
 int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
-    try
     {
         util::LogPolicy::GetInstance().Unmute();
         TIMER_START(extracting);
@@ -202,14 +201,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         util::SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting)
                                      << "s";
     }
-    // we do this for scoping
-    // TODO move to own functions
-    catch (const std::exception &e)
-    {
-        util::SimpleLogger().Write(logWARNING) << e.what();
-        return 1;
-    }
-    try
+
     {
         // Transform the node-based graph that OSM is based on into an edge-based graph
         // that is better for routing.  Every edge becomes a node, and every valid
@@ -265,11 +257,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             << " nodes/sec and " << ((max_edge_id + 1) / TIMER_SEC(expansion)) << " edges/sec";
         util::SimpleLogger().Write() << "To prepare the data for routing, run: "
                                      << "./osrm-contract " << config.output_file_name << std::endl;
-    }
-    catch (const std::exception &e)
-    {
-        util::SimpleLogger().Write(logWARNING) << e.what();
-        return 1;
     }
 
     return 0;

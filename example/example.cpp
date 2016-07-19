@@ -18,7 +18,7 @@
 
 #include <cstdlib>
 
-int main(int argc, const char *argv[]) try
+int main(int argc, const char *argv[])
 {
     if (argc < 2)
     {
@@ -77,9 +77,4 @@ int main(int argc, const char *argv[]) try
         std::cout << "Message: " << code << "\n";
         return EXIT_FAILURE;
     }
-}
-catch (const std::exception &e)
-{
-    std::cerr << "Error: " << e.what() << std::endl;
-    return EXIT_FAILURE;
 }

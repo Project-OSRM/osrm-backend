@@ -140,28 +140,21 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
                                        const std::string &name_file_name,
                                        const std::string &turn_lane_file_name)
 {
-    try
-    {
-        std::ofstream file_out_stream;
-        file_out_stream.open(output_file_name.c_str(), std::ios::binary);
-        const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
-        file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+    std::ofstream file_out_stream;
+    file_out_stream.open(output_file_name.c_str(), std::ios::binary);
+    const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
+    file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
 
-        PrepareNodes();
-        WriteNodes(file_out_stream);
-        PrepareEdges(scripting_environment);
-        WriteEdges(file_out_stream);
+    PrepareNodes();
+    WriteNodes(file_out_stream);
+    PrepareEdges(scripting_environment);
+    WriteEdges(file_out_stream);
 
-        PrepareRestrictions();
-        WriteRestrictions(restrictions_file_name);
+    PrepareRestrictions();
+    WriteRestrictions(restrictions_file_name);
 
-        WriteCharData(name_file_name);
-        WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Caught Execption:" << e.what() << std::endl;
-    }
+    WriteCharData(name_file_name);
+    WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
 }
 
 void ExtractionContainers::WriteTurnLaneMasks(

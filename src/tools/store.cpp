@@ -99,8 +99,3 @@ catch (const std::bad_alloc &e)
            "address space (note: this makes OSRM swap, i.e. slow)";
     return EXIT_FAILURE;
 }
-catch (const std::exception &e)
-{
-    util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
-    return EXIT_FAILURE;
-}
