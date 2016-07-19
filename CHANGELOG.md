@@ -1,3 +1,8 @@
+# 5.3.0
+  Changes from 5.3.0-rc.3
+    - Bugfixes
+      - Fix BREAKING: bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
+
 # 5.3.0 RC3
   Changes from 5.3.0-rc.2
     - Guidance

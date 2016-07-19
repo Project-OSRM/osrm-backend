@@ -375,7 +375,7 @@ int Storage::Run()
     }
 
     std::uint64_t num_bearings;
-    intersection_stream >> num_bearings;
+    intersection_stream.read(reinterpret_cast<char*>(&num_bearings),sizeof(num_bearings));
 
     std::vector<DiscreteBearing> bearing_class_table(num_bearings);
     intersection_stream.read(reinterpret_cast<char *>(&bearing_class_table[0]),
