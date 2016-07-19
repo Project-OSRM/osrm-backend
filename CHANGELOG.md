@@ -1,3 +1,7 @@
+# 5.2.7
+  - Bugfixes
+    - BREAKING: Fix bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
+
 # 5.2.6
   - Bugfixes
     - Fix numeric overflow in roundabout center calculation which throws an exception

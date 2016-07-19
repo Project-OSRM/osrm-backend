@@ -330,7 +330,7 @@ class InternalDataFacade final : public BaseDataFacade
             std::vector<util::guidance::BearingClass> bearing_classes;
             // and the actual bearing values
             std::uint64_t num_bearings;
-            intersection_stream >> num_bearings;
+            intersection_stream.read(reinterpret_cast<char*>(&num_bearings),sizeof(num_bearings));
             m_bearing_values_table.resize(num_bearings);
             intersection_stream.read(reinterpret_cast<char *>(&m_bearing_values_table[0]),
                                      sizeof(m_bearing_values_table[0]) * num_bearings);

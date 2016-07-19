@@ -661,7 +661,7 @@ void Extractor::WriteIntersectionClassificationData(
     util::RangeTable<> bearing_class_range_table(bearing_counts);
     file_out_stream << bearing_class_range_table;
 
-    file_out_stream << total_bearings;
+    file_out_stream.write(reinterpret_cast<const char *>(&total_bearings), sizeof(total_bearings));
     for (const auto &bearing_class : bearing_classes)
     {
         const auto &bearings = bearing_class.getAvailableBearings();
@@ -669,17 +669,18 @@ void Extractor::WriteIntersectionClassificationData(
                               sizeof(bearings[0]) * bearings.size());
     }
 
-    // FIXME
-    // This should be here, but g++4.8 does not have it...
-    // static_assert(std::is_trivially_copyable<util::guidance::EntryClass>::value,
-    //              "EntryClass Serialization requires trivial copyable entry classes");
+    if (!static_cast<bool>(file_out_stream))
+    {
+        throw util::exception("Failed to write to " + output_file_name + ".");
+    }
 
     util::serializeVector(file_out_stream, entry_classes);
     TIMER_STOP(write_edges);
     util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s for "
                                  << node_based_intersection_classes.size() << " Indices into "
                                  << bearing_classes.size() << " bearing classes and "
-                                 << entry_classes.size() << " entry classes";
+                                 << entry_classes.size() << " entry classes and " << total_bearings
+                                 << " bearing values." << std::endl;
 }
 }
 }
