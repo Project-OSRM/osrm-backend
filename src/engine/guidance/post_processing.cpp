@@ -517,7 +517,6 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
 
         // Although the enter instruction may be a left/right turn, for right-sided driving the
         // roundabout is counter-clockwise and therefore we need to always set it to a left turn.
-        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
         const auto enter_direction = enter.maneuver.instruction.direction_modifier;
 
         if (facade.UseLeftSideDriving())
@@ -536,7 +535,6 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
         auto enterAndLeave = anticipateLaneChange({enter, leave});
 
         // Undo flipping direction on a right turn in a right-sided counter-clockwise roundabout.
-        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
         enterAndLeave[0].maneuver.instruction.direction_modifier = enter_direction;
 
         std::swap(*roundabout.first, enterAndLeave[0]);
