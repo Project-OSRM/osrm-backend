@@ -69,12 +69,10 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
 
     const bool lhs = profile_properties.left_hand_driving;
     const int step = lhs ? -1 : 1;
-    const signed int_size = static_cast<signed>(intersection.size());
-
-    for (signed i = lhs ? int_size - 1 : 0;
-         i >= 0 && i < int_size; i += step)
+    for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
+         cnt < intersection.size(); ++cnt, idx += step)
     {
-        const auto &road = intersection[i];
+        const auto &road = intersection[idx];
         const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
         // only check actual outgoing edges
         if (edge_data.reversed || !road.entry_allowed)
@@ -90,8 +88,6 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
         // separate vertex than the one we are coming from that are in the direction of
         // the roundabout.
         // The sorting of the angles represents a problem for left-sided driving, though.
-        // FIXME in case of left-sided driving, we have to check whether we can enter the
-        // roundabout later in the cycle, rather than prior.
         // FIXME requires consideration of crossing the roundabout
         else if (node_based_graph.GetTarget(road.turn.eid) != from_nid && !can_enter_roundabout)
         {
@@ -112,12 +108,10 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
     bool past_roundabout_angle = false;
     const bool lhs = profile_properties.left_hand_driving;
     const int step = lhs ? -1 : 1;
-    const signed int_size = static_cast<signed>(intersection.size());
-
-    for (signed i = lhs ? int_size - 1 : 0;
-         i >= 0 && i < int_size; i += step)
+    for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
+         cnt < intersection.size(); ++cnt, idx += step)
     {
-        auto &road = intersection[i];
+        auto &road = intersection[idx];
         const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
         // only check actual outgoing edges
         if (edge_data.reversed)
@@ -133,8 +127,6 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
         // This workaround handles cases in which an exit precedes and entry. The resulting
         // u-turn against the roundabout direction is invalidated.
         // The sorting of the angles represents a problem for left-sided driving, though.
-        // FIXME in case of left-sided driving, we have to check whether we can enter the
-        // roundabout later in the cycle, rather than prior.
         if (!edge_data.roundabout && node_based_graph.GetTarget(road.turn.eid) != from_nid &&
             past_roundabout_angle)
         {
@@ -375,16 +367,15 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
 
     const bool lhs = profile_properties.left_hand_driving;
     const int step = lhs ? -1 : 1;
-    const signed int_size = static_cast<signed>(intersection.size());
 
     if (on_roundabout)
     {
         // Shoule hopefully have only a single exit and continue
         // at least for cars. How about bikes?
-    for (signed i = lhs ? int_size - 1 : 0;
-        i >= 0 && i < int_size; i += step)
+        for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
+             cnt < intersection.size(); ++cnt, idx += step)
         {
-            auto &road = intersection[i];
+            auto &road = intersection[idx];
             auto &turn = road.turn;
             const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
             if (out_data.roundabout)
@@ -418,10 +409,10 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
     }
     else
     {
-        for (signed i = lhs ? int_size - 1 : 0;
-            i >= 0 && i < int_size; i += step)
+        for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
+             cnt < intersection.size(); ++cnt, idx += step)
         {
-            auto &road = intersection[i];
+            auto &road = intersection[idx];
             if (!road.entry_allowed)
                 continue;
             auto &turn = road.turn;
