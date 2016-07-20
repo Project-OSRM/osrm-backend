@@ -131,7 +131,7 @@ add_library(SERVER OBJECT ${ServerGlob})
 
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
-add_executable(osrm-extract src/tools/extract.cpp)
+add_executable(osrm-extract src/tools/extract.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
@@ -460,6 +460,9 @@ else()
     set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
   endif()
 
+  find_package(V8 REQUIRED)
+  add_dependency_includes(${V8_INCLUDE_DIR})
+
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
 
@@ -539,10 +542,6 @@ if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_dependency_defines(-DBOOST_TEST_DYN_LINK)
 endif()
 
-if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
-  add_dependency_defines(-DBOOST_TEST_DYN_LINK)
-endif()
-
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
 add_dependency_defines(-DBOOST_FILESYSTEM_NO_DEPRECATED)
@@ -583,6 +582,7 @@ set(EXTRACTOR_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}
     ${USED_LUA_LIBRARIES}
+    ${V8_LIBRARIES}
     ${OSMIUM_LIBRARIES}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
@@ -618,6 +618,7 @@ set(UTIL_LIBRARIES
 # Libraries
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
+target_link_libraries(osrm-extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
