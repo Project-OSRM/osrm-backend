@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <tuple>
 
 #include <boost/assert.hpp>
 
@@ -24,22 +25,11 @@ LaneTupel::LaneTupel(const LaneID lanes_in_turn, const LaneID first_lane_from_th
 // comparation based on interpretation as unsigned 32bit integer
 bool LaneTupel::operator==(const LaneTupel other) const
 {
-    static_assert(sizeof(LaneTupel) == sizeof(std::uint16_t),
-                  "Comparation requires LaneTupel to be the of size 16Bit");
-    return *reinterpret_cast<const std::uint16_t *>(this) ==
-           *reinterpret_cast<const std::uint16_t *>(&other);
+    return std::tie(lanes_in_turn, first_lane_from_the_right) ==
+           std::tie(other.lanes_in_turn, other.first_lane_from_the_right);
 }
 
 bool LaneTupel::operator!=(const LaneTupel other) const { return !(*this == other); }
-
-// comparation based on interpretation as unsigned 32bit integer
-bool LaneTupel::operator<(const LaneTupel other) const
-{
-    static_assert(sizeof(LaneTupel) == sizeof(std::uint16_t),
-                  "Comparation requires LaneTupel to be the of size 16Bit");
-    return *reinterpret_cast<const std::uint16_t *>(this) <
-           *reinterpret_cast<const std::uint16_t *>(&other);
-}
 
 } // namespace guidance
 } // namespace util

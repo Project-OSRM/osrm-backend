@@ -128,3 +128,36 @@ Feature: End Of Road Instructions
             | a,c       | aeb,bc,bc | depart,on ramp left,arrive  |
             | a,d       | aeb,bd,bd | depart,on ramp right,arrive |
 
+    # http://www.openstreetmap.org/#map=19/52.49907/13.41836
+    @end-of-road @negative
+    Scenario: Don't Handle Circles as End-Of-Road
+        Given the node map
+            |   | r |   |   |   | q |   |   |   |   |   |   |
+            |   |   |   |   |   | a | s |   |   |   |   |   |
+            |   |   |   | b |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   | j |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |
+            | l |   | c |   |   |   |   | i |   |   |   | k |
+            |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   | h |   |   |   |   |
+            | m |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | d |   |   |   |   |   |   |   |   | n |
+            |   |   |   | e |   |   | g |   |   |   |   |   |
+            |   |   |   |   | f |   |   |   |   |   |   |   |
+            |   |   |   |   | o |   | p |   |   |   |   |   |
+
+        And the ways
+            | nodes        | highway     | name  | oneway |
+            | abcdefghijsa | secondary   | kotti | yes    |
+            | ki           | secondary   | skal  | yes    |
+            | cl           | secondary   | skal  | yes    |
+            | md           | secondary   | skal  | yes    |
+            | gn           | secondary   | skal  | yes    |
+            | qa           | tertiary    | adal  | no     |
+            | br           | residential | rei   | yes    |
+            | fo           | secondary   | kstr  | yes    |
+            | pg           | secondary   | kstr  | yes    |
+
+        When I route I should get
+            | waypoints | route                | turns                               | #                                                      |
+            | k,l       | skal,kotti,skal,skal | depart,turn right,turn right,arrive | # could be a case to find better turn instructions for |

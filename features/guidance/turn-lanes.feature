@@ -684,3 +684,35 @@ Feature: Turn Lane Guidance
             | waypoints | route             | turns                                             | lanes                           |
             | a,j       | on,xbcj,xbcj,xbcj | depart,merge slight left,use lane straight,arrive | ,,none:true slight right:false, |
             | a,i       | on,xbcj,off,off   | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
+
+    #http://www.openstreetmap.org/#map=17/52.47414/13.35712
+    @todo @ramp @2645
+    Scenario: Kreuz Schoeneberg - Continue on ramp, don't merge
+        Given the node map
+            | i |   |   |   |   | j |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | k |   |   |   |   |   |   |   |   |   |   |   |   |
+            | h | g |   | l |   |   | f |   |   |   |   |   |   |   |   |   | e |
+            | d |   |   |   |   |   |   |   | c |   |   |   |   | b |   |   | a |
+
+        And the ways
+            | nodes | highway       | name  | oneway | lanes | turn:lanes            |
+            | ab    | motorway      | A 100 | yes    | 3     |                       |
+            | bc    | motorway      | A 100 | yes    | 4     | \|\|\|slight_right    |
+            | cd    | motorway      | A 100 | yes    | 3     |                       |
+            | eb    | motorway_link |       | yes    | 1     |                       |
+            | cf    | motorway_link |       | yes    | 1     |                       |
+            | fj    | motorway_link |       | yes    | 1     |                       |
+            | fl    | motorway_link |       | yes    | 1     |                       |
+            | kl    | motorway_link |       | yes    | 1     |                       |
+            | lg    | motorway_link |       | yes    | 2     | through\|slight_right |
+            | gi    | motorway_link |       | yes    | 1     |                       |
+            | gh    | motorway_link |       | yes    | 1     |                       |
+
+        When I route I should get
+            | waypoints | route        | turns                                                           | lanes                                                                                  |
+            | a,d       | A 100,A 100  | depart,arrive                                                   |                                                                                        |
+            | a,i       | A 100,,,,    | depart,off ramp slight right,fork slight left,turn right,arrive | ,none:false none:false none:false slight right:true,,straight:false slight right:true, |
+            | e,j       | ,,,          | depart,off ramp slight right,fork slight right,arrive           | ,none:false none:false none:false slight right:true,,,                                 |
+            | e,i       | ,,,,         | depart,off ramp right,fork slight left,use lane straight,arrive | ,none:false none:false none:false slight right:true,,straight:false slight right:true, |
+            | e,d       | ,A 100,A 100 | depart,merge slight left,arrive                                 | ,,                                                                                     |
+            | e,h       | ,,,,         | depart,off ramp right,fork left,use lane straight,arrive        | ,none:false none:false none:false slight right:true,,straight:true slight right:false, |

@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -535,7 +535,6 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
     };
 
     forEachRoundabout(begin(steps), end(steps), anticipate_lanes_in_roundabout);
-
     return steps;
 }
 } // namespace
@@ -627,6 +626,10 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
             closeOffRoundabout(has_entered_roundabout, steps, step_index);
             has_entered_roundabout = false;
             on_roundabout = false;
+        }
+        else if (on_roundabout && step_index + 1 < steps.size())
+        {
+            steps[step_index + 1].maneuver.exit = step.maneuver.exit;
         }
     }
 
