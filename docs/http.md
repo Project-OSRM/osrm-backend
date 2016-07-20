@@ -414,10 +414,22 @@ With `steps=false` and `annotations=true`:
   "annotation": {
     "distance": [5,5,10,5,5],
     "duration": [15,15,40,15,15],
+    "datasources": [1,0,0,0,1],
     "nodes": [49772551,49772552,49786799,49786800,49786801,49786802]
   }
 }
 ```
+
+#### Annotation data
+
+Several fields are available as annotations.  They are:
+
+   | field       | description                                                                                             |
+   |-------------|---------------------------------------------------------------------------------------------------------|
+   | distance    | the distance, in metres, between each pair of coordinates                                               |
+   | duration    | the duration between each pair of coordinates, in seconds                                               |
+   | datasources | the index of the datasource for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract`                                 |
+   | nodes       | the OSM node ID for each coordinate along the route, excluding the first/last user-supplied coordinates |
 
 ### RouteStep
 

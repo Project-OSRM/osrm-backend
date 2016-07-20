@@ -83,6 +83,8 @@ static const NameID EMPTY_NAMEID = 0;
 static const unsigned INVALID_COMPONENTID = 0;
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::max();
 
+using DatasourceID = std::uint8_t;
+
 struct SegmentID
 {
     SegmentID(const NodeID id_, const bool enabled_) : id{id_}, enabled{enabled_}

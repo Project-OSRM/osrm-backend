@@ -33,6 +33,9 @@ struct PathData
     extractor::TravelMode travel_mode : 4;
     // entry class of the turn, indicating possibility of turns
     EntryClassID entry_classid;
+
+    // Source of the speed value on this road segment
+    DatasourceID datasource_id;
 };
 
 struct InternalRouteResult

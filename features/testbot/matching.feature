@@ -4,6 +4,7 @@ Feature: Basic Map Matching
     Background:
         Given the profile "testbot"
         Given a grid size of 10 meters
+        Given the extract extra arguments "--generate-edge-lookup"
 
     Scenario: Testbot - Map matching with outlier that has no candidate
         Given a grid size of 100 meters
@@ -118,10 +119,17 @@ Feature: Basic Map Matching
             | abcdegh  | no     |
             | ci       | no     |
 
+        And the speed file
+        """
+        1,2,36
+        """
+
+        And the contract extra arguments "--segment-speed-file speeds.csv"
+
         When I match I should get
-            | trace | matchings | annotation                                                                     |
-            | abeh  | abcedgh   | 1:9.897633,0:0,1:10.008842,1:10.008842,1:10.008842,0:0,2:20.017685,1:10.008842 |
-            | abci  | abc,ci    | 1:9.897633,0:0,1:10.008842,0:0.111209,1:10.010367                              |
+            | trace | matchings | annotation                                                                                     |
+            | abeh  | abcedgh   | 1:9.897633:1,0:0:0,1:10.008842:0,1:10.008842:0,1:10.008842:0,0:0:0,2:20.017685:0,1:10.008842:0 |
+            | abci  | abc,ci    | 1:9.897633:1,0:0:0,1:10.008842:0,0:0.111209:0,1:10.010367:0                                    |
 
         # The following is the same as the above, but separated for readability (line length)
         When I match I should get

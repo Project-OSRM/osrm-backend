@@ -294,15 +294,17 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                         ? phantom_node_pair.source_phantom.backward_travel_mode
                         : facade->GetTravelModeForEdgeID(ed.id);
 
+                const auto geometry_index = facade->GetGeometryIndexForEdgeID(ed.id);
                 std::vector<NodeID> id_vector;
-                facade->GetUncompressedGeometry(facade->GetGeometryIndexForEdgeID(ed.id),
-                                                id_vector);
+                facade->GetUncompressedGeometry(geometry_index, id_vector);
                 BOOST_ASSERT(id_vector.size() > 0);
 
                 std::vector<EdgeWeight> weight_vector;
-                facade->GetUncompressedWeights(facade->GetGeometryIndexForEdgeID(ed.id),
-                                               weight_vector);
+                facade->GetUncompressedWeights(geometry_index, weight_vector);
                 BOOST_ASSERT(weight_vector.size() > 0);
+
+                std::vector<DatasourceID> datasource_vector;
+                facade->GetUncompressedDatasources(geometry_index, datasource_vector);
 
                 auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
@@ -329,7 +331,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                  extractor::guidance::TurnInstruction::NO_TURN(),
                                  {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                                  travel_mode,
-                                 INVALID_ENTRY_CLASSID});
+                                 INVALID_ENTRY_CLASSID,
+                                 datasource_vector[i]});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
                 if (facade->hasLaneData(ed.id))
@@ -343,6 +346,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         std::size_t start_index = 0, end_index = 0;
         std::vector<unsigned> id_vector;
         std::vector<EdgeWeight> weight_vector;
+        std::vector<DatasourceID> datasource_vector;
         const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
                                     phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
                                    unpacked_path.empty();
@@ -354,6 +358,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
             facade->GetUncompressedWeights(
                 phantom_node_pair.target_phantom.reverse_packed_geometry_id, weight_vector);
+
+            facade->GetUncompressedDatasources(
+                phantom_node_pair.target_phantom.reverse_packed_geometry_id, datasource_vector);
 
             if (is_local_path)
             {
@@ -375,6 +382,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
             facade->GetUncompressedWeights(
                 phantom_node_pair.target_phantom.forward_packed_geometry_id, weight_vector);
+
+            facade->GetUncompressedDatasources(
+                phantom_node_pair.target_phantom.forward_packed_geometry_id, datasource_vector);
         }
 
         // Given the following compressed geometry:
@@ -396,7 +406,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
                                             : phantom_node_pair.target_phantom.forward_travel_mode,
-                INVALID_ENTRY_CLASSID});
+                INVALID_ENTRY_CLASSID,
+                datasource_vector[i]});
         }
 
         if (unpacked_path.size() > 0)
