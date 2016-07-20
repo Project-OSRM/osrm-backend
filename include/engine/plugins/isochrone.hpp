@@ -76,9 +76,6 @@ class IsochronePlugin final : public BasePlugin
     std::vector<osrm::extractor::QueryNode> coordinate_list;
     std::vector<engine::plugins::SimpleEdge> graph_edge_list;
     std::size_t number_of_nodes;
-    IsochroneVector isochroneVector;
-    IsochroneVector convexhull;
-    IsochroneVector concavehull;
 
     std::size_t loadGraph(const std::string &path,
                           std::vector<extractor::QueryNode> &coordinate_list,

@@ -68,7 +68,9 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
                                    forward_id_vector);
     auto source = forward_id_vector[0];
 
-    isochroneVector.clear();
+    IsochroneVector isochroneVector;
+    IsochroneVector convexhull;
+    IsochroneVector concavehull;
 
     if (params.duration != 0)
     {
@@ -102,10 +104,6 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     }
 
     util::SimpleLogger().Write() << "Nodes Found: " << isochroneVector.size();
-
-    convexhull.clear();
-    concavehull.clear();
-
     // Optional param for calculating Convex Hull
     if (params.convexhull)
     {
