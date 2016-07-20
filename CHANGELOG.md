@@ -1,6 +1,7 @@
 # 5.2.7
   - Bugfixes
     - BREAKING: Fix bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
+    - Fix deduplication of parallel edges. Now uses correct weight.
 
 # 5.2.6
   - Bugfixes
