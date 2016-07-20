@@ -367,6 +367,37 @@ Feature: Turn Lane Guidance
 
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
+        Given the profile "lhs"
+        And the node map
+            |   |   | a |   |   |
+            |   |   | b |   |   |
+            | h | c |   | g |   |
+            |   |   |   |   |   |
+            |   | d |   | f |   |
+            |   |   | e |   |   |
+            | x |   |   |   | y |
+
+        And the ways
+            | nodes | turn:lanes:forward         | highway | junction   |
+            | ab    | slight_left\|slight_left   | primary |            |
+            | bg    |                            | primary | roundabout |
+            | gf    |                            | primary | roundabout |
+            | fe    |                            | primary | roundabout |
+            | ed    |                            | primary | roundabout |
+            | dc    | slight_left                | primary | roundabout |
+            | cb    |                            | primary | roundabout |
+            | ch    |                            | primary |            |
+            | ex    |                            | primary |            |
+            | dx    |                            | primary |            |
+            | gy    |                            | primary |            |
+            | fy    |                            | primary |            |
+
+        When I route I should get
+            | waypoints | route      | turns                           | lanes |
+            | a,h       | ab,ch,ch   | depart,roundabout-exit-5,arrive | ,,    |
+
+    @anticipate
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             |   |   | a |   |   |
             | x | b |   | d | y |
