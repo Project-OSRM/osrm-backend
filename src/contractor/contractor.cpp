@@ -3,6 +3,7 @@
 #include "contractor/graph_contractor.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/node_based_edge.hpp"
 
 #include "util/exception.hpp"
@@ -76,7 +77,7 @@ int Contractor::Run()
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
 #else
-    static_assert(sizeof(extractor::NodeBasedEdge) == 20,
+    static_assert(sizeof(extractor::NodeBasedEdge) == 24,
                   "changing extractor::NodeBasedEdge type has influence on memory consumption!");
     static_assert(sizeof(extractor::EdgeBasedEdge) == 16,
                   "changing EdgeBasedEdge type has influence on memory consumption!");
@@ -93,17 +94,17 @@ int Contractor::Run()
 
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
-    std::size_t max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
-                                                    edge_based_edge_list,
-                                                    config.edge_segment_lookup_path,
-                                                    config.edge_penalty_path,
-                                                    config.segment_speed_lookup_paths,
-                                                    config.turn_penalty_lookup_paths,
-                                                    config.node_based_graph_path,
-                                                    config.geometry_path,
-                                                    config.datasource_names_path,
-                                                    config.datasource_indexes_path,
-                                                    config.rtree_leaf_path);
+    EdgeID max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
+                                               edge_based_edge_list,
+                                               config.edge_segment_lookup_path,
+                                               config.edge_penalty_path,
+                                               config.segment_speed_lookup_paths,
+                                               config.turn_penalty_lookup_paths,
+                                               config.node_based_graph_path,
+                                               config.geometry_path,
+                                               config.datasource_names_path,
+                                               config.datasource_indexes_path,
+                                               config.rtree_leaf_path);
 
     // Contracting the edge-expanded graph
 
@@ -252,7 +253,7 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
                 throw util::exception{"Segment speed file " + filename + " malformed"};
 
             SegmentSpeedSource val{
-                {static_cast<OSMNodeID>(from_node_id), static_cast<OSMNodeID>(to_node_id)},
+                {OSMNodeID{from_node_id}, OSMNodeID{to_node_id}},
                 {speed, static_cast<std::uint8_t>(file_id)}};
 
             local.push_back(std::move(val));
@@ -338,7 +339,7 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
                 throw util::exception{"Turn penalty file " + filename + " malformed"};
 
             map[std::make_tuple(
-                OSMNodeID(from_node_id), OSMNodeID(via_node_id), OSMNodeID(to_node_id))] =
+                OSMNodeID{from_node_id}, OSMNodeID{via_node_id}, OSMNodeID{to_node_id})] =
                 std::make_pair(penalty, file_id);
         }
     };
@@ -349,7 +350,7 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
 }
 } // anon ns
 
-std::size_t Contractor::LoadEdgeExpandedGraph(
+EdgeID Contractor::LoadEdgeExpandedGraph(
     std::string const &edge_based_graph_filename,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
     const std::string &edge_segment_lookup_filename,
@@ -366,41 +367,58 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached");
 
     util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
-    boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
-    if (!input_stream)
-        throw util::exception("Could not load edge based graph file");
+
+    auto mmap_file = [](const std::string &filename) {
+        using boost::interprocess::file_mapping;
+        using boost::interprocess::mapped_region;
+        using boost::interprocess::read_only;
+
+        const file_mapping mapping{ filename.c_str(), read_only };
+        mapped_region region{mapping, read_only};
+        region.advise(mapped_region::advice_sequential);
+        return region;
+    };
+
+    const auto edge_based_graph_region = mmap_file(edge_based_graph_filename);
 
     const bool update_edge_weights = !segment_speed_filenames.empty();
     const bool update_turn_penalties = !turn_penalty_filenames.empty();
 
-    boost::filesystem::ifstream edge_segment_input_stream;
-    boost::filesystem::ifstream edge_fixed_penalties_input_stream;
-
-    if (update_edge_weights || update_turn_penalties)
-    {
-        edge_segment_input_stream.open(edge_segment_lookup_filename, std::ios::binary);
-        edge_fixed_penalties_input_stream.open(edge_penalty_filename, std::ios::binary);
-        if (!edge_segment_input_stream || !edge_fixed_penalties_input_stream)
+    const auto edge_penalty_region = [&] {
+        if (update_edge_weights || update_turn_penalties)
         {
-            throw util::exception("Could not load .edge_segment_lookup or .edge_penalties, did you "
-                                  "run osrm-extract with '--generate-edge-lookup'?");
+            return mmap_file(edge_penalty_filename);
         }
-    }
+        return boost::interprocess::mapped_region();
+    }();
+
+    const auto edge_segment_region = [&] {
+        if (update_edge_weights || update_turn_penalties)
+        {
+            return mmap_file(edge_segment_lookup_filename);
+        }
+        return boost::interprocess::mapped_region();
+    }();
+
+    // Set the struct packing to 1 byte word sizes.  This prevents any padding.  We only use
+    // this struct once, so any alignment penalty is trivial.  If this is *not* done, then
+    // the struct will be padded out by an extra 4 bytes, and sizeof() will mean we read
+    // too much data from the original file.
+    #pragma pack(push, r1, 1)
+    struct EdgeBasedGraphHeader {
+        util::FingerPrint fingerprint;
+        std::uint64_t number_of_edges;
+        EdgeID max_edge_id;
+    };
+    #pragma pack(pop, r1)
+
+    const EdgeBasedGraphHeader graph_header = *(reinterpret_cast<const EdgeBasedGraphHeader *>(edge_based_graph_region.get_address()));
 
     const util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
-    util::FingerPrint fingerprint_loaded;
-    input_stream.read((char *)&fingerprint_loaded, sizeof(util::FingerPrint));
-    fingerprint_loaded.TestContractor(fingerprint_valid);
+    graph_header.fingerprint.TestContractor(fingerprint_valid);
 
-    // TODO std::size_t can vary on systems. Our files are not transferable, but we might want to
-    // consider using a fixed size type for I/O
-    std::size_t number_of_edges = 0;
-    std::size_t max_edge_id = SPECIAL_EDGEID;
-    input_stream.read((char *)&number_of_edges, sizeof(std::size_t));
-    input_stream.read((char *)&max_edge_id, sizeof(std::size_t));
-
-    edge_based_edge_list.resize(number_of_edges);
-    util::SimpleLogger().Write() << "Reading " << number_of_edges
+    edge_based_edge_list.resize(graph_header.number_of_edges);
+    util::SimpleLogger().Write() << "Reading " << graph_header.number_of_edges
                                  << " edges from the edge based graph";
 
     SegmentSpeedSourceFlatMap segment_speed_lookup;
@@ -502,12 +520,9 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         // update the RTree itself, we just use the leaf nodes to iterate over all segments)
         using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
 
-        using boost::interprocess::file_mapping;
         using boost::interprocess::mapped_region;
-        using boost::interprocess::read_only;
 
-        const file_mapping mapping{rtree_leaf_filename.c_str(), read_only};
-        mapped_region region{mapping, read_only};
+        auto region = mmap_file(rtree_leaf_filename.c_str());
         region.advise(mapped_region::advice_willneed);
 
         const auto bytes = region.get_size();
@@ -686,7 +701,7 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         {
             throw util::exception("Failed to open " + datasource_indexes_filename + " for writing");
         }
-        auto number_of_datasource_entries = m_geometry_datasource.size();
+        std::uint64_t number_of_datasource_entries = m_geometry_datasource.size();
         datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
                                 sizeof(number_of_datasource_entries));
         if (number_of_datasource_entries > 0)
@@ -715,43 +730,43 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
 
     tbb::parallel_invoke(maybe_save_geometries, save_datasource_indexes, save_datastore_names);
 
-    // TODO: can we read this in bulk?  util::DeallocatingVector isn't necessarily
-    // all stored contiguously
-    for (; number_of_edges > 0; --number_of_edges)
+    auto penaltyblock =
+        reinterpret_cast<const extractor::lookup::PenaltyBlock *>(edge_penalty_region.get_address());
+    auto edge_segment_byte_ptr = reinterpret_cast<const char *>(edge_segment_region.get_address());
+    auto edge_based_edge_ptr = reinterpret_cast<extractor::EdgeBasedEdge *>(
+        reinterpret_cast<char *>(edge_based_graph_region.get_address()) + sizeof(EdgeBasedGraphHeader));
+
+    const auto edge_based_edge_last = reinterpret_cast<extractor::EdgeBasedEdge *>(
+        reinterpret_cast<char *>(edge_based_graph_region.get_address()) + sizeof(EdgeBasedGraphHeader) + sizeof(extractor::EdgeBasedEdge) * graph_header.number_of_edges);
+
+    while (edge_based_edge_ptr != edge_based_edge_last)
     {
-        extractor::EdgeBasedEdge inbuffer;
-        input_stream.read((char *)&inbuffer, sizeof(extractor::EdgeBasedEdge));
+        // Make a copy of the data from the memory map
+        extractor::EdgeBasedEdge inbuffer = *edge_based_edge_ptr;
+        edge_based_edge_ptr++;
+
         if (update_edge_weights || update_turn_penalties)
         {
-            // Processing-time edge updates
-            unsigned fixed_penalty;
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&fixed_penalty),
-                                                   sizeof(fixed_penalty));
+            auto header = reinterpret_cast<const extractor::lookup::SegmentHeaderBlock *>(
+                edge_segment_byte_ptr);
+            edge_segment_byte_ptr += sizeof(extractor::lookup::SegmentHeaderBlock);
 
+            auto previous_osm_node_id = header->previous_osm_node_id;
             int new_weight = 0;
+            int compressed_edge_nodes = static_cast<int>(header->num_osm_nodes);
 
-            unsigned num_osm_nodes = 0;
-            edge_segment_input_stream.read(reinterpret_cast<char *>(&num_osm_nodes),
-                                           sizeof(num_osm_nodes));
-            OSMNodeID previous_osm_node_id;
-            edge_segment_input_stream.read(reinterpret_cast<char *>(&previous_osm_node_id),
-                                           sizeof(previous_osm_node_id));
-            OSMNodeID this_osm_node_id;
-            double segment_length;
-            int segment_weight;
-            int compressed_edge_nodes = static_cast<int>(num_osm_nodes);
-            --num_osm_nodes;
-            for (; num_osm_nodes != 0; --num_osm_nodes)
+            auto segmentblocks =
+                reinterpret_cast<const extractor::lookup::SegmentBlock *>(edge_segment_byte_ptr);
+            edge_segment_byte_ptr +=
+                sizeof(extractor::lookup::SegmentBlock) * (header->num_osm_nodes - 1);
+
+            const auto num_segments = header->num_osm_nodes - 1;
+            for (auto i : util::irange<std::size_t>(0, num_segments))
             {
-                edge_segment_input_stream.read(reinterpret_cast<char *>(&this_osm_node_id),
-                                               sizeof(this_osm_node_id));
-                edge_segment_input_stream.read(reinterpret_cast<char *>(&segment_length),
-                                               sizeof(segment_length));
-                edge_segment_input_stream.read(reinterpret_cast<char *>(&segment_weight),
-                                               sizeof(segment_weight));
 
                 auto speed_iter =
-                    find(segment_speed_lookup, Segment{previous_osm_node_id, this_osm_node_id});
+                    find(segment_speed_lookup,
+                         Segment{previous_osm_node_id, segmentblocks[i].this_osm_node_id});
                 if (speed_iter != segment_speed_lookup.end())
                 {
                     // This sets the segment weight using the same formula as the
@@ -759,30 +774,22 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                     // is lost in the annals of time.
                     int new_segment_weight = std::max(
                         1,
-                        static_cast<int>(std::floor(
-                            (segment_length * 10.) / (speed_iter->speed_source.speed / 3.6) + .5)));
+                        static_cast<int>(std::floor((segmentblocks[i].segment_length * 10.) /
+                                                        (speed_iter->speed_source.speed / 3.6) +
+                                                    .5)));
                     new_weight += new_segment_weight;
                 }
                 else
                 {
                     // If no lookup found, use the original weight value for this segment
-                    new_weight += segment_weight;
+                    new_weight += segmentblocks[i].segment_weight;
                 }
 
-                previous_osm_node_id = this_osm_node_id;
+                previous_osm_node_id = segmentblocks[i].this_osm_node_id;
             }
 
-            OSMNodeID from_id;
-            OSMNodeID via_id;
-            OSMNodeID to_id;
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&from_id),
-                                                   sizeof(from_id));
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&via_id),
-                                                   sizeof(via_id));
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&to_id), sizeof(to_id));
-
-            const auto turn_iter =
-                turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
+            const auto turn_iter = turn_penalty_lookup.find(
+                std::make_tuple(penaltyblock->from_id, penaltyblock->via_id, penaltyblock->to_id));
             if (turn_iter != turn_penalty_lookup.end())
             {
                 int new_turn_weight = static_cast<int>(turn_iter->second.first * 10);
@@ -790,24 +797,28 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
                 if (new_turn_weight + new_weight < compressed_edge_nodes)
                 {
                     util::SimpleLogger().Write(logWARNING)
-                        << "turn penalty " << turn_iter->second.first << " for turn " << from_id
-                        << ", " << via_id << ", " << to_id
-                        << " is too negative: clamping turn weight to " << compressed_edge_nodes;
+                        << "turn penalty " << turn_iter->second.first << " for turn "
+                        << penaltyblock->from_id << ", " << penaltyblock->via_id << ", "
+                        << penaltyblock->to_id << " is too negative: clamping turn weight to "
+                        << compressed_edge_nodes;
                 }
 
                 inbuffer.weight = std::max(new_turn_weight + new_weight, compressed_edge_nodes);
             }
             else
             {
-                inbuffer.weight = fixed_penalty + new_weight;
+                inbuffer.weight = penaltyblock->fixed_penalty + new_weight;
             }
+
+            // Increment the pointer
+            penaltyblock++;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
 
     util::SimpleLogger().Write() << "Done reading edges";
-    return max_edge_id;
+    return graph_header.max_edge_id;
 }
 
 void Contractor::ReadNodeLevels(std::vector<float> &node_levels) const
@@ -861,8 +872,8 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
-    const unsigned max_used_node_id = [&contracted_edge_list] {
-        unsigned tmp_max = 0;
+    const NodeID max_used_node_id = [&contracted_edge_list] {
+        NodeID tmp_max = 0;
         for (const QueryEdge &edge : contracted_edge_list)
         {
             BOOST_ASSERT(SPECIAL_NODEID != edge.source);
@@ -928,7 +939,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
 
     // serialize all edges
     util::SimpleLogger().Write() << "Building edge array";
-    int number_of_used_edges = 0;
+    std::size_t number_of_used_edges = 0;
 
     util::StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
     for (const auto edge : util::irange<std::size_t>(0UL, contracted_edge_list.size()))
@@ -970,7 +981,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
  \brief Build contracted graph.
  */
 void Contractor::ContractGraph(
-    const unsigned max_edge_id,
+    const EdgeID max_edge_id,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
     util::DeallocatingVector<QueryEdge> &contracted_edge_list,
     std::vector<EdgeWeight> &&node_weights,

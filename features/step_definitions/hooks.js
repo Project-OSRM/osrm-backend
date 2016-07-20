@@ -15,16 +15,4 @@ module.exports = function () {
         this.setOrigin(this.DEFAULT_ORIGIN);
         callback();
     });
-
-    this.Before('@ignore-platform-windows', () => {
-        this.skipThisScenario();
-    });
-
-    this.Before('@ignore-platform-unix', () => {
-        this.skipThisScenario();
-    });
-
-    this.Before('@ignore-platform-mac', () => {
-        this.skipThisScenario();
-    });
 };

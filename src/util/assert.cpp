@@ -1,16 +1,17 @@
-#include "util/assert.hpp"
+#include <boost/assert.hpp>
 
-#include <sstream>
+#include <exception>
+#include <iostream>
 
 namespace
 {
-// We throw to guarantee for stack-unwinding and therefore our destructors being called.
+// We hard-abort on assertion violations.
 void assertion_failed_msg_helper(
     char const *expr, char const *msg, char const *function, char const *file, long line)
 {
-    std::ostringstream fmt;
-    fmt << file << ":" << line << "\nin: " << function << ": " << expr << "\n" << msg;
-    throw osrm::util::assertionError{fmt.str().c_str()};
+    std::cerr << "[assert] " << file << ":" << line << "\nin: " << function << ": " << expr << "\n"
+              << msg;
+    std::terminate();
 }
 }
 

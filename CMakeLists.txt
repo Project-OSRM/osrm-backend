@@ -9,7 +9,7 @@ endif()
 
 project(OSRM C CXX)
 set(OSRM_VERSION_MAJOR 5)
-set(OSRM_VERSION_MINOR 2)
+set(OSRM_VERSION_MINOR 3)
 set(OSRM_VERSION_PATCH 0)
 
 # these two functions build up custom variables:
@@ -39,7 +39,7 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(bitness 64)
   message(STATUS "Building on a 64 bit system")
 else()
-  message(WARNING "Building on a 32 bit system is unsupported")
+  message(STATUS "Building on a 32 bit system")
 endif()
 
 if(WIN32 AND MSVC_VERSION LESS 1900)
@@ -53,6 +53,7 @@ option(BUILD_COMPONENTS "Build osrm-components" OFF)
 option(ENABLE_ASSERTIONS OFF)
 option(COVERAGE OFF)
 option(SANITIZER OFF)
+option(ENABLE_LTO "Use LTO if available" ON)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -118,7 +119,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
   # Check if LTO is available
   check_cxx_compiler_flag("-flto" LTO_AVAILABLE)
-  if(LTO_AVAILABLE)
+  if(ENABLE_LTO AND LTO_AVAILABLE)
     set(OLD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     # GCC in addition allows parallelizing LTO
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -319,7 +320,7 @@ include_directories(SYSTEM ${OSRM_INCLUDE_PATHS})
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_LIBRARIES})
 target_link_libraries(osrm-extract osrm_extract ${Boost_LIBRARIES})
-target_link_libraries(osrm-contract osrm_contract ${Boost_LIBRARIES})
+target_link_libraries(osrm-contract ${Boost_LIBRARIES} ${TBB_LIBRARIES} osrm_contract)
 target_link_libraries(osrm-routed osrm ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 set(EXTRACTOR_LIBRARIES

@@ -361,3 +361,79 @@ Feature: Basic Roundabout
            | a,f       | ab,ef,ef | depart,roundabout-exit-2,arrive | 0->180,180->270,180->0 |
            | a,h       | ab,gh,gh | depart,roundabout-exit-1,arrive | 0->180,180->270,270->0 |
 
+    Scenario: Motorway Roundabout
+    #See 39.933742 -75.082345
+        Given the node map
+            |   |   |   |   | l |   |   |   | a |   | i |
+            |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | b |   |   |   |   |
+            |   |   |   | c |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   | h |   |   |
+            | n |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | d |   |   |   |   |   |   |   | j |
+            |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | m |   |   | g |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | e |   | f |   |   |   |   |   |   |
+
+        And the ways
+            | nodes | junction   | name     | highway    | oneway | ref    |
+            | ab    |            | crescent | trunk      | yes    | US 130 |
+            | bcd   | roundabout | crescent | trunk      | yes    | US 130 |
+            | de    |            | crescent | trunk      | yes    | US 130 |
+            | fg    |            | crescent | trunk      | yes    | US 130 |
+            | gh    | roundabout | crescent | trunk      | yes    | US 130 |
+            | hi    |            | crescent | trunk      | yes    | US 130 |
+            | jh    |            |          | trunk_link | yes    | NJ 38  |
+            | hb    | roundabout |          | trunk_link | yes    | NJ 38  |
+            | bl    |            |          | trunk_link | yes    | NJ 38  |
+            | cnd   |            | kaighns  | trunk_link | yes    |        |
+            | dmg   | roundabout |          | trunk_link | yes    |        |
+
+        When I route I should get
+            | waypoints | route                                                 | turns                           |
+            | a,e       | crescent (US 130),crescent (US 130),crescent (US 130) | depart,roundabout-exit-3,arrive |
+            | j,l       | NJ 38,NJ 38,NJ 38                                     | depart,roundabout-exit-2,arrive |
+
+    Scenario: Double Roundabout with through-lane
+    #http://map.project-osrm.org/?z=18&center=38.911752%2C-77.048667&loc=38.912003%2C-77.050831&loc=38.909277%2C-77.042516&hl=en&alt=0
+        Given the node map
+            |   |   |   |   | o |   |   |   |   |   |   |   |   |   |   |   | n |   |   |   |   |
+            |   |   |   |   | e |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | q |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            | a |   | b |   |   |   |   |   | s |   | f |   |   |   | g |   |   |   | i |   | k |
+            |   |   |   |   |   |   | r |   |   |   |   |   |   |   |   |   |   | p |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   | t |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | c |   | d |   |   |   |   |   |   |   |   |   | h |   |   |   |   |
+            |   |   |   |   | l |   |   |   |   |   |   |   |   |   |   |   | m |   |   |   |   |
+
+        And the nodes
+            | node | highway         |
+            | i    | traffic_signals |
+
+        And the ways
+            | nodes   | junction   | name            | oneway |
+            | bcdrqeb | roundabout | sheridan circle | yes    |
+            | ghi     | roundabout | dupont circle   | yes    |
+            | ijg     | roundabout | dupont circle   | yes    |
+            | ab      |            | massachusetts   | no     |
+            | sfgpik  |            | massachusetts   | no     |
+            | cl      |            | 23rd street     | no     |
+            | oe      |            | r street        | no     |
+            | jn      |            | new hampshire   | no     |
+            | mh      |            | new hampshire   | yes    |
+            | rsq     |            | massachusetts   | yes    |
+            | ft      |            | suppressed      | no     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | sfgpik   | ijg    | i        | no_left_turn  |
+
+        When I route I should get
+            | waypoints | route                                                   | turns                                                     |
+            | a,k       | massachusetts,massachusetts,massachusetts,massachusetts | depart,sheridan circle-exit-2,dupont circle-exit-1,arrive |

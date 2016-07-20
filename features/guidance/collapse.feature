@@ -511,3 +511,122 @@ Feature: Collapse
             | i,h       | in,road,road | depart,turn slight left,arrive  |
             | a,d       | road,road    | depart,arrive                   |
             | a,j       | road,out,out | depart,turn slight right,arrive |
+
+    Scenario: Don't collapse everything to u-turn / too wide
+        Given the node map
+            | a |   | b |   | e |
+            |   |   |   |   |   |
+            | d |   | c |   | f |
+
+        And the ways
+            | nodes | highway   | name   |
+            | abcd  | primary   | road   |
+            | be    | secondary | top    |
+            | cf    | secondary | bottom |
+
+        When I route I should get
+            | waypoints | turns                                   | route               |
+            | a,d       | depart,continue right,turn right,arrive | road,road,road,road |
+            | d,a       | depart,continue left,turn left,arrive   | road,road,road,road |
+
+    Scenario: Forking before a turn
+        Given the node map
+            |   |   |   | g |   |
+            |   |   |   |   |   |
+            |   |   |   | c |   |
+            | a |   | b | d | e |
+            |   |   |   |   |   |
+            |   |   |   | f |   |
+
+        And the ways
+            | nodes | name  | oneway | highway   |
+            | ab    | road  | yes    | primary   |
+            | bd    | road  | yes    | primary   |
+            | bc    | road  | yes    | primary   |
+            | de    | road  | yes    | primary   |
+            | fdcg  | cross | no     | secondary |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | bd       | fdcg   | d        | no_left_turn  |
+            | restriction | bc       | fdcg   | c        | no_right_turn |
+
+        When I route I should get
+          | waypoints | route            | turns                   |
+          | a,g       | road,cross,cross | depart,turn left,arrive |
+          | a,e       | road,road        | depart,arrive           |
+
+    Scenario: Forking before a turn (narrow)
+        Given the node map
+            |   |   |   | g |   |
+            |   |   |   |   |   |
+            |   |   |   | c |   |
+            | a | b |   | d | e |
+            |   |   |   |   |   |
+            |   |   |   | f |   |
+
+        And the ways
+            | nodes | name  | oneway | highway   |
+            | ab    | road  | yes    | primary   |
+            | bd    | road  | yes    | primary   |
+            | bc    | road  | yes    | primary   |
+            | de    | road  | yes    | primary   |
+            | fdcg  | cross | no     | secondary |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | bd       | fdcg   | d        | no_left_turn  |
+            | restriction | bc       | fdcg   | c        | no_right_turn |
+
+        When I route I should get
+          | waypoints | route            | turns                   |
+          | a,g       | road,cross,cross | depart,turn left,arrive |
+          | a,e       | road,road        | depart,arrive           |
+
+    Scenario: Forking before a turn (forky)
+        Given the node map
+            |   |   |   | g |   |   |
+            |   |   |   |   |   |   |
+            |   |   |   | c |   |   |
+            | a | b |   |   |   |   |
+            |   |   |   |   | d |   |
+            |   |   |   |   | f | e |
+
+        And the ways
+            | nodes | name  | oneway | highway   |
+            | ab    | road  | yes    | primary   |
+            | bd    | road  | yes    | primary   |
+            | bc    | road  | yes    | primary   |
+            | de    | road  | yes    | primary   |
+            | fdcg  | cross | no     | secondary |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | bd       | fdcg   | d        | no_left_turn  |
+            | restriction | bc       | fdcg   | c        | no_right_turn |
+
+        When I route I should get
+            | waypoints | route                 | turns                                          |
+            | a,g       | road,cross,cross      | depart,turn left,arrive                        |
+            | a,e       | road,road,road        | depart,continue slight right,arrive            |
+            # We should discuss whether the next item should be collapsed to depart,turn right,arrive.
+            | a,f       | road,road,cross,cross | depart,continue slight right,turn right,arrive |
+
+    Scenario: On-Off on Highway
+        Given the node map
+            | f |   |   |   |
+            | a | b | c | d |
+            |   |   |   | e |
+
+        And the ways
+            | nodes | name | highway       | oneway |
+            | abcd  | Hwy  | motorway      | yes    |
+            | fb    | on   | motorway_link | yes    |
+            | ce    | off  | motorway_link | yes    |
+
+        When I route I should get
+            | waypoints | route          | turns                                           |
+            | a,d       | Hwy,Hwy        | depart,arrive                                   |
+            | f,d       | on,Hwy,Hwy     | depart,merge slight right,arrive                |
+            | f,e       | on,Hwy,off,off | depart,merge slight right,off ramp right,arrive |
+            | a,e       | Hwy,off,off    | depart,off ramp right,arrive                    |

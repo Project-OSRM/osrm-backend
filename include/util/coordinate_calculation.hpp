@@ -61,10 +61,10 @@ inline std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoord
 
     return {clamped_ratio,
             {
-                FloatLongitude(1.0 - clamped_ratio) * source.lon +
-                    target.lon * FloatLongitude(clamped_ratio),
-                FloatLatitude(1.0 - clamped_ratio) * source.lat +
-                    target.lat * FloatLatitude(clamped_ratio),
+                FloatLongitude{1.0 - clamped_ratio} * source.lon +
+                    target.lon * FloatLongitude{clamped_ratio},
+                FloatLatitude{1.0 - clamped_ratio} * source.lat +
+                    target.lat * FloatLatitude{clamped_ratio},
             }};
 }
 

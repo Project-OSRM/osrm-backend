@@ -65,6 +65,70 @@ mirrorDirectionModifier(const extractor::guidance::DirectionModifier::Enum modif
     return results[modifier];
 }
 
+inline bool hasLeftModifier(const extractor::guidance::TurnInstruction instruction)
+{
+    return instruction.direction_modifier == extractor::guidance::DirectionModifier::SharpLeft ||
+           instruction.direction_modifier == extractor::guidance::DirectionModifier::Left ||
+           instruction.direction_modifier == extractor::guidance::DirectionModifier::SlightLeft;
+}
+
+inline bool hasRightModifier(const extractor::guidance::TurnInstruction instruction)
+{
+    return instruction.direction_modifier == extractor::guidance::DirectionModifier::SharpRight ||
+           instruction.direction_modifier == extractor::guidance::DirectionModifier::Right ||
+           instruction.direction_modifier == extractor::guidance::DirectionModifier::SlightRight;
+}
+
+inline bool isLeftTurn(const extractor::guidance::TurnInstruction instruction)
+{
+    switch (instruction.type)
+    {
+    case extractor::guidance::TurnType::Merge:
+        return hasRightModifier(instruction);
+    default:
+        return hasLeftModifier(instruction);
+    }
+}
+
+inline bool isRightTurn(const extractor::guidance::TurnInstruction instruction)
+{
+    switch (instruction.type)
+    {
+    case extractor::guidance::TurnType::Merge:
+        return hasLeftModifier(instruction);
+    default:
+        return hasRightModifier(instruction);
+    }
+}
+
+inline bool entersRoundabout(const extractor::guidance::TurnInstruction instruction)
+{
+    return (instruction.type == extractor::guidance::TurnType::EnterRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersection ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterRotaryAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
+}
+
+inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruction)
+{
+    return (instruction.type == extractor::guidance::TurnType::ExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::ExitRotary ||
+            instruction.type == extractor::guidance::TurnType::ExitRoundaboutIntersection ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection);
+}
+
+inline bool staysOnRoundabout(const extractor::guidance::TurnInstruction instruction)
+{
+    return instruction.type == extractor::guidance::TurnType::StayOnRoundabout;
+}
+
 } // namespace guidance
 } // namespace util
 } // namespace osrm

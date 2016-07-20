@@ -29,7 +29,6 @@ struct InternalExtractorEdge
 
     struct WeightData
     {
-
         WeightData() : duration(0.0), type(WeightType::INVALID) {}
 
         union {
@@ -51,6 +50,7 @@ struct InternalExtractorEdge
                  true,
                  TRAVEL_MODE_INACCESSIBLE,
                  false,
+                 guidance::TurnLaneType::empty,
                  guidance::RoadClassificationData())
     {
     }
@@ -66,9 +66,10 @@ struct InternalExtractorEdge
                                    bool startpoint,
                                    TravelMode travel_mode,
                                    bool is_split,
+                                   LaneDescriptionID lane_description,
                                    guidance::RoadClassificationData road_classification)
-        : result(OSMNodeID(source),
-                 OSMNodeID(target),
+        : result(source,
+                 target,
                  name_id,
                  0,
                  forward,
@@ -78,6 +79,7 @@ struct InternalExtractorEdge
                  startpoint,
                  travel_mode,
                  is_split,
+                 lane_description,
                  std::move(road_classification)),
           weight_data(std::move(weight_data))
     {
@@ -104,6 +106,7 @@ struct InternalExtractorEdge
                                      true,
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
+                                     INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassificationData());
     }
     static InternalExtractorEdge max_osm_value()
@@ -119,6 +122,7 @@ struct InternalExtractorEdge
                                      true,
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
+                                     INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassificationData());
     }
 
@@ -138,43 +142,6 @@ struct InternalExtractorEdge
     }
 };
 
-struct CmpEdgeByInternalStartThenInternalTargetID
-{
-    using value_type = InternalExtractorEdge;
-    bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
-    {
-        return (lhs.result.source < rhs.result.source) ||
-               ((lhs.result.source == rhs.result.source) &&
-                (lhs.result.target < rhs.result.target));
-    }
-
-    value_type max_value() { return InternalExtractorEdge::max_internal_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_internal_value(); }
-};
-
-struct CmpEdgeByOSMStartID
-{
-    using value_type = InternalExtractorEdge;
-    bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
-    {
-        return lhs.result.osm_source_id < rhs.result.osm_source_id;
-    }
-
-    value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
-};
-
-struct CmpEdgeByOSMTargetID
-{
-    using value_type = InternalExtractorEdge;
-    bool operator()(const InternalExtractorEdge &lhs, const InternalExtractorEdge &rhs) const
-    {
-        return lhs.result.osm_target_id < rhs.result.osm_target_id;
-    }
-
-    value_type max_value() { return InternalExtractorEdge::max_osm_value(); }
-    value_type min_value() { return InternalExtractorEdge::min_osm_value(); }
-};
 }
 }
 

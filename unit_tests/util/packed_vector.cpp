@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(insert_and_retrieve_packed_test)
 
     for (std::size_t i = 0; i < num_test_cases; i++)
     {
-        OSMNodeID r = static_cast<OSMNodeID>(rand() % 2147483647); // max 33-bit uint
+        OSMNodeID r {static_cast<std::uint64_t>(rand() % 2147483647)}; // max 33-bit uint
 
         packed_ids.push_back(r);
         original_ids.push_back(r);

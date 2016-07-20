@@ -40,32 +40,32 @@ namespace osrm
  * etc.  Also clarifies what this random "int" value is
  * being used for.
  */
-#define OSRM_STRONG_TYPEDEF(From, To)                                                              \
-    class To final                                                                                 \
-    {                                                                                              \
-        static_assert(std::is_arithmetic<From>(), "");                                             \
-        From x;                                                                                    \
-        friend std::ostream &operator<<(std::ostream &stream, const To &inst);                     \
-                                                                                                   \
-      public:                                                                                      \
-        To() = default;                                                                            \
-        explicit To(const From x_) : x(x_) {}                                                      \
-        explicit operator From &() { return x; }                                                   \
-        explicit operator From() const { return x; }                                               \
-        To operator+(const To rhs_) const { return To(x + static_cast<const From>(rhs_)); }        \
-        To operator-(const To rhs_) const { return To(x - static_cast<const From>(rhs_)); }        \
-        To operator*(const To rhs_) const { return To(x * static_cast<const From>(rhs_)); }        \
-        To operator/(const To rhs_) const { return To(x / static_cast<const From>(rhs_)); }        \
-        bool operator<(const To z_) const { return x < static_cast<const From>(z_); }              \
-        bool operator>(const To z_) const { return x > static_cast<const From>(z_); }              \
-        bool operator<=(const To z_) const { return x <= static_cast<const From>(z_); }            \
-        bool operator>=(const To z_) const { return x >= static_cast<const From>(z_); }            \
-        bool operator==(const To z_) const { return x == static_cast<const From>(z_); }            \
-        bool operator!=(const To z_) const { return x != static_cast<const From>(z_); }            \
-    };                                                                                             \
-    inline std::ostream &operator<<(std::ostream &stream, const To &inst)                          \
-    {                                                                                              \
-        return stream << inst.x;                                                                   \
+#define OSRM_STRONG_TYPEDEF(From, To)                                                                    \
+    struct To final                                                                                      \
+    {                                                                                                    \
+        static_assert(std::is_arithmetic<From>(), "");                                                   \
+        From __value;                                                                                    \
+        friend std::ostream &operator<<(std::ostream &stream, const To &inst);                           \
+                                                                                                         \
+        explicit operator From &() { return __value; }                                                   \
+        explicit operator From() const { return __value; }                                               \
+        To operator+(const To rhs_) const { return To{__value + static_cast<const From>(rhs_)}; }        \
+        To operator-(const To rhs_) const { return To{__value - static_cast<const From>(rhs_)}; }        \
+        To operator*(const To rhs_) const { return To{__value * static_cast<const From>(rhs_)}; }        \
+        To operator/(const To rhs_) const { return To{__value / static_cast<const From>(rhs_)}; }        \
+        bool operator<(const To z_) const { return __value < static_cast<const From>(z_); }              \
+        bool operator>(const To z_) const { return __value > static_cast<const From>(z_); }              \
+        bool operator<=(const To z_) const { return __value <= static_cast<const From>(z_); }            \
+        bool operator>=(const To z_) const { return __value >= static_cast<const From>(z_); }            \
+        bool operator==(const To z_) const { return __value == static_cast<const From>(z_); }            \
+        bool operator!=(const To z_) const { return __value != static_cast<const From>(z_); }            \
+    };                                                                                                   \
+    static_assert(std::is_trivial<To>(), #To " is not a trivial type");                                \
+    static_assert(std::is_standard_layout<To>(), #To " is not a standart layout");                     \
+    static_assert(std::is_pod<To>(), #To " is not a POD layout");                                      \
+    inline std::ostream &operator<<(std::ostream &stream, const To &inst)                                \
+    {                                                                                                    \
+        return stream << inst.__value;                                                                   \
     }
 
 #define OSRM_STRONG_TYPEDEF_HASHABLE(From, To)                                                     \

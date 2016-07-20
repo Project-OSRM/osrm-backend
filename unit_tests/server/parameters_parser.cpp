@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
 
 BOOST_AUTO_TEST_CASE(valid_route_urls)
 {
-    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
-                                              {util::FloatLongitude(3), util::FloatLatitude(4)}};
+    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
+                                              {util::FloatLongitude{3}, util::FloatLatitude{4}}};
 
     RouteParameters reference_1{};
     reference_1.coordinates = coords_1;
@@ -199,9 +199,9 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_5.coordinates, result_5->coordinates);
     CHECK_EQUAL_RANGE(reference_5.hints, result_5->hints);
 
-    std::vector<util::Coordinate> coords_2 = {{util::FloatLongitude(0), util::FloatLatitude(1)},
-                                              {util::FloatLongitude(2), util::FloatLatitude(3)},
-                                              {util::FloatLongitude(4), util::FloatLatitude(5)}};
+    std::vector<util::Coordinate> coords_2 = {{util::FloatLongitude{0}, util::FloatLatitude{1}},
+                                              {util::FloatLongitude{2}, util::FloatLatitude{3}},
+                                              {util::FloatLongitude{4}, util::FloatLatitude{5}}};
 
     RouteParameters reference_6{};
     reference_6.coordinates = coords_2;
@@ -250,10 +250,10 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_9.radiuses, result_9->radiuses);
 
     // Some Hint's are empty
-    std::vector<util::Coordinate> coords_3 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
-                                              {util::FloatLongitude(3), util::FloatLatitude(4)},
-                                              {util::FloatLongitude(5), util::FloatLatitude(6)},
-                                              {util::FloatLongitude(7), util::FloatLatitude(8)}};
+    std::vector<util::Coordinate> coords_3 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
+                                              {util::FloatLongitude{3}, util::FloatLatitude{4}},
+                                              {util::FloatLongitude{5}, util::FloatLatitude{6}},
+                                              {util::FloatLongitude{7}, util::FloatLatitude{8}}};
     std::vector<boost::optional<engine::Hint>> hints_10 = {
         engine::Hint::FromBase64("DAIAgP___"
                                  "38AAAAAAAAAAAIAAAAAAAAAEAAAAOgDAAD0AwAAGwAAAOUacQBQP5sCshpxAB0_"
@@ -293,8 +293,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
 
 BOOST_AUTO_TEST_CASE(valid_table_urls)
 {
-    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
-                                              {util::FloatLongitude(3), util::FloatLatitude(4)}};
+    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
+                                              {util::FloatLongitude{3}, util::FloatLatitude{4}}};
 
     TableParameters reference_1{};
     reference_1.coordinates = coords_1;
@@ -329,8 +329,8 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
 
 BOOST_AUTO_TEST_CASE(valid_match_urls)
 {
-    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
-                                              {util::FloatLongitude(3), util::FloatLatitude(4)}};
+    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
+                                              {util::FloatLongitude{3}, util::FloatLatitude{4}}};
 
     MatchParameters reference_1{};
     reference_1.coordinates = coords_1;
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(valid_match_urls)
 
 BOOST_AUTO_TEST_CASE(valid_nearest_urls)
 {
-    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)}};
+    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude{1}, util::FloatLatitude{2}}};
 
     NearestParameters reference_1{};
     reference_1.coordinates = coords_1;
@@ -388,8 +388,8 @@ BOOST_AUTO_TEST_CASE(valid_tile_urls)
 
 BOOST_AUTO_TEST_CASE(valid_trip_urls)
 {
-    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude(1), util::FloatLatitude(2)},
-                                              {util::FloatLongitude(3), util::FloatLatitude(4)}};
+    std::vector<util::Coordinate> coords_1 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
+                                              {util::FloatLongitude{3}, util::FloatLatitude{4}}};
 
     TripParameters reference_1{};
     reference_1.coordinates = coords_1;

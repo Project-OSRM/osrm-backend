@@ -4,9 +4,9 @@
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
 #include "engine/phantom_node.hpp"
-#include "util/typedefs.hpp"
-
 #include "osrm/coordinate.hpp"
+#include "util/guidance/turn_lanes.hpp"
+#include "util/typedefs.hpp"
 
 #include <vector>
 
@@ -27,6 +27,8 @@ struct PathData
     EdgeWeight duration_until_turn;
     // instruction to execute at the turn
     extractor::guidance::TurnInstruction turn_instruction;
+    // turn lane data
+    util::guidance::LaneTupelIdPair lane_data;
     // travel mode of the street that leads to the turn
     extractor::TravelMode travel_mode : 4;
     // entry class of the turn, indicating possibility of turns

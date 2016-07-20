@@ -115,8 +115,8 @@ Coordinate centroid(const Coordinate lhs, const Coordinate rhs)
     Coordinate centroid;
     // The coordinates of the midpoints are given by:
     // x = (x1 + x2) /2 and y = (y1 + y2) /2.
-    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude(2);
-    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude(2);
+    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude{2};
+    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude{2};
     return centroid;
 }
 
@@ -258,7 +258,10 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
                             C2C1_slope * (C2_x + C3_x)) /
                            (2 * (C3C2_slope - C2C1_slope));
         const double lat = (0.5 * (C1_x + C2_x) - lon) / C2C1_slope + 0.5 * (C1_y + C2_y);
-        return Coordinate(FloatLongitude(lon), FloatLatitude(lat));
+        if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
+            return boost::none;
+        else
+            return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
     }
 }
 
@@ -276,10 +279,13 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
 {
     BOOST_ASSERT(0 <= factor && factor <= 1.0);
 
-    FixedLongitude interpolated_lon(((1. - factor) * static_cast<std::int32_t>(from.lon)) +
-                                    (factor * static_cast<std::int32_t>(to.lon)));
-    FixedLatitude interpolated_lat(((1. - factor) * static_cast<std::int32_t>(from.lat)) +
-                                   (factor * static_cast<std::int32_t>(to.lat)));
+    const auto from_lon = static_cast<std::int32_t>(from.lon);
+    const auto from_lat = static_cast<std::int32_t>(from.lat);
+    const auto to_lon = static_cast<std::int32_t>(to.lon);
+    const auto to_lat = static_cast<std::int32_t>(to.lat);
+
+    FixedLongitude interpolated_lon{static_cast<std::int32_t>(from_lon + factor * (to_lon - from_lon))};
+    FixedLatitude interpolated_lat{static_cast<std::int32_t>(from_lat + factor * (to_lat - from_lat))};
 
     return {std::move(interpolated_lon), std::move(interpolated_lat)};
 }

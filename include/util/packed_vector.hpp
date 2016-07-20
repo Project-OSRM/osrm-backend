@@ -23,7 +23,7 @@ const constexpr std::size_t PACKSIZE = BITSIZE * ELEMSIZE;
 inline std::size_t PackedVectorSize(std::size_t elements)
 {
     return ceil(float(elements) / ELEMSIZE) * BITSIZE;
-}
+};
 
 /**
  * Returns the capacity of a packed vector with underlying vector size `vec_size`
@@ -41,9 +41,23 @@ inline std::size_t PackedVectorCapacity(std::size_t vec_size)
  * NOTE: this type is templated for future use, but will require a slight refactor to
  * configure BITSIZE and ELEMSIZE
  */
-template <typename T, bool UseSharedMemory> class PackedVector
+template <typename T, bool UseSharedMemory = false> class PackedVector
 {
+    static const constexpr std::size_t BITSIZE = 33;
+    static const constexpr std::size_t ELEMSIZE = 64;
+    static const constexpr std::size_t PACKSIZE = BITSIZE * ELEMSIZE;
+
   public:
+    /**
+     * Returns the size of the packed vector datastructure with `elements` packed elements (the size
+     * of
+     * its underlying uint64 vector)
+     */
+    inline static std::size_t elements_to_blocks(std::size_t elements)
+    {
+        return std::ceil(static_cast<double>(elements) * BITSIZE / ELEMSIZE);
+    }
+
     void push_back(T incoming_node_id)
     {
         std::uint64_t node_id = static_cast<std::uint64_t>(incoming_node_id);
@@ -102,14 +116,14 @@ template <typename T, bool UseSharedMemory> class PackedVector
         if (left_index == 0)
         {
             // ID is at the far left side of this element
-            return static_cast<T>(elem >> (ELEMSIZE - BITSIZE));
+            return T{elem >> (ELEMSIZE - BITSIZE)};
         }
         else if (left_index >= BITSIZE)
         {
             // ID is entirely contained within this element
             const std::uint64_t at_right = elem >> (left_index - BITSIZE);
             const std::uint64_t left_mask = static_cast<std::uint64_t>(pow(2, BITSIZE)) - 1;
-            return static_cast<T>(at_right & left_mask);
+            return T{at_right & left_mask};
         }
         else
         {
@@ -121,7 +135,7 @@ template <typename T, bool UseSharedMemory> class PackedVector
             const std::uint64_t next_elem = static_cast<std::uint64_t>(vec.at(index + 1));
 
             const std::uint64_t right_side = next_elem >> (ELEMSIZE - (BITSIZE - left_index));
-            return static_cast<T>(left_side | right_side);
+            return T{left_side | right_side};
         }
     }
 
@@ -130,14 +144,14 @@ template <typename T, bool UseSharedMemory> class PackedVector
     template <bool enabled = UseSharedMemory>
     void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
     {
-        vec.reserve(PackedVectorSize(capacity));
+        vec.reserve(elements_to_blocks(capacity));
     }
 
     template <bool enabled = UseSharedMemory>
-    void reset(typename std::enable_if<enabled, T>::type *ptr,
+    void reset(typename std::enable_if<enabled, std::uint64_t>::type *ptr,
                typename std::enable_if<enabled, std::size_t>::type size)
     {
-        vec.reset(reinterpret_cast<std::uint64_t *>(ptr), size);
+        vec.reset(ptr, size);
     }
 
     template <bool enabled = UseSharedMemory>
@@ -146,7 +160,10 @@ template <typename T, bool UseSharedMemory> class PackedVector
         num_elements = count;
     }
 
-    std::size_t capacity() const { return PackedVectorCapacity(vec.capacity()); }
+    std::size_t capacity() const
+    {
+        return std::floor(static_cast<double>(vec.capacity()) * ELEMSIZE / BITSIZE);
+    }
 
   private:
     typename util::ShM<std::uint64_t, UseSharedMemory>::vector vec;

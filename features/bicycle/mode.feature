@@ -46,14 +46,17 @@ Feature: Bike - Mode flag
 
      Scenario: Bike - Mode when pushing bike against oneways
      	Given the node map
-     	 | a | b |   |
-     	 |   | c | d |
+     	 | a | b | e |
+     	 | f | c | d |
 
      	And the ways
      	 | nodes | highway | oneway |
      	 | ab    | primary |        |
      	 | bc    | primary | yes    |
      	 | cd    | primary |        |
+     	 | be    | primary |        |
+     	 | cf    | primary |        |
+
 
      	When I route I should get
      	 | from | to | route       | modes                                |

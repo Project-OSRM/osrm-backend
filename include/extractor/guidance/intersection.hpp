@@ -22,6 +22,7 @@ struct TurnOperation final
     EdgeID eid;
     double angle;
     TurnInstruction instruction;
+    LaneDataID lane_data_id;
 };
 
 // A Connected Road is the internal representation of a potential turn. Internally, we require
@@ -58,6 +59,9 @@ struct ConnectedRoad final
 std::string toString(const ConnectedRoad &road);
 
 typedef std::vector<ConnectedRoad> Intersection;
+
+Intersection::const_iterator findClosestTurn(const Intersection &intersection, const double angle);
+Intersection::iterator findClosestTurn(Intersection &intersection, const double angle);
 
 } // namespace guidance
 } // namespace extractor

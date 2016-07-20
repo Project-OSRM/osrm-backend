@@ -5,6 +5,8 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/guidance/turn_lanes.hpp"
+#include "util/typedefs.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
@@ -20,10 +22,12 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace osrm
 {
@@ -32,7 +36,12 @@ namespace extractor
 namespace guidance
 {
 
+using util::guidance::LaneTupelIdPair;
+using LaneDataIdMap = std::unordered_map<LaneTupelIdPair, LaneDataID, boost::hash<LaneTupelIdPair>>;
+
 using util::guidance::angularDeviation;
+using util::guidance::entersRoundabout;
+using util::guidance::leavesRoundabout;
 
 namespace detail
 {
@@ -405,10 +414,10 @@ inline bool requiresNameAnnounced(const std::string &from,
         (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
     const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
 
-    const auto obvious_change = (names_are_empty && refs_are_empty) ||
-                                (names_are_equal && ref_is_contained) ||
-                                (names_are_equal && refs_are_empty) || name_is_removed ||
-                                ref_is_removed || is_suffix_change;
+    const auto obvious_change =
+        (names_are_empty && refs_are_empty) || (names_are_equal && ref_is_contained) ||
+        (names_are_equal && refs_are_empty) || (ref_is_contained && name_is_removed) ||
+        (names_are_equal && ref_is_removed) || is_suffix_change;
 
     return !obvious_change;
 }
@@ -454,6 +463,74 @@ inline ConnectedRoad mirror(ConnectedRoad road)
             mirrored_modifiers[road.turn.instruction.direction_modifier];
     }
     return road;
+}
+
+inline bool hasRoundaboutType(const TurnInstruction instruction)
+{
+    using namespace extractor::guidance::TurnType;
+    const constexpr TurnType::Enum valid_types[] = {TurnType::EnterRoundabout,
+                                                    TurnType::EnterAndExitRoundabout,
+                                                    TurnType::EnterRotary,
+                                                    TurnType::EnterAndExitRotary,
+                                                    TurnType::EnterRoundaboutIntersection,
+                                                    TurnType::EnterAndExitRoundaboutIntersection,
+                                                    TurnType::EnterRoundaboutAtExit,
+                                                    TurnType::ExitRoundabout,
+                                                    TurnType::EnterRotaryAtExit,
+                                                    TurnType::ExitRotary,
+                                                    TurnType::EnterRoundaboutIntersectionAtExit,
+                                                    TurnType::ExitRoundaboutIntersection,
+                                                    TurnType::StayOnRoundabout};
+    const auto valid_end = valid_types + 13;
+    return std::find(valid_types, valid_end, instruction.type) != valid_end;
+}
+
+// Public service vehicle lanes and similar can introduce additional lanes into the lane string that
+// are not specifically marked for left/right turns. This function can be used from the profile to
+// trim the lane string appropriately
+//
+// left|throught|
+// in combination with lanes:psv:forward=1
+// will be corrected to left|throught, since the final lane is not drivable.
+// This is in contrast to a situation with lanes:psv:forward=0 (or not set) where left|through|
+// represents left|through|through
+inline std::string
+trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t count_right)
+{
+    if (count_left)
+    {
+        bool sane = count_left < static_cast<std::int32_t>(lane_string.size());
+        for (std::int32_t i = 0; i < count_left; ++i)
+            // this is adjusted for our fake pipe. The moment cucumber can handle multiple escaped
+            // pipes, the '&' part can be removed
+            if (lane_string[i] != '|' && lane_string[i] != '&')
+            {
+                sane = false;
+                break;
+            }
+
+        if (sane)
+        {
+            lane_string.erase(lane_string.begin(), lane_string.begin() + count_left);
+        }
+    }
+    if (count_right)
+    {
+        bool sane = count_right < static_cast<std::int32_t>(lane_string.size());
+        for (auto itr = lane_string.rbegin();
+             itr != lane_string.rend() && itr != lane_string.rbegin() + count_right;
+             ++itr)
+        {
+            if (*itr != '|' && *itr != '&')
+            {
+                sane = false;
+                break;
+            }
+        }
+        if (sane)
+            lane_string.resize(lane_string.size() - count_right);
+    }
+    return lane_string;
 }
 
 } // namespace guidance

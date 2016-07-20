@@ -3,6 +3,8 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/travel_mode.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
@@ -14,6 +16,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/optional.hpp>
@@ -34,14 +37,13 @@ std::pair<short, short> getIntermediateBearings(const LegGeometry &leg_geometry,
                                                 const std::size_t segment_index);
 } // ns detail
 
-template <typename DataFacadeT>
-std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
-                                     const std::vector<PathData> &leg_data,
-                                     const LegGeometry &leg_geometry,
-                                     const PhantomNode &source_node,
-                                     const PhantomNode &target_node,
-                                     const bool source_traversed_in_reverse,
-                                     const bool target_traversed_in_reverse)
+inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &facade,
+                                            const std::vector<PathData> &leg_data,
+                                            const LegGeometry &leg_geometry,
+                                            const PhantomNode &source_node,
+                                            const PhantomNode &target_node,
+                                            const bool source_traversed_in_reverse,
+                                            const bool target_traversed_in_reverse)
 {
     const double constexpr ZERO_DURATION = 0., ZERO_DISTANCE = 0.;
     const constexpr char *NO_ROTARY_NAME = "";
@@ -70,7 +72,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                           bearings.second,
                           extractor::guidance::TurnInstruction::NO_TURN(),
                           WaypointType::Depart,
-                          0};
+                          0,
+                          util::guidance::LaneTupel(),
+                          {}};
     Intersection intersection{source_node.location,
                               std::vector<short>({bearings.second}),
                               std::vector<bool>({true}),
@@ -147,7 +151,11 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                             bearings.second,
                             path_point.turn_instruction,
                             WaypointType::None,
-                            0};
+                            0,
+                            path_point.lane_data.first,
+                            (path_point.lane_data.second != INVALID_LANE_DESCRIPTIONID
+                                 ? facade.GetTurnDescription(path_point.lane_data.second)
+                                 : extractor::guidance::TurnLaneDescription())};
                 segment_index++;
                 segment_duration = 0;
             }
@@ -202,7 +210,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
                 bearings.second,
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 WaypointType::Arrive,
-                0};
+                0,
+                util::guidance::LaneTupel(),
+                {}};
     intersection = {
         target_node.location,
         std::vector<short>({static_cast<short>(util::bearing::reverseBearing(bearings.first))}),
@@ -233,6 +243,9 @@ std::vector<RouteStep> assembleSteps(const DataFacadeT &facade,
     BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
     BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
     BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
+    BOOST_ASSERT(steps.back().maneuver.lanes.lanes_in_turn == 0);
+    BOOST_ASSERT(steps.back().maneuver.lanes.first_lane_from_the_right == INVALID_LANEID);
+    BOOST_ASSERT(steps.back().maneuver.lane_description.empty());
     return steps;
 }
 

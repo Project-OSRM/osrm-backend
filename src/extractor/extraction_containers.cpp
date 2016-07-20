@@ -6,6 +6,7 @@
 
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
+#include "util/io.hpp"
 #include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
@@ -25,6 +26,8 @@
 
 namespace
 {
+namespace oe = osrm::extractor;
+
 // Needed for STXXL comparison - STXXL requires max_value(), min_value(), so we can not use
 // std::less<OSMNodeId>{}. Anonymous namespace to keep translation unit local.
 struct OSMNodeIDSTXXLLess
@@ -34,6 +37,69 @@ struct OSMNodeIDSTXXLLess
     value_type max_value() { return MAX_OSM_NODEID; }
     value_type min_value() { return MIN_OSM_NODEID; }
 };
+
+struct CmpEdgeByOSMStartID
+{
+    using value_type = oe::InternalExtractorEdge;
+    bool operator()(const value_type &lhs, const value_type &rhs) const
+    {
+        return lhs.result.osm_source_id < rhs.result.osm_source_id;
+    }
+
+    value_type max_value() { return value_type::max_osm_value(); }
+    value_type min_value() { return value_type::min_osm_value(); }
+};
+
+struct CmpEdgeByOSMTargetID
+{
+    using value_type = oe::InternalExtractorEdge;
+    bool operator()(const value_type &lhs, const value_type &rhs) const
+    {
+        return lhs.result.osm_target_id < rhs.result.osm_target_id;
+    }
+
+    value_type max_value() { return value_type::max_osm_value(); }
+    value_type min_value() { return value_type::min_osm_value(); }
+};
+
+struct CmpEdgeByInternalSourceTargetAndName
+{
+    using value_type = oe::InternalExtractorEdge;
+    bool operator()(const value_type &lhs, const value_type &rhs) const
+    {
+        if (lhs.result.source != rhs.result.source)
+            return lhs.result.source < rhs.result.source;
+
+        if (lhs.result.target != rhs.result.target)
+            return lhs.result.target < rhs.result.target;
+
+        if (lhs.result.source == SPECIAL_NODEID)
+            return false;
+
+        if (lhs.result.name_id == rhs.result.name_id)
+            return false;
+
+        if (lhs.result.name_id == EMPTY_NAMEID)
+            return false;
+
+        if (rhs.result.name_id == EMPTY_NAMEID)
+            return true;
+
+        BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
+        const oe::ExtractionContainers::STXXLNameCharData::const_iterator data = name_data.begin();
+        return std::lexicographical_compare(data + name_offsets[lhs.result.name_id],
+                                            data + name_offsets[lhs.result.name_id + 1],
+                                            data + name_offsets[rhs.result.name_id],
+                                            data + name_offsets[rhs.result.name_id + 1]);
+    }
+
+    value_type max_value() { return value_type::max_internal_value(); }
+    value_type min_value() { return value_type::min_internal_value(); }
+
+    const oe::ExtractionContainers::STXXLNameCharData &name_data;
+    const oe::ExtractionContainers::STXXLNameOffsets &name_offsets;
+};
+
 }
 
 namespace osrm
@@ -47,10 +113,18 @@ ExtractionContainers::ExtractionContainers()
 {
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
-    // Insert three empty strings for name, destination and pronunciation
-    name_lengths.push_back(0);
-    name_lengths.push_back(0);
-    name_lengths.push_back(0);
+
+    // Insert three empty strings offsets for name, destination and pronunciation
+    name_offsets.push_back(0);
+    name_offsets.push_back(0);
+    name_offsets.push_back(0);
+    // Insert the total length sentinel (corresponds to the next name string offset)
+    name_offsets.push_back(0);
+
+    // the offsets have to be initialized with two values, since we have the empty turn string for
+    // the first id
+    turn_lane_offsets.push_back(0);
+    turn_lane_offsets.push_back(0);
 }
 
 /**
@@ -66,6 +140,7 @@ ExtractionContainers::ExtractionContainers()
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
+                                       const std::string &turn_lane_file_name,
                                        lua_State *segment_state)
 {
     try
@@ -83,7 +158,8 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteNames(name_file_name);
+        WriteCharData(name_file_name);
+        WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
     }
     catch (const std::exception &e)
     {
@@ -91,24 +167,55 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     }
 }
 
-void ExtractionContainers::WriteNames(const std::string &names_file_name) const
+void ExtractionContainers::WriteTurnLaneMasks(
+    const std::string &file_name,
+    const stxxl::vector<std::uint32_t> &offsets,
+    const stxxl::vector<guidance::TurnLaneType::Mask> &masks) const
 {
-    std::cout << "[extractor] writing street name index ... " << std::flush;
-    TIMER_START(write_name_index);
-    boost::filesystem::ofstream name_file_stream(names_file_name, std::ios::binary);
+    util::SimpleLogger().Write() << "Writing turn lane masks...";
+    TIMER_START(turn_lane_timer);
 
-    unsigned total_length = 0;
+    std::ofstream ofs(file_name, std::ios::binary);
 
-    for (const auto name_length : name_lengths)
+    if (!util::serializeVector(ofs, offsets))
     {
-        total_length += name_length;
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
     }
 
-    // builds and writes the index
-    util::RangeTable<> name_index_range(name_lengths);
-    name_file_stream << name_index_range;
+    if (!util::serializeVector(ofs, masks))
+    {
+        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
+        return;
+    }
 
-    name_file_stream.write((char *)&total_length, sizeof(unsigned));
+    TIMER_STOP(turn_lane_timer);
+    util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
+}
+
+void ExtractionContainers::WriteCharData(const std::string &file_name)
+{
+    std::cout << "[extractor] writing street name index ... " << std::flush;
+    TIMER_START(write_index);
+    boost::filesystem::ofstream file_stream(file_name, std::ios::binary);
+
+    // transforms in-place name offsets to name lengths
+    BOOST_ASSERT(!name_offsets.empty());
+    for (auto curr = name_offsets.begin(), next = name_offsets.begin() + 1;
+         next != name_offsets.end(); ++curr, ++next)
+    {
+        *curr = *next - *curr;
+    }
+
+    // removes the total length sentinel
+    unsigned total_length = name_offsets.back();
+    name_offsets.pop_back();
+
+    // builds and writes the index
+    util::RangeTable<> index_range(name_offsets);
+    file_stream << index_range;
+
+    file_stream.write((char *)&total_length, sizeof(unsigned));
 
     // write all chars consecutively
     char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
@@ -120,15 +227,15 @@ void ExtractionContainers::WriteNames(const std::string &names_file_name) const
 
         if (buffer_len >= WRITE_BLOCK_BUFFER_SIZE)
         {
-            name_file_stream.write(write_buffer, WRITE_BLOCK_BUFFER_SIZE);
+            file_stream.write(write_buffer, WRITE_BLOCK_BUFFER_SIZE);
             buffer_len = 0;
         }
     }
 
-    name_file_stream.write(write_buffer, buffer_len);
+    file_stream.write(write_buffer, buffer_len);
 
-    TIMER_STOP(write_name_index);
-    std::cout << "ok, after " << TIMER_SEC(write_name_index) << "s" << std::endl;
+    TIMER_STOP(write_index);
+    std::cout << "ok, after " << TIMER_SEC(write_index) << "s" << std::endl;
 }
 
 void ExtractionContainers::PrepareNodes()
@@ -167,7 +274,7 @@ void ExtractionContainers::PrepareNodes()
     // handle > uint32_t actual usable nodes.  This should be OK for a while
     // because we usually route on a *lot* less than 2^32 of the OSM
     // graph nodes.
-    std::size_t internal_id = 0;
+    std::uint64_t internal_id = 0;
 
     // compute the intersection of nodes that were referenced and nodes we actually have
     while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
@@ -308,9 +415,9 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
         BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
         BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
         BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
-                     util::FixedLatitude(std::numeric_limits<int>::min()));
+                     util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
         BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
-                     util::FixedLongitude(std::numeric_limits<int>::min()));
+                     util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
 
         const double distance = util::coordinate_calculation::greatCircleDistance(
             edge_iterator->source_coordinate,
@@ -380,7 +487,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     TIMER_START(sort_edges_by_renumbered_start);
     stxxl::sort(all_edges_list.begin(),
                 all_edges_list.end(),
-                CmpEdgeByInternalStartThenInternalTargetID(),
+                CmpEdgeByInternalSourceTargetAndName{name_char_data, name_offsets},
                 stxxl_memory);
     TIMER_STOP(sort_edges_by_renumbered_start);
     std::cout << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s" << std::endl;
@@ -417,11 +524,13 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
                 all_edges_list[i].result.weight < min_forward_weight)
             {
                 min_forward_idx = i;
+                min_forward_weight = all_edges_list[i].result.weight;
             }
             if (all_edges_list[i].result.backward &&
                 all_edges_list[i].result.weight < min_backward_weight)
             {
                 min_backward_idx = i;
+                min_backward_weight = all_edges_list[i].result.weight;
             }
 
             // this also increments the outer loop counter!
@@ -479,11 +588,11 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
     std::cout << "[extractor] Writing used edges       ... " << std::flush;
     TIMER_START(write_edges);
     // Traverse list of edges and nodes in parallel and set target coord
-    std::size_t used_edges_counter = 0;
-    unsigned used_edges_counter_buffer = 0;
+    std::uint64_t used_edges_counter = 0;
+    std::uint32_t used_edges_counter_buffer = 0;
 
     auto start_position = file_out_stream.tellp();
-    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(unsigned));
+    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(used_edges_counter_buffer));
 
     for (const auto &edge : all_edges_list)
     {
@@ -508,10 +617,10 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
 
     std::cout << "[extractor] setting number of edges   ... " << std::flush;
 
-    used_edges_counter_buffer = boost::numeric_cast<unsigned>(used_edges_counter);
+    used_edges_counter_buffer = boost::numeric_cast<std::uint32_t>(used_edges_counter);
 
     file_out_stream.seekp(start_position);
-    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(unsigned));
+    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(used_edges_counter_buffer));
     std::cout << "ok" << std::endl;
 
     util::SimpleLogger().Write() << "Processed " << used_edges_counter << " edges";
@@ -616,14 +725,14 @@ void ExtractionContainers::PrepareRestrictions()
            restrictions_iterator != restrictions_list_end)
     {
         if (way_start_and_end_iterator->way_id <
-            OSMWayID(restrictions_iterator->restriction.from.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
         {
             ++way_start_and_end_iterator;
             continue;
         }
 
         if (way_start_and_end_iterator->way_id >
-            OSMWayID(restrictions_iterator->restriction.from.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
         {
             util::SimpleLogger().Write(LogLevel::logWARNING)
                 << "Restriction references invalid way: "
@@ -634,9 +743,9 @@ void ExtractionContainers::PrepareRestrictions()
         }
 
         BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID(restrictions_iterator->restriction.from.way));
+                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
         // we do not remap the via id yet, since we will need it for the to node as well
-        const OSMNodeID via_node_id = OSMNodeID(restrictions_iterator->restriction.via.node);
+        const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
         // check if via is actually valid, if not invalidate
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
@@ -650,11 +759,11 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
 
-        if (OSMNodeID(way_start_and_end_iterator->first_segment_source_id) == via_node_id)
+        if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
         {
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
+                way_start_and_end_iterator->first_segment_target_id);
             if (id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)
@@ -667,11 +776,11 @@ void ExtractionContainers::PrepareRestrictions()
             }
             restrictions_iterator->restriction.from.node = id_iter->second;
         }
-        else if (OSMNodeID(way_start_and_end_iterator->last_segment_target_id) == via_node_id)
+        else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
         {
             // assign new from node id
             auto id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
+                way_start_and_end_iterator->last_segment_source_id);
             if (id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)
@@ -710,7 +819,7 @@ void ExtractionContainers::PrepareRestrictions()
            restrictions_iterator != restrictions_list_end_)
     {
         if (way_start_and_end_iterator->way_id <
-            OSMWayID(restrictions_iterator->restriction.to.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
         {
             ++way_start_and_end_iterator;
             continue;
@@ -722,7 +831,7 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
         if (way_start_and_end_iterator->way_id >
-            OSMWayID(restrictions_iterator->restriction.to.way))
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
         {
             util::SimpleLogger().Write(LogLevel::logDEBUG)
                 << "Restriction references invalid way: "
@@ -732,18 +841,18 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
         BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID(restrictions_iterator->restriction.to.way));
-        const OSMNodeID via_node_id = OSMNodeID(restrictions_iterator->restriction.via.node);
+                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
+        const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
         // assign new via node id
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
         BOOST_ASSERT(via_id_iter != external_to_internal_node_id_map.end());
         restrictions_iterator->restriction.via.node = via_id_iter->second;
 
-        if (OSMNodeID(way_start_and_end_iterator->first_segment_source_id) == via_node_id)
+        if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->first_segment_target_id));
+                way_start_and_end_iterator->first_segment_target_id);
             if (to_id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)
@@ -756,10 +865,10 @@ void ExtractionContainers::PrepareRestrictions()
             }
             restrictions_iterator->restriction.to.node = to_id_iter->second;
         }
-        else if (OSMNodeID(way_start_and_end_iterator->last_segment_target_id) == via_node_id)
+        else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
         {
             auto to_id_iter = external_to_internal_node_id_map.find(
-                OSMNodeID(way_start_and_end_iterator->last_segment_source_id));
+                way_start_and_end_iterator->last_segment_source_id);
             if (to_id_iter == external_to_internal_node_id_map.end())
             {
                 util::SimpleLogger().Write(LogLevel::logWARNING)

@@ -19,16 +19,16 @@ namespace util
 
 bool Coordinate::IsValid() const
 {
-    return !(lat > FixedLatitude(90 * COORDINATE_PRECISION) ||
-             lat < FixedLatitude(-90 * COORDINATE_PRECISION) ||
-             lon > FixedLongitude(180 * COORDINATE_PRECISION) ||
-             lon < FixedLongitude(-180 * COORDINATE_PRECISION));
+    return !(lat > FixedLatitude{static_cast<std::int32_t>(90 * COORDINATE_PRECISION)} ||
+             lat < FixedLatitude{static_cast<std::int32_t>(-90 * COORDINATE_PRECISION)} ||
+             lon > FixedLongitude{static_cast<std::int32_t>(180 * COORDINATE_PRECISION)} ||
+             lon < FixedLongitude{static_cast<std::int32_t>(-180 * COORDINATE_PRECISION)});
 }
 
 bool FloatCoordinate::IsValid() const
 {
-    return !(lat > FloatLatitude(90) || lat < FloatLatitude(-90) || lon > FloatLongitude(180) ||
-             lon < FloatLongitude(-180));
+    return !(lat > FloatLatitude{90} || lat < FloatLatitude{-90} || lon > FloatLongitude{180} ||
+             lon < FloatLongitude{-180});
 }
 
 bool operator==(const Coordinate lhs, const Coordinate rhs)

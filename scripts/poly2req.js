@@ -2,7 +2,7 @@
 
 'use strict';
 
-let fs = require('fs');
+let fs = require('fs');  // Node 4.x required!
 
 let VERSION = "route_5.0";
 let SAMPLE_SIZE = 20;

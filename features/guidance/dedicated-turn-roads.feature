@@ -57,20 +57,21 @@ Feature: Slipways and Dedicated Turn Lanes
 
     Scenario: Inner city expressway with on road
         Given the node map
-            | a | b |   |   |   | c |
-            |   |   |   |   | f |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   | d |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   | e |
+            | a | b |   |   |   | c | g |
+            |   |   |   |   | f |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   | d |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   | e |   |
 
         And the ways
             | nodes | highway      | name  |
             | abc   | primary      | road  |
+            | cg    | primary      | road  |
             | bfd   | trunk_link   |       |
             | cde   | trunk        | trunk |
 
@@ -123,3 +124,46 @@ Feature: Slipways and Dedicated Turn Lanes
        When I route I should get
             | waypoints | route          | turns                        |
             | a,f       | road,road,road | depart,continue uturn,arrive |
+
+    Scenario: Schwarzwaldstrasse Autobahn
+        Given the node map
+            |   |   |   |   | i |   |   |   |   |   | h |   |   |   |   | g |
+            |   |   | j |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            | a |   |   |   |   |   |   | k |   |   |   |   |   |   |   |   |
+            |   |   |   | b |   | r | c |   | d |   | e |   |   |   |   | f |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | l |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | m |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | n |   | q |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | o |   | p |   |   |   |   |   |   |   |
+
+        And the nodes
+            # the traffic light at `l` is not actually in the data, but necessary for the test to check everything
+            # http://www.openstreetmap.org/#map=19/48.99211/8.40336
+            | node | highway         |
+            | r    | traffic_signals |
+            | l    | traffic_signals |
+
+        And the ways
+            | nodes | highway        | name               | ref  | oneway |
+            | abrcd | secondary      | Schwarzwaldstrasse | L561 | yes    |
+            | hija  | secondary      | Schwarzwaldstrasse | L561 | yes    |
+            | def   | secondary      | Ettlinger Strasse  |      | yes    |
+            | gh    | secondary      | Ettlinger Strasse  |      | yes    |
+            | blmn  | secondary_link |                    | L561 | yes    |
+            | hkc   | secondary_link | Ettlinger Strasse  |      | yes    |
+            | qdki  | secondary_link | Ettlinger Allee    |      | yes    |
+            | cn    | secondary_link | Ettlinger Allee    |      | yes    |
+            | no    | primary        | Ettlinger Allee    |      | yes    |
+            | pq    | primary        | Ettlinger Allee    |      | yes    |
+            | qe    | secondary_link | Ettlinger Allee    |      | yes    |
+
+        When I route I should get
+            | waypoints | route                                                     | turns                    |
+            | a,o       | Schwarzwaldstrasse (L561),Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive |

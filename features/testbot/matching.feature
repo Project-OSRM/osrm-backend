@@ -128,3 +128,21 @@ Feature: Basic Map Matching
             | trace | matchings | OSM IDs               |
             | abeh  | abcedgh   | 1,2,3,2,3,4,5,4,5,6,7 |
             | abci  | abc,ci    | 1,2,3,2,3,8,3,8       |
+
+    Scenario: Testbot - Geometry details
+        Given the query options
+            | overview   | full     |
+            | geometries | polyline |
+
+        Given the node map
+            | a | b | c |
+            |   | d |   |
+
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+            | bd    | no     |
+
+        When I match I should get
+            | trace | matchings | geometry                                |
+            | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |

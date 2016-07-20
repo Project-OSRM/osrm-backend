@@ -49,6 +49,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
     {
         std::string request_string;
         util::URIDecode(current_request.uri, request_string);
+        util::SimpleLogger().Write(logDEBUG) << "req: " << request_string;
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
@@ -105,11 +106,10 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         else
         {
             BOOST_ASSERT(result.is<std::string>());
-            current_reply.content.resize(current_reply.content.size() +
-                                         result.get<std::string>().size());
+            current_reply.content.resize(result.get<std::string>().size());
             std::copy(result.get<std::string>().cbegin(),
                       result.get<std::string>().cend(),
-                      current_reply.content.end());
+                      current_reply.content.begin());
 
             current_reply.headers.emplace_back("Content-Type", "application/x-protobuf");
         }

@@ -7,6 +7,8 @@
 #include <limits>
 #include <string>
 
+#include "extractor/guidance/toolkit.hpp"
+
 namespace osrm
 {
 namespace extractor
@@ -97,6 +99,12 @@ inline unsigned parseDuration(const std::string &s)
     boost::spirit::qi::parse(iter, s.end(), iso_8601_grammar, duration);
 
     return !s.empty() && iter == s.end() ? duration : std::numeric_limits<unsigned>::max();
+}
+
+inline std::string
+trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t count_right)
+{
+    return extractor::guidance::trimLaneString(std::move(lane_string), count_left, count_right);
 }
 }
 }

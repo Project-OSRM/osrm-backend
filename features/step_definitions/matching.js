@@ -1,5 +1,6 @@
 var util = require('util');
 var d3 = require('d3-queue');
+var polyline = require('polyline');
 
 module.exports = function () {
     this.When(/^I match I should get$/, (table, callback) => {
@@ -35,6 +36,7 @@ module.exports = function () {
                         route = '',
                         duration = '',
                         annotation = '',
+                        geometry = '',
                         OSMIDs = '';
 
 
@@ -63,6 +65,11 @@ module.exports = function () {
                             annotation = this.annotationList(json.matchings[0]);
                         }
 
+                        if (headers.has('geometry')) {
+                            if (json.matchings.length != 1) throw new Error('*** Checking geometry only supported for matchings with one subtrace');
+                            geometry = json.matchings[0].geometry;
+                        }
+
                         if (headers.has('OSM IDs')) {
                             if (json.matchings.length != 1) throw new Error('*** CHecking annotation only supported for matchings with one subtrace');
                             OSMIDs = this.OSMIDList(json.matchings[0]);
@@ -83,6 +90,13 @@ module.exports = function () {
 
                     if (headers.has('annotation')) {
                         got.annotation = annotation.toString();
+                    }
+
+                    if (headers.has('geometry')) {
+                        if (this.queryParams['geometries'] === 'polyline')
+                            got.geometry = polyline.decode(geometry).toString();
+                        else
+                            got.geometry = geometry;
                     }
 
                     if (headers.has('OSM IDs')) {

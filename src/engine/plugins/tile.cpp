@@ -128,7 +128,7 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
     for (auto const &pt : geo_line)
     {
         double px_merc = pt.x * util::web_mercator::DEGREE_TO_PX;
-        double py_merc = util::web_mercator::latToY(util::FloatLatitude(pt.y)) *
+        double py_merc = util::web_mercator::latToY(util::FloatLatitude{pt.y}) *
                          util::web_mercator::DEGREE_TO_PX;
         // convert lon/lat to tile coordinates
         const auto px = std::round(
@@ -174,8 +174,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     util::web_mercator::xyzToWGS84(
         parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
 
-    util::Coordinate southwest{util::FloatLongitude(min_lon), util::FloatLatitude(min_lat)};
-    util::Coordinate northeast{util::FloatLongitude(max_lon), util::FloatLatitude(max_lat)};
+    util::Coordinate southwest{util::FloatLongitude{min_lon}, util::FloatLatitude{min_lat}};
+    util::Coordinate northeast{util::FloatLongitude{max_lon}, util::FloatLatitude{max_lat}};
 
     // Fetch all the segments that are in our bounding box.
     // This hits the OSRM StaticRTree
@@ -184,6 +184,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     std::vector<int> used_weights;
     std::unordered_map<int, std::size_t> weight_offsets;
     uint8_t max_datasource_id = 0;
+    std::vector<std::string> names;
+    std::unordered_map<std::string, std::size_t> name_offsets;
 
     // Loop over all edges once to tally up all the attributes we'll need.
     // We need to do this so that we know the attribute offsets to use
@@ -237,6 +239,14 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         // data to the layer attribute values
         max_datasource_id = std::max(max_datasource_id, forward_datasource);
         max_datasource_id = std::max(max_datasource_id, reverse_datasource);
+
+        std::string name = facade.GetNameForID(edge.name_id);
+
+        if (name_offsets.find(name) == name_offsets.end())
+        {
+            names.push_back(name);
+            name_offsets[name] = names.size() - 1;
+        }
     }
 
     // TODO: extract speed values for compressed and uncompressed geometries
@@ -279,6 +289,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 uint8_t forward_datasource = 0;
                 uint8_t reverse_datasource = 0;
 
+                std::string name = facade.GetNameForID(edge.name_id);
+
                 if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
                 {
                     std::vector<EdgeWeight> forward_weight_vector;
@@ -316,13 +328,17 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 max_datasource_id = std::max(max_datasource_id, forward_datasource);
                 max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
-                const auto encode_tile_line = [&layer_writer, &edge, &id, &max_datasource_id](
-                    const detail::FixedLine &tile_line,
-                    const std::uint32_t speed_kmh,
-                    const std::size_t duration,
-                    const std::uint8_t datasource,
-                    std::int32_t &start_x,
-                    std::int32_t &start_y) {
+                const auto encode_tile_line = [&layer_writer,
+                                               &edge,
+                                               &id,
+                                               &max_datasource_id,
+                                               &used_weights](const detail::FixedLine &tile_line,
+                                                              const std::uint32_t speed_kmh,
+                                                              const std::size_t duration,
+                                                              const std::uint8_t datasource,
+                                                              const std::size_t name,
+                                                              std::int32_t &start_x,
+                                                              std::int32_t &start_y) {
                     // Here, we save the two attributes for our feature: the speed and the
                     // is_small
                     // boolean.  We onl serve up speeds from 0-139, so all we do is save the
@@ -356,6 +372,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         field.add_element(3);                // "duration" tag key offset
                         field.add_element(130 + max_datasource_id + 1 +
                                           duration); // duration value offset
+                        field.add_element(4);        // "name" tag key offset
+
+                        field.add_element(130 + max_datasource_id + 1 + used_weights.size() +
+                                          name); // name value offset
                     }
                     {
 
@@ -383,6 +403,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                                          speed_kmh,
                                          weight_offsets[forward_weight],
                                          forward_datasource,
+                                         name_offsets[name],
                                          start_x,
                                          start_y);
                     }
@@ -406,6 +427,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                                          speed_kmh,
                                          weight_offsets[reverse_weight],
                                          reverse_datasource,
+                                         name_offsets[name],
                                          start_x,
                                          start_y);
                     }
@@ -420,6 +442,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         layer_writer.add_string(util::vector_tile::KEY_TAG, "is_small");
         layer_writer.add_string(util::vector_tile::KEY_TAG, "datasource");
         layer_writer.add_string(util::vector_tile::KEY_TAG, "duration");
+        layer_writer.add_string(util::vector_tile::KEY_TAG, "name");
 
         // Now, we write out the possible speed value arrays and possible is_tiny
         // values.  Field type 4 is the "values" field.  It's a variable type field,
@@ -457,6 +480,14 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
             // Durations come out of OSRM in integer deciseconds, so we convert them
             // to seconds with a simple /10 for display
             values_writer.add_double(util::vector_tile::VARIANT_TYPE_DOUBLE, weight / 10.);
+        }
+
+        for (const auto &name : names)
+        {
+            // Writing field type 4 == variant type
+            protozero::pbf_writer values_writer(layer_writer, util::vector_tile::VARIANT_TAG);
+            // Attribute value 1 == string type
+            values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING, name);
         }
     }
 

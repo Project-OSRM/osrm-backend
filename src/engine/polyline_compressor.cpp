@@ -116,8 +116,8 @@ std::vector<util::Coordinate> decodePolyline(const std::string &geometry_string)
         lng += dlng;
 
         util::Coordinate p;
-        p.lat = util::FixedLatitude(lat * detail::POLYLINE_TO_COORDINATE);
-        p.lon = util::FixedLongitude(lng * detail::POLYLINE_TO_COORDINATE);
+        p.lat = util::FixedLatitude{static_cast<std::int32_t>(lat * detail::POLYLINE_TO_COORDINATE)};
+        p.lon = util::FixedLongitude{static_cast<std::int32_t>(lng * detail::POLYLINE_TO_COORDINATE)};
         new_coordinates.push_back(p);
     }
 

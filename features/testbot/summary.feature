@@ -29,7 +29,7 @@ Feature: Basic Routing
     Scenario: Check handling empty values
         Given the node map
             | a | b |  | c |   | d | f |
-            |   |   |  |   |   | e |
+            |   |   |  |   |   | e |   |
 
         And the ways
             | nodes | name |
