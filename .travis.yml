@@ -15,8 +15,8 @@ branches:
     - master
 
 cache:
+  ccache: true
   directories:
-    - $HOME/.ccache
     - test/cache
 
 env:
