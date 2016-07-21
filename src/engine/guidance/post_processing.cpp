@@ -9,6 +9,7 @@
 #include "util/guidance/turn_lanes.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 
 #include <algorithm>
@@ -912,8 +913,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             designated_depart.maneuver.instruction = TurnInstruction::NO_TURN();
             // we need to make this conform with the intersection format for the first intersection
             auto &first_intersection = designated_depart.intersections.front();
-            designated_depart.maneuver.lanes = util::guidance::LaneTupel();
-            designated_depart.maneuver.lane_description.clear();
+            designated_depart.intersections.front().lanes = util::guidance::LaneTupel();
+            designated_depart.intersections.front().lane_description.clear();
             first_intersection.bearings = {first_intersection.bearings[first_intersection.out]};
             first_intersection.entry = {true};
             first_intersection.in = Intersection::NO_INDEX;
@@ -980,8 +981,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.maneuver.waypoint_type = WaypointType::Arrive;
         next_to_last_step.maneuver.instruction = TurnInstruction::NO_TURN();
         next_to_last_step.maneuver.bearing_after = 0;
-        next_to_last_step.maneuver.lanes = util::guidance::LaneTupel();
-        next_to_last_step.maneuver.lane_description.clear();
+        next_to_last_step.intersections.front().lanes = util::guidance::LaneTupel();
+        next_to_last_step.intersections.front().lane_description.clear();
         BOOST_ASSERT(next_to_last_step.intersections.size() == 1);
         auto &last_intersection = next_to_last_step.intersections.back();
         last_intersection.bearings = {last_intersection.bearings[last_intersection.in]};
@@ -1178,7 +1179,7 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
                 return false;
 
             const auto lane_to_the_right = lanes.first_lane_from_the_right + lanes.lanes_in_turn;
-            if (lane_to_the_right < lane_description.size() &&
+            if (lane_to_the_right < boost::numeric_cast<int>(lane_description.size()) &&
                 containsTag(*(lane_description.rbegin() + lane_to_the_right),
                             (extractor::guidance::TurnLaneType::straight |
                              extractor::guidance::TurnLaneType::none)))
@@ -1191,7 +1192,8 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
     {
         const auto &step = steps[step_index];
         if (step.maneuver.instruction.type == TurnType::UseLane &&
-            canCollapeUseLane(step.maneuver.lanes, step.maneuver.lane_description))
+            canCollapeUseLane(step.intersections.front().lanes,
+                              step.intersections.front().lane_description))
         {
             const auto previous = getPreviousIndex(step_index);
             steps[previous] = elongate(steps[previous], steps[step_index]);

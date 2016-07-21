@@ -2,8 +2,8 @@
 #define ENGINE_GUIDANCE_ASSEMBLE_STEPS_HPP_
 
 #include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/travel_mode.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/travel_mode.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
@@ -72,14 +72,15 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                           bearings.second,
                           extractor::guidance::TurnInstruction::NO_TURN(),
                           WaypointType::Depart,
-                          0,
-                          util::guidance::LaneTupel(),
-                          {}};
+                          0};
+
     Intersection intersection{source_node.location,
                               std::vector<short>({bearings.second}),
                               std::vector<bool>({true}),
                               Intersection::NO_INDEX,
-                              0};
+                              0,
+                              util::guidance::LaneTupel(),
+                              {}};
 
     if (leg_data.size() > 0)
     {
@@ -138,6 +139,11 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 intersection.location = facade.GetCoordinateOfNode(path_point.turn_via_node);
                 intersection.bearings.clear();
                 intersection.bearings.reserve(bearing_class.getAvailableBearings().size());
+                intersection.lanes = path_point.lane_data.first;
+                intersection.lane_description =
+                    path_point.lane_data.second != INVALID_LANE_DESCRIPTIONID
+                        ? facade.GetTurnDescription(path_point.lane_data.second)
+                        : extractor::guidance::TurnLaneDescription();
                 std::copy(bearing_class.getAvailableBearings().begin(),
                           bearing_class.getAvailableBearings().end(),
                           std::back_inserter(intersection.bearings));
@@ -151,11 +157,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                             bearings.second,
                             path_point.turn_instruction,
                             WaypointType::None,
-                            0,
-                            path_point.lane_data.first,
-                            (path_point.lane_data.second != INVALID_LANE_DESCRIPTIONID
-                                 ? facade.GetTurnDescription(path_point.lane_data.second)
-                                 : extractor::guidance::TurnLaneDescription())};
+                            0};
                 segment_index++;
                 segment_duration = 0;
             }
@@ -210,15 +212,16 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 bearings.second,
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 WaypointType::Arrive,
-                0,
-                util::guidance::LaneTupel(),
-                {}};
+                0};
+
     intersection = {
         target_node.location,
         std::vector<short>({static_cast<short>(util::bearing::reverseBearing(bearings.first))}),
         std::vector<bool>({true}),
         0,
-        Intersection::NO_INDEX};
+        Intersection::NO_INDEX,
+        util::guidance::LaneTupel(),
+        {}};
 
     BOOST_ASSERT(!leg_geometry.locations.empty());
     steps.push_back(RouteStep{target_node.name_id,
@@ -243,9 +246,9 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
     BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
     BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
-    BOOST_ASSERT(steps.back().maneuver.lanes.lanes_in_turn == 0);
-    BOOST_ASSERT(steps.back().maneuver.lanes.first_lane_from_the_right == INVALID_LANEID);
-    BOOST_ASSERT(steps.back().maneuver.lane_description.empty());
+    BOOST_ASSERT(steps.back().intersections.front().lanes.lanes_in_turn == 0);
+    BOOST_ASSERT(steps.back().intersections.front().lanes.first_lane_from_the_right == INVALID_LANEID);
+    BOOST_ASSERT(steps.back().intersections.front().lane_description.empty());
     return steps;
 }
 

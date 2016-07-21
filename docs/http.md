@@ -453,24 +453,28 @@ step.
  "maneuver":{
      "type":"turn",
      "modifier":"right",
-     "lanes":[
-         {"indications":["left","straight"], "valid":"false"},
-         {"indications":["right"], "valid":"true"}
-     ]},
+     },
  "geometry":"{lu_IypwpAVrAvAdI",
  "mode":"driving",
  "intersections":[
     {"location":[13.39677,52.54366],
     "in":3,
-    "out":1,
+    "out":2,
     "bearings":[10,92,184,270],
-    "entry":[false,"true","true"]},
+    "entry":["true","true","true","false"],
+    "lanes":[
+         {"indications":["left","straight"], "valid":"false"},
+         {"indications":["right"], "valid":"true"}
+    ]},
     {"location":[13.394718,52.543096],
     "in":0,
-    "out":2,
-    "bearings":[60,150,240,330],
-    "entry":["false","true","true","true"]
-    }
+    "out":1,
+    "bearings":[60,240,330],
+    "entry":["false","true","true"]
+    "lanes":[
+         {"indications":["straight"], "valid":"true"},
+         {"indications":["right"], "valid":"false"}
+     ]}
 ]}
 ```
 
@@ -536,8 +540,7 @@ step.
   |------------------------|---------------------------------------------------------------------------------------------------------------------------|
   | `roundabout`           | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
   | else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
-  
-- `lanes`: Array of `Lane` objects that denote the available turn lanes at the turn location
+
 
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.
 
@@ -588,6 +591,7 @@ location of the StepManeuver. Further intersections are listed for every cross-w
   in the direction of driving, the bearing has to be rotated by a value of 180. The value is not supplied for `depart` maneuvers.
 - `out`: index into the bearings/entry array. Used to extract the bearing just after the turn. Namely, The clockwise angle from true north to the
   direction of travel immediately after the maneuver/passing the intersection. The value is not supplied for `arrive` maneuvers.
+- `lanes`: Array of `Lane` objects that denote the available turn lanes at the turn location
 
 #### Example
 ```
@@ -597,6 +601,11 @@ location of the StepManeuver. Further intersections are listed for every cross-w
     "out":2,
     "bearings":[60,150,240,330],
     "entry":["false","true","true","true"]
+    "lanes":{
+        "indications": ["left", "straight"],
+        "valid": "false"
+    }
+                                                                                                                               ]}
 }
 ```
 

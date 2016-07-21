@@ -60,10 +60,10 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
         // the current turn lanes constrain the lanes we have to take in the previous turn.
         util::for_each_pair(rev_first, rev_last, [](RouteStep &current, RouteStep &previous) {
             const auto current_inst = current.maneuver.instruction;
-            const auto current_lanes = current.maneuver.lanes;
+            const auto current_lanes = current.intersections.front().lanes;
 
             // Constrain the previous turn's lanes
-            auto &previous_lanes = previous.maneuver.lanes;
+            auto &previous_lanes = previous.intersections.front().lanes;
             // Lane mapping (N:M) from previous lanes (N) to current lanes (M), with:
             //  N > M, N > 1   fan-in situation, constrain N lanes to min(N,M) shared lanes
             //  otherwise      nothing to constrain

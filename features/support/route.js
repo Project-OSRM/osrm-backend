@@ -170,9 +170,9 @@ module.exports = function () {
 
     this.lanesList = (instructions) => {
         return this.extractInstructionList(instructions, instruction => {
-            if( 'lanes' in instruction.maneuver )
+            if( 'lanes' in instruction.intersections[0] )
             {
-                return instruction.maneuver.lanes.map( p => { return (p.indications).join(';') + ':' + p.valid; } ).join(' ');
+                return instruction.intersections[0].lanes.map( p => { return (p.indications).join(';') + ':' + p.valid; } ).join(' ');
             } else
             {
                 return '';
