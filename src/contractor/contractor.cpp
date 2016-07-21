@@ -72,6 +72,15 @@ namespace osrm
 namespace contractor
 {
 
+// Returns duration in deci-seconds
+inline EdgeWeight distanceAndSpeedToWeight(double distance_in_meters, double speed_in_kmh)
+{
+    BOOST_ASSERT(speed_in_kmh > 0);
+    const double speed_in_ms = speed_in_kmh / 3.6;
+    const double duration = distance_in_meters / speed_in_ms;
+    return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10)));
+}
+
 int Contractor::Run()
 {
 #ifdef WIN32
@@ -573,12 +582,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                         find(segment_speed_lookup, Segment{u->node_id, v->node_id});
                     if (forward_speed_iter != segment_speed_lookup.end())
                     {
-                        int new_segment_weight =
-                            std::max(1,
-                                     static_cast<int>(std::floor(
-                                         (segment_length * 10.) /
-                                             (forward_speed_iter->speed_source.speed / 3.6) +
-                                         .5)));
+                        auto new_segment_weight =
+                            (forward_speed_iter->speed_source.speed > 0)
+                                ? distanceAndSpeedToWeight(segment_length,
+                                                           forward_speed_iter->speed_source.speed)
+                                : INVALID_EDGE_WEIGHT;
                         m_geometry_list[forward_begin + leaf_object.fwd_segment_position].weight =
                             new_segment_weight;
                         m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
@@ -624,12 +632,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                         find(segment_speed_lookup, Segment{u->node_id, v->node_id});
                     if (reverse_speed_iter != segment_speed_lookup.end())
                     {
-                        int new_segment_weight =
-                            std::max(1,
-                                     static_cast<int>(std::floor(
-                                         (segment_length * 10.) /
-                                             (reverse_speed_iter->speed_source.speed / 3.6) +
-                                         .5)));
+                        auto new_segment_weight =
+                            (reverse_speed_iter->speed_source.speed > 0)
+                                ? distanceAndSpeedToWeight(segment_length,
+                                                           reverse_speed_iter->speed_source.speed)
+                                : INVALID_EDGE_WEIGHT;
                         m_geometry_list[reverse_begin + rev_segment_position].weight =
                             new_segment_weight;
                         m_geometry_datasource[reverse_begin + rev_segment_position] =
@@ -763,21 +770,22 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
             const auto num_segments = header->num_osm_nodes - 1;
             for (auto i : util::irange<std::size_t>(0, num_segments))
             {
-
                 auto speed_iter =
                     find(segment_speed_lookup,
                          Segment{previous_osm_node_id, segmentblocks[i].this_osm_node_id});
                 if (speed_iter != segment_speed_lookup.end())
                 {
-                    // This sets the segment weight using the same formula as the
-                    // EdgeBasedGraphFactory for consistency.  The *why* of this formula
-                    // is lost in the annals of time.
-                    int new_segment_weight = std::max(
-                        1,
-                        static_cast<int>(std::floor((segmentblocks[i].segment_length * 10.) /
-                                                        (speed_iter->speed_source.speed / 3.6) +
-                                                    .5)));
-                    new_weight += new_segment_weight;
+                    if (speed_iter->speed_source.speed > 0)
+                    {
+                        auto new_segment_weight = distanceAndSpeedToWeight(segmentblocks[i].segment_length, speed_iter->speed_source.speed);
+                        new_weight += new_segment_weight;
+                    }
+                    else
+                    {
+                        // This edge is blocked, we don't need to continue updating
+                        new_weight = INVALID_EDGE_WEIGHT;
+                        break;
+                    }
                 }
                 else
                 {
