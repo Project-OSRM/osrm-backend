@@ -180,6 +180,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     bool GetContinueStraightDefault() const override { return true; }
     BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; };
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
+    bool UseLeftSideDriving() const override { return false; }
 
     bool hasLaneData(const EdgeID /*id*/) const override final { return true; };
     util::guidance::LaneTupelIdPair GetLaneData(const EdgeID /*id*/) const override final

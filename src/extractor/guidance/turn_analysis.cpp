@@ -37,7 +37,8 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                            const std::unordered_set<NodeID> &barrier_nodes,
                            const CompressedEdgeContainer &compressed_edge_container,
                            const util::NameTable &name_table,
-                           const SuffixTable &street_name_suffix_table)
+                           const SuffixTable &street_name_suffix_table,
+                           const ProfileProperties &profile_properties)
     : node_based_graph(node_based_graph), intersection_generator(node_based_graph,
                                                                  restriction_map,
                                                                  barrier_nodes,
@@ -47,7 +48,8 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                          node_info_list,
                          compressed_edge_container,
                          name_table,
-                         street_name_suffix_table),
+                         street_name_suffix_table,
+                         profile_properties),
       motorway_handler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
       turn_handler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
 {

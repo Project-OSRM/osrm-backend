@@ -502,7 +502,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 
 // Works on steps including silent and invalid instructions in order to do lane anticipation for
 // roundabouts which later on get collapsed into a single multi-hop instruction.
-std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep> steps)
+std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep> steps, const datafacade::BaseDataFacade &facade)
 {
     using namespace util::guidance;
 
@@ -518,12 +518,20 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
 
         // Although the enter instruction may be a left/right turn, for right-sided driving the
         // roundabout is counter-clockwise and therefore we need to always set it to a left turn.
-        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
         const auto enter_direction = enter.maneuver.instruction.direction_modifier;
 
-        if (util::guidance::isRightTurn(enter.maneuver.instruction))
-            enter.maneuver.instruction.direction_modifier =
-                mirrorDirectionModifier(enter_direction);
+        if (facade.UseLeftSideDriving())
+        {
+            if (util::guidance::isLeftTurn(enter.maneuver.instruction))
+                enter.maneuver.instruction.direction_modifier =
+                    mirrorDirectionModifier(enter_direction);
+        }
+        else
+        {
+            if (util::guidance::isRightTurn(enter.maneuver.instruction))
+                enter.maneuver.instruction.direction_modifier =
+                    mirrorDirectionModifier(enter_direction);
+        }
 
         // a roundabout is a continuous maneuver. We don't switch lanes within a roundabout, as long
         // as it can be avoided.
@@ -531,7 +539,6 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
             anticipateLaneChange({enter, leave}, std::numeric_limits<double>::max());
 
         // Undo flipping direction on a right turn in a right-sided counter-clockwise roundabout.
-        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
         enterAndLeave[0].maneuver.instruction.direction_modifier = enter_direction;
 
         std::swap(*roundabout.first, enterAndLeave[0]);
@@ -582,7 +589,7 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 // They are required for maintenance purposes. We can calculate the number
 // of exits to pass in a roundabout and the number of intersections
 // that we come across.
-std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
+std::vector<RouteStep> postProcess(std::vector<RouteStep> steps, const datafacade::BaseDataFacade &facade)
 {
     // the steps should always include the first/last step in form of a location
     BOOST_ASSERT(steps.size() >= 2);
@@ -592,7 +599,7 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // Before we invalidate and remove silent instructions, we handle roundabouts (before they're
     // getting collapsed into a single multi-hop instruction) by back-propagating exit lane
     // constraints already to a roundabout's enter instruction.
-    steps = anticipateLaneChangeForRoundabouts(std::move(steps));
+    steps = anticipateLaneChangeForRoundabouts(std::move(steps), facade);
 
     // Count Street Exits forward
     bool on_roundabout = false;

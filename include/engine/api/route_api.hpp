@@ -143,7 +143,7 @@ class RouteAPI : public BaseAPI
                  */
 
                 guidance::trimShortSegments(steps, leg_geometry);
-                leg.steps = guidance::postProcess(std::move(steps));
+                leg.steps = guidance::postProcess(std::move(steps), BaseAPI::facade);
                 leg.steps = guidance::collapseTurns(std::move(leg.steps));
                 leg.steps = guidance::buildIntersections(std::move(leg.steps));
                 leg.steps = guidance::assignRelativeLocations(std::move(leg.steps),
