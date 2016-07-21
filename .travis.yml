@@ -24,6 +24,7 @@ env:
   global:
    - CCACHE_TEMPDIR=/tmp/.ccache-temp
    - CCACHE_COMPRESS=1
+   - CASHER_TIME_OUT=1000
    - JOBS=4
 
 matrix:
