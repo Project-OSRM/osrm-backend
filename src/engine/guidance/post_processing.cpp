@@ -1156,6 +1156,16 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         return (mask & tag) != extractor::guidance::TurnLaneType::empty;
     };
 
+    const auto getPreviousIndex = [&steps](std::size_t index) {
+        BOOST_ASSERT(index > 0);
+        BOOST_ASSERT(index < steps.size());
+        --index;
+        while (index > 0 && steps[index].maneuver.instruction.type == TurnType::NoTurn)
+            --index;
+
+        return index;
+    };
+
     const auto canCollapeUseLane =
         [containsTag](const util::guidance::LaneTupel lanes,
                       extractor::guidance::TurnLaneDescription lane_description) {
@@ -1183,7 +1193,9 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         if (step.maneuver.instruction.type == TurnType::UseLane &&
             canCollapeUseLane(step.maneuver.lanes, step.maneuver.lane_description))
         {
-            elongate(steps[step_index - 1], steps[step_index]);
+            const auto previous = getPreviousIndex(step_index);
+            steps[previous] = elongate(steps[previous], steps[step_index]);
+            //elongate(steps[step_index-1], steps[step_index]);
             invalidateStep(steps[step_index]);
         }
     }

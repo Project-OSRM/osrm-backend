@@ -4,6 +4,7 @@
       - Only announce `use lane` on required turns (not using all lanes to go straight)
     - Bugfixes
       - Fix BREAKING: bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
+      - Fix: bug that results in segfaults when `use lane` instructions are suppressed
 
 # 5.3.0 RC3
   Changes from 5.3.0-rc.2

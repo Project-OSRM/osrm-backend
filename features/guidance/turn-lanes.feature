@@ -715,3 +715,25 @@ Feature: Turn Lane Guidance
             | e,i       | ,,,,         | depart,off ramp right,fork slight left,use lane straight,arrive | ,none:false none:false none:false slight right:true,,straight:false slight right:true, |
             | e,d       | ,A 100,A 100 | depart,merge slight left,arrive                                 | ,,                                                                                     |
             | e,h       | ,,,,         | depart,off ramp right,fork left,use lane straight,arrive        | ,none:false none:false none:false slight right:true,,straight:true slight right:false, |
+
+    @collapse @use-lane
+    Scenario: Collapse Multiple Use Lanes
+        Given the node map
+            | x | a |   | b |   |   | c |   |   | d |
+            |   |   |   | e |   |   | f |   |   |   |
+
+        And the ways
+            | nodes | name | highway | turn:lanes:forward |
+            | ab    | road | primary | through,right      |
+            | bc    | road | primary | through,right      |
+            | cd    | road | primary |                    |
+            | xa    | road | primary |                    |
+            | be    | turn | primary |                    |
+            | cf    | turn | primary |                    |
+
+        When I route I should get
+            | waypoints | route     | turns         | lanes |
+            | x,d       | road,road | depart,arrive | ,     |
+
+
+
