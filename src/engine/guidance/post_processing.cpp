@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -512,7 +512,8 @@ bool collapsable(const RouteStep &step, const RouteStep &next)
     const auto instruction_can_be_collapsed = isCollapsableInstruction(step.maneuver.instruction);
 
     const auto is_use_lane = step.maneuver.instruction.type == TurnType::UseLane;
-    const auto lanes_dont_change = step.maneuver.lanes == next.maneuver.lanes;
+    const auto lanes_dont_change =
+        step.intersections.front().lanes == next.intersections.front().lanes;
 
     if (is_short_step && instruction_can_be_collapsed)
         return true;
@@ -764,9 +765,10 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
                     // the turn lanes for this turn are on the sliproad itself, so we have to
                     // remember  them
-                    steps[one_back_index].maneuver.lanes = current_step.maneuver.lanes;
-                    steps[one_back_index].maneuver.lane_description =
-                        current_step.maneuver.lane_description;
+                    steps[one_back_index].intersections.front().lanes =
+                        current_step.intersections.front().lanes;
+                    steps[one_back_index].intersections.front().lane_description =
+                        current_step.intersections.front().lane_description;
 
                     const auto exit_intersection = steps[step_index].intersections.front();
                     const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
@@ -1229,7 +1231,7 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         {
             const auto previous = getPreviousIndex(step_index);
             steps[previous] = elongate(steps[previous], steps[step_index]);
-            //elongate(steps[step_index-1], steps[step_index]);
+            // elongate(steps[step_index-1], steps[step_index]);
             invalidateStep(steps[step_index]);
         }
     }

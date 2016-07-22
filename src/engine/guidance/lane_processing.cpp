@@ -29,7 +29,7 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
     // Lane anticipation works on contiguous ranges of quick steps that have lane information
     const auto is_quick_has_lanes = [&](const RouteStep &step) {
         const auto is_quick = step.duration < min_duration_needed_for_lane_change;
-        const auto has_lanes = step.maneuver.lanes.lanes_in_turn > 0;
+        const auto has_lanes = step.intersections.front().lanes.lanes_in_turn > 0;
         return has_lanes && is_quick;
     };
 
@@ -79,7 +79,7 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // where lanes in the turn fan in but for example the overall lanes at that location
             // fan out, we would have to know the asymmetric mapping of lanes. This is currently
             // not possible at the moment. In the following we implement a heuristic instead.
-            const LaneID current_num_all_lanes = current.maneuver.lane_description.size();
+            const LaneID current_num_all_lanes = current.intersections.front().lane_description.size();
             const LaneID current_num_lanes_right_of_turn = current_lanes.first_lane_from_the_right;
             const LaneID current_num_lanes_left_of_turn =
                 current_num_all_lanes -

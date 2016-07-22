@@ -24,18 +24,20 @@ inline void print(const engine::guidance::RouteStep &step)
               << static_cast<int>(step.maneuver.waypoint_type) << " "
               << " Duration: " << step.duration << " Distance: " << step.distance
               << " Geometry: " << step.geometry_begin << " " << step.geometry_end
-              << " Lanes: " << static_cast<int>(step.maneuver.lanes.lanes_in_turn) << " "
-              << static_cast<int>(step.maneuver.lanes.first_lane_from_the_right)
+
               << "\n\tIntersections: " << step.intersections.size() << " [";
 
     for (const auto &intersection : step.intersections)
     {
-        std::cout << "(bearings:";
+        std::cout << "(Lanes: " << static_cast<int>(intersection.lanes.lanes_in_turn) << " "
+                  << static_cast<int>(intersection.lanes.first_lane_from_the_right)
+                  << " bearings:";
         for (auto bearing : intersection.bearings)
             std::cout << " " << bearing;
         std::cout << ", entry: ";
         for (auto entry : intersection.entry)
             std::cout << " " << (entry ? "true" : "false");
+
         std::cout << ")";
     }
     std::cout << "] name[" << step.name_id << "]: " << step.name;
@@ -53,14 +55,13 @@ inline void print(const std::vector<engine::guidance::RouteStep> &steps)
     }
 }
 
-inline void print( const extractor::guidance::Intersection & intersection )
+inline void print(const extractor::guidance::Intersection &intersection)
 {
     std::cout << "  Intersection:\n";
     for (const auto &road : intersection)
         std::cout << "\t" << toString(road) << "\n";
     std::cout << std::flush;
 }
-
 
 inline void print(const extractor::guidance::lanes::LaneDataVector &turn_lane_data)
 {
