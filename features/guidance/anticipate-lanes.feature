@@ -280,8 +280,8 @@ Feature: Turn Lane Guidance
                | di    |                                        | off  |
 
           When I route I should get
-               | waypoints | route               | turns                                             | lanes                                                                                                     |
-               | a,e       | main,main,main,main | depart,use lane straight,use lane straight,arrive | ,left:false straight:false straight:true straight:false right:false,left:false straight:true right:false, |
+               | waypoints | route          | turns                           | lanes                                                                |
+               | a,e       | main,main,main | depart,use lane straight,arrive | ,left:false straight:false straight:true straight:false right:false, |
 
        @anticipate
        Scenario: Anticipate Lanes for through and collapse multiple use lanes
@@ -305,9 +305,9 @@ Feature: Turn Lane Guidance
                | dj    |                                        | off  |
 
           When I route I should get
-               | waypoints | route          | turns                           | lanes                                                                |
-               | a,c       | main,main,main | depart,use lane straight,arrive | ,left:false straight:true straight:true right:false,                 |
-               | a,d       | main,main,main | depart,use lane straight,arrive | ,left:false straight:true straight:true right:false,                 |
+               | waypoints | route     | turns         | lanes |
+               | a,c       | main,main | depart,arrive | ,     |
+               | a,d       | main,main | depart,arrive | ,     |
 
        @anticipate
        Scenario: Anticipate Lanes for through followed by left/right
@@ -419,8 +419,8 @@ Feature: Turn Lane Guidance
                | dt    |                                                          | off  |
 
           When I route I should get
-               | waypoints | route                    | turns                                                            | lanes                                                                                                                                                                                                    |
-               | a,e       | main,main,main,main,main | depart,use lane straight,continue right,use lane straight,arrive | ,left:false straight:false straight:false straight:false straight:true straight:true right:false,straight:false straight:false right:false right:true right:true,left:false straight:true straight:true, |
+               | waypoints | route               | turns                                          | lanes                                                                                                                                                             |
+               | a,e       | main,main,main,main | depart,use lane straight,continue right,arrive | ,left:false straight:false straight:false straight:false straight:true straight:true right:false,straight:false straight:false right:false right:true right:true, |
 
     @anticipate @todo @bug @2661
     Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
