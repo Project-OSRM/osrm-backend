@@ -427,7 +427,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                 }
 
                 edge_based_node_info[edge.forward_segment_id.id] = {
-                    edge.u, edge.v, edge.forward_packed_geometry_id};
+                    edge.u, edge.v, edge.packed_geometry_id};
             }
             // Same as previous block, but everything flipped
             if (edge.reverse_segment_id.enabled &&
@@ -456,7 +456,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                 // Save info about this edge-based-node, note reversal from forward
                 // block above.
                 edge_based_node_info[edge.reverse_segment_id.id] = {
-                    edge.v, edge.u, edge.reverse_packed_geometry_id};
+                    edge.v, edge.u, edge.packed_geometry_id};
             }
         }
 
@@ -468,8 +468,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         for (const auto &source_ebn : edge_based_node_info)
         {
             // Grab a copy of the geometry leading up to the intersection.
-            first_geometry.clear();
-            facade->GetUncompressedGeometry(source_ebn.second.packed_geometry_id, first_geometry);
+            first_geometry = facade->GetUncompressedForwardGeometry(source_ebn.second.packed_geometry_id);
 
             // We earlier saved the source and target intersection nodes for every road section.
             // We can use the target node to find all road sections that lead away from
@@ -532,14 +531,11 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 
                     // This is the geometry leading away from the intersection
                     // (i.e. the geometry of the target edge-based-node)
-                    second_geometry.clear();
-                    facade->GetUncompressedGeometry(
-                        edge_based_node_info.at(target_ebn).packed_geometry_id, second_geometry);
+                    second_geometry = facade->GetUncompressedReverseGeometry(
+                        edge_based_node_info.at(target_ebn).packed_geometry_id);
 
                     // Now, calculate the sum of the weight of all the segments.
-                    forward_weight_vector.clear();
-                    facade->GetUncompressedWeights(source_ebn.second.packed_geometry_id,
-                                                   forward_weight_vector);
+                    forward_weight_vector = facade->GetUncompressedForwardWeights(source_ebn.second.packed_geometry_id);
                     const auto sum_node_weight = std::accumulate(
                         forward_weight_vector.begin(), forward_weight_vector.end(), EdgeWeight{0});
 
@@ -616,38 +612,30 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         // TODO this approach of writing at least an empty vector for any segment is probably stupid
         // (inefficient)
 
-        if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
-        {
-            forward_weight_vector.clear();
-            facade->GetUncompressedWeights(edge.forward_packed_geometry_id, forward_weight_vector);
-            forward_weight = forward_weight_vector[edge.fwd_segment_position];
+        forward_weight_vector =
+            facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+        reverse_weight_vector =
+            facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
 
-            forward_datasource_vector.clear();
-            facade->GetUncompressedDatasources(edge.forward_packed_geometry_id,
-                                               forward_datasource_vector);
-            forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
+        forward_weight = forward_weight_vector[edge.fwd_segment_position];
 
-            use_line_value(forward_weight);
-        }
+        BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
+        reverse_weight =
+            reverse_weight_vector[reverse_weight_vector.size() - edge.fwd_segment_position - 1];
 
-        if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID)
-        {
-            reverse_weight_vector.clear();
-            facade->GetUncompressedWeights(edge.reverse_packed_geometry_id, reverse_weight_vector);
+        forward_datasource_vector.clear();
+        forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+        forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
 
-            BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
+        reverse_datasource_vector.clear();
+        // TODO have not tested geom zipping with tiles yet
+        reverse_datasource_vector =
+            facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
+        reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
+                                                       edge.fwd_segment_position - 1];
 
-            reverse_weight =
-                reverse_weight_vector[reverse_weight_vector.size() - edge.fwd_segment_position - 1];
+        use_line_value(reverse_weight);
 
-            reverse_datasource_vector.clear();
-            facade->GetUncompressedDatasources(edge.reverse_packed_geometry_id,
-                                               reverse_datasource_vector);
-            reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
-                                                           edge.fwd_segment_position - 1];
-
-            use_line_value(reverse_weight);
-        }
         // Keep track of the highest datasource seen so that we don't write unnecessary
         // data to the layer attribute values
         max_datasource_id = std::max(max_datasource_id, forward_datasource);
@@ -704,40 +692,37 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 
                     std::uint8_t forward_datasource = 0;
                     std::uint8_t reverse_datasource = 0;
+                    forward_weight_vector.clear();
+                    forward_weight_vector =
+                        facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+                    forward_weight = forward_weight_vector[edge.fwd_segment_position];
+
+                    forward_datasource_vector.clear();
+                    forward_datasource_vector =
+                        facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+                    forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
+
+                    reverse_weight_vector.clear();
+                    reverse_weight_vector =
+                        facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
 
                     std::string name = facade->GetNameForID(edge.name_id);
 
-                    if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
-                    {
-                        forward_weight_vector.clear();
-                        facade->GetUncompressedWeights(edge.forward_packed_geometry_id,
-                                                       forward_weight_vector);
-                        forward_weight = forward_weight_vector[edge.fwd_segment_position];
+                    forward_weight_vector = facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+                    forward_weight = forward_weight_vector[edge.fwd_segment_position];
 
-                        forward_datasource_vector.clear();
-                        facade->GetUncompressedDatasources(edge.forward_packed_geometry_id,
-                                                           forward_datasource_vector);
-                        forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
-                    }
+                    forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+                    forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
 
-                    if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID)
-                    {
-                        reverse_weight_vector.clear();
-                        facade->GetUncompressedWeights(edge.reverse_packed_geometry_id,
-                                                       reverse_weight_vector);
+                    reverse_weight_vector = facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
 
-                        BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
+                    reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
+                                                           edge.fwd_segment_position - 1];
 
-                        reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
-                                                               edge.fwd_segment_position - 1];
-
-                        reverse_datasource_vector.clear();
-                        facade->GetUncompressedDatasources(edge.reverse_packed_geometry_id,
-                                                           reverse_datasource_vector);
-                        reverse_datasource =
-                            reverse_datasource_vector[reverse_datasource_vector.size() -
-                                                      edge.fwd_segment_position - 1];
-                    }
+                    reverse_datasource_vector = facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
+                    reverse_datasource =
+                        reverse_datasource_vector[reverse_datasource_vector.size() -
+                                                  edge.fwd_segment_position - 1];
 
                     // Keep track of the highest datasource seen so that we don't write unnecessary
                     // data to the layer attribute values
@@ -848,6 +833,12 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                                              start_y);
                         }
                     }
+                    reverse_datasource_vector.clear();
+                    reverse_datasource_vector =
+                        facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
+                    reverse_datasource =
+                        reverse_datasource_vector[reverse_datasource_vector.size() -
+                                                  edge.fwd_segment_position - 1];
                 }
             }
 

@@ -53,8 +53,7 @@ struct PhantomNode
                 int reverse_weight,
                 int forward_offset,
                 int reverse_offset,
-                unsigned forward_packed_geometry_id_,
-                unsigned reverse_packed_geometry_id_,
+                unsigned packed_geometry_id_,
                 bool is_tiny_component,
                 unsigned component_id,
                 util::Coordinate location,
@@ -65,8 +64,7 @@ struct PhantomNode
         : forward_segment_id(forward_segment_id), reverse_segment_id(reverse_segment_id),
           name_id(name_id), forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
-          forward_packed_geometry_id(forward_packed_geometry_id_),
-          reverse_packed_geometry_id(reverse_packed_geometry_id_),
+          packed_geometry_id(packed_geometry_id_),
           component{component_id, is_tiny_component}, location(std::move(location)),
           input_location(std::move(input_location)), fwd_segment_position(fwd_segment_position),
           forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
@@ -78,7 +76,7 @@ struct PhantomNode
           reverse_segment_id{SPECIAL_SEGMENTID, false},
           name_id(std::numeric_limits<unsigned>::max()), forward_weight(INVALID_EDGE_WEIGHT),
           reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0), reverse_offset(0),
-          forward_packed_geometry_id(SPECIAL_EDGEID), reverse_packed_geometry_id(SPECIAL_EDGEID),
+          packed_geometry_id(SPECIAL_GEOMETRYID),
           component{INVALID_COMPONENTID, false}, fwd_segment_position(0),
           forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
@@ -129,8 +127,7 @@ struct PhantomNode
           reverse_segment_id{other.reverse_segment_id}, name_id{other.name_id},
           forward_weight{forward_weight_}, reverse_weight{reverse_weight_},
           forward_offset{forward_offset_}, reverse_offset{reverse_offset_},
-          forward_packed_geometry_id{other.forward_packed_geometry_id},
-          reverse_packed_geometry_id{other.reverse_packed_geometry_id},
+          packed_geometry_id{other.packed_geometry_id},
           component{other.component.id, other.component.is_tiny}, location{location_},
           input_location{input_location_}, fwd_segment_position{other.fwd_segment_position},
           forward_travel_mode{other.forward_travel_mode},
@@ -145,8 +142,7 @@ struct PhantomNode
     int reverse_weight;
     int forward_offset;
     int reverse_offset;
-    unsigned forward_packed_geometry_id;
-    unsigned reverse_packed_geometry_id;
+    unsigned packed_geometry_id;
     struct ComponentType
     {
         std::uint32_t id : 31;
@@ -163,7 +159,7 @@ struct PhantomNode
     extractor::TravelMode backward_travel_mode;
 };
 
-static_assert(sizeof(PhantomNode) == 60, "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 56, "PhantomNode has more padding then expected");
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 
@@ -195,8 +191,7 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
         << "rev-w: " << pn.reverse_weight << ", "
         << "fwd-o: " << pn.forward_offset << ", "
         << "rev-o: " << pn.reverse_offset << ", "
-        << "fwd_geom: " << pn.forward_packed_geometry_id << ", "
-        << "rev_geom: " << pn.reverse_packed_geometry_id << ", "
+        << "geom: " << pn.packed_geometry_id << ", "
         << "comp: " << pn.component.is_tiny << " / " << pn.component.id << ", "
         << "pos: " << pn.fwd_segment_position << ", "
         << "loc: " << pn.location;

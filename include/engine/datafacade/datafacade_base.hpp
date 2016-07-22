@@ -8,6 +8,7 @@
 #include "extractor/external_memory_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/original_edge_data.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/exception.hpp"
 #include "util/guidance/bearing_class.hpp"
@@ -74,20 +75,22 @@ class BaseDataFacade
     virtual util::Coordinate GetCoordinateOfNode(const unsigned id) const = 0;
     virtual OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const = 0;
 
-    virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const = 0;
+    virtual GeometryID GetGeometryIndexForEdgeID(const unsigned id) const = 0;
 
-    virtual void GetUncompressedGeometry(const EdgeID id,
-                                         std::vector<NodeID> &result_nodes) const = 0;
+    virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const = 0;
+
+    virtual std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID id) const = 0;
 
     // Gets the weight values for each segment in an uncompressed geometry.
     // Should always be 1 shorter than GetUncompressedGeometry
-    virtual void GetUncompressedWeights(const EdgeID id,
-                                        std::vector<EdgeWeight> &result_weights) const = 0;
+    virtual std::vector<EdgeWeight> GetUncompressedForwardWeights(const EdgeID id) const = 0;
+
+    virtual std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID id) const = 0;
 
     // Returns the data source ids that were used to supply the edge
     // weights.  Will return an empty array when only the base profile is used.
-    virtual void GetUncompressedDatasources(const EdgeID id,
-                                            std::vector<uint8_t> &data_sources) const = 0;
+    virtual std::vector<uint8_t> GetUncompressedForwardDatasources(const EdgeID id) const = 0;
+    virtual std::vector<uint8_t> GetUncompressedReverseDatasources(const EdgeID id) const = 0;
 
     // Gets the name of a datasource
     virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const = 0;
