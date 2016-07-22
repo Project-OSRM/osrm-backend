@@ -494,7 +494,7 @@ Feature: Turn Lane Guidance
             | from | to | bearings        | route            | turns                           | lanes                                  |
             | a    | g  | 180,180 180,180 | road,cross,cross | depart,turn right,arrive        | ,none:false straight:false right:true, |
             | a    | h  | 180,180 180,180 | road,cross,cross | depart,turn left,arrive         | ,none:true straight:false right:false, |
-            | a    | i  | 180,180 180,180 | road,road,road   | depart,use lane straight,arrive | ,none:true straight:true right:false,  |
+            | a    | i  | 180,180 180,180 | road,road        | depart,arrive                   | ,                                      |
             | b    | a  | 90,2 270,2      | road,road,road   | depart,continue uturn,arrive    | ,none:true straight:false right:false, |
 
     @reverse

@@ -225,9 +225,9 @@ TurnLaneHandler::deduceScenario(const NodeID at,
                                  previous_via_edge,
                                  previous_intersection))
     {
-//        if (lane_description_id == INVALID_LANE_DESCRIPTIONID &&
-//            previous_description_id == INVALID_LANE_DESCRIPTIONID)
-//            return TurnLaneScenario::NONE;
+        //        if (lane_description_id == INVALID_LANE_DESCRIPTIONID &&
+        //            previous_description_id == INVALID_LANE_DESCRIPTIONID)
+        //            return TurnLaneScenario::NONE;
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
         for (std::size_t road_index = 0; road_index < previous_intersection.size(); ++road_index)
         {
@@ -562,9 +562,33 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
 
     // find out about the next intersection. To check for valid matches, we also need the turn
     // types
-    auto next_intersection = turn_analysis.getIntersection(at, straightmost->turn.eid);
-    next_intersection =
-        turn_analysis.assignTurnTypes(at, straightmost->turn.eid, std::move(next_intersection));
+    auto next_intersection = [&]() {
+        auto next_intersection_candidate =
+            turn_analysis.getIntersection(at, straightmost->turn.eid);
+        next_intersection_candidate = turn_analysis.assignTurnTypes(
+            at, straightmost->turn.eid, std::move(next_intersection_candidate));
+
+        // There are cases that actually offer a size of two but are actual turns. So if the name
+        // changes, there is a turn or something, we cannot handle this as a traffic light
+        if (next_intersection_candidate.size() == 2 &&
+            angularDeviation(next_intersection_candidate[1].turn.angle, STRAIGHT_ANGLE) <
+                FUZZY_ANGLE_DIFFERENCE &&
+            next_intersection_candidate[1].turn.instruction.type == TurnType::NoTurn)
+        {
+            // an intersection of size two that is not contracted indicates a traffic light or a
+            // similar node
+            const auto traffic_light_node = node_based_graph.GetTarget(straightmost->turn.eid);
+            const auto turn_eid = next_intersection_candidate[1].turn.eid;
+            next_intersection_candidate =
+                turn_analysis.getIntersection(traffic_light_node, turn_eid);
+            return turn_analysis.assignTurnTypes(
+                traffic_light_node, turn_eid, std::move(next_intersection_candidate));
+        }
+        else
+        {
+            return next_intersection_candidate;
+        }
+    }();
 
     // check where we can match turn lanes
     std::size_t straightmost_tag_index = turn_lane_data.size();
