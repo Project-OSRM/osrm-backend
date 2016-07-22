@@ -973,3 +973,27 @@ Feature: Turn Lane Guidance
             | a,i       | road,other,other | depart,turn left,arrive  | ,,                                    |
             | a,h       | road,other,other | depart,turn right,arrive | ,,                                    |
 
+    @simple @none @partition-lanes
+    Scenario: Close but disconnected Intersections
+        Given the node map
+            |   |   | g | i |   |   |
+            |   |   |   |   |   |   |
+            | a |   | b | d |   | e |
+            |   |   |   |   |   |   |
+            |   |   | f | h |   |   |
+
+        And the ways
+            | nodes | name  | highway | turn:lanes:forward |
+            | ab    | road  | primary | left\|none\|none   |
+            | bde   | road  | primary |                    |
+            | gbf   | cross | primary |                    |
+            | hdi   | other | primary |                    |
+
+       When I route I should get
+            | waypoints | route            | turns                    | lanes                             |
+            | a,e       | road,road        | depart,arrive            | ,                                 |
+            | a,g       | road,cross,cross | depart,turn left,arrive  | ,left:true none:false none:false, |
+            | a,f       | road,cross,cross | depart,turn right,arrive | ,left:false none:false none:true, |
+            | a,i       | road,other,other | depart,turn left,arrive  | ,,                                |
+            | a,h       | road,other,other | depart,turn right,arrive | ,,                                |
+
