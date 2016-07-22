@@ -355,7 +355,8 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     if (previous_via_edge == SPECIAL_EDGEID)
         return TurnLaneScenario::NONE;
 
-    if (previous_lane_data.empty())
+    if (previous_lane_data.empty() ||
+        (previous_lane_data.size() == 1 && previous_lane_data[0].tag == TurnLaneType::none))
         return TurnLaneScenario::NONE;
 
     const bool previous_has_merge_lane =

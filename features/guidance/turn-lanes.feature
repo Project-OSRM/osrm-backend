@@ -108,6 +108,27 @@ Feature: Turn Lane Guidance
             | a,d       | road,turn,turn | depart,turn right,arrive | ,straight:false right:true, |
             | a,c       | road,road      | depart,arrive            | ,                           |
 
+    @psv @none
+    Scenario: Turn with Bus-Lane, no other lanes given
+        Given the node map
+            | a |   | b |   | c | f |
+            |   |   |   |   |   |   |
+            |   |   | d |   | e |   |
+
+        And the ways
+            | nodes | name  | turn:lanes:forward | lanes:psv:forward |
+            | ab    | road  | \|\|               | 1                 |
+            | bcf   | road  |                    |                   |
+            | bd    | turn  |                    |                   |
+            | ce    | other |                    |                   |
+
+        When I route I should get
+            | waypoints | route            | turns                    | lanes |
+            | a,d       | road,turn,turn   | depart,turn right,arrive | ,,    |
+            | a,c       | road,road        | depart,arrive            | ,     |
+            | a,f       | road,road        | depart,arrive            | ,     |
+            | a,e       | road,other,other | depart,turn right,arrive | ,,    |
+
     @simple @psv
     Scenario: Turn with Bus-Lane but without lanes
         Given the node map
