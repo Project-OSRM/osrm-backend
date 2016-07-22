@@ -3,6 +3,7 @@
 #include "util/guidance/toolkit.hpp"
 
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/toolkit.hpp"
 
 #include <iterator>
 
@@ -101,6 +102,29 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
     };
 
     std::for_each(begin(subsequent_quick_turns), end(subsequent_quick_turns), constrain_lanes);
+    return steps;
+}
+
+std::vector<RouteStep> removeLanesFromRoundabouts(std::vector<RouteStep> steps)
+{
+    using namespace util::guidance;
+
+    const auto removeLanes = [](RouteStep &step) {
+        for (auto &intersection : step.intersections)
+        {
+            intersection.lane_description = {};
+            intersection.lanes = {};
+        }
+    };
+
+    for (auto &step : steps)
+    {
+        const auto inst = step.maneuver.instruction;
+
+        if (entersRoundabout(inst) || staysOnRoundabout(inst) || leavesRoundabout(inst))
+            removeLanes(step);
+    }
+
     return steps;
 }
 

@@ -150,6 +150,7 @@ class RouteAPI : public BaseAPI
                                                               leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
+                leg.steps = guidance::removeLanesFromRoundabouts(std::move(leg.steps));
                 leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
                 leg.steps = guidance::collapseUseLane(std::move(leg.steps));
                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);

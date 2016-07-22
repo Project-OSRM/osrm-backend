@@ -314,7 +314,7 @@ Feature: Turn Lane Guidance
             | a,f       | ab,df,df | depart,roundabout-exit-1,use lane slight right,arrive | ,,slight left:false slight left:false slight right:true, |
 
     @anticipate
-    Scenario: Anticipate with lanes in roundabout where we stay on the roundabout for multiple exits
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             |   |   | a |   |   |
             |   |   | b |   |   |
@@ -340,11 +340,11 @@ Feature: Turn Lane Guidance
             | fy    |                            | primary |            |
 
         When I route I should get
-            | waypoints | route    | turns                           | lanes                                  |
-            | a,h       | ab,gh,gh | depart,roundabout-exit-5,arrive | ,slight right:false slight right:true, |
+            | waypoints | route    | turns                           | lanes |
+            | a,h       | ab,gh,gh | depart,roundabout-exit-5,arrive | ,,    |
 
     @anticipate
-    Scenario: Departing or arriving inside a roundabout does not yet anticipate lanes
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             |   |   | a |   |   |
             | x | b |   | d | y |
@@ -360,13 +360,13 @@ Feature: Turn Lane Guidance
             | da    |                            | primary | roundabout | roundabout |
 
         When I route I should get
-            | waypoints | route                    | turns                                   | lanes                                  |
-            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,slight right:false slight right:true, |
-            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,slight right:true slight right:true,  |
-            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,slight right:true slight right:true,  |
+            | waypoints | route                    | turns                                   | lanes |
+            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,,    |
+            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
+            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
 
     @anticipate
-    Scenario: Departing or arriving inside a roundabout does not yet anticipate lanes (BIG version)
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             |   |   | a |   |   |
             | x | b |   | d | y |
@@ -416,13 +416,13 @@ Feature: Turn Lane Guidance
             | da    |                            | primary | roundabout | roundabout |
 
         When I route I should get
-            | waypoints | route                    | turns                                   | lanes                                  |
-            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,slight right:false slight right:true, |
-            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,slight right:true slight right:true,  |
-            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,slight right:true slight right:true,  |
+            | waypoints | route                    | turns                                   | lanes |
+            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,,    |
+            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
+            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
 
     @anticipate
-    Scenario: Anticipate Lanes for turns before and / or after roundabout
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             | a | b |   |   | x |
             |   | c |   |   |   |
@@ -447,7 +447,7 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route           | turns                                            | lanes                                                                                                                                    |
-            | a,h       | abx,bc,fg,gh,gh | depart,turn right,cdefc-exit-2,turn right,arrive | ,straight:false right:false right:false right:false right:true,right:false right:false right:false right:true,straight:false right:true, |
+            | a,h       | abx,bc,fg,gh,gh | depart,turn right,cdefc-exit-2,turn right,arrive | ,straight:false right:false right:false right:false right:true,,straight:false right:true, |
 
     @anticipate @bug @todo
     Scenario: Tripple Right keeping Left

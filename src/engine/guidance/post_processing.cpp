@@ -499,48 +499,6 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         }
     }
 }
-
-// Works on steps including silent and invalid instructions in order to do lane anticipation for
-// roundabouts which later on get collapsed into a single multi-hop instruction.
-std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep> steps)
-{
-    using namespace util::guidance;
-
-    using StepIter = decltype(steps)::iterator;
-    using StepIterRange = std::pair<StepIter, StepIter>;
-
-    const auto anticipate_lanes_in_roundabout = [&](StepIterRange roundabout) {
-        // We do lane anticipation on the roundabout's enter and leave step only.
-        // TODO: This means, lanes _inside_ the roundabout are ignored at the moment.
-
-        auto enter = *roundabout.first;
-        const auto leave = *roundabout.second;
-
-        // Although the enter instruction may be a left/right turn, for right-sided driving the
-        // roundabout is counter-clockwise and therefore we need to always set it to a left turn.
-        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
-        const auto enter_direction = enter.maneuver.instruction.direction_modifier;
-
-        if (util::guidance::isRightTurn(enter.maneuver.instruction))
-            enter.maneuver.instruction.direction_modifier =
-                mirrorDirectionModifier(enter_direction);
-
-        // a roundabout is a continuous maneuver. We don't switch lanes within a roundabout, as long
-        // as it can be avoided.
-        auto enterAndLeave =
-            anticipateLaneChange({enter, leave}, std::numeric_limits<double>::max());
-
-        // Undo flipping direction on a right turn in a right-sided counter-clockwise roundabout.
-        // FIXME: assumes right-side driving (counter-clockwise roundabout flow)
-        enterAndLeave[0].maneuver.instruction.direction_modifier = enter_direction;
-
-        std::swap(*roundabout.first, enterAndLeave[0]);
-        std::swap(*roundabout.second, enterAndLeave[1]);
-    };
-
-    forEachRoundabout(begin(steps), end(steps), anticipate_lanes_in_roundabout);
-    return steps;
-}
 } // namespace
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
@@ -588,11 +546,6 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     BOOST_ASSERT(steps.size() >= 2);
     if (steps.size() == 2)
         return steps;
-
-    // Before we invalidate and remove silent instructions, we handle roundabouts (before they're
-    // getting collapsed into a single multi-hop instruction) by back-propagating exit lane
-    // constraints already to a roundabout's enter instruction.
-    steps = anticipateLaneChangeForRoundabouts(std::move(steps));
 
     // Count Street Exits forward
     bool on_roundabout = false;
@@ -1182,7 +1135,7 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         [containsTag](const util::guidance::LaneTupel lanes,
                       extractor::guidance::TurnLaneDescription lane_description) {
             // the lane description is given left to right, lanes are counted from the right.
-            // Therefore we access the lane description yousing the reverse iterator
+            // Therefore we access the lane description using the reverse iterator
             if (lanes.first_lane_from_the_right > 0 &&
                 containsTag(*(lane_description.rbegin() + (lanes.first_lane_from_the_right - 1)),
                             (extractor::guidance::TurnLaneType::straight |
