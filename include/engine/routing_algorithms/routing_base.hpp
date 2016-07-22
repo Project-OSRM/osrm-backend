@@ -244,80 +244,90 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
 
                 const auto geometry_index = facade.GetGeometryIndexForEdgeID(edge_data.id);
                 std::vector<NodeID> id_vector;
-                facade.GetUncompressedGeometry(geometry_index, id_vector);
-                BOOST_ASSERT(id_vector.size() > 0);
-
                 std::vector<EdgeWeight> weight_vector;
-                facade.GetUncompressedWeights(geometry_index, weight_vector);
-                BOOST_ASSERT(weight_vector.size() > 0);
-
                 std::vector<DatasourceID> datasource_vector;
-                facade.GetUncompressedDatasources(geometry_index, datasource_vector);
-
-                const auto total_weight =
-                    std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
-
-                BOOST_ASSERT(weight_vector.size() == id_vector.size());
-                const bool is_first_segment = unpacked_path.empty();
-
-                const std::size_t start_index =
-                    (is_first_segment
-                         ? ((start_traversed_in_reverse)
-                                ? id_vector.size() -
-                                      phantom_node_pair.source_phantom.fwd_segment_position - 1
-                                : phantom_node_pair.source_phantom.fwd_segment_position)
-                         : 0);
-                const std::size_t end_index = id_vector.size();
-
-                BOOST_ASSERT(start_index >= 0);
-                BOOST_ASSERT(start_index < end_index);
-                for (std::size_t i = start_index; i < end_index; ++i)
+                if (geometry_index.forward)
                 {
-                    unpacked_path.push_back(
-                        PathData{id_vector[i],
-                                 name_index,
-                                 weight_vector[i],
-                                 extractor::guidance::TurnInstruction::NO_TURN(),
-                                 {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
-                                 travel_mode,
-                                 INVALID_ENTRY_CLASSID,
-                                 datasource_vector[i]});
+                    id_vector = facade.GetUncompressedForwardGeometry(geometry_index.id);
+                    weight_vector = facade.GetUncompressedForwardWeights(geometry_index.id);
+                    datasource_vector =
+                        facade.GetUncompressedForwardDatasources(geometry_index.id);
                 }
-                BOOST_ASSERT(unpacked_path.size() > 0);
-                if (facade.hasLaneData(edge_data.id))
-                    unpacked_path.back().lane_data = facade.GetLaneData(edge_data.id);
+                else
+                {
+                    id_vector = facade.GetUncompressedReverseGeometry(geometry_index.id);
+                    weight_vector = facade.GetUncompressedReverseWeights(geometry_index.id);
+                    datasource_vector =
+                        facade.GetUncompressedReverseDatasources(geometry_index.id);
+                }
+                BOOST_ASSERT(id_vector.size() > 0);
+                BOOST_ASSERT(weight_vector.size() > 0);
+                BOOST_ASSERT(datasource_vector.size() > 0);
 
-                unpacked_path.back().entry_classid = facade.GetEntryClassID(edge_data.id);
-                unpacked_path.back().turn_instruction = turn_instruction;
-                unpacked_path.back().duration_until_turn += (edge_data.distance - total_weight);
-            });
+                  const auto total_weight =
+                      std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
-        std::size_t start_index = 0, end_index = 0;
-        std::vector<unsigned> id_vector;
-        std::vector<EdgeWeight> weight_vector;
-        std::vector<DatasourceID> datasource_vector;
-        const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
-                                    phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
-                                   unpacked_path.empty();
+                  BOOST_ASSERT(weight_vector.size() == id_vector.size() - 1);
+                  const bool is_first_segment = unpacked_path.empty();
 
-        if (target_traversed_in_reverse)
-        {
-            facade.GetUncompressedGeometry(
-                phantom_node_pair.target_phantom.reverse_packed_geometry_id, id_vector);
+                  const std::size_t start_index =
+                      (is_first_segment
+                           ? ((start_traversed_in_reverse)
+                                  ? weight_vector.size() -
+                                        phantom_node_pair.source_phantom.fwd_segment_position - 1
+                                  : phantom_node_pair.source_phantom.fwd_segment_position)
+                           : 0);
+                  const std::size_t end_index = weight_vector.size();
 
-            facade.GetUncompressedWeights(
-                phantom_node_pair.target_phantom.reverse_packed_geometry_id, weight_vector);
+                  BOOST_ASSERT(start_index >= 0);
+                  BOOST_ASSERT(start_index < end_index);
+                  for (std::size_t segment_idx = start_index; segment_idx < end_index; ++segment_idx)
+                  {
+                      unpacked_path.push_back(
+                          PathData{id_vector[segment_idx + 1],
+                                   name_index,
+                                   weight_vector[segment_idx],
+                                   extractor::guidance::TurnInstruction::NO_TURN(),
+                                   {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
+                                   travel_mode,
+                                   INVALID_ENTRY_CLASSID,
+                                   datasource_vector[segment_idx]});
+                  }
+                  BOOST_ASSERT(unpacked_path.size() > 0);
+                  if (facade.hasLaneData(edge_data.id))
+                      unpacked_path.back().lane_data = facade.GetLaneData(edge_data.id);
 
-            facade.GetUncompressedDatasources(
-                phantom_node_pair.target_phantom.reverse_packed_geometry_id, datasource_vector);
+                  unpacked_path.back().entry_classid = facade.GetEntryClassID(edge_data.id);
+                  unpacked_path.back().turn_instruction = turn_instruction;
+                  unpacked_path.back().duration_until_turn += (edge_data.distance - total_weight);
+              });
+
+          std::size_t start_index = 0, end_index = 0;
+          std::vector<unsigned> id_vector;
+          std::vector<EdgeWeight> weight_vector;
+          std::vector<DatasourceID> datasource_vector;
+          const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id ==
+                                      phantom_node_pair.target_phantom.packed_geometry_id) &&
+                                     unpacked_path.empty();
+
+          if (target_traversed_in_reverse)
+          {
+              id_vector = facade.GetUncompressedReverseGeometry(
+                  phantom_node_pair.target_phantom.packed_geometry_id);
+
+              weight_vector = facade.GetUncompressedReverseWeights(
+                  phantom_node_pair.target_phantom.packed_geometry_id);
+
+              datasource_vector = facade.GetUncompressedReverseDatasources(
+                  phantom_node_pair.target_phantom.packed_geometry_id);
 
             if (is_local_path)
             {
                 start_index =
-                    id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
+                    weight_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
             }
             end_index =
-                id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
+                weight_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
         }
         else
         {
@@ -326,14 +336,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 start_index = phantom_node_pair.source_phantom.fwd_segment_position;
             }
             end_index = phantom_node_pair.target_phantom.fwd_segment_position;
-            facade.GetUncompressedGeometry(
-                phantom_node_pair.target_phantom.forward_packed_geometry_id, id_vector);
 
-            facade.GetUncompressedWeights(
-                phantom_node_pair.target_phantom.forward_packed_geometry_id, weight_vector);
+            id_vector = facade.GetUncompressedForwardGeometry(
+                phantom_node_pair.target_phantom.packed_geometry_id);
 
-            facade.GetUncompressedDatasources(
-                phantom_node_pair.target_phantom.forward_packed_geometry_id, datasource_vector);
+            weight_vector = facade.GetUncompressedForwardWeights(
+                phantom_node_pair.target_phantom.packed_geometry_id);
+
+            datasource_vector = facade.GetUncompressedForwardDatasources(
+                phantom_node_pair.target_phantom.packed_geometry_id);
         }
 
         // Given the following compressed geometry:
@@ -343,20 +354,20 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         // t: fwd_segment 3
         // -> (U, v), (v, w), (w, x)
         // note that (x, t) is _not_ included but needs to be added later.
-        for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
+        for (std::size_t segment_idx = start_index; segment_idx != end_index; (start_index < end_index ? ++segment_idx : --segment_idx))
         {
-            BOOST_ASSERT(i < id_vector.size());
+            BOOST_ASSERT(segment_idx < id_vector.size() - 1);
             BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
             unpacked_path.push_back(PathData{
-                id_vector[i],
+                id_vector[start_index < end_index ? segment_idx + 1 : segment_idx - 1],
                 phantom_node_pair.target_phantom.name_id,
-                weight_vector[i],
+                weight_vector[segment_idx],
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
                 target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
                                             : phantom_node_pair.target_phantom.forward_travel_mode,
                 INVALID_ENTRY_CLASSID,
-                datasource_vector[i]});
+                datasource_vector[segment_idx]});
         }
 
         if (unpacked_path.size() > 0)

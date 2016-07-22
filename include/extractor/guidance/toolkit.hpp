@@ -125,7 +125,7 @@ getRepresentativeCoordinate(const NodeID from_node,
     };
 
     // Uncompressed roads are simple, return the coordinate at the end
-    if (!compressed_geometries.HasEntryForID(via_edge_id))
+    if (!compressed_geometries.HasZippedEntryForForwardID(via_edge_id) && !compressed_geometries.HasZippedEntryForReverseID(via_edge_id))
     {
         return extractCoordinateFromNode(traverse_in_reverse ? query_nodes[from_node]
                                                              : query_nodes[to_node]);

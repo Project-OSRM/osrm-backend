@@ -474,8 +474,6 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                               *node_based_graph,
                               compressed_edge_container);
 
-    compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
-
     util::NameTable name_table(config.names_file_name);
 
     // could use some additional capacity? To avoid a copy during processing, though small data so
@@ -505,6 +503,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                  config.generate_edge_lookup);
 
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);
+    compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
