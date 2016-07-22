@@ -1,3 +1,5 @@
+#include "util/debug.hpp"
+
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
 
@@ -599,6 +601,7 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 // that we come across.
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 {
+    util::guidance::print(steps);
     // the steps should always include the first/last step in form of a location
     BOOST_ASSERT(steps.size() >= 2);
     if (steps.size() == 2)
@@ -874,7 +877,6 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
     BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
     BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
-
     return removeNoTurnInstructions(std::move(steps));
 }
 
@@ -1186,6 +1188,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
 
 std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
 {
+    util::guidance::print(steps);
     const auto containsTag = [](const extractor::guidance::TurnLaneType::Mask mask,
                                 const extractor::guidance::TurnLaneType::Mask tag) {
         return (mask & tag) != extractor::guidance::TurnLaneType::empty;
@@ -1224,15 +1227,40 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
 
     for (std::size_t step_index = 1; step_index < steps.size(); ++step_index)
     {
-        const auto &step = steps[step_index];
-        if (step.maneuver.instruction.type == TurnType::UseLane &&
-            canCollapeUseLane(step.intersections.front().lanes,
-                              step.intersections.front().lane_description))
+        const auto &current = steps[step_index];
+        const auto previous_index = getPreviousIndex(step_index);
+        const auto &previous = steps[previous_index];
+        if (current.maneuver.instruction.type == TurnType::UseLane &&
+            canCollapeUseLane(current.intersections.front().lanes,
+                              current.intersections.front().lane_description))
         {
-            const auto previous = getPreviousIndex(step_index);
-            steps[previous] = elongate(steps[previous], steps[step_index]);
+            steps[previous_index] = elongate(steps[previous_index], steps[step_index]);
             // elongate(steps[step_index-1], steps[step_index]);
             invalidateStep(steps[step_index]);
+        }
+
+        // We might have constrained the previous step in a way that makes it compatible
+        // with the current step. If we did so we collapse it here and mark the current
+        // step as invalid, scheduled for later removal.
+        else if (previous.maneuver.instruction.type == TurnType::UseLane &&
+                 collapsable(previous, current))
+        {
+            // Which turn to keep depends on the combination of instructions. If multiple
+            // use-lanes are used, we are keeping the first restriction onto the lanes and don't
+            // repeat it. If a turn is required, we keep the second turn and elongate the
+            // use-lane prior to it. This is necessary to not invalidate any required turns.
+            if (current.maneuver.instruction.type == TurnType::UseLane)
+            {
+                steps[previous_index] = elongate(std::move(steps[previous_index]), current);
+                invalidateStep(steps[step_index]);
+            }
+            else
+            { // we are looking at an actual turn, keep it
+                BOOST_ASSERT(previous_index >= 1);
+                const auto two_back_index = getPreviousIndex(previous_index);
+                steps[two_back_index] = elongate(std::move(steps[two_back_index]), steps[previous_index]);
+                invalidateStep(steps[previous_index]);
+            }
         }
     }
     return removeNoTurnInstructions(std::move(steps));

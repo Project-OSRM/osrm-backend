@@ -841,3 +841,47 @@ Feature: Turn Lane Guidance
             | waypoints | route    | turns                    | lanes                             |
             | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, |
             | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
+
+    @partition-lanes
+    Scenario: Two Four Way Intersections - Far enough apart
+        Given the node map
+            |   |   | g |   |   |   | i |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            | a |   | b |   | c |   | d |   | e |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   | f |   |   |   | h |   |   |
+
+        And the ways
+            | nodes | name  | highway | oneway | turn:lanes:forward  |
+            | ab    | road  | primary | no     | left\|through\|none |
+            | bcde  | road  | primary | no     |                     |
+            | fbg   | cross | primary | yes    |                     |
+            | idh   | cross | primary | yes    |                     |
+
+       When I route I should get
+            | waypoints | route            | turns                    | lanes                                 |
+            | a,e       | road,road        | depart,arrive            | ,                                     |
+            | a,g       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
+            | a,h       | road,cross,cross | depart,turn right,arrive | ,,                                    |
+
+    @partition-lanes
+    Scenario: Two Four Way Intersections - combine
+        Given the node map
+            |   |   | g | i |   |   |
+            |   |   |   |   |   |   |
+            | a |   | b | d |   | e |
+            |   |   |   |   |   |   |
+            |   |   | f | h |   |   |
+
+        And the ways
+            | nodes | name  | highway | oneway | turn:lanes:forward  |
+            | ab    | road  | primary | no     | left\|through\|none |
+            | bde   | road  | primary | no     |                     |
+            | fbg   | cross | primary | yes    |                     |
+            | idh   | cross | primary | yes    |                     |
+
+       When I route I should get
+            | waypoints | route            | turns                    | lanes                                 |
+            | a,e       | road,road        | depart,arrive            | ,                                     |
+            | a,g       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
+            | a,h       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |

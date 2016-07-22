@@ -79,7 +79,8 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // where lanes in the turn fan in but for example the overall lanes at that location
             // fan out, we would have to know the asymmetric mapping of lanes. This is currently
             // not possible at the moment. In the following we implement a heuristic instead.
-            const LaneID current_num_all_lanes = current.intersections.front().lane_description.size();
+            const LaneID current_num_all_lanes =
+                current.intersections.front().lane_description.size();
             const LaneID current_num_lanes_right_of_turn = current_lanes.first_lane_from_the_right;
             const LaneID current_num_lanes_left_of_turn =
                 current_num_all_lanes -
@@ -163,15 +164,6 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                     anticipate_for_right_turn();
                 else // FIXME: right-sided driving
                     anticipate_for_right_turn();
-            }
-
-            // We might have constrained the previous step in a way that makes it compatible
-            // with the current step. If we did so we collapse it here and mark the current
-            // step as invalid, scheduled for later removal.
-            if (collapsable(previous, current))
-            {
-                previous = elongate(previous, current);
-                current.maneuver.instruction = TurnInstruction::NO_TURN();
             }
         });
     };

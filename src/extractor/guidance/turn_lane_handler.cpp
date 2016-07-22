@@ -107,6 +107,12 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                                          previous_lane_data,
                                          previous_description_id);
 
+#if 0 
+    std::cout << "[scenario] " << scenario_names[scenario] << std::endl;
+    std::cout << "[intersection]\n";
+    for (auto road : intersection)
+        std::cout << "\t" << toString(road) << std::endl;
+#endif
     if (scenario != TurnLaneHandler::NONE)
         (*count_called)++;
 
