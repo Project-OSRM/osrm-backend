@@ -107,7 +107,7 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                                          previous_lane_data,
                                          previous_description_id);
 
-#if 1
+#if 0
     std::cout << "[scenario] " << scenario_names[scenario] << std::endl;
     std::cout << "[intersection]\n";
     for (auto road : intersection)
@@ -379,10 +379,11 @@ TurnLaneHandler::deduceScenario(const NodeID at,
 
         std::sort(previous_lane_data.begin(), previous_lane_data.end());
 
+        const bool has_valid_size = previous_lane_data.size() == possible_entries ||
+                                    (previous_lane_data.size() == possible_entries + 1 &&
+                                     hasTag(TurnLaneType::none, previous_lane_data));
         // check if we were successfull in trimming
-        if ((previous_lane_data.size() ==
-             possible_entries + (hasTag(TurnLaneType::none, previous_lane_data) ? 1 : 0)) &&
-            isSimpleIntersection(previous_lane_data, intersection))
+        if (has_valid_size && isSimpleIntersection(previous_lane_data, intersection))
             return TurnLaneScenario::PARTITION_PREVIOUS;
     }
 

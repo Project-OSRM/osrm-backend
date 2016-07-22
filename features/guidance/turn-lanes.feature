@@ -886,7 +886,7 @@ Feature: Turn Lane Guidance
             | a,g       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
             | a,h       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |
 
-    @partition-lanes
+    @partition-lanes @none
     Scenario: Two Four Way Intersections - Far enough apart - Right First
         Given the node map
             |   |   | g |   |   |   | i |   |   |
@@ -908,7 +908,7 @@ Feature: Turn Lane Guidance
             | a,i       | road,cross,cross | depart,turn left,arrive  | ,,                                    |
             | a,f       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |
 
-    @partition-lanes
+    @partition-lanes @none
     Scenario: Two Four Way Intersections - combine - right first
         Given the node map
             |   |   | g | i |   |   |
@@ -929,3 +929,47 @@ Feature: Turn Lane Guidance
             | a,e       | road,road        | depart,arrive            | ,                                     |
             | a,i       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
             | a,f       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |
+
+    @partition-lanes @none
+    Scenario: Turn from previous intersection
+        Given the node map
+            | f |   |   | e |   |   |   |
+            |   |   |   |   |   |   |   |
+            | a |   | b | c |   |   | d |
+
+        And the ways
+            | nodes | highway | name  | oneway | turn:lanes:forward     |
+            | ab    | primary | road  | yes    | left\|none\|none\|none |
+            | bcd   | primary | road  | yes    |                        |
+            | ce    | primary | cross | yes    |                        |
+            | fb    | primary | back  | yes    |                        |
+
+        When I route I should get
+            | waypoints | route            | turns                   | lanes                                        |
+            | a,d       | road,road        | depart,arrive           | ,                                            |
+            | a,e       | road,cross,cross | depart,turn left,arrive | ,left:true none:false none:false none:false, |
+
+    @simple @none @partition-lanes
+    Scenario: Close but disconnected Intersections
+        Given the node map
+            |   |   | g | i |   |   |
+            |   |   |   |   |   |   |
+            | a |   | b | d |   | e |
+            |   |   |   |   |   |   |
+            |   |   | f | h |   |   |
+
+        And the ways
+            | nodes | name  | highway | turn:lanes:forward  |
+            | ab    | road  | primary | left\|through\|none |
+            | bde   | road  | primary |                     |
+            | gbf   | cross | primary |                     |
+            | hdi   | other | primary |                     |
+
+       When I route I should get
+            | waypoints | route            | turns                    | lanes                                 |
+            | a,e       | road,road        | depart,arrive            | ,                                     |
+            | a,g       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
+            | a,f       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |
+            | a,i       | road,other,other | depart,turn left,arrive  | ,,                                    |
+            | a,h       | road,other,other | depart,turn right,arrive | ,,                                    |
+
