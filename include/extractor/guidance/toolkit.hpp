@@ -12,7 +12,6 @@
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 
-#include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/discrete_angle.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -46,12 +45,6 @@ using util::guidance::leavesRoundabout;
 namespace detail
 {
 const constexpr double DESIRED_SEGMENT_LENGTH = 10.0;
-const constexpr bool shiftable_ccw[] = {false, true, true, false, false, true, true, false};
-const constexpr bool shiftable_cw[] = {false, false, true, true, false, false, true, true};
-const constexpr std::uint8_t modifier_bounds[detail::num_direction_modifiers] = {
-    0, 36, 93, 121, 136, 163, 220, 255};
-
-const constexpr double discrete_angle_step_size = 360. / 24;
 
 template <typename IteratorType>
 util::Coordinate
@@ -154,163 +147,6 @@ getRepresentativeCoordinate(const NodeID from_node,
             return detail::getCoordinateFromCompressedRange(
                 base_coordinate, geometry.begin(), geometry.end(), final_coordinate, query_nodes);
     }
-}
-
-// shift an instruction around the degree circle in CCW order
-inline DirectionModifier::Enum forcedShiftCCW(const DirectionModifier::Enum modifier)
-{
-    return static_cast<DirectionModifier::Enum>((static_cast<std::uint32_t>(modifier) + 1) %
-                                                detail::num_direction_modifiers);
-}
-
-inline DirectionModifier::Enum shiftCCW(const DirectionModifier::Enum modifier)
-{
-    if (detail::shiftable_ccw[static_cast<int>(modifier)])
-        return forcedShiftCCW(modifier);
-    else
-        return modifier;
-}
-
-// shift an instruction around the degree circle in CW order
-inline DirectionModifier::Enum forcedShiftCW(const DirectionModifier::Enum modifier)
-{
-    return static_cast<DirectionModifier::Enum>(
-        (static_cast<std::uint32_t>(modifier) + detail::num_direction_modifiers - 1) %
-        detail::num_direction_modifiers);
-}
-
-inline DirectionModifier::Enum shiftCW(const DirectionModifier::Enum modifier)
-{
-    if (detail::shiftable_cw[static_cast<int>(modifier)])
-        return forcedShiftCW(modifier);
-    else
-        return modifier;
-}
-
-inline bool isBasic(const TurnType::Enum type)
-{
-    return type == TurnType::Turn || type == TurnType::EndOfRoad;
-}
-
-inline bool isUturn(const TurnInstruction instruction)
-{
-    return isBasic(instruction.type) && instruction.direction_modifier == DirectionModifier::UTurn;
-}
-
-inline bool resolve(TurnInstruction &to_resolve, const TurnInstruction neighbor, bool resolve_cw)
-{
-    const auto shifted_turn = resolve_cw ? shiftCW(to_resolve.direction_modifier)
-                                         : shiftCCW(to_resolve.direction_modifier);
-    if (shifted_turn == neighbor.direction_modifier ||
-        shifted_turn == to_resolve.direction_modifier)
-        return false;
-
-    to_resolve.direction_modifier = shifted_turn;
-    return true;
-}
-
-inline bool resolveTransitive(TurnInstruction &first,
-                              TurnInstruction &second,
-                              const TurnInstruction third,
-                              bool resolve_cw)
-{
-    if (resolve(second, third, resolve_cw))
-    {
-        first.direction_modifier =
-            resolve_cw ? shiftCW(first.direction_modifier) : shiftCCW(first.direction_modifier);
-        return true;
-    }
-    return false;
-}
-
-inline bool isSlightTurn(const TurnInstruction turn)
-{
-    return (isBasic(turn.type) || turn.type == TurnType::NoTurn) &&
-           (turn.direction_modifier == DirectionModifier::Straight ||
-            turn.direction_modifier == DirectionModifier::SlightRight ||
-            turn.direction_modifier == DirectionModifier::SlightLeft);
-}
-
-inline bool isSlightModifier(const DirectionModifier::Enum direction_modifier)
-{
-    return (direction_modifier == DirectionModifier::Straight ||
-            direction_modifier == DirectionModifier::SlightRight ||
-            direction_modifier == DirectionModifier::SlightLeft);
-}
-
-inline bool isSharpTurn(const TurnInstruction turn)
-{
-    return isBasic(turn.type) && (turn.direction_modifier == DirectionModifier::SharpLeft ||
-                                  turn.direction_modifier == DirectionModifier::SharpRight);
-}
-
-inline bool isStraight(const TurnInstruction turn)
-{
-    return (isBasic(turn.type) || turn.type == TurnType::NoTurn) &&
-           turn.direction_modifier == DirectionModifier::Straight;
-}
-
-inline bool isConflict(const TurnInstruction first, const TurnInstruction second)
-{
-    return (first.type == second.type && first.direction_modifier == second.direction_modifier) ||
-           (isStraight(first) && isStraight(second));
-}
-
-inline DiscreteAngle discretizeAngle(const double angle)
-{
-    BOOST_ASSERT(angle >= 0. && angle <= 360.);
-    return DiscreteAngle(static_cast<std::uint8_t>(
-        (angle + 0.5 * detail::discrete_angle_step_size) / detail::discrete_angle_step_size));
-}
-
-inline double angleFromDiscreteAngle(const DiscreteAngle angle)
-{
-    return static_cast<double>(angle) * detail::discrete_angle_step_size +
-           0.5 * detail::discrete_angle_step_size;
-}
-
-inline double getAngularPenalty(const double angle, DirectionModifier::Enum modifier)
-{
-    // these are not aligned with getTurnDirection but represent an ideal center
-    const double center[] = {0, 45, 90, 135, 180, 225, 270, 315};
-    return angularDeviation(center[static_cast<int>(modifier)], angle);
-}
-
-inline double getTurnConfidence(const double angle, TurnInstruction instruction)
-{
-
-    // special handling of U-Turns and Roundabout
-    if (!isBasic(instruction.type) || instruction.direction_modifier == DirectionModifier::UTurn)
-        return 1.0;
-
-    const double deviations[] = {0, 45, 50, 30, 20, 30, 50, 45};
-    const double difference = getAngularPenalty(angle, instruction.direction_modifier);
-    const double max_deviation = deviations[static_cast<int>(instruction.direction_modifier)];
-    return 1.0 - (difference / max_deviation) * (difference / max_deviation);
-}
-
-inline bool canBeSuppressed(const TurnType::Enum type)
-{
-    if (type == TurnType::Turn)
-        return true;
-    return false;
-}
-
-inline bool isLowPriorityRoadClass(const FunctionalRoadClass road_class)
-{
-    return road_class == FunctionalRoadClass::LOW_PRIORITY_ROAD ||
-           road_class == FunctionalRoadClass::SERVICE;
-}
-
-inline bool isDistinct(const DirectionModifier::Enum first, const DirectionModifier::Enum second)
-{
-    if ((first + 1) % detail::num_direction_modifiers == second)
-        return false;
-
-    if ((second + 1) % detail::num_direction_modifiers == first)
-        return false;
-
-    return true;
 }
 
 inline std::pair<std::string, std::string> getPrefixAndSuffix(const std::string &data)
@@ -422,26 +258,6 @@ inline bool requiresNameAnnounced(const std::string &from,
     return !obvious_change;
 }
 
-inline int getPriority(const FunctionalRoadClass road_class)
-{
-    // The road priorities indicate which roads can bee seen as more or less equal.
-    // They are used in Fork-Discovery. Possibly should be moved to profiles post v5?
-    // A fork can happen between road types that are at most 1 priority apart from each other
-    const constexpr int road_priority[] = {
-        10, 0, 10, 2, 10, 4, 10, 6, 10, 8, 10, 11, 10, 12, 10, 14};
-    return road_priority[static_cast<int>(road_class)];
-}
-
-inline bool canBeSeenAsFork(const FunctionalRoadClass first, const FunctionalRoadClass second)
-{
-    // forks require similar road categories
-    // Based on the priorities assigned above, we can set forks only if the road priorities match
-    // closely.
-    // Potentially we could include features like number of lanes here and others?
-    // Should also be moved to profiles
-    return std::abs(getPriority(first) - getPriority(second)) <= 1;
-}
-
 // To simplify handling of Left/Right hand turns, we can mirror turns and write an intersection
 // handler only for one side. The mirror function turns a left-hand turn in a equivalent right-hand
 // turn and vice versa.
@@ -481,8 +297,11 @@ inline bool hasRoundaboutType(const TurnInstruction instruction)
                                                     TurnType::EnterRoundaboutIntersectionAtExit,
                                                     TurnType::ExitRoundaboutIntersection,
                                                     TurnType::StayOnRoundabout};
-    const auto valid_end = valid_types + 13;
-    return std::find(valid_types, valid_end, instruction.type) != valid_end;
+
+    const auto *first = valid_types;
+    const auto *last = first + sizeof(valid_types) / sizeof(valid_types[0]);
+
+    return std::find(first, last, instruction.type) != last;
 }
 
 // Public service vehicle lanes and similar can introduce additional lanes into the lane string that

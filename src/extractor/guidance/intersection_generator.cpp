@@ -1,5 +1,5 @@
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include <algorithm>
@@ -21,10 +21,13 @@ IntersectionGenerator::IntersectionGenerator(
     const RestrictionMap &restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::vector<QueryNode> &node_info_list,
-    const CompressedEdgeContainer &compressed_edge_container)
+    const CompressedEdgeContainer &compressed_edge_container,
+    const util::NameTable &name_table,
+    const SuffixTable &suffix_table)
     : node_based_graph(node_based_graph), restriction_map(restriction_map),
       barrier_nodes(barrier_nodes), node_info_list(node_info_list),
-      compressed_edge_container(compressed_edge_container)
+      compressed_edge_container(compressed_edge_container), name_table(name_table),
+      suffix_table(suffix_table)
 {
 }
 
@@ -181,14 +184,16 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
         const auto &first_data = node_based_graph.GetEdgeData(intersection[first].turn.eid);
         const auto &second_data = node_based_graph.GetEdgeData(intersection[second].turn.eid);
 
-        return first_data.name_id != EMPTY_NAMEID && first_data.name_id == second_data.name_id &&
-               !first_data.roundabout && !second_data.roundabout &&
-               first_data.travel_mode == second_data.travel_mode &&
+        return first_data.name_id != EMPTY_NAMEID && !first_data.roundabout &&
+               !second_data.roundabout && first_data.travel_mode == second_data.travel_mode &&
                first_data.road_classification == second_data.road_classification &&
                // compatible threshold
                angularDeviation(intersection[first].turn.angle, intersection[second].turn.angle) <
                    60 &&
-               first_data.reversed != second_data.reversed;
+               first_data.reversed != second_data.reversed &&
+               !requiresNameAnnounced(name_table.GetNameForID(first_data.name_id),
+                                      name_table.GetNameForID(second_data.name_id),
+                                      suffix_table);
     };
 
     const auto merge = [](const ConnectedRoad &first,

@@ -29,7 +29,8 @@ class IntersectionHandler
                         const std::vector<QueryNode> &node_info_list,
                         const util::NameTable &name_table,
                         const SuffixTable &street_name_suffix_table);
-    virtual ~IntersectionHandler();
+
+    virtual ~IntersectionHandler() = default;
 
     // check whether the handler can actually handle the intersection
     virtual bool
@@ -50,6 +51,9 @@ class IntersectionHandler
 
     // Decide on a basic turn types
     TurnType::Enum findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
+
+    // Find the most obvious turn to follow
+    std::size_t findObviousTurn(const EdgeID via_edge, const Intersection &intersection) const;
 
     // Get the Instruction for an obvious turn
     TurnInstruction getInstructionForObvious(const std::size_t number_of_candidates,

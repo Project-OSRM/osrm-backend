@@ -4,7 +4,7 @@
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
 
-#include "extractor/guidance/classification_data.hpp"
+#include "extractor/guidance/road_classification.hpp"
 
 namespace osrm
 {
@@ -27,7 +27,7 @@ struct NodeBasedEdge
                   TravelMode travel_mode,
                   bool is_split,
                   const LaneDescriptionID lane_description_id,
-                  guidance::RoadClassificationData road_classification);
+                  guidance::RoadClassification road_classification);
 
     bool operator<(const NodeBasedEdge &other) const;
 
@@ -43,7 +43,7 @@ struct NodeBasedEdge
     bool is_split : 1;
     TravelMode travel_mode : 4;
     LaneDescriptionID lane_description_id;
-    guidance::RoadClassificationData road_classification;
+    guidance::RoadClassification road_classification;
 };
 
 struct NodeBasedEdgeWithOSM : NodeBasedEdge
@@ -60,7 +60,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          TravelMode travel_mode,
                          bool is_split,
                          const LaneDescriptionID lane_description_id,
-                         guidance::RoadClassificationData road_classification);
+                         guidance::RoadClassification road_classification);
 
     OSMNodeID osm_source_id;
     OSMNodeID osm_target_id;
@@ -87,7 +87,7 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     TravelMode travel_mode,
                                     bool is_split,
                                     const LaneDescriptionID lane_description_id,
-                                    guidance::RoadClassificationData road_classification)
+                                    guidance::RoadClassification road_classification)
     : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
       backward(backward), roundabout(roundabout), access_restricted(access_restricted),
       startpoint(startpoint), is_split(is_split), travel_mode(travel_mode),
@@ -125,7 +125,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(
     TravelMode travel_mode,
     bool is_split,
     const LaneDescriptionID lane_description_id,
-    guidance::RoadClassificationData road_classification)
+    guidance::RoadClassification road_classification)
     : NodeBasedEdge(SPECIAL_NODEID,
                     SPECIAL_NODEID,
                     name_id,

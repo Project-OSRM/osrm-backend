@@ -120,11 +120,6 @@ ExtractionContainers::ExtractionContainers()
     name_offsets.push_back(0);
     // Insert the total length sentinel (corresponds to the next name string offset)
     name_offsets.push_back(0);
-
-    // the offsets have to be initialized with two values, since we have the empty turn string for
-    // the first id
-    turn_lane_offsets.push_back(0);
-    turn_lane_offsets.push_back(0);
 }
 
 /**
@@ -140,7 +135,6 @@ ExtractionContainers::ExtractionContainers()
 void ExtractionContainers::PrepareData(const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
-                                       const std::string &turn_lane_file_name,
                                        lua_State *segment_state)
 {
     try
@@ -158,8 +152,7 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         PrepareRestrictions();
         WriteRestrictions(restrictions_file_name);
 
-        WriteCharData(name_file_name);
-        WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
+        WriteCharData(name_file_name, name_offsets, name_char_data);
     }
     catch (const std::exception &e)
     {
@@ -167,52 +160,28 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
     }
 }
 
-void ExtractionContainers::WriteTurnLaneMasks(
-    const std::string &file_name,
-    const stxxl::vector<std::uint32_t> &offsets,
-    const stxxl::vector<guidance::TurnLaneType::Mask> &masks) const
-{
-    util::SimpleLogger().Write() << "Writing turn lane masks...";
-    TIMER_START(turn_lane_timer);
-
-    std::ofstream ofs(file_name, std::ios::binary);
-
-    if (!util::serializeVector(ofs, offsets))
-    {
-        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
-        return;
-    }
-
-    if (!util::serializeVector(ofs, masks))
-    {
-        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
-        return;
-    }
-
-    TIMER_STOP(turn_lane_timer);
-    util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
-}
-
-void ExtractionContainers::WriteCharData(const std::string &file_name)
+void ExtractionContainers::WriteCharData(const std::string &file_name,
+                                         stxxl::vector<unsigned> &offsets,
+                                         const stxxl::vector<unsigned char> &char_data) const
 {
     std::cout << "[extractor] writing street name index ... " << std::flush;
     TIMER_START(write_index);
     boost::filesystem::ofstream file_stream(file_name, std::ios::binary);
 
     // transforms in-place name offsets to name lengths
-    BOOST_ASSERT(!name_offsets.empty());
-    for (auto curr = name_offsets.begin(), next = name_offsets.begin() + 1;
-         next != name_offsets.end(); ++curr, ++next)
+    BOOST_ASSERT(!offsets.empty());
+    for (auto curr = offsets.begin(), next = offsets.begin() + 1;
+         next != offsets.end(); ++curr, ++next)
     {
         *curr = *next - *curr;
     }
 
     // removes the total length sentinel
-    unsigned total_length = name_offsets.back();
-    name_offsets.pop_back();
+    unsigned total_length = offsets.back();
+    offsets.pop_back();
 
     // builds and writes the index
-    util::RangeTable<> index_range(name_offsets);
+    util::RangeTable<> index_range(offsets);
     file_stream << index_range;
 
     file_stream.write((char *)&total_length, sizeof(unsigned));
@@ -221,7 +190,7 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
     unsigned buffer_len = 0;
 
-    for (const auto c : name_char_data)
+    for (const auto c : char_data)
     {
         write_buffer[buffer_len++] = c;
 

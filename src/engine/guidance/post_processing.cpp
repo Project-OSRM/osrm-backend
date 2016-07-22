@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <limits>
 #include <utility>
 
@@ -60,16 +59,6 @@ bool isCollapsableInstruction(const TurnInstruction instruction)
            (instruction.type == TurnType::Continue &&
             instruction.direction_modifier == DirectionModifier::Straight) ||
            (instruction.type == TurnType::Merge);
-}
-
-// A check whether two instructions can be treated as one. This is only the case for very short
-// maneuvers that can, in some form, be seen as one. The additional in_step is to find out about
-// a possible u-turn.
-bool collapsable(const RouteStep &step)
-{
-    return step.distance < MAX_COLLAPSE_DISTANCE &&
-           (step.maneuver.instruction.type == TurnType::UseLane ||
-            isCollapsableInstruction(step.maneuver.instruction));
 }
 
 bool compatible(const RouteStep &lhs, const RouteStep &rhs) { return lhs.mode == rhs.mode; }
@@ -317,41 +306,6 @@ void closeOffRoundabout(const bool on_roundabout,
     }
 }
 
-// elongate a step by another. the data is added either at the front, or the back
-RouteStep elongate(RouteStep step, const RouteStep &by_step)
-{
-    BOOST_ASSERT(step.mode == by_step.mode);
-
-    step.duration += by_step.duration;
-    step.distance += by_step.distance;
-
-    // by_step comes after step -> we append at the end
-    if (step.geometry_end == by_step.geometry_begin + 1)
-    {
-        step.geometry_end = by_step.geometry_end;
-
-        // if we elongate in the back, we only need to copy the intersections to the beginning.
-        // the bearings remain the same, as the location of the turn doesn't change
-        step.intersections.insert(
-            step.intersections.end(), by_step.intersections.begin(), by_step.intersections.end());
-    }
-    // by_step comes before step -> we append at the front
-    else
-    {
-        BOOST_ASSERT(step.maneuver.waypoint_type == WaypointType::None &&
-                     by_step.maneuver.waypoint_type == WaypointType::None);
-        BOOST_ASSERT(by_step.geometry_end == step.geometry_begin + 1);
-        step.geometry_begin = by_step.geometry_begin;
-
-        // elongating in the front changes the location of the maneuver
-        step.maneuver = by_step.maneuver;
-
-        step.intersections.insert(
-            step.intersections.begin(), by_step.intersections.begin(), by_step.intersections.end());
-    }
-    return step;
-}
-
 void collapseTurnAt(std::vector<RouteStep> &steps,
                     const std::size_t two_back_index,
                     const std::size_t one_back_index,
@@ -360,10 +314,9 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     BOOST_ASSERT(step_index < steps.size());
     BOOST_ASSERT(one_back_index < steps.size());
     const auto &current_step = steps[step_index];
-
     const auto &one_back_step = steps[one_back_index];
 
-    // This function assumes driving on the right hand side of the streat
+    // FIXME: this function assumes driving on the right hand side of the streat
     const auto bearingsAreReversed = [](const double bearing_in, const double bearing_out) {
         // Nearly perfectly reversed angles have a difference close to 180 degrees (straight)
         const double left_turn_angle = [&]() {
@@ -376,7 +329,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 
     BOOST_ASSERT(!one_back_step.intersections.empty() && !current_step.intersections.empty());
     // Very Short New Name
-    if (((collapsable(one_back_step) ||
+    if (((collapsable(one_back_step, current_step) ||
           (isCollapsableInstruction(one_back_step.maneuver.instruction) &&
            choiceless(current_step, one_back_step))) &&
          !(one_back_step.maneuver.instruction.type == TurnType::Merge)))
@@ -399,6 +352,11 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                 steps[step_index].maneuver.instruction.type = TurnType::Turn;
             }
             else if (TurnType::NewName == current_step.maneuver.instruction.type &&
+                     current_step.maneuver.instruction.direction_modifier !=
+                         DirectionModifier::Straight &&
+                     one_back_step.intersections.front().bearings.size() > 2)
+                steps[step_index].maneuver.instruction.type = TurnType::Turn;
+            else if (TurnType::UseLane == current_step.maneuver.instruction.type &&
                      current_step.maneuver.instruction.direction_modifier !=
                          DirectionModifier::Straight &&
                      one_back_step.intersections.front().bearings.size() > 2)
@@ -545,6 +503,63 @@ std::vector<RouteStep> anticipateLaneChangeForRoundabouts(std::vector<RouteStep>
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
 // is turned into exit counts. These instructions are removed by the following function
+
+// A check whether two instructions can be treated as one. This is only the case for very short
+// maneuvers that can, in some form, be seen as one. Lookahead of one step.
+bool collapsable(const RouteStep &step, const RouteStep &next)
+{
+    const auto is_short_step = step.distance < MAX_COLLAPSE_DISTANCE;
+    const auto instruction_can_be_collapsed = isCollapsableInstruction(step.maneuver.instruction);
+
+    const auto is_use_lane = step.maneuver.instruction.type == TurnType::UseLane;
+    const auto lanes_dont_change =
+        step.intersections.front().lanes == next.intersections.front().lanes;
+
+    if (is_short_step && instruction_can_be_collapsed)
+        return true;
+
+    // Prevent collapsing away important lane change steps
+    if (is_short_step && is_use_lane && lanes_dont_change)
+        return true;
+
+    return false;
+}
+
+// Elongate a step by another. the data is added either at the front, or the back
+RouteStep elongate(RouteStep step, const RouteStep &by_step)
+{
+    BOOST_ASSERT(step.mode == by_step.mode);
+
+    step.duration += by_step.duration;
+    step.distance += by_step.distance;
+
+    // by_step comes after step -> we append at the end
+    if (step.geometry_end == by_step.geometry_begin + 1)
+    {
+        step.geometry_end = by_step.geometry_end;
+
+        // if we elongate in the back, we only need to copy the intersections to the beginning.
+        // the bearings remain the same, as the location of the turn doesn't change
+        step.intersections.insert(
+            step.intersections.end(), by_step.intersections.begin(), by_step.intersections.end());
+    }
+    // by_step comes before step -> we append at the front
+    else
+    {
+        BOOST_ASSERT(step.maneuver.waypoint_type == WaypointType::None &&
+                     by_step.maneuver.waypoint_type == WaypointType::None);
+        BOOST_ASSERT(by_step.geometry_end == step.geometry_begin + 1);
+        step.geometry_begin = by_step.geometry_begin;
+
+        // elongating in the front changes the location of the maneuver
+        step.maneuver = by_step.maneuver;
+
+        step.intersections.insert(
+            step.intersections.begin(), by_step.intersections.begin(), by_step.intersections.end());
+    }
+    return step;
+}
+
 std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 {
     // finally clean up the post-processed instructions.
@@ -720,34 +735,53 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         // TurnType::Sliproad != TurnType::NoTurn
         if (one_back_step.maneuver.instruction.type == TurnType::Sliproad)
         {
-            // Handle possible u-turns between highways that look like slip-roads
-            if (steps[getPreviousIndex(one_back_index)].name_id == steps[step_index].name_id &&
-                steps[step_index].name_id != EMPTY_NAMEID)
+            if (current_step.maneuver.instruction.type == TurnType::Suppressed &&
+                compatible(one_back_step, current_step))
             {
-                steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+                // Traffic light on the sliproad, the road itself will be handled in the next
+                // iteration, when one-back-index again points to the sliproad.
+                steps[one_back_index] =
+                    elongate(std::move(steps[one_back_index]), steps[step_index]);
+                invalidateStep(steps[step_index]);
             }
             else
             {
-                steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
-            }
-            if (compatible(one_back_step, current_step))
-            {
-                steps[one_back_index] =
-                    elongate(std::move(steps[one_back_index]), steps[step_index]);
-                steps[one_back_index].name_id = steps[step_index].name_id;
-                steps[one_back_index].name = steps[step_index].name;
+                // Handle possible u-turns between highways that look like slip-roads
+                if (steps[getPreviousIndex(one_back_index)].name_id == steps[step_index].name_id &&
+                    steps[step_index].name_id != EMPTY_NAMEID)
+                {
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+                }
+                else
+                {
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
+                }
+                if (compatible(one_back_step, current_step))
+                {
+                    steps[one_back_index] =
+                        elongate(std::move(steps[one_back_index]), steps[step_index]);
+                    steps[one_back_index].name_id = steps[step_index].name_id;
+                    steps[one_back_index].name = steps[step_index].name;
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
+                    // the turn lanes for this turn are on the sliproad itself, so we have to
+                    // remember  them
+                    steps[one_back_index].intersections.front().lanes =
+                        current_step.intersections.front().lanes;
+                    steps[one_back_index].intersections.front().lane_description =
+                        current_step.intersections.front().lane_description;
 
-                const auto exit_intersection = steps[step_index].intersections.front();
-                const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
+                    const auto exit_intersection = steps[step_index].intersections.front();
+                    const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
 
-                const auto entry_intersection = steps[one_back_index].intersections.front();
-                const auto entry_bearing = entry_intersection.bearings[entry_intersection.in];
+                    const auto entry_intersection = steps[one_back_index].intersections.front();
+                    const auto entry_bearing = entry_intersection.bearings[entry_intersection.in];
 
-                const double angle =
-                    turn_angle(util::bearing::reverseBearing(entry_bearing), exit_bearing);
-                steps[one_back_index].maneuver.instruction.direction_modifier =
-                    ::osrm::util::guidance::getTurnDirection(angle);
-                invalidateStep(steps[step_index]);
+                    const double angle =
+                        turn_angle(util::bearing::reverseBearing(entry_bearing), exit_bearing);
+                    steps[one_back_index].maneuver.instruction.direction_modifier =
+                        ::osrm::util::guidance::getTurnDirection(angle);
+                    invalidateStep(steps[step_index]);
+                }
             }
         }
         // Due to empty segments, we can get name-changes from A->A
@@ -840,7 +874,6 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     BOOST_ASSERT(steps.back().intersections.front().bearings.size() == 1);
     BOOST_ASSERT(steps.back().intersections.front().entry.size() == 1);
     BOOST_ASSERT(steps.back().maneuver.waypoint_type == WaypointType::Arrive);
-
     return removeNoTurnInstructions(std::move(steps));
 }
 
@@ -1190,15 +1223,40 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
 
     for (std::size_t step_index = 1; step_index < steps.size(); ++step_index)
     {
-        const auto &step = steps[step_index];
-        if (step.maneuver.instruction.type == TurnType::UseLane &&
-            canCollapeUseLane(step.intersections.front().lanes,
-                              step.intersections.front().lane_description))
+        const auto &current = steps[step_index];
+        const auto previous_index = getPreviousIndex(step_index);
+        const auto &previous = steps[previous_index];
+        if (current.maneuver.instruction.type == TurnType::UseLane &&
+            canCollapeUseLane(current.intersections.front().lanes,
+                              current.intersections.front().lane_description))
         {
-            const auto previous = getPreviousIndex(step_index);
-            steps[previous] = elongate(steps[previous], steps[step_index]);
-            //elongate(steps[step_index-1], steps[step_index]);
+            steps[previous_index] = elongate(steps[previous_index], steps[step_index]);
+            // elongate(steps[step_index-1], steps[step_index]);
             invalidateStep(steps[step_index]);
+        }
+
+        // We might have constrained the previous step in a way that makes it compatible
+        // with the current step. If we did so we collapse it here and mark the current
+        // step as invalid, scheduled for later removal.
+        else if (previous.maneuver.instruction.type == TurnType::UseLane &&
+                 collapsable(previous, current))
+        {
+            // Which turn to keep depends on the combination of instructions. If multiple
+            // use-lanes are used, we are keeping the first restriction onto the lanes and don't
+            // repeat it. If a turn is required, we keep the second turn and elongate the
+            // use-lane prior to it. This is necessary to not invalidate any required turns.
+            if (current.maneuver.instruction.type == TurnType::UseLane)
+            {
+                steps[previous_index] = elongate(std::move(steps[previous_index]), current);
+                invalidateStep(steps[step_index]);
+            }
+            else
+            { // we are looking at an actual turn, keep it
+                BOOST_ASSERT(previous_index >= 1);
+                const auto two_back_index = getPreviousIndex(previous_index);
+                steps[two_back_index] = elongate(std::move(steps[two_back_index]), steps[previous_index]);
+                invalidateStep(steps[previous_index]);
+            }
         }
     }
     return removeNoTurnInstructions(std::move(steps));

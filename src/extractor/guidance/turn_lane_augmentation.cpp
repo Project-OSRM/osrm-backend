@@ -1,3 +1,6 @@
+#include "util/debug.hpp"
+
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "util/simple_logger.hpp"
@@ -107,16 +110,45 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
         util::SimpleLogger().Write(logWARNING) << "Failed lane assignment. Reached bad situation.";
         return std::make_pair(std::size_t{0}, std::size_t{0});
     }();
+
+    bool has_straight = [&]() {
+        for (auto intersection_index = range.first; intersection_index < range.second;
+             ++intersection_index)
+        {
+            if (intersection[intersection_index].entry_allowed)
+            {
+                // FIXME this probably can be only a subset of these turns here?
+                const auto tag = tag_by_modifier[intersection[intersection_index]
+                                                     .turn.instruction.direction_modifier];
+                if (tag == TurnLaneType::straight)
+                    return true;
+            }
+        }
+        return false;
+    }();
     for (auto intersection_index = range.first; intersection_index < range.second;
          ++intersection_index)
     {
         if (intersection[intersection_index].entry_allowed)
         {
             // FIXME this probably can be only a subset of these turns here?
-            lane_data.push_back({tag_by_modifier[intersection[intersection_index]
-                                                     .turn.instruction.direction_modifier],
-                                 lane_data[none_index].from,
-                                 lane_data[none_index].to});
+            const auto tag = tag_by_modifier[intersection[intersection_index]
+                                                 .turn.instruction.direction_modifier];
+            if (tag == TurnLaneType::straight || !has_straight)
+            {
+                lane_data.push_back(
+                    {tag, lane_data[none_index].from, lane_data[none_index].to, false});
+            }
+            else if (intersection[intersection_index].turn.angle < STRAIGHT_ANGLE)
+            {
+                lane_data.push_back(
+                    {tag, lane_data[none_index].from, lane_data[none_index].from, false});
+            }
+            else if (intersection[intersection_index].turn.angle > STRAIGHT_ANGLE)
+            {
+                lane_data.push_back(
+                    {tag, lane_data[none_index].to, lane_data[none_index].to, false});
+            }
         }
     }
     lane_data.erase(lane_data.begin() + none_index);
@@ -268,7 +300,8 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
         ((intersection[0].entry_allowed && lane_data.back().tag != TurnLaneType::uturn) ? 1 : 0);
 
     // TODO check for impossible turns to see whether the turn lane is at the correct place
-    const std::size_t none_index = std::distance(lane_data.begin(), findTag(TurnLaneType::none, lane_data));
+    const std::size_t none_index =
+        std::distance(lane_data.begin(), findTag(TurnLaneType::none, lane_data));
     BOOST_ASSERT(none_index != lane_data.size());
     // we have to create multiple turns
     if (connection_count > lane_data.size())
@@ -279,6 +312,14 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     // we have to reduce it, assigning it to neighboring turns
     else if (connection_count < lane_data.size())
     {
+        if (connection_count + 1 < lane_data.size())
+        {
+            std::cout << "[error] failed assignment" << std::endl;
+            util::guidance::print(lane_data);
+            std::cout << "Intersection:\n";
+            for (auto road : intersection)
+                std::cout << "\t" << toString(road) << std::endl;
+        }
         // a pgerequisite is simple turns. Larger differences should not end up here
         // an additional line at the side is only reasonable if it is targeting public
         // service vehicles. Otherwise, we should not have it
