@@ -107,7 +107,7 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                                          previous_lane_data,
                                          previous_description_id);
 
-#if 0 
+#if 1
     std::cout << "[scenario] " << scenario_names[scenario] << std::endl;
     std::cout << "[intersection]\n";
     for (auto road : intersection)
@@ -380,7 +380,8 @@ TurnLaneHandler::deduceScenario(const NodeID at,
         std::sort(previous_lane_data.begin(), previous_lane_data.end());
 
         // check if we were successfull in trimming
-        if ((previous_lane_data.size() == possible_entries) &&
+        if ((previous_lane_data.size() ==
+             possible_entries + (hasTag(TurnLaneType::none, previous_lane_data) ? 1 : 0)) &&
             isSimpleIntersection(previous_lane_data, intersection))
             return TurnLaneScenario::PARTITION_PREVIOUS;
     }
@@ -633,7 +634,9 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
 
         // we need to match all items to either the current or the next intersection
         if (!(matched_at_first[lane] || matched_at_second[lane]))
+        {
             return {turn_lane_data, {}};
+        }
     }
 
     std::size_t none_index =
@@ -699,7 +702,6 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
         first.push_back(data);
         std::sort(first.begin(), first.end());
     }
-
     // TODO augment straightmost turn
     return {std::move(first), std::move(second)};
 }

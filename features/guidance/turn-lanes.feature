@@ -864,7 +864,7 @@ Feature: Turn Lane Guidance
             | a,g       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
             | a,h       | road,cross,cross | depart,turn right,arrive | ,,                                    |
 
-    @partition-lanes
+    @partition-lanes @todo
     Scenario: Two Four Way Intersections - combine
         Given the node map
             |   |   | g | i |   |   |
@@ -885,3 +885,47 @@ Feature: Turn Lane Guidance
             | a,e       | road,road        | depart,arrive            | ,                                     |
             | a,g       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
             | a,h       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |
+
+    @partition-lanes
+    Scenario: Two Four Way Intersections - Far enough apart - Right First
+        Given the node map
+            |   |   | g |   |   |   | i |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            | a |   | b |   | c |   | d |   | e |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   | f |   |   |   | h |   |   |
+
+        And the ways
+            | nodes | name  | highway | oneway | turn:lanes:forward  |
+            | ab    | road  | primary | no     | left\|through\|none |
+            | bcde  | road  | primary | no     |                     |
+            | gbf   | cross | primary | yes    |                     |
+            | hdi   | cross | primary | yes    |                     |
+
+       When I route I should get
+            | waypoints | route            | turns                    | lanes                                 |
+            | a,e       | road,road        | depart,arrive            | ,                                     |
+            | a,i       | road,cross,cross | depart,turn left,arrive  | ,,                                    |
+            | a,f       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |
+
+    @partition-lanes
+    Scenario: Two Four Way Intersections - combine - right first
+        Given the node map
+            |   |   | g | i |   |   |
+            |   |   |   |   |   |   |
+            | a |   | b | d |   | e |
+            |   |   |   |   |   |   |
+            |   |   | f | h |   |   |
+
+        And the ways
+            | nodes | name  | highway | oneway | turn:lanes:forward  |
+            | ab    | road  | primary | no     | left\|through\|none |
+            | bde   | road  | primary | no     |                     |
+            | gbf   | cross | primary | yes    |                     |
+            | hdi   | cross | primary | yes    |                     |
+
+       When I route I should get
+            | waypoints | route            | turns                    | lanes                                 |
+            | a,e       | road,road        | depart,arrive            | ,                                     |
+            | a,i       | road,cross,cross | depart,turn left,arrive  | ,left:true straight:false none:false, |
+            | a,f       | road,cross,cross | depart,turn right,arrive | ,left:false straight:false none:true, |
