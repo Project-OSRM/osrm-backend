@@ -107,7 +107,7 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                                          previous_lane_data,
                                          previous_description_id);
 
-#if 0
+#if 1
     std::cout << "[scenario] " << scenario_names[scenario] << std::endl;
     std::cout << "[intersection]\n";
     for (auto road : intersection)
@@ -153,12 +153,40 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                 std::cout << "[Unhandled] " << (int)lane_description_id << " -- "
                           << (int)previous_description_id << "\n"
                           << std::endl;
+                if (lane_description_id != INVALID_LANE_DESCRIPTIONID)
+                {
+                    std::cout << "Description:";
+                    for (auto mask =
+                             turn_lane_masks.begin() + turn_lane_offsets[lane_description_id];
+                         mask !=
+                         turn_lane_masks.begin() + turn_lane_offsets[lane_description_id + 1];
+                         ++mask)
+                    {
+                        std::cout << " " << (int)*mask;
+                    }
+                    std::cout << std::endl;
+                }
                 std::cout << "This Intersection";
                 util::guidance::printTurnAssignmentData(
                     at, lane_data, intersection, node_info_list);
 
                 if (previous_node != SPECIAL_NODEID)
                 {
+                    if (previous_description_id != INVALID_LANE_DESCRIPTIONID)
+                    {
+                        std::cout << "Description:";
+                        for (auto mask = turn_lane_masks.begin() +
+                                         turn_lane_offsets[previous_description_id];
+                             mask !=
+                             turn_lane_masks.begin() +
+                                 turn_lane_offsets[previous_description_id + 1];
+                             ++mask)
+                        {
+                            std::cout << " " << (int)*mask;
+                        }
+                        std::cout << std::endl;
+                    }
+
                     std::cout << "Previous Intersection";
                     util::guidance::printTurnAssignmentData(
                         previous_node, previous_lane_data, previous_intersection, node_info_list);
@@ -329,17 +357,26 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     // For our initial case, we consider only the turns that are available at the current
     // location,
     // which are given by partitioning the lane data and selecting the first part.
+    const auto has_valid_size = [](const std::size_t possible_entries,
+                                   const LaneDataVector &turn_lane_data) {
+        return turn_lane_data.size() == possible_entries ||
+               (turn_lane_data.size() == possible_entries + 1 &&
+                hasTag(TurnLaneType::none, turn_lane_data));
+    };
     if (!lane_data.empty())
     {
         if (lane_data.size() >= possible_entries)
         {
+            std::cout << "Did Partition step" << std::endl;
             lane_data = partitionLaneData(node_based_graph.GetTarget(via_edge),
                                           std::move(lane_data),
                                           intersection)
                             .first;
 
+            std::cout << "Check: " << has_valid_size(possible_entries, lane_data) << " " << 
+                isSimpleIntersection(lane_data, intersection) << std::endl;
             // check if we were successfull in trimming
-            if (lane_data.size() == possible_entries &&
+            if (has_valid_size(possible_entries, lane_data) &&
                 isSimpleIntersection(lane_data, intersection))
                 return TurnLaneScenario::PARTITION_LOCAL;
         }
@@ -364,6 +401,10 @@ TurnLaneHandler::deduceScenario(const NodeID at,
     if (previous_has_merge_lane)
         return TurnLaneScenario::MERGE;
 
+    // If all turns are handled at the previous intersection, we are done here
+    if (isSimpleIntersection(previous_lane_data, previous_intersection))
+        return TurnLaneScenario::NONE;
+
     const auto is_simple_previous =
         isSimpleIntersection(previous_lane_data, intersection) && previous_intersection.size() == 2;
     if (is_simple_previous)
@@ -380,11 +421,9 @@ TurnLaneHandler::deduceScenario(const NodeID at,
 
         std::sort(previous_lane_data.begin(), previous_lane_data.end());
 
-        const bool has_valid_size = previous_lane_data.size() == possible_entries ||
-                                    (previous_lane_data.size() == possible_entries + 1 &&
-                                     hasTag(TurnLaneType::none, previous_lane_data));
         // check if we were successfull in trimming
-        if (has_valid_size && isSimpleIntersection(previous_lane_data, intersection))
+        if (has_valid_size(possible_entries, previous_lane_data) &&
+            isSimpleIntersection(previous_lane_data, intersection))
             return TurnLaneScenario::PARTITION_PREVIOUS;
     }
 
@@ -508,6 +547,7 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
             return findBestMatchForReverse(lane_data[1].tag, intersection);
         }();
         std::size_t match_index = std::distance(intersection.begin(), best_match);
+        std::cout << "Matched " << (int) data.tag << " to: " << match_index << std::endl;
         all_simple &= (matched_indices.count(match_index) == 0);
         matched_indices.insert(match_index);
         // in case of u-turns, we might need to activate them first
@@ -515,6 +555,8 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
         all_simple &= isValidMatch(data.tag, best_match->turn.instruction);
     }
 
+    std::cout << "Matching reached last check" << std::endl;
+    std::cout << "Matched: " << matched_indices.size() << " of " << lane_data.size() << std::endl;
     // either all indices are matched, or we have a single none-value
     if (all_simple && (matched_indices.size() == lane_data.size() ||
                        (matched_indices.size() + 1 == lane_data.size() && has_none)))
