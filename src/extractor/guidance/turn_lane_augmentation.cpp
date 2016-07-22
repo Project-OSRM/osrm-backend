@@ -283,27 +283,18 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     // we have to reduce it, assigning it to neighboring turns
     else if (connection_count < lane_data.size())
     {
-        if( connection_count+1 < lane_data.size() ){
-            std::cout << "[error] failed assignment" << std::endl;
-            util::guidance::print(lane_data);
-            std::cout << "Intersection:\n";
-            for( auto road : intersection )
-                std::cout << "\t" << toString(road) << std::endl;
-        }
         // a pgerequisite is simple turns. Larger differences should not end up here
         // an additional line at the side is only reasonable if it is targeting public
         // service vehicles. Otherwise, we should not have it
-        //
-        // TODO(mokob): #2730 have a look please
-        // BOOST_ASSERT(connection_count + 1 == lane_data.size());
-        //
-        if (connection_count + 1 != lane_data.size())
+        if (connection_count + 1 == lane_data.size())
         {
-            // skip broken intersections
+            lane_data = mergeNoneTag(none_index, std::move(lane_data));
         }
         else
         {
-            lane_data = mergeNoneTag(none_index, std::move(lane_data));
+            // This represents a currently unhandled case. It should not even get here, but to be
+            // sure we return nevertheless.
+            return lane_data;
         }
     }
     // we have to rename and possibly augment existing ones. The pure count remains the

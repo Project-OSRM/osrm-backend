@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <boost/assert.hpp>
-#include <boost/functional/hash_fwd.hpp>
+#include <boost/functional/hash.hpp>
 
 #include "util/json_container.hpp"
 #include "util/simple_logger.hpp"
@@ -90,8 +90,7 @@ struct TurnLaneDescription_hash
     std::size_t operator()(const TurnLaneDescription &lane_description) const
     {
         std::size_t seed = 0;
-        for (auto val : lane_description)
-            boost::hash_combine(seed, val);
+        boost::hash_range(seed, lane_description.begin(), lane_description.end());
         return seed;
     }
 };

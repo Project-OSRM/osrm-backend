@@ -1,5 +1,5 @@
-#include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
+#include "extractor/guidance/toolkit.hpp"
 #include "util/guidance/toolkit.hpp"
 
 #include <boost/assert.hpp>
@@ -102,11 +102,11 @@ bool isValidMatch(const TurnLaneType::Mask tag, const TurnInstruction instructio
     return false;
 }
 
-double getMatchingQuality( const TurnLaneType::Mask tag, const ConnectedRoad &road)
+double getMatchingQuality(const TurnLaneType::Mask tag, const ConnectedRoad &road)
 {
     const constexpr double idealized_turn_angles[] = {0, 35, 90, 135, 180, 225, 270, 315};
     const auto idealized_angle = idealized_turn_angles[getMatchingModifier(tag)];
-    return angularDeviation(idealized_angle,road.turn.angle);
+    return angularDeviation(idealized_angle, road.turn.angle);
 }
 
 // Every tag is somewhat idealized in form of the expected angle. A through lane should go straight
@@ -116,21 +116,21 @@ double getMatchingQuality( const TurnLaneType::Mask tag, const ConnectedRoad &ro
 typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag,
                                                     const Intersection &intersection)
 {
-    return std::min_element(
-        intersection.begin(),
-        intersection.end(),
-        [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
-            // prefer valid matches
-            if (isValidMatch(tag, lhs.turn.instruction) != isValidMatch(tag, rhs.turn.instruction))
-                return isValidMatch(tag, lhs.turn.instruction);
+    return std::min_element(intersection.begin(),
+                            intersection.end(),
+                            [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
+                                // prefer valid matches
+                                if (isValidMatch(tag, lhs.turn.instruction) !=
+                                    isValidMatch(tag, rhs.turn.instruction))
+                                    return isValidMatch(tag, lhs.turn.instruction);
 
-            // if the entry allowed flags don't match, we select the one with
-            // entry allowed set to true
-            if (lhs.entry_allowed != rhs.entry_allowed)
-                return lhs.entry_allowed;
+                                // if the entry allowed flags don't match, we select the one with
+                                // entry allowed set to true
+                                if (lhs.entry_allowed != rhs.entry_allowed)
+                                    return lhs.entry_allowed;
 
-            return getMatchingQuality(tag,lhs) < getMatchingQuality(tag,rhs);
-        });
+                                return getMatchingQuality(tag, lhs) < getMatchingQuality(tag, rhs);
+                            });
 }
 
 // Reverse is a special case, because it requires access to the leftmost tag. It has its own
@@ -138,8 +138,8 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag
 // by default in OSRM. Therefor we cannot check whether a turn is allowed, since it could be
 // possible that it is forbidden. In addition, the best u-turn angle does not necessarily represent
 // the u-turn, since it could be a sharp-left turn instead on a road with a middle island.
-typename Intersection::const_iterator
-findBestMatchForReverse(const TurnLaneType::Mask neighbor_tag, const Intersection &intersection)
+typename Intersection::const_iterator findBestMatchForReverse(const TurnLaneType::Mask neighbor_tag,
+                                                              const Intersection &intersection)
 {
     const auto neighbor_itr = findBestMatch(neighbor_tag, intersection);
     if (neighbor_itr + 1 == intersection.cend())
@@ -159,7 +159,7 @@ findBestMatchForReverse(const TurnLaneType::Mask neighbor_tag, const Intersectio
             if (lhs.entry_allowed != rhs.entry_allowed)
                 return lhs.entry_allowed;
 
-            return getMatchingQuality(tag,lhs) < getMatchingQuality(tag,rhs);
+            return getMatchingQuality(tag, lhs) < getMatchingQuality(tag, rhs);
         });
 }
 

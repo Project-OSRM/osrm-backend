@@ -47,6 +47,7 @@
 #include <iostream>
 #include <numeric> //partial_sum
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -55,6 +56,36 @@ namespace osrm
 {
 namespace extractor
 {
+
+namespace
+{
+std::tuple<std::vector<std::uint32_t>, std::vector<guidance::TurnLaneType::Mask>>
+transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map)
+{
+    // could use some additional capacity? To avoid a copy during processing, though small data so
+    // probably not that important.
+    //
+    // From the map, we construct an adjacency array that allows access from all IDs to the list of
+    // associated Turn Lane Masks.
+    //
+    // turn lane offsets points into the locations of the turn_lane_masks array. We use a standard
+    // adjacency array like structure to store the turn lane masks.
+    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.size() + 2); // empty ID + sentinel
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        turn_lane_offsets[entry->second + 1] = entry->first.size();
+
+    // inplace prefix sum
+    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
+
+    // allocate the current masks
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
+    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
+        std::copy(entry->first.begin(),
+                  entry->first.end(),
+                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
+    return std::make_tuple(std::move(turn_lane_offsets), std::move(turn_lane_masks));
+}
+} // namespace
 
 /**
  * TODO: Refactor this function into smaller functions for better readability.
@@ -94,8 +125,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         util::SimpleLogger().Write() << "Threads: " << number_of_threads;
 
         ExtractionContainers extraction_containers;
-        auto extractor_callbacks =
-            util::make_unique<ExtractorCallbacks>(extraction_containers, turn_lane_map);
+        auto extractor_callbacks = util::make_unique<ExtractorCallbacks>(extraction_containers);
 
         const osmium::io::File input_file(config.input_path.string());
         osmium::io::Reader reader(input_file);
@@ -184,6 +214,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         util::SimpleLogger().Write() << "Raw input contains " << number_of_nodes << " nodes, "
                                      << number_of_ways << " ways, and " << number_of_relations
                                      << " relations";
+
+        // take control over the turn lane map
+        turn_lane_map = extractor_callbacks->moveOutLaneDescriptionMap();
 
         extractor_callbacks.reset();
 
@@ -447,19 +480,9 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     // could use some additional capacity? To avoid a copy during processing, though small data so
     // probably not that important.
-    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.size() + 2); // empty ID + sentinel
-    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
-        turn_lane_offsets[entry->second + 1] = entry->first.size();
-
-    // inplace prefix sum
-    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
-
-    // allocate the current masks
-    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
-    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
-        std::copy(entry->first.begin(),
-                  entry->first.end(),
-                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
+    std::vector<std::uint32_t> turn_lane_offsets;
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
+    std::tie(turn_lane_offsets, turn_lane_masks) = transformTurnLaneMapIntoArrays(turn_lane_map);
 
     EdgeBasedGraphFactory edge_based_graph_factory(
         node_based_graph,
@@ -649,24 +672,16 @@ void Extractor::WriteIntersectionClassificationData(
 void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
 {
     // Write the turn lane data to file
-    std::vector<std::uint32_t> turn_lane_offsets(turn_lane_map.size() + 2); // empty ID + sentinel
-    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
-        turn_lane_offsets[entry->second + 1] = entry->first.size();
-
-    // inplace prefix sum
-    std::partial_sum(turn_lane_offsets.begin(), turn_lane_offsets.end(), turn_lane_offsets.begin());
-
-    // allocate the current masks
-    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks(turn_lane_offsets.back());
-    for (auto entry = turn_lane_map.begin(); entry != turn_lane_map.end(); ++entry)
-        std::copy(entry->first.begin(),
-                  entry->first.end(),
-                  turn_lane_masks.begin() + turn_lane_offsets[entry->second]);
+    std::vector<std::uint32_t> turn_lane_offsets;
+    std::vector<guidance::TurnLaneType::Mask> turn_lane_masks;
+    std::tie(turn_lane_offsets, turn_lane_masks) = transformTurnLaneMapIntoArrays(turn_lane_map);
 
     util::SimpleLogger().Write() << "Writing turn lane masks...";
     TIMER_START(turn_lane_timer);
 
     std::ofstream ofs(turn_lane_file, std::ios::binary);
+    if (!ofs)
+        throw osrm::util::exception("Failed to open " + turn_lane_file + " for writing.");
 
     if (!util::serializeVector(ofs, turn_lane_offsets))
     {

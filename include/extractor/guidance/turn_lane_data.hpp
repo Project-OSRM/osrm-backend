@@ -40,10 +40,6 @@ LaneDataVector::iterator findTag(const TurnLaneType::Mask tag, LaneDataVector &d
 
 // Returns true if any of the queried tags is contained
 bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data);
-
-// Check if a set of lanes is a subset of a different set of lanes
-bool isSubsetOf(const LaneDataVector &subset_candidate, const LaneDataVector &superset_candidate);
-
 } // namespace lane_data_generation
 
 } // namespace guidance

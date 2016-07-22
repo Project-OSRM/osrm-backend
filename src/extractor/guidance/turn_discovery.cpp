@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_discovery.hpp"
+#include "extractor/guidance/constants.hpp"
 
 namespace osrm
 {

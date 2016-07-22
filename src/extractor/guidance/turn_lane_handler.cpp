@@ -1,9 +1,7 @@
-#include "util/debug.hpp"
-
+#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/turn_lane_augmentation.hpp"
-#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
@@ -33,8 +31,6 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 }
 } // namespace
 
-const constexpr char *TurnLaneHandler::scenario_names[TurnLaneScenario::NUM_SCENARIOS];
-
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  std::vector<std::uint32_t> &turn_lane_offsets,
                                  std::vector<TurnLaneType::Mask> &turn_lane_masks,
@@ -46,18 +42,12 @@ TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_g
       turn_lane_masks(turn_lane_masks), lane_description_map(lane_description_map),
       node_info_list(node_info_list), turn_analysis(turn_analysis), id_map(id_map)
 {
-    count_handled = new unsigned;
-    count_called = new unsigned;
-    *count_handled = *count_called = 0;
 }
 
 TurnLaneHandler::~TurnLaneHandler()
 {
-    std::cout << "Handled: " << *count_handled << " of " << *count_called
-              << " lanes: " << (double)(*count_handled * 100) / (*count_called) << " %."
-              << std::endl;
-    delete count_called;
-    delete count_handled;
+    std::cout << "Handled: " << count_handled << " of " << count_called
+              << " lanes: " << (double)(count_handled * 100) / (count_called) << " %." << std::endl;
 }
 
 /*
@@ -107,8 +97,8 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
                                          previous_lane_data,
                                          previous_description_id);
 
-    if (scenario != TurnLaneHandler::NONE)
-        (*count_called)++;
+    if (scenario != TurnLaneScenario::NONE)
+        count_called++;
 
     switch (scenario)
     {
@@ -140,44 +130,26 @@ TurnLaneHandler::assignTurnLanes(const NodeID at, const EdgeID via_edge, Interse
         // case TurnLaneScenario::UNKNOWN:
         // case TurnLaneScenario::NONE:
         // case TurnLaneScenario::INVALID:
-        {
-            /*
-            static int print_count = 0;
-            if (TurnLaneScenario::NONE != scenario && print_count++ < 10)
-            {
-                std::cout << "[Unhandled] " << (int)lane_description_id << " -- "
-                          << (int)previous_description_id << "\n"
-                          << std::endl;
-                util::guidance::printTurnAssignmentData(
-                    at, lane_data, intersection, node_info_list);
-
-                if (previous_node != SPECIAL_NODEID)
-                    util::guidance::printTurnAssignmentData(
-                        previous_node, previous_lane_data, previous_intersection, node_info_list);
-            }
-            */
-        }
         return intersection;
     }
 }
 
 // Find out which scenario we have to handle
-TurnLaneHandler::TurnLaneScenario
-TurnLaneHandler::deduceScenario(const NodeID at,
-                                const EdgeID via_edge,
-                                const Intersection &intersection,
-                                // Output Variables
-                                LaneDescriptionID &lane_description_id,
-                                LaneDataVector &lane_data,
-                                NodeID &previous_node,
-                                EdgeID &previous_via_edge,
-                                Intersection &previous_intersection,
-                                LaneDataVector &previous_lane_data,
-                                LaneDescriptionID &previous_description_id)
+TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
+                                                 const EdgeID via_edge,
+                                                 const Intersection &intersection,
+                                                 // Output Variables
+                                                 LaneDescriptionID &lane_description_id,
+                                                 LaneDataVector &lane_data,
+                                                 NodeID &previous_node,
+                                                 EdgeID &previous_via_edge,
+                                                 Intersection &previous_intersection,
+                                                 LaneDataVector &previous_lane_data,
+                                                 LaneDescriptionID &previous_description_id)
 {
     // if only a uturn exists, there is nothing we can do
     if (intersection.size() == 1)
-        return TurnLaneHandler::NONE;
+        return TurnLaneScenario::NONE;
 
     extractLaneData(via_edge, lane_description_id, lane_data);
 
@@ -199,7 +171,7 @@ TurnLaneHandler::deduceScenario(const NodeID at,
           angularDeviation(intersection[1].turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE));
 
     if (is_going_straight_and_turns_continue)
-        return TurnLaneHandler::NONE;
+        return TurnLaneScenario::NONE;
 
     // if we see an invalid conversion, we stop immediately
     if (lane_description_id != INVALID_LANE_DESCRIPTIONID && lane_data.empty())
@@ -694,7 +666,7 @@ Intersection TurnLaneHandler::simpleMatchTuplesToTurns(Intersection intersection
         !hasTag(TurnLaneType::none | TurnLaneType::merge_to_left | TurnLaneType::merge_to_right,
                 lane_data));
 
-    (*count_handled)++;
+    count_handled++;
 
     return triviallyMatchLanesToTurns(
         std::move(intersection), lane_data, node_based_graph, lane_description_id, id_map);

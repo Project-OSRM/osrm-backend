@@ -40,12 +40,11 @@ class ExtractorCallbacks
     using MapKey = std::pair<std::string, std::string>;
     using MapVal = unsigned;
     std::unordered_map<MapKey, MapVal, boost::hash<MapKey>> string_map;
-    guidance::LaneDescriptionMap &lane_description_map;
+    guidance::LaneDescriptionMap lane_description_map;
     ExtractionContainers &external_memory;
 
   public:
-    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
-                                guidance::LaneDescriptionMap &lane_description_map);
+    explicit ExtractorCallbacks(ExtractionContainers &extraction_containers);
 
     ExtractorCallbacks(const ExtractorCallbacks &) = delete;
     ExtractorCallbacks &operator=(const ExtractorCallbacks &) = delete;
@@ -58,6 +57,9 @@ class ExtractorCallbacks
 
     // warning: caller needs to take care of synchronization!
     void ProcessWay(const osmium::Way &current_way, const ExtractionWay &result_way);
+
+    // destroys the internal laneDescriptionMap
+    guidance::LaneDescriptionMap &&moveOutLaneDescriptionMap();
 };
 }
 }

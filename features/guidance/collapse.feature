@@ -767,8 +767,8 @@ Feature: Collapse
             | di    |                                        | off  |
 
        When I route I should get
-            | waypoints | route               | turns                                             |
-            | a,e       | main,main,main,main | depart,use lane straight,use lane straight,arrive |
+            | waypoints | route          | turns                           |
+            | a,e       | main,main,main | depart,use lane straight,arrive |
 
     Scenario: But _do_ collapse UseLane step when lanes stay the same
         Given the node map
@@ -790,5 +790,5 @@ Feature: Collapse
             | di    |                                        | off  |
 
        When I route I should get
-            | waypoints | route          | turns                           |
-            | a,e       | main,main,main | depart,use lane straight,arrive |
+            | waypoints | route     | turns         |
+            | a,e       | main,main | depart,arrive |

@@ -31,15 +31,13 @@ namespace extractor
 using TurnLaneDescription = guidance::TurnLaneDescription;
 namespace TurnLaneType = guidance::TurnLaneType;
 
-ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers,
-                                       guidance::LaneDescriptionMap &lane_description_map)
-    : lane_description_map(lane_description_map), external_memory(extraction_containers)
+ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
+    : external_memory(extraction_containers)
 {
     // we reserved 0, 1, 2 for the empty case
     string_map[MapKey("", "")] = 0;
 
     // The map should be empty before we start initializing it
-    BOOST_ASSERT(lane_description_map.empty());
     lane_description_map[TurnLaneDescription()] = 0;
 }
 
@@ -395,5 +393,10 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[0].ref())}});
     }
 }
+
+guidance::LaneDescriptionMap &&ExtractorCallbacks::moveOutLaneDescriptionMap()
+{
+    return std::move(lane_description_map);
 }
-}
+} // namespace extractor
+} // namespace osrm

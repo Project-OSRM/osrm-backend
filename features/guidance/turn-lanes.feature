@@ -358,10 +358,10 @@ Feature: Turn Lane Guidance
             | bg    | right |                     | no     |
 
         When I route I should get
-            | waypoints | route            | turns                           | lanes                            |
-            | a,f       | road,turn,turn   | depart,turn left,arrive         | ,left:true straight;right:false, |
-            | a,d       | road,road,road   | depart,use lane straight,arrive | ,left:false straight;right:true, |
-            | a,g       | road,right,right | depart,turn right,arrive        | ,left:false straight;right:true, |
+            | waypoints | route            | turns                    | lanes                            |
+            | a,f       | road,turn,turn   | depart,turn left,arrive  | ,left:true straight;right:false, |
+            | a,d       | road,road        | depart,arrive            | ,                                |
+            | a,g       | road,right,right | depart,turn right,arrive | ,left:false straight;right:true, |
 
     @partition-lanes @previous-lanes
     Scenario: Passing a one-way street, partly pulled back lanes, no through
@@ -491,9 +491,9 @@ Feature: Turn Lane Guidance
             | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-            | waypoints | route            | turns                   | lanes                                               |
-            | a,g       | road,cross,cross | depart,turn left,arrive | ,left:true left:true straight:false straight:false, |
-            | a,e       | road,road        | depart,arrive           | ,                                                   |
+            | waypoints | route            | turns                   | lanes                                                           |
+            | a,g       | road,cross,cross | depart,turn left,arrive | ,left:true left:true straight:false straight:false right:false, |
+            | a,e       | road,road        | depart,arrive           | ,                                                               |
 
     #NEEDS TO BE INVESTIGATED. Turn restriction shouldn't be here. See #2867
     @reverse @previous-lanes

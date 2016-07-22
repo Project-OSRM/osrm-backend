@@ -3,8 +3,8 @@
 #include "util/guidance/toolkit.hpp"
 
 #include "extractor/guidance/turn_instruction.hpp"
-#include "engine/guidance/toolkit.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "engine/guidance/toolkit.hpp"
 
 #include <iterator>
 #include <unordered_set>
@@ -80,7 +80,8 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // where lanes in the turn fan in but for example the overall lanes at that location
             // fan out, we would have to know the asymmetric mapping of lanes. This is currently
             // not possible at the moment. In the following we implement a heuristic instead.
-            const LaneID current_num_all_lanes = current.intersections.front().lane_description.size();
+            const LaneID current_num_all_lanes =
+                current.intersections.front().lane_description.size();
             const LaneID current_num_lanes_right_of_turn = current_lanes.first_lane_from_the_right;
             const LaneID current_num_lanes_left_of_turn =
                 current_num_all_lanes -

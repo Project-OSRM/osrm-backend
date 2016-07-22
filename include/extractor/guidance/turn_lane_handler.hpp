@@ -14,6 +14,8 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <string>
@@ -31,36 +33,39 @@ namespace guidance
 // assigns appropriate turn tupels to the different turns.
 namespace lanes
 {
+
+namespace
+{
+typedef enum TurnLaneScenario {
+    SIMPLE,             // a straightforward assignment
+    PARTITION_LOCAL,    // an assignment that requires partitioning, using local turns
+    SIMPLE_PREVIOUS,    // an assignemtnn using the turns specified at the previous road (e.g.
+                        // traffic light, lanes not drawn up to the intersection)
+    PARTITION_PREVIOUS, // a set of lanes on a turn with a traffic island. The lanes for the
+                        // turn end at the previous turn (parts of it remain valid without being
+                        // shown again)
+    SLIPROAD, // Sliproads are simple assignments that, for better visual representation should
+              // include turns from other roads in their listings
+    MERGE,    // Merging Lanes
+    NONE,     // not a turn lane scenario at all
+    INVALID,  // some error might have occurred
+    UNKNOWN,  // UNKNOWN describes all cases that we are currently not able to handle
+    NUM_SCENARIOS
+} TurnLaneScenario;
+
+const constexpr char *scenario_names[] = {"Simple",
+                                          "Partition Local",
+                                          "Simple Previous",
+                                          "Partition Previous",
+                                          "Sliproad",
+                                          "Merge",
+                                          "None",
+                                          "Invalid",
+                                          "Unknown"};
+} // namespace
+
 class TurnLaneHandler
 {
-    typedef enum TurnLaneScenario {
-        SIMPLE,             // a straightforward assignment
-        PARTITION_LOCAL,    // an assignment that requires partitioning, using local turns
-        SIMPLE_PREVIOUS,    // an assignemtnn using the turns specified at the previous road (e.g.
-                            // traffic light, lanes not drawn up to the intersection)
-        PARTITION_PREVIOUS, // a set of lanes on a turn with a traffic island. The lanes for the
-                            // turn end at the previous turn (parts of it remain valid without being
-                            // shown again)
-        SLIPROAD, // Sliproads are simple assignments that, for better visual representation should
-                  // include turns from other roads in their listings
-        MERGE,    // Merging Lanes
-        NONE,     // not a turn lane scenario at all
-        INVALID,  // some error might have occurred
-        UNKNOWN,  // UNKNOWN describes all cases that we are currently not able to handle
-        NUM_SCENARIOS
-    } TurnLaneScenario;
-
-    const constexpr static char *scenario_names[TurnLaneScenario::NUM_SCENARIOS] = {
-        "Simple",
-        "Partition Local",
-        "Simple Previous",
-        "Partition Previous",
-        "Sliproad",
-        "Merge",
-        "None",
-        "Invalid",
-        "Unknown"};
-
   public:
     typedef std::vector<TurnLaneData> LaneDataVector;
 
@@ -78,8 +83,8 @@ class TurnLaneHandler
     Intersection assignTurnLanes(const NodeID at, const EdgeID via_edge, Intersection intersection);
 
   private:
-    unsigned *count_handled;
-    unsigned *count_called;
+    mutable std::atomic<std::size_t> count_handled;
+    mutable std::atomic<std::size_t> count_called;
     // we need to be able to look at previous intersections to, in some cases, find the correct turn
     // lanes for a turn
     const util::NodeBasedDynamicGraph &node_based_graph;
@@ -132,6 +137,9 @@ class TurnLaneHandler
                          LaneDescriptionID &lane_description_id,
                          LaneDataVector &lane_data) const;
 };
+
+static_assert(sizeof(scenario_names) / sizeof(*scenario_names) == TurnLaneScenario::NUM_SCENARIOS,
+              "Number of scenarios needs to match the number of scenario names.");
 
 } // namespace lanes
 } // namespace guidance

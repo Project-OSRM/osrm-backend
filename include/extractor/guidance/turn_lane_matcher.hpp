@@ -32,10 +32,10 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag
                                                     const Intersection &intersection);
 
 // the quality of a matching to decide between first/second possibility on segregated intersections
-double getMatchingQuality( const TurnLaneType::Mask tag, const ConnectedRoad &road );
+double getMatchingQuality(const TurnLaneType::Mask tag, const ConnectedRoad &road);
 
-typename Intersection::const_iterator
-findBestMatchForReverse(const TurnLaneType::Mask leftmost_tag, const Intersection &intersection);
+typename Intersection::const_iterator findBestMatchForReverse(const TurnLaneType::Mask leftmost_tag,
+                                                              const Intersection &intersection);
 
 // a match is trivial if all turns can be associated with their best match in a valid way and the
 // matches occur in order

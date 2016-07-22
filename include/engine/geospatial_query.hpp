@@ -20,7 +20,8 @@ namespace osrm
 namespace engine
 {
 
-inline std::pair<bool, bool> boolPairAnd(const std::pair<bool, bool> &A, const std::pair<bool, bool> &B)
+inline std::pair<bool, bool> boolPairAnd(const std::pair<bool, bool> &A,
+                                         const std::pair<bool, bool> &B)
 {
     return std::make_pair(A.first && B.first, A.second && B.second);
 }

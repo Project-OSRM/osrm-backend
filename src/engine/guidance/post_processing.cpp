@@ -1,5 +1,5 @@
-#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -408,8 +408,11 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                 if (bearingsAreReversed(
                         util::bearing::reverseBearing(getBearing(true, one_back_step)),
                         getBearing(false, current_step)))
+                {
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
                     steps[one_back_index].maneuver.instruction.direction_modifier =
                         DirectionModifier::UTurn;
+                }
             }
             else if (TurnType::Merge == one_back_step.maneuver.instruction.type &&
                      current_step.maneuver.instruction.type !=
@@ -549,8 +552,6 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
     }
     return step;
 }
-
-
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
 // is turned into exit counts. These instructions are removed by the following function
@@ -764,22 +765,23 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             else
             {
                 // Handle possible u-turns between highways that look like slip-roads
-                if (steps[getPreviousIndex(one_back_index)].name_id == steps[step_index].name_id &&
-                    steps[step_index].name_id != EMPTY_NAMEID)
-                {
-                    steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
-                }
-                else
-                {
-                    steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
-                }
                 if (compatible(one_back_step, current_step))
                 {
+                    // Turn Types in the response depend on whether we find the same road name
+                    // (sliproad indcating a u-turn) or if we are turning onto a different road, in
+                    // which case we use a turn.
+                    if (steps[getPreviousIndex(one_back_index)].name_id ==
+                            steps[step_index].name_id &&
+                        steps[step_index].name_id != EMPTY_NAMEID)
+                        steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
+                    else
+                        steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
+
                     steps[one_back_index] =
                         elongate(std::move(steps[one_back_index]), steps[step_index]);
+
                     steps[one_back_index].name_id = steps[step_index].name_id;
                     steps[one_back_index].name = steps[step_index].name;
-                    steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
                     // the turn lanes for this turn are on the sliproad itself, so we have to
                     // remember  them
                     steps[one_back_index].intersections.front().lanes =
@@ -1202,7 +1204,8 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
         {
             // count intersections. We cannot use exit, since intersections can follow directly
             // after a roundabout
-            steps[last_valid_instruction] = elongate(std::move(steps[last_valid_instruction]), step);
+            steps[last_valid_instruction] =
+                elongate(std::move(steps[last_valid_instruction]), step);
             step.maneuver.instruction = TurnInstruction::NO_TURN();
         }
         else if (!isSilent(instruction))
