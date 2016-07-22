@@ -136,6 +136,7 @@ install:
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
+  - nm -C libosrm.so || true
   - echo "travis_fold:end:MAKE"
   - ccache -s
   - sudo make install
