@@ -736,4 +736,18 @@ Feature: Turn Lane Guidance
             | x,d       | road,road | depart,arrive | ,     |
 
 
+    Scenario: Lane Parsing Issue #2694
+        Given the node map
+            |   | c |
+            | a | b |
+            |   | d |
 
+        And the ways
+            | nodes | highway | turn:lanes:forward |
+            | ab    | primary | left;left\|right   |
+            | bc    | primary |                    |
+            | bd    | primary |                    |
+
+        When I route I should get
+            | waypoints | route     | turns                   | lanes                   |
+            | a,c       | ab,bc,bc  | depart,turn left,arrive | ,left:true right:false, |
