@@ -244,18 +244,18 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         util::SimpleLogger().Write() << "Done writing. (" << TIMER_SEC(timer_write_node_weights)
                                      << ")";
 
-        util::SimpleLogger().Write() << "building r-tree ...";
-        TIMER_START(rtree);
-
+        util::SimpleLogger().Write() << "Computing strictly connected components ...";
         FindComponents(max_edge_id, edge_based_edge_list, edge_based_node_list);
 
+        util::SimpleLogger().Write() << "Building r-tree ...";
+        TIMER_START(rtree);
         BuildRTree(std::move(edge_based_node_list),
                    std::move(node_is_startpoint),
                    internal_to_external_node_map);
 
         TIMER_STOP(rtree);
 
-        util::SimpleLogger().Write() << "writing node map ...";
+        util::SimpleLogger().Write() << "Writing node map ...";
         WriteNodeMapping(internal_to_external_node_map);
 
         WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
