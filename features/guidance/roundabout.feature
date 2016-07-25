@@ -535,3 +535,149 @@ Feature: Basic Roundabout
             | i,n       | Petersburger Strasse,Petersburger Strasse,Petersburger Strasse | depart,Bersarinplatz-exit-2,arrive |
             | i,d       | Petersburger Strasse,Weidenweg,Weidenweg                       | depart,Bersarinplatz-exit-3,arrive |
             | i,g       | Petersburger Strasse,Petersburger Strasse,Petersburger Strasse | depart,Bersarinplatz-exit-4,arrive |
+
+    @turboroundabout
+    # http://www.openstreetmap.org/?mlat=48.782118&mlon=8.194456&zoom=16#map=19/48.78216/8.19457
+    Scenario: Turboroundabout, Baden-Baden
+        Given the node map
+            """
+                a p
+                b o
+            d c     m n
+            f e     k l
+                g i
+                h j
+            """
+
+       And the ways
+            | nodes | highway     | oneway | junction   | name          | turn:lanes                             |
+            | ab    | trunk_link  | yes    |            |               |                                        |
+            | bc    | trunk       | yes    | roundabout | Europaplatz   | slight_left;slight_right\|slight_right |
+            | cd    | trunk       | yes    |            | Europastrasse |                                        |
+            | ce    | trunk       | yes    | roundabout | Europaplatz   |                                        |
+            | fe    | trunk       | yes    |            | Europastrasse |                                        |
+            | eg    | trunk       | yes    | roundabout | Europaplatz   |                                        |
+            | gh    | residential | yes    |            | Allee Cite    |                                        |
+            | gi    | trunk       | yes    | roundabout | Europaplatz   |                                        |
+            | ji    | residential | yes    |            | Allee Cite    |                                        |
+            | ik    | trunk       | yes    | roundabout | Europaplatz   | slight_left;slight_right\|slight_right |
+            | kl    | trunk       | yes    |            | Europastrasse |                                        |
+            | km    | trunk       | yes    | roundabout | Europaplatz   |                                        |
+            | nm    | trunk       | yes    |            | Europastrasse |                                        |
+            | mo    | trunk       | yes    | rounadbout | Europaplatz   |                                        |
+            | op    | trunk_link  | yes    |            |               |                                        |
+            | ob    | trunk       | yes    | roundabout | Europaplatz   |                                        |
+
+       When I route I should get
+           | waypoints | route                                    | turns                           | lanes |
+           | a,d       | ,Europaplatz,Europastrasse,Europastrasse | depart,roundabout-exit-1,arrive | ,,    |
+           | a,h       | ,Europaplatz,Allee Cite,Allee Cite       | depart,roundabout-exit-2,arrive | ,,    |
+           | a,l       | ,Europaplatz,Europastrasse,Europastrasse | depart,roundabout-exit-3,arrive | ,,    |
+           | a,p       | ,Europaplatz,,                           | depart,roundabout-exit-4,arrive | ,,    |
+
+    @turboroundabout
+    # http://www.openstreetmap.org/?mlat=50.180039&mlon=8.474939&zoom=16#map=19/50.17999/8.47506
+    Scenario: Turboroundabout, Königstein im Taunus
+        Given the node map
+            """
+                a
+                b   w t   v
+              c         s u
+              d           r
+            f e         q
+              g         p
+            h   i     n
+              j   k m
+                    l o
+            """
+
+       And the ways
+            | nodes | highway      | oneway | junction   | name                         | turn:lanes                         |
+            | ab    | primary      | yes    |            | Le-Cannet-Rocheville-Strasse |                                    |
+            | wa    | primary      | yes    |            | Le-Cannet-Rocheville-Strasse |                                    |
+            | bc    | primary      | yes    | roundabout |                              | through\|through;right             |
+            | cd    | primary      | yes    | roundabout |                              | through\|through\|right;through    |
+            | df    | tertiary     | yes    |            | Frankfurter Strasse          |                                    |
+            | de    | primary      | yes    | roundabout |                              | through\|through\|right;through    |
+            | fe    | tertiary     | yes    |            | Frankfurter Strasse          |                                    |
+            | eg    | primary      | yes    | roundabout |                              | through\|through\|right;through    |
+            | gh    | primary      | yes    |            | Bischof-Kaller-Strasse       |                                    |
+            | gi    | primary      | yes    | roundabout |                              | left\|through;slight_left\|through |
+            | ji    | primary      | yes    |            | Bischof-Kaller-Strasse       |                                    |
+            | ik    | primary      | yes    | roundabout |                              | left\|through;slight_left\|through |
+            | km    | primary      | yes    | roundabout |                              |                                    |
+            | kl    | primary      | yes    |            | Sodener Strasse              |                                    |
+            | mn    | primary      | yes    | roundabout |                              | through\|through;right             |
+            | on    | primary      | yes    |            | Sodener Strasse              |                                    |
+            | np    | primary      | yes    | roundabout |                              | through\|through;right             |
+            | pq    | primary      | yes    | roundabout |                              | through\|through\|right;through    |
+            | qr    | primary      | yes    |            |                              |                                    |
+            | qs    | primary      | yes    | roundabout |                              |                                    |
+            | us    | primary_link | yes    |            |                              |                                    |
+            | st    | primary      | yes    | roundabout |                              |                                    |
+            | vt    | primary      | yes    |            |                              |                                    |
+            | tw    | primary      | yes    | roundabout |                              | left\|left\|right\|right           |
+            | wa    | primary      | yes    |            | Le-Cannet-Rocheville-Strasse |                                    |
+            | wb    | primary      | yes    | roundabout |                              | through\|through;right             |
+
+       When I route I should get
+           | waypoints | route                                                                      | turns                                   | lanes |
+           | a,w       | Le-Cannet-Rocheville-Strasse,,                                             | depart,roundabout-exit-undefined,arrive | ,,    |
+           | a,r       | Le-Cannet-Rocheville-Strasse,,                                             | depart,roundabout-exit-4,arrive         | ,,    |
+           | a,f       | Le-Cannet-Rocheville-Strasse,Frankfurter Strasse,Frankfurter Strasse       | depart,roundabout-exit-1,arrive         | ,,    |
+           | a,h       | Le-Cannet-Rocheville-Strasse,Bischof-Kaller-Strasse,Bischof-Kaller-Strasse | depart,roundabout-exit-2,arrive         | ,,    |
+           | u,r       | ,,                                                                         | depart,roundabout-exit-5,arrive         | ,,    |
+           | j,h       | Bischof-Kaller-Strasse,Bischof-Kaller-Strasse,Bischof-Kaller-Strasse       | depart,roundabout-exit-5,arrive         | ,,    |
+           | n,m       | ,                                                                          | depart,arrive                           | ,     |
+
+    @turboroundabout
+    # http://www.openstreetmap.org/?mlat=47.57723&mlon=7.796765&zoom=16#map=19/47.57720/7.79711
+    Scenario: Turboroundabout, Rheinfelden (Baden)
+        Given the node map
+            """
+            r             w
+                a   l k
+              b         j
+              c
+              d         i
+            s   e f g h   v
+
+                  t u
+            """
+
+       And the ways
+            | nodes | highway      | oneway | junction   |
+            | ar    | secondary    | yes    |            |
+            | ab    | primary      | yes    | roundabout |
+            | rb    | secondary    | yes    |            |
+            | bc    | primary      | yes    | roundabout |
+            | cd    | primary      | yes    | roundabout |
+            | ds    | primary      | yes    |            |
+            | se    | primary      | yes    |            |
+            | de    | primary      | yes    | roundabout |
+            | ef    | primary      | yes    | roundabout |
+            | ft    | unclassified | yes    |            |
+            | fg    | primary      | yes    | roundabout |
+            | ug    | unclassified | yes    |            |
+            | gh    | primary      | yes    | roundabout |
+            | hv    | primary      | yes    |            |
+            | hi    | primary      | yes    | roundabout |
+            | vi    | primary      | yes    |            |
+            | ij    | primary      | yes    | roundabout |
+            | jw    | tertiary     | yes    |            |
+            | jk    | primary      | yes    | roundabout |
+            | wk    | tertiary     | yes    |            |
+            | kl    | primary      | yes    | roundabout |
+            | la    | primary      | yes    | roundabout |
+
+       When I route I should get
+           | waypoints | route    | turns                           |
+           | w,r       | wk,ar,ar | depart,roundabout-exit-1,arrive |
+           | w,s       | wk,ds,ds | depart,roundabout-exit-2,arrive |
+           | w,t       | wk,ft,ft | depart,roundabout-exit-3,arrive |
+           | w,v       | wk,hv,hv | depart,roundabout-exit-4,arrive |
+           | u,v       | ug,hv,hv | depart,roundabout-exit-1,arrive |
+           | u,w       | ug,jw,jw | depart,roundabout-exit-2,arrive |
+           | u,r       | ug,ar,ar | depart,roundabout-exit-3,arrive |
+           | u,s       | ug,ds,ds | depart,roundabout-exit-4,arrive |
+           | u,t       | ug,ft,ft | depart,roundabout-exit-5,arrive |
