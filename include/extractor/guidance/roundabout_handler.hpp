@@ -5,8 +5,8 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/roundabout_type.hpp"
-#include "extractor/query_node.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"

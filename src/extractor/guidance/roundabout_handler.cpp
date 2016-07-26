@@ -28,8 +28,7 @@ RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_bas
                                      const SuffixTable &street_name_suffix_table,
                                      const ProfileProperties &profile_properties)
     : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
-      compressed_edge_container(compressed_edge_container),
-      profile_properties(profile_properties)
+      compressed_edge_container(compressed_edge_container), profile_properties(profile_properties)
 {
 }
 
@@ -69,8 +68,8 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
 
     const bool lhs = profile_properties.left_hand_driving;
     const int step = lhs ? -1 : 1;
-    for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
-         cnt < intersection.size(); ++cnt, idx += step)
+    for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0; cnt < intersection.size();
+         ++cnt, idx += step)
     {
         const auto &road = intersection[idx];
         const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
@@ -108,8 +107,8 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
     bool past_roundabout_angle = false;
     const bool lhs = profile_properties.left_hand_driving;
     const int step = lhs ? -1 : 1;
-    for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
-         cnt < intersection.size(); ++cnt, idx += step)
+    for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0; cnt < intersection.size();
+         ++cnt, idx += step)
     {
         auto &road = intersection[idx];
         const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
@@ -373,7 +372,8 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
         // Shoule hopefully have only a single exit and continue
         // at least for cars. How about bikes?
         for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
-             cnt < intersection.size(); ++cnt, idx += step)
+             cnt < intersection.size();
+             ++cnt, idx += step)
         {
             auto &road = intersection[idx];
             auto &turn = road.turn;
@@ -410,7 +410,8 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
     else
     {
         for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
-             cnt < intersection.size(); ++cnt, idx += step)
+             cnt < intersection.size();
+             ++cnt, idx += step)
         {
             auto &road = intersection[idx];
             if (!road.entry_allowed)
