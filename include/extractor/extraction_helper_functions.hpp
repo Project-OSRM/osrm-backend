@@ -110,7 +110,7 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
 inline std::string
 applyAccessTokens(const std::string &lane_string, const std::string &access_tokens)
 {
-    return extractor::guidance::trimLaneString(lane_string,access_tokens);
+    return extractor::guidance::applyAccessTokens(lane_string, access_tokens);
 }
 
 }

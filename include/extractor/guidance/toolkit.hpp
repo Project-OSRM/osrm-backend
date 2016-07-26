@@ -357,8 +357,7 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
 // turn:lanes=left|through|through|right
 // vehicle:lanes=yes|yes|no|yes
 // bicycle:lanes=yes|no|designated|yes
-
-inline std::string trimLaneString(std::string lane_string, const std::string &access_tokens)
+inline std::string applyAccessTokens(std::string lane_string, const std::string &access_tokens)
 {
     typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
     boost::char_separator<char> sep("|", "", boost::keep_empty_tokens);
