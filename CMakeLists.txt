@@ -378,10 +378,10 @@ target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 # Binaries
-target_link_libraries(osrm-datastore ${Boost_LIBRARIES} osrm_store ${STORAGE_LIBRARIES})
-target_link_libraries(osrm-extract ${Boost_LIBRARIES} osrm_extract ${EXTRACT_LIBRARIES})
-target_link_libraries(osrm-contract ${Boost_LIBRARIES} osrm_contract ${TBB_LIBRARIES})
-target_link_libraries(osrm-routed ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY} osrm ${ENGINE_LIBRARIES})
+target_link_libraries(osrm-datastore osrm_store ${STORAGE_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(osrm-extract osrm_extract ${EXTRACT_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(osrm-contract osrm_contract ${TBB_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(osrm-routed osrm ${ENGINE_LIBRARIES} ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 if(BUILD_COMPONENTS)
   find_package(GDAL)
