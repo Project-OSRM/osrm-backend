@@ -591,7 +591,7 @@ location of the StepManeuver. Further intersections are listed for every cross-w
   in the direction of driving, the bearing has to be rotated by a value of 180. The value is not supplied for `depart` maneuvers.
 - `out`: index into the bearings/entry array. Used to extract the bearing just after the turn. Namely, The clockwise angle from true north to the
   direction of travel immediately after the maneuver/passing the intersection. The value is not supplied for `arrive` maneuvers.
-- `lanes`: Array of `Lane` objects that denote the available turn lanes at the turn location
+- `lanes`: Array of `Lane` objects that denote the available turn lanes at the intersection. If no lane information is available for an intersection, the `lanes` property will not be present.
 
 #### Example
 ```
