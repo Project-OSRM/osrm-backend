@@ -261,9 +261,8 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
             if (!ok || it != last)
                 throw util::exception{"Segment speed file " + filename + " malformed"};
 
-            SegmentSpeedSource val{
-                {OSMNodeID{from_node_id}, OSMNodeID{to_node_id}},
-                {speed, static_cast<std::uint8_t>(file_id)}};
+            SegmentSpeedSource val{{OSMNodeID{from_node_id}, OSMNodeID{to_node_id}},
+                                   {speed, static_cast<std::uint8_t>(file_id)}};
 
             local.push_back(std::move(val));
         }
@@ -382,7 +381,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         using boost::interprocess::mapped_region;
         using boost::interprocess::read_only;
 
-        const file_mapping mapping{ filename.c_str(), read_only };
+        const file_mapping mapping{filename.c_str(), read_only};
         mapped_region region{mapping, read_only};
         region.advise(mapped_region::advice_sequential);
         return region;
@@ -409,19 +408,21 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         return boost::interprocess::mapped_region();
     }();
 
-    // Set the struct packing to 1 byte word sizes.  This prevents any padding.  We only use
-    // this struct once, so any alignment penalty is trivial.  If this is *not* done, then
-    // the struct will be padded out by an extra 4 bytes, and sizeof() will mean we read
-    // too much data from the original file.
-    #pragma pack(push, r1, 1)
-    struct EdgeBasedGraphHeader {
+// Set the struct packing to 1 byte word sizes.  This prevents any padding.  We only use
+// this struct once, so any alignment penalty is trivial.  If this is *not* done, then
+// the struct will be padded out by an extra 4 bytes, and sizeof() will mean we read
+// too much data from the original file.
+#pragma pack(push, r1, 1)
+    struct EdgeBasedGraphHeader
+    {
         util::FingerPrint fingerprint;
         std::uint64_t number_of_edges;
         EdgeID max_edge_id;
     };
-    #pragma pack(pop, r1)
+#pragma pack(pop, r1)
 
-    const EdgeBasedGraphHeader graph_header = *(reinterpret_cast<const EdgeBasedGraphHeader *>(edge_based_graph_region.get_address()));
+    const EdgeBasedGraphHeader graph_header =
+        *(reinterpret_cast<const EdgeBasedGraphHeader *>(edge_based_graph_region.get_address()));
 
     const util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
     graph_header.fingerprint.TestContractor(fingerprint_valid);
@@ -737,14 +738,17 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
     tbb::parallel_invoke(maybe_save_geometries, save_datasource_indexes, save_datastore_names);
 
-    auto penaltyblock =
-        reinterpret_cast<const extractor::lookup::PenaltyBlock *>(edge_penalty_region.get_address());
+    auto penaltyblock = reinterpret_cast<const extractor::lookup::PenaltyBlock *>(
+        edge_penalty_region.get_address());
     auto edge_segment_byte_ptr = reinterpret_cast<const char *>(edge_segment_region.get_address());
     auto edge_based_edge_ptr = reinterpret_cast<extractor::EdgeBasedEdge *>(
-        reinterpret_cast<char *>(edge_based_graph_region.get_address()) + sizeof(EdgeBasedGraphHeader));
+        reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
+        sizeof(EdgeBasedGraphHeader));
 
     const auto edge_based_edge_last = reinterpret_cast<extractor::EdgeBasedEdge *>(
-        reinterpret_cast<char *>(edge_based_graph_region.get_address()) + sizeof(EdgeBasedGraphHeader) + sizeof(extractor::EdgeBasedEdge) * graph_header.number_of_edges);
+        reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
+        sizeof(EdgeBasedGraphHeader) +
+        sizeof(extractor::EdgeBasedEdge) * graph_header.number_of_edges);
 
     while (edge_based_edge_ptr != edge_based_edge_last)
     {
@@ -777,7 +781,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 {
                     if (speed_iter->speed_source.speed > 0)
                     {
-                        auto new_segment_weight = distanceAndSpeedToWeight(segmentblocks[i].segment_length, speed_iter->speed_source.speed);
+                        auto new_segment_weight = distanceAndSpeedToWeight(
+                            segmentblocks[i].segment_length, speed_iter->speed_source.speed);
                         new_weight += new_segment_weight;
                     }
                     else

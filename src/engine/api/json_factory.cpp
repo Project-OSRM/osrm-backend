@@ -83,7 +83,8 @@ util::json::Array lanesFromIntersection(const guidance::Intersection &intersecti
         util::json::Object lane;
         lane.values["indications"] = extractor::guidance::TurnLaneType::toJsonArray(lane_desc);
         if (lane_id >= intersection.lanes.first_lane_from_the_right &&
-            lane_id < intersection.lanes.first_lane_from_the_right + intersection.lanes.lanes_in_turn)
+            lane_id <
+                intersection.lanes.first_lane_from_the_right + intersection.lanes.lanes_in_turn)
             lane.values["valid"] = util::json::True();
         else
             lane.values["valid"] = util::json::False();

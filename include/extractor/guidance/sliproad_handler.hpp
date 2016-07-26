@@ -2,8 +2,8 @@
 #define OSRM_EXTRACTOR_GUIDANCE_SLIPROAD_HANDLER_HPP_
 
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
@@ -42,6 +42,7 @@ class SliproadHandler : public IntersectionHandler
     Intersection operator()(const NodeID nid,
                             const EdgeID via_eid,
                             Intersection intersection) const override final;
+
   private:
     const IntersectionGenerator &intersection_generator;
 };

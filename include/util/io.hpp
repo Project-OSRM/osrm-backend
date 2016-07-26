@@ -151,7 +151,7 @@ bool serializeVector(std::ofstream &out_stream, const stxxl::vector<simple_type>
 template <typename simple_type>
 bool deserializeAdjacencyArray(const std::string &filename,
                                std::vector<std::uint32_t> &offsets,
-                               std::vector<simple_type>& data)
+                               std::vector<simple_type> &data)
 {
     std::ifstream in_stream(filename, std::ios::binary);
 

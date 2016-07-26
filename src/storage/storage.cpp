@@ -1,3 +1,4 @@
+#include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -8,7 +9,6 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "storage/storage.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
@@ -375,7 +375,7 @@ int Storage::Run()
     }
 
     std::uint64_t num_bearings;
-    intersection_stream.read(reinterpret_cast<char*>(&num_bearings),sizeof(num_bearings));
+    intersection_stream.read(reinterpret_cast<char *>(&num_bearings), sizeof(num_bearings));
 
     std::vector<DiscreteBearing> bearing_class_table(num_bearings);
     intersection_stream.read(reinterpret_cast<char *>(&bearing_class_table[0]),

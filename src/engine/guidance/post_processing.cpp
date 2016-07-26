@@ -1,5 +1,5 @@
-#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -1161,7 +1161,7 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         {
             const auto previous = getPreviousIndex(step_index);
             steps[previous] = elongate(steps[previous], steps[step_index]);
-            //elongate(steps[step_index-1], steps[step_index]);
+            // elongate(steps[step_index-1], steps[step_index]);
             invalidateStep(steps[step_index]);
         }
     }

@@ -84,16 +84,10 @@ class RoadClassification
     bool IsLowPriorityRoadClass() const { return (0 != may_be_ignored); }
     void SetLowPriorityFlag(const bool new_value) { may_be_ignored = new_value; }
 
-    std::uint32_t GetPriority() const
-    {
-        return static_cast<std::uint32_t>(road_priority_class);
-    }
+    std::uint32_t GetPriority() const { return static_cast<std::uint32_t>(road_priority_class); }
 
     RoadPriorityClass::Enum GetClass() const { return road_priority_class; }
-    void SetClass(const RoadPriorityClass::Enum new_value)
-    {
-        road_priority_class = new_value;
-    }
+    void SetClass(const RoadPriorityClass::Enum new_value) { road_priority_class = new_value; }
 
     bool operator==(const RoadClassification &other) const
     {
@@ -102,10 +96,7 @@ class RoadClassification
                road_priority_class == other.road_priority_class;
     }
 
-    bool operator!=(const RoadClassification &other ) const
-    {
-        return !(*this == other);
-    }
+    bool operator!=(const RoadClassification &other) const { return !(*this == other); }
 
     std::string ToString() const
     {
@@ -116,7 +107,9 @@ class RoadClassification
 };
 #pragma pack(pop)
 
-static_assert(sizeof(RoadClassification) == 1,"Road Classification should fit a byte. Increasing this has a severe impact on memory.");
+static_assert(
+    sizeof(RoadClassification) == 1,
+    "Road Classification should fit a byte. Increasing this has a severe impact on memory.");
 
 inline bool canBeSeenAsFork(const RoadClassification first, const RoadClassification second)
 {

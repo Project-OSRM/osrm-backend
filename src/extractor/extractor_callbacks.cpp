@@ -1,8 +1,8 @@
+#include "extractor/extractor_callbacks.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
-#include "extractor/extractor_callbacks.hpp"
 #include "extractor/guidance/road_classification.hpp"
 #include "extractor/restriction.hpp"
 

@@ -130,7 +130,7 @@ inline unsigned generateServerProgramOptions(const int argc,
                                           .run(),
                                       option_variables);
     }
-    catch(boost::program_options::error& e)
+    catch (boost::program_options::error &e)
     {
         util::SimpleLogger().Write(logWARNING) << "[error] " << e.what();
         return INIT_FAILED;

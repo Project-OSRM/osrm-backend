@@ -83,7 +83,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         tbb::task_scheduler_init init(number_of_threads);
 
         util::SimpleLogger().Write() << "Input file: " << config.input_path.filename().string();
-        if (!config.profile_path.empty()) {
+        if (!config.profile_path.empty())
+        {
             util::SimpleLogger().Write() << "Profile: " << config.profile_path.filename().string();
         }
         util::SimpleLogger().Write() << "Threads: " << number_of_threads;
@@ -150,7 +151,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                   resulting_nodes,
                                                   resulting_ways,
                                                   resulting_restrictions);
-
 
             number_of_nodes += resulting_nodes.size();
             // put parsed objects thru extractor callbacks

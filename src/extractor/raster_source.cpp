@@ -154,8 +154,9 @@ SourceContainer::GetRasterInterpolateFromSource(unsigned int source_id, double l
     BOOST_ASSERT(lon > -180);
 
     const auto &found = LoadedSources[source_id];
-    return found.GetRasterInterpolate(static_cast<std::int32_t>(util::toFixed(util::FloatLongitude{lon})),
-                                      static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{lat})));
+    return found.GetRasterInterpolate(
+        static_cast<std::int32_t>(util::toFixed(util::FloatLongitude{lon})),
+        static_cast<std::int32_t>(util::toFixed(util::FloatLatitude{lat})));
 }
 }
 }

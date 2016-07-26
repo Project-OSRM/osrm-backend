@@ -1,7 +1,7 @@
+#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/turn_lane_augmentation.hpp"
-#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
@@ -63,8 +63,8 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
                                               Intersection intersection,
                                               LaneDataIdMap &id_map) const
 {
-    //if only a uturn exists, there is nothing we can do
-    if( intersection.size() == 1 )
+    // if only a uturn exists, there is nothing we can do
+    if (intersection.size() == 1)
         return intersection;
 
     const auto &data = node_based_graph.GetEdgeData(via_edge);
@@ -77,7 +77,9 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
                   turn_lane_masks.begin() + turn_lane_offsets[data.lane_description_id + 1])
             : TurnLaneDescription();
 
-    BOOST_ASSERT( turn_lane_description.empty() || turn_lane_description.size() == (turn_lane_offsets[data.lane_description_id+1] - turn_lane_offsets[data.lane_description_id]));
+    BOOST_ASSERT(turn_lane_description.empty() ||
+                 turn_lane_description.size() == (turn_lane_offsets[data.lane_description_id + 1] -
+                                                  turn_lane_offsets[data.lane_description_id]));
 
     // going straight, due to traffic signals, we can have uncompressed geometry
     if (intersection.size() == 2 &&

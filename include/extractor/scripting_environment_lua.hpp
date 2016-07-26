@@ -48,7 +48,7 @@ class LuaScriptingEnvironment final : public ScriptingEnvironment
     explicit LuaScriptingEnvironment(const std::string &file_name);
     ~LuaScriptingEnvironment() override = default;
 
-    const ProfileProperties& GetProfileProperties() override;
+    const ProfileProperties &GetProfileProperties() override;
 
     LuaScriptingContext &GetLuaContext();
 

@@ -192,9 +192,9 @@ class StaticRTree
 
                     Coordinate current_centroid = coordinate_calculation::centroid(
                         m_coordinate_list[current_element.u], m_coordinate_list[current_element.v]);
-                    current_centroid.lat =
-                        FixedLatitude{static_cast<std::int32_t>(COORDINATE_PRECISION *
-                                      web_mercator::latToY(toFloating(current_centroid.lat)))};
+                    current_centroid.lat = FixedLatitude{static_cast<std::int32_t>(
+                        COORDINATE_PRECISION *
+                        web_mercator::latToY(toFloating(current_centroid.lat)))};
 
                     current_wrapper.m_hilbert_value = hilbertCode(current_centroid);
                 }

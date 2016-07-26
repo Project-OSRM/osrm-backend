@@ -840,7 +840,8 @@ class SharedDataFacade final : public BaseDataFacade
         else
             return extractor::guidance::TurnLaneDescription(
                 m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id],
-                m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id + 1]);
+                m_lane_description_masks.begin() +
+                    m_lane_description_offsets[lane_description_id + 1]);
     }
 };
 }

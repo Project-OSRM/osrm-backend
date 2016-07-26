@@ -112,20 +112,19 @@ inline bool NodeBasedEdge::operator<(const NodeBasedEdge &other) const
     return source < other.source;
 }
 
-inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(
-    OSMNodeID source,
-    OSMNodeID target,
-    NodeID name_id,
-    EdgeWeight weight,
-    bool forward,
-    bool backward,
-    bool roundabout,
-    bool access_restricted,
-    bool startpoint,
-    TravelMode travel_mode,
-    bool is_split,
-    const LaneDescriptionID lane_description_id,
-    guidance::RoadClassification road_classification)
+inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
+                                                  OSMNodeID target,
+                                                  NodeID name_id,
+                                                  EdgeWeight weight,
+                                                  bool forward,
+                                                  bool backward,
+                                                  bool roundabout,
+                                                  bool access_restricted,
+                                                  bool startpoint,
+                                                  TravelMode travel_mode,
+                                                  bool is_split,
+                                                  const LaneDescriptionID lane_description_id,
+                                                  guidance::RoadClassification road_classification)
     : NodeBasedEdge(SPECIAL_NODEID,
                     SPECIAL_NODEID,
                     name_id,

@@ -1,5 +1,5 @@
-#include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
+#include "extractor/edge_based_edge.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
@@ -422,7 +422,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.traffic_signal_penalty;
                 }
 
-                const int32_t turn_penalty = scripting_environment.GetTurnPenalty(180. - turn.angle);
+                const int32_t turn_penalty =
+                    scripting_environment.GetTurnPenalty(180. - turn.angle);
                 const auto turn_instruction = turn.instruction;
 
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)

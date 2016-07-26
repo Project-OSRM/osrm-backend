@@ -141,7 +141,6 @@ struct InternalExtractorEdge
         return v;
     }
 };
-
 }
 }
 
