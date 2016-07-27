@@ -85,7 +85,7 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
                                           .run(),
                                       option_variables);
     }
-    catch (boost::program_options::error &e)
+    catch (const boost::program_options::error &e)
     {
         util::SimpleLogger().Write(logWARNING) << "[error] " << e.what();
         return return_code::fail;
