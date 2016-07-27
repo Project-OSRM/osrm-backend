@@ -67,6 +67,7 @@ int main(int argc, const char *argv[])
 
         std::cout << "Distance: " << distance << " meter\n";
         std::cout << "Duration: " << duration << " seconds\n";
+        return EXIT_SUCCESS;
     }
     else if (status == Status::Error)
     {
