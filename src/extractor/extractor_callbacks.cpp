@@ -3,6 +3,7 @@
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
+#include "extractor/guidance/road_classification.hpp"
 #include "extractor/restriction.hpp"
 
 #include "util/for_each_pair.hpp"
@@ -140,13 +141,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     }
 
     // FIXME this need to be moved into the profiles
-    const char *data = input_way.get_value_by_key("highway");
-    guidance::RoadClassificationData road_classification;
-    if (data)
-    {
-        road_classification.road_class = guidance::functionalRoadClassFromTag(data);
-    }
-
+    const guidance::RoadClassification road_classification = parsed_way.road_classification;
     const auto laneStringToDescription = [](std::string lane_string) -> TurnLaneDescription {
         if (lane_string.empty())
             return {};
@@ -204,7 +199,10 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                          << *token_itr << "\"";
                     return {};
                 }
-                BOOST_ASSERT((lane_mask & translated_mask) == 0); // make sure the mask is valid
+
+                // In case of multiple times the same lane indicators withn a lane, as in
+                // "left;left|.."  or-ing the masks generates a single "left" enum.
+                // Which is fine since this is data issue and we can't represent it anyway.
                 lane_mask |= translated_mask;
             }
             // add the lane to the description

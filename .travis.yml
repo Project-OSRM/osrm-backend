@@ -24,6 +24,7 @@ env:
   global:
    - CCACHE_TEMPDIR=/tmp/.ccache-temp
    - CCACHE_COMPRESS=1
+   - CASHER_TIME_OUT=1000
    - JOBS=4
 
 matrix:
@@ -40,14 +41,6 @@ matrix:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
-
-    - os: linux
-      compiler: "gcc-4.8-debug"
-      addons: &gcc48
-        apt:
-          sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Debug'
 
     - os: linux
       compiler: "clang-3.8-debug"
@@ -74,20 +67,6 @@ matrix:
     - os: linux
       compiler: "gcc-5-release-i686"
       env: TARGET_ARCH='i686' CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
-
-      # FIXME disabled until sourceforge fixes its packages for stxxl
-      #- os: linux
-      #- compiler: "gcc-4.8-release-armhf"
-      #- env: TARGET_ARCH='armhf' CCOMPILER='arm-linux-gnueabihf-gcc-4.8' CXXCOMPILER='arm-linux-gnueabihf-g++-4.8' BUILD_TYPE='Release'
-
-      # Disabled because of CI slowness
-      #- os: linux
-      #- compiler: gcc
-      #- addons: &gcc48
-      #-   apt:
-      #-     sources: ['ubuntu-toolchain-r-test']
-      #-     packages: ['g++-4.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='gcc-4.8' CXXCOMPILER='g++-4.8' BUILD_TYPE='Release'
 
       # Disabled because of CI slowness
       #- os: linux

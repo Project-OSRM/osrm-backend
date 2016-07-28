@@ -15,7 +15,13 @@ namespace guidance
 // Constrains lanes for multi-hop situations where lane changes depend on earlier ones.
 // Instead of forcing users to change lanes rapidly in a short amount of time,
 // we anticipate lane changes emitting only matching lanes early on.
-std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps);
+// the second parameter describes the duration that we feel two segments need to be apart to count
+// as separate maneuvers.
+std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
+                                            const double min_duration_needed_for_lane_change = 15);
+
+// Remove all lane information from roundabouts. See #2626.
+std::vector<RouteStep> removeLanesFromRoundabouts(std::vector<RouteStep> steps);
 
 } // namespace guidance
 } // namespace engine

@@ -206,16 +206,31 @@
             "description": "Turn Lanes for lane guidance."
         },
         {
+            "key": "vehicle:lanes",
+            "object_types": [ "way" ],
+            "description": "Access tags for turn lanes."
+        },
+        {
             "key": "turn:lanes:forward",
             "object_types": [ "way" ],
             "description": "Turn Lanes for lane guidance."
+        },
+        {
+            "key": "vehicle:lanes:forward",
+            "object_types": [ "way" ],
+            "description": "Access tags for turn lanes."
         },
         {
             "key": "turn:lanes:backward",
             "object_types": [ "way" ],
             "description": "Turn Lanes for lane guidance."
         },
-         {
+        {
+            "key": "vehicle:lanes:backward",
+            "object_types": [ "way" ],
+            "description": "Access tags for turn lanes."
+        },
+        {
             "key": "lanes:psv",
             "object_types": [ "way" ],
             "description": "Turn Lanes for lane guidance."

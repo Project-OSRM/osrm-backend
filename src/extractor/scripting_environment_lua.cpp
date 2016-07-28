@@ -1,4 +1,4 @@
-#include "extractor/scripting_environment.hpp"
+#include "extractor/scripting_environment_lua.hpp"
 
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_helper_functions.hpp"
@@ -7,6 +7,7 @@
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/raster_source.hpp"
+#include "extractor/restriction_parser.hpp"
 #include "util/exception.hpp"
 #include "util/lua_util.hpp"
 #include "util/make_unique.hpp"
@@ -18,6 +19,8 @@
 #include <luabind/tag_function.hpp>
 
 #include <osmium/osm.hpp>
+
+#include <tbb/parallel_for.h>
 
 #include <sstream>
 
@@ -58,12 +61,13 @@ int luaErrorCallback(lua_State *state)
 }
 }
 
-ScriptingEnvironment::ScriptingEnvironment(const std::string &file_name) : file_name(file_name)
+LuaScriptingEnvironment::LuaScriptingEnvironment(const std::string &file_name)
+    : file_name(file_name)
 {
     util::SimpleLogger().Write() << "Using script " << file_name;
 }
 
-void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
+void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 {
     typedef double (osmium::Location::*location_member_ptr_type)() const;
 
@@ -78,6 +82,7 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
         [luabind::def("durationIsValid", durationIsValid),
          luabind::def("parseDuration", parseDuration),
          luabind::def("trimLaneString", trimLaneString),
+         luabind::def("applyAccessTokens", applyAccessTokens),
          luabind::class_<TravelMode>("mode").enum_(
              "enums")[luabind::value("inaccessible", TRAVEL_MODE_INACCESSIBLE),
                       luabind::value("driving", TRAVEL_MODE_DRIVING),
@@ -91,6 +96,24 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
                       luabind::value("river_up", TRAVEL_MODE_RIVER_UP),
                       luabind::value("river_down", TRAVEL_MODE_RIVER_DOWN),
                       luabind::value("route", TRAVEL_MODE_ROUTE)],
+
+         luabind::class_<extractor::guidance::RoadPriorityClass::Enum>("road_priority_class")
+             .enum_("enums")
+                 [luabind::value("motorway", extractor::guidance::RoadPriorityClass::MOTORWAY),
+                  luabind::value("trunk", extractor::guidance::RoadPriorityClass::TRUNK),
+                  luabind::value("primary", extractor::guidance::RoadPriorityClass::PRIMARY),
+                  luabind::value("secondary", extractor::guidance::RoadPriorityClass::SECONDARY),
+                  luabind::value("tertiary", extractor::guidance::RoadPriorityClass::TERTIARY),
+                  luabind::value("main_residential",
+                                 extractor::guidance::RoadPriorityClass::MAIN_RESIDENTIAL),
+                  luabind::value("side_residential",
+                                 extractor::guidance::RoadPriorityClass::SIDE_RESIDENTIAL),
+                  luabind::value("link_road", extractor::guidance::RoadPriorityClass::LINK_ROAD),
+                  luabind::value("bike_path", extractor::guidance::RoadPriorityClass::BIKE_PATH),
+                  luabind::value("foot_path", extractor::guidance::RoadPriorityClass::FOOT_PATH),
+                  luabind::value("connectivity",
+                                 extractor::guidance::RoadPriorityClass::CONNECTIVITY)],
+
          luabind::class_<SourceContainer>("sources")
              .def(luabind::constructor<>())
              .def("load", &SourceContainer::LoadRasterSource)
@@ -131,6 +154,21 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
              .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
              .def_readwrite("barrier", &ExtractionNode::barrier),
 
+         // road classification to be set in profile
+         luabind::class_<guidance::RoadClassification>("RoadClassification")
+             .property("motorway_class",
+                       &guidance::RoadClassification::IsMotorwayClass,
+                       &guidance::RoadClassification::SetMotorwayFlag)
+             .property("link_class",
+                       &guidance::RoadClassification::IsLinkClass,
+                       &guidance::RoadClassification::SetLinkClass)
+             .property("may_be_ignored",
+                       &guidance::RoadClassification::IsLowPriorityRoadClass,
+                       &guidance::RoadClassification::SetLowPriorityFlag)
+             .property("road_priority_class",
+                       &guidance::RoadClassification::GetClass,
+                       &guidance::RoadClassification::SetClass),
+
          luabind::class_<ExtractionWay>("ResultWay")
              // .def(luabind::constructor<>())
              .def_readwrite("forward_speed", &ExtractionWay::forward_speed)
@@ -144,6 +182,7 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
              .def_readwrite("duration", &ExtractionWay::duration)
              .def_readwrite("turn_lanes_forward", &ExtractionWay::turn_lanes_forward)
              .def_readwrite("turn_lanes_backward", &ExtractionWay::turn_lanes_backward)
+             .def_readwrite("road_classification", &ExtractionWay::road_classification)
              .property(
                  "forward_mode", &ExtractionWay::get_forward_mode, &ExtractionWay::set_forward_mode)
              .property("backward_mode",
@@ -187,21 +226,180 @@ void ScriptingEnvironment::InitContext(ScriptingEnvironment::Context &context)
         error_stream << error_msg;
         throw util::exception("ERROR occurred in profile script:\n" + error_stream.str());
     }
+
+    context.has_turn_penalty_function = util::luaFunctionExists(context.state, "turn_function");
+    context.has_node_function = util::luaFunctionExists(context.state, "node_function");
+    context.has_way_function = util::luaFunctionExists(context.state, "way_function");
+    context.has_segment_function = util::luaFunctionExists(context.state, "segment_function");
 }
 
-ScriptingEnvironment::Context &ScriptingEnvironment::GetContex()
+const ProfileProperties &LuaScriptingEnvironment::GetProfileProperties()
+{
+    return GetLuaContext().properties;
+}
+
+LuaScriptingContext &LuaScriptingEnvironment::GetLuaContext()
 {
     std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = util::make_unique<Context>();
+        ref = util::make_unique<LuaScriptingContext>();
         InitContext(*ref);
     }
     luabind::set_pcall_callback(&luaErrorCallback);
 
     return *ref;
+}
+
+void LuaScriptingEnvironment::ProcessElements(
+    const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+    const RestrictionParser &restriction_parser,
+    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
+    tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
+    tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
+{
+    // parse OSM entities in parallel, store in resulting vectors
+    tbb::parallel_for(
+        tbb::blocked_range<std::size_t>(0, osm_elements.size()),
+        [&](const tbb::blocked_range<std::size_t> &range) {
+            ExtractionNode result_node;
+            ExtractionWay result_way;
+            auto &local_context = this->GetLuaContext();
+
+            for (auto x = range.begin(), end = range.end(); x != end; ++x)
+            {
+                const auto entity = osm_elements[x];
+
+                switch (entity->type())
+                {
+                case osmium::item_type::node:
+                    result_node.clear();
+                    if (local_context.has_node_function)
+                    {
+                        local_context.processNode(static_cast<const osmium::Node &>(*entity),
+                                                  result_node);
+                    }
+                    resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
+                    break;
+                case osmium::item_type::way:
+                    result_way.clear();
+                    if (local_context.has_way_function)
+                    {
+                        local_context.processWay(static_cast<const osmium::Way &>(*entity),
+                                                 result_way);
+                    }
+                    resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
+                    break;
+                case osmium::item_type::relation:
+                    resulting_restrictions.push_back(restriction_parser.TryParse(
+                        static_cast<const osmium::Relation &>(*entity)));
+                    break;
+                default:
+                    break;
+                }
+            }
+        });
+}
+
+std::vector<std::string> LuaScriptingEnvironment::GetNameSuffixList()
+{
+    auto &context = GetLuaContext();
+    BOOST_ASSERT(context.state != nullptr);
+    if (!util::luaFunctionExists(context.state, "get_name_suffix_list"))
+        return {};
+
+    std::vector<std::string> suffixes_vector;
+    try
+    {
+        // call lua profile to compute turn penalty
+        luabind::call_function<void>(
+            context.state, "get_name_suffix_list", boost::ref(suffixes_vector));
+    }
+    catch (const luabind::error &er)
+    {
+        util::SimpleLogger().Write(logWARNING) << er.what();
+    }
+
+    return suffixes_vector;
+}
+
+std::vector<std::string> LuaScriptingEnvironment::GetExceptions()
+{
+    auto &context = GetLuaContext();
+    BOOST_ASSERT(context.state != nullptr);
+    std::vector<std::string> restriction_exceptions;
+    if (util::luaFunctionExists(context.state, "get_exceptions"))
+    {
+        // get list of turn restriction exceptions
+        luabind::call_function<void>(
+            context.state, "get_exceptions", boost::ref(restriction_exceptions));
+    }
+    return restriction_exceptions;
+}
+
+void LuaScriptingEnvironment::SetupSources()
+{
+    auto &context = GetLuaContext();
+    BOOST_ASSERT(context.state != nullptr);
+    if (util::luaFunctionExists(context.state, "source_function"))
+    {
+        luabind::call_function<void>(context.state, "source_function");
+    }
+}
+
+int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle)
+{
+    auto &context = GetLuaContext();
+    if (context.has_turn_penalty_function)
+    {
+        BOOST_ASSERT(context.state != nullptr);
+        try
+        {
+            // call lua profile to compute turn penalty
+            const double penalty =
+                luabind::call_function<double>(context.state, "turn_function", angle);
+            BOOST_ASSERT(penalty < std::numeric_limits<int32_t>::max());
+            BOOST_ASSERT(penalty > std::numeric_limits<int32_t>::min());
+            return boost::numeric_cast<int32_t>(penalty);
+        }
+        catch (const luabind::error &er)
+        {
+            util::SimpleLogger().Write(logWARNING) << er.what();
+        }
+    }
+    return 0;
+}
+
+void LuaScriptingEnvironment::ProcessSegment(const osrm::util::Coordinate &source,
+                                             const osrm::util::Coordinate &target,
+                                             double distance,
+                                             InternalExtractorEdge::WeightData &weight)
+{
+    auto &context = GetLuaContext();
+    if (context.has_segment_function)
+    {
+        BOOST_ASSERT(context.state != nullptr);
+        luabind::call_function<void>(context.state,
+                                     "segment_function",
+                                     boost::cref(source),
+                                     boost::cref(target),
+                                     distance,
+                                     boost::ref(weight));
+    }
+}
+
+void LuaScriptingContext::processNode(const osmium::Node &node, ExtractionNode &result)
+{
+    BOOST_ASSERT(state != nullptr);
+    luabind::call_function<void>(state, "node_function", boost::cref(node), boost::ref(result));
+}
+
+void LuaScriptingContext::processWay(const osmium::Way &way, ExtractionWay &result)
+{
+    BOOST_ASSERT(state != nullptr);
+    luabind::call_function<void>(state, "way_function", boost::cref(way), boost::ref(result));
 }
 }
 }

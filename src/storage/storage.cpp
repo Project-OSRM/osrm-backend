@@ -293,11 +293,12 @@ int Storage::Run()
         throw util::exception("Could not open " + config.datasource_indexes_path.string() +
                               " for reading.");
     }
-    std::size_t number_of_compressed_datasources = 0;
+    std::uint64_t number_of_compressed_datasources = 0;
     if (geometry_datasource_input_stream)
     {
         geometry_datasource_input_stream.read(
-            reinterpret_cast<char *>(&number_of_compressed_datasources), sizeof(std::size_t));
+            reinterpret_cast<char *>(&number_of_compressed_datasources),
+            sizeof(number_of_compressed_datasources));
     }
     shared_layout_ptr->SetBlockSize<uint8_t>(SharedDataLayout::DATASOURCES_LIST,
                                              number_of_compressed_datasources);

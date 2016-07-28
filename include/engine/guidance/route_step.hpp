@@ -7,6 +7,9 @@
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 
+#include "extractor/guidance/turn_lane_types.hpp"
+#include "util/guidance/turn_lanes.hpp"
+
 #include <cstddef>
 
 #include <string>
@@ -34,6 +37,10 @@ struct Intersection
     std::vector<bool> entry;
     std::size_t in;
     std::size_t out;
+
+    // turn lane information
+    util::guidance::LaneTupel lanes;
+    extractor::guidance::TurnLaneDescription lane_description;
 };
 
 inline Intersection getInvalidIntersection()
@@ -42,7 +49,9 @@ inline Intersection getInvalidIntersection()
             {},
             {},
             Intersection::NO_INDEX,
-            Intersection::NO_INDEX};
+            Intersection::NO_INDEX,
+            util::guidance::LaneTupel(),
+            {}};
 }
 
 struct RouteStep

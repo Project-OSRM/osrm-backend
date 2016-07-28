@@ -335,7 +335,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                                                &used_weights](const detail::FixedLine &tile_line,
                                                               const std::uint32_t speed_kmh,
                                                               const std::size_t duration,
-                                                              const std::uint8_t datasource,
+                                                              const DatasourceID datasource,
                                                               const std::size_t name,
                                                               std::int32_t &start_x,
                                                               std::int32_t &start_y) {

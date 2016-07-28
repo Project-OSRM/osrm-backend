@@ -77,11 +77,19 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
 
     // parse command line options
     boost::program_options::variables_map option_variables;
-    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                      .options(cmdline_options)
-                                      .positional(positional_options)
-                                      .run(),
-                                  option_variables);
+    try
+    {
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                          .options(cmdline_options)
+                                          .positional(positional_options)
+                                          .run(),
+                                      option_variables);
+    }
+    catch (const boost::program_options::error &e)
+    {
+        util::SimpleLogger().Write(logWARNING) << "[error] " << e.what();
+        return return_code::fail;
+    }
 
     if (option_variables.count("version"))
     {
@@ -160,10 +168,5 @@ catch (const std::bad_alloc &e)
     util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     util::SimpleLogger().Write(logWARNING)
         << "Please provide more memory or consider using a larger swapfile";
-    return EXIT_FAILURE;
-}
-catch (const std::exception &e)
-{
-    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     return EXIT_FAILURE;
 }

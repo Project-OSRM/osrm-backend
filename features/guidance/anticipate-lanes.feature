@@ -135,9 +135,9 @@ Feature: Turn Lane Guidance
             | cj    |                    | 1     | motorway_link | yes    | xbcj |
 
        When I route I should get
-            | waypoints | route             | turns                                             | lanes                           |
-            | a,i       | ab,xbcj,ci,ci     | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
-            | a,j       | ab,xbcj,xbcj,xbcj | depart,merge slight left,use lane straight,arrive | ,,none:true slight right:false, |
+            | waypoints | route         | turns                                             | lanes                           |
+            | a,i       | ab,xbcj,ci,ci | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
+            | a,j       | ab,xbcj,xbcj  | depart,merge slight left,arrive                   | ,,                              |
 
 
     @anticipate
@@ -259,8 +259,8 @@ Feature: Turn Lane Guidance
             | waypoints | route                 | turns                                                   | lanes                                                                                                                                                  |
             | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true right:false,left:true straight:false, |
 
-    @anticipate
-        Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
+    @anticipate @todo @bug @2661
+    Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
         Given the node map
             |   |   | e |   |   |
             | a | b |   | d | f |
@@ -271,20 +271,20 @@ Feature: Turn Lane Guidance
             |   |   | i |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward                      | highway | junction   | #   |
+            | nodes | turn:lanes:forward                       | highway | junction   | #   |
             | ab    | slight_right\|slight_right\|slight_right | primary |            |     |
             | bc    | slight_left\|slight_right\|slight_right  | primary | roundabout | top |
-            | cd    |                                         | primary | roundabout | top |
-            | de    |                                         | primary | roundabout | top |
-            | eb    |                                         | primary | roundabout | top |
-            | df    |                                         | primary |            |     |
-            | cg    | slight_right\|slight_right              | primary |            |     |
-            | gh    | slight_left\|slight_right               | primary | roundabout | bot |
-            | hi    |                                         | primary | roundabout | bot |
-            | ij    | slight_left\|slight_right               | primary | roundabout | bot |
-            | jg    |                                         | primary | roundabout | bot |
-            | hk    |                                         | primary |            |     |
-            | jl    |                                         | primary |            |     |
+            | cd    |                                          | primary | roundabout | top |
+            | de    |                                          | primary | roundabout | top |
+            | eb    |                                          | primary | roundabout | top |
+            | df    |                                          | primary |            |     |
+            | cg    | slight_right\|slight_right               | primary |            |     |
+            | gh    | slight_left\|slight_right                | primary | roundabout | bot |
+            | hi    |                                          | primary | roundabout | bot |
+            | ij    | slight_left\|slight_right                | primary | roundabout | bot |
+            | jg    |                                          | primary | roundabout | bot |
+            | hk    |                                          | primary |            |     |
+            | jl    |                                          | primary |            |     |
 
         When I route I should get
             | #           | waypoints | route       | turns                                             | lanes                                                                                          |
@@ -301,20 +301,20 @@ Feature: Turn Lane Guidance
             |   |   | c |   |   |
 
         And the ways
-            | nodes | turn:lanes:forward                    | highway | junction   |
-            | ab    |                                       | primary |            |
-            | bc    |                                       | primary | roundabout |
+            | nodes | turn:lanes:forward                     | highway | junction   |
+            | ab    |                                        | primary |            |
+            | bc    |                                        | primary | roundabout |
             | cd    | slight_left\|slight_left\|slight_right | primary | roundabout |
-            | de    |                                       | primary | roundabout |
-            | eb    |                                       | primary | roundabout |
-            | df    |                                       | primary |            |
+            | de    |                                        | primary | roundabout |
+            | eb    |                                        | primary | roundabout |
+            | df    |                                        | primary |            |
 
         When I route I should get
             | waypoints | route    | turns                                                 | lanes                                                    |
             | a,f       | ab,df,df | depart,roundabout-exit-1,use lane slight right,arrive | ,,slight left:false slight left:false slight right:true, |
 
     @anticipate
-    Scenario: Anticipate with lanes in roundabout where we stay on the roundabout for multiple exits
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             |   |   | a |   |   |
             |   |   | b |   |   |
@@ -340,11 +340,11 @@ Feature: Turn Lane Guidance
             | fy    |                            | primary |            |
 
         When I route I should get
-            | waypoints | route    | turns                           | lanes                                  |
-            | a,h       | ab,gh,gh | depart,roundabout-exit-5,arrive | ,slight right:false slight right:true, |
+            | waypoints | route    | turns                           | lanes |
+            | a,h       | ab,gh,gh | depart,roundabout-exit-5,arrive | ,,    |
 
     @anticipate
-    Scenario: Departing or arriving inside a roundabout does not yet anticipate lanes
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             |   |   | a |   |   |
             | x | b |   | d | y |
@@ -360,13 +360,69 @@ Feature: Turn Lane Guidance
             | da    |                            | primary | roundabout | roundabout |
 
         When I route I should get
-            | waypoints | route                    | turns                                   | lanes                                  |
-            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,slight right:false slight right:true, |
-            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,slight right:true slight right:true,  |
-            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,slight right:true slight right:true,  |
+            | waypoints | route                    | turns                                   | lanes |
+            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,,    |
+            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
+            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
 
     @anticipate
-    Scenario: Anticipate Lanes for turns before and / or after roundabout
+    Scenario: No Lanes for Roundabouts, see #2626
+        Given the node map
+            |   |   | a |   |   |
+            | x | b |   | d | y |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   | c |   |   |
+
+        And the ways
+            | nodes | turn:lanes:forward         | highway | junction   | name       |
+            | xb    | slight_right\|slight_right | primary |            | xb         |
+            | dy    |                            | primary |            | dy         |
+            | ab    |                            | primary | roundabout | roundabout |
+            | bc    |                            | primary | roundabout | roundabout |
+            | cd    | left\|slight_right         | primary | roundabout | roundabout |
+            | da    |                            | primary | roundabout | roundabout |
+
+        When I route I should get
+            | waypoints | route                    | turns                                   | lanes |
+            | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,,    |
+            | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
+            | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
+
+    @anticipate
+    Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
             | a | b |   |   | x |
             |   | c |   |   |   |
@@ -391,7 +447,7 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route           | turns                                            | lanes                                                                                                                                    |
-            | a,h       | abx,bc,fg,gh,gh | depart,turn right,cdefc-exit-2,turn right,arrive | ,straight:false right:false right:false right:false right:true,right:false right:false right:false right:true,straight:false right:true, |
+            | a,h       | abx,bc,fg,gh,gh | depart,turn right,cdefc-exit-2,turn right,arrive | ,straight:false right:false right:false right:false right:true,,straight:false right:true, |
 
     @anticipate @bug @todo
     Scenario: Tripple Right keeping Left

@@ -1,52 +1,70 @@
 #ifndef SCRIPTING_ENVIRONMENT_HPP
 #define SCRIPTING_ENVIRONMENT_HPP
 
+#include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
-#include "extractor/raster_source.hpp"
+#include "extractor/restriction.hpp"
 
-#include "util/lua_util.hpp"
+#include <osmium/memory/buffer.hpp>
 
-#include <memory>
-#include <mutex>
+#include <boost/optional/optional.hpp>
+
+#include <tbb/concurrent_vector.h>
+
 #include <string>
-#include <tbb/enumerable_thread_specific.h>
+#include <vector>
 
-struct lua_State;
+namespace osmium
+{
+class Node;
+class Way;
+}
 
 namespace osrm
 {
+
+namespace util
+{
+struct Coordinate;
+}
+
 namespace extractor
 {
 
+class RestrictionParser;
+struct ExtractionNode;
+struct ExtractionWay;
+
 /**
- * Creates a lua context and binds osmium way, node and relation objects and
- * ExtractionWay and ExtractionNode to lua objects.
- *
- * Each thread has its own lua state which is implemented with thread specific
- * storage from TBB.
+ * Abstract class that handles processing osmium ways, nodes and relation objects by applying
+ * user supplied profiles.
  */
 class ScriptingEnvironment
 {
   public:
-    struct Context
-    {
-        ProfileProperties properties;
-        SourceContainer sources;
-        util::LuaState state;
-    };
-
-    explicit ScriptingEnvironment(const std::string &file_name);
-
+    ScriptingEnvironment() = default;
     ScriptingEnvironment(const ScriptingEnvironment &) = delete;
     ScriptingEnvironment &operator=(const ScriptingEnvironment &) = delete;
+    virtual ~ScriptingEnvironment() = default;
 
-    Context &GetContex();
+    virtual const ProfileProperties &GetProfileProperties() = 0;
 
-  private:
-    void InitContext(Context &context);
-    std::mutex init_mutex;
-    std::string file_name;
-    tbb::enumerable_thread_specific<std::unique_ptr<Context>> script_contexts;
+    virtual std::vector<std::string> GetNameSuffixList() = 0;
+    virtual std::vector<std::string> GetExceptions() = 0;
+    virtual void SetupSources() = 0;
+    virtual int32_t GetTurnPenalty(double angle) = 0;
+    virtual void ProcessSegment(const osrm::util::Coordinate &source,
+                                const osrm::util::Coordinate &target,
+                                double distance,
+                                InternalExtractorEdge::WeightData &weight) = 0;
+    virtual void
+    ProcessElements(const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+                    const RestrictionParser &restriction_parser,
+                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
+                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
+                    tbb::concurrent_vector<boost::optional<InputRestrictionContainer>>
+                        &resulting_restrictions) = 0;
 };
 }
 }

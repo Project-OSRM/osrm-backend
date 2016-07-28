@@ -164,15 +164,15 @@ module.exports = function () {
     };
 
     this.annotationList = (instructions) => {
-        function zip(list_1, list_2)
+        function zip(list_1, list_2, list_3)
         {
-            let pairs = [];
+            let tuples = [];
             for (let i = 0; i <  list_1.length; ++i) {
-                pairs.push([list_1[i], list_2[i]]);
+                tuples.push([list_1[i], list_2[i], list_3[i]]);
             }
-            return pairs;
+            return tuples;
         }
-        return instructions.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance).map(p => { return p.join(':'); }).join(','); }).join(',');
+        return instructions.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance, l.annotation.datasources).map(p => { return p.join(':'); }).join(','); }).join(',');
     };
 
     this.OSMIDList = (instructions) => {
@@ -182,9 +182,9 @@ module.exports = function () {
 
     this.lanesList = (instructions) => {
         return this.extractInstructionList(instructions, instruction => {
-            if( 'lanes' in instruction.maneuver )
+            if( 'lanes' in instruction.intersections[0] )
             {
-                return instruction.maneuver.lanes.map( p => { return (p.indications).join(';') + ':' + p.valid; } ).join(' ');
+                return instruction.intersections[0].lanes.map( p => { return (p.indications).join(';') + ':' + p.valid; } ).join(' ');
             } else
             {
                 return '';

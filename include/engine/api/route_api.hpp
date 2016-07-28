@@ -150,7 +150,9 @@ class RouteAPI : public BaseAPI
                                                               leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
+                leg.steps = guidance::removeLanesFromRoundabouts(std::move(leg.steps));
                 leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
+                leg.steps = guidance::collapseUseLane(std::move(leg.steps));
                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
             }
 
@@ -205,18 +207,21 @@ class RouteAPI : public BaseAPI
                 util::json::Array durations;
                 util::json::Array distances;
                 util::json::Array nodes;
+                util::json::Array datasources;
                 auto &leg_geometry = leg_geometries[idx];
 
                 durations.values.reserve(leg_geometry.annotations.size());
                 distances.values.reserve(leg_geometry.annotations.size());
                 nodes.values.reserve(leg_geometry.osm_node_ids.size());
+                datasources.values.reserve(leg_geometry.annotations.size());
 
                 std::for_each(
                     leg_geometry.annotations.begin(),
                     leg_geometry.annotations.end(),
-                    [this, &durations, &distances](const guidance::LegGeometry::Annotation &step) {
+                    [this, &durations, &distances, &datasources](const guidance::LegGeometry::Annotation &step) {
                         durations.values.push_back(step.duration);
                         distances.values.push_back(step.distance);
+                        datasources.values.push_back(step.datasource);
                     });
                 std::for_each(leg_geometry.osm_node_ids.begin(),
                               leg_geometry.osm_node_ids.end(),
@@ -227,6 +232,7 @@ class RouteAPI : public BaseAPI
                 annotation.values["distance"] = std::move(distances);
                 annotation.values["duration"] = std::move(durations);
                 annotation.values["nodes"] = std::move(nodes);
+                annotation.values["datasources"] = std::move(datasources);
                 annotations.push_back(std::move(annotation));
             }
         }

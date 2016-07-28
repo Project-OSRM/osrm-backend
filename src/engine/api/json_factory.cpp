@@ -61,9 +61,9 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
             maneuver.instruction.direction_modifier != DirectionModifier::UTurn);
 }
 
-inline bool hasValidLanes(const guidance::StepManeuver maneuver)
+inline bool hasValidLanes(const guidance::Intersection &intersection)
 {
-    return maneuver.lanes.lanes_in_turn > 0;
+    return intersection.lanes.lanes_in_turn > 0;
 }
 
 std::string instructionTypeToString(const TurnType::Enum type)
@@ -71,19 +71,20 @@ std::string instructionTypeToString(const TurnType::Enum type)
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
-util::json::Array lanesFromManeuver(const guidance::StepManeuver &maneuver)
+util::json::Array lanesFromIntersection(const guidance::Intersection &intersection)
 {
-    BOOST_ASSERT(maneuver.lanes.lanes_in_turn >= 1);
+    BOOST_ASSERT(intersection.lanes.lanes_in_turn >= 1);
     util::json::Array result;
-    LaneID lane_id = maneuver.lane_description.size();
+    LaneID lane_id = intersection.lane_description.size();
 
-    for (const auto &lane_desc : maneuver.lane_description)
+    for (const auto &lane_desc : intersection.lane_description)
     {
         --lane_id;
         util::json::Object lane;
         lane.values["indications"] = extractor::guidance::TurnLaneType::toJsonArray(lane_desc);
-        if (lane_id >= maneuver.lanes.first_lane_from_the_right &&
-            lane_id < maneuver.lanes.first_lane_from_the_right + maneuver.lanes.lanes_in_turn)
+        if (lane_id >= intersection.lanes.first_lane_from_the_right &&
+            lane_id <
+                intersection.lanes.first_lane_from_the_right + intersection.lanes.lanes_in_turn)
             lane.values["valid"] = util::json::True();
         else
             lane.values["valid"] = util::json::False();
@@ -175,9 +176,6 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
 
-    if (detail::hasValidLanes(maneuver))
-        step_maneuver.values["lanes"] = detail::lanesFromManeuver(maneuver);
-
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
     step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);
     step_maneuver.values["bearing_after"] = std::round(maneuver.bearing_after);
@@ -216,6 +214,9 @@ util::json::Object makeIntersection(const guidance::Intersection &intersection)
         result.values["in"] = intersection.in;
     if (intersection.out != guidance::Intersection::NO_INDEX)
         result.values["out"] = intersection.out;
+
+    if (detail::hasValidLanes(intersection))
+        result.values["lanes"] = detail::lanesFromIntersection(intersection);
 
     return result;
 }

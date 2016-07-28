@@ -34,7 +34,7 @@ class ExtractionContainers
 #endif
     void PrepareNodes();
     void PrepareRestrictions();
-    void PrepareEdges(lua_State *segment_state);
+    void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
     void WriteNodes(std::ofstream &file_out_stream) const;
     void WriteRestrictions(const std::string &restrictions_file_name) const;
@@ -69,11 +69,11 @@ class ExtractionContainers
 
     ExtractionContainers();
 
-    void PrepareData(const std::string &output_file_name,
+    void PrepareData(ScriptingEnvironment &scripting_environment,
+                     const std::string &output_file_name,
                      const std::string &restrictions_file_name,
                      const std::string &names_file_name,
-                     const std::string &turn_lane_file_name,
-                     lua_State *segment_state);
+                     const std::string &turn_lane_file_name);
 };
 }
 }

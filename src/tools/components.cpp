@@ -228,8 +228,3 @@ int main(int argc, char *argv[]) try
     osrm::util::SimpleLogger().Write() << "finished component analysis";
     return EXIT_SUCCESS;
 }
-catch (const std::exception &e)
-{
-    osrm::util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    return EXIT_FAILURE;
-}

@@ -28,7 +28,8 @@ class TurnHandler : public IntersectionHandler
                 const std::vector<QueryNode> &node_info_list,
                 const util::NameTable &name_table,
                 const SuffixTable &street_name_suffix_table);
-    ~TurnHandler() override final;
+
+    ~TurnHandler() override final = default;
 
     // check whether the handler can actually handle the intersection
     bool canProcess(const NodeID nid,
@@ -41,6 +42,9 @@ class TurnHandler : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
+    bool isObviousOfTwo(const EdgeID via_edge,
+                        const ConnectedRoad &road,
+                        const ConnectedRoad &other) const;
     // Dead end.
     Intersection handleOneWayTurn(Intersection intersection) const;
 
@@ -57,8 +61,8 @@ class TurnHandler : public IntersectionHandler
     handleDistinctConflict(const EdgeID via_edge, ConnectedRoad &left, ConnectedRoad &right) const;
 
     // Classification
-    std::size_t findObviousTurn(const EdgeID via_edge, const Intersection &intersection) const;
-    std::pair<std::size_t, std::size_t> findFork(const Intersection &intersection) const;
+    std::pair<std::size_t, std::size_t> findFork(const EdgeID via_edge,
+                                                 const Intersection &intersection) const;
 
     Intersection assignLeftTurns(const EdgeID via_edge,
                                  Intersection intersection,

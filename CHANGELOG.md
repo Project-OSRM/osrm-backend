@@ -1,7 +1,43 @@
+# 5.4.0
+  Changes from 5.3.0
+    - Profiles
+      - includes library guidance.lua that offers preliminary configuration on guidance.
+    - Guidance
+      - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
+    - API:
+      - `annotations=true` now returns the data source id for each segment as `datasources`
+
 # 5.3.0
   Changes from 5.3.0-rc.3
+    - Guidance
+      - Only announce `use lane` on required turns (not using all lanes to go straight)
+      - Moved `lanes` to the intersection objects. This is BREAKING in relation to other Release Candidates but not with respect to other releases.
     - Bugfixes
       - Fix BREAKING: bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
+      - Fix: bug that results in segfaults when `use lane` instructions are suppressed
+
+  Changes form 5.2.7
+    - API
+      - Introduces new `TurnType` in the form of `use lane`. The type indicates that you have to stick to a lane without turning
+      - Introduces `lanes` to the `Intersection` object. The lane data contains both the markings at the intersection and a flag indicating if they can be chosen for the next turn
+      - Removed unused `-s` from `osrm-datastore`
+    - Guidance
+      - Only announce `use lane` on required turns (not using all lanes to go straight)
+      - Improved detection of obvious turns
+      - Improved turn lane detection
+      - Reduce the number of end-of-road instructions in obvious cases
+    - Profile:
+      - bicycle.lua: Surface speeds never increase the actual speed
+    - Infrastructure
+      - Add 32bit support
+      - Add ARM NEON/VFP support
+      - Fix Windows builds
+      - Optimize speed file updates using mmap
+      - Add option to disable LTO for older compilers
+      - BREAKING: The new turn type changes the turn-type order. This breaks the **data format**.
+      - BREAKING: Turn lane data introduces two new files (osrm.tld,osrm.tls). This breaks the fileformat for older versions.
+    - Bugfixes:
+      - Fix devide by zero on updating speed data using osrm-contract
 
 # 5.3.0 RC3
   Changes from 5.3.0-rc.2

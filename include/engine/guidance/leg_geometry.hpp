@@ -39,6 +39,7 @@ struct LegGeometry
     {
         double distance;
         double duration;
+        DatasourceID datasource;
     };
     std::vector<Annotation> annotations;
 

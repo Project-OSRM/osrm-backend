@@ -49,7 +49,7 @@ void runStatistics(std::vector<double> &timings_vector, Statistics &stats)
 
 boost::filesystem::path test_path;
 
-int main(int argc, char *argv[]) try
+int main(int argc, char *argv[])
 {
 
 #ifdef __FreeBSD__
@@ -311,15 +311,4 @@ int main(int argc, char *argv[]) try
     }
     return EXIT_SUCCESS;
 #endif
-}
-catch (const std::exception &e)
-{
-    osrm::util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what();
-    osrm::util::SimpleLogger().Write(logWARNING) << "cleaning up, and exiting";
-    if (boost::filesystem::exists(test_path))
-    {
-        boost::filesystem::remove(test_path);
-        osrm::util::SimpleLogger().Write(logWARNING) << "removing temporary files";
-    }
-    return EXIT_FAILURE;
 }

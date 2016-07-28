@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-int main() try
+int main()
 {
     osrm::util::LogPolicy::GetInstance().Unmute();
     osrm::util::SimpleLogger().Write() << "Releasing all locks";
@@ -12,9 +12,4 @@ int main() try
     barrier.query_mutex.unlock();
     barrier.update_mutex.unlock();
     return 0;
-}
-catch (const std::exception &e)
-{
-    osrm::util::SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
-    return EXIT_FAILURE;
 }

@@ -385,7 +385,7 @@ class StaticRTree
             std::size_t num_leaves = m_leaves_region.size() / sizeof(LeafNode);
             m_leaves.reset(reinterpret_cast<const LeafNode *>(m_leaves_region.data()), num_leaves);
         }
-        catch (std::exception &exc)
+        catch (const std::exception &exc)
         {
             throw exception(boost::str(boost::format("Leaf file %1% mapping failed: %2%") %
                                        leaf_file % exc.what()));

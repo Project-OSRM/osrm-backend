@@ -1,5 +1,6 @@
 #include "extractor/extractor.hpp"
 #include "extractor/extractor_config.hpp"
+#include "extractor/scripting_environment_lua.hpp"
 #include "util/simple_logger.hpp"
 #include "util/version.hpp"
 
@@ -72,38 +73,39 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
     visible_options.add(generic_options).add(config_options);
 
     // parse command line options
+    boost::program_options::variables_map option_variables;
     try
     {
-        boost::program_options::variables_map option_variables;
         boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
                                           .options(cmdline_options)
                                           .positional(positional_options)
                                           .run(),
                                       option_variables);
-        if (option_variables.count("version"))
-        {
-            util::SimpleLogger().Write() << OSRM_VERSION;
-            return return_code::exit;
-        }
-
-        if (option_variables.count("help"))
-        {
-            util::SimpleLogger().Write() << visible_options;
-            return return_code::exit;
-        }
-
-        boost::program_options::notify(option_variables);
-
-        if (!option_variables.count("input"))
-        {
-            util::SimpleLogger().Write() << visible_options;
-            return return_code::exit;
-        }
     }
-    catch (std::exception &e)
+    catch (const boost::program_options::error &e)
     {
-        util::SimpleLogger().Write(logWARNING) << e.what();
+        util::SimpleLogger().Write(logWARNING) << "[error] " << e.what();
         return return_code::fail;
+    }
+
+    if (option_variables.count("version"))
+    {
+        util::SimpleLogger().Write() << OSRM_VERSION;
+        return return_code::exit;
+    }
+
+    if (option_variables.count("help"))
+    {
+        util::SimpleLogger().Write() << visible_options;
+        return return_code::exit;
+    }
+
+    boost::program_options::notify(option_variables);
+
+    if (!option_variables.count("input"))
+    {
+        util::SimpleLogger().Write() << visible_options;
+        return return_code::exit;
     }
 
     return return_code::ok;
@@ -147,17 +149,16 @@ int main(int argc, char *argv[]) try
             << "Profile " << extractor_config.profile_path.string() << " not found!";
         return EXIT_FAILURE;
     }
-    return extractor::Extractor(extractor_config).run();
+
+    // setup scripting environment
+    extractor::LuaScriptingEnvironment scripting_environment(
+        extractor_config.profile_path.string().c_str());
+    return extractor::Extractor(extractor_config).run(scripting_environment);
 }
 catch (const std::bad_alloc &e)
 {
     util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     util::SimpleLogger().Write(logWARNING)
         << "Please provide more memory or consider using a larger swapfile";
-    return EXIT_FAILURE;
-}
-catch (const std::exception &e)
-{
-    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
     return EXIT_FAILURE;
 }

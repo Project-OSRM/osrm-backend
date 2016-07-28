@@ -18,7 +18,7 @@
 
 #include <cstdlib>
 
-int main(int argc, const char *argv[]) try
+int main(int argc, const char *argv[])
 {
     if (argc < 2)
     {
@@ -67,6 +67,7 @@ int main(int argc, const char *argv[]) try
 
         std::cout << "Distance: " << distance << " meter\n";
         std::cout << "Duration: " << duration << " seconds\n";
+        return EXIT_SUCCESS;
     }
     else if (status == Status::Error)
     {
@@ -77,9 +78,4 @@ int main(int argc, const char *argv[]) try
         std::cout << "Message: " << code << "\n";
         return EXIT_FAILURE;
     }
-}
-catch (const std::exception &e)
-{
-    std::cerr << "Error: " << e.what() << std::endl;
-    return EXIT_FAILURE;
 }

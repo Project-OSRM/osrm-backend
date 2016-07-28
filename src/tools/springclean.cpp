@@ -53,7 +53,7 @@ void springclean()
 }
 }
 
-int main() try
+int main()
 {
     osrm::util::LogPolicy::GetInstance().Unmute();
     osrm::util::SimpleLogger().Write() << "Releasing all locks";
@@ -73,9 +73,4 @@ int main() try
     }
     osrm::tools::springclean();
     return EXIT_SUCCESS;
-}
-catch (const std::exception &e)
-{
-    osrm::util::SimpleLogger().Write(logWARNING) << "[excpetion] " << e.what();
-    return EXIT_FAILURE;
 }

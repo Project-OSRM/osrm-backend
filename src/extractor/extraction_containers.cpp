@@ -7,7 +7,6 @@
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
-#include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
 
@@ -16,8 +15,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/ref.hpp>
-
-#include <luabind/luabind.hpp>
 
 #include <stxxl/sort>
 
@@ -136,34 +133,27 @@ ExtractionContainers::ExtractionContainers()
  * - merge edges with nodes to include location of start/end points and serialize
  *
  */
-void ExtractionContainers::PrepareData(const std::string &output_file_name,
+void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environment,
+                                       const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name,
-                                       const std::string &turn_lane_file_name,
-                                       lua_State *segment_state)
+                                       const std::string &turn_lane_file_name)
 {
-    try
-    {
-        std::ofstream file_out_stream;
-        file_out_stream.open(output_file_name.c_str(), std::ios::binary);
-        const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
-        file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+    std::ofstream file_out_stream;
+    file_out_stream.open(output_file_name.c_str(), std::ios::binary);
+    const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
+    file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
 
-        PrepareNodes();
-        WriteNodes(file_out_stream);
-        PrepareEdges(segment_state);
-        WriteEdges(file_out_stream);
+    PrepareNodes();
+    WriteNodes(file_out_stream);
+    PrepareEdges(scripting_environment);
+    WriteEdges(file_out_stream);
 
-        PrepareRestrictions();
-        WriteRestrictions(restrictions_file_name);
+    PrepareRestrictions();
+    WriteRestrictions(restrictions_file_name);
 
-        WriteCharData(name_file_name);
-        WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Caught Execption:" << e.what() << std::endl;
-    }
+    WriteCharData(name_file_name);
+    WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
 }
 
 void ExtractionContainers::WriteTurnLaneMasks(
@@ -304,7 +294,7 @@ void ExtractionContainers::PrepareNodes()
     std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
 }
 
-void ExtractionContainers::PrepareEdges(lua_State *segment_state)
+void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
 {
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
@@ -326,8 +316,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     {
         if (edge_iterator->result.osm_source_id < node_iterator->node_id)
         {
-            util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
-                                                             << edge_iterator->result.source;
+            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
+                                                           << edge_iterator->result.source;
             edge_iterator->result.source = SPECIAL_NODEID;
             ++edge_iterator;
             continue;
@@ -362,8 +352,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // Remove all remaining edges. They are invalid because there are no corresponding nodes for
     // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
     auto markSourcesInvalid = [](InternalExtractorEdge &edge) {
-        util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
-                                                         << edge.result.source;
+        util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
+                                                       << edge.result.source;
         edge.result.source = SPECIAL_NODEID;
         edge.result.osm_source_id = SPECIAL_OSM_NODEID;
     };
@@ -386,8 +376,6 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     const auto all_edges_list_end_ = all_edges_list.end();
     const auto all_nodes_list_end_ = all_nodes_list.end();
 
-    const auto has_segment_function = util::luaFunctionExists(segment_state, "segment_function");
-
     while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
     {
         // skip all invalid edges
@@ -399,7 +387,7 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
 
         if (edge_iterator->result.osm_target_id < node_iterator->node_id)
         {
-            util::SimpleLogger().Write(LogLevel::logWARNING)
+            util::SimpleLogger().Write(LogLevel::logDEBUG)
                 << "Found invalid node reference "
                 << static_cast<uint64_t>(edge_iterator->result.osm_target_id);
             edge_iterator->result.target = SPECIAL_NODEID;
@@ -423,15 +411,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
             edge_iterator->source_coordinate,
             util::Coordinate(node_iterator->lon, node_iterator->lat));
 
-        if (has_segment_function)
-        {
-            luabind::call_function<void>(segment_state,
-                                         "segment_function",
-                                         boost::cref(edge_iterator->source_coordinate),
-                                         boost::cref(*node_iterator),
-                                         distance,
-                                         boost::ref(edge_iterator->weight_data));
-        }
+        scripting_environment.ProcessSegment(
+            edge_iterator->source_coordinate, *node_iterator, distance, edge_iterator->weight_data);
 
         const double weight = [distance](const InternalExtractorEdge::WeightData &data) {
             switch (data.type)
@@ -474,8 +455,8 @@ void ExtractionContainers::PrepareEdges(lua_State *segment_state)
     // Remove all remaining edges. They are invalid because there are no corresponding nodes for
     // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
     auto markTargetsInvalid = [](InternalExtractorEdge &edge) {
-        util::SimpleLogger().Write(LogLevel::logWARNING) << "Found invalid node reference "
-                                                         << edge.result.target;
+        util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
+                                                       << edge.result.target;
         edge.result.target = SPECIAL_NODEID;
     };
     std::for_each(edge_iterator, all_edges_list_end_, markTargetsInvalid);
@@ -734,7 +715,7 @@ void ExtractionContainers::PrepareRestrictions()
         if (way_start_and_end_iterator->way_id >
             OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
         {
-            util::SimpleLogger().Write(LogLevel::logWARNING)
+            util::SimpleLogger().Write(LogLevel::logDEBUG)
                 << "Restriction references invalid way: "
                 << restrictions_iterator->restriction.from.way;
             restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
@@ -752,7 +733,7 @@ void ExtractionContainers::PrepareRestrictions()
         auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
         if (via_id_iter == external_to_internal_node_id_map.end())
         {
-            util::SimpleLogger().Write(LogLevel::logWARNING)
+            util::SimpleLogger().Write(LogLevel::logDEBUG)
                 << "Restriction references invalid node: "
                 << restrictions_iterator->restriction.via.node;
             restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
@@ -767,7 +748,7 @@ void ExtractionContainers::PrepareRestrictions()
                 way_start_and_end_iterator->first_segment_target_id);
             if (id_iter == external_to_internal_node_id_map.end())
             {
-                util::SimpleLogger().Write(LogLevel::logWARNING)
+                util::SimpleLogger().Write(LogLevel::logDEBUG)
                     << "Way references invalid node: "
                     << way_start_and_end_iterator->first_segment_target_id;
                 restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
@@ -784,7 +765,7 @@ void ExtractionContainers::PrepareRestrictions()
                 way_start_and_end_iterator->last_segment_source_id);
             if (id_iter == external_to_internal_node_id_map.end())
             {
-                util::SimpleLogger().Write(LogLevel::logWARNING)
+                util::SimpleLogger().Write(LogLevel::logDEBUG)
                     << "Way references invalid node: "
                     << way_start_and_end_iterator->last_segment_target_id;
                 restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
@@ -857,7 +838,7 @@ void ExtractionContainers::PrepareRestrictions()
                 way_start_and_end_iterator->first_segment_target_id);
             if (to_id_iter == external_to_internal_node_id_map.end())
             {
-                util::SimpleLogger().Write(LogLevel::logWARNING)
+                util::SimpleLogger().Write(LogLevel::logDEBUG)
                     << "Way references invalid node: "
                     << way_start_and_end_iterator->first_segment_source_id;
                 restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
@@ -873,7 +854,7 @@ void ExtractionContainers::PrepareRestrictions()
                 way_start_and_end_iterator->last_segment_source_id);
             if (to_id_iter == external_to_internal_node_id_map.end())
             {
-                util::SimpleLogger().Write(LogLevel::logWARNING)
+                util::SimpleLogger().Write(LogLevel::logDEBUG)
                     << "Way references invalid node: "
                     << way_start_and_end_iterator->last_segment_source_id;
                 restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
