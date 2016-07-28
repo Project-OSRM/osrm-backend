@@ -758,6 +758,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
         if (update_edge_weights || update_turn_penalties)
         {
+            bool skip_this_edge = false;
             auto header = reinterpret_cast<const extractor::lookup::SegmentHeaderBlock *>(
                 edge_segment_byte_ptr);
             edge_segment_byte_ptr += sizeof(extractor::lookup::SegmentHeaderBlock);
@@ -787,8 +788,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                     }
                     else
                     {
-                        // This edge is blocked, we don't need to continue updating
-                        new_weight = INVALID_EDGE_WEIGHT;
+                        // If we hit a 0-speed edge, then it's effectively not traversible.
+                        // We don't want to include it in the edge_based_edge_list, so
+                        // we set a flag and `continue` the parent loop as soon as we can.
+                        // This would be a perfect place to use `goto`, but Patrick vetoed it.
+                        skip_this_edge = true;
                         break;
                     }
                 }
@@ -799,6 +803,13 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 }
 
                 previous_osm_node_id = segmentblocks[i].this_osm_node_id;
+            }
+
+            // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
+            // effectively removes it from the routing network.
+            if (skip_this_edge) {
+                penaltyblock++;
+                continue;
             }
 
             const auto turn_iter = turn_penalty_lookup.find(

@@ -23,8 +23,8 @@ Feature: Traffic - speeds
             | fb    | primary |
         And the speed file
         """
-        1,2,27
-        2,1,27
+        1,2,0
+        2,1,0
         2,3,27
         3,2,27
         1,4,27
@@ -36,12 +36,58 @@ Feature: Traffic - speeds
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file speeds.csv"
         And I route I should get
-            | from | to | route    | speed   |
-            | a    | b  | ab,ab    | 27 km/h |
-            | a    | c  | ab,bc,bc | 27 km/h |
-            | b    | c  | bc,bc    | 27 km/h |
-            | a    | d  | ad,ad    | 27 km/h |
-            | d    | c  | dc,dc    | 36 km/h |
-            | g    | b  | ab,ab    | 27 km/h |
-            | a    | g  | ab,ab    | 27 km/h |
+            | from | to | route          | speed   |
+            | a    | b  | ad,de,eb,eb    | 30 km/h |
+            | a    | c  | ad,dc,dc       | 31 km/h |
+            | b    | c  | bc,bc          | 27 km/h |
+            | a    | d  | ad,ad          | 27 km/h |
+            | d    | c  | dc,dc          | 36 km/h |
+            | g    | b  | fb,fb          | 36 km/h |
+            | a    | g  | ad,df,fb,fb    | 30 km/h |
 
+
+    Scenario: Speeds that isolate a single node (a)
+        Given the profile "testbot"
+        Given the extract extra arguments "--generate-edge-lookup"
+        Given the contract extra arguments "--segment-speed-file speeds.csv"
+        Given the speed file
+        """
+        1,2,0
+        2,1,0
+        2,3,27
+        3,2,27
+        1,4,0
+        4,1,0
+        """
+        And I route I should get
+            | from | to | route          | speed   |
+            | a    | b  | fb,fb          | 36 km/h |
+            | a    | c  | fb,bc,bc       | 30 km/h |
+            | b    | c  | bc,bc          | 27 km/h |
+            | a    | d  | fb,df,df       | 36 km/h |
+            | d    | c  | dc,dc          | 36 km/h |
+            | g    | b  | fb,fb          | 36 km/h |
+            | a    | g  | fb,fb          | 36 km/h |
+
+    Scenario: Verify that negative values are treated like 0
+        Given the profile "testbot"
+        Given the extract extra arguments "--generate-edge-lookup"
+        Given the contract extra arguments "--segment-speed-file speeds.csv"
+        Given the speed file
+        """
+        1,2,-10
+        2,1,-20
+        2,3,27
+        3,2,27
+        1,4,-3
+        4,1,-5
+        """
+        And I route I should get
+            | from | to | route          | speed   |
+            | a    | b  | fb,fb          | 36 km/h |
+            | a    | c  | fb,bc,bc       | 30 km/h |
+            | b    | c  | bc,bc          | 27 km/h |
+            | a    | d  | fb,df,df       | 36 km/h |
+            | d    | c  | dc,dc          | 36 km/h |
+            | g    | b  | fb,fb          | 36 km/h |
+            | a    | g  | fb,fb          | 36 km/h |
