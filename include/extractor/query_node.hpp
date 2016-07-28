@@ -5,8 +5,8 @@
 
 #include "util/coordinate.hpp"
 
-#include <limits>
 #include <cstdint>
+#include <limits>
 
 namespace osrm
 {
@@ -15,8 +15,8 @@ namespace extractor
 
 struct QueryNode
 {
-    using key_type = OSMNodeID; // type of NodeID
-    using value_type = std::int32_t;     // type of lat,lons
+    using key_type = OSMNodeID;      // type of NodeID
+    using value_type = std::int32_t; // type of lat,lons
 
     explicit QueryNode(const util::FixedLongitude lon_,
                        const util::FixedLatitude lat_,

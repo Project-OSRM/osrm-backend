@@ -1,8 +1,8 @@
 #include "server/service/isochrone_service.hpp"
 #include "server/service/utils.hpp"
 
-#include "engine/api/isochrone_parameters.hpp"
 #include "server/api/parameters_parser.hpp"
+#include "engine/api/isochrone_parameters.hpp"
 
 #include "util/json_container.hpp"
 
@@ -24,12 +24,13 @@ std::string getWrongOptionHelp(const engine::api::IsochroneParameters &parameter
 
     const auto coord_size = parameters.coordinates.size();
 
-    const bool param_size_mismatch = constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "hints",
-                                                        parameters.hints, coord_size, help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "bearings",
-                                                        parameters.bearings, coord_size, help) ||
-                                     constrainParamSize(PARAMETER_SIZE_MISMATCH_MSG, "radiuses",
-                                                        parameters.radiuses, coord_size, help);
+    const bool param_size_mismatch =
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "hints", parameters.hints, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "bearings", parameters.bearings, coord_size, help) ||
+        constrainParamSize(
+            PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help);
 
     if (!param_size_mismatch && parameters.coordinates.size() < 2)
     {
@@ -40,13 +41,15 @@ std::string getWrongOptionHelp(const engine::api::IsochroneParameters &parameter
 }
 } // anon. ns
 
-engine::Status IsochroneService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
+engine::Status
+IsochroneService::RunQuery(std::size_t prefix_length, std::string &query, ResultT &result)
 {
     result = util::json::Object();
     auto &json_result = result.get<util::json::Object>();
 
     auto query_iterator = query.begin();
-    auto parameters = api::parseParameters<engine::api::IsochroneParameters>(query_iterator, query.end());
+    auto parameters =
+        api::parseParameters<engine::api::IsochroneParameters>(query_iterator, query.end());
     if (!parameters || query_iterator != query.end())
     {
         const auto position = std::distance(query.begin(), query_iterator);

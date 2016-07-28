@@ -284,8 +284,10 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
     const auto to_lon = static_cast<std::int32_t>(to.lon);
     const auto to_lat = static_cast<std::int32_t>(to.lat);
 
-    FixedLongitude interpolated_lon{static_cast<std::int32_t>(from_lon + factor * (to_lon - from_lon))};
-    FixedLatitude interpolated_lat{static_cast<std::int32_t>(from_lat + factor * (to_lat - from_lat))};
+    FixedLongitude interpolated_lon{
+        static_cast<std::int32_t>(from_lon + factor * (to_lon - from_lon))};
+    FixedLatitude interpolated_lat{
+        static_cast<std::int32_t>(from_lat + factor * (to_lat - from_lat))};
 
     return {std::move(interpolated_lon), std::move(interpolated_lat)};
 }

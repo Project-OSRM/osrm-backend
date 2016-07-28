@@ -159,7 +159,6 @@ double distanceToEdge(const engine::plugins::IsochroneNode &p,
     return distance;
 }
 
-
 std::vector<engine::plugins::IsochroneNode>
 concavehull(std::vector<engine::plugins::IsochroneNode> &convexhull,
             unsigned int threshold,

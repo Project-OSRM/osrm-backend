@@ -1,24 +1,22 @@
 #ifndef ISOCHRONE_HPP
 #define ISOCHRONE_HPP
 
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/api/isochrone_parameters.hpp"
+#include "engine/plugins/plugin_base.hpp"
 #include "osrm/json_container.hpp"
-#include "util/static_graph.hpp"
 #include "util/binary_heap.hpp"
+#include "util/static_graph.hpp"
 
 #include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/function.hpp>
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
 #include <cstdlib>
 #include <utility>
 #include <vector>
-
-
 
 namespace osrm
 {
@@ -42,7 +40,10 @@ struct SimpleEdgeData
 struct IsochroneNode
 {
     IsochroneNode(){};
-    IsochroneNode(osrm::extractor::QueryNode node, osrm::extractor::QueryNode predecessor, double distance, int duration)
+    IsochroneNode(osrm::extractor::QueryNode node,
+                  osrm::extractor::QueryNode predecessor,
+                  double distance,
+                  int duration)
         : node(node), predecessor(predecessor), distance(distance), duration(duration)
     {
     }
@@ -52,15 +53,14 @@ struct IsochroneNode
     double distance;
     int duration;
 
-    bool operator==(const IsochroneNode &n) const {
+    bool operator==(const IsochroneNode &n) const
+    {
         if (n.node.node_id == node.node_id)
             return true;
         else
             return false;
     }
 };
-
-
 
 using SimpleGraph = util::StaticGraph<SimpleEdgeData>;
 using SimpleEdge = SimpleGraph::InputEdge;

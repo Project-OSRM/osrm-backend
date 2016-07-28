@@ -1,8 +1,8 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_DATA_HPP_
 #define OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_DATA_HPP_
 
-#include "util/typedefs.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "util/typedefs.hpp"
 #include <string>
 #include <vector>
 

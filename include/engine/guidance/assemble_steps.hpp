@@ -2,8 +2,8 @@
 #define ENGINE_GUIDANCE_ASSEMBLE_STEPS_HPP_
 
 #include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/travel_mode.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/travel_mode.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"

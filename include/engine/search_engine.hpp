@@ -1,13 +1,13 @@
 #ifndef SEARCH_ENGINE_HPP
 #define SEARCH_ENGINE_HPP
 
-#include "engine/search_engine_data.hpp"
 #include "engine/routing_algorithms/alternative_path.hpp"
+#include "engine/routing_algorithms/direct_shortest_path.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
-#include "engine/routing_algorithms/shortest_path.hpp"
-#include "engine/routing_algorithms/direct_shortest_path.hpp"
 #include "engine/routing_algorithms/one_to_many.hpp"
+#include "engine/routing_algorithms/shortest_path.hpp"
+#include "engine/search_engine_data.hpp"
 
 #include <type_traits>
 

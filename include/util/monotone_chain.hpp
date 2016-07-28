@@ -6,9 +6,9 @@
 #include <util/coordinate_calculation.hpp>
 #include <util/simple_logger.hpp>
 
-#include <stack>
 #include <algorithm>
 #include <iterator>
+#include <stack>
 
 namespace osrm
 {
@@ -18,7 +18,7 @@ using Node = engine::plugins::IsochroneNode;
 
 int ccw(Node &p, Node &q, Node &r)
 {
-    //Using double values to avoid integer overflows
+    // Using double values to avoid integer overflows
     double Q_lat = static_cast<double>(util::toFloating(q.node.lat));
     double Q_lon = static_cast<double>(util::toFloating(q.node.lon));
     double R_lat = static_cast<double>(util::toFloating(r.node.lat));
@@ -40,13 +40,10 @@ std::vector<Node> monotoneChain(std::vector<Node> &nodes)
     int n = P.size(), k = 0;
     std::vector<Node> H(2 * n);
 
-
     // sort Points by lat and lon
-    std::sort(P.begin(), P.end(), [&](const Node &a, const Node &b)
-              {
-                  return a.node.lat < b.node.lat ||
-                         (a.node.lat == b.node.lat && a.node.lon < b.node.lon);
-              });
+    std::sort(P.begin(), P.end(), [&](const Node &a, const Node &b) {
+        return a.node.lat < b.node.lat || (a.node.lat == b.node.lat && a.node.lon < b.node.lon);
+    });
 
     // Build lower hull
     for (int i = 0; i < n; ++i)

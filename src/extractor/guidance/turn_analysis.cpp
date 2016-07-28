@@ -1,6 +1,6 @@
+#include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/classification_data.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -181,8 +181,8 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
     const auto next_road_next_intersection = [&]() {
         auto intersection = intersection_generator(intersection_node_id, next_road->turn.eid);
         auto in_edge = next_road->turn.eid;
-        //skip over traffic lights
-        if(intersection.size() == 2)
+        // skip over traffic lights
+        if (intersection.size() == 2)
         {
             const auto node = node_based_graph.GetTarget(in_edge);
             in_edge = intersection[1].turn.eid;
@@ -206,8 +206,8 @@ Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
         {
             const auto target_intersection = [&](NodeID node, EdgeID eid) {
                 auto intersection = intersection_generator(node, eid);
-                //skip over traffic lights
-                if(intersection.size() == 2)
+                // skip over traffic lights
+                if (intersection.size() == 2)
                 {
                     node = node_based_graph.GetTarget(eid);
                     eid = intersection[1].turn.eid;

@@ -99,7 +99,6 @@ struct CmpEdgeByInternalSourceTargetAndName
     const oe::ExtractionContainers::STXXLNameCharData &name_data;
     const oe::ExtractionContainers::STXXLNameOffsets &name_offsets;
 };
-
 }
 
 namespace osrm
@@ -202,7 +201,8 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     // transforms in-place name offsets to name lengths
     BOOST_ASSERT(!name_offsets.empty());
     for (auto curr = name_offsets.begin(), next = name_offsets.begin() + 1;
-         next != name_offsets.end(); ++curr, ++next)
+         next != name_offsets.end();
+         ++curr, ++next)
     {
         *curr = *next - *curr;
     }
@@ -742,8 +742,9 @@ void ExtractionContainers::PrepareRestrictions()
             continue;
         }
 
-        BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
+        BOOST_ASSERT(
+            way_start_and_end_iterator->way_id ==
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
         // we do not remap the via id yet, since we will need it for the to node as well
         const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
@@ -840,8 +841,9 @@ void ExtractionContainers::PrepareRestrictions()
             ++restrictions_iterator;
             continue;
         }
-        BOOST_ASSERT(way_start_and_end_iterator->way_id ==
-                     OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
+        BOOST_ASSERT(
+            way_start_and_end_iterator->way_id ==
+            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
         const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
 
         // assign new via node id

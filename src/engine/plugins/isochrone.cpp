@@ -1,9 +1,9 @@
+#include "engine/plugins/isochrone.hpp"
 #include "engine/api/isochrone_api.hpp"
 #include "engine/phantom_node.hpp"
-#include "engine/plugins/isochrone.hpp"
+#include "util/concave_hull.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/graph_loader.hpp"
-#include "util/concave_hull.hpp"
 #include "util/monotone_chain.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
@@ -51,8 +51,10 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         return Error("InvalidOptions", "Only distance or duration should be set", json_result);
     }
 
-    if (params.concavehull == true && params.convexhull == false) {
-        return Error("InvalidOptions", "If concavehull is set, convexhull must be set too", json_result);
+    if (params.concavehull == true && params.convexhull == false)
+    {
+        return Error(
+            "InvalidOptions", "If concavehull is set, convexhull must be set too", json_result);
     }
 
     auto phantomnodes = GetPhantomNodes(params, 1);
@@ -79,9 +81,9 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         TIMER_STOP(DIJKSTRA);
         util::SimpleLogger().Write() << "DijkstraByDuration took: " << TIMER_MSEC(DIJKSTRA) << "ms";
         TIMER_START(SORTING);
-        std::sort(isochroneVector.begin(), isochroneVector.end(),
-                  [&](const IsochroneNode n1, const IsochroneNode n2)
-                  {
+        std::sort(isochroneVector.begin(),
+                  isochroneVector.end(),
+                  [&](const IsochroneNode n1, const IsochroneNode n2) {
                       return n1.duration < n2.duration;
                   });
         TIMER_STOP(SORTING);
@@ -94,9 +96,9 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         TIMER_STOP(DIJKSTRA);
         util::SimpleLogger().Write() << "DijkstraByDistance took: " << TIMER_MSEC(DIJKSTRA) << "ms";
         TIMER_START(SORTING);
-        std::sort(isochroneVector.begin(), isochroneVector.end(),
-                  [&](const IsochroneNode n1, const IsochroneNode n2)
-                  {
+        std::sort(isochroneVector.begin(),
+                  isochroneVector.end(),
+                  [&](const IsochroneNode n1, const IsochroneNode n2) {
                       return n1.distance < n2.distance;
                   });
         TIMER_STOP(SORTING);
@@ -113,7 +115,8 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
         TIMER_STOP(CONVEXHULL);
         util::SimpleLogger().Write() << "CONVEXHULL took: " << TIMER_MSEC(CONVEXHULL) << "ms";
     }
-    if(params.concavehull && params.convexhull) {
+    if (params.concavehull && params.convexhull)
+    {
         TIMER_START(CONCAVEHULL);
         concavehull = util::concavehull(convexhull, params.threshold, isochroneVector);
         TIMER_STOP(CONCAVEHULL);
@@ -145,7 +148,7 @@ void IsochronePlugin::dijkstraByDuration(IsochroneVector &isochroneSet,
     isochroneSet.emplace_back(
         IsochroneNode(coordinate_list[source], coordinate_list[source], 0, 0));
 
-    int MAX_DURATION = duration * 60 *10;
+    int MAX_DURATION = duration * 60 * 10;
     {
         // Standard Dijkstra search, terminating when path length > MAX
         while (!heap.Empty())
@@ -177,8 +180,10 @@ void IsochronePlugin::dijkstraByDuration(IsochroneVector &isochroneSet,
                             heap.GetData(target).parent = source;
                             heap.DecreaseKey(target, to_duration);
                             update(isochroneSet,
-                                   IsochroneNode(coordinate_list[target], coordinate_list[source],
-                                                 0, to_duration));
+                                   IsochroneNode(coordinate_list[target],
+                                                 coordinate_list[source],
+                                                 0,
+                                                 to_duration));
                         }
                     }
                 }
@@ -214,7 +219,7 @@ void IsochronePlugin::dijkstraByDistance(IsochroneVector &isochroneSet,
                     {
                         Coordinate s(coordinate_list[source].lon, coordinate_list[source].lat);
                         Coordinate t(coordinate_list[target].lon, coordinate_list[target].lat);
-                        //FIXME this might not be accurate enough
+                        // FIXME this might not be accurate enough
                         int to_distance =
                             static_cast<int>(
                                 util::coordinate_calculation::haversineDistance(s, t)) +
@@ -235,8 +240,10 @@ void IsochronePlugin::dijkstraByDistance(IsochroneVector &isochroneSet,
                             heap.GetData(target).parent = source;
                             heap.DecreaseKey(target, to_distance);
                             update(isochroneSet,
-                                   IsochroneNode(coordinate_list[target], coordinate_list[source],
-                                                 to_distance, 0));
+                                   IsochroneNode(coordinate_list[target],
+                                                 coordinate_list[source],
+                                                 to_distance,
+                                                 0));
                         }
                     }
                 }
@@ -260,8 +267,8 @@ std::size_t IsochronePlugin::loadGraph(const std::string &path,
     std::vector<NodeID> traffic_light_node_list;
     std::vector<NodeID> barrier_node_list;
 
-    auto number_of_nodes = util::loadNodesFromFile(input_stream, barrier_node_list,
-                                                   traffic_light_node_list, coordinate_list);
+    auto number_of_nodes = util::loadNodesFromFile(
+        input_stream, barrier_node_list, traffic_light_node_list, coordinate_list);
 
     util::loadEdgesFromFile(input_stream, edge_list);
     traffic_light_node_list.clear();
@@ -275,11 +282,11 @@ std::size_t IsochronePlugin::loadGraph(const std::string &path,
             continue;
         }
         // forward edge
-        graph_edge_list.emplace_back(input_edge.source, input_edge.target, input_edge.weight,
-                                     input_edge.forward);
+        graph_edge_list.emplace_back(
+            input_edge.source, input_edge.target, input_edge.weight, input_edge.forward);
         // backward edge
-        graph_edge_list.emplace_back(input_edge.target, input_edge.source, input_edge.weight,
-                                     input_edge.backward);
+        graph_edge_list.emplace_back(
+            input_edge.target, input_edge.source, input_edge.weight, input_edge.backward);
     }
 
     return number_of_nodes;

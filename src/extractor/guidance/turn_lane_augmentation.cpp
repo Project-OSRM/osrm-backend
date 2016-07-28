@@ -268,7 +268,8 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
         ((intersection[0].entry_allowed && lane_data.back().tag != TurnLaneType::uturn) ? 1 : 0);
 
     // TODO check for impossible turns to see whether the turn lane is at the correct place
-    const std::size_t none_index = std::distance(lane_data.begin(), findTag(TurnLaneType::none, lane_data));
+    const std::size_t none_index =
+        std::distance(lane_data.begin(), findTag(TurnLaneType::none, lane_data));
     BOOST_ASSERT(none_index != lane_data.size());
     // we have to create multiple turns
     if (connection_count > lane_data.size())

@@ -40,7 +40,7 @@ struct IsochroneParametersGrammar final : public BaseParametersGrammar<Iterator,
         concavehull_rule =
             (qi::lit("concavehull=") >
              qi::bool_)[ph::bind(&engine::api::IsochroneParameters::concavehull, qi::_r1) = qi::_1];
-        threshold_rule=
+        threshold_rule =
             (qi::lit("threshold=") >
              qi::double_)[ph::bind(&engine::api::IsochroneParameters::threshold, qi::_r1) = qi::_1];
 

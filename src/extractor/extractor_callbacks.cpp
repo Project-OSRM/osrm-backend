@@ -193,7 +193,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             for (auto token_itr = inner_tokens.begin(); token_itr != inner_tokens.end();
                  ++token_itr)
             {
-                auto position = std::find(osm_lane_strings, osm_lane_strings + num_osm_tags, *token_itr);
+                auto position =
+                    std::find(osm_lane_strings, osm_lane_strings + num_osm_tags, *token_itr);
                 const auto translated_mask =
                     masks_by_osm_string[std::distance(osm_lane_strings, position)];
                 if (translated_mask == TurnLaneType::empty)
@@ -265,8 +266,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         // name_offsets already has an offset of a new name, take the offset index as the name id
         name_id = external_memory.name_offsets.size() - 1;
 
-        external_memory.name_char_data.reserve(external_memory.name_char_data.size() + name_length
-                                               + destinations_length + pronunciation_length);
+        external_memory.name_char_data.reserve(external_memory.name_char_data.size() + name_length +
+                                               destinations_length + pronunciation_length);
 
         std::copy(parsed_way.name.c_str(),
                   parsed_way.name.c_str() + name_length,
@@ -306,7 +307,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     std::transform(input_way.nodes().begin(),
                    input_way.nodes().end(),
                    std::back_inserter(external_memory.used_node_id_list),
-                   [](const osmium::NodeRef &ref) { return OSMNodeID{static_cast<std::uint64_t>(ref.ref())}; });
+                   [](const osmium::NodeRef &ref) {
+                       return OSMNodeID{static_cast<std::uint64_t>(ref.ref())};
+                   });
 
     const bool is_opposite_way = TRAVEL_MODE_INACCESSIBLE == parsed_way.forward_travel_mode;
 
@@ -338,7 +341,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         external_memory.way_start_end_id_list.push_back(
             {OSMWayID{static_cast<std::uint32_t>(input_way.id())},
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes().back().ref())},
-             OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[input_way.nodes().size() - 2].ref())},
+             OSMNodeID{
+                 static_cast<std::uint64_t>(input_way.nodes()[input_way.nodes().size() - 2].ref())},
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[1].ref())},
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[0].ref())}});
     }
@@ -372,27 +376,28 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 input_way.nodes().cbegin(),
                 input_way.nodes().cend(),
                 [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node) {
-                    external_memory.all_edges_list.push_back(
-                        InternalExtractorEdge(OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
-                                              OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
-                                              name_id,
-                                              backward_weight_data,
-                                              false,
-                                              true,
-                                              parsed_way.roundabout,
-                                              parsed_way.is_access_restricted,
-                                              parsed_way.is_startpoint,
-                                              parsed_way.backward_travel_mode,
-                                              true,
-                                              turn_lane_id_backward,
-                                              road_classification));
+                    external_memory.all_edges_list.push_back(InternalExtractorEdge(
+                        OSMNodeID{static_cast<std::uint64_t>(first_node.ref())},
+                        OSMNodeID{static_cast<std::uint64_t>(last_node.ref())},
+                        name_id,
+                        backward_weight_data,
+                        false,
+                        true,
+                        parsed_way.roundabout,
+                        parsed_way.is_access_restricted,
+                        parsed_way.is_startpoint,
+                        parsed_way.backward_travel_mode,
+                        true,
+                        turn_lane_id_backward,
+                        road_classification));
                 });
         }
 
         external_memory.way_start_end_id_list.push_back(
             {OSMWayID{static_cast<std::uint32_t>(input_way.id())},
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes().back().ref())},
-             OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[input_way.nodes().size() - 2].ref())},
+             OSMNodeID{
+                 static_cast<std::uint64_t>(input_way.nodes()[input_way.nodes().size() - 2].ref())},
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[1].ref())},
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[0].ref())}});
     }

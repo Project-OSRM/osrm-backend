@@ -77,7 +77,6 @@ class SharedMemory
   public:
     void *Ptr() const { return region.get_address(); }
 
-  
     SharedMemory(const SharedMemory &) = delete;
     SharedMemory &operator=(const SharedMemory &) = delete;
 

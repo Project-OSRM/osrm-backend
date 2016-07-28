@@ -10,9 +10,9 @@
 #include <boost/assert.hpp>
 #include <boost/functional/hash_fwd.hpp>
 
+#include "util/json_container.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
-#include "util/json_container.hpp"
 
 namespace osrm
 {

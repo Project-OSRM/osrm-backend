@@ -1,5 +1,5 @@
-#include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
+#include "extractor/edge_based_edge.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"

@@ -46,21 +46,21 @@ using engine::api::MatchParameters;
 using engine::api::TileParameters;
 using engine::api::IsochroneParameters;
 
-    /**
-     * Represents a Open Source Routing Machine with access to its services.
-     *
-     * This represents an Open Source Routing Machine (OSRM) instance, with the services:
-     *
-     *  - Route: shortest path queries for coordinates
-     *  - Table: distance tables for coordinates
-     *  - Nearest: nearest street segment for coordinate
-     *  - Trip: shortest round trip between coordinates
-     *  - Match: snaps noisy coordinate traces to the road network
-     *  - Tile: vector tiles with internal graph representation
-     *
-     *  All services take service-specific parameters, fill a JSON object, and return a status code.
-     */
-    class OSRM final
+/**
+ * Represents a Open Source Routing Machine with access to its services.
+ *
+ * This represents an Open Source Routing Machine (OSRM) instance, with the services:
+ *
+ *  - Route: shortest path queries for coordinates
+ *  - Table: distance tables for coordinates
+ *  - Nearest: nearest street segment for coordinate
+ *  - Trip: shortest round trip between coordinates
+ *  - Match: snaps noisy coordinate traces to the road network
+ *  - Tile: vector tiles with internal graph representation
+ *
+ *  All services take service-specific parameters, fill a JSON object, and return a status code.
+ */
+class OSRM final
 {
   public:
     /**
