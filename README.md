@@ -10,6 +10,11 @@ The Open Source Routing Machine is a high performance routing engine written in 
 | Windows      | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
 | Coverage     | [![codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
 
+## Contact
+
+- IRC: server `irc.oftc.net`, channel: `#osrm` (see: `https://www.oftc.net`, and for a webchat: `https://webchat.oftc.net`)
+- Mailinglist: `https://lists.openstreetmap.org/listinfo/osrm-talk`
+
 ## Building
 
 For instructions on how to [build](https://github.com/Project-OSRM/osrm-backend/wiki/Building-OSRM) and [run OSRM](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM), please consult [the Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
