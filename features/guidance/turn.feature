@@ -879,3 +879,23 @@ Feature: Simple Turns
             | waypoints | turns                   | route                                                                                   |
             | a,d       | depart,arrive           | Channing Street Northeast,Channing Street Northwest                                     |
             | a,h       | depart,turn left,arrive | Channing Street Northeast,North Capitol Street Northeast,North Capitol Street Northeast |
+
+    Scenario: V St NW, Florida Ave NW: Turn Instruction
+    # https://www.mapillary.com/app/?focus=map&lat=38.91815595&lng=-77.03880249&z=17&pKey=sCxepTOCTZD3OoBXuqGEOw
+    # http://www.openstreetmap.org/way/6062557#map=19/38.91805/-77.03892
+        Given the node map
+            | y |   |   | x |   |   |
+            |   |   | c |   |   |   |
+            |   | d |   |   | b | a |
+            |   |   |   |   |   |   |
+            | e |   |   |   |   |   |
+
+        And the ways
+            | nodes | name                           | highway     | oneway |
+            | abc   | V St NW                        | tertiary    | yes    |
+            | xcde  | Florida Ave NW                 | tertiary    | yes    |
+            | yd    | Champlain St NW                | residential |        |
+
+        When I route I should get
+            | waypoints | turns                   | route                                 |
+            | a,e       | depart,turn left,arrive | V St NW,Florida Ave NW,Florida Ave NW |
