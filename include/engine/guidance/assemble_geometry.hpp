@@ -51,8 +51,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         reverse_geometry[reverse_geometry.size() - source_node.fwd_segment_position - 1]));
 
     std::vector<uint8_t> forward_datasource_vector;
-    facade.GetUncompressedDatasources(source_node.forward_packed_geometry_id, forward_datasource_vector);
-
+    facade.GetUncompressedDatasources(source_node.forward_packed_geometry_id,
+                                      forward_datasource_vector);
 
     auto cumulative_distance = 0.;
     auto current_distance = 0.;
@@ -73,8 +73,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         }
 
         prev_coordinate = coordinate;
-        geometry.annotations.emplace_back(
-            LegGeometry::Annotation{current_distance, path_point.duration_until_turn / 10., path_point.datasource_id});
+        geometry.annotations.emplace_back(LegGeometry::Annotation{
+            current_distance, path_point.duration_until_turn / 10., path_point.datasource_id});
         geometry.locations.push_back(std::move(coordinate));
         geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(path_point.turn_via_node));
     }
@@ -88,7 +88,9 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     facade.GetUncompressedDatasources(target_node.forward_packed_geometry_id, forward_datasources);
 
     geometry.annotations.emplace_back(
-        LegGeometry::Annotation{current_distance, target_node.forward_weight / 10., forward_datasources[target_node.fwd_segment_position]});
+        LegGeometry::Annotation{current_distance,
+                                target_node.forward_weight / 10.,
+                                forward_datasources[target_node.fwd_segment_position]});
     geometry.segment_offsets.push_back(geometry.locations.size());
     geometry.locations.push_back(target_node.location);
 
@@ -98,7 +100,6 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     facade.GetUncompressedGeometry(target_node.forward_packed_geometry_id, forward_geometry);
     geometry.osm_node_ids.push_back(
         facade.GetOSMNodeIDOfNode(forward_geometry[target_node.fwd_segment_position]));
-
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());
