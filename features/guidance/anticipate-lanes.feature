@@ -477,7 +477,7 @@ Feature: Turn Lane Guidance
             | gh    |                                                    | primary |            | gh    |
 
         When I route I should get
-            | waypoints | route           | turns                                            | lanes                                                                                                                                    |
+            | waypoints | route           | turns                                            | lanes                                                                                      |
             | a,h       | abx,bc,fg,gh,gh | depart,turn right,cdefc-exit-2,turn right,arrive | ,straight:false right:false right:false right:false right:true,,straight:false right:true, |
 
     @anticipate @bug @todo

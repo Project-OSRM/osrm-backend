@@ -53,10 +53,10 @@ Feature: Testbot - side bias
             | bcegb  | roundabout |
 
        When I route I should get
-           | waypoints | route    | turns                           |
-           | a,d       | ab,cd,cd | depart,roundabout-exit-1,arrive |
-           | a,f       | ab,ef,ef | depart,roundabout-exit-2,arrive |
-           | a,h       | ab,gh,gh | depart,roundabout-exit-3,arrive |
+           | waypoints | route    | turns                                         |
+           | a,d       | ab,cd,cd | depart,roundabout turn left exit-1,arrive     |
+           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive |
+           | a,h       | ab,gh,gh | depart,roundabout turn right exit-3,arrive    |
 
      Scenario: Mixed Entry and Exit
         Given the profile "lhs"
