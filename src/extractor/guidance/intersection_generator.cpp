@@ -143,7 +143,20 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     const auto valid_count =
         boost::count_if(intersection, [](const ConnectedRoad &road) { return road.entry_allowed; });
     if (0 == valid_count && uturn_could_be_valid)
-        intersection[0].entry_allowed = true;
+    {
+        // after intersections sorting by angles, find the u-turn with (from_node == to_node)
+        // that was inserted together with setting uturn_could_be_valid flag
+        std::size_t self_u_turn = 0;
+        while (self_u_turn < intersection.size()
+               && intersection[self_u_turn].turn.angle < std::numeric_limits<double>::epsilon()
+               && from_node != node_based_graph.GetTarget(intersection[self_u_turn].turn.eid))
+        {
+            ++self_u_turn;
+        }
+
+        BOOST_ASSERT(from_node == node_based_graph.GetTarget(intersection[self_u_turn].turn.eid));
+        intersection[self_u_turn].entry_allowed = true;
+    }
 
     return mergeSegregatedRoads(std::move(intersection));
 }
