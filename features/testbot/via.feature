@@ -262,3 +262,18 @@ Feature: Via points
             | 3,2,1     | ab,bc,cd,da,ab,ab,ab,bc,cd,da,ab,ab | 3000m +-1    |
             | 6,5,4     | bc,cd,da,ab,bc,bc,bc,cd,da,ab,bc,bc | 3000m +-1    |
             | 9,8,7     | cd,da,ab,bc,cd,cd,cd,da,ab,bc,cd,cd | 3000m +-1    |
+
+    # See issue #2706
+    Scenario: Incorrect ordering of nodes can produce multiple U-turns
+        Given the node map
+            |   | a |   |   |   |
+            | e | b | c | d | f |
+
+        And the ways
+            | nodes  | oneway |
+            | abcd   | no     |
+            | ebbdcf | yes    |
+
+        When I route I should get
+            | from | to | route         |
+            | e    | f  | ebbdcf,ebbdcf |
