@@ -1,3 +1,7 @@
+# 5.2.8
+  - Bugfixes:
+    - Handle an edge case that cause the turn instruction code to segfault during osrm-extract on Egypt.
+
 # 5.2.7
   - Bugfixes
     - BREAKING: Fix bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
