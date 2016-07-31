@@ -47,6 +47,12 @@
             "description": "Roads with area=yes are ignored by default."
         },
         {
+            "key": "hov",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov=designated are ignored by default."
+        },
+        {
             "key": "impassable",
             "description": "This is used by HOT."
         },

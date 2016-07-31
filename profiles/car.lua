@@ -148,6 +148,7 @@ local turn_bias                  = 1.2
 
 local obey_oneway                = true
 local ignore_areas               = true
+local ignore_hov_ways            = true
 
 local abs = math.abs
 local min = math.min
@@ -230,6 +231,12 @@ function way_function (way, result)
   -- we dont route over areas
   local area = way:get_value_by_key("area")
   if ignore_areas and area and "yes" == area then
+    return
+  end
+
+  -- respect user-preference for HOV-only ways
+  local hov = way:get_value_by_key("hov")
+  if ignore_hov_ways and hov and "designated" == hov then
     return
   end
 
