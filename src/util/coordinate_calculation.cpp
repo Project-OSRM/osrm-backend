@@ -275,6 +275,142 @@ double circleRadius(const Coordinate C1, const Coordinate C2, const Coordinate C
         return std::numeric_limits<double>::infinity();
 }
 
+/// Newton-based Taubin circle algebraic fit in a plain.
+/// Chernov, N. Circular and Linear Regression: Fitting Circles and Lines by Least Squares, 2010
+/// Chapter 5.10 Implementation of the Taubin fit, p. 126
+/// Original code http://people.cas.uab.edu/~mosya/cl/CircleFitByTaubin.cpp
+bool circleCenterTaubin(const std::vector<Coordinate> &coords,
+                        std::pair<double, double> &center,
+                        double &estimated_radius)
+{
+    // Compute mean and covariances with the two-pass algorithm
+    double meanX = 0., meanY = 0.;
+    for (const auto &c : coords)
+    {
+        // Use the equirectangular projection
+        const auto x = static_cast<double>(toFloating(c.lon));
+        const auto y = static_cast<double>(toFloating(c.lat));
+        meanX += x;
+        meanY += y;
+    }
+    meanX /= coords.size();
+    meanY /= coords.size();
+
+    // Compute moments for centered x, y and z = x^2+y^2 coordinates
+    double Mxx = 0., Myy = 0., Mxy = 0., Mxz = 0., Myz = 0., Mzz = 0.;
+    for (auto &c : coords)
+    {
+        const auto Xi = static_cast<double>(toFloating(c.lon)) - meanX;
+        const auto Yi = static_cast<double>(toFloating(c.lat)) - meanY;
+        const auto Zi = Xi * Xi + Yi * Yi;
+
+        Mxx += Xi * Xi;
+        Myy += Yi * Yi;
+        Mzz += Zi * Zi;
+        Mxy += Xi * Yi;
+        Mxz += Xi * Zi;
+        Myz += Yi * Zi;
+    }
+
+    Mxx /= coords.size();
+    Myy /= coords.size();
+    Mxy /= coords.size();
+    Mxz /= coords.size();
+    Myz /= coords.size();
+    Mzz /= coords.size();
+
+    // Compute coefficients of the characteristic polynomial
+    const auto Mz = Mxx + Myy;
+    const auto cov_xy = Mxx * Myy - Mxy * Mxy;
+    const auto var_z = Mzz - Mz * Mz;
+    const auto c3 = 4. * Mz;
+    const auto c2 = -3. * Mz * Mz - Mzz;
+    const auto c1 = var_z * Mz + 4. * cov_xy * Mz - Mxz * Mxz - Myz * Myz;
+    const auto c0 = Mxz * (Mxz * Myy - Myz * Mxy) + Myz * (Myz * Mxx - Mxz * Mxy) - var_z * cov_xy;
+
+    // Find the root of the characteristic polynomial using Newton's method starting at x=0.
+    // It is guaranteed to converge to the smallest characteristic value
+    double x = 0., y = c0;
+    const auto eps = sqrt(std::numeric_limits<double>::epsilon());
+    for (int iter = 0; iter < 5; ++iter)
+    {
+        const auto dy = c1 + x * (2. * c2 + 3. * c3 * x);
+        const auto xnew = x - y / dy;
+        if (!std::isfinite(xnew))
+            return false;
+        if (std::abs(xnew - x) < eps)
+            break;
+
+        const auto ynew = c0 + xnew * (c1 + xnew * (c2 + xnew * c3));
+        if (abs(ynew) >= abs(y))
+            break;
+
+        x = xnew;
+        y = ynew;
+    }
+
+    // Computing parameters of the fitting circle
+    const auto det = x * x - x * Mz + cov_xy;
+    // Check if line is fitted
+    if (det == 0.)
+        return false;
+
+    const auto centerX = (Mxz * (Myy - x) - Myz * Mxy) / det / 2.0; // a = -B/2/A
+    const auto centerY = (Myz * (Mxx - x) - Mxz * Mxy) / det / 2.0; // b = -C/2/A
+
+    // Translate the center
+    center.first = meanX + centerX;
+    center.second = meanY + centerY;
+
+    // R^2 = (B^2 + C^2 - 4AD) / (4A^2) (3.11), D = -A Mz (5.49)
+    estimated_radius = std::sqrt(centerX * centerX + centerY * centerY + Mz);
+
+    return true;
+}
+
+boost::optional<Coordinate> circleCenter(const std::vector<Coordinate> &coords)
+{
+    std::pair<double, double> center;
+    double radius;
+
+    if (!circleCenterTaubin(coords, center, radius))
+        return boost::none;
+
+    const double lon = center.first, lat = center.second;
+    if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
+        return boost::none;
+    else
+        return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
+}
+
+double circleRadius(const std::vector<Coordinate> &coords)
+{
+    switch (coords.size())
+    {
+    case 0:
+        return std::numeric_limits<double>::quiet_NaN();
+    case 1:
+        return 0.;
+    case 2:
+        return 0.5 * haversineDistance(coords[0], coords[1]);
+    default:
+        break;
+    }
+
+    std::pair<double, double> center;
+    double radius;
+
+    if (!circleCenterTaubin(coords, center, radius))
+        return std::numeric_limits<double>::infinity();
+
+    const double lon = center.first, lat = center.second;
+    if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
+        return std::numeric_limits<double>::infinity();
+
+    // The estimated radius corresponds to the arc angle in degrees, convert it to meters
+    return radius * detail::DEGREE_TO_RAD * detail::EARTH_RADIUS;
+}
+
 Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
 {
     BOOST_ASSERT(0 <= factor && factor <= 1.0);

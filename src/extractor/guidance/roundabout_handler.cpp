@@ -290,22 +290,16 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     }
 
     // calculate the radius of the roundabout/rotary. For two coordinates, we assume a minimal
-    // circle
-    // with both vertices right at the other side (so half their distance in meters).
+    // circle with both vertices right at the other side (so half their distance in meters).
     // Otherwise, we construct a circle through the first tree vertices.
     const auto getRadius = [&roundabout_nodes, &getCoordinate]() {
-        auto node_itr = roundabout_nodes.begin();
-        if (roundabout_nodes.size() == 2)
-        {
-            const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++);
-            return 0.5 * util::coordinate_calculation::haversineDistance(first, second);
-        }
-        else
-        {
-            const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++),
-                       third = getCoordinate(*node_itr++);
-            return util::coordinate_calculation::circleRadius(first, second, third);
-        }
+        std::vector<util::Coordinate> coordinates;
+        coordinates.reserve(roundabout_nodes.size());
+        std::transform(roundabout_nodes.begin(),
+                       roundabout_nodes.end(),
+                       std::back_inserter(coordinates),
+                       getCoordinate);
+        return util::coordinate_calculation::circleRadius(std::move(coordinates));
     };
     const double radius = getRadius();
 

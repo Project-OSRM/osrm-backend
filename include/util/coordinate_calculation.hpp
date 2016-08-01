@@ -6,6 +6,7 @@
 #include <boost/optional.hpp>
 
 #include <utility>
+#include <vector>
 
 namespace osrm
 {
@@ -94,6 +95,12 @@ boost::optional<Coordinate> circleCenter(const Coordinate first_coordinate,
 double circleRadius(const Coordinate first_coordinate,
                     const Coordinate second_coordinate,
                     const Coordinate third_coordinate);
+
+// find the center of a circle via fitting
+boost::optional<Coordinate> circleCenter(const std::vector<Coordinate> &coords);
+
+// find the radius of a circle via curve fitting
+double circleRadius(const std::vector<Coordinate> &coords);
 
 // factor in [0,1]. Returns point along the straight line between from and to. 0 returns from, 1
 // returns to
