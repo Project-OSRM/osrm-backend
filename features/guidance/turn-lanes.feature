@@ -751,3 +751,42 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route     | turns                   | lanes                   |
             | a,c       | ab,bc,bc  | depart,turn left,arrive | ,left:true right:false, |
+
+    # http://www.openstreetmap.org/export#map=19/47.97685/7.82933&layers=D
+    Scenario: Lane Parsing Issue #2706: None Assignments
+        Given the node map
+            |   | f |   |   | j  |   |
+            |   |   |   |   |    |   |
+            | a | b | c |   | d  | e |
+            |   |   |   |   |    |   |
+            |   |   |   |   | i  |   |
+            |   | g |   |   | h  |   |
+
+        And the nodes
+            | node | highway         |
+            | a    | traffic_signals |
+            | i    | traffic_signals |
+
+        And the ways
+            | nodes | highway        | name           | oneway | turn:lanes:forward       |
+            | ab    | secondary      | Wiesentalstr   |        | through;left\|right      |
+            | bc    | secondary      | Wiesentalstr   |        | none\|left;through       |
+            | cd    | secondary      | Wiesentalstr   |        | none\|left;through       |
+            | de    | residential    | Wippertstr     |        |                          |
+            | fb    | secondary      | Merzhauser Str | yes    | through\|through\|right  |
+            | bg    | secondary      | Merzhauser Str | yes    |                          |
+            | hi    | secondary      | Merzhauser Str | yes    | left;reverse\|none\|none |
+            | ic    | secondary_link | Merzhauser Str | yes    |                          |
+            | id    | secondary      | Merzhauser Str | yes    | through;right\|none      |
+            | dj    | secondary      | Merzhauser Str | yes    |                          |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction    |
+            | restriction | fb       | fb     | b        | no_left_turn   |
+            | restriction | ic       | cb     | c        | only_left_turn |
+            | restriction | id       | dc     | d        | no_left_turn   |
+
+        When I route I should get
+            | waypoints | route     | turns                   | lanes                  |
+            | h,a ||||
+            # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
