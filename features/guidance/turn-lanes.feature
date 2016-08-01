@@ -768,8 +768,8 @@ Feature: Turn Lane Guidance
             | waypoints | route     | turns                   | lanes                   |
             | a,c       | ab,bc,bc  | depart,turn left,arrive | ,left:true right:false, |
 
-    # http://www.openstreetmap.org/export#map=19/47.97685/7.82933&layers=D
-    Scenario: Lane Parsing Issue #2706: None Assignments
+    # http://www.openstreetmap.org/#map=19/47.97685/7.82933&layers=D
+    Scenario: Lane Parsing Issue #2706: None Assignments I
         Given the node map
             |   | f |   |   | j  |   |
             |   |   |   |   |    |   |
@@ -805,4 +805,39 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route     | turns                   | lanes                  |
             | h,a ||||
+            # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
+
+   # https://www.openstreetmap.org/#map=19/47.99257/7.83276&layers=D
+    Scenario: Lane Parsing Issue #2706: None Assignments II
+        Given the node map
+            |   | k | l |   |
+            | j | a | b | f |
+            | i | c | d | e |
+            |   | h | g |   |
+
+        And the ways
+            | nodes | highway        | name           | oneway | turn:lanes                           |
+            | ka    | secondary      | Eschholzstr    | yes    | left;reverse\|through\|through\|none |
+            | kj    | unclassified   | kj             | yes    |                                      |
+            | ac    | secondary      | Eschholzstr    | yes    | left;reverse\|none\|none\|none       |
+            | ch    | secondary      | Eschholzstr    | yes    |                                      |
+            | gd    | secondary      | Eschholzstr    | yes    | left;reverse\|through\|through\|none |
+            | db    | secondary      | Eschholzstr    | yes    | left;reverse\|through\|through\|none |
+            | bl    | secondary      | Eschholzstr    | yes    |                                      |
+            | fb    | residential    | Haslacher Str  | yes    | left;reverse\|left;through\|right    |
+            | ba    | secondary_link | Haslacher Str  | yes    | left;reverse\|left;through           |
+            | aj    | unclassified   | Haslacher Str  | yes    |                                      |
+            | ic    | unclassified   | Haslacher Str  | yes    | left;reverse\|left\|through          |
+            | cd    | secondary_link | Haslacher Str  | yes    | left;reverse\|left\|through          |
+            | de    | residential    | Haslacher Str  | yes    |                                      |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction      |
+            | restriction | ka       | ac     | a        | only_straight_on |
+            | restriction | ic       | cd     | c        | only_straight_on |
+            | restriction | gd       | db     | d        | only_straight_on |
+
+        When I route I should get
+            | waypoints | route     | turns                   | lanes                  |
+            | i,e ||||
             # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
