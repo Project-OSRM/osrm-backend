@@ -344,7 +344,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          name_table,
                                          street_name_suffix_table);
     guidance::lanes::TurnLaneHandler turn_lane_handler(
-        *m_node_based_graph, turn_lane_offsets, turn_lane_masks, m_node_info_list, turn_analysis);
+        *m_node_based_graph, turn_lane_offsets, turn_lane_masks, turn_analysis);
 
     bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
