@@ -825,3 +825,21 @@ Feature: Turn Lane Guidance
             | waypoints | route     | turns                   | lanes                  |
             | i,e ||||
             # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
+
+    Scenario: Lane Parsing Issue #2706: None Assignments III - Minimal reproduction recipe
+        Given the node map
+            |   |   | l |   |
+            |   | a | b |   |
+            |   |   | d |   |
+            |   |   |   |   |
+
+        And the ways
+            | nodes | highway        | name           | oneway | turn:lanes                           |
+            | db    | secondary      | Eschholzstr    | yes    | left;reverse\|through\|through\|none |
+            | bl    | secondary      | Eschholzstr    | yes    |                                      |
+            | ba    | secondary_link | Haslacher Str  | yes    |                                      |
+
+        When I route I should get
+            | waypoints | route     | turns                   | lanes                  |
+            | d,a ||||
+            # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
