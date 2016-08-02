@@ -22,6 +22,9 @@
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 
+// Keep debug include to make sure the debug header is in sync with types.
+#include "util/debug.hpp"
+
 #include "extractor/tarjan_scc.hpp"
 
 #include <boost/filesystem.hpp>
