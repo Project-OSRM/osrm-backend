@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_lane_data.hpp"
+#include "util/attributes.hpp"
 
 namespace osrm
 {
@@ -13,6 +14,7 @@ namespace guidance
 namespace lanes
 {
 
+OSRM_ATTR_WARN_UNUSED
 LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
                                            const Intersection &intersection);
 

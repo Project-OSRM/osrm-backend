@@ -5,6 +5,7 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/query_node.hpp"
 
+#include "util/attributes.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 
@@ -40,11 +41,17 @@ class MotorwayHandler : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
+    OSRM_ATTR_WARN_UNUSED
     Intersection handleSliproads(const NodeID intersection_node_id,
                                  Intersection intersection) const;
+
+    OSRM_ATTR_WARN_UNUSED
     Intersection fromMotorway(const EdgeID via_edge, Intersection intersection) const;
+
+    OSRM_ATTR_WARN_UNUSED
     Intersection fromRamp(const EdgeID via_edge, Intersection intersection) const;
 
+    OSRM_ATTR_WARN_UNUSED
     Intersection fallback(Intersection intersection) const;
 };
 

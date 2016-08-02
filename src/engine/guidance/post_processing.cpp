@@ -5,6 +5,7 @@
 #include "engine/guidance/lane_processing.hpp"
 #include "engine/guidance/toolkit.hpp"
 
+#include "util/attributes.hpp"
 #include "util/guidance/toolkit.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
@@ -127,6 +128,7 @@ double turn_angle(const double entry_bearing, const double exit_bearing)
     return angle > 360 ? angle - 360 : angle;
 }
 
+OSRM_ATTR_WARN_UNUSED
 RouteStep forwardInto(RouteStep destination, const RouteStep &source)
 {
     // Merge a turn into a silent turn
@@ -325,6 +327,7 @@ void closeOffRoundabout(const bool on_roundabout,
 }
 
 // elongate a step by another. the data is added either at the front, or the back
+OSRM_ATTR_WARN_UNUSED
 RouteStep elongate(RouteStep step, const RouteStep &by_step)
 {
     BOOST_ASSERT(step.mode == by_step.mode);

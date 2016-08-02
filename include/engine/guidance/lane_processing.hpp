@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "engine/guidance/route_step.hpp"
+#include "util/attributes.hpp"
 
 namespace osrm
 {
@@ -17,10 +18,12 @@ namespace guidance
 // we anticipate lane changes emitting only matching lanes early on.
 // the second parameter describes the duration that we feel two segments need to be apart to count
 // as separate maneuvers.
+OSRM_ATTR_WARN_UNUSED
 std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                                             const double min_duration_needed_for_lane_change = 15);
 
 // Remove all lane information from roundabouts. See #2626.
+OSRM_ATTR_WARN_UNUSED
 std::vector<RouteStep> removeLanesFromRoundabouts(std::vector<RouteStep> steps);
 
 } // namespace guidance
