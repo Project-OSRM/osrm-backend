@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <iostream>
 #include <limits>
 #include <utility>
 
@@ -513,6 +514,33 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         }
     }
 }
+
+// Staggered intersection are very short zig-zags of a few meters.
+// We do not want to announce these short left-rights or right-lefts:
+//
+//      * -> b      a -> *
+//      |       or       |       becomes  a   ->   b
+// a -> *                * -> b
+//
+bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current)
+{
+    // Base decision on distance since the zig-zag is a visual clue.
+    const constexpr auto MAX_STAGGERED_DISTANCE = 3; // debatable, but keep short to be on safe side
+
+    using namespace util::guidance;
+
+    const auto left_right = isLeftTurn(previous.maneuver.instruction) && //
+                            isRightTurn(current.maneuver.instruction);
+    const auto right_left = isRightTurn(previous.maneuver.instruction) && //
+                            isLeftTurn(current.maneuver.instruction);
+
+    // A RouteStep holds distance/duration from the maneuver to the subsequent step.
+    // We are only interested in the distance between the first and the second.
+    const auto is_short = previous.distance < MAX_STAGGERED_DISTANCE;
+
+    return is_short && (left_right || right_left);
+}
+
 } // namespace
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
@@ -753,12 +781,13 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         // A name oszillation changes from name A shortly to name B and back to A.
         // In these cases, the name change will be suppressed.
         else if (one_back_index > 0 && compatible(current_step, one_back_step) &&
-                 isCollapsableInstruction(current_step.maneuver.instruction) &&
-                 isCollapsableInstruction(one_back_step.maneuver.instruction))
+                 ((isCollapsableInstruction(current_step.maneuver.instruction) &&
+                   isCollapsableInstruction(one_back_step.maneuver.instruction)) ||
+                  isStaggeredIntersection(one_back_step, current_step)))
         {
             const auto two_back_index = getPreviousIndex(one_back_index);
             BOOST_ASSERT(two_back_index < steps.size());
-            // valid, since one_back is collapsable:
+            // valid, since one_back is collapsable or a turn and therefore not depart:
             const auto &coming_from_name = steps[two_back_index].name;
             if (current_step.name == coming_from_name)
             {
