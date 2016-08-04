@@ -351,6 +351,10 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
             if (lane_data.back().tag == TurnLaneType::uturn)
                 return findBestMatchForReverse(lane_data[lane_data.size() - 2].tag, intersection);
 
+            // TODO(mokob): #2730 have a look please
+            // BOOST_ASSERT(lane_data.front().tag == TurnLaneType::uturn);
+            // return findBestMatchForReverse(lane_data[1].tag, intersection);
+            //
             if (lane_data.front().tag == TurnLaneType::uturn)
                 return findBestMatchForReverse(lane_data[1].tag, intersection);
 

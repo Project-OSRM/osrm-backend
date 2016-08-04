@@ -753,6 +753,7 @@ Feature: Turn Lane Guidance
             | a,c       | ab,bc,bc  | depart,turn left,arrive | ,left:true right:false, |
 
     # http://www.openstreetmap.org/#map=19/47.97685/7.82933&layers=D
+    @bug @todo
     Scenario: Lane Parsing Issue #2706: None Assignments I
         Given the node map
             |   | f |   |   | j  |   |
@@ -791,7 +792,8 @@ Feature: Turn Lane Guidance
             | h,a ||||
             # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
 
-   # https://www.openstreetmap.org/#map=19/47.99257/7.83276&layers=D
+    # https://www.openstreetmap.org/#map=19/47.99257/7.83276&layers=D
+    @bug @todo
     Scenario: Lane Parsing Issue #2706: None Assignments II
         Given the node map
             |   | k | l |   |
@@ -826,6 +828,7 @@ Feature: Turn Lane Guidance
             | i,e ||||
             # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
 
+    @bug @todo
     Scenario: Lane Parsing Issue #2706: None Assignments III - Minimal reproduction recipe
         Given the node map
             |   |   | l |   |
