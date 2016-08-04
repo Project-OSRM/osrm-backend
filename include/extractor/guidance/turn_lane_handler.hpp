@@ -27,7 +27,7 @@ namespace extractor
 namespace guidance
 {
 
-// Given an Intersection, the graph to access the data and  the turn lanes, the turn lane matcher
+// Given an Intersection, the graph to access the data and the turn lanes, the turn lane matcher
 // assigns appropriate turn tupels to the different turns.
 namespace lanes
 {
@@ -39,7 +39,6 @@ class TurnLaneHandler
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                     const std::vector<std::uint32_t> &turn_lane_offsets,
                     const std::vector<TurnLaneType::Mask> &turn_lane_masks,
-                    const std::vector<QueryNode> &node_info_list,
                     const TurnAnalysis &turn_analysis);
 
     OSRM_ATTR_WARN_UNUSED
@@ -54,7 +53,6 @@ class TurnLaneHandler
     const util::NodeBasedDynamicGraph &node_based_graph;
     const std::vector<std::uint32_t> &turn_lane_offsets;
     const std::vector<TurnLaneType::Mask> &turn_lane_masks;
-    const std::vector<QueryNode> &node_info_list;
     const TurnAnalysis &turn_analysis;
 
     // check whether we can handle an intersection

@@ -33,10 +33,9 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const std::vector<std::uint32_t> &turn_lane_offsets,
                                  const std::vector<TurnLaneType::Mask> &turn_lane_masks,
-                                 const std::vector<QueryNode> &node_info_list,
                                  const TurnAnalysis &turn_analysis)
     : node_based_graph(node_based_graph), turn_lane_offsets(turn_lane_offsets),
-      turn_lane_masks(turn_lane_masks), node_info_list(node_info_list), turn_analysis(turn_analysis)
+      turn_lane_masks(turn_lane_masks), turn_analysis(turn_analysis)
 {
 }
 
