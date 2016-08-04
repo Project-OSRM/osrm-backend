@@ -1,3 +1,9 @@
+# 5.3.1
+  Changes from 5.3.1
+    - Bugfixes:
+      - Disabled broken lane handling for complex uturn/oneway combinations for now (190 intersections affected on the planet)
+      - Fixed a bug with overlaping geometries, which broke OSRM on recent Egypt extracts with data-modelling issues
+
 # 5.3.0
   Changes from 5.3.0-rc.3
     - Guidance
