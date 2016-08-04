@@ -53,6 +53,12 @@
             "description": "Roads with hov=designated are ignored by default."
         },
         {
+            "key": "toll",
+            "value": "yes",
+            "object_types": [ "way" ],
+            "description": "Roads with toll=yes are ignored by default."
+        },
+        {
             "key": "impassable",
             "description": "This is used by HOT."
         },
