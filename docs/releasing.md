@@ -39,7 +39,7 @@ We may introduce forward-compatible changes: query parameters and response prope
 
 ## Releasing a version
 
-1. Check out the appropriate release branch `x.y.z`
+1. Check out the appropriate release branch `x.y`
 2. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
 3. Make sure `CHANGELOG.md` is up to date.
 4. Make sure the OSRM version in `CMakeLists.txt` is up to date
