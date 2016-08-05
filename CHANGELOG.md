@@ -2,6 +2,7 @@
   Changes from 5.3.0
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
+      - added left_hand_driving flag in global profile properties
     - Guidance
       - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
     - API:
