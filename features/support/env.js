@@ -1,7 +1,6 @@
 var path = require('path');
 var util = require('util');
 var fs = require('fs');
-var exec = require('child_process').exec;
 var d3 = require('d3-queue');
 
 module.exports = function () {
@@ -48,44 +47,6 @@ module.exports = function () {
         fs.exists(this.TEST_FOLDER, (exists) => {
             if (!exists) throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_FOLDER));
             callback();
-        });
-    };
-
-    this.verifyOSRMIsNotRunning = () => {
-        if (this.OSRMLoader.up()) {
-            throw new Error('*** osrm-routed is already running.');
-        }
-    };
-
-    this.verifyExistenceOfBinaries = (callback) => {
-        var verify = (bin, cb) => {
-            var binPath = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
-            fs.exists(binPath, (exists) => {
-                if (!exists) throw new Error(util.format('%s is missing. Build failed?', binPath));
-                var helpPath = util.format('%s --help > /dev/null 2>&1', binPath);
-                exec(helpPath, (err) => {
-                    if (err) {
-                        this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
-                        throw new Error(util.format('*** %s exited with code %d', helpPath, err.code));
-                    }
-                    cb();
-                });
-            });
-        };
-
-        var q = d3.queue();
-        ['osrm-extract', 'osrm-contract', 'osrm-routed'].forEach(bin => { q.defer(verify, bin); });
-        q.awaitAll(() => {
-            callback();
-        });
-    };
-
-    this.AfterConfiguration = (callback) => {
-        this.clearLogFiles(() => {
-            this.verifyOSRMIsNotRunning();
-            this.verifyExistenceOfBinaries(() => {
-                callback();
-            });
         });
     };
 

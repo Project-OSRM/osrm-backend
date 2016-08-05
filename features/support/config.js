@@ -4,6 +4,7 @@ var util = require('util');
 var d3 = require('d3-queue');
 var OSM = require('./build_osm');
 var classes = require('./data_classes');
+var child_process = require('child_process');
 
 module.exports = function () {
     this.initializeOptions = (callback) => {
@@ -84,10 +85,42 @@ module.exports = function () {
             .defer(hashContract)
             .defer(hashRouted)
             .awaitAll(() => {
-                this.AfterConfiguration(() => {
-                    callback();
+                this.clearLogFiles(() => {
+                    this.verifyOSRMIsNotRunning();
+                    this.verifyExistenceOfBinaries(() => {
+                        callback();
+                    });
                 });
             });
+    };
+
+    this.verifyOSRMIsNotRunning = () => {
+        if (this.OSRMLoader.up()) {
+            throw new Error('*** osrm-routed is already running.');
+        }
+    };
+
+    this.verifyExistenceOfBinaries = (callback) => {
+        var verify = (bin, cb) => {
+            var binPath = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
+            fs.exists(binPath, (exists) => {
+                if (!exists) throw new Error(util.format('%s is missing. Build failed?', binPath));
+                var helpPath = util.format('%s --help > /dev/null 2>&1', binPath);
+                child_process.exec(helpPath, (err) => {
+                    if (err) {
+                        this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
+                        throw new Error(util.format('*** %s exited with code %d', helpPath, err.code));
+                    }
+                    cb();
+                });
+            });
+        };
+
+        var q = d3.queue();
+        ['osrm-extract', 'osrm-contract', 'osrm-routed'].forEach(bin => { q.defer(verify, bin); });
+        q.awaitAll(() => {
+            callback();
+        });
     };
 
     this.updateFingerprintExtract = (str) => {
