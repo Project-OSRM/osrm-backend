@@ -31,7 +31,7 @@ We may introduce forward-compatible changes: query parameters and response prope
 ## Release and branch management
 
 - The `master` branch is for the bleeding edge development
-- We create and maintain release branches to control the release flow
+- We create and maintain release branches `x.y` to control the release flow
 - No minor or major version will be released without a code-equal release candidates
 - For quality assurance, release candidates will be run on the demo server for 24 hours before releaseing the version proper
 - Patch versions may be released without a release candidate
@@ -47,3 +47,4 @@ We may introduce forward-compatible changes: query parameters and response prope
 6. Push tags and commits: `git push; git push --tags`
 8. Proceede with the `node-osrm` release as [outlined in the repository](https://github.com/Project-OSRM/node-osrm/blob/master/docs/releasing.md).
 9. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
+
