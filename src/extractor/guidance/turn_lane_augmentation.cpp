@@ -289,10 +289,12 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
         //
         if (connection_count + 1 != lane_data.size())
         {
-            goto these_intersections_are_clearly_broken_at_the_moment;
+            // skip broken intersections
         }
-
-        lane_data = mergeNoneTag(none_index, std::move(lane_data));
+        else
+        {
+            lane_data = mergeNoneTag(none_index, std::move(lane_data));
+        }
     }
     // we have to rename and possibly augment existing ones. The pure count remains the
     // same.
@@ -300,8 +302,6 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     {
         lane_data = handleRenamingSituations(none_index, std::move(lane_data), intersection);
     }
-
-these_intersections_are_clearly_broken_at_the_moment:
 
     // finally make sure we are still sorted
     std::sort(lane_data.begin(), lane_data.end());
