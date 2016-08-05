@@ -8,6 +8,10 @@ module.exports = function () {
         });
     });
 
+    this.BeforeFeature((feature) => {
+        console.log(feature.getUri());
+    });
+
     this.Before((scenario, callback) => {
         this.scenarioTitle = scenario.getName();
 
