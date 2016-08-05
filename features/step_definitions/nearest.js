@@ -2,7 +2,8 @@ var util = require('util');
 
 module.exports = function () {
     this.When(/^I request nearest I should get$/, (table, callback) => {
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             var testRow = (row, ri, cb) => {
                 var inNode = this.findNodeByName(row.in);
                 if (!inNode) throw new Error(util.format('*** unknown in-node "%s"'), row.in);

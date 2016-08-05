@@ -2,7 +2,8 @@ var assert = require('assert');
 
 module.exports = function () {
     this.When(/^I request \/(.*)$/, (path, callback) => {
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             this.requestPath(path, {}, (err, res, body) => {
                 this.response = res;
                 callback(err, res, body);

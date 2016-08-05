@@ -35,7 +35,8 @@ module.exports = function () {
         var actual = [];
         actual.push(table.headers);
 
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             // compute matrix
             var params = this.queryParams;
 
