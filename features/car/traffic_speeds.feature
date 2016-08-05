@@ -2,6 +2,8 @@
 Feature: Traffic - speeds
 
     Background: Use specific speeds
+
+    Scenario: Weighting based on speed file
         Given the node locations
             | node | lat        | lon      |
             | a    | 0.1        | 0.1      |
@@ -21,7 +23,10 @@ Feature: Traffic - speeds
             | eb    | primary |
             | df    | primary |
             | fb    | primary |
-        And the speed file
+        Given the profile "testbot"
+        Given the extract extra arguments "--generate-edge-lookup"
+        Given the contract extra arguments "--segment-speed-file speeds.csv"
+        Given the speed file
         """
         1,2,0
         2,1,0
@@ -30,11 +35,6 @@ Feature: Traffic - speeds
         1,4,27
         4,1,27
         """
-
-    Scenario: Weighting based on speed file
-        Given the profile "testbot"
-        Given the extract extra arguments "--generate-edge-lookup"
-        Given the contract extra arguments "--segment-speed-file speeds.csv"
         And I route I should get
             | from | to | route          | speed   |
             | a    | b  | ad,de,eb,eb    | 30 km/h |
@@ -47,6 +47,26 @@ Feature: Traffic - speeds
 
 
     Scenario: Speeds that isolate a single node (a)
+        Given the node locations
+            | node | lat        | lon      |
+            | a    | 0.1        | 0.1      |
+            | b    | .05        | 0.1      |
+            | c    | 0.0        | 0.1      |
+            | d    | .05        | .03      |
+            | e    | .05        | .066     |
+            | f    | .075       | .066     |
+            | g    | .075       | 0.1      |
+            | h    | 2.075      | 19.1     |
+        And the ways
+            | nodes | highway |
+            | ab    | primary |
+            | ad    | primary |
+            | bc    | primary |
+            | dc    | primary |
+            | de    | primary |
+            | eb    | primary |
+            | df    | primary |
+            | fb    | primary |
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file speeds.csv"
@@ -69,7 +89,27 @@ Feature: Traffic - speeds
             | g    | b  | fb,fb          | 36 km/h |
             | a    | g  | fb,fb          | 36 km/h |
 
-    Scenario: Verify that negative values are treated like 0
+    Scenario: Verify that negative values cause an error, they're not valid at all
+        Given the node locations
+            | node | lat        | lon      |
+            | a    | 0.1        | 0.1      |
+            | b    | .05        | 0.1      |
+            | c    | 0.0        | 0.1      |
+            | d    | .05        | .03      |
+            | e    | .05        | .066     |
+            | f    | .075       | .066     |
+            | g    | .075       | 0.1      |
+            | h    | 1.075      | 10.1     |
+        And the ways
+            | nodes | highway |
+            | ab    | primary |
+            | ad    | primary |
+            | bc    | primary |
+            | dc    | primary |
+            | de    | primary |
+            | eb    | primary |
+            | df    | primary |
+            | fb    | primary |
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file speeds.csv"
@@ -82,12 +122,7 @@ Feature: Traffic - speeds
         1,4,-3
         4,1,-5
         """
-        And I route I should get
-            | from | to | route          | speed   |
-            | a    | b  | fb,fb          | 36 km/h |
-            | a    | c  | fb,bc,bc       | 30 km/h |
-            | b    | c  | bc,bc          | 27 km/h |
-            | a    | d  | fb,df,df       | 36 km/h |
-            | d    | c  | dc,dc          | 36 km/h |
-            | g    | b  | fb,fb          | 36 km/h |
-            | a    | g  | fb,fb          | 36 km/h |
+        And the data has been extracted
+        When I run "osrm-contract --segment-speed-file speeds.csv {extracted_base}.osrm"
+        And stderr should contain "malformed"
+        And it should exit with code not 0

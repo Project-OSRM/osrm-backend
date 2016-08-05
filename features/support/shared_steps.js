@@ -24,7 +24,8 @@ module.exports = function () {
     };
 
     this.WhenIRouteIShouldGet = (table, callback) => {
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             var headers = new Set(table.raw()[0]);
 
             var requestRow = (row, ri, cb) => {
