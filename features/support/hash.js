@@ -36,7 +36,7 @@ module.exports = function () {
     };
 
     this.hashString = (str) => {
-        return crypto.createHash('sha1').update(str).digest('hex');
+        return crypto.createHash('md5').update(str).digest('hex');
     };
 
     return this;
