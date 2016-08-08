@@ -28,7 +28,7 @@ using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
 bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
 {
-    return !from.IsCompatibleTo(to);
+    return !from.CanCombineWith(to);
 }
 
 TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,

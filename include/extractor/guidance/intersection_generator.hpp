@@ -66,7 +66,7 @@ class IntersectionGenerator
     Intersection GetConnectedRoads(const NodeID from_node, const EdgeID via_eid) const;
 
     // check if two indices in an intersection can be seen as a single road in the perceived
-    // intersection representation See below for an example. Utility function for
+    // intersection representation. See below for an example. Utility function for
     // MergeSegregatedRoads
     bool CanMerge(const NodeID intersection_node,
                   const Intersection &intersection,
