@@ -878,25 +878,34 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
                                            geometry.locations[0], geometry.locations[1]) <= 1;
     if (zero_length_step || duplicated_coordinate)
     {
-        // fixup the coordinate
-        geometry.locations.erase(geometry.locations.begin());
-        geometry.annotations.erase(geometry.annotations.begin());
-        geometry.osm_node_ids.erase(geometry.osm_node_ids.begin());
 
         // remove the initial distance value
         geometry.segment_distances.erase(geometry.segment_distances.begin());
 
+        const auto offset = zero_length_step ? geometry.segment_offsets[1] : 1;
+        if (offset > 0)
+        {
+            // fixup the coordinates/annotations/ids
+            geometry.locations.erase(geometry.locations.begin(),
+                                     geometry.locations.begin() + offset);
+            geometry.annotations.erase(geometry.annotations.begin(),
+                                       geometry.annotations.begin() + offset);
+            geometry.osm_node_ids.erase(geometry.osm_node_ids.begin(),
+                                        geometry.osm_node_ids.begin() + offset);
+        }
+
         // We have to adjust the first step both for its name and the bearings
         if (zero_length_step)
         {
+            // since we are not only checking for epsilon but for a full meter, we can have multiple
+            // coordinates here.
             // move offsets to front
-            BOOST_ASSERT(geometry.segment_offsets[1] == 1);
             // geometry offsets have to be adjusted. Move all offsets to the front and reduce by
             // one. (This is an inplace forward one and reduce by one)
             std::transform(geometry.segment_offsets.begin() + 1,
                            geometry.segment_offsets.end(),
                            geometry.segment_offsets.begin(),
-                           [](const std::size_t val) { return val - 1; });
+                           [offset](const std::size_t val) { return val - offset; });
 
             geometry.segment_offsets.pop_back();
             const auto &current_depart = steps.front();
@@ -937,9 +946,9 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         }
 
         // and update the leg geometry indices for the removed entry
-        std::for_each(steps.begin(), steps.end(), [](RouteStep &step) {
-            --step.geometry_begin;
-            --step.geometry_end;
+        std::for_each(steps.begin(), steps.end(), [offset](RouteStep &step) {
+            step.geometry_begin -= offset;
+            step.geometry_end -= offset;
         });
 
         auto &first_step = steps.front();
@@ -971,10 +980,12 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
     // all zero-length instructions
     if (next_to_last_step.distance <= 1 && steps.size() > 2)
     {
-        geometry.locations.pop_back();
-        geometry.annotations.pop_back();
-        geometry.osm_node_ids.pop_back();
         geometry.segment_offsets.pop_back();
+        // remove all the last coordinates from the geometry
+        geometry.locations.resize(geometry.segment_offsets.back() + 1);
+        geometry.annotations.resize(geometry.segment_offsets.back() + 1);
+        geometry.osm_node_ids.resize(geometry.segment_offsets.back() + 1);
+
         BOOST_ASSERT(geometry.segment_distances.back() <= 1);
         geometry.segment_distances.pop_back();
 
@@ -983,6 +994,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.maneuver.bearing_after = 0;
         next_to_last_step.intersections.front().lanes = util::guidance::LaneTupel();
         next_to_last_step.intersections.front().lane_description.clear();
+        next_to_last_step.geometry_end = next_to_last_step.geometry_begin + 1;
         BOOST_ASSERT(next_to_last_step.intersections.size() == 1);
         auto &last_intersection = next_to_last_step.intersections.back();
         last_intersection.bearings = {last_intersection.bearings[last_intersection.in]};
@@ -1029,6 +1041,8 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         last_step.maneuver.bearing_before = bearing;
         last_step.intersections.front().bearings.front() = util::bearing::reverseBearing(bearing);
     }
+
+    BOOST_ASSERT(steps.back().geometry_end == geometry.locations.size());
 
     BOOST_ASSERT(steps.front().intersections.size() >= 1);
     BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);
