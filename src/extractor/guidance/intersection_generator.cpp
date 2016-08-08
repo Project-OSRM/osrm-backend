@@ -549,6 +549,15 @@ Intersection IntersectionGenerator::AdjustForJoiningRoads(const NodeID node_at_i
     for (std::size_t index = 1; index < intersection.size(); ++index)
     {
         auto &road = intersection[index];
+        // to find out about the above situation, we need to look at the next intersection (at d in
+        // the example). If the initial road can be merged to the left/right, we are about to adjust
+        // the angle.
+        const auto next_intersection_along_road =
+            GetConnectedRoads(node_at_intersection, road.turn.eid);
+
+        if (next_intersection_along_road.size() <= 1)
+            continue;
+
         const auto node_at_next_intersection = node_based_graph.GetTarget(road.turn.eid);
         const util::Coordinate coordinate_at_next_intersection =
             node_info_list[node_at_next_intersection];
@@ -568,12 +577,6 @@ Intersection IntersectionGenerator::AdjustForJoiningRoads(const NodeID node_at_i
         const auto range = node_based_graph.GetAdjacentEdgeRange(node_at_next_intersection);
         if (range.size() <= 1)
             continue;
-
-        // to find out about the above situation, we need to look at the next intersection (at d in
-        // the example). If the initial road can be merged to the left/right, we are about to adjust
-        // the angle.
-        const auto next_intersection_along_road =
-            GetConnectedRoads(node_at_intersection, road.turn.eid);
 
         // check if the u-turn edge at the next intersection could be merged to the left/right. If
         // this is the case and the road is not far away (see previous distance check), if
