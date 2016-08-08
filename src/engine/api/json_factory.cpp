@@ -50,7 +50,7 @@ const constexpr char *turn_type_names[] = {
     "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
     "roundabout turn", "use lane",   "invalid",  "invalid",     "invalid",
     "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
-    "invalid"};
+    "invalid",         "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
@@ -68,6 +68,7 @@ inline bool hasValidLanes(const guidance::Intersection &intersection)
 
 std::string instructionTypeToString(const TurnType::Enum type)
 {
+    BOOST_ASSERT(static_cast<std::size_t>(type) < sizeof(turn_type_names)/sizeof(turn_type_names[0]));
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
