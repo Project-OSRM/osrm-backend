@@ -83,9 +83,9 @@ Feature: Ramp Guidance
 
     Scenario: Ramp Off Though Street
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   | d |   |
+            |   |   |   |   | c |
+            | a |   |   | b |   |
+            |   |   |   | d |   |
 
         And the ways
             | nodes | highway       |

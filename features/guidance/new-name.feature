@@ -125,10 +125,10 @@ Feature: New-Name Instructions
             |   |   |   |   | c |
 
         And the ways
-            | nodes  | highway     |
-            | ab     | residential |
-            | bc     | residential |
-            | bd     | service     |
+            | nodes  | highway     | oneway |
+            | ab     | residential | yes    |
+            | bc     | residential | yes    |
+            | bd     | service     | yes    |
 
        When I route I should get
             | waypoints | route    | turns                               |

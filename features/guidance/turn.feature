@@ -930,3 +930,40 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | turns                                        | route                                                         |
             | a,h       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
+
+    # https://www.openstreetmap.org/#map=20/52.51609/13.41080
+    Scenario: Unnecessary Slight Left onto Stralauer Strasse
+        Given the node map
+            |   | e |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            | a |   | b |   | c |   | d |
+
+        And the ways
+            | nodes | name          | highway   | oneway |
+            | ab    | Molkenmarkt   | secondary | yes    |
+            | bc    | Stralauer Str | secondary | yes    |
+            | cd    | Stralauer Str | secondary | yes    |
+            | ec    | Molkenmarkt   | secondary | yes    |
+
+        When I route I should get
+            | waypoints | turns         | route                     |
+            | a,d       | depart,arrive | Molkenmarkt,Stralauer Str |
+            | e,d       | depart,arrive | Molkenmarkt,Stralauer Str |
+
+    Scenario: Unnecessary Slight Left onto Stralauer Strasse
+        Given the node map
+            |   | e |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            | a |   | b |   | c |   | d |
+
+        And the ways
+            | nodes | name          | highway   | oneway |
+            | ab    | Molkenmarkt   | secondary | yes    |
+            | bc    | Molkenmarkt   | secondary | yes    |
+            | cd    | Stralauer Str | secondary | yes    |
+            | ec    | Molkenmarkt   | secondary | yes    |
+
+        When I route I should get
+            | waypoints | turns         | route                     |
+            | a,d       | depart,arrive | Molkenmarkt,Stralauer Str |
+            | e,d       | depart,arrive | Molkenmarkt,Stralauer Str |

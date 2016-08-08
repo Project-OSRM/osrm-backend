@@ -302,12 +302,12 @@ Feature: Collapse
 
     Scenario: Entering a segregated road
         Given the node map
-            |   | a | f |   |   |
-            |   |   |   |   | g |
-            |   | b | e |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            | c | d |   |   |   |
+            |   | a | f |   |   |   | g |
+            |   |   |   |   |   |   |   |
+            |   | b | e |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            | c | d |   |   |   |   |   |
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -615,12 +615,12 @@ Feature: Collapse
 
     Scenario: Forking before a turn (forky)
         Given the node map
-            |   |   |   | g |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   | c |   |   |
-            | a | b |   |   |   |   |
-            |   |   |   |   | d |   |
-            |   |   |   |   | f | e |
+            |   |   |   |   |   | g |   |   |
+            |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | c |   |   |
+            | a |   |   | b |   |   |   |   |
+            |   |   |   |   |   |   | d |   |
+            |   |   |   |   |   |   | f | e |
 
         And the ways
             | nodes | name  | oneway | highway   |

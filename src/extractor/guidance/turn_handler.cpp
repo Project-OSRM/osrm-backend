@@ -1,7 +1,7 @@
-#include "extractor/guidance/turn_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_handler.hpp"
 
 #include "util/guidance/toolkit.hpp"
 
@@ -124,6 +124,11 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     const auto &in_data = node_based_graph.GetEdgeData(via_edge);
     const auto &first_data = node_based_graph.GetEdgeData(intersection[1].turn.eid);
     const auto &second_data = node_based_graph.GetEdgeData(intersection[2].turn.eid);
+    const auto obvious_index = findObviousTurn(via_edge, intersection);
+    std::cout << "[intersection]\n";
+    for (auto road : intersection)
+        std::cout << "\t" << toString(road) << std::endl;
+    std::cout << "Obvious: " << obvious_index << std::endl;
     BOOST_ASSERT(intersection[0].turn.angle < 0.001);
     /* Two nearly straight turns -> FORK
                OOOOOOO
@@ -143,9 +148,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 I
                 I
      */
-    else if (isEndOfRoad(intersection[0], intersection[1], intersection[2]) &&
-             !isObviousOfTwo(via_edge, intersection[1], intersection[2]) &&
-             !isObviousOfTwo(via_edge, intersection[2], intersection[1]))
+    else if (isEndOfRoad(intersection[0], intersection[1], intersection[2]) && obvious_index == 0)
     {
         if (intersection[1].entry_allowed)
         {
@@ -165,9 +168,12 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     }
     else
     {
-        if (isObviousOfTwo(via_edge, intersection[1], intersection[2]) &&
+        std::cout << "Name IDs: " << (int)in_data.name_id << " " << (int)first_data.name_id << " "
+                  << (int)second_data.name_id << std::endl;
+        if (obvious_index == 1 &&
             (in_data.name_id != second_data.name_id || first_data.name_id == second_data.name_id))
         {
+            std::cout << "Assigning Obvious first" << std::endl;
             intersection[1].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(1, intersection), intersection[1]);
         }
@@ -177,9 +183,10 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                                                 getTurnDirection(intersection[1].turn.angle)};
         }
 
-        if (isObviousOfTwo(via_edge, intersection[2], intersection[1]) &&
+        if (obvious_index == 2 &&
             (in_data.name_id != first_data.name_id || first_data.name_id == second_data.name_id))
         {
+            std::cout << "Assigning Obvious Second" << std::endl;
             intersection[2].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(2, intersection), intersection[2]);
         }
@@ -195,6 +202,10 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection intersection) const
 {
     const std::size_t obvious_index = findObviousTurn(via_edge, intersection);
+    std::cout << "[intersection]\n";
+    for (auto road : intersection)
+        std::cout << "\t" << toString(road) << std::endl;
+    std::cout << "Obvious: " << obvious_index << std::endl;
     const auto fork_range = findFork(via_edge, intersection);
     std::size_t straightmost_turn = 0;
     double straightmost_deviation = 180;
