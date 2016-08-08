@@ -1,7 +1,7 @@
-#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/turn_lane_augmentation.hpp"
+#include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
@@ -119,9 +119,8 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
 
     if (!lane_data.empty() && canMatchTrivially(intersection, lane_data) &&
         lane_data.size() !=
-            static_cast<std::size_t>(
-                lane_data.back().tag != TurnLaneType::uturn && intersection[0].entry_allowed ? 1
-                                                                                             : 0) +
+            static_cast<std::size_t>((
+                !hasTag(TurnLaneType::uturn, lane_data) && intersection[0].entry_allowed ? 1 : 0)) +
                 possible_entries &&
         intersection[0].entry_allowed && !hasTag(TurnLaneType::none, lane_data))
         lane_data.push_back({TurnLaneType::uturn, lane_data.back().to, lane_data.back().to});
@@ -352,14 +351,8 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
             if (lane_data.back().tag == TurnLaneType::uturn)
                 return findBestMatchForReverse(lane_data[lane_data.size() - 2].tag, intersection);
 
-            // TODO(mokob): #2730 have a look please
-            // BOOST_ASSERT(lane_data.front().tag == TurnLaneType::uturn);
-            // return findBestMatchForReverse(lane_data[1].tag, intersection);
-            //
-            if (lane_data.front().tag == TurnLaneType::uturn)
-                return findBestMatchForReverse(lane_data[1].tag, intersection);
-
-            return findBestMatch(data.tag, intersection);
+            BOOST_ASSERT(lane_data.front().tag == TurnLaneType::uturn);
+            return findBestMatchForReverse(lane_data[1].tag, intersection);
         }();
         std::size_t match_index = std::distance(intersection.begin(), best_match);
         all_simple &= (matched_indices.count(match_index) == 0);

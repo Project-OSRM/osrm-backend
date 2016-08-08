@@ -38,6 +38,28 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
                                                             TurnLaneType::left,
                                                             TurnLaneType::sharp_left,
                                                             TurnLaneType::uturn};
+    // U-Turns are supposed to be on the outside. So if the first lane is 0 and we are looking at a
+    // u-turn, it has to be on the very left. If it is equal to the number of lanes, it has to be on
+    // the right. These sorting function assume reverse to be on the outside always. Might need to
+    // be reconsidered if there are situations that offer a reverse from some middle lane (seems
+    // improbable)
+
+    if (tag == TurnLaneType::uturn)
+    {
+        if (from == 0)
+            return true;
+        else
+            return false;
+    }
+
+    if (other.tag == TurnLaneType::uturn)
+    {
+        if (other.from == 0)
+            return false;
+        else
+            return true;
+    }
+
     return std::find(tag_by_modifier, tag_by_modifier + 8, this->tag) <
            std::find(tag_by_modifier, tag_by_modifier + 8, other.tag);
 }
