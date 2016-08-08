@@ -134,17 +134,17 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask &ta
 // possible that it is forbidden. In addition, the best u-turn angle does not necessarily represent
 // the u-turn, since it could be a sharp-left turn instead on a road with a middle island.
 typename Intersection::const_iterator
-findBestMatchForReverse(const TurnLaneType::Mask &leftmost_tag, const Intersection &intersection)
+findBestMatchForReverse(const TurnLaneType::Mask &neighbor_tag, const Intersection &intersection)
 {
-    const auto leftmost_itr = findBestMatch(leftmost_tag, intersection);
-    if (leftmost_itr + 1 == intersection.cend())
+    const auto neighbor_itr = findBestMatch(neighbor_tag, intersection);
+    if ((neighbor_itr + 1 == intersection.cend()) || (neighbor_itr == intersection.cbegin() + 1))
         return intersection.begin();
 
     const constexpr double idealized_turn_angles[] = {0, 35, 90, 135, 180, 225, 270, 315};
     const TurnLaneType::Mask tag = TurnLaneType::uturn;
     const auto idealized_angle = idealized_turn_angles[getMatchingModifier(tag)];
     return std::min_element(
-        intersection.begin() + std::distance(intersection.begin(), leftmost_itr),
+        intersection.begin() + std::distance(intersection.begin(), neighbor_itr),
         intersection.end(),
         [idealized_angle, &tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
             // prefer valid matches
@@ -165,6 +165,12 @@ findBestMatchForReverse(const TurnLaneType::Mask &leftmost_tag, const Intersecti
 bool canMatchTrivially(const Intersection &intersection, const LaneDataVector &lane_data)
 {
     std::size_t road_index = 1, lane = 0;
+    if (!lane_data.empty() && lane_data.front().tag == TurnLaneType::uturn)
+    {
+        // the very first is a u-turn to the right
+        if (intersection[0].entry_allowed)
+            lane = 1;
+    }
     for (; road_index < intersection.size() && lane < lane_data.size(); ++road_index)
     {
         if (intersection[road_index].entry_allowed)
@@ -207,6 +213,34 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
         road.turn.lane_data_id = lane_data_id;
     };
 
+    if (!lane_data.empty() && lane_data.front().tag == TurnLaneType::uturn)
+    {
+        // the very first is a u-turn to the right
+        if (intersection[0].entry_allowed)
+        {
+            std::size_t u_turn = 0;
+            if (node_based_graph.GetEdgeData(intersection[0].turn.eid).reversed)
+            {
+                if (intersection.size() <= 1 || !intersection[1].entry_allowed ||
+                    intersection[1].turn.instruction.direction_modifier !=
+                        DirectionModifier::SharpRight)
+                {
+                    // cannot match u-turn in a valid way
+                    return intersection;
+                }
+                u_turn = 1;
+                road_index = 2;
+            }
+            intersection[u_turn].entry_allowed = true;
+            intersection[u_turn].turn.instruction.type = TurnType::Turn;
+            intersection[u_turn].turn.instruction.direction_modifier = DirectionModifier::UTurn;
+
+            matchRoad(intersection[u_turn], lane_data.back());
+            // continue with the first lane
+            lane = 1;
+        }
+    }
+
     for (; road_index < intersection.size() && lane < lane_data.size(); ++road_index)
     {
         if (intersection[road_index].entry_allowed)
@@ -231,7 +265,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
         std::size_t u_turn = 0;
         if (node_based_graph.GetEdgeData(intersection[0].turn.eid).reversed)
         {
-            if (intersection.back().entry_allowed ||
+            if (!intersection.back().entry_allowed ||
                 intersection.back().turn.instruction.direction_modifier !=
                     DirectionModifier::SharpLeft)
             {

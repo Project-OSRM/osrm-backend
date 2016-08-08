@@ -277,7 +277,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
     {
         const double correction_factor = (intersection[1].turn.angle) / 2;
         for (std::size_t i = 2; i < intersection.size(); ++i)
-            intersection[i].turn.angle += correction_factor;
+            intersection[i].turn.angle -= correction_factor;
         intersection[0] = merge(intersection[0], intersection[1]);
         intersection[0].turn.angle = 0;
         intersection.erase(intersection.begin() + 1);
