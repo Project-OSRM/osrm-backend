@@ -90,14 +90,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             if (new_distance < upper_bound)
             {
                 // if loops are forced, they are so at the source
-                if (new_distance >= 0 &&
-                    (!force_loop_forward || forward_heap.GetData(node).parent != node) &&
-                    (!force_loop_reverse || reverse_heap.GetData(node).parent != node))
-                {
-                    middle_node_id = node;
-                    upper_bound = new_distance;
-                }
-                else
+                if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
+                    (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
+                    // in this case we are looking at a bi-directional way where the source
+                    // and target phantom are on the same edge based node
+                    new_distance < 0)
                 {
                     // check whether there is a loop present at the node
                     for (const auto edge : facade->GetAdjacentEdgeRange(node))
@@ -120,6 +117,13 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                             }
                         }
                     }
+                }
+                else
+                {
+                    BOOST_ASSERT(new_distance >= 0);
+
+                    middle_node_id = node;
+                    upper_bound = new_distance;
                 }
             }
         }
@@ -513,7 +517,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                           std::vector<NodeID> &packed_path) const
     {
         NodeID current_node_id = middle_node_id;
-        while (current_node_id != search_heap.GetData(current_node_id).parent)
+        // all initial nodes will have itself as parent, or a node not in the heap
+        // in case of a core search heap. We need a distinction between core entry nodes
+        // and start nodes since otherwise start node specific code that assumes
+        // node == node.parent (e.g. the loop code) might get actived.
+        while (current_node_id != search_heap.GetData(current_node_id).parent &&
+               search_heap.WasInserted(search_heap.GetData(current_node_id).parent))
         {
             current_node_id = search_heap.GetData(current_node_id).parent;
             packed_path.emplace_back(current_node_id);
@@ -625,8 +634,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         NodeID middle = SPECIAL_NODEID;
         distance = duration_upper_bound;
 
-        std::vector<std::pair<NodeID, EdgeWeight>> forward_entry_points;
-        std::vector<std::pair<NodeID, EdgeWeight>> reverse_entry_points;
+        using CoreEntryPoint = std::tuple<NodeID, EdgeWeight, NodeID>;
+        std::vector<CoreEntryPoint> forward_entry_points;
+        std::vector<CoreEntryPoint> reverse_entry_points;
 
         // get offset to account for offsets on phantom nodes on compressed edges
         const auto min_edge_offset = std::min(0, forward_heap.MinKey());
@@ -643,7 +653,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {
                     const NodeID node = forward_heap.DeleteMin();
                     const int key = forward_heap.GetKey(node);
-                    forward_entry_points.emplace_back(node, key);
+                    forward_entry_points.emplace_back(node, key, forward_heap.GetData(node).parent);
                 }
                 else
                 {
@@ -664,7 +674,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 {
                     const NodeID node = reverse_heap.DeleteMin();
                     const int key = reverse_heap.GetKey(node);
-                    reverse_entry_points.emplace_back(node, key);
+                    reverse_entry_points.emplace_back(node, key, reverse_heap.GetData(node).parent);
                 }
                 else
                 {
@@ -680,36 +690,27 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 }
             }
         }
-        // TODO check if unordered_set might be faster
-        // sort by id and increasing by distance
-        auto entry_point_comparator = [](const std::pair<NodeID, EdgeWeight> &lhs,
-                                         const std::pair<NodeID, EdgeWeight> &rhs) {
-            return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
-        };
-        std::sort(forward_entry_points.begin(), forward_entry_points.end(), entry_point_comparator);
-        std::sort(reverse_entry_points.begin(), reverse_entry_points.end(), entry_point_comparator);
 
-        NodeID last_id = SPECIAL_NODEID;
+        const auto insertInCoreHeap =
+            [](const CoreEntryPoint &p, SearchEngineData::QueryHeap &core_heap) {
+                NodeID id;
+                EdgeWeight weight;
+                NodeID parent;
+                // TODO this should use std::apply when we get c++17 support
+                std::tie(id, weight, parent) = p;
+                core_heap.Insert(id, weight, parent);
+            };
+
         forward_core_heap.Clear();
-        reverse_core_heap.Clear();
         for (const auto &p : forward_entry_points)
         {
-            if (p.first == last_id)
-            {
-                continue;
-            }
-            forward_core_heap.Insert(p.first, p.second, p.first);
-            last_id = p.first;
+            insertInCoreHeap(p, forward_core_heap);
         }
-        last_id = SPECIAL_NODEID;
+
+        reverse_core_heap.Clear();
         for (const auto &p : reverse_entry_points)
         {
-            if (p.first == last_id)
-            {
-                continue;
-            }
-            reverse_core_heap.Insert(p.first, p.second, p.first);
-            last_id = p.first;
+            insertInCoreHeap(p, reverse_core_heap);
         }
 
         // get offset to account for offsets on phantom nodes on compressed edges
