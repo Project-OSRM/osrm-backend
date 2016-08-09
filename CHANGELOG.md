@@ -1,3 +1,8 @@
+# 5.3.2
+  Changes from 5.3.1
+    - Bugfixes
+      - fixed a bug that occurred when trimming very short segments at the begin/end of a route (less than 1 meter)
+
 # 5.3.1
   Changes from 5.3.1
     - Bugfixes:
