@@ -5,6 +5,7 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
+#include "util/attributes.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -46,6 +47,7 @@ class IntersectionGenerator
     // node reached
     // from `from_node` via `via_eid`
     // The resulting candidates have to be analysed for their actual instructions later on.
+    OSRM_ATTR_WARN_UNUSED
     Intersection getConnectedRoads(const NodeID from_node, const EdgeID via_eid) const;
 
     // Merge segregated roads to omit invalid turns in favor of treating segregated roads as
@@ -59,6 +61,7 @@ class IntersectionGenerator
     //
     // The treatment results in a straight turn angle of 180º rather than a turn angle of approx
     // 160
+    OSRM_ATTR_WARN_UNUSED
     Intersection mergeSegregatedRoads(Intersection intersection) const;
 };
 

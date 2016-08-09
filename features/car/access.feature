@@ -5,7 +5,7 @@ Feature: Car - Restricted access
     Background:
         Given the profile "car"
 
-    Scenario: Car - Access tag hierarchy    on ways
+    Scenario: Car - Access tag hierarchy on ways
         Then routability should be
             | access | vehicle | motor_vehicle | motorcar | bothw |
             |        |         |               |          | x     |
@@ -148,3 +148,17 @@ Feature: Car - Restricted access
             | primary |      |         | no  |           | x     |
             | runway  |      |         |     | yes       |       |
             | primary |      |         |     | no        | x     |
+
+    Scenario: Car - only designated HOV ways are ignored by default
+        Then routability should be
+            | highway | hov        | bothw |
+            | primary | designated |       |
+            | primary | yes        | x     |
+            | primary | no         | x     |
+
+     Scenario: Car - only toll=yes ways are ignored by default
+        Then routability should be
+            | highway | toll        | bothw |
+            | primary | yes         |       |
+            | primary | no          | x     |
+            | primary | snowmobile  | x     |

@@ -6,6 +6,7 @@
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/phantom_node.hpp"
+#include "util/attributes.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/simple_logger.hpp"
@@ -50,6 +51,7 @@ inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const doubl
 }
 
 // swaps left <-> right modifier types
+OSRM_ATTR_WARN_UNUSED
 inline extractor::guidance::DirectionModifier::Enum
 mirrorDirectionModifier(const extractor::guidance::DirectionModifier::Enum modifier)
 {

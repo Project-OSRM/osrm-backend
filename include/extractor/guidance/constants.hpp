@@ -18,7 +18,7 @@ const double constexpr MAXIMAL_ALLOWED_NO_TURN_DEVIATION = 3.;
 const double constexpr NARROW_TURN_ANGLE = 40.;
 const double constexpr GROUP_ANGLE = 60;
 // angle difference that can be classified as straight, if its the only narrow turn
-const double constexpr FUZZY_ANGLE_DIFFERENCE = 20.;
+const double constexpr FUZZY_ANGLE_DIFFERENCE = 25.;
 const double constexpr DISTINCTION_RATIO = 2;
 
 const double constexpr MAX_ROUNDABOUT_INTERSECTION_RADIUS = 5;

@@ -2,6 +2,7 @@
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
+#include "util/coordinate_calculation.hpp"
 #include "util/guidance/toolkit.hpp"
 #include "util/simple_logger.hpp"
 
@@ -93,9 +94,43 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
             // obvious turn onto a through street is a merge
             if (through_street)
             {
-                return {TurnType::Merge,
-                        road.turn.angle > STRAIGHT_ANGLE ? DirectionModifier::SlightRight
-                                                         : DirectionModifier::SlightLeft};
+                // We reserve merges for motorway types. All others are considered for simply going
+                // straight onto a road. This avoids confusion about merge directions on streets
+                // that could potentially also offer different choices
+                if (out_data.road_classification.IsMotorwayClass())
+                    return {TurnType::Merge,
+                            road.turn.angle > STRAIGHT_ANGLE ? DirectionModifier::SlightRight
+                                                             : DirectionModifier::SlightLeft};
+                else if (in_data.road_classification.IsRampClass() &&
+                         out_data.road_classification.IsRampClass())
+                {
+                    if (in_mode == out_mode)
+                        return {TurnType::Suppressed, getTurnDirection(road.turn.angle)};
+                    else
+                        return {TurnType::Notification, getTurnDirection(road.turn.angle)};
+                }
+                else
+                {
+                    const double constexpr MAX_COLLAPSE_DISTANCE = 30;
+                    // in normal road condidtions, we check if the turn is nearly straight.
+                    // Doing so, we widen the angle that a turn is considered straight, but since it
+                    // is obvious, the choice is arguably better.
+
+                    // FIXME this requires https://github.com/Project-OSRM/osrm-backend/pull/2399,
+                    // since `distance` does not refer to an actual distance but rather to the
+                    // duration/weight of the traversal. We can only approximate the distance here
+                    // or actually follow the full road. When 2399 lands, we can exchange here for a
+                    // precalculated distance value.
+                    const auto distance = util::coordinate_calculation::haversineDistance(
+                        node_info_list[node_based_graph.GetTarget(via_edge)],
+                        node_info_list[node_based_graph.GetTarget(road.turn.eid)]);
+                    return {TurnType::Turn,
+                            (angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <
+                                 FUZZY_ANGLE_DIFFERENCE ||
+                             distance > 2 * MAX_COLLAPSE_DISTANCE)
+                                ? DirectionModifier::Straight
+                                : getTurnDirection(road.turn.angle)};
+                }
             }
             else
             {

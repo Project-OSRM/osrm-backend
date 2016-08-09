@@ -508,6 +508,36 @@ Feature: Collapse
 
         When I route I should get
             | waypoints | route        | turns                           |
+            | i,h       | in,road,road | depart,turn left,arrive         |
+            | a,d       | road,road    | depart,arrive                   |
+            | a,j       | road,out,out | depart,turn slight right,arrive |
+
+    Scenario: Segregated Intersection into Very Slight Turn
+        Given the node map
+            | h |   |   |   |   |   |   |
+            | a |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   | g |   |   |   |   |
+            |   |   | b |   |   |   |   |
+            |   |   |   | f |   |   |   |
+            |   |   |   | c |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | e |
+            |   |   |   |   |   |   | d |
+            |   |   | j | i |   |   |   |
+
+        And the ways
+            | nodes | highway   | name | oneway |
+            | abcd  | primary   | road | yes    |
+            | efgh  | primary   | road | yes    |
+            | icf   | secondary | in   | yes    |
+            | gbj   | secondary | out  | yes    |
+
+        When I route I should get
+            | waypoints | route        | turns                           |
             | i,h       | in,road,road | depart,turn slight left,arrive  |
             | a,d       | road,road    | depart,arrive                   |
             | a,j       | road,out,out | depart,turn slight right,arrive |
@@ -630,3 +660,26 @@ Feature: Collapse
             | f,d       | on,Hwy,Hwy     | depart,merge slight right,arrive                |
             | f,e       | on,Hwy,off,off | depart,merge slight right,off ramp right,arrive |
             | a,e       | Hwy,off,off    | depart,off ramp right,arrive                    |
+
+    @negative @straight
+    Scenario: Don't collapse going straight if actual turn
+        Given the node map
+            |   | c | e |   |   |
+            |   |   | d |   | f |
+            |   |   |   |   |   |
+            |   |   | b |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   | a |   |   |
+
+        And the ways
+            | nodes | name     | highway     |
+            | abc   | main     | primary     |
+            | bde   | straight | residential |
+            | df    | right    | residential |
+
+        When I route I should get
+            | waypoints | route                     | turns                                  |
+            | a,c       | main,main                 | depart,arrive                          |
+            | a,e       | main,straight,straight    | depart,turn straight,arrive            |
+            | a,f       | main,straight,right,right | depart,turn straight,turn right,arrive |

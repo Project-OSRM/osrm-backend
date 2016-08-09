@@ -138,16 +138,19 @@ properties.u_turn_penalty                  = 20
 properties.traffic_signal_penalty          = 2
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
+properties.left_hand_driving               = false
 
 local side_road_speed_multiplier = 0.8
 
 local turn_penalty               = 10
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
-local turn_bias                  = 1.2
+local turn_bias                  = properties.left_hand_driving and 1/1.2 or 1.2
 
 local obey_oneway                = true
 local ignore_areas               = true
+local ignore_hov_ways            = true
+local ignore_toll_ways           = true
 
 local abs = math.abs
 local min = math.min
@@ -230,6 +233,18 @@ function way_function (way, result)
   -- we dont route over areas
   local area = way:get_value_by_key("area")
   if ignore_areas and area and "yes" == area then
+    return
+  end
+
+  -- respect user-preference for HOV-only ways
+  local hov = way:get_value_by_key("hov")
+  if ignore_hov_ways and hov and "designated" == hov then
+    return
+  end
+
+  -- respect user-preference for toll=yes ways
+  local toll = way:get_value_by_key("toll")
+  if ignore_toll_ways and toll and "yes" == toll then
     return
   end
 

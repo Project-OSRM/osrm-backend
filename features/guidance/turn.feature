@@ -879,3 +879,54 @@ Feature: Simple Turns
             | waypoints | turns                   | route                                                                                   |
             | a,d       | depart,arrive           | Channing Street Northeast,Channing Street Northwest                                     |
             | a,h       | depart,turn left,arrive | Channing Street Northeast,North Capitol Street Northeast,North Capitol Street Northeast |
+
+    Scenario: V St NW, Florida Ave NW: Turn Instruction
+    # https://www.mapillary.com/app/?focus=map&lat=38.91815595&lng=-77.03880249&z=17&pKey=sCxepTOCTZD3OoBXuqGEOw
+    # http://www.openstreetmap.org/way/6062557#map=19/38.91805/-77.03892
+        Given the node map
+            | y |   |   | x |   |   |
+            |   |   | c |   |   |   |
+            |   | d |   |   | b | a |
+            |   |   |   |   |   |   |
+            | e |   |   |   |   |   |
+
+        And the ways
+            | nodes | name                           | highway     | oneway |
+            | abc   | V St NW                        | tertiary    | yes    |
+            | xcde  | Florida Ave NW                 | tertiary    | yes    |
+            | yd    | Champlain St NW                | residential |        |
+
+        When I route I should get
+            | waypoints | turns                   | route                                 |
+            | a,e       | depart,turn left,arrive | V St NW,Florida Ave NW,Florida Ave NW |
+
+    # http://www.openstreetmap.org/node/182805179
+    Scenario: Make Sharp Left at Traffic Signal
+        Given the node map
+            |   |   |   | g |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   | f |   |   | y |
+            | i |   |   |   |   |   |   |
+            | j | k | a |   | b |   | x |
+            |   |   |   | e |   | c |   |
+            |   |   |   |   | d |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   | h |   |   |   |
+
+        And the nodes
+            | node | highway         |
+            | f    | traffic_signals |
+
+        And the ways
+            | nodes | name                           | highway     | oneway |
+            | yf    | yf                             | trunk_link  | yes    |
+            | gfeh  | Centreville Road               | primary     |        |
+            | fi    | fi                             | trunk_link  | yes    |
+            | ij    | Bloomingdale Road              | residential |        |
+            | jkabx | Blue Star Memorial Hwy         | trunk       |        |
+            | bcde  | bcde                           | trunk_link  | yes    |
+            | kh    | kh                             | trunk_link  | yes    |
+
+        When I route I should get
+            | waypoints | turns                                        | route                                                         |
+            | a,h       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |

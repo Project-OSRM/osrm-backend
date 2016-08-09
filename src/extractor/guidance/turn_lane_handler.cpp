@@ -33,10 +33,9 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                  const std::vector<std::uint32_t> &turn_lane_offsets,
                                  const std::vector<TurnLaneType::Mask> &turn_lane_masks,
-                                 const std::vector<QueryNode> &node_info_list,
                                  const TurnAnalysis &turn_analysis)
     : node_based_graph(node_based_graph), turn_lane_offsets(turn_lane_offsets),
-      turn_lane_masks(turn_lane_masks), node_info_list(node_info_list), turn_analysis(turn_analysis)
+      turn_lane_masks(turn_lane_masks), turn_analysis(turn_analysis)
 {
 }
 
@@ -353,8 +352,14 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
             if (lane_data.back().tag == TurnLaneType::uturn)
                 return findBestMatchForReverse(lane_data[lane_data.size() - 2].tag, intersection);
 
-            BOOST_ASSERT(lane_data.front().tag == TurnLaneType::uturn);
-            return findBestMatchForReverse(lane_data[1].tag, intersection);
+            // TODO(mokob): #2730 have a look please
+            // BOOST_ASSERT(lane_data.front().tag == TurnLaneType::uturn);
+            // return findBestMatchForReverse(lane_data[1].tag, intersection);
+            //
+            if (lane_data.front().tag == TurnLaneType::uturn)
+                return findBestMatchForReverse(lane_data[1].tag, intersection);
+
+            return findBestMatch(data.tag, intersection);
         }();
         std::size_t match_index = std::distance(intersection.begin(), best_match);
         all_simple &= (matched_indices.count(match_index) == 0);

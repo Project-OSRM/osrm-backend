@@ -215,14 +215,14 @@ class RouteAPI : public BaseAPI
                 nodes.values.reserve(leg_geometry.osm_node_ids.size());
                 datasources.values.reserve(leg_geometry.annotations.size());
 
-                std::for_each(
-                    leg_geometry.annotations.begin(),
-                    leg_geometry.annotations.end(),
-                    [this, &durations, &distances, &datasources](const guidance::LegGeometry::Annotation &step) {
-                        durations.values.push_back(step.duration);
-                        distances.values.push_back(step.distance);
-                        datasources.values.push_back(step.datasource);
-                    });
+                std::for_each(leg_geometry.annotations.begin(),
+                              leg_geometry.annotations.end(),
+                              [this, &durations, &distances, &datasources](
+                                  const guidance::LegGeometry::Annotation &step) {
+                                  durations.values.push_back(step.duration);
+                                  distances.values.push_back(step.distance);
+                                  datasources.values.push_back(step.datasource);
+                              });
                 std::for_each(leg_geometry.osm_node_ids.begin(),
                               leg_geometry.osm_node_ids.end(),
                               [this, &nodes](const OSMNodeID &node_id) {

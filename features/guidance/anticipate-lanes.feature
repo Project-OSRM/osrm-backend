@@ -135,9 +135,9 @@ Feature: Turn Lane Guidance
             | cj    |                    | 1     | motorway_link | yes    | xbcj |
 
        When I route I should get
-            | waypoints | route         | turns                                             | lanes                           |
-            | a,i       | ab,xbcj,ci,ci | depart,merge slight left,turn slight right,arrive | ,,none:false slight right:true, |
-            | a,j       | ab,xbcj,xbcj  | depart,merge slight left,arrive                   | ,,                              |
+            | waypoints | route        | turns                           | lanes                          |
+            | a,i       | ab,ci,ci     | depart,turn slight right,arrive | ,none:false slight right:true, |
+            | a,j       | ab,xbcj      | depart,arrive                   | ,                              |
 
 
     @anticipate
@@ -364,6 +364,37 @@ Feature: Turn Lane Guidance
             | x,y       | xb,dy,dy                 | depart,roundabout-exit-1,arrive         | ,,    |
             | x,c       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
             | x,a       | xb,roundabout,roundabout | depart,roundabout-exit-undefined,arrive | ,,    |
+
+    @anticipate
+    Scenario: No Lanes for Roundabouts, see #2626
+        Given the profile "lhs"
+        And the node map
+            |   |   | a |   |   |
+            |   |   | b |   |   |
+            | h | c |   | g |   |
+            |   |   |   |   |   |
+            |   | d |   | f |   |
+            |   |   | e |   |   |
+            | x |   |   |   | y |
+
+        And the ways
+            | nodes | turn:lanes:forward         | highway | junction   |
+            | ab    | slight_left\|slight_left   | primary |            |
+            | bg    |                            | primary | roundabout |
+            | gf    |                            | primary | roundabout |
+            | fe    |                            | primary | roundabout |
+            | ed    |                            | primary | roundabout |
+            | dc    | slight_left                | primary | roundabout |
+            | cb    |                            | primary | roundabout |
+            | ch    |                            | primary |            |
+            | ex    |                            | primary |            |
+            | dx    |                            | primary |            |
+            | gy    |                            | primary |            |
+            | fy    |                            | primary |            |
+
+        When I route I should get
+            | waypoints | route      | turns                           | lanes |
+            | a,h       | ab,ch,ch   | depart,roundabout-exit-5,arrive | ,,    |
 
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626

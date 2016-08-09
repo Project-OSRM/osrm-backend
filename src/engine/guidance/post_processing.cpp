@@ -5,6 +5,7 @@
 #include "engine/guidance/lane_processing.hpp"
 #include "engine/guidance/toolkit.hpp"
 
+#include "util/attributes.hpp"
 #include "util/guidance/toolkit.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
@@ -15,6 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <iostream>
 #include <iostream>
 #include <limits>
 #include <utility>
@@ -36,6 +38,13 @@ namespace
 {
 const constexpr std::size_t MIN_END_OF_ROAD_INTERSECTIONS = std::size_t{2};
 const constexpr double MAX_COLLAPSE_DISTANCE = 30;
+
+// check if at least one of the turns is actually a maneuver
+inline bool hasManeuver(const RouteStep &first, const RouteStep &second)
+{
+    return first.maneuver.instruction.type != TurnType::Suppressed ||
+           second.maneuver.instruction.type != TurnType::Suppressed;
+}
 
 inline bool choiceless(const RouteStep &step, const RouteStep &previous)
 {
@@ -120,6 +129,7 @@ double turn_angle(const double entry_bearing, const double exit_bearing)
     return angle > 360 ? angle - 360 : angle;
 }
 
+OSRM_ATTR_WARN_UNUSED
 RouteStep forwardInto(RouteStep destination, const RouteStep &source)
 {
     // Merge a turn into a silent turn
@@ -318,6 +328,7 @@ void closeOffRoundabout(const bool on_roundabout,
 }
 
 // elongate a step by another. the data is added either at the front, or the back
+OSRM_ATTR_WARN_UNUSED
 RouteStep elongate(RouteStep step, const RouteStep &by_step)
 {
     BOOST_ASSERT(step.mode == by_step.mode);
@@ -375,6 +386,10 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     };
 
     BOOST_ASSERT(!one_back_step.intersections.empty() && !current_step.intersections.empty());
+
+    if (!hasManeuver(one_back_step, current_step))
+        return;
+
     // Very Short New Name
     if (((collapsable(one_back_step) ||
           (isCollapsableInstruction(one_back_step.maneuver.instruction) &&
@@ -499,6 +514,33 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         }
     }
 }
+
+// Staggered intersection are very short zig-zags of a few meters.
+// We do not want to announce these short left-rights or right-lefts:
+//
+//      * -> b      a -> *
+//      |       or       |       becomes  a   ->   b
+// a -> *                * -> b
+//
+bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current)
+{
+    // Base decision on distance since the zig-zag is a visual clue.
+    const constexpr auto MAX_STAGGERED_DISTANCE = 3; // debatable, but keep short to be on safe side
+
+    using namespace util::guidance;
+
+    const auto left_right = isLeftTurn(previous.maneuver.instruction) && //
+                            isRightTurn(current.maneuver.instruction);
+    const auto right_left = isRightTurn(previous.maneuver.instruction) && //
+                            isLeftTurn(current.maneuver.instruction);
+
+    // A RouteStep holds distance/duration from the maneuver to the subsequent step.
+    // We are only interested in the distance between the first and the second.
+    const auto is_short = previous.distance < MAX_STAGGERED_DISTANCE;
+
+    return is_short && (left_right || right_left);
+}
+
 } // namespace
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
@@ -661,6 +703,10 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         BOOST_ASSERT(one_back_index < steps.size());
 
         const auto &one_back_step = steps[one_back_index];
+
+        if (!hasManeuver(one_back_step, current_step))
+            continue;
+
         // how long has a name change to be so that we announce it, even as a bridge?
         const constexpr auto name_segment_cutoff_length = 100;
         const auto isBasicNameChange = [](const RouteStep &step) {
@@ -735,12 +781,13 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         // A name oszillation changes from name A shortly to name B and back to A.
         // In these cases, the name change will be suppressed.
         else if (one_back_index > 0 && compatible(current_step, one_back_step) &&
-                 isCollapsableInstruction(current_step.maneuver.instruction) &&
-                 isCollapsableInstruction(one_back_step.maneuver.instruction))
+                 ((isCollapsableInstruction(current_step.maneuver.instruction) &&
+                   isCollapsableInstruction(one_back_step.maneuver.instruction)) ||
+                  isStaggeredIntersection(one_back_step, current_step)))
         {
             const auto two_back_index = getPreviousIndex(one_back_index);
             BOOST_ASSERT(two_back_index < steps.size());
-            // valid, since one_back is collapsable:
+            // valid, since one_back is collapsable or a turn and therefore not depart:
             const auto &coming_from_name = steps[two_back_index].name;
             if (current_step.name == coming_from_name)
             {

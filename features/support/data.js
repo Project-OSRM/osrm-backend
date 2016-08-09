@@ -339,7 +339,8 @@ module.exports = function () {
     };
 
     this.reprocessAndLoadData = (callback) => {
-        this.reprocess(() => {
+        this.reprocess((e) => {
+            if (e) return callback(e);
             this.OSRMLoader.load(util.format('%s.osrm', this.osmData.contractedFile), callback);
         });
     };

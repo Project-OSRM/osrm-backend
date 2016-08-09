@@ -8,6 +8,7 @@
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/query_node.hpp"
 
+#include "util/attributes.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
@@ -26,7 +27,7 @@ namespace extractor
 namespace guidance
 {
 
-// Given an Intersection, the graph to access the data and  the turn lanes, the turn lane matcher
+// Given an Intersection, the graph to access the data and the turn lanes, the turn lane matcher
 // assigns appropriate turn tupels to the different turns.
 namespace lanes
 {
@@ -38,9 +39,9 @@ class TurnLaneHandler
     TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                     const std::vector<std::uint32_t> &turn_lane_offsets,
                     const std::vector<TurnLaneType::Mask> &turn_lane_masks,
-                    const std::vector<QueryNode> &node_info_list,
                     const TurnAnalysis &turn_analysis);
 
+    OSRM_ATTR_WARN_UNUSED
     Intersection assignTurnLanes(const NodeID at,
                                  const EdgeID via_edge,
                                  Intersection intersection,
@@ -52,7 +53,6 @@ class TurnLaneHandler
     const util::NodeBasedDynamicGraph &node_based_graph;
     const std::vector<std::uint32_t> &turn_lane_offsets;
     const std::vector<TurnLaneType::Mask> &turn_lane_masks;
-    const std::vector<QueryNode> &node_info_list;
     const TurnAnalysis &turn_analysis;
 
     // check whether we can handle an intersection
@@ -60,17 +60,20 @@ class TurnLaneHandler
                               const Intersection &intersection) const;
 
     // in case of a simple intersection, assign the lane entries
+    OSRM_ATTR_WARN_UNUSED
     Intersection simpleMatchTuplesToTurns(Intersection intersection,
                                           const LaneDataVector &lane_data,
                                           const LaneDescriptionID lane_string_id,
                                           LaneDataIdMap &id_map) const;
 
     // partition lane data into lane data relevant at current turn and at next turn
+    OSRM_ATTR_WARN_UNUSED
     std::pair<TurnLaneHandler::LaneDataVector, TurnLaneHandler::LaneDataVector> partitionLaneData(
         const NodeID at, LaneDataVector turn_lane_data, const Intersection &intersection) const;
 
     // if the current intersections turn string is empty, we check whether there is an incoming
     // intersection whose turns might be related to this current intersection
+    OSRM_ATTR_WARN_UNUSED
     Intersection handleTurnAtPreviousIntersection(const NodeID at,
                                                   const EdgeID via_edge,
                                                   Intersection intersection,

@@ -311,6 +311,6 @@ Feature: Fork Instructions
             | ab    | on   | motorway_link |
 
         When I route I should get
-            | waypoints | route           | turns                                             |
-            | a,j       | on,xbcj,xbcj    | depart,merge slight left,arrive                   |
-            | a,i       | on,xbcj,off,off | depart,merge slight left,turn slight right,arrive |
+            | waypoints | route      | turns                           |
+            | a,j       | on,xbcj    | depart,arrive                   |
+            | a,i       | on,off,off | depart,turn slight right,arrive |

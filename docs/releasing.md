@@ -1,50 +1,50 @@
 # Releasing a new OSRM version
 
-Do decide if this is a major or minor version bump use: http://semver.org/
+We are using http://semver.org/ for versioning with major, minor and patch versions.
 
-What we guarantee on major version changes:
+## Guarantees
 
-- Breaking changes will be in the changelog
-- If we break an HTTP API we bump the version
+We are giving the following guarantees between versions:
 
-What we guarantee on minor version changes:
+### Major version change
 
-- HTTP API does not include breaking changes
-- C++ library API does not include breaking changes
-- node-osrm API does not include breaking changes
+- There are no guarantees about compatiblity of APIs or datasets
+- Breaking changes will be noted as `BREAKING` in the changelog
 
-What we DO NOT guarantee on minor version changes:
+### Minor version change
 
-- file format comp ability. Breakage will be listed in the changelog.
-- new turn types and fields may be introduced. How to handle this see [the HTTP API docs](http.md).
+We may introduce forward-compatible changes: query parameters and response properties may be added in responses, but existing properties may not be changed or removed. One exception to this is the addition of new turn types, which we see as forward-compatible changes.
 
-What we guarantee on patch version changes:
+- Forward-compatible HTTP API
+- Forward-compatible C++ library API
+- Forward-compatible node-osrm API
+- No compatiblity between OSRM datasets (needs new processing)
 
-- HTTP API does not include breaking changes
-- C++ library API does not include breaking changes
-- node-osrm API does not include breaking changes
-- full file format compatibility
+### Patch version change
 
-## Major or Minor release x.y
+- No change of query parameters or response formats
+- Compatible HTTP API
+- Compatible C++ library API
+- Compatible node-osrm API
+- Compatible OSRM datasets
 
-1. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
-2. Make sure `CHANGELOG.md` is up to date.
-3. Make sure the OSRM version in `CMakeLists.txt` is up to date
-4. Use an annotated tag to mark the release: `git tag vx.y.0 -a` Body of the tag description should be the changelog entries.
-5. Push tags and commits: `git push; git push --tags`
-6. Branch of the `vx.y.0` tag to create a release branch `x.y`:
-   `git branch x.y. vx.y.0; git push -u x.y:origin/x.y`
-7. Modify `.travis.yml` to allow builds for the `x.y` branch.
-8. Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
+## Release and branch management
 
-## Patch release x.y.z
+- The `master` branch is for the bleeding edge development
+- We create and maintain release branches `x.y` to control the release flow
+- No minor or major version will be released without a code-equal release candidates
+- For quality assurance, release candidates will be run on the demo server for 24 hours before releaseing the version proper
+- Patch versions may be released without a release candidate
+- We may backport fixes to older versions and release them as patch versions
 
-1. Check out the appropriate release branch x.y
-2. Make sure all fixes are listed in the changelog and included in the branch
-3. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
+## Releasing a version
+
+1. Check out the appropriate release branch `x.y`
+2. Make sure all tests are passing (e.g. Travis CI gives you a :thumbs_up:)
+3. Make sure `CHANGELOG.md` is up to date.
 4. Make sure the OSRM version in `CMakeLists.txt` is up to date
 5. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries.
 6. Push tags and commits: `git push; git push --tags`
-7. Proceede with the `node-osrm` release as outlined in the repository.
-8. Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
+8. Proceede with the `node-osrm` release as [outlined in the repository](https://github.com/Project-OSRM/node-osrm/blob/master/docs/releasing.md).
+9. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
 

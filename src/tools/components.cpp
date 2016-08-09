@@ -102,7 +102,7 @@ std::size_t loadGraph(const char *path,
 }
 }
 
-int main(int argc, char *argv[]) try
+int main(int argc, char *argv[])
 {
     std::vector<osrm::extractor::QueryNode> coordinate_list;
     osrm::util::LogPolicy::GetInstance().Unmute();

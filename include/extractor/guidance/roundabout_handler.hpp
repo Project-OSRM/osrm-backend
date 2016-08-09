@@ -5,6 +5,7 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/roundabout_type.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
@@ -42,7 +43,8 @@ class RoundaboutHandler : public IntersectionHandler
                       const std::vector<QueryNode> &node_info_list,
                       const CompressedEdgeContainer &compressed_edge_container,
                       const util::NameTable &name_table,
-                      const SuffixTable &street_name_suffix_table);
+                      const SuffixTable &street_name_suffix_table,
+                      const ProfileProperties &profile_properties);
 
     ~RoundaboutHandler() override final = default;
 
@@ -81,6 +83,7 @@ class RoundaboutHandler : public IntersectionHandler
     bool qualifiesAsRoundaboutIntersection(const std::set<NodeID> &roundabout_nodes) const;
 
     const CompressedEdgeContainer &compressed_edge_container;
+    const ProfileProperties &profile_properties;
 };
 
 } // namespace guidance

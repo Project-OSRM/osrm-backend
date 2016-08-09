@@ -283,9 +283,18 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
         // a pgerequisite is simple turns. Larger differences should not end up here
         // an additional line at the side is only reasonable if it is targeting public
         // service vehicles. Otherwise, we should not have it
-        BOOST_ASSERT(connection_count + 1 == lane_data.size());
-
-        lane_data = mergeNoneTag(none_index, std::move(lane_data));
+        //
+        // TODO(mokob): #2730 have a look please
+        // BOOST_ASSERT(connection_count + 1 == lane_data.size());
+        //
+        if (connection_count + 1 != lane_data.size())
+        {
+            // skip broken intersections
+        }
+        else
+        {
+            lane_data = mergeNoneTag(none_index, std::move(lane_data));
+        }
     }
     // we have to rename and possibly augment existing ones. The pure count remains the
     // same.
@@ -293,6 +302,7 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
     {
         lane_data = handleRenamingSituations(none_index, std::move(lane_data), intersection);
     }
+
     // finally make sure we are still sorted
     std::sort(lane_data.begin(), lane_data.end());
     return lane_data;

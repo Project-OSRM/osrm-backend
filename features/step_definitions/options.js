@@ -30,6 +30,10 @@ module.exports = function () {
         assert.equal(this.exitCode, parseInt(code));
     });
 
+    this.Then(/^it should exit with code not (\d+)$/, (code) => {
+        assert.notEqual(this.exitCode, parseInt(code));
+    });
+
     this.Then(/^stdout should contain "(.*?)"$/, (str) => {
         assert.ok(this.stdout.indexOf(str) > -1);
     });
