@@ -393,7 +393,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                                           const RoadClassification obvious_candidate,
                                           const RoadClassification compare_candidate) {
         const bool has_high_priority =
-            2 * obvious_candidate.GetPriority() < compare_candidate.GetPriority();
+            PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
+            compare_candidate.GetPriority();
         const bool continues_on_same_class = in_classification == obvious_candidate;
         return (has_high_priority && continues_on_same_class) ||
                (!obvious_candidate.IsLowPriorityRoadClass() &&
@@ -444,8 +445,6 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             best = i;
         }
     }
-
-    std::cout << "Chose Best: " << best << std::endl;
 
     if (best == 0)
         return 0;
@@ -504,17 +503,12 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         if (angularDeviation(intersection[right_index].turn.angle, STRAIGHT_ANGLE) <=
                 FUZZY_ANGLE_DIFFERENCE &&
             !obvious_to_right)
-        {
-            std::cout << "Index to the right prevents it." << std::endl;
             return 0;
-        }
+
         if (angularDeviation(intersection[left_index].turn.angle, STRAIGHT_ANGLE) <=
                 FUZZY_ANGLE_DIFFERENCE &&
             !obvious_to_left)
-        {
-            std::cout << "Index to the left prevents it." << std::endl;
             return 0;
-        }
 
         const bool distinct_to_left =
             left_deviation / best_deviation >= DISTINCTION_RATIO ||
@@ -528,9 +522,6 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         // Well distinct turn that is nearly straight
         if ((distinct_to_left || obvious_to_left) && (distinct_to_right || obvious_to_right))
             return best;
-
-        std::cout << "Failed: " << distinct_to_left << " " << distinct_to_right << " "
-                  << obvious_to_left << " " << obvious_to_right << std::endl;
     }
     else
     {

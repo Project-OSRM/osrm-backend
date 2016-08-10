@@ -325,7 +325,6 @@ Feature: Collapse
             | g,f       | second,first,first  | depart,turn right,arrive       |
             | g,c       | second,first,first  | depart,end of road left,arrive |
 
-
     Scenario: Do not collapse turning roads
         Given the node map
             |   |   | e |   |   |
@@ -333,12 +332,12 @@ Feature: Collapse
             | a |   | b | f |   |
 
         And the ways
-            | nodes | highway | name   |
-            | ab    | primary | first  |
-            | bc    | primary | first  |
-            | cd    | primary | first  |
-            | ce    | primary | second |
-            | bf    | primary | third  |
+            | nodes | highway | name   | oneway |
+            | ab    | primary | first  | yes    |
+            | bc    | primary | first  | yes    |
+            | cd    | primary | first  | yes    |
+            | ce    | primary | second | yes    |
+            | bf    | primary | third  | yes    |
 
         When I route I should get
             | waypoints | route                   | turns                                      |
@@ -602,8 +601,8 @@ Feature: Collapse
             | bc    | road  | yes    | primary   |
             | de    | road  | yes    | primary   |
             | fd    | cross | no     | secondary |
-            |  dc   | cross | no     | secondary |
-            |   cg  | cross | no     | secondary |
+            | dc    | cross | no     | secondary |
+            | cg    | cross | no     | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -631,8 +630,8 @@ Feature: Collapse
             | bc    | road  | yes    | primary   |
             | de    | road  | yes    | primary   |
             | fd    | cross | no     | secondary |
-            |  dc   | cross | no     | secondary |
-            |   cg  | cross | no     | secondary |
+            | dc    | cross | no     | secondary |
+            | cg    | cross | no     | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |

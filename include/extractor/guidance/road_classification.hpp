@@ -15,6 +15,10 @@ namespace extractor
 namespace guidance
 {
 
+// Priorities are used to distinguish between how likely a turn is in comparison to a different
+// road. The priorities here are used to distinguish between obvious turns (e.g. following a primary
+// road next to a residential one is obvious). The decision what is obvious is described in the
+// guidance constants.
 namespace RoadPriorityClass
 {
 typedef std::uint8_t Enum;

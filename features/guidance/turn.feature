@@ -931,6 +931,7 @@ Feature: Simple Turns
             | waypoints | turns                                        | route                                                         |
             | a,h       | depart,off ramp right,turn sharp left,arrive | Blue Star Memorial Hwy,bcde,Centreville Road,Centreville Road |
 
+    @todo
     # https://www.openstreetmap.org/#map=20/52.51609/13.41080
     Scenario: Unnecessary Slight Left onto Stralauer Strasse
         Given the node map
@@ -964,6 +965,6 @@ Feature: Simple Turns
             | ec    | Molkenmarkt   | secondary | yes    |
 
         When I route I should get
-            | waypoints | turns         | route                     |
-            | a,d       | depart,arrive | Molkenmarkt,Stralauer Str |
-            | e,d       | depart,arrive | Molkenmarkt,Stralauer Str |
+            | waypoints | turns                              | route                                   |
+            | a,d       | depart,new name straight,arrive    | Molkenmarkt,Stralauer Str,Stralauer Str |
+            | e,d       | depart,new name slight left,arrive | Molkenmarkt,Stralauer Str,Stralauer Str |

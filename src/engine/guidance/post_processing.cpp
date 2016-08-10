@@ -584,7 +584,6 @@ std::vector<RouteStep> removeNoTurnInstructions(std::vector<RouteStep> steps)
 // that we come across.
 std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
 {
-    util::guidance::print(steps);
     // the steps should always include the first/last step in form of a location
     BOOST_ASSERT(steps.size() >= 2);
     if (steps.size() == 2)
