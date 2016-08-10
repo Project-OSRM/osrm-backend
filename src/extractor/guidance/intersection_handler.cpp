@@ -458,14 +458,23 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         return count;
     }();
 
+    if (0 != best_continue && best != best_continue &&
+        angularDeviation(intersection[best].turn.angle, STRAIGHT_ANGLE) <
+            MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
+        node_based_graph.GetEdgeData(intersection[best_continue].turn.eid).road_classification ==
+            node_based_graph.GetEdgeData(intersection[best].turn.eid).road_classification)
+    {
+        // if the best angle is going straight but the road is turning, we don't name anything
+        // obvious
+        return 0;
+    }
+
     // has no obvious continued road
-    if (best_continue == 0 || best_continue_deviation >= 2 * NARROW_TURN_ANGLE ||
-        num_continue_names > 2 ||
+    if (best_continue == 0 || num_continue_names > 2 ||
         (node_based_graph.GetEdgeData(intersection[best_continue].turn.eid).road_classification ==
              node_based_graph.GetEdgeData(intersection[best].turn.eid).road_classification &&
          std::abs(best_continue_deviation) > 1 && best_deviation / best_continue_deviation < 0.75))
     {
-        std::cout << "Checking best" << std::endl;
         // Find left/right deviation
         const double left_deviation = angularDeviation(
             intersection[(best + 1) % intersection.size()].turn.angle, STRAIGHT_ANGLE);
@@ -525,7 +534,6 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     }
     else
     {
-        std::cout << "Checking best continue" << std::endl;
         const double deviation =
             angularDeviation(intersection[best_continue].turn.angle, STRAIGHT_ANGLE);
         const auto &continue_data =

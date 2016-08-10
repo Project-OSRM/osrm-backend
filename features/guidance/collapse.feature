@@ -601,17 +601,19 @@ Feature: Collapse
             | bd    | road  | yes    | primary   |
             | bc    | road  | yes    | primary   |
             | de    | road  | yes    | primary   |
-            | fdcg  | cross | no     | secondary |
+            | fd    | cross | no     | secondary |
+            |  dc   | cross | no     | secondary |
+            |   cg  | cross | no     | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | fdcg   | d        | no_left_turn  |
-            | restriction | bc       | fdcg   | c        | no_right_turn |
+            | restriction | bd       | dc     | d        | no_left_turn  |
+            | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-          | waypoints | route            | turns                   |
-          | a,g       | road,cross,cross | depart,turn left,arrive |
-          | a,e       | road,road        | depart,arrive           |
+            | waypoints | route            | turns                   |
+            | a,g       | road,cross,cross | depart,turn left,arrive |
+            | a,e       | road,road        | depart,arrive           |
 
     Scenario: Forking before a turn (forky)
         Given the node map
@@ -628,12 +630,14 @@ Feature: Collapse
             | bd    | road  | yes    | primary   |
             | bc    | road  | yes    | primary   |
             | de    | road  | yes    | primary   |
-            | fdcg  | cross | no     | secondary |
+            | fd    | cross | no     | secondary |
+            |  dc   | cross | no     | secondary |
+            |   cg  | cross | no     | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | fdcg   | d        | no_left_turn  |
-            | restriction | bc       | fdcg   | c        | no_right_turn |
+            | restriction | bd       | dc     | d        | no_left_turn  |
+            | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
             | waypoints | route                 | turns                                          |

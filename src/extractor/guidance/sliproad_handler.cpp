@@ -1,6 +1,6 @@
-#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
+#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"
@@ -48,7 +48,62 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     if (intersection.size() <= 2)
         return intersection;
 
-    const auto obvious_turn_index = findObviousTurn(source_edge_id, intersection);
+    const auto findNextIntersectionForRoad =
+        [&](const NodeID at_node, const ConnectedRoad &road, NodeID *output_node) {
+            auto intersection = intersection_generator(at_node, road.turn.eid);
+            auto in_edge = road.turn.eid;
+            // skip over traffic lights
+            if (intersection.size() == 2)
+            {
+                const auto node = node_based_graph.GetTarget(in_edge);
+                in_edge = intersection[1].turn.eid;
+                if (output_node)
+                    *output_node = node_based_graph.GetTarget(in_edge);
+                intersection = intersection_generator(node, in_edge);
+            }
+            return intersection;
+        };
+
+    const std::size_t obvious_turn_index = [&]() -> std::size_t {
+        const auto index = findObviousTurn(source_edge_id, intersection);
+        if (index != 0)
+            return index;
+        else if (intersection.size() == 3 &&
+                 intersection[1].turn.instruction.type == TurnType::Fork)
+        {
+            // Forks themselves do not contain a `obvious` turn index. If we look at a fork that has
+            // a one-sided sliproad, however, the non-sliproad can be considered `obvious`. Here we
+            // assume that this could be the case and check for a potential sliproad/non-sliproad
+            // situation.
+            const auto intersection_following_index_one =
+                findNextIntersectionForRoad(intersection_node_id, intersection[1], NULL);
+            const auto intersection_following_index_two =
+                findNextIntersectionForRoad(intersection_node_id, intersection[2], NULL);
+
+            // a sliproad has to enter a road without choice
+            const auto couldBeSliproad = [](const Intersection &intersection) {
+                if (intersection.size() != 3)
+                    return false;
+                if ((intersection[1].entry_allowed && intersection[2].entry_allowed) ||
+                    intersection[0].entry_allowed)
+                    return false;
+                return true;
+            };
+
+            if (couldBeSliproad(intersection_following_index_one))
+                return 2;
+            else if (couldBeSliproad(intersection_following_index_two))
+                return 1;
+            else
+                return 0;
+        }
+        else
+            return 0;
+    }();
+
+    if (obvious_turn_index == 0)
+        return intersection;
+
     const auto &next_road = intersection[obvious_turn_index];
 
     const auto linkTest = [this, next_road](const ConnectedRoad &road) {
@@ -90,19 +145,8 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     }
     auto next_intersection_node = node_based_graph.GetTarget(next_road.turn.eid);
 
-    const auto next_road_next_intersection = [&]() {
-        auto intersection = intersection_generator(intersection_node_id, next_road.turn.eid);
-        auto in_edge = next_road.turn.eid;
-        // skip over traffic lights
-        if (intersection.size() == 2)
-        {
-            const auto node = node_based_graph.GetTarget(in_edge);
-            in_edge = intersection[1].turn.eid;
-            next_intersection_node = node_based_graph.GetTarget(in_edge);
-            intersection = intersection_generator(node, in_edge);
-        }
-        return intersection;
-    }();
+    const auto next_road_next_intersection =
+        findNextIntersectionForRoad(intersection_node_id, next_road, &next_intersection_node);
 
     std::unordered_set<NameID> target_road_names;
 
