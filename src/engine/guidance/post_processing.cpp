@@ -815,6 +815,20 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     invalidateStep(steps[step_index]);
                 }
             }
+            else if (step_index + 2 < steps.size() &&
+                     current_step.maneuver.instruction.type == TurnType::NewName &&
+                     steps[step_index + 1].maneuver.instruction.type == TurnType::NewName &&
+                     one_back_step.name == steps[step_index + 1].name)
+            {
+                // if we are crossing an intersection and go immediately after into a name change,
+                // we don't wan't to collapse the initial intersection.
+                // a - b ---BRIDGE -- c
+                steps[one_back_index] =
+                    elongate(std::move(steps[one_back_index]),
+                             elongate(std::move(steps[step_index]), steps[step_index + 1]));
+                invalidateStep(steps[step_index]);
+                invalidateStep(steps[step_index + 1]);
+            }
             else if (choiceless(current_step, one_back_step) ||
                      one_back_step.distance <= MAX_COLLAPSE_DISTANCE)
             {

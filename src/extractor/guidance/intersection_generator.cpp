@@ -160,7 +160,7 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
         intersection[self_u_turn].entry_allowed = true;
     }
 
-    return mergeSegregatedRoads(std::move(intersection));
+    return intersection;
 }
 
 bool IntersectionGenerator::canMerge(const Intersection &intersection,
@@ -184,8 +184,8 @@ bool IntersectionGenerator::canMerge(const Intersection &intersection,
     if (first_data.road_classification != second_data.road_classification)
         return false;
 
-    //may not be on a roundabout
-    if( first_data.roundabout || second_data.roundabout)
+    // may not be on a roundabout
+    if (first_data.roundabout || second_data.roundabout)
         return false;
 
     // exactly one of them has to be reversed
@@ -381,12 +381,12 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_intersection,
                                                           Intersection intersection) const
 {
+    // nothing to do for dead ends
+    if ( intersection.size() <= 1)
+        return intersection;
+
     for (auto &road : intersection)
     {
-        // prune to short intersections to save on compute overhead
-        if (node_based_graph.GetEdgeData(road.turn.eid).distance > 10)
-            continue;
-
         // to find out about the above situation, we need to look at the next intersection (at d in
         // the example). If the initial road can be merged to the left/right, we are about to adjust
         // the angle.
@@ -395,15 +395,36 @@ Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_i
         if (next_intersection_along_road.size() <= 1)
             continue;
 
+        const auto adjustAngle = [](double angle, double offset) {
+            angle += offset;
+            if (angle > 360)
+                return angle - 360.;
+            else if (angle < 0)
+                return angle + 360.;
+            return angle;
+        };
+
         if (canMerge(next_intersection_along_road, 0, 1))
         {
-            std::cout << "Merge at next intersection" << std::endl;
+            const auto offset = 0.5 * angularDeviation(next_intersection_along_road[0].turn.angle,
+                                                       next_intersection_along_road[1].turn.angle);
+            // at the target intersection, we merge to the right, so we need to shift the current
+            // angle to the left
+            road.turn.angle = adjustAngle(road.turn.angle, offset);
         }
         else if (canMerge(next_intersection_along_road, 0, next_intersection_along_road.size() - 1))
         {
-            std::cout << "Merge at next intersection (2)" << std::endl;
+            const auto offset =
+                0.5 * angularDeviation(
+                          next_intersection_along_road[0].turn.angle,
+                          next_intersection_along_road[next_intersection_along_road.size() - 1]
+                              .turn.angle);
+            // at the target intersection, we merge to the left, so we need to shift the current
+            // angle to the right
+            road.turn.angle = adjustAngle(road.turn.angle, -offset);
         }
     }
+    std::cout << std::flush;
     return intersection;
 }
 

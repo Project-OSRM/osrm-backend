@@ -975,6 +975,7 @@ Feature: Simple Turns
         Given the node map
             |   | f |   |
             |   | e |   |
+            |   |   |   |
             | g |   | d |
             |   |   |   |
             |   |   |   |
@@ -1012,3 +1013,27 @@ Feature: Simple Turns
             | f,a       | depart,arrive | Hermannstr,Hermannstr |
             | y,f       | depart,arrive | Hermannstr,Hermannstr |
             | f,y       | depart,arrive | Hermannstr,Hermannstr |
+
+    Scenario: Turning into splitting road
+        Given the node map
+            |   | a |   |   |
+            |   | b |   |   |
+            |   |   |   |   |
+            |   |   |   |   |
+            | c |   | d |   |
+            |   |   |   |   |
+            |   |   |   | e |
+            |   |   |   |   |
+            |   |   | f |   |
+
+        And the ways
+            | nodes | name | highway | oneway |
+            | ab    | road | primary | no     |
+            | bc    | road | primary | yes    |
+            | fdb   | road | primary | yes    |
+            | de    | turn | primary | no     |
+
+        When I route I should get
+            | waypoints | turns                           | route          |
+            | f,a       | depart,arrive                   | road,road      |
+            | e,a       | depart,turn slight right,arrive | turn,road,road |
