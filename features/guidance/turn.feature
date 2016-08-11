@@ -968,3 +968,47 @@ Feature: Simple Turns
             | waypoints | turns                              | route                                   |
             | a,d       | depart,new name straight,arrive    | Molkenmarkt,Stralauer Str,Stralauer Str |
             | e,d       | depart,new name slight left,arrive | Molkenmarkt,Stralauer Str,Stralauer Str |
+
+    Scenario: Collapse Turn Instruction, Issue #2725
+    # https://www.mapillary.com/app/?lat=52.466483333333336&lng=13.431908333333332&z=17&focus=photo&pKey=LWXnKqoGqUNLnG0lofiO0Q
+    # http://www.openstreetmap.org/#map=19/52.46750/13.43171
+        Given the node map
+            |   | f |   |
+            |   | e |   |
+            | g |   | d |
+            |   |   |   |
+            |   |   |   |
+            | h |   | c |
+            |   |   |   |
+            |   |   |   |
+            |   | b |   |
+            |   | a |   |
+            |   |   |   |
+            |   |   |   |
+            | r | x | s |
+            |   | y |   |
+
+        And the ways
+            | nodes | name           | highway   | oneway |
+            | ab    | Hermannstr     | secondary |        |
+            | bc    | Hermannstr     | secondary | yes    |
+            | cd    | Hermannbruecke | secondary | yes    |
+            | de    | Hermannstr     | secondary | yes    |
+            | ef    | Hermannstr     | secondary |        |
+            | eg    | Hermannstr     | secondary | yes    |
+            | gh    | Hermannbruecke | secondary | yes    |
+            | hb    | Hermannstr     | secondary | yes    |
+            | xa    | Hermannstr     | secondary |        |
+            | yx    | Hermannstr     | secondary |        |
+            | rxs   | Silbersteinstr | tertiary  |        |
+
+        And the nodes
+            | node | highway         |
+            | x    | traffic_signals |
+
+        When I route I should get
+            | waypoints | turns         | route                 |
+            | a,f       | depart,arrive | Hermannstr,Hermannstr |
+            | f,a       | depart,arrive | Hermannstr,Hermannstr |
+            | y,f       | depart,arrive | Hermannstr,Hermannstr |
+            | f,y       | depart,arrive | Hermannstr,Hermannstr |
