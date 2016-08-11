@@ -30,7 +30,9 @@ IntersectionGenerator::IntersectionGenerator(
 
 Intersection IntersectionGenerator::operator()(const NodeID from_node, const EdgeID via_eid) const
 {
-    return getConnectedRoads(from_node, via_eid);
+    auto intersection = getConnectedRoads(from_node, via_eid);
+    return adjustForJoiningRoads(node_based_graph.GetTarget(via_eid),
+                                 mergeSegregatedRoads(std::move(intersection)));
 }
 
 //                                               a
@@ -161,6 +163,40 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     return mergeSegregatedRoads(std::move(intersection));
 }
 
+bool IntersectionGenerator::canMerge(const Intersection &intersection,
+                                     std::size_t first_index,
+                                     std::size_t second_index) const
+{
+    const auto &first_data = node_based_graph.GetEdgeData(intersection[first_index].turn.eid);
+    const auto &second_data = node_based_graph.GetEdgeData(intersection[second_index].turn.eid);
+
+    // only merge named ids
+    if (first_data.name_id == EMPTY_NAMEID)
+        return false;
+
+    // need to be same name
+    if (first_data.name_id != second_data.name_id)
+        return false;
+
+    // compatibility is required
+    if (first_data.travel_mode != second_data.travel_mode)
+        return false;
+    if (first_data.road_classification != second_data.road_classification)
+        return false;
+
+    //may not be on a roundabout
+    if( first_data.roundabout || second_data.roundabout)
+        return false;
+
+    // exactly one of them has to be reversed
+    if (first_data.reversed == second_data.reversed)
+        return false;
+
+    // mergeable if the angle is not too big
+    return angularDeviation(intersection[first_index].turn.angle,
+                            intersection[second_index].turn.angle) < 60;
+}
+
 /*
  * Segregated Roads often merge onto a single intersection.
  * While technically representing different roads, they are
@@ -188,20 +224,6 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 {
     const auto getRight = [&](std::size_t index) {
         return (index + intersection.size() - 1) % intersection.size();
-    };
-
-    const auto mergable = [&](std::size_t first, std::size_t second) -> bool {
-        const auto &first_data = node_based_graph.GetEdgeData(intersection[first].turn.eid);
-        const auto &second_data = node_based_graph.GetEdgeData(intersection[second].turn.eid);
-
-        return first_data.name_id != EMPTY_NAMEID && first_data.name_id == second_data.name_id &&
-               !first_data.roundabout && !second_data.roundabout &&
-               first_data.travel_mode == second_data.travel_mode &&
-               first_data.road_classification == second_data.road_classification &&
-               // compatible threshold
-               angularDeviation(intersection[first].turn.angle, intersection[second].turn.angle) <
-                   60 &&
-               first_data.reversed != second_data.reversed;
     };
 
     const auto merge = [](const ConnectedRoad &first,
@@ -275,7 +297,8 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
     // with respect to the now changed perceived location of a. If we move (a) to the left, we add
     // the difference to all angles. Otherwise we subtract it.
     bool merged_first = false;
-    if (mergable(0, intersection.size() - 1))
+    // these result in an adjustment of all other angles
+    if (canMerge(intersection, 0, intersection.size() - 1))
     {
         merged_first = true;
         // moving `a` to the left
@@ -290,7 +313,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 
         intersection.pop_back();
     }
-    else if (mergable(0, 1))
+    else if (canMerge(intersection, 0, 1))
     {
         merged_first = true;
         // moving `a` to the right
@@ -321,7 +344,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
     // therefore these are handled prior to this step
     for (std::size_t index = 2; index < intersection.size(); ++index)
     {
-        if (mergable(index, getRight(index)))
+        if (canMerge(intersection, index, getRight(index)))
         {
             intersection[getRight(index)] =
                 merge(intersection[getRight(index)], intersection[index]);
@@ -334,6 +357,53 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
         return first.turn.angle < second.turn.angle;
     };
     std::sort(std::begin(intersection), std::end(intersection), ByAngle);
+    return intersection;
+}
+
+// OSM can have some very steep angles for joining roads. Considering the following intersection:
+//        x
+//        |__________c
+//       /
+// a ---d
+//       \ __________b
+//
+// with c->d as a oneway
+// and d->b as a oneway, the turn von x->d is actually a turn from x->a. So when looking at the
+// intersection coming from x, we want to interpret the situation as
+//           x
+// a __ d __ |__________c
+//      |
+//      |_______________b
+//
+// Where we see the turn to `d` as a right turn, rather than going straight.
+// We do this by adjusting the local turn angle at `x` to turn onto `d` to be reflective of this
+// situation.
+Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_intersection,
+                                                          Intersection intersection) const
+{
+    for (auto &road : intersection)
+    {
+        // prune to short intersections to save on compute overhead
+        if (node_based_graph.GetEdgeData(road.turn.eid).distance > 10)
+            continue;
+
+        // to find out about the above situation, we need to look at the next intersection (at d in
+        // the example). If the initial road can be merged to the left/right, we are about to adjust
+        // the angle.
+        const auto next_intersection_along_road =
+            getConnectedRoads(node_at_intersection, road.turn.eid);
+        if (next_intersection_along_road.size() <= 1)
+            continue;
+
+        if (canMerge(next_intersection_along_road, 0, 1))
+        {
+            std::cout << "Merge at next intersection" << std::endl;
+        }
+        else if (canMerge(next_intersection_along_road, 0, next_intersection_along_road.size() - 1))
+        {
+            std::cout << "Merge at next intersection (2)" << std::endl;
+        }
+    }
     return intersection;
 }
 

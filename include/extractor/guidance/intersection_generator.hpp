@@ -50,6 +50,12 @@ class IntersectionGenerator
     OSRM_ATTR_WARN_UNUSED
     Intersection getConnectedRoads(const NodeID from_node, const EdgeID via_eid) const;
 
+    // check if two indices in an intersection can be seen as a single road in the perceived
+    // intersection representation
+    bool canMerge(const Intersection &intersection,
+                  std::size_t first_index,
+                  std::size_t second_index) const;
+
     // Merge segregated roads to omit invalid turns in favor of treating segregated roads as
     // one.
     // This function combines roads the following way:
@@ -63,6 +69,20 @@ class IntersectionGenerator
     // 160
     OSRM_ATTR_WARN_UNUSED
     Intersection mergeSegregatedRoads(Intersection intersection) const;
+
+    // The counterpiece to mergeSegregatedRoads. While we can adjust roads that split up at the
+    // intersection itself, it can also happen that intersections are connected to joining roads.
+    //
+    //     *                           *
+    //     *        is converted to    *
+    //   v   a ---                     a ---
+    //   v   ^                         +
+    //   v   ^                         +
+    //       b
+    //
+    // for the local view of b at a.
+    Intersection adjustForJoiningRoads(const NodeID node_at_intersection,
+                                       Intersection intersection) const;
 };
 
 } // namespace guidance
