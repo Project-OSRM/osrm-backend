@@ -20,8 +20,6 @@ namespace guidance
 {
 inline void print(const engine::guidance::RouteStep &step)
 {
-    const auto lanes = step.intersections.front().lanes;
-
     std::cout << static_cast<int>(step.maneuver.instruction.type) << " "
               << static_cast<int>(step.maneuver.instruction.direction_modifier) << "  "
               << static_cast<int>(step.maneuver.waypoint_type) << " "

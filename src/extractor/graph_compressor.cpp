@@ -59,7 +59,6 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
         //    forward_e1
         //
         // If the edges are compatible.
-
         const bool reverse_edge_order = graph.GetEdgeData(graph.BeginEdges(node_v)).reversed;
         const EdgeID forward_e2 = graph.BeginEdges(node_v) + reverse_edge_order;
         BOOST_ASSERT(SPECIAL_EDGEID != forward_e2);

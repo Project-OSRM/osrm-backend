@@ -3,6 +3,7 @@
 #include "extractor/guidance/toolkit.hpp"
 
 #include <algorithm>
+#include <iomanip>
 #include <iterator>
 #include <limits>
 #include <utility>
@@ -30,9 +31,13 @@ IntersectionGenerator::IntersectionGenerator(
 
 Intersection IntersectionGenerator::operator()(const NodeID from_node, const EdgeID via_eid) const
 {
-    auto intersection = getConnectedRoads(from_node, via_eid);
-    return adjustForJoiningRoads(node_based_graph.GetTarget(via_eid),
-                                 mergeSegregatedRoads(std::move(intersection)));
+    auto intersection = GetConnectedRoads(from_node, via_eid);
+    const auto node_at_intersection = node_based_graph.GetTarget(via_eid);
+    std::cout << "Creating Intersection: " << from_node << " ("
+              << util::Coordinate(node_info_list[from_node]) << ") " << node_at_intersection << " ("
+              << util::Coordinate(node_info_list[node_at_intersection]) << ")" << std::endl;
+    return AdjustForJoiningRoads(
+        node_at_intersection, MergeSegregatedRoads(node_at_intersection, std::move(intersection)));
 }
 
 //                                               a
@@ -48,7 +53,7 @@ Intersection IntersectionGenerator::operator()(const NodeID from_node, const Edg
 // That means we not only get (from_node, turn_node, c) in the above example
 // but also (from_node, turn_node, a), (from_node, turn_node, b). These turns are
 // marked as invalid and only needed for intersection classification.
-Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
+Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
                                                       const EdgeID via_eid) const
 {
     Intersection intersection;
@@ -163,7 +168,8 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
     return intersection;
 }
 
-bool IntersectionGenerator::canMerge(const Intersection &intersection,
+bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
+                                     const Intersection &intersection,
                                      std::size_t first_index,
                                      std::size_t second_index) const
 {
@@ -192,9 +198,108 @@ bool IntersectionGenerator::canMerge(const Intersection &intersection,
     if (first_data.reversed == second_data.reversed)
         return false;
 
+    // one of them needs to be invalid
+    if (intersection[first_index].entry_allowed && intersection[second_index].entry_allowed)
+        return false;
+
     // mergeable if the angle is not too big
-    return angularDeviation(intersection[first_index].turn.angle,
-                            intersection[second_index].turn.angle) < 60;
+    const auto angle_between = angularDeviation(intersection[first_index].turn.angle,
+                                                intersection[second_index].turn.angle);
+
+    const auto coordinate_at_in_edge =
+        getRepresentativeCoordinate(node_at_intersection,
+                                    node_based_graph.GetTarget(intersection[0].turn.eid),
+                                    intersection[0].turn.eid,
+                                    false,
+                                    compressed_edge_container,
+                                    node_info_list);
+    const auto coordinate_at_intersection = node_info_list[node_at_intersection];
+
+    const auto isValidYArm = [this,
+                              intersection,
+                              coordinate_at_in_edge,
+                              coordinate_at_intersection,
+                              node_at_intersection](const std::size_t index,
+                                                    const std::size_t other_index) {
+        const auto target_id = [&]() {
+            EdgeID last_in_edge_id;
+            GetActualNextIntersection(
+                node_at_intersection, intersection[index].turn.eid, nullptr, &last_in_edge_id);
+            return node_based_graph.GetTarget(last_in_edge_id);
+        }();
+
+        const auto coordinate_at_target = node_info_list[target_id];
+
+        const auto turn_angle = util::coordinate_calculation::computeAngle(
+            coordinate_at_in_edge, coordinate_at_intersection, coordinate_at_target);
+        const double distance_to_target = util::coordinate_calculation::haversineDistance(
+            coordinate_at_intersection, coordinate_at_target);
+
+        const auto other_angle = intersection[other_index].turn.angle;
+        const bool becomes_narrower =
+            angularDeviation(turn_angle, other_angle) < NARROW_TURN_ANGLE &&
+            angularDeviation(turn_angle, other_angle) <
+                angularDeviation(intersection[index].turn.angle, other_angle);
+
+        return becomes_narrower;
+    };
+
+    // Only merge valid y-arms
+    if (!isValidYArm(first_index, second_index) || !isValidYArm(second_index, first_index))
+    {
+        if (angle_between < 60)
+        {
+            std::cout << "Cannot Merge here, due two y-arms." << std::endl;
+        }
+        return false;
+    }
+
+    if (angle_between < 60)
+    {
+        std::cout << "Merging success at (" << first_index << "." << second_index << "):\n";
+        for (auto road : intersection)
+            std::cout << "\t" << toString(road) << std::endl;
+        return true;
+    }
+
+    // return false;
+    // Finally, we also allow merging if all streets offer the same name, it is only three roads and
+    // the angle is not fully extreme:
+    if (intersection.size() != 3)
+        return false;
+
+    const std::size_t missing_index = [first_index, second_index]() {
+        if (first_index == 0)
+            return second_index == 2 ? 1 : 2;
+        else if (first_index == 1)
+            return second_index == 2 ? 0 : 2;
+        else
+            return second_index == 1 ? 0 : 1;
+    }();
+
+    // needs to be same road coming in
+    if (node_based_graph.GetEdgeData(intersection[missing_index].turn.eid).name_id !=
+        first_data.name_id)
+        return false;
+
+    // we only allow collapsing of a Y like fork. So the angle to the missing index has to be
+    // roughly equal:
+    const auto y_angle_difference =
+        angularDeviation(angularDeviation(intersection[missing_index].turn.angle,
+                                          intersection[first_index].turn.angle),
+                         angularDeviation(intersection[missing_index].turn.angle,
+                                          intersection[second_index].turn.angle));
+
+    // Allow larger angles if its three roads only of the same name
+    const bool could_be_valid_y_intersection =
+        angle_between < 100 && y_angle_difference < FUZZY_ANGLE_DIFFERENCE;
+    if (could_be_valid_y_intersection)
+    {
+        std::cout << "Merging success (y) at (" << first_index << "." << second_index << "):\n";
+        for (auto road : intersection)
+            std::cout << "\t" << toString(road) << std::endl;
+    }
+    return could_be_valid_y_intersection;
 }
 
 /*
@@ -220,7 +325,8 @@ bool IntersectionGenerator::canMerge(const Intersection &intersection,
  * Anything containing the first u-turn in a merge affects all other angles
  * and is handled separately from all others.
  */
-Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersection) const
+Intersection IntersectionGenerator::MergeSegregatedRoads(const NodeID intersection_node,
+                                                         Intersection intersection) const
 {
     const auto getRight = [&](std::size_t index) {
         return (index + intersection.size() - 1) % intersection.size();
@@ -298,7 +404,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
     // the difference to all angles. Otherwise we subtract it.
     bool merged_first = false;
     // these result in an adjustment of all other angles
-    if (canMerge(intersection, 0, intersection.size() - 1))
+    if (CanMerge(intersection_node, intersection, 0, intersection.size() - 1))
     {
         merged_first = true;
         // moving `a` to the left
@@ -313,7 +419,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 
         intersection.pop_back();
     }
-    else if (canMerge(intersection, 0, 1))
+    else if (CanMerge(intersection_node, intersection, 0, 1))
     {
         merged_first = true;
         // moving `a` to the right
@@ -344,7 +450,7 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
     // therefore these are handled prior to this step
     for (std::size_t index = 2; index < intersection.size(); ++index)
     {
-        if (canMerge(intersection, index, getRight(index)))
+        if (CanMerge(intersection_node, intersection, index, getRight(index)))
         {
             intersection[getRight(index)] =
                 merge(intersection[getRight(index)], intersection[index]);
@@ -378,11 +484,13 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
 // Where we see the turn to `d` as a right turn, rather than going straight.
 // We do this by adjusting the local turn angle at `x` to turn onto `d` to be reflective of this
 // situation.
-Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_intersection,
+Intersection IntersectionGenerator::AdjustForJoiningRoads(const NodeID node_at_intersection,
                                                           Intersection intersection) const
 {
+    // FIXME remove
+    return intersection;
     // nothing to do for dead ends
-    if ( intersection.size() <= 1)
+    if (intersection.size() <= 1)
         return intersection;
 
     for (auto &road : intersection)
@@ -391,7 +499,7 @@ Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_i
         // the example). If the initial road can be merged to the left/right, we are about to adjust
         // the angle.
         const auto next_intersection_along_road =
-            getConnectedRoads(node_at_intersection, road.turn.eid);
+            GetConnectedRoads(node_at_intersection, road.turn.eid);
         if (next_intersection_along_road.size() <= 1)
             continue;
 
@@ -404,7 +512,7 @@ Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_i
             return angle;
         };
 
-        if (canMerge(next_intersection_along_road, 0, 1))
+        if (CanMerge(node_based_graph.GetTarget(road.turn.eid), next_intersection_along_road, 0, 1))
         {
             const auto offset = 0.5 * angularDeviation(next_intersection_along_road[0].turn.angle,
                                                        next_intersection_along_road[1].turn.angle);
@@ -412,7 +520,10 @@ Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_i
             // angle to the left
             road.turn.angle = adjustAngle(road.turn.angle, offset);
         }
-        else if (canMerge(next_intersection_along_road, 0, next_intersection_along_road.size() - 1))
+        else if (CanMerge(node_based_graph.GetTarget(road.turn.eid),
+                          next_intersection_along_road,
+                          0,
+                          next_intersection_along_road.size() - 1))
         {
             const auto offset =
                 0.5 * angularDeviation(
@@ -426,6 +537,43 @@ Intersection IntersectionGenerator::adjustForJoiningRoads(const NodeID node_at_i
     }
     std::cout << std::flush;
     return intersection;
+}
+
+inline Intersection
+IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
+                                                 const EdgeID via_edge,
+                                                 NodeID *resulting_from_node = nullptr,
+                                                 EdgeID *resulting_via_edge = nullptr) const
+{
+    // This function skips over traffic lights/graph compression issues and similar to find the next
+    // actual intersection
+    Intersection potential_result = GetConnectedRoads(starting_node, via_edge);
+
+    // Skip over stuff that has not been compressed due to barriers/parallel edges
+    NodeID node_at_intersection = starting_node;
+    EdgeID incoming_edge = via_edge;
+
+    // if we only have the u-turn and the node could have been compressed
+    while (potential_result.size() == 2 &&
+           node_based_graph.GetEdgeData(via_edge).IsCompatibleToExceptForName(
+               node_based_graph.GetEdgeData(potential_result[1].turn.eid)))
+    {
+        if (!node_based_graph.GetEdgeData(via_edge).IsCompatibleTo(
+                node_based_graph.GetEdgeData(potential_result[1].turn.eid)))
+            std::cout << "Got Further Down the road." << std::endl;
+
+        node_at_intersection = node_based_graph.GetTarget(incoming_edge);
+        incoming_edge = potential_result[1].turn.eid;
+        potential_result = GetConnectedRoads(node_at_intersection, incoming_edge);
+    }
+
+    // return output if requested
+    if (resulting_from_node)
+        *resulting_from_node = node_at_intersection;
+    if (resulting_via_edge)
+        *resulting_via_edge = incoming_edge;
+
+    return potential_result;
 }
 
 } // namespace guidance
