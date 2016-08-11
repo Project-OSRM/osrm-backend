@@ -116,6 +116,13 @@ LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_desc
         // which is invalid
         for (std::size_t index = 1; index < lane_data.size(); ++index)
         {
+            // u-turn located somewhere in the middle
+            // Right now we can only handle u-turns at the sides. If we find a u-turn somewhere in
+            // the middle of the tags, we abort the handling right here.
+            if (index + 1 < lane_data.size() &&
+                ((lane_data[index].tag & TurnLaneType::uturn) != TurnLaneType::empty))
+                return false;
+
             if (lane_data[index - 1].to > lane_data[index].from)
                 return false;
         }

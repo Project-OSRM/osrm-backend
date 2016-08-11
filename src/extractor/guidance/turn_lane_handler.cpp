@@ -117,12 +117,18 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
     if (has_merge_lane || has_non_usable_u_turn)
         return intersection;
 
-    if (!lane_data.empty() && canMatchTrivially(intersection, lane_data) &&
+    // check if a u-turn is allowed (for some reason) and is missing from the list of tags (u-turn
+    // is often allowed from the `left` lane without an additional indication dedicated to u-turns).
+    const bool is_missing_valid_u_turn =
         lane_data.size() !=
             static_cast<std::size_t>((
                 !hasTag(TurnLaneType::uturn, lane_data) && intersection[0].entry_allowed ? 1 : 0)) +
                 possible_entries &&
-        intersection[0].entry_allowed && !hasTag(TurnLaneType::none, lane_data))
+        intersection[0].entry_allowed;
+
+    // FIXME the lane to add depends on the side of driving/u-turn rules in the country
+    if (!lane_data.empty() && canMatchTrivially(intersection, lane_data) &&
+        !is_missing_valid_u_turn && !hasTag(TurnLaneType::none, lane_data))
         lane_data.push_back({TurnLaneType::uturn, lane_data.back().to, lane_data.back().to});
 
     bool is_simple = isSimpleIntersection(lane_data, intersection);
@@ -335,24 +341,34 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
     bool all_simple = true;
     bool has_none = false;
     std::unordered_set<std::size_t> matched_indices;
-    for (const auto &data : lane_data)
+    for (std::size_t data_index = 0; data_index < lane_data.size(); ++data_index)
     {
+        const auto &data = lane_data[data_index];
         if (data.tag == TurnLaneType::none)
         {
             has_none = true;
             continue;
         }
 
+        // u-turn tags are at the outside of the lane-tags and require special handling, since
+        // locating their best match requires knowledge on the neighboring tag. (see documentation
+        // on findBestMatch/findBestMatchForReverse
         const auto best_match = [&]() {
+            // normal tag or u-turn as only choice (no other tag present)
             if (data.tag != TurnLaneType::uturn || lane_data.size() == 1)
                 return findBestMatch(data.tag, intersection);
 
-            // lane_data.size() > 1
-            if (lane_data.back().tag == TurnLaneType::uturn)
-                return findBestMatchForReverse(lane_data[lane_data.size() - 2].tag, intersection);
+            BOOST_ASSERT(data.tag == TurnLaneType::uturn);
+            // u-turn at the very left, leftmost turn at data_index - 1
+            if (data_index + 1 == lane_data.size())
+                return findBestMatchForReverse(lane_data[data_index - 1].tag, intersection);
 
-            BOOST_ASSERT(lane_data.front().tag == TurnLaneType::uturn);
-            return findBestMatchForReverse(lane_data[1].tag, intersection);
+            // u-turn to the right (left-handed driving) -> rightmost turn to the left (data_index +
+            // 1)
+            if (data_index == 0)
+                return findBestMatchForReverse(lane_data[data_index + 1].tag, intersection);
+
+            return intersection.begin();
         }();
         std::size_t match_index = std::distance(intersection.begin(), best_match);
         all_simple &= (matched_indices.count(match_index) == 0);

@@ -1,5 +1,5 @@
-#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include <algorithm>
@@ -147,9 +147,9 @@ Intersection IntersectionGenerator::getConnectedRoads(const NodeID from_node,
         // after intersections sorting by angles, find the u-turn with (from_node == to_node)
         // that was inserted together with setting uturn_could_be_valid flag
         std::size_t self_u_turn = 0;
-        while (self_u_turn < intersection.size()
-               && intersection[self_u_turn].turn.angle < std::numeric_limits<double>::epsilon()
-               && from_node != node_based_graph.GetTarget(intersection[self_u_turn].turn.eid))
+        while (self_u_turn < intersection.size() &&
+               intersection[self_u_turn].turn.angle < std::numeric_limits<double>::epsilon() &&
+               from_node != node_based_graph.GetTarget(intersection[self_u_turn].turn.eid))
         {
             ++self_u_turn;
         }
@@ -244,9 +244,41 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
     }();
 
     // check for merges including the basic u-turn
-    // these result in an adjustment of all other angles
+    // these result in an adjustment of all other angles. This is due to how these angles are
+    // perceived. Considering the following example:
+    //
+    //   c   b
+    //     Y
+    //     a
+    //
+    // coming from a to b (given a road that splits at the fork into two one-ways), the turn is not
+    // considered as a turn but rather as going straight.
+    // Now if we look at the situation merging:
+    //
+    //  a     b
+    //    \ /
+    // e - + - d
+    //     |
+    //     c
+    //
+    // With a,b representing the same road, the intersection itself represents a classif for way
+    // intersection so we handle it like
+    //
+    //   (a),b
+    //      |
+    // e -  + - d
+    //      |
+    //      c
+    //
+    // To be able to consider this adjusted representation down the line, we merge some roads.
+    // If the merge occurs at the u-turn edge, we need to adjust all angles, though, since they are
+    // with respect to the now changed perceived location of a. If we move (a) to the left, we add
+    // the difference to all angles. Otherwise we subtract it.
+    bool merged_first = false;
     if (mergable(0, intersection.size() - 1))
     {
+        merged_first = true;
+        // moving `a` to the left
         const double correction_factor =
             (360 - intersection[intersection.size() - 1].turn.angle) / 2;
         for (std::size_t i = 1; i + 1 < intersection.size(); ++i)
@@ -256,31 +288,33 @@ Intersection IntersectionGenerator::mergeSegregatedRoads(Intersection intersecti
         intersection[0] = merge(intersection.front(), intersection.back());
         intersection[0].turn.angle = 0;
 
-        if (is_connected_to_roundabout)
-        {
-            /*
-             * We are merging a u-turn against the direction of a roundabout
-             *
-             *     -----------> roundabout
-             *        /    \
-             *     out      in
-             *
-             * These cases have to be disabled, even if they are not forbidden specifically by a
-             * relation
-             */
-            intersection[0].entry_allowed = false;
-        }
-
         intersection.pop_back();
     }
     else if (mergable(0, 1))
     {
+        merged_first = true;
+        // moving `a` to the right
         const double correction_factor = (intersection[1].turn.angle) / 2;
         for (std::size_t i = 2; i < intersection.size(); ++i)
             intersection[i].turn.angle -= correction_factor;
         intersection[0] = merge(intersection[0], intersection[1]);
         intersection[0].turn.angle = 0;
         intersection.erase(intersection.begin() + 1);
+    }
+
+    if (merged_first && is_connected_to_roundabout)
+    {
+        /*
+         * We are merging a u-turn against the direction of a roundabout
+         *
+         *     -----------> roundabout
+         *        /    \
+         *     out      in
+         *
+         * These cases have to be disabled, even if they are not forbidden specifically by a
+         * relation
+         */
+        intersection[0].entry_allowed = false;
     }
 
     // a merge including the first u-turn requres an adjustment of the turn angles
