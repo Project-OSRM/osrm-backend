@@ -253,7 +253,7 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
             // The ulong_long -> uint64_t will likely break on 32bit platforms
             const auto ok = parse(it,
                                   last,                                              //
-                                  (ulong_long >> ',' >> ulong_long >> ',' >> uint_), //
+                                  (ulong_long >> ',' >> ulong_long >> ',' >> uint_ >> *(',' >> *char_)), //
                                   from_node_id,
                                   to_node_id,
                                   speed); //
@@ -337,7 +337,7 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
             const auto ok =
                 parse(it,
                       last,                                                                     //
-                      (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >> ',' >> double_), //
+                      (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >> ',' >> double_ >> *(',' >> *char_)), //
                       from_node_id,
                       via_node_id,
                       to_node_id,

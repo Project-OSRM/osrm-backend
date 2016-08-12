@@ -23,7 +23,7 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
     Scenario: Weighting based on turn penalty file, with an extreme negative value -- clamps and does not fail
         Given the turn penalty file
             """
-            1,2,5,0
+            1,2,5,0,comment
             3,4,7,-20
             """
         And the contract extra arguments "--turn-penalty-file penalties.csv"
