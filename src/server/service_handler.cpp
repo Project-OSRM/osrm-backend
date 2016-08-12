@@ -39,7 +39,7 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
     }
     auto &service = service_iter->second;
 
-    if (service->GetVersion() != parsed_url.version)
+    if (!service->SupportsVersion(parsed_url.version))
     {
         result = util::json::Object();
         auto &json_result = result.get<util::json::Object>();

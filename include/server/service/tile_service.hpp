@@ -25,7 +25,7 @@ class TileService final : public BaseService
     engine::Status
     RunQuery(std::size_t prefix_length, std::string &query, ResultT &result) final override;
 
-    unsigned GetVersion() final override { return 1; }
+    bool SupportsVersion(unsigned version) final override { return version == 1; }
 };
 }
 }
