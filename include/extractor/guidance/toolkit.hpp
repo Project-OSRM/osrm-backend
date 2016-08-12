@@ -323,7 +323,7 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
         for (std::int32_t i = 0; i < count_left; ++i)
             // this is adjusted for our fake pipe. The moment cucumber can handle multiple escaped
             // pipes, the '&' part can be removed
-            if (lane_string[i] != '|' && lane_string[i] != '&')
+            if (lane_string[i] != '|')
             {
                 sane = false;
                 break;
@@ -341,7 +341,7 @@ trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t co
              itr != lane_string.rend() && itr != lane_string.rbegin() + count_right;
              ++itr)
         {
-            if (*itr != '|' && *itr != '&')
+            if (*itr != '|')
             {
                 sane = false;
                 break;

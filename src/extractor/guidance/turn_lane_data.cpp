@@ -104,9 +104,7 @@ LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_desc
     // transform the map into the lane data vector
     LaneDataVector lane_data;
     for (const auto tag : lane_map)
-    {
         lane_data.push_back({tag.first, tag.second.first, tag.second.second});
-    }
 
     std::sort(lane_data.begin(), lane_data.end());
 

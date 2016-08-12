@@ -128,7 +128,7 @@ Intersection TurnLaneHandler::assignTurnLanes(const NodeID at,
 
     // FIXME the lane to add depends on the side of driving/u-turn rules in the country
     if (!lane_data.empty() && canMatchTrivially(intersection, lane_data) &&
-        !is_missing_valid_u_turn && !hasTag(TurnLaneType::none, lane_data))
+        is_missing_valid_u_turn && !hasTag(TurnLaneType::none, lane_data))
         lane_data.push_back({TurnLaneType::uturn, lane_data.back().to, lane_data.back().to});
 
     bool is_simple = isSimpleIntersection(lane_data, intersection);
@@ -374,7 +374,10 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
         all_simple &= (matched_indices.count(match_index) == 0);
         matched_indices.insert(match_index);
         // in case of u-turns, we might need to activate them first
-        all_simple &= (best_match->entry_allowed || match_index == 0);
+        all_simple &= (best_match->entry_allowed ||
+                       // check for possible u-turn match on non-reversed edge
+                       ((match_index == 0 || match_index + 1 == intersection.size()) &&
+                        !node_based_graph.GetEdgeData(best_match->turn.eid).reversed));
         all_simple &= isValidMatch(data.tag, best_match->turn.instruction);
     }
 
@@ -473,8 +476,6 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
         if (none_index != turn_lane_data.size())
             straightmost_tag_index = none_index;
     }
-
-    // TODO handle reverse
 
     // handle none values
     if (none_index != turn_lane_data.size())

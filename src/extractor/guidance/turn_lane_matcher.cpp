@@ -137,7 +137,7 @@ typename Intersection::const_iterator
 findBestMatchForReverse(const TurnLaneType::Mask &neighbor_tag, const Intersection &intersection)
 {
     const auto neighbor_itr = findBestMatch(neighbor_tag, intersection);
-    if ((neighbor_itr + 1 == intersection.cend()) || (neighbor_itr == intersection.cbegin() + 1))
+    if (neighbor_itr + 1 == intersection.cend())
         return intersection.begin();
 
     const constexpr double idealized_turn_angles[] = {0, 35, 90, 135, 180, 225, 270, 315};
@@ -239,6 +239,8 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             // continue with the first lane
             lane = 1;
         }
+        else
+            return intersection;
     }
 
     for (; road_index < intersection.size() && lane < lane_data.size(); ++road_index)
