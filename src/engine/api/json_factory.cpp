@@ -50,7 +50,7 @@ const constexpr char *turn_type_names[] = {
     "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
     "roundabout turn", "use lane",   "invalid",  "invalid",     "invalid",
     "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
-    "invalid"};
+    "invalid",         "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
@@ -68,6 +68,8 @@ inline bool hasValidLanes(const guidance::Intersection &intersection)
 
 std::string instructionTypeToString(const TurnType::Enum type)
 {
+    static_assert(sizeof(turn_type_names)/sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
+            "Some turn types has not string representation.");
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
@@ -97,11 +99,15 @@ util::json::Array lanesFromIntersection(const guidance::Intersection &intersecti
 
 std::string instructionModifierToString(const DirectionModifier::Enum modifier)
 {
+    static_assert(sizeof(modifier_names)/sizeof(modifier_names[0]) >= DirectionModifier::MaxDirectionModifier,
+            "Some direction modifiers has not string representation.");
     return modifier_names[static_cast<std::size_t>(modifier)];
 }
 
 std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
 {
+    static_assert(sizeof(waypoint_type_names)/sizeof(waypoint_type_names[0]) >= static_cast<size_t>(guidance::WaypointType::MaxWaypointType),
+            "Some waypoint types has not string representation.");
     return waypoint_type_names[static_cast<std::size_t>(waypoint_type)];
 }
 
