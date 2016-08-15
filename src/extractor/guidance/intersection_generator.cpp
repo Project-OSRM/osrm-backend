@@ -165,6 +165,8 @@ Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
     return intersection;
 }
 
+// Checks for mergability of two ways that represent the same intersection. For further information
+// see interface documentation in header.
 bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
                                      const Intersection &intersection,
                                      std::size_t first_index,
@@ -227,6 +229,8 @@ bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
 
         const auto target_id = GetActualTarget(index);
         const auto other_target_id = GetActualTarget(other_index);
+        if (target_id == node_at_intersection || other_target_id == node_at_intersection)
+            return false;
 
         const auto coordinate_at_target = node_info_list[target_id];
         const auto coordinate_at_other_target = node_info_list[other_target_id];
@@ -258,13 +262,14 @@ bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
     if (angle_between < 60)
         return true;
 
-    // return false;
     // Finally, we also allow merging if all streets offer the same name, it is only three roads and
     // the angle is not fully extreme:
     if (intersection.size() != 3)
         return false;
 
-    const std::size_t missing_index = [first_index, second_index]() {
+    // since we have an intersection of size three now, there is only one index we are not looking
+    // at right now. The final index in the intersection is calculated next:
+    const std::size_t third_index = [first_index, second_index]() {
         if (first_index == 0)
             return second_index == 2 ? 1 : 2;
         else if (first_index == 1)
@@ -274,22 +279,23 @@ bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
     }();
 
     // needs to be same road coming in
-    if (node_based_graph.GetEdgeData(intersection[missing_index].turn.eid).name_id !=
+    if (node_based_graph.GetEdgeData(intersection[third_index].turn.eid).name_id !=
         first_data.name_id)
         return false;
 
-    // we only allow collapsing of a Y like fork. So the angle to the missing index has to be
+    // we only allow collapsing of a Y like fork. So the angle to the third index has to be
     // roughly equal:
     const auto y_angle_difference =
-        angularDeviation(angularDeviation(intersection[missing_index].turn.angle,
+        angularDeviation(angularDeviation(intersection[third_index].turn.angle,
                                           intersection[first_index].turn.angle),
-                         angularDeviation(intersection[missing_index].turn.angle,
+                         angularDeviation(intersection[third_index].turn.angle,
                                           intersection[second_index].turn.angle));
 
     // Allow larger angles if its three roads only of the same name
-    const bool could_be_valid_y_intersection =
+    // This is a heuristic and might need to be revised.
+    const bool assume_y_intersection =
         angle_between < 100 && y_angle_difference < FUZZY_ANGLE_DIFFERENCE;
-    return could_be_valid_y_intersection;
+    return assume_y_intersection;
 }
 
 /*
@@ -458,7 +464,8 @@ Intersection IntersectionGenerator::MergeSegregatedRoads(const NodeID intersecti
 
 // OSM can have some very steep angles for joining roads. Considering the following intersection:
 //        x
-//        |__________c
+//        |
+//        v __________c
 //       /
 // a ---d
 //       \ __________b
@@ -467,13 +474,14 @@ Intersection IntersectionGenerator::MergeSegregatedRoads(const NodeID intersecti
 // and d->b as a oneway, the turn von x->d is actually a turn from x->a. So when looking at the
 // intersection coming from x, we want to interpret the situation as
 //           x
-// a __ d __ |__________c
+//           |
+// a __ d __ v__________c
 //      |
 //      |_______________b
 //
 // Where we see the turn to `d` as a right turn, rather than going straight.
 // We do this by adjusting the local turn angle at `x` to turn onto `d` to be reflective of this
-// situation.
+// situation, where `v` would be the node at the intersection.
 Intersection IntersectionGenerator::AdjustForJoiningRoads(const NodeID node_at_intersection,
                                                           Intersection intersection) const
 {
@@ -481,16 +489,24 @@ Intersection IntersectionGenerator::AdjustForJoiningRoads(const NodeID node_at_i
     if (intersection.size() <= 1)
         return intersection;
 
-    // We can't adjust the very first angle, because the u-turn should always be 0
-    for (std::size_t road_index = 1; road_index < intersection.size(); ++road_index)
+    const util::Coordinate coordinate_at_intersection = node_info_list[node_at_intersection];
+    // never adjust u-turns
+    for (std::size_t index = 1; index < intersection.size(); ++index)
     {
-        auto &road = intersection[road_index];
+        auto &road = intersection[index];
         // to find out about the above situation, we need to look at the next intersection (at d in
         // the example). If the initial road can be merged to the left/right, we are about to adjust
         // the angle.
         const auto next_intersection_along_road =
             GetConnectedRoads(node_at_intersection, road.turn.eid);
         if (next_intersection_along_road.size() <= 1)
+            continue;
+
+        const auto node_at_next_intersection = node_based_graph.GetTarget(road.turn.eid);
+        const util::Coordinate coordinate_at_next_intersection =
+            node_info_list[node_at_next_intersection];
+        if (util::coordinate_calculation::haversineDistance(coordinate_at_intersection,
+                                                            coordinate_at_next_intersection) > 30)
             continue;
 
         const auto adjustAngle = [](double angle, double offset) {
@@ -502,7 +518,10 @@ Intersection IntersectionGenerator::AdjustForJoiningRoads(const NodeID node_at_i
             return angle;
         };
 
-        if (CanMerge(node_based_graph.GetTarget(road.turn.eid), next_intersection_along_road, 0, 1))
+        // check if the u-turn edge at the next intersection could be merged to the left/right. If
+        // this is the case and the road is not far away (see previous distance check), if
+        // influences the perceived angle.
+        if (CanMerge(node_at_next_intersection, next_intersection_along_road, 0, 1))
         {
             const auto offset = 0.5 * angularDeviation(next_intersection_along_road[0].turn.angle,
                                                        next_intersection_along_road[1].turn.angle);
@@ -510,7 +529,7 @@ Intersection IntersectionGenerator::AdjustForJoiningRoads(const NodeID node_at_i
             // angle to the left
             road.turn.angle = adjustAngle(road.turn.angle, offset);
         }
-        else if (CanMerge(node_based_graph.GetTarget(road.turn.eid),
+        else if (CanMerge(node_at_next_intersection,
                           next_intersection_along_road,
                           0,
                           next_intersection_along_road.size() - 1))
@@ -536,19 +555,19 @@ IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
 {
     // This function skips over traffic lights/graph compression issues and similar to find the next
     // actual intersection
-    Intersection potential_result = GetConnectedRoads(starting_node, via_edge);
+    Intersection result = GetConnectedRoads(starting_node, via_edge);
 
     // Skip over stuff that has not been compressed due to barriers/parallel edges
     NodeID node_at_intersection = starting_node;
     EdgeID incoming_edge = via_edge;
 
-    while (potential_result.size() == 2 &&
-           node_based_graph.GetEdgeData(via_edge).IsCompatibleToExceptForName(
-               node_based_graph.GetEdgeData(potential_result[1].turn.eid)))
+    while (result.size() == 2 &&
+           node_based_graph.GetEdgeData(via_edge).IsCompatibleTo(
+               node_based_graph.GetEdgeData(result[1].turn.eid)))
     {
         node_at_intersection = node_based_graph.GetTarget(incoming_edge);
-        incoming_edge = potential_result[1].turn.eid;
-        potential_result = GetConnectedRoads(node_at_intersection, incoming_edge);
+        incoming_edge = result[1].turn.eid;
+        result = GetConnectedRoads(node_at_intersection, incoming_edge);
     }
 
     // return output if requested
@@ -557,7 +576,7 @@ IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
     if (resulting_via_edge)
         *resulting_via_edge = incoming_edge;
 
-    return potential_result;
+    return result;
 }
 
 } // namespace guidance

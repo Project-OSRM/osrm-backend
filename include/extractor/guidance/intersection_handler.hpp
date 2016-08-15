@@ -55,10 +55,16 @@ class IntersectionHandler
     // Decide on a basic turn types
     TurnType::Enum findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
 
-    // Find the most obvious turn to follow
+    // Find the most obvious turn to follow. The function returns an index into the intersection
+    // determining whether there is a road that can be seen as obvious turn in the presence of many
+    // other possible turns. The function will consider road categories and other inputs like the
+    // turn angles.
     std::size_t findObviousTurn(const EdgeID via_edge, const Intersection &intersection) const;
 
-    // Get the Instruction for an obvious turn
+    // Obvious turns can still take multiple forms. This function looks at the turn onto a road
+    // candidate when coming from a via_edge and determines the best instruction to emit.
+    // `through_street` indicates if the street turned onto is a through sreet (think mergees and
+    // similar)
     TurnInstruction getInstructionForObvious(const std::size_t number_of_candidates,
                                              const EdgeID via_edge,
                                              const bool through_street,

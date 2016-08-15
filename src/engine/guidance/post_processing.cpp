@@ -485,13 +485,14 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         const bool direct_u_turn = steps[two_back_index].name == current_step.name;
 
         // however, we might also deal with a dual-collapse scenario in which we have to
-        // additionall collapse a name-change as well
+        // additionall collapse a name-change as welll
+        const auto next_step_index = step_index + 1;
         const bool continues_with_name_change =
-            (step_index + 1 < steps.size()) &&
-            (steps[step_index + 1].maneuver.instruction.type == TurnType::UseLane ||
-             isCollapsableInstruction(steps[step_index + 1].maneuver.instruction));
+            (next_step_index < steps.size()) &&
+            (steps[next_step_index].maneuver.instruction.type == TurnType::UseLane ||
+             isCollapsableInstruction(steps[next_step_index].maneuver.instruction));
         const bool u_turn_with_name_change =
-            continues_with_name_change && steps[step_index + 1].name == steps[two_back_index].name;
+            continues_with_name_change && steps[next_step_index].name == steps[two_back_index].name;
 
         if (direct_u_turn || u_turn_with_name_change)
         {
@@ -500,8 +501,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             if (u_turn_with_name_change)
             {
                 steps[one_back_index] =
-                    elongate(std::move(steps[one_back_index]), steps[step_index + 1]);
-                invalidateStep(steps[step_index + 1]); // will be skipped due to the
+                    elongate(std::move(steps[one_back_index]), steps[next_step_index]);
+                invalidateStep(steps[next_step_index]); // will be skipped due to the
                                                        // continue statement at the
                                                        // beginning of this function
             }
@@ -599,22 +600,23 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
     // In this case, exits are numbered from the start of the leg.
     for (std::size_t step_index = 0; step_index < steps.size(); ++step_index)
     {
+        const auto next_step_index = step_index + 1;
         auto &step = steps[step_index];
         const auto instruction = step.maneuver.instruction;
         if (entersRoundabout(instruction))
         {
             has_entered_roundabout = setUpRoundabout(step);
 
-            if (has_entered_roundabout && step_index + 1 < steps.size())
-                steps[step_index + 1].maneuver.exit = step.maneuver.exit;
+            if (has_entered_roundabout && next_step_index < steps.size())
+                steps[next_step_index].maneuver.exit = step.maneuver.exit;
         }
         else if (instruction.type == TurnType::StayOnRoundabout)
         {
             on_roundabout = true;
             // increase the exit number we require passing the exit
             step.maneuver.exit += 1;
-            if (step_index + 1 < steps.size())
-                steps[step_index + 1].maneuver.exit = step.maneuver.exit;
+            if (next_step_index < steps.size())
+                steps[next_step_index].maneuver.exit = step.maneuver.exit;
         }
         else if (leavesRoundabout(instruction))
         {
@@ -626,9 +628,9 @@ std::vector<RouteStep> postProcess(std::vector<RouteStep> steps)
             has_entered_roundabout = false;
             on_roundabout = false;
         }
-        else if (on_roundabout && step_index + 1 < steps.size())
+        else if (on_roundabout && next_step_index < steps.size())
         {
-            steps[step_index + 1].maneuver.exit = step.maneuver.exit;
+            steps[next_step_index].maneuver.exit = step.maneuver.exit;
         }
     }
 
@@ -697,6 +699,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     for (std::size_t step_index = 1; step_index + 1 < steps.size(); ++step_index)
     {
         const auto &current_step = steps[step_index];
+        const auto next_step_index = step_index + 1;
         if (current_step.maneuver.instruction.type == TurnType::NoTurn)
             continue;
         const auto one_back_index = getPreviousIndex(step_index);
@@ -765,7 +768,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
                  current_step.maneuver.instruction.type != TurnType::Suppressed &&
                  steps[getPreviousNameIndex(step_index)].name == current_step.name &&
-                 canCollapseAll(getPreviousNameIndex(step_index) + 1, step_index + 1))
+                 canCollapseAll(getPreviousNameIndex(step_index) + 1, next_step_index))
         {
             BOOST_ASSERT(step_index > 0);
             const std::size_t last_available_name_index = getPreviousNameIndex(step_index);
@@ -817,17 +820,17 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             }
             else if (step_index + 2 < steps.size() &&
                      current_step.maneuver.instruction.type == TurnType::NewName &&
-                     steps[step_index + 1].maneuver.instruction.type == TurnType::NewName &&
-                     one_back_step.name == steps[step_index + 1].name)
+                     steps[next_step_index].maneuver.instruction.type == TurnType::NewName &&
+                     one_back_step.name == steps[next_step_index].name)
             {
                 // if we are crossing an intersection and go immediately after into a name change,
                 // we don't wan't to collapse the initial intersection.
                 // a - b ---BRIDGE -- c
                 steps[one_back_index] =
                     elongate(std::move(steps[one_back_index]),
-                             elongate(std::move(steps[step_index]), steps[step_index + 1]));
+                             elongate(std::move(steps[step_index]), steps[next_step_index]));
                 invalidateStep(steps[step_index]);
-                invalidateStep(steps[step_index + 1]);
+                invalidateStep(steps[next_step_index]);
             }
             else if (choiceless(current_step, one_back_step) ||
                      one_back_step.distance <= MAX_COLLAPSE_DISTANCE)
@@ -1155,6 +1158,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
     std::size_t last_valid_instruction = 0;
     for (std::size_t step_index = 0; step_index < steps.size(); ++step_index)
     {
+        const auto next_step_index = step_index + 1;
         auto &step = steps[step_index];
         const auto instruction = step.maneuver.instruction;
         if (instruction.type == TurnType::Suppressed)
@@ -1176,7 +1180,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
             // previous instruction.
             if (instruction.type == TurnType::EndOfRoad)
             {
-                BOOST_ASSERT(step_index > 0 && step_index + 1 < steps.size());
+                BOOST_ASSERT(step_index > 0 && next_step_index < steps.size());
                 const auto &previous_step = steps[last_valid_instruction];
                 if (previous_step.intersections.size() < MIN_END_OF_ROAD_INTERSECTIONS)
                     step.maneuver.instruction.type = TurnType::Turn;

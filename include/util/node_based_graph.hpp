@@ -51,7 +51,7 @@ struct NodeBasedEdgeData
     LaneDescriptionID lane_description_id;
     extractor::guidance::RoadClassification road_classification;
 
-    bool IsCompatibleToExceptForName(const NodeBasedEdgeData &other) const
+    bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
         return (reversed == other.reversed) &&
                (roundabout == other.roundabout) && (startpoint == other.startpoint) &&
@@ -60,9 +60,9 @@ struct NodeBasedEdgeData
                (road_classification == other.road_classification);
     }
 
-    bool IsCompatibleTo(const NodeBasedEdgeData &other) const
+    bool CanCombineWith(const NodeBasedEdgeData &other) const
     {
-        return (name_id == other.name_id) && IsCompatibleToExceptForName(other);
+        return (name_id == other.name_id) && IsCompatibleTo(other);
     }
 };
 

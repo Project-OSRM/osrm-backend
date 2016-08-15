@@ -124,23 +124,3 @@ Feature: Simple Turns
             | a,f       | depart,continue left,continue right,arrive        | place,place,place,place    |
             | d,f       | depart,turn right,continue right,arrive           | bottom,place,place,place   |
             | d,h       | depart,turn right,continue left,turn right,arrive | bottom,place,place,top,top |
-
-    Scenario: Don't Collapse Places:
-        Given the node map
-            |   |   |   |   |   |   | h |   |   |   |   |   |   |
-            |   |   |   |   |   |   | g |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   | b |   |   |   |   |   |   |   |   |   | e | f |
-
-        And the ways
-            | nodes | name   | oneway |
-            | fe    | place  | yes     |
-            | gh    | top    | yes     |
-            | egb | place  | yes    |
-
-        When I route I should get
-            | waypoints | turns                                             | route                      |
-            | f,h       | depart,turn right,arrive | place,top,top |

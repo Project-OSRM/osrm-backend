@@ -99,8 +99,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
             continue;
         }
 
-        if (fwd_edge_data1.IsCompatibleTo(fwd_edge_data2) &&
-            rev_edge_data1.IsCompatibleTo(rev_edge_data2))
+        if (fwd_edge_data1.CanCombineWith(fwd_edge_data2) &&
+            rev_edge_data1.CanCombineWith(rev_edge_data2))
         {
             BOOST_ASSERT(graph.GetEdgeData(forward_e1).name_id ==
                          graph.GetEdgeData(reverse_e1).name_id);
@@ -108,7 +108,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                          graph.GetEdgeData(reverse_e2).name_id);
 
             // Do not compress edge if it crosses a traffic signal.
-            // This can't be done in IsCompatibleTo, becase we only store the
+            // This can't be done in CanCombineWith, becase we only store the
             // traffic signals in the `traffic_lights` list, which EdgeData
             // doesn't have access to.
             const bool has_node_penalty = traffic_lights.find(node_v) != traffic_lights.end();

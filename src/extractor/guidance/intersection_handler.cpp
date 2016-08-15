@@ -23,7 +23,7 @@ namespace detail
 {
 inline bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
 {
-    return !from.IsCompatibleTo(to);
+    return !from.CanCombineWith(to);
 }
 }
 
@@ -610,12 +610,13 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             {
                 // since we look at the intersection in the wrong direction, a similar angle
                 // actually represents a near 180 degree different in bearings between the two
-                // roads.
+                // roads. So if there is a road that is enterable in the opposite direction just
+                // prior, a turn is not obvious
+                const auto &turn_data = node_based_graph.GetEdgeData(comparison_road.turn.eid);
                 if (angularDeviation(comparison_road.turn.angle, STRAIGHT_ANGLE) > GROUP_ANGLE &&
                     angularDeviation(comparison_road.turn.angle, continue_road.turn.angle) <
                         FUZZY_ANGLE_DIFFERENCE &&
-                    continue_data.IsCompatibleTo(
-                        node_based_graph.GetEdgeData(comparison_road.turn.eid)))
+                    !turn_data.reversed && continue_data.CanCombineWith(turn_data))
                     return 0;
             }
         }
