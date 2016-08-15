@@ -3,6 +3,7 @@
 
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/attributes.hpp"
@@ -28,7 +29,8 @@ class TurnHandler : public IntersectionHandler
     TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                 const std::vector<QueryNode> &node_info_list,
                 const util::NameTable &name_table,
-                const SuffixTable &street_name_suffix_table);
+                const SuffixTable &street_name_suffix_table,
+                const IntersectionGenerator &intersection_generator);
 
     ~TurnHandler() override final = default;
 

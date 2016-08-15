@@ -35,6 +35,17 @@ class IntersectionGenerator
 
     Intersection operator()(const NodeID nid, const EdgeID via_eid) const;
 
+    // Graph Compression cannot compress every setting. For example any barrier/traffic light cannot
+    // be compressed. As a result, a simple road of the form `a ----- b` might end up as having an
+    // intermediate intersection, if there is a traffic light in between. If we want to look farther
+    // down a road, finding the next actual decision requires the look at multiple intersections.
+    // Here we follow the road until we either reach a dead end or find the next intersection with
+    // more than a single next road.
+    Intersection GetActualNextIntersection(const NodeID starting_node,
+                                           const EdgeID via_edge,
+                                           NodeID *resulting_from_node,
+                                           EdgeID *resulting_via_edge) const;
+
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
     const RestrictionMap &restriction_map;
@@ -86,17 +97,6 @@ class IntersectionGenerator
     OSRM_ATTR_WARN_UNUSED
     Intersection AdjustForJoiningRoads(const NodeID node_at_intersection,
                                        Intersection intersection) const;
-
-    // Graph Compression cannot compress every setting. For example any barrier/traffic light cannot
-    // be compressed. As a result, a simple road of the form `a ----- b` might end up as having an
-    // intermediate intersection, if there is a traffic light in between. If we want to look farther
-    // down a road, finding the next actual decision requires the look at multiple intersections.
-    // Here we follow the road until we either reach a dead end or find the next intersection with
-    // more than a single next road.
-    inline Intersection GetActualNextIntersection(const NodeID starting_node,
-                                                  const EdgeID via_edge,
-                                                  NodeID *resulting_from_node,
-                                                  EdgeID *resulting_via_edge) const;
 };
 
 } // namespace guidance

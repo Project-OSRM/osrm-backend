@@ -119,31 +119,28 @@ Feature: Simple Turns
             | bcegb | place  | yes    |
 
         When I route I should get
-            | waypoints | turns                                                     | route                         |
-            | a,d       | depart,continue right,turn right,arrive                   | place,place,bottom,bottom     |
-            | a,f       | depart,continue right,continue left,continue right,arrive | place,place,place,place,place |
-            | d,f       | depart,turn right,continue right,arrive                   | bottom,place,place,place      |
-            | d,h       | depart,turn right,continue left,turn right,arrive         | bottom,place,place,top,top    |
+            | waypoints | turns                                             | route                      |
+            | a,d       | depart,turn right,arrive                          | place,bottom,bottom        |
+            | a,f       | depart,continue left,continue right,arrive        | place,place,place,place    |
+            | d,f       | depart,turn right,continue right,arrive           | bottom,place,place,place   |
+            | d,h       | depart,turn right,continue left,turn right,arrive | bottom,place,place,top,top |
 
     Scenario: Don't Collapse Places:
         Given the node map
+            |   |   |   |   |   |   | h |   |   |   |   |   |   |
             |   |   |   |   |   |   | g |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   | e | f |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | c |   |   |   |   |   |   |
+            |   | b |   |   |   |   |   |   |   |   |   | e | f |
 
         And the ways
             | nodes | name   | oneway |
-            | ef    | place  | no     |
-            |  ceg  | place  | yes    |
+            | fe    | place  | yes     |
+            | gh    | top    | yes     |
+            | egb | place  | yes    |
 
         When I route I should get
-            | waypoints | turns                                                     | route                         |
-            | c,f       | depart,turn right,continue right,arrive                   | bottom,place,place,place      |
+            | waypoints | turns                                             | route                      |
+            | f,h       | depart,turn right,arrive | place,top,top |

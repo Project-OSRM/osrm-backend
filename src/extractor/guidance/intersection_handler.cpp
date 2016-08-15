@@ -7,6 +7,7 @@
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
+#include <cstddef>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
 using osrm::util::guidance::getTurnDirection;
@@ -29,9 +30,11 @@ inline bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
 IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                          const std::vector<QueryNode> &node_info_list,
                                          const util::NameTable &name_table,
-                                         const SuffixTable &street_name_suffix_table)
+                                         const SuffixTable &street_name_suffix_table,
+                                         const IntersectionGenerator &intersection_generator)
     : node_based_graph(node_based_graph), node_info_list(node_info_list), name_table(name_table),
-      street_name_suffix_table(street_name_suffix_table)
+      street_name_suffix_table(street_name_suffix_table),
+      intersection_generator(intersection_generator)
 {
 }
 
@@ -469,10 +472,10 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     }
 
     // has no obvious continued road
+    const auto &best_data = node_based_graph.GetEdgeData(intersection[best].turn.eid);
     if (best_continue == 0 || num_continue_names > 2 ||
-        (node_based_graph.GetEdgeData(intersection[best_continue].turn.eid).road_classification ==
-             node_based_graph.GetEdgeData(intersection[best].turn.eid).road_classification &&
-         std::abs(best_continue_deviation) > 1 && best_deviation / best_continue_deviation < 0.75))
+        (num_continue_names > 2 && best_continue_deviation >= 2 * NARROW_TURN_ANGLE) ||
+        (best_deviation < FUZZY_ANGLE_DIFFERENCE && !best_data.road_classification.IsRampClass()))
     {
         // Find left/right deviation
         const double left_deviation = angularDeviation(
@@ -484,7 +487,6 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             std::min(left_deviation, right_deviation) > FUZZY_ANGLE_DIFFERENCE)
             return best;
 
-        const auto &best_data = node_based_graph.GetEdgeData(intersection[best].turn.eid);
         const auto left_index = (best + 1) % intersection.size();
         const auto right_index = best - 1;
         const auto &left_data = node_based_graph.GetEdgeData(intersection[left_index].turn.eid);
@@ -538,14 +540,87 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             if (i == best_continue || !intersection[i].entry_allowed)
                 continue;
 
-            if (angularDeviation(intersection[i].turn.angle, STRAIGHT_ANGLE) / deviation < 1.1 &&
-                !obvious_by_road_class(
-                    in_data.road_classification,
-                    continue_data.road_classification,
-                    node_based_graph.GetEdgeData(intersection[i].turn.eid).road_classification))
+            const auto &turn_data = node_based_graph.GetEdgeData(intersection[i].turn.eid);
+            const bool is_obvious_by_road_class =
+                obvious_by_road_class(in_data.road_classification,
+                                      continue_data.road_classification,
+                                      turn_data.road_classification);
+
+            // if the main road is obvious by class, we ignore the current road as a potential
+            // prevention of obviousness
+            if (is_obvious_by_road_class)
+                continue;
+
+            // continuation could be grouped with a straight turn and the turning road is a ramp
+            if (turn_data.road_classification.IsRampClass() && deviation < GROUP_ANGLE)
+                continue;
+
+            // perfectly straight turns prevent obviousness
+            const auto turn_deviation =
+                angularDeviation(intersection[i].turn.angle, STRAIGHT_ANGLE);
+            if (turn_deviation < FUZZY_ANGLE_DIFFERENCE)
+                return 0;
+
+            const auto deviation_ratio = turn_deviation / deviation;
+
+            // in comparison to normal devitions, a continue road can offer a smaller distinction
+            // ratio. Other roads close to the turn angle are not as obvious, if one road continues.
+            if (deviation_ratio < DISTINCTION_RATIO / 1.5)
+                return 0;
+
+            // in comparison to another continuing road, we need a better distinction. This prevents
+            // situations where the turn is probably less obvious. An example are places that have a
+            // road with the same name entering/exiting:
+            //
+            //         d
+            //        /
+            //       /
+            // a -- b
+            //       \
+            //        \
+            //         c
+
+            if (turn_data.name_id == continue_data.name_id &&
+                deviation_ratio < 1.5 * DISTINCTION_RATIO)
                 return 0;
         }
-        return best_continue; // no obvious turn
+
+        // Segregated intersections can result in us finding an obvious turn, even though its only
+        // obvious due to a very short segment in between. So if the segment coming in is very
+        // short, we check the previous intersection for other continues in the opposite bearing.
+        const auto node_at_intersection = node_based_graph.GetTarget(via_edge);
+        const util::Coordinate coordinate_at_intersection = node_info_list[node_at_intersection];
+
+        const auto node_at_u_turn = node_based_graph.GetTarget(intersection[0].turn.eid);
+        const util::Coordinate coordinate_at_u_turn = node_info_list[node_at_u_turn];
+
+        const double constexpr MAX_COLLAPSE_DISTANCE = 30;
+        if (util::coordinate_calculation::haversineDistance(
+                coordinate_at_intersection, coordinate_at_u_turn) < MAX_COLLAPSE_DISTANCE)
+        {
+            // this request here actually goes against the direction of the ingoing edgeid. This can
+            // even reverse the direction. Since we don't want to compute actual turns but simply
+            // try to find whether there is a turn going to the opposite direction of our obvious
+            // turn, this should be alright.
+            const auto previous_intersection = intersection_generator.GetActualNextIntersection(
+                node_at_intersection, intersection[0].turn.eid, nullptr, nullptr);
+
+            const auto continue_road = intersection[best_continue];
+            for (const auto &comparison_road : previous_intersection)
+            {
+                // since we look at the intersection in the wrong direction, a similar angle
+                // actually represents a near 180 degree different in bearings between the two
+                // roads.
+                if (angularDeviation(comparison_road.turn.angle, STRAIGHT_ANGLE) > GROUP_ANGLE &&
+                    angularDeviation(comparison_road.turn.angle, continue_road.turn.angle) <
+                        FUZZY_ANGLE_DIFFERENCE &&
+                    continue_data.IsCompatibleTo(
+                        node_based_graph.GetEdgeData(comparison_road.turn.eid)))
+                    return 0;
+            }
+        }
+
+        return best_continue;
     }
 
     return 0;

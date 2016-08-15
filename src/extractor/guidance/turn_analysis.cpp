@@ -1,6 +1,6 @@
-#include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/road_classification.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -49,9 +49,18 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                          compressed_edge_container,
                          name_table,
                          street_name_suffix_table,
-                         profile_properties),
-      motorway_handler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
-      turn_handler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
+                         profile_properties,
+                         intersection_generator),
+      motorway_handler(node_based_graph,
+                       node_info_list,
+                       name_table,
+                       street_name_suffix_table,
+                       intersection_generator),
+      turn_handler(node_based_graph,
+                   node_info_list,
+                   name_table,
+                   street_name_suffix_table,
+                   intersection_generator),
       sliproad_handler(intersection_generator,
                        node_based_graph,
                        node_info_list,

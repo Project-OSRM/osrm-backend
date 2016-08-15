@@ -1,5 +1,5 @@
-#include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -26,8 +26,13 @@ RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_bas
                                      const CompressedEdgeContainer &compressed_edge_container,
                                      const util::NameTable &name_table,
                                      const SuffixTable &street_name_suffix_table,
-                                     const ProfileProperties &profile_properties)
-    : IntersectionHandler(node_based_graph, node_info_list, name_table, street_name_suffix_table),
+                                     const ProfileProperties &profile_properties,
+                                     const IntersectionGenerator &intersection_generator)
+    : IntersectionHandler(node_based_graph,
+                          node_info_list,
+                          name_table,
+                          street_name_suffix_table,
+                          intersection_generator),
       compressed_edge_container(compressed_edge_container), profile_properties(profile_properties)
 {
 }

@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HANDLER_HPP_
 
 #include "extractor/guidance/intersection.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 
@@ -28,7 +29,8 @@ class IntersectionHandler
     IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                         const std::vector<QueryNode> &node_info_list,
                         const util::NameTable &name_table,
-                        const SuffixTable &street_name_suffix_table);
+                        const SuffixTable &street_name_suffix_table,
+                        const IntersectionGenerator &intersection_generator);
 
     virtual ~IntersectionHandler() = default;
 
@@ -45,6 +47,7 @@ class IntersectionHandler
     const std::vector<QueryNode> &node_info_list;
     const util::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
+    const IntersectionGenerator &intersection_generator;
 
     // counts the number on allowed entry roads
     std::size_t countValid(const Intersection &intersection) const;
