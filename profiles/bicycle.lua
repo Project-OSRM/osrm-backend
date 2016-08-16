@@ -99,7 +99,7 @@ properties.continue_straight_at_waypoint = false
 
 local obey_oneway               = true
 local ignore_areas              = true
-local turn_penalty              = 60
+local turn_penalty              = 6
 local turn_bias                 = 1.4
 -- reduce the driving speed by 30% for unsafe roads
 -- local safety_penalty            = 0.7

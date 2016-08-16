@@ -5,7 +5,7 @@ require 'testbot'
 
 properties.left_hand_driving = false
 
-local turn_penalty           = 500
+local turn_penalty           = 50
 local turn_bias              = properties.left_hand_driving and 1/1.2 or 1.2
 
 function turn_function (angle)
