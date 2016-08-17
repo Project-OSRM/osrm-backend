@@ -18,6 +18,7 @@
 
 #include "engine/geospatial_query.hpp"
 #include "util/packed_vector.hpp"
+#include "util/guidance/turn_bearing.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
 #include "util/simple_logger.hpp"
@@ -85,6 +86,8 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<LaneDataID, true>::vector m_lane_data_id;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
     util::ShM<extractor::TravelMode, true>::vector m_travel_mode_list;
+    util::ShM<util::guidance::TurnBearing, true>::vector m_pre_turn_bearing;
+    util::ShM<util::guidance::TurnBearing, true>::vector m_post_turn_bearing;
     util::ShM<char, true>::vector m_names_char_list;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
     util::ShM<unsigned, true>::vector m_geometry_indices;
@@ -104,11 +107,11 @@ class SharedDataFacade final : public BaseDataFacade
     boost::filesystem::path file_index_path;
 
     std::shared_ptr<util::RangeTable<16, true>> m_name_table;
-
     // bearing classes by node based node
     util::ShM<BearingClassID, true>::vector m_bearing_class_id_table;
     // entry class IDs
     util::ShM<EntryClassID, true>::vector m_entry_class_id_list;
+
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
     util::ShM<util::guidance::EntryClass, true>::vector m_entry_class_table;
@@ -182,7 +185,7 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadNodeAndEdgeInformation()
     {
-        auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
+        const auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
             shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
         m_coordinate_list.reset(
             coordinate_list_ptr,
@@ -193,7 +196,7 @@ class SharedDataFacade final : public BaseDataFacade
             BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
         }
 
-        auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
+        const auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
             shared_memory, storage::SharedDataLayout::OSM_NODE_ID_LIST);
         m_osmnodeid_list.reset(
             osmnodeid_list_ptr,
@@ -202,26 +205,27 @@ class SharedDataFacade final : public BaseDataFacade
         m_osmnodeid_list.set_number_of_entries(
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
 
-        auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
+        const auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
         util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
             travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
-        auto lane_data_id_ptr = data_layout->GetBlockPtr<LaneDataID>(
+        const auto lane_data_id_ptr = data_layout->GetBlockPtr<LaneDataID>(
             shared_memory, storage::SharedDataLayout::LANE_DATA_ID);
         util::ShM<LaneDataID, true>::vector lane_data_id(
             lane_data_id_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DATA_ID]);
         m_lane_data_id = std::move(lane_data_id);
 
-        auto lane_tupel_id_pair_ptr = data_layout->GetBlockPtr<util::guidance::LaneTupleIdPair>(
-            shared_memory, storage::SharedDataLayout::TURN_LANE_DATA);
+        const auto lane_tupel_id_pair_ptr =
+            data_layout->GetBlockPtr<util::guidance::LaneTupleIdPair>(
+                shared_memory, storage::SharedDataLayout::TURN_LANE_DATA);
         util::ShM<util::guidance::LaneTupleIdPair, true>::vector lane_tupel_id_pair(
             lane_tupel_id_pair_ptr,
             data_layout->num_entries[storage::SharedDataLayout::TURN_LANE_DATA]);
         m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
 
-        auto turn_instruction_list_ptr =
+        const auto turn_instruction_list_ptr =
             data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
                 shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
         util::ShM<extractor::guidance::TurnInstruction, true>::vector turn_instruction_list(
@@ -229,18 +233,32 @@ class SharedDataFacade final : public BaseDataFacade
             data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list = std::move(turn_instruction_list);
 
-        auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
+        const auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::NAME_ID_LIST);
         util::ShM<unsigned, true>::vector name_id_list(
             name_id_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_ID_LIST]);
         m_name_ID_list = std::move(name_id_list);
 
-        auto entry_class_id_list_ptr = data_layout->GetBlockPtr<EntryClassID>(
+        const auto entry_class_id_list_ptr = data_layout->GetBlockPtr<EntryClassID>(
             shared_memory, storage::SharedDataLayout::ENTRY_CLASSID);
         typename util::ShM<EntryClassID, true>::vector entry_class_id_list(
             entry_class_id_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::ENTRY_CLASSID]);
         m_entry_class_id_list = std::move(entry_class_id_list);
+
+        const auto pre_turn_bearing_ptr = data_layout->GetBlockPtr<util::guidance::TurnBearing>(
+            shared_memory, storage::SharedDataLayout::PRE_TURN_BEARING);
+        typename util::ShM<util::guidance::TurnBearing, true>::vector pre_turn_bearing(
+            pre_turn_bearing_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::PRE_TURN_BEARING]);
+        m_pre_turn_bearing = std::move(pre_turn_bearing);
+
+        const auto post_turn_bearing_ptr = data_layout->GetBlockPtr<util::guidance::TurnBearing>(
+            shared_memory, storage::SharedDataLayout::POST_TURN_BEARING);
+        typename util::ShM<util::guidance::TurnBearing, true>::vector post_turn_bearing(
+            post_turn_bearing_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::POST_TURN_BEARING]);
+        m_post_turn_bearing = std::move(post_turn_bearing);
     }
 
     void LoadViaNodeList()
@@ -929,6 +947,15 @@ class SharedDataFacade final : public BaseDataFacade
     EntryClassID GetEntryClassID(const EdgeID eid) const override final
     {
         return m_entry_class_id_list.at(eid);
+    }
+
+    util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const override final
+    {
+        return m_pre_turn_bearing.at(eid);
+    }
+    util::guidance::TurnBearing PostTurnBearing(const EdgeID eid) const override final
+    {
+        return m_post_turn_bearing.at(eid);
     }
 
     util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final

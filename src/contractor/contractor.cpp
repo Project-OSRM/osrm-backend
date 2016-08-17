@@ -598,10 +598,10 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 const auto current_segment =
                     &(m_geometry_list[forward_begin + leaf_object.fwd_segment_position]);
 
-                u = &(internal_to_external_node_map
-                          [m_geometry_list[forward_begin +
-                                           leaf_object.fwd_segment_position]
-                               .node_id]);
+                u = &(
+                    internal_to_external_node_map[m_geometry_list[forward_begin +
+                                                                  leaf_object.fwd_segment_position]
+                                                      .node_id]);
                 v = &(internal_to_external_node_map
                           [m_geometry_list[forward_begin + leaf_object.fwd_segment_position + 1]
                                .node_id]);
@@ -619,8 +619,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                                                                  current_segment->forward_weight,
                                                                  log_edge_updates_factor);
 
-                    m_geometry_list[forward_begin + 1 + leaf_object.fwd_segment_position].forward_weight =
-                        new_segment_weight;
+                    m_geometry_list[forward_begin + 1 + leaf_object.fwd_segment_position]
+                        .forward_weight = new_segment_weight;
                     m_geometry_datasource[forward_begin + 1 + leaf_object.fwd_segment_position] =
                         forward_speed_iter->speed_source.source;
 
@@ -642,8 +642,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                                                                  segment_speed_filenames,
                                                                  current_segment->reverse_weight,
                                                                  log_edge_updates_factor);
-                    m_geometry_list[forward_begin + leaf_object.fwd_segment_position].reverse_weight =
-                        new_segment_weight;
+                    m_geometry_list[forward_begin + leaf_object.fwd_segment_position]
+                        .reverse_weight = new_segment_weight;
                     m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
                         reverse_speed_iter->speed_source.source;
 

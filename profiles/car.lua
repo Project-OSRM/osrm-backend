@@ -425,7 +425,7 @@ function way_function (way, result)
   end
 
   -- set the road classification based on guidance globals configuration
-  set_classification(highway,result)
+  set_classification(highway,result,way)
 
   -- parse the remaining tags
   local name = way:get_value_by_key("name")

@@ -414,21 +414,21 @@ Feature: Turn Lane Guidance
                """
 
            And the ways
-               | nodes | turn:lanes:forward                              | name |
-               | ab    | through\|right\|right\|right                    | top  |
-               | be    |                                                 | top  |
-               | bq    |                                                 | off  |
-               | ef    | left\|through\|through\|through\|through\|right | main |
-               | fg    | left\|left\|right\|right                        | main |
-               | fs    |                                                 | off  |
-               | ft    |                                                 | off  |
-               | gh    |                                                 | top  |
-               | hi    |                                                 | top  |
-               | cd    | left\|left\|left\|through                       | bot  |
-               | de    |                                                 | bot  |
-               | dr    |                                                 | off  |
-               | gj    |                                                 | bot  |
-               | jk    |                                                 | bot  |
+               | nodes | turn:lanes:forward                              | name | highway | oneway |
+               | ab    | through\|right\|right\|right                    | top  | primary | yes    |
+               | be    |                                                 | top  | primary | yes    |
+               | bq    |                                                 | off  | primary | yes    |
+               | ef    | left\|through\|through\|through\|through\|right | main | primary | yes    |
+               | fg    | left\|left\|right\|right                        | main | primary | yes    |
+               | fs    |                                                 | off  | primary | yes    |
+               | ft    |                                                 | off  | primary | yes    |
+               | gh    |                                                 | top  | primary | yes    |
+               | hi    |                                                 | top  | primary | yes    |
+               | cd    | left\|left\|left\|through                       | bot  | primary | yes    |
+               | de    |                                                 | bot  | primary | yes    |
+               | dr    |                                                 | off  | primary | yes    |
+               | gj    |                                                 | bot  | primary | yes    |
+               | jk    |                                                 | bot  | primary | yes    |
 
           When I route I should get
                | waypoints | route                 | turns                                                  | lanes                                                                                                                                                                           |

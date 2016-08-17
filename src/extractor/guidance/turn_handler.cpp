@@ -136,7 +136,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                OOOOOOO
      */
     const auto fork_range = findFork(via_edge, intersection);
-    if (fork_range.first == 1 && fork_range.second == 2)
+    if (fork_range.first == 1 && fork_range.second == 2 && obvious_index == 0)
         assignFork(via_edge, intersection[2], intersection[1]);
 
     /*  T Intersection
@@ -525,6 +525,7 @@ std::pair<std::size_t, std::size_t> TurnHandler::findFork(const EdgeID via_edge,
             return false;
         }();
 
+        // A fork can only happen between edges of similar types where none of the ones is obvious
         const bool has_compatible_classes = [&]() {
             const bool ramp_class = node_based_graph.GetEdgeData(intersection[right].turn.eid)
                                         .road_classification.IsLinkClass();
@@ -533,6 +534,27 @@ std::pair<std::size_t, std::size_t> TurnHandler::findFork(const EdgeID via_edge,
                     node_based_graph.GetEdgeData(intersection[index].turn.eid)
                         .road_classification.IsLinkClass())
                     return false;
+
+            const auto in_classification =
+                node_based_graph.GetEdgeData(intersection[0].turn.eid).road_classification;
+            for (std::size_t base_index = right; base_index <= left; ++base_index)
+            {
+                const auto base_classification =
+                    node_based_graph.GetEdgeData(intersection[base_index].turn.eid)
+                        .road_classification;
+                for (std::size_t compare_index = right; compare_index <= left; ++compare_index)
+                {
+                    if (base_index == compare_index)
+                        continue;
+
+                    const auto compare_classification =
+                        node_based_graph.GetEdgeData(intersection[compare_index].turn.eid)
+                            .road_classification;
+                    if (obviousByRoadClass(
+                            in_classification, base_classification, compare_classification))
+                        return false;
+                }
+            }
             return true;
         }();
 
@@ -657,20 +679,20 @@ void TurnHandler::handleDistinctConflict(const EdgeID via_edge,
 
     if (getTurnDirection(left.turn.angle) == DirectionModifier::Right)
     {
-        if (angularDeviation(left.turn.angle, 90) > angularDeviation(right.turn.angle, 90))
-        {
-            left.turn.instruction = {left_type, DirectionModifier::SlightRight};
-            right.turn.instruction = {right_type, DirectionModifier::Right};
-        }
-        else
+        if (angularDeviation(left.turn.angle, 85) >= angularDeviation(right.turn.angle, 85))
         {
             left.turn.instruction = {left_type, DirectionModifier::Right};
             right.turn.instruction = {right_type, DirectionModifier::SharpRight};
         }
+        else
+        {
+            left.turn.instruction = {left_type, DirectionModifier::SlightRight};
+            right.turn.instruction = {right_type, DirectionModifier::Right};
+        }
     }
     else
     {
-        if (angularDeviation(left.turn.angle, 270) > angularDeviation(right.turn.angle, 270))
+        if (angularDeviation(left.turn.angle, 265) >= angularDeviation(right.turn.angle, 265))
         {
             left.turn.instruction = {left_type, DirectionModifier::SharpLeft};
             right.turn.instruction = {right_type, DirectionModifier::Left};

@@ -21,6 +21,7 @@ struct TurnOperation final
 {
     EdgeID eid;
     double angle;
+    double bearing;
     TurnInstruction instruction;
     LaneDataID lane_data_id;
 };

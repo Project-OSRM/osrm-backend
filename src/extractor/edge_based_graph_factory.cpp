@@ -1,8 +1,10 @@
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
+#include "util/guidance/turn_bearing.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
 #include "util/simple_logger.hpp"
@@ -377,18 +379,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             auto intersection = turn_analysis.getIntersection(node_u, edge_from_u);
             intersection =
                 turn_analysis.assignTurnTypes(node_u, edge_from_u, std::move(intersection));
-
             intersection =
                 turn_lane_handler.assignTurnLanes(node_u, edge_from_u, std::move(intersection));
+
             const auto possible_turns = turn_analysis.transformIntersectionIntoTurns(intersection);
 
             // the entry class depends on the turn, so we have to classify the interesction for
             // every edge
-            const auto turn_classification = classifyIntersection(node_v,
-                                                                  intersection,
-                                                                  *m_node_based_graph,
-                                                                  m_compressed_edge_container,
-                                                                  m_node_info_list);
+            const auto turn_classification = classifyIntersection(intersection);
 
             const auto entry_class_id = [&](const util::guidance::EntryClass entry_class) {
                 if (0 == entry_class_hash.count(entry_class))
@@ -436,6 +434,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 const int32_t turn_penalty =
                     scripting_environment.GetTurnPenalty(180. - turn.angle);
+
                 const auto turn_instruction = turn.instruction;
 
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
@@ -443,27 +442,43 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.u_turn_penalty;
                 }
 
-                distance += turn_penalty;
+                // don't add turn penalty if it is not an actual turn. This heuristic is necessary
+                // since OSRM cannot handle looping roads/parallel roads
+                if (turn_instruction.type != guidance::TurnType::NoTurn)
+                    distance += turn_penalty;
 
-                const bool is_encoded_forwards = m_compressed_edge_container.HasZippedEntryForForwardID(edge_from_u);
-                const bool is_encoded_backwards = m_compressed_edge_container.HasZippedEntryForReverseID(edge_from_u);
+                const bool is_encoded_forwards =
+                    m_compressed_edge_container.HasZippedEntryForForwardID(edge_from_u);
+                const bool is_encoded_backwards =
+                    m_compressed_edge_container.HasZippedEntryForReverseID(edge_from_u);
                 BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
-                if (is_encoded_forwards) {
+                if (is_encoded_forwards)
+                {
                     original_edge_data_vector.emplace_back(
-                        GeometryID{m_compressed_edge_container.GetZippedPositionForForwardID(edge_from_u), true},
+                        GeometryID{
+                            m_compressed_edge_container.GetZippedPositionForForwardID(edge_from_u),
+                            true},
                         edge_data1.name_id,
                         turn.lane_data_id,
                         turn_instruction,
                         entry_class_id,
-                        edge_data1.travel_mode);
-                } else if (is_encoded_backwards) {
+                        edge_data1.travel_mode,
+                        util::guidance::TurnBearing(intersection[0].turn.bearing),
+                        util::guidance::TurnBearing(turn.bearing));
+                }
+                else if (is_encoded_backwards)
+                {
                     original_edge_data_vector.emplace_back(
-                        GeometryID{m_compressed_edge_container.GetZippedPositionForReverseID(edge_from_u), false},
+                        GeometryID{
+                            m_compressed_edge_container.GetZippedPositionForReverseID(edge_from_u),
+                            false},
                         edge_data1.name_id,
                         turn.lane_data_id,
                         turn_instruction,
                         entry_class_id,
-                        edge_data1.travel_mode);
+                        edge_data1.travel_mode,
+                        util::guidance::TurnBearing(intersection[0].turn.bearing),
+                        util::guidance::TurnBearing(turn.bearing));
                 }
 
                 ++original_edges_counter;

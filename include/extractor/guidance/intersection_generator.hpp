@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_GENERATOR_HPP_
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
@@ -51,7 +52,7 @@ class IntersectionGenerator
     const RestrictionMap &restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
     const std::vector<QueryNode> &node_info_list;
-    const CompressedEdgeContainer &compressed_edge_container;
+    const CoordinateExtractor coordinate_extractor;
 
     // Check for restrictions/barriers and generate a list of valid and invalid turns present at
     // the

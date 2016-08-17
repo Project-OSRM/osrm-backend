@@ -32,7 +32,8 @@ RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_bas
                           name_table,
                           street_name_suffix_table,
                           intersection_generator),
-      compressed_edge_container(compressed_edge_container), profile_properties(profile_properties)
+      compressed_edge_container(compressed_edge_container), profile_properties(profile_properties),
+      coordinate_extractor(node_based_graph, compressed_edge_container, node_info_list)
 {
 }
 
@@ -180,13 +181,14 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
 
                 // there is a single non-roundabout edge
                 const auto src_coordinate = getCoordinate(node);
-                const auto next_coordinate =
-                    getRepresentativeCoordinate(node,
-                                                node_based_graph.GetTarget(edge),
-                                                edge,
-                                                edge_data.reversed,
-                                                compressed_edge_container,
-                                                node_info_list);
+
+                const auto next_coordinate = coordinate_extractor.GetCoordinateAlongRoad(
+                    node,
+                    edge,
+                    edge_data.reversed,
+                    node_based_graph.GetTarget(edge),
+                    getLaneCountAtIntersection(node, node_based_graph));
+
                 result.push_back(
                     util::coordinate_calculation::bearing(src_coordinate, next_coordinate));
                 break;

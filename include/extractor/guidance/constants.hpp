@@ -34,7 +34,7 @@ const int constexpr MAX_SLIPROAD_THRESHOLD = 250;
 // Road priorities give an idea of how obvious a turn is. If two priorities differ greatly (e.g.
 // service road over a primary road, the better priority can be seen as obvious due to its road
 // category).
-const double constexpr PRIORITY_DISTINCTION_FACTOR = 2.0;
+const double constexpr PRIORITY_DISTINCTION_FACTOR = 1.75;
 
 } // namespace guidance
 } // namespace extractor

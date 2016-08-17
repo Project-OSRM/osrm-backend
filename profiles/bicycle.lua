@@ -395,7 +395,7 @@ function way_function (way, result)
   end
 
   -- set the road classification based on guidance globals configuration
-  set_classification(highway,result)
+  set_classification(highway,result,way)
 
   -- maxspeed
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )

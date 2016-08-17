@@ -11,6 +11,9 @@
       - Properly handle destinations on `oneway=-1` roads
     - Guidance
       - Notifications are now exposed more prominently, announcing turns onto a ferry/pushing your bike more prominently
+      - Improved turn angle calculation, detecting offsets due to lanes / minor variations due to inaccuracies
+      - Corrected the bearings returned for intermediate steps - requires reprocessing
+      - Improved turn locations for collapsed turns
     - Trip Plugin
       - changed internal behaviour to prefer the smallest lexicographic result over the largest one
     - Bugfixes

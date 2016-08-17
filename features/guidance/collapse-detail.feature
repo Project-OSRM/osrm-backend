@@ -19,8 +19,8 @@ Feature: Collapse
             | nodes | highway      | name | oneway |
             | abc   | primary      | road | yes    |
             | defg  | primary      | road | yes    |
-            | fb    | primary_link |      |        |
-            | be    | primary_link |      |        |
+            | fb    | primary_link |      | yes    |
+            | be    | primary_link |      | yes    |
 
        When I route I should get
             | waypoints | route          | turns                        |

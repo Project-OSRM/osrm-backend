@@ -372,8 +372,10 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         int forward_offset = 0, forward_weight = 0;
         int reverse_offset = 0, reverse_weight = 0;
 
-        const std::vector<EdgeWeight> forward_weight_vector = datafacade.GetUncompressedForwardWeights(data.packed_geometry_id);
-        const std::vector<EdgeWeight> reverse_weight_vector = datafacade.GetUncompressedReverseWeights(data.packed_geometry_id);
+        const std::vector<EdgeWeight> forward_weight_vector =
+            datafacade.GetUncompressedForwardWeights(data.packed_geometry_id);
+        const std::vector<EdgeWeight> reverse_weight_vector =
+            datafacade.GetUncompressedReverseWeights(data.packed_geometry_id);
 
         for (std::size_t i = 0; i < data.fwd_segment_position; i++)
         {
@@ -383,8 +385,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         BOOST_ASSERT(data.fwd_segment_position < reverse_weight_vector.size());
 
-        for (std::size_t i = 0;
-             i < reverse_weight_vector.size() - data.fwd_segment_position - 1;
+        for (std::size_t i = 0; i < reverse_weight_vector.size() - data.fwd_segment_position - 1;
              i++)
         {
             reverse_offset += reverse_weight_vector[i];
@@ -469,16 +470,18 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         bool forward_edge_valid = false;
         bool reverse_edge_valid = false;
 
-        const std::vector<EdgeWeight> forward_weight_vector = datafacade.GetUncompressedForwardWeights(segment.data.packed_geometry_id);
+        const std::vector<EdgeWeight> forward_weight_vector =
+            datafacade.GetUncompressedForwardWeights(segment.data.packed_geometry_id);
 
         if (forward_weight_vector[segment.data.fwd_segment_position] != INVALID_EDGE_WEIGHT)
         {
             forward_edge_valid = segment.data.forward_segment_id.enabled;
         }
 
-        const std::vector<EdgeWeight> reverse_weight_vector = datafacade.GetUncompressedReverseWeights(segment.data.packed_geometry_id);
-        if (reverse_weight_vector[reverse_weight_vector.size() -
-                                  segment.data.fwd_segment_position - 1] != INVALID_EDGE_WEIGHT)
+        const std::vector<EdgeWeight> reverse_weight_vector =
+            datafacade.GetUncompressedReverseWeights(segment.data.packed_geometry_id);
+        if (reverse_weight_vector[reverse_weight_vector.size() - segment.data.fwd_segment_position -
+                                  1] != INVALID_EDGE_WEIGHT)
         {
             reverse_edge_valid = segment.data.reverse_segment_id.enabled;
         }

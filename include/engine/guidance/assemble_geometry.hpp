@@ -47,8 +47,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     // TODO: check if this was traversed in reverse?
     const std::vector<NodeID> source_geometry =
         facade.GetUncompressedForwardGeometry(source_node.packed_geometry_id);
-    geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(
-        source_geometry[source_node.fwd_segment_position]));
+    geometry.osm_node_ids.push_back(
+        facade.GetOSMNodeIDOfNode(source_geometry[source_node.fwd_segment_position]));
 
     auto cumulative_distance = 0.;
     auto current_distance = 0.;

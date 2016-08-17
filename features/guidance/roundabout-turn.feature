@@ -435,9 +435,9 @@ Feature: Basic Roundabout
 
        When I route I should get
            | waypoints | route    | turns                                         | bearing                |
-           | a,d       | ab,cd,cd | depart,roundabout turn left exit-3,arrive     | 0->180,180->224,90->0  |
-           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive | 0->180,180->224,180->0 |
-           | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    | 0->180,180->224,270->0 |
+           | a,d       | ab,cd,cd | depart,roundabout turn left exit-3,arrive     | 0->180,180->225,90->0  |
+           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive | 0->180,180->225,180->0 |
+           | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    | 0->180,180->225,270->0 |
 
     Scenario: Enter and Exit - Bearings
         Given the node map

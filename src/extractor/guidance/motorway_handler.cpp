@@ -494,12 +494,6 @@ Intersection MotorwayHandler::fallback(Intersection intersection) const
 {
     for (auto &road : intersection)
     {
-        const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
-
-        util::SimpleLogger().Write(logDEBUG)
-            << "road: " << toString(road) << " Name: " << out_data.name_id
-            << " Road Class: " << out_data.road_classification.ToString();
-
         if (!road.entry_allowed)
             continue;
 

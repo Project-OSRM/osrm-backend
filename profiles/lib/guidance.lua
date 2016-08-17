@@ -42,7 +42,7 @@ road_types = { ["motorway"] = true,
 
 link_types = { ["motorway_link"] = true, ["trunk_link"] = true, ["primary_link"] = true, ["secondary_link"] = true, ["tertiary_link"] = true }
 
-function Guidance.set_classification (highway, result)
+function Guidance.set_classification (highway, result, input_way)
     if motorway_types[highway] then
         result.road_classification.motorway_class = true;
     end
@@ -59,6 +59,33 @@ function Guidance.set_classification (highway, result)
     else
         result.road_classification.may_be_ignored = true;
     end
+
+    local lane_count = input_way:get_value_by_key("lanes")
+    if lane_count and lane_count ~= "" then
+        local lc = tonumber(lane_count)
+        if lane_count ~= nil then
+            result.road_classification.num_lanes = lc
+        end
+    else
+        local total_count = 0
+        local forward_count = input_way:get_value_by_key("lanes:forward")
+        if forward_count and forward_count ~= "" then
+            local fc = tonumber(forward_count)
+            if fc ~= nil then
+                total_count = fc
+            end
+        end
+        local backward_count = input_way:get_value_by_key("lanes:backward")
+        if backward_count and backward_count ~= "" then
+            local bc = tonumber(backward_count)
+            if bc ~= nil then
+                total_count = total_count + bc
+            end
+        end
+        if total_count ~= 0 then
+            result.road_classification.num_lanes = total_count
+        end
+    end
 end
 
 -- returns forward,backward psv lane count
@@ -69,19 +96,19 @@ local function get_psv_counts(way)
 
     local fw = 0;
     local bw = 0;
-    if( psv and psv ~= "" ) then
+    if  psv and psv ~= ""  then
         fw = tonumber(psv)
         if( fw == nil ) then
             fw = 0
         end
-    end 
-    if( psv_forward and psv_forward ~= "" ) then
+    end
+    if psv_forward and psv_forward ~= "" then
         fw = tonumber(psv_forward)
         if( fw == nil ) then
             fw = 0
         end
-    end 
-    if( psv_backward and psv_backward ~= "" ) then
+    end
+    if psv_backward and psv_backward ~= "" then
         bw = tonumber(psv_backward);
         if( bw == nil ) then
             bw = 0

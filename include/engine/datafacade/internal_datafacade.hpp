@@ -18,6 +18,7 @@
 #include "storage/io.hpp"
 #include "engine/geospatial_query.hpp"
 #include "util/graph_loader.hpp"
+#include "util/guidance/turn_bearing.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/io.hpp"
 #include "util/packed_vector.hpp"
@@ -104,6 +105,9 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<BearingClassID, false>::vector m_bearing_class_id_table;
     // entry class IDs by edge based egde
     util::ShM<EntryClassID, false>::vector m_entry_class_id_list;
+    // bearings pre/post turn
+    util::ShM<util::guidance::TurnBearing, false>::vector m_pre_turn_bearing;
+    util::ShM<util::guidance::TurnBearing, false>::vector m_post_turn_bearing;
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. For every turn, there is an associated entry class.
     util::ShM<util::guidance::EntryClass, false>::vector m_entry_class_table;
@@ -205,6 +209,8 @@ class InternalDataFacade final : public BaseDataFacade
         m_lane_data_id.resize(number_of_edges);
         m_travel_mode_list.resize(number_of_edges);
         m_entry_class_id_list.resize(number_of_edges);
+        m_pre_turn_bearing.resize(number_of_edges);
+        m_post_turn_bearing.resize(number_of_edges);
 
         extractor::OriginalEdgeData current_edge_data;
         for (unsigned i = 0; i < number_of_edges; ++i)
@@ -217,6 +223,8 @@ class InternalDataFacade final : public BaseDataFacade
             m_lane_data_id[i] = current_edge_data.lane_data_id;
             m_travel_mode_list[i] = current_edge_data.travel_mode;
             m_entry_class_id_list[i] = current_edge_data.entry_classid;
+            m_pre_turn_bearing[i] = current_edge_data.pre_turn_bearing;
+            m_post_turn_bearing[i] = current_edge_data.post_turn_bearing;
         }
     }
 
@@ -919,6 +927,15 @@ class InternalDataFacade final : public BaseDataFacade
     EntryClassID GetEntryClassID(const EdgeID eid) const override final
     {
         return m_entry_class_id_list.at(eid);
+    }
+
+    util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const override final
+    {
+        return m_pre_turn_bearing.at(eid);
+    }
+    util::guidance::TurnBearing PostTurnBearing(const EdgeID eid) const override final
+    {
+        return m_post_turn_bearing.at(eid);
     }
 
     util::guidance::EntryClass GetEntryClass(const EntryClassID entry_class_id) const override final

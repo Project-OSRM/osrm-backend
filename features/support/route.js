@@ -121,8 +121,7 @@ module.exports = function () {
         return this.requestPath('match', params, callback);
     };
 
-    this.extractInstructionList = (instructions, keyFinder, postfix) => {
-        postfix = postfix || null;
+    this.extractInstructionList = (instructions, keyFinder) => {
         if (instructions) {
             return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
                 .map(keyFinder)
@@ -152,8 +151,16 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.destinations || '');
     };
 
+    this.reverseBearing = (bearing) => {
+        if (bearing >= 180)
+            return bearing - 180.;
+        return bearing + 180;
+    };
+
     this.bearingList = (instructions) => {
-        return this.extractInstructionList(instructions, s => s.maneuver.bearing_before + '->' + s.maneuver.bearing_after);
+        return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
+                                                              + '->' +
+                                                              ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
     };
 
     this.annotationList = (instructions) => {

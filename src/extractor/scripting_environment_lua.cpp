@@ -169,7 +169,10 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
                        &guidance::RoadClassification::SetLowPriorityFlag)
              .property("road_priority_class",
                        &guidance::RoadClassification::GetClass,
-                       &guidance::RoadClassification::SetClass),
+                       &guidance::RoadClassification::SetClass)
+             .property("num_lanes",
+                       &guidance::RoadClassification::GetNumberOfLanes,
+                       &guidance::RoadClassification::SetNumberOfLanes),
 
          luabind::class_<ExtractionWay>("ResultWay")
              // .def(luabind::constructor<>())

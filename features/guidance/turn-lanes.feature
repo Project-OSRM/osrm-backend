@@ -901,10 +901,10 @@ Feature: Turn Lane Guidance
         Given the node map
             """
                 f   e
-
-
-                    c
-            a   b
+                |   |
+                |   |
+                |   c
+            a - b ' |
                 g   d
             """
 
@@ -1091,3 +1091,26 @@ Feature: Turn Lane Guidance
             | waypoints | route    | turns                    | lanes                             |
             | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, |
             | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
+
+    Scenario: Reverse Not Allowed
+        Given the node map
+            """
+                        n o
+            f - - e\- - g-j-m
+                    d   | |
+            a - 1 b/- - c-i-l
+                        h k
+            """
+
+        And the ways
+            | nodes | name | highway        | oneway | turn:lanes:forward   |
+            | abc   | road | secondary      | yes    | left\|through\|right |
+            | cil   | road | secondary      | yes    |                      |
+            | mjgef | road | secondary      | yes    |                      |
+            | bde   | road | secondary_link | yes    |                      |
+            | ngch  | turn | secondary      | yes    |                      |
+            | kijo  | turn | secondary      | yes    |                      |
+
+        When I route I should get
+            | waypoints | bearings     | route | turns |
+            | 1,a       | 90,2 180,180 |       |       |

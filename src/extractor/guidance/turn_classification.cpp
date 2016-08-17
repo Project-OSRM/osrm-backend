@@ -27,49 +27,30 @@ struct TurnPossibility
 };
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
-classifyIntersection(NodeID nid,
-                     const Intersection &intersection,
-                     const util::NodeBasedDynamicGraph &node_based_graph,
-                     const extractor::CompressedEdgeContainer &compressed_geometries,
-                     const std::vector<extractor::QueryNode> &query_nodes)
+classifyIntersection(Intersection intersection)
 {
     if (intersection.empty())
         return {};
 
-    std::vector<TurnPossibility> turns;
-
-    const auto node_coordinate = util::Coordinate(query_nodes[nid].lon, query_nodes[nid].lat);
-
-    // generate a list of all turn angles between a base edge, the node and a current edge
-    for (const auto &road : intersection)
-    {
-        const auto eid = road.turn.eid;
-        const auto edge_coordinate = getRepresentativeCoordinate(
-            nid, node_based_graph.GetTarget(eid), eid, false, compressed_geometries, query_nodes);
-
-        const double bearing =
-            util::coordinate_calculation::bearing(node_coordinate, edge_coordinate);
-        turns.push_back({road.entry_allowed, bearing});
-    }
-
-    std::sort(
-        turns.begin(), turns.end(), [](const TurnPossibility left, const TurnPossibility right) {
-            return left.bearing < right.bearing;
-        });
+    std::sort(intersection.begin(),
+              intersection.end(),
+              [](const ConnectedRoad &left, const ConnectedRoad &right) {
+                  return left.turn.bearing < right.turn.bearing;
+              });
 
     util::guidance::EntryClass entry_class;
     util::guidance::BearingClass bearing_class;
 
     const bool canBeDiscretized = [&]() {
-        if (turns.size() <= 1)
+        if (intersection.size() <= 1)
             return true;
 
-        DiscreteBearing last_discrete_bearing =
-            util::guidance::BearingClass::getDiscreteBearing(std::round(turns.back().bearing));
-        for (const auto turn : turns)
+        DiscreteBearing last_discrete_bearing = util::guidance::BearingClass::getDiscreteBearing(
+            std::round(intersection.back().turn.bearing));
+        for (const auto road : intersection)
         {
             const DiscreteBearing discrete_bearing =
-                util::guidance::BearingClass::getDiscreteBearing(std::round(turn.bearing));
+                util::guidance::BearingClass::getDiscreteBearing(std::round(road.turn.bearing));
             if (discrete_bearing == last_discrete_bearing)
                 return false;
             last_discrete_bearing = discrete_bearing;
@@ -81,18 +62,18 @@ classifyIntersection(NodeID nid,
     std::size_t number = 0;
     if (canBeDiscretized)
     {
-        if (util::guidance::BearingClass::getDiscreteBearing(turns.back().bearing) <
-            util::guidance::BearingClass::getDiscreteBearing(turns.front().bearing))
+        if (util::guidance::BearingClass::getDiscreteBearing(intersection.back().turn.bearing) <
+            util::guidance::BearingClass::getDiscreteBearing(intersection.front().turn.bearing))
         {
-            turns.insert(turns.begin(), turns.back());
-            turns.pop_back();
+            intersection.insert(intersection.begin(), intersection.back());
+            intersection.pop_back();
         }
-        for (const auto turn : turns)
+        for (const auto &road : intersection)
         {
-            if (turn.entry_allowed)
+            if (road.entry_allowed)
                 entry_class.activate(number);
             auto discrete_bearing_class =
-                util::guidance::BearingClass::getDiscreteBearing(std::round(turn.bearing));
+                util::guidance::BearingClass::getDiscreteBearing(std::round(road.turn.bearing));
             bearing_class.add(std::round(discrete_bearing_class *
                                          util::guidance::BearingClass::discrete_step_size));
             ++number;
@@ -100,11 +81,11 @@ classifyIntersection(NodeID nid,
     }
     else
     {
-        for (const auto turn : turns)
+        for (const auto &road : intersection)
         {
-            if (turn.entry_allowed)
+            if (road.entry_allowed)
                 entry_class.activate(number);
-            bearing_class.add(std::round(turn.bearing));
+            bearing_class.add(std::round(road.turn.bearing));
             ++number;
         }
     }

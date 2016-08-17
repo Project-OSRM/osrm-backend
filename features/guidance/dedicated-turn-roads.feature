@@ -43,6 +43,10 @@ Feature: Slipways and Dedicated Turn Lanes
 
 
 
+
+
+
+
                     f
 
 
@@ -56,6 +60,31 @@ Feature: Slipways and Dedicated Turn Lanes
             | efg   | primary       | second |
 
        When I route I should get
+            | waypoints | route                | turns                                             |
+            | a,g       | first,,second,second | depart,off ramp slight right,turn straight,arrive |
+
+    Scenario: Turn Instead of Ramp
+        Given the node map
+            """
+                    e
+            a b     c d
+                  h
+
+
+
+                    f
+
+
+                    g
+            """
+
+        And the ways
+            | nodes | highway       | name   |
+            | abcd  | motorway      | first  |
+            | bhf   | motorway_link |        |
+            | efg   | primary       | second |
+
+        When I route I should get
             | waypoints | route                | turns                                             |
             | a,g       | first,,second,second | depart,off ramp slight right,turn straight,arrive |
 
@@ -208,11 +237,11 @@ Feature: Slipways and Dedicated Turn Lanes
             | jcghf  | primary        | Brauerstrasse | yes    |
 
         When I route I should get
-            | waypoints | route                                    | turns                           |
-            | a,i       | Ebertstrasse,Ebertstrasse                | depart,arrive                   |
-            | a,l       | Ebertstrasse,Ebertstrasse                | depart,arrive                   |
-            | a,f       | Ebertstrasse,Brauerstrasse,Brauerstrasse | depart,turn right,arrive        |
-            | a,1       | Ebertstrasse,,                           | depart,turn slight right,arrive |
+            | waypoints | route                                    | turns                    |
+            | a,i       | Ebertstrasse,Ebertstrasse                | depart,arrive            |
+            | a,l       | Ebertstrasse,Ebertstrasse                | depart,arrive            |
+            | a,f       | Ebertstrasse,Brauerstrasse,Brauerstrasse | depart,turn right,arrive |
+            | a,1       | Ebertstrasse,,                           | depart,turn right,arrive |
 
     #2839
     Scenario: Self-Loop

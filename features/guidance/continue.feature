@@ -134,4 +134,5 @@ Feature: Continue Instructions
           | a,c       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive |
           | a,f       | abcdefb,abcdefb,abcdefb | depart,continue left,arrive  |
           | a,d       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive |
-          | a,e       | abcdefb,abcdefb,abcdefb | depart,continue left,arrive  |
+          # continuing right here, since the turn to the left is more expensive
+          | a,e       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive |

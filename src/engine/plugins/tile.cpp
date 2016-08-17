@@ -467,7 +467,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         for (const auto &source_ebn : edge_based_node_info)
         {
             // Grab a copy of the geometry leading up to the intersection.
-            first_geometry = facade->GetUncompressedForwardGeometry(source_ebn.second.packed_geometry_id);
+            first_geometry =
+                facade->GetUncompressedForwardGeometry(source_ebn.second.packed_geometry_id);
 
             // We earlier saved the source and target intersection nodes for every road section.
             // We can use the target node to find all road sections that lead away from
@@ -534,7 +535,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                         edge_based_node_info.at(target_ebn).packed_geometry_id);
 
                     // Now, calculate the sum of the weight of all the segments.
-                    forward_weight_vector = facade->GetUncompressedForwardWeights(source_ebn.second.packed_geometry_id);
+                    forward_weight_vector =
+                        facade->GetUncompressedForwardWeights(source_ebn.second.packed_geometry_id);
                     const auto sum_node_weight = std::accumulate(
                         forward_weight_vector.begin(), forward_weight_vector.end(), EdgeWeight{0});
 

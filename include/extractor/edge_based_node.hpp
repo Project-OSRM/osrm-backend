@@ -22,8 +22,7 @@ struct EdgeBasedNode
     EdgeBasedNode()
         : forward_segment_id{SPECIAL_SEGMENTID, false},
           reverse_segment_id{SPECIAL_SEGMENTID, false}, u(SPECIAL_NODEID), v(SPECIAL_NODEID),
-          name_id(0), packed_geometry_id(SPECIAL_GEOMETRYID),
-          component{INVALID_COMPONENTID, false},
+          name_id(0), packed_geometry_id(SPECIAL_GEOMETRYID), component{INVALID_COMPONENTID, false},
           fwd_segment_position(std::numeric_limits<unsigned short>::max()),
           forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)

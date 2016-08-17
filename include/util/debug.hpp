@@ -10,12 +10,15 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <vector>
 
 namespace osrm
 {
 namespace util
 {
+
 namespace guidance
 {
 inline void print(const engine::guidance::RouteStep &step)
@@ -30,7 +33,9 @@ inline void print(const engine::guidance::RouteStep &step)
     for (const auto &intersection : step.intersections)
     {
         std::cout << "(Lanes: " << static_cast<int>(intersection.lanes.lanes_in_turn) << " "
-                  << static_cast<int>(intersection.lanes.first_lane_from_the_right) << " bearings:";
+                  << static_cast<int>(intersection.lanes.first_lane_from_the_right) << " ["
+                  << intersection.in << "," << intersection.out << "]"
+                  << " bearings:";
         for (auto bearing : intersection.bearings)
             std::cout << " " << bearing;
         std::cout << ", entry: ";

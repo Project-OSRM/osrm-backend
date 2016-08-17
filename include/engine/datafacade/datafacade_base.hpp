@@ -13,6 +13,8 @@
 #include "util/exception.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/guidance/turn_bearing.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/integer_range.hpp"
 #include "util/string_util.hpp"
 #include "util/typedefs.hpp"
@@ -172,6 +174,9 @@ class BaseDataFacade
     virtual bool GetContinueStraightDefault() const = 0;
 
     virtual BearingClassID GetBearingClassID(const NodeID id) const = 0;
+
+    virtual util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const = 0;
+    virtual util::guidance::TurnBearing PostTurnBearing(const EdgeID eid) const = 0;
 
     virtual util::guidance::BearingClass
     GetBearingClass(const BearingClassID bearing_class_id) const = 0;

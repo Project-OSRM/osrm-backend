@@ -112,7 +112,6 @@ struct GeometryID
     std::uint32_t forward : 1;
 };
 
-
 static_assert(sizeof(SegmentID) == 4, "SegmentID needs to be 4 bytes big");
 
 #endif /* TYPEDEFS_H */

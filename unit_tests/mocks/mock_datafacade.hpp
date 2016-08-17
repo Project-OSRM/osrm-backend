@@ -9,6 +9,7 @@
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/guidance/turn_bearing.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -193,7 +194,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
                                                       const int /*bearing_range*/) const override
     {
         return {};
-    };
+    }
 
     unsigned GetCheckSum() const override { return 0; }
     bool IsCoreNode(const NodeID /* id */) const override { return false; }
@@ -205,8 +206,17 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     std::size_t GetCoreSize() const override { return 0; }
     std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }
-    BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; };
+    BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; }
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
+
+    util::guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override final
+    {
+        return util::guidance::TurnBearing{0.0};
+    }
+    util::guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override final
+    {
+        return util::guidance::TurnBearing{0.0};
+    }
 
     bool hasLaneData(const EdgeID /*id*/) const override final { return true; };
     util::guidance::LaneTupleIdPair GetLaneData(const EdgeID /*id*/) const override final

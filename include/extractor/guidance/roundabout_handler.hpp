@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
@@ -87,6 +88,8 @@ class RoundaboutHandler : public IntersectionHandler
 
     const CompressedEdgeContainer &compressed_edge_container;
     const ProfileProperties &profile_properties;
+
+    const CoordinateExtractor coordinate_extractor;
 };
 
 } // namespace guidance

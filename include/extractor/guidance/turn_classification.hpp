@@ -25,11 +25,7 @@ namespace guidance
 {
 
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
-classifyIntersection(NodeID nid,
-                     const Intersection &intersection,
-                     const util::NodeBasedDynamicGraph &node_based_graph,
-                     const extractor::CompressedEdgeContainer &compressed_geometries,
-                     const std::vector<extractor::QueryNode> &query_nodes);
+classifyIntersection(Intersection intersection);
 
 } // namespace guidance
 } // namespace extractor

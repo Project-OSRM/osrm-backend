@@ -32,6 +32,12 @@ inline double angularDeviation(const double angle, const double from)
     return std::min(360 - deviation, deviation);
 }
 
+inline bool hasRampType(const extractor::guidance::TurnInstruction instruction)
+{
+    return instruction.type == extractor::guidance::TurnType::OffRamp ||
+           instruction.type == extractor::guidance::TurnType::OnRamp;
+}
+
 inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const double angle)
 {
     // An angle of zero is a u-turn

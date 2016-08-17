@@ -30,6 +30,13 @@ double haversineDistance(const Coordinate first_coordinate, const Coordinate sec
 
 double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
+// Find the closest distance and location between coordinate and the line connecting source and
+// target:
+//             coordinate
+//                 |
+//                 |
+// source -------- x -------- target.
+// returns x as well as the distance between source and x as ratio ([0,1])
 inline std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoordinate &source,
                                                                 const FloatCoordinate &target,
                                                                 const FloatCoordinate &coordinate)
@@ -98,6 +105,16 @@ double circleRadius(const Coordinate first_coordinate,
 // factor in [0,1]. Returns point along the straight line between from and to. 0 returns from, 1
 // returns to
 Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to);
+
+// compute the signed area of a triangle
+double signedArea(const Coordinate first_coordinate,
+                  const Coordinate second_coordinate,
+                  const Coordinate third_coordinate);
+
+// check if a set of three coordinates is given in CCW order
+bool isCCW(const Coordinate first_coordinate,
+           const Coordinate second_coordinate,
+           const Coordinate third_coordinate);
 
 } // ns coordinate_calculation
 } // ns util

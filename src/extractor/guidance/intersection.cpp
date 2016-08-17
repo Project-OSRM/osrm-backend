@@ -21,6 +21,8 @@ std::string toString(const ConnectedRoad &road)
     result += std::to_string(road.entry_allowed);
     result += " angle: ";
     result += std::to_string(road.turn.angle);
+    result += " bearing: ";
+    result += std::to_string(road.turn.bearing);
     result += " instruction: ";
     result += std::to_string(static_cast<std::int32_t>(road.turn.instruction.type)) + " " +
               std::to_string(static_cast<std::int32_t>(road.turn.instruction.direction_modifier)) +
