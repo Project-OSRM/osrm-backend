@@ -132,10 +132,6 @@ module.exports = function () {
         return this.nameWayHash[s.toString()] || this.nameWayHash[s.toString().split('').reverse().join('')];
     };
 
-    this.resetData = () => {
-        this.resetOSM();
-    };
-
     this.makeOSMId = () => {
         this.osmID = this.osmID + 1;
         return this.osmID;
@@ -202,7 +198,7 @@ module.exports = function () {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
                 process.chdir('../');
-                return callback(this.ExtractError(err.code, util.format('osrm-extract exited with code %d', err.code)));
+                return callback(new Error(err.code, util.format('osrm-extract exited with code %d', err.code)));
             }
 
             var q = d3.queue();
@@ -210,7 +206,7 @@ module.exports = function () {
             var rename = (file, cb) => {
                 this.log(util.format('Renaming %s.%s to %s.%s', this.osmData.osmFile, file, this.osmData.extractedFile, file), 'preprocess');
                 fs.rename([this.osmData.osmFile, file].join('.'), [this.osmData.extractedFile, file].join('.'), (err) => {
-                    if (err) return cb(this.FileError(null, 'failed to rename data file after extracting'));
+                    if (err) return cb(new Error('Failed to rename data file after extracting'));
                     cb();
                 });
             };
@@ -250,13 +246,13 @@ module.exports = function () {
             if (err) {
                 this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
                 process.chdir('../');
-                return callback(this.ContractError(err.code, util.format('osrm-contract exited with code %d', err.code)));
+                return callback(new Error('osrm-contract exited with code ' + err.code)));
             }
 
             var rename = (file, cb) => {
                 this.log(util.format('Renaming %s.%s to %s.%s', this.osmData.extractedFile, file, this.osmData.contractedFile, file), 'preprocess');
                 fs.rename([this.osmData.extractedFile, file].join('.'), [this.osmData.contractedFile, file].join('.'), (err) => {
-                    if (err) return cb(this.FileError(null, 'failed to rename data file after contracting.'));
+                    if (err) return cb(new Error('failed to rename data file after contracting.'));
                     cb();
                 });
             };
@@ -275,7 +271,7 @@ module.exports = function () {
                             .on('finish', cb)
                         )
                     .on('error', () => {
-                        return cb(this.FileError(null, 'failed to copy data after contracting.'));
+                        return cb(new Error('failed to copy data after contracting.'));
                     });
             };
 

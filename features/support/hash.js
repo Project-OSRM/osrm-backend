@@ -31,10 +31,6 @@ module.exports = function () {
         });
     };
 
-    this.hashProfile = (cb) => {
-        this.hashOfFiles(path.resolve(this.PROFILES_PATH, this.profile + '.lua'), cb);
-    };
-
     this.hashString = (str) => {
         return crypto.createHash('md5').update(str).digest('hex');
     };
