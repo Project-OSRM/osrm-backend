@@ -12,7 +12,7 @@ var OSRMBaseLoader = class {
     }
 
     launch (callback) {
-        var limit = Timeout(this.scope.TIMEOUT, { err: this.scope.RoutedError('Launching osrm-routed timed out.') });
+        var limit = Timeout(this.scope.TIMEOUT, { err: new Error('*** Launching osrm-routed timed out.') });
 
         var runLaunch = (cb) => {
             this.osrmUp(() => { this.waitForConnection(cb); });
@@ -22,7 +22,7 @@ var OSRMBaseLoader = class {
     }
 
     shutdown (callback) {
-        var limit = Timeout(this.scope.TIMEOUT, { err: this.scope.RoutedError('Shutting down osrm-routed timed out.')});
+        var limit = Timeout(this.scope.TIMEOUT, { err: new Error('*** Shutting down osrm-routed timed out.')});
 
         var runShutdown = (cb) => {
             this.osrmDown(cb);
@@ -112,7 +112,7 @@ var OSRMDatastoreLoader = class extends OSRMBaseLoader {
 
     loadData (callback) {
         this.scope.runBin('osrm-datastore', this.inputFile, (err) => {
-            if (err) return callback(this.scope.LaunchError(this.exitCode, 'datastore', err));
+            if (err) return callback(new Error('*** osrm-datastore exited with ' + this.exitCode + ': ' + err));
             callback();
         });
     }

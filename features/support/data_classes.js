@@ -11,7 +11,7 @@ module.exports = {
         }
     },
 
-    osmData: class {
+    OSMData: class {
         constructor (scope) {
             this.scope          = scope;
             this.str            = null;
