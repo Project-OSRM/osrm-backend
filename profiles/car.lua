@@ -150,7 +150,7 @@ local turn_bias                  = properties.left_hand_driving and 1/1.2 or 1.2
 local obey_oneway                = true
 local ignore_areas               = true
 local ignore_hov_ways            = true
-local ignore_toll_ways           = true
+local ignore_toll_ways           = false
 
 local abs = math.abs
 local min = math.min
