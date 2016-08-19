@@ -54,6 +54,7 @@ option(ENABLE_ASSERTIONS OFF)
 option(COVERAGE OFF)
 option(SANITIZER OFF)
 option(ENABLE_LTO "Use LTO if available" ON)
+option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -115,6 +116,19 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 
   endif()
 endif()
+
+if(ENABLE_GOLD_LINKER)
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
+    if("${LD_VERSION}" MATCHES "GNU gold")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+        message(STATUS "Using GNU gold as linker.")
+    else()
+        message(WARNING "GNU gold linker isn't available.")
+        set(ENABLE_GOLD_LINKER OFF)
+    endif()
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
   # Check if LTO is available
@@ -317,12 +331,6 @@ endif()
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${OSRM_INCLUDE_PATHS})
 
-# Binaries
-target_link_libraries(osrm-datastore osrm_store ${Boost_LIBRARIES})
-target_link_libraries(osrm-extract osrm_extract ${Boost_LIBRARIES})
-target_link_libraries(osrm-contract ${Boost_LIBRARIES} ${TBB_LIBRARIES} osrm_contract)
-target_link_libraries(osrm-routed osrm ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
-
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
     ${Boost_LIBRARIES}
@@ -368,6 +376,12 @@ target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
+
+# Binaries
+target_link_libraries(osrm-datastore osrm_store ${STORAGE_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(osrm-extract osrm_extract ${EXTRACT_LIBRARIES} ${Boost_LIBRARIES} )
+target_link_libraries(osrm-contract osrm_contract ${TBB_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(osrm-routed osrm ${ENGINE_LIBRARIES} ${Boost_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 if(BUILD_COMPONENTS)
   find_package(GDAL)
