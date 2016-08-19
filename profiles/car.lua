@@ -144,7 +144,7 @@ properties.left_hand_driving               = false
 
 local side_road_speed_multiplier = 0.8
 
-local turn_penalty               = 10
+local turn_penalty               = 1
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
 local turn_bias                  = properties.left_hand_driving and 1/1.2 or 1.2
@@ -526,7 +526,8 @@ end
 
 function turn_function (angle)
   ---- compute turn penalty as angle^2, with a left/right bias
-  k = turn_penalty/(90.0*90.0)
+  -- multiplying by 10 converts to deci-seconds see issue #1318
+  k = 10*turn_penalty/(90.0*90.0)
   if angle>=0 then
     return angle*angle*k/turn_bias
   else
