@@ -94,13 +94,13 @@ module.exports = function () {
         q.awaitAll(callback);
     };
 
-    this.ensureDecimal = (i) => {
+    function ensureDecimal(i) {
         if (parseInt(i) === i) return i.toFixed(1);
         else return i;
     };
 
     this.tableCoordToLonLat = (ci, ri) => {
-        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(this.ensureDecimal);
+        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(ensureDecimal);
     };
 
     this.addOSMNode = (name, lon, lat, id) => {
@@ -162,7 +162,7 @@ module.exports = function () {
     };
 
     this.extractData = (callback) => {
-        this.runBin(this.OSRM_EXTRACT_PATH, [this.extractArgs || '', '--profile', this.profileFile], (err) => {
+        this.runBin(this.OSRM_EXTRACT_PATH, util.format("%s --profile %s", this.extractArgs, this.profileFile), (err) => {
             if (err) {
                 return callback(new Error(err.code, util.format('osrm-extract exited with code %d', err.code)));
             }
@@ -171,7 +171,7 @@ module.exports = function () {
     };
 
     this.contractData = (callback) => {
-        this.runBin(this.OSRM_CONTRACT_PATH, [this.contractArgs || '', this.processedCacheFile], (err) => {
+        this.runBin(this.OSRM_CONTRACT_PATH, util.format("%s %s", this.contractArgs, this.processedCacheFile), (err) => {
             if (err) {
                 return callback(new Error(err.code, util.format('osrm-contract exited with code %d', err.code)));
             }
