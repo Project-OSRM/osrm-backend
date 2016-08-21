@@ -60,7 +60,7 @@ module.exports = function () {
 
         if(!fs.existsSync(this.TEST_PATH))
         {
-            throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_PATH);
+            throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_PATH));
             callback();
             return;
         }

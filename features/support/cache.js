@@ -3,11 +3,11 @@
 var d3 = require('d3-queue');
 var fs = require('fs');
 
-modules.exports = function() {
+module.exports = function() {
   this.initializeCache = (callback) => {
     this.getOSRMHash((osrmHash) => {
       this.osrmHash = osrmHash;
-    }.bind(this));
+    });
   };
 
   this.setupFeatureCache = (featureID) => {
@@ -21,7 +21,7 @@ modules.exports = function() {
     }
   };
 
-  this.setupScenarioCache = (scenarioID) {
+  this.setupScenarioCache = (scenarioID) => {
     this.scenarioCacheFile = this.getScenarioCacheFile(this.featureCacheDirectory, scenarioID);
     this.processedCacheFile = this.getProcessedCacheFile(this.featureProcessedCacheDirectory, scenarioID);
   }
@@ -48,11 +48,11 @@ modules.exports = function() {
 
     d3.queue()
       .defer(addLuaFiles, this.PROFILES_PATH)
-      .defer(addLuaFiles, this.PROFILES_PATH + '/lib)
+      .defer(addLuaFiles, this.PROFILES_PATH + '/lib')
       .awaitAll(this.hashOfFiles.bind(this, dependencies, callback));
   };
 
-  this.getFeatureID = (feature, callback) {
+  this.getFeatureID = (feature, callback) => {
     let uri = feature.getUri();
 
     // setup cache for feature data
