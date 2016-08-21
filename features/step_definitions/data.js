@@ -228,58 +228,41 @@ module.exports = function () {
     });
 
     this.Given(/^the raster source$/, (data, callback) => {
-        this.updateFingerprintExtract(data);
-        fs.writeFile(path.resolve(this.TEST_FOLDER, 'rastersource.asc'), data, callback);
+        fs.writeFile(path.resolve(this.TEST_PATH, 'rastersource.asc'), data, callback);
     });
 
     this.Given(/^the speed file$/, (data, callback) => {
-        this.updateFingerprintContract(data);
-        fs.writeFile(path.resolve(this.TEST_FOLDER, 'speeds.csv'), data, callback);
+        fs.writeFile(path.resolve(this.TEST_PATH, 'speeds.csv'), data, callback);
     });
 
     this.Given(/^the turn penalty file$/, (data, callback) => {
-        this.updateFingerprintContract(data);
-        fs.writeFile(path.resolve(this.TEST_FOLDER, 'penalties.csv'), data, callback);
+        fs.writeFile(path.resolve(this.TEST_PATH, 'penalties.csv'), data, callback);
     });
 
     this.Given(/^the data has been saved to disk$/, (callback) => {
-        try {
-            this.reprocess(callback);
-        } catch(e) {
-            this.processError = e;
-            callback(e);
-        }
+        this.reprocess(callback);
     });
 
     this.Given(/^the data has been extracted$/, (callback) => {
-        this.osmData.populate(() => {
-            this.writeAndExtract((err) => {
-                if (err) this.processError = err;
-                callback();
-            });
-        });
+        this.reprocess(callback);
     });
 
     this.Given(/^the data has been contracted$/, (callback) => {
-        this.reprocess((err) => {
-            if (err) this.processError = err;
-            callback();
-        });
+        this.reprocess(callback);
     });
 
     this.Given(/^osrm\-routed is stopped$/, (callback) => {
-        this.OSRMLoader.shutdown((err) => {
-            if (err) this.processError = err;
-            callback();
-        });
+        this.OSRMLoader.shutdown(callback);
     });
 
-    this.Given(/^data is loaded directly/, () => {
+    this.Given(/^data is loaded directly/, (callback) => {
         this.loadMethod = 'directly';
+        callback();
     });
 
-    this.Given(/^data is loaded with datastore$/, () => {
+    this.Given(/^data is loaded with datastore$/, (callback) => {
         this.loadMethod = 'datastore';
+        callback();
     });
 
     this.Given(/^the HTTP method "([^"]*)"$/, (method, callback) => {

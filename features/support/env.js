@@ -10,15 +10,15 @@ module.exports = function () {
         this.TIMEOUT = process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT) || 5000;
         // set cucumber default timeout
         this.setDefaultTimeout(this.TIMEOUT);
-        this.ROOT_FOLDER = process.cwd();
+        this.ROOT_PATH = process.cwd();
 
-        this.TEST_FOLDER = path.resolve(this.ROOT_FOLDER, 'test');
-        this.DATA_FOLDER = path.resolve(this.TEST_FOLDER, 'cache');
-        this.TMP_FOLDER = path.resolve(this.TEST_FOLDER, 'tmp');
+        this.TEST_PATH = path.resolve(this.ROOT_PATH, 'test');
+        this.CACHE_PATH = path.resolve(this.TEST_PATH, 'cache');
+        this.LOGS_PATH = path.resolve(this.TEST_PATH, 'logs');
 
-        this.PROFILES_PATH = path.resolve(this.ROOT_FOLDER, 'profiles');
-        this.FIXTURES_PATH = path.resolve(this.ROOT_FOLDER, 'unit_tests/fixtures');
-        this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_FOLDER, 'build');
+        this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
+        this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
+        this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_PATH, 'build');
 
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
@@ -33,11 +33,6 @@ module.exports = function () {
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;
-
-        this.ERROR_LOG_FILE = path.resolve(this.TEST_FOLDER, 'error.log');
-        this.OSRM_ROUTED_LOG_FILE = path.resolve(this.TEST_FOLDER, 'osrm-routed.log');
-        this.PREPROCESS_LOG_FILE = path.resolve(this.TEST_FOLDER, 'preprocessing.log');
-        this.LOG_FILE = path.resolve(this.TEST_FOLDER, 'fail.log');
 
         // TODO make sure this works on win
         if (process.platform.match(/indows.*/)) {
@@ -63,9 +58,9 @@ module.exports = function () {
         console.info(util.format('Node Version', process.version));
         if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** PLease upgrade to Node 4.+ to run OSRM cucumber tests');
 
-        if(!fs.existsSync(this.TEST_FOLDER))
+        if(!fs.existsSync(this.TEST_PATH))
         {
-            throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_FOLDER);
+            throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_PATH);
             callback();
             return;
         }
@@ -78,11 +73,10 @@ module.exports = function () {
     };
 
     this.verifyOSRMIsNotRunning = (callback) => {
-        if (this.OSRMLoader.up()) {
-            callback(new Error('*** osrm-routed is already running.'));
-            return;
-        }
-        callback();
+        this.osrmLoader.waitForConnection((err) => {
+            if (!err) return callback(new Error('*** osrm-routed is already running.'));
+            else callback();
+        });
     };
 
     this.verifyExistenceOfBinaries = (callback) => {
@@ -108,7 +102,7 @@ module.exports = function () {
     };
 
     process.on('exit', () => {
-        if (this.OSRMLoader.loader) this.OSRMLoader.shutdown(() => {});
+        this.osrmLoader.shutdown(() => {});
     });
 
     process.on('SIGINT', () => {
