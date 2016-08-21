@@ -33,6 +33,8 @@ module.exports = function () {
         this.setGridSize(this.DEFAULT_GRID_SIZE);
         this.setOrigin(this.DEFAULT_ORIGIN);
         this.queryParams = {};
+        this.extractArgs = '';
+        this.contractArgs = '';
         this.resetOSM();
 
         this.scenarioID = this.getScenarioID(scenario);
@@ -40,12 +42,5 @@ module.exports = function () {
         this.setupScenarioLogFile(this.featureID, this.scenarioID);
 
         callback();
-    });
-
-    this.After((scenario, callback) => {
-        let queue = d3.queue();
-        queue.defer(this.setExtractArgs.bind(this), '');
-        queue.defer(this.setContractArgs.bind(this), '');
-        queue.awaitAll(callback);
     });
 };

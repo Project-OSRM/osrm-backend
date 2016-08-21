@@ -6,15 +6,19 @@ var OSM = require('../support/build_osm');
 
 module.exports = function () {
     this.Given(/^the profile "([^"]*)"$/, (profile, callback) => {
-        this.setProfile(profile, callback);
+        this.profile = profile;
+        this.profileFile = path.join([this.PROFILES_PATH, this.profile + '.lua']);
+        callback();
     });
 
     this.Given(/^the extract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setExtractArgs(args, callback);
+        this.extractArgs = args;
+        callback();
     });
 
     this.Given(/^the contract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setContractArgs(args, callback);
+        this.contractArgs = args;
+        callback();
     });
 
     this.Given(/^a grid size of ([0-9.]+) meters$/, (meters, callback) => {
