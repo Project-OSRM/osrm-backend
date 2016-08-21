@@ -1,11 +1,14 @@
+'use strict';
+
 var fs = require('fs');
 var path = require('path');
 var util = require('util');
 var exec = require('child_process').exec;
 var d3 = require('d3-queue');
 
-var OSM = require('./build_osm');
+var OSM = require('../lib/osm');
 var classes = require('./data_classes');
+var table_diff = require('../lib/table_diff');
 
 module.exports = function () {
     this.setGridSize = (meters) => {
@@ -214,7 +217,9 @@ module.exports = function () {
 
         q.awaitAll((err, actual) => {
             if (err) return callback(err);
-            this.diffTables(table, actual, {}, callback);
+            let diff = diffTables(table, actual);
+            if (diff) callback(new Error(diff));
+            else callback();
         });
     };
 };
