@@ -1,26 +1,31 @@
+'use strict';
+
 var util = require('util');
-var async = require('async');
+var d3 = require('d3-queue');
 var OSM = require('./build_osm');
-var classes = require('./data_classes');
+var OSRMLoader = require('./osrm_loader');
 
 module.exports = function () {
     this.BeforeFeatures((features, callback) => {
-        this.OSRMLoader = this._OSRMLoader();
+        this.osrmLoader = new OSRMLoader();
         this.OSMDB = new OSM.DB();
-        this.osmData = new classes.OSMData(this);
-        this.pid = null;
 
-        async.series([
-          this.initializeEnv.bind(this),
-          this.clearLogFiles.bind(this),
-          this.verifyOSRMIsNotRunning.bind(this),
-          this.verifyExistenceOfBinaries.bind(this),
-          this.initializeCache.bind(this)
-        ], callback);
+        let queue = d3.queue(1);
+        queue.defer(this.initializeEnv.bind(this));
+        queue.defer(this.clearLogFiles.bind(this));
+        queue.defer(this.verifyOSRMIsNotRunning.bind(this));
+        queue.defer(this.verifyExistenceOfBinaries.bind(this));
+        queue.defer(this.initializeCache.bind(this));
+        queue.awaitAll(callback);
     });
 
     this.BeforeFeature((feature, callback) => {
         this.profile = this.DEFAULT_PROFILE;
+        this.profileFile = path.join([this.PROFILES_PATH, this.profile + '.lua']);
+        this.getFeatureID(feature, (featureID) => {
+          this.featureID = featureID;
+          this.setupFeatureCache(this.featureID);
+        });
     });
 
     this.Before((scenario, callback) => {
@@ -30,18 +35,17 @@ module.exports = function () {
         this.queryParams = {};
         this.resetOSM();
 
-        let scenarioPrefix = this.getScenarioPrefix(scenario);
-        let scenarioCacheFile = this.getScenarioCacheFile();
+        this.scenarioID = this.getScenarioID(scenario);
+        this.setupScenarioCache(this.scenarioID);
+        this.setupScenarioLogFile(this.featureID, this.scenarioID);
 
         callback();
     });
 
     this.After((scenario, callback) => {
-        this.setExtractArgs('', () => {
-            this.setContractArgs('', () => {
-                if (this.loadMethod === 'directly' && !!this.OSRMLoader.loader) this.OSRMLoader.shutdown(callback);
-                else callback();
-            });
-        });
+        let queue = d3.queue();
+        queue.defer(this.setExtractArgs.bind(this), '');
+        queue.defer(this.setContractArgs.bind(this), '');
+        queue.awaitAll(callback);
     });
 };

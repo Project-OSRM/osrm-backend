@@ -1,40 +1,33 @@
 var fs = require('fs');
+var path = require('path');
 var util = require('util');
-var exec = require('child_process').exec;
+var child_process = require('child_process');
 
 module.exports = function () {
-    this.runBin = (bin, options, callback) => {
+    // replaces placeholders for in user supplied commands
+    this.expandOptions = (options) {
         var opts = options.slice();
 
-        if (opts.match('{osm_base}')) {
-            if (!this.osmData.osmFile) throw new Error('*** {osm_base} is missing');
-            opts = opts.replace('{osm_base}', this.osmData.osmFile);
+        if (opts.match('{osm_file}')) {
+            opts = opts.replace('{osm_file}', this.scenarioCacheFile);
         }
 
-        if (opts.match('{extracted_base}')) {
-            if (!this.osmData.extractedFile) throw new Error('*** {extracted_base} is missing');
-            opts = opts.replace('{extracted_base}', this.osmData.extractedFile);
+        if (opts.match('{processed_file}')) {
+            opts = opts.replace('{processed_file}', this.processedCacheFile);
         }
 
-        if (opts.match('{contracted_base}')) {
-            if (!this.osmData.contractedFile) throw new Error('*** {contracted_base} is missing');
-            opts = opts.replace('{contracted_base}', this.osmData.contractedFile);
+        if (opts.match('{profile_file}')) {
+            opts = opts.replace('{profile_file}', this.profileFile);
         }
 
-        if (opts.match('{profile}')) {
-            opts = opts.replace('{profile}', [this.PROFILES_PATH, this.profile + '.lua'].join('/'));
-        }
+        return opts;
+    };
 
-        var cmd = util.format('%s%s/%s%s%s %s 2>%s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ, opts, this.ERROR_LOG_FILE);
-        process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err, stdout, stderr) => {
-            this.stdout = stdout.toString();
-            fs.readFile(this.ERROR_LOG_FILE, (e, data) => {
-                this.stderr = data ? data.toString() : '';
-                this.exitCode = err && err.code || 0;
-                process.chdir('../');
-                callback(err, stdout, stderr);
-            });
-        });
+    this.runBin = (bin, options, callback) => {
+        let cmd = util.format('%s%s/%s%s%s %s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ, options);
+        let child = child_process.exec(cmd, callback);
+        child.stdout.on('data', this.log.bind(this));
+        child.stderr.on('data', this.log.bind(this));
+        return child;
     };
 };

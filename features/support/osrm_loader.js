@@ -1,14 +1,14 @@
 'use strict';
 
 var fs = require('fs');
-var spawn = require('child_process').spawn;
 var util = require('util');
 var net = require('net');
 var Timeout = require('node-timeout');
 
-var OSRMBaseLoader = class {
+class OSRMBaseLoader{
     constructor (scope) {
         this.scope = scope;
+        this.child = null;
     }
 
     launch (callback) {
@@ -32,15 +32,14 @@ var OSRMBaseLoader = class {
     }
 
     osrmIsRunning () {
-        return !!this.scope.pid && this.child && !this.child.killed;
+        return this.child && !this.child.killed;
     }
 
     osrmDown (callback) {
-        if (this.scope.pid) {
-            process.kill(this.scope.pid, this.scope.TERMSIGNAL);
+        if (this.osrmIsRunning()) {
+            process.kill(this.child.pid, this.scope.TERMSIGNAL);
             this.waitForShutdown(callback);
-            this.scope.pid = null;
-        } else callback(true);
+        } else callback();
     }
 
     waitForConnection (callback) {
@@ -69,7 +68,7 @@ var OSRMBaseLoader = class {
     }
 };
 
-var OSRMDirectLoader = class extends OSRMBaseLoader {
+class OSRMDirectLoader extends OSRMBaseLoader {
     constructor (scope) {
         super(scope);
     }
@@ -82,83 +81,72 @@ var OSRMDirectLoader = class extends OSRMBaseLoader {
     }
 
     osrmUp (callback) {
-        if (this.scope.pid) return callback();
-        var writeToLog = (data) => {
-            fs.appendFile(this.scope.OSRM_ROUTED_LOG_FILE, data, (err) => { if (err) throw err; });
-        };
+        if (this.osrmIsRunning()) return callback();
 
-        var child = spawn(util.format('%s/osrm-routed', this.scope.BIN_PATH), [this.inputFile, util.format('-p%d', this.scope.OSRM_PORT)]);
-        this.scope.pid = child.pid;
-        child.stdout.on('data', writeToLog);
-        child.stderr.on('data', writeToLog);
-
+        this.child = this.scope.runBin('osrm-routed', util.format("%s -p %d", this.inputFile, this.scope.OSRM_PORT));
         callback();
     }
 };
 
-var OSRMDatastoreLoader = class extends OSRMBaseLoader {
+class OSRMDatastoreLoader extends OSRMBaseLoader {
     constructor (scope) {
         super(scope);
     }
 
     load (inputFile, callback) {
         this.inputFile = inputFile;
+
         this.loadData((err) => {
             if (err) return callback(err);
-            if (!this.scope.pid) return this.launch(callback);
+            if (this.osrmIsRunning()) return this.launch(callback);
             else callback();
         });
     }
 
     loadData (callback) {
         this.scope.runBin('osrm-datastore', this.inputFile, (err) => {
-            if (err) return callback(new Error('*** osrm-datastore exited with ' + this.exitCode + ': ' + err));
+            if (err) return callback(new Error('*** osrm-datastore exited with ' + err.code + ': ' + err));
             callback();
         });
     }
 
     osrmUp (callback) {
-        if (this.scope.pid) return callback();
-        var writeToLog = (data) => {
-            fs.appendFile(this.scope.OSRM_ROUTED_LOG_FILE, data, (err) => { if (err) throw err; });
-        };
+        if (this.osrmIsRunning()) return callback();
 
-        var child = spawn(util.format('%s/osrm-routed', this.scope.BIN_PATH), ['--shared-memory=1', util.format('-p%d', this.scope.OSRM_PORT)]);
-        this.child = child;
-        this.scope.pid = child.pid;
-        child.stdout.on('data', writeToLog);
-        child.stderr.on('data', writeToLog);
+        this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT));
 
         callback();
     }
 };
 
-module.exports = {
-    _OSRMLoader: class {
-        constructor (scope) {
-            this.scope = scope;
-            this.loader = null;
-        }
+class OSRMLoader {
+    constructor (scope) {
+        this.scope = scope;
+        this.loader = null;
+    }
 
-        load (inputFile, callback) {
-            var method = this.scope.loadMethod;
-            if (method === 'datastore') {
-                this.loader = new OSRMDatastoreLoader(this.scope);
-                this.loader.load(inputFile, callback);
-            } else if (method === 'directly') {
-                this.loader = new OSRMDirectLoader(this.scope);
-                this.loader.load(inputFile, callback);
-            } else {
-                callback(new Error('*** Unknown load method ' + method));
-            }
-        }
-
-        shutdown (callback) {
-            this.loader.shutdown(callback);
-        }
-
-        up () {
-            return this.loader ? this.loader.osrmIsRunning() : false;
+    load (inputFile, callback) {
+        let method = this.scope.loadMethod;
+        if (method === 'datastore') {
+            this.loader = new OSRMDatastoreLoader(this.scope);
+            this.loader.load(inputFile, callback);
+        } else if (method === 'directly') {
+            this.loader = new OSRMDirectLoader(this.scope);
+            this.loader.load(inputFile, callback);
+        } else {
+            callback(new Error('*** Unknown load method ' + method));
         }
     }
+
+    shutdown (callback) {
+        if (!this.loader) return callback();
+
+        this.loader.shutdown(callback);
+    }
+
+    up () {
+        return this.loader ? this.loader.osrmIsRunning() : false;
+    }
 };
+
+module.exports = OSRMLoader;
