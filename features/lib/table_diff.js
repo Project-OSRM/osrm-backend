@@ -9,14 +9,13 @@ var unescapeStr = (str) => str.replace(/\\\|/g, '\|').replace(/\\\\/g, '\\');
 
 module.exports = function (expected, actual) {
     let headers = expected.raw()[0];
-    let expected = expected.hashes();
-    let actual = actual;
+    let expected_keys = expected.hashes();
     let diff = [];
     let hasErrors = false;
 
     var good = 0, bad = 0;
 
-    let expected.forEach((row, i) => {
+    expected_keys.forEach((row, i) => {
         var rowError = false;
 
         for (var j in row) {

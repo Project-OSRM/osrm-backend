@@ -2,8 +2,8 @@
 
 var fs = require('fs');
 var util = require('util');
-var net = require('net');
 var Timeout = require('node-timeout');
+var tryConnect = require('../lib/try_connect');
 
 class OSRMBaseLoader{
     constructor (scope) {
@@ -44,20 +44,22 @@ class OSRMBaseLoader{
 
     waitForConnection (callback) {
         var retryCount = 0;
-        var connectWithRetry = () => {
-            net.connect({ port: this.scope.OSRM_PORT, host: '127.0.0.1' })
-               .on('connect', () => { callback(); })
-               .on('error', () => {
-                   if (retryCount < 2) {
-                       retryCount++;
-                       setTimeout(connectWithRetry, 100);
-                   } else {
-                       callback(new Error('Could not connect to osrm-routed after three retires'));
-                   }
-               });
+        let retry = (err) => {
+          if (err) {
+            if (retryCount < 10) {
+              retryCount++;
+              setTimeout(() => { tryConnect(this.scope.OSRM_PORT, retry); }, 10);
+            } else {
+              callback(new Error("Could not connect to osrm-routed after ten retries."));
+            }
+          }
+          else
+          {
+            callback();
+          }
         };
 
-        connectWithRetry();
+        tryConnect(this.scope.OSRM_PORT, retry);
     }
 
     waitForShutdown (callback) {
@@ -98,8 +100,8 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
 
         this.loadData((err) => {
             if (err) return callback(err);
-            if (this.osrmIsRunning()) return this.launch(callback);
-            else callback();
+            if (this.osrmIsRunning()) return callback();
+            else this.launch(callback);
         });
     }
 
@@ -122,20 +124,31 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
 class OSRMLoader {
     constructor (scope) {
         this.scope = scope;
-        this.loader = null;
+        this.sharedLoader = new OSRMDatastoreLoader(this.scope);
+        this.directLoader = new OSRMDirectLoader(this.scope);
+        this.method = scope.DEFAULT_LOAD_METHOD;
     }
 
     load (inputFile, callback) {
-        let method = this.scope.loadMethod;
-        if (method === 'datastore') {
-            this.loader = new OSRMDatastoreLoader(this.scope);
-            this.loader.load(inputFile, callback);
-        } else if (method === 'directly') {
-            this.loader = new OSRMDirectLoader(this.scope);
-            this.loader.load(inputFile, callback);
+        if (this.method === 'datastore') {
+            this.directLoader.shutdown((err) => {
+              if (err) return callback(err);
+              this.loader = this.sharedLoader;
+              this.sharedLoader.load(inputFile, callback);
+            });
+        } else if (this.method === 'directly') {
+            this.sharedLoader.shutdown((err) => {
+              if (err) return callback(err);
+              this.loader = this.directLoader;
+              this.directLoader.load(inputFile, callback);
+            });
         } else {
             callback(new Error('*** Unknown load method ' + method));
         }
+    }
+
+    setLoadMethod (method) {
+        this.method = method;
     }
 
     shutdown (callback) {

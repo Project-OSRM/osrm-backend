@@ -2,12 +2,12 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 var d3 = require('d3-queue');
-var OSM = require('../support/build_osm');
+var OSM = require('../lib/osm');
 
 module.exports = function () {
     this.Given(/^the profile "([^"]*)"$/, (profile, callback) => {
         this.profile = profile;
-        this.profileFile = path.join([this.PROFILES_PATH, this.profile + '.lua']);
+        this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
         callback();
     });
 
@@ -260,12 +260,12 @@ module.exports = function () {
     });
 
     this.Given(/^data is loaded directly/, (callback) => {
-        this.loadMethod = 'directly';
+        this.osrmLoader.setLoadMethod('directly');
         callback();
     });
 
     this.Given(/^data is loaded with datastore$/, (callback) => {
-        this.loadMethod = 'datastore';
+        this.osrmLoader.setLoadMethod('directly');
         callback();
     });
 
