@@ -1,7 +1,5 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const util = require('util');
 const child_process = require('child_process');
 
@@ -32,7 +30,7 @@ module.exports = function () {
         child.stdout.on('data', this.log.bind(this));
         child.stderr.on('data', this.log.bind(this));
         child.on('exit', function(code) {
-          this.log(util.format('*** %s exited with code %d\n', bin, code));
+            this.log(util.format('*** %s exited with code %d\n', bin, code));
         }.bind(this));
         return child;
     };

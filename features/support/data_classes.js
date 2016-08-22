@@ -1,7 +1,6 @@
 'use strict';
 
-var util = require('util');
-var path = require('path');
+const util = require('util');
 
 module.exports = {
     Location: class {
