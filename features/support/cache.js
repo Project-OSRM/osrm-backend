@@ -13,15 +13,14 @@ module.exports = function() {
         });
     };
 
-    this.setupFeatureCache = (featureID) => {
+    this.setupFeatureCache = (featureID, callback) => {
         this.featureCacheDirectory = this.getFeatureCacheDirectory(featureID);
         this.featureProcessedCacheDirectory = this.getFeatureProcessedCacheDirectory(this.featureCacheDirectory, this.osrmHash);
-        try {
-            mkdirp.sync(this.featureCacheDirectory);
-            mkdirp.sync(this.featureProcessedCacheDirectory);
-        } catch(e) {
-            if (e.code != 'EEXIST') throw e;
-        }
+
+        d3.queue(1)
+            .defer(mkdirp, this.featureCacheDirectory)
+            .defer(mkdirp, this.featureProcessedCacheDirectory)
+            .awaitAll(callback);
     };
 
     this.setupScenarioCache = (scenarioID) => {
