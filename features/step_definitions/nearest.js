@@ -22,15 +22,12 @@ module.exports = function () {
 
                         var got = { in: row.in, out: row.out };
 
-                        var ok = true;
-
                         Object.keys(row).forEach((key) => {
                             if (key === 'out') {
                                 if (this.FuzzyMatch.matchLocation(coord, outNode)) {
                                     got[key] = row[key];
                                 } else {
                                     row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
-                                    ok = false;
                                 }
                             }
                         });
