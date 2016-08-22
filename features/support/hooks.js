@@ -23,8 +23,7 @@ module.exports = function () {
         this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
         this.getFeatureID(feature, (featureID) => {
             this.featureID = featureID;
-            this.setupFeatureCache(this.featureID);
-            callback();
+            this.setupFeatureCache(this.featureID, callback);
         });
     });
 
@@ -39,8 +38,6 @@ module.exports = function () {
 
         this.scenarioID = this.getScenarioID(scenario);
         this.setupScenarioCache(this.scenarioID);
-        this.setupScenarioLogFile(this.featureID, this.scenarioID);
-
-        callback();
+        this.setupScenarioLogFile(this.featureID, this.scenarioID, callback);
     });
 };
