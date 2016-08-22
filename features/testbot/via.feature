@@ -277,3 +277,20 @@ Feature: Via points
         When I route I should get
             | from | to | route         |
             | e    | f  | ebbdcf,ebbdcf |
+
+    @2798
+    Scenario: UTurns Enabled
+        Given the node map
+            | a | b | c | d | e |
+
+        And the query options
+            | continue_straight | false |
+
+        And the ways
+            | nodes | oneway |
+            | abc   | yes    |
+            | edc   | yes    |
+
+        When I route I should get
+            | waypoints | route |
+            | a,b,e     |       |

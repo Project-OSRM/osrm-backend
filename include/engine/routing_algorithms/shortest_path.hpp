@@ -114,7 +114,11 @@ class ShortestPathRouting final
                           needs_loop_forwad,
                           needs_loop_backwards);
         }
-        new_total_distance += std::min(total_distance_to_forward, total_distance_to_reverse);
+        // if no route is found between two parts of the via-route, the entire route becomes
+        // invalid. Adding to invalid edge weight sadly doesn't return an invalid edge weight. Here
+        // we prevent the possible overflow, faking the addition of infinity + x == infinity
+        if (new_total_distance != INVALID_EDGE_WEIGHT)
+            new_total_distance += std::min(total_distance_to_forward, total_distance_to_reverse);
     }
 
     // searches shortest path between:
