@@ -116,6 +116,8 @@
         {"key": "maxspeed", "value": "uk:nsl_single"},
         {"key": "maxspeed", "value": "uk:nsl_dual"},
         {"key": "maxspeed", "value": "uk:motorway"},
+        {"key": "maxspeed", "value": "nl:rural"},
+        {"key": "maxspeed", "value": "nl:trunk"},
         {"key": "smoothness", "value": "intermediate"},
         {"key": "smoothness", "value": "bad"},
         {"key": "smoothness", "value": "very_bad"},
