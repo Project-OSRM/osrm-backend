@@ -1,6 +1,5 @@
 'use strict';
 
-var util = require('util');
 var d3 = require('d3-queue');
 var path = require('path');
 var OSM = require('../lib/osm');
@@ -23,9 +22,9 @@ module.exports = function () {
         this.profile = this.DEFAULT_PROFILE;
         this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
         this.getFeatureID(feature, (featureID) => {
-          this.featureID = featureID;
-          this.setupFeatureCache(this.featureID);
-          callback();
+            this.featureID = featureID;
+            this.setupFeatureCache(this.featureID);
+            callback();
         });
     });
 

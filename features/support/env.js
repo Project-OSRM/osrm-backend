@@ -50,9 +50,9 @@ module.exports = function () {
             this.QQ = '';
         }
 
-        this.OSRM_EXTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, "osrm-extract", this.EXE));
-        this.OSRM_CONTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, "osrm-contract", this.EXE));
-        this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, "osrm-routed", this.EXE));
+        this.OSRM_EXTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-extract', this.EXE));
+        this.OSRM_CONTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-contract', this.EXE));
+        this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE));
         this.LIB_OSRM_EXTRACT_PATH = util.format('%s/libosrm_extract%s', this.BIN_PATH, this.LIB),
         this.LIB_OSRM_CONTRACT_PATH = util.format('%s/libosrm_contract%s', this.BIN_PATH, this.LIB),
         this.LIB_OSRM_PATH = util.format('%s/libosrm%s', this.BIN_PATH, this.LIB);
@@ -61,14 +61,12 @@ module.exports = function () {
         console.info(util.format('Node Version', process.version));
         if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** PLease upgrade to Node 4.+ to run OSRM cucumber tests');
 
-        if(!fs.existsSync(this.TEST_PATH))
-        {
-            throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_PATH));
-            callback();
-            return;
-        }
-
-        callback();
+        fs.exists(this.TEST_PATH, (exists) => {
+            if (exists)
+                return callback();
+            else
+                return callback(new Error('*** Test folder doesn\'t exist.'));
+        });
     };
 
     this.getProfilePath = (profile) => {

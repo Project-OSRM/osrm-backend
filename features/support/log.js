@@ -6,10 +6,10 @@ const mkdirp = require('mkdirp');
 
 module.exports = function () {
     this.setupScenarioLogFile = (featureID, scenarioID) => {
-      let logPath = path.join(this.LOGS_PATH, featureID);
-      this.scenarioLogFile = path.join(logPath, scenarioID) + ".log";
-      mkdirp.sync(logPath);
-      fs.writeFileSync(this.scenarioLogFile, '');
+        let logPath = path.join(this.LOGS_PATH, featureID);
+        this.scenarioLogFile = path.join(logPath, scenarioID) + '.log';
+        mkdirp.sync(logPath);
+        fs.writeFileSync(this.scenarioLogFile, '');
     };
 
     this.log = (message) => {

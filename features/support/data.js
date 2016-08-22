@@ -1,9 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 const util = require('util');
-const exec = require('child_process').exec;
 const d3 = require('d3-queue');
 
 const OSM = require('../lib/osm');
@@ -146,32 +144,27 @@ module.exports = function () {
     };
 
     this.writeOSM = (callback) => {
-      fs.exists(this.scenarioCacheFile, (exists) => {
-        if (exists) callback();
-        else {
-          this.OSMDB.toXML((xml) => {
-            fs.writeFile(this.scenarioCacheFile, xml, callback);
-          });
-        }
-      });
+        fs.exists(this.scenarioCacheFile, (exists) => {
+            if (exists) callback();
+            else {
+                this.OSMDB.toXML((xml) => {
+                    fs.writeFile(this.scenarioCacheFile, xml, callback);
+                });
+            }
+        });
     };
 
     this.linkOSM = (callback) => {
-      fs.exists(this.inputCacheFile, (exists) => {
-        if (exists) callback();
-        else {
-            fs.link(this.scenarioCacheFile, this.inputCacheFile, callback);
-        }
-      });
-    };
-
-    this.isProcessed = (callback) => {
-        fs.exists(this.processedCacheFile, (exists) => {
+        fs.exists(this.inputCacheFile, (exists) => {
+            if (exists) callback();
+            else {
+                fs.link(this.scenarioCacheFile, this.inputCacheFile, callback);
+            }
         });
     };
 
     this.extractData = (callback) => {
-        this.runBin('osrm-extract', util.format("%s --profile %s %s", this.extractArgs, this.profileFile, this.inputCacheFile), (err) => {
+        this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), (err) => {
             if (err) {
                 return callback(new Error(util.format('osrm-extract exited with code %d', err.code)));
             }
@@ -180,7 +173,7 @@ module.exports = function () {
     };
 
     this.contractData = (callback) => {
-        this.runBin('osrm-contract', util.format("%s %s", this.contractArgs, this.processedCacheFile), (err) => {
+        this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), (err) => {
             if (err) {
                 return callback(new Error(util.format('osrm-contract exited with code %d', err.code)));
             }
@@ -214,7 +207,7 @@ module.exports = function () {
         queue.defer(this.writeOSM.bind(this));
         queue.defer(this.linkOSM.bind(this));
         queue.defer(this.extractAndContract.bind(this));
-        queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile)
+        queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
         queue.awaitAll(callback);
     };
 
