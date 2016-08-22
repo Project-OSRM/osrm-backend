@@ -41,10 +41,6 @@ module.exports = function () {
                             }
                         });
 
-                        if (outputRow != row) {
-                            this.logFail(row, outputRow, result);
-                        }
-
                         cb(null, outputRow);
                     });
                 };
