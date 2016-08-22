@@ -1,12 +1,14 @@
-var fs = require('fs');
-var path = require('path');
-var crypto = require('crypto');
-var d3 = require('d3-queue');
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const d3 = require('d3-queue');
 
 module.exports = function () {
     this.hashOfFiles = (paths, cb) => {
         paths = Array.isArray(paths) ? paths : [paths];
-        var shasum = crypto.createHash('sha1'), hashedFiles = false;
+        var shasum = crypto.createHash('md5'), hashedFiles = false;
 
         var q = d3.queue(1);
 

@@ -1,15 +1,17 @@
-var fs = require('fs');
-var path = require('path');
-var util = require('util');
-var child_process = require('child_process');
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const util = require('util');
+const child_process = require('child_process');
 
 module.exports = function () {
     // replaces placeholders for in user supplied commands
-    this.expandOptions = (options) {
+    this.expandOptions = (options) => {
         var opts = options.slice();
 
         if (opts.match('{osm_file}')) {
-            opts = opts.replace('{osm_file}', this.scenarioCacheFile);
+            opts = opts.replace('{osm_file}', this.inputCacheFile);
         }
 
         if (opts.match('{processed_file}')) {
@@ -25,6 +27,7 @@ module.exports = function () {
 
     this.runBin = (bin, options, callback) => {
         let cmd = util.format('%s%s/%s%s%s %s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ, options);
+        this.log(cmd);
         let child = child_process.exec(cmd, callback);
         child.stdout.on('data', this.log.bind(this));
         child.stderr.on('data', this.log.bind(this));

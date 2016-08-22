@@ -1,14 +1,15 @@
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var util = require('util');
-var exec = require('child_process').exec;
-var d3 = require('d3-queue');
+const fs = require('fs');
+const path = require('path');
+const util = require('util');
+const exec = require('child_process').exec;
+const d3 = require('d3-queue');
 
-var OSM = require('../lib/osm');
-var classes = require('./data_classes');
-var table_diff = require('../lib/table_diff');
+const OSM = require('../lib/osm');
+const classes = require('./data_classes');
+const tableDiff = require('../lib/table_diff');
+const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
     this.setGridSize = (meters) => {
@@ -97,11 +98,6 @@ module.exports = function () {
         q.awaitAll(callback);
     };
 
-    function ensureDecimal(i) {
-        if (parseInt(i) === i) return i.toFixed(1);
-        else return i;
-    };
-
     this.tableCoordToLonLat = (ci, ri) => {
         return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(ensureDecimal);
     };
@@ -144,6 +140,7 @@ module.exports = function () {
         this.OSMDB.clear();
         this.nameNodeHash = {};
         this.locationHash = {};
+        this.shortcutsHash = {};
         this.nameWayHash = {};
         this.osmID = 0;
     };
@@ -152,9 +149,18 @@ module.exports = function () {
       fs.exists(this.scenarioCacheFile, (exists) => {
         if (exists) callback();
         else {
-          this.osmData.toXML((xml) => {
+          this.OSMDB.toXML((xml) => {
             fs.writeFile(this.scenarioCacheFile, xml, callback);
           });
+        }
+      });
+    };
+
+    this.linkOSM = (callback) => {
+      fs.exists(this.inputCacheFile, (exists) => {
+        if (exists) callback();
+        else {
+            fs.link(this.scenarioCacheFile, this.inputCacheFile, callback);
         }
       });
     };
@@ -165,18 +171,18 @@ module.exports = function () {
     };
 
     this.extractData = (callback) => {
-        this.runBin(this.OSRM_EXTRACT_PATH, util.format("%s --profile %s", this.extractArgs, this.profileFile), (err) => {
+        this.runBin('osrm-extract', util.format("%s --profile %s %s", this.extractArgs, this.profileFile, this.inputCacheFile), (err) => {
             if (err) {
-                return callback(new Error(err.code, util.format('osrm-extract exited with code %d', err.code)));
+                return callback(new Error(util.format('osrm-extract exited with code %d', err.code)));
             }
             callback();
         });
     };
 
     this.contractData = (callback) => {
-        this.runBin(this.OSRM_CONTRACT_PATH, util.format("%s %s", this.contractArgs, this.processedCacheFile), (err) => {
+        this.runBin('osrm-contract', util.format("%s %s", this.contractArgs, this.processedCacheFile), (err) => {
             if (err) {
-                return callback(new Error(err.code, util.format('osrm-contract exited with code %d', err.code)));
+                return callback(new Error(util.format('osrm-contract exited with code %d', err.code)));
             }
             callback();
         });
@@ -198,6 +204,7 @@ module.exports = function () {
     this.reprocess = (callback) => {
         let queue = d3.queue(1);
         queue.defer(this.writeOSM.bind(this));
+        queue.defer(this.linkOSM.bind(this));
         queue.defer(this.extractAndContract.bind(this));
         queue.awaitAll(callback);
     };
@@ -205,6 +212,7 @@ module.exports = function () {
     this.reprocessAndLoadData = (callback) => {
         let queue = d3.queue(1);
         queue.defer(this.writeOSM.bind(this));
+        queue.defer(this.linkOSM.bind(this));
         queue.defer(this.extractAndContract.bind(this));
         queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile)
         queue.awaitAll(callback);
@@ -217,7 +225,7 @@ module.exports = function () {
 
         q.awaitAll((err, actual) => {
             if (err) return callback(err);
-            let diff = diffTables(table, actual);
+            let diff = tableDiff(table, actual);
             if (diff) callback(new Error(diff));
             else callback();
         });

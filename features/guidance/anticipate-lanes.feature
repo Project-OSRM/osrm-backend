@@ -422,7 +422,7 @@ Feature: Turn Lane Guidance
                | waypoints | route               | turns                                          | lanes                                                                                                                                                             |
                | a,e       | main,main,main,main | depart,use lane straight,continue right,arrive | ,left:false straight:false straight:false straight:false straight:true straight:true right:false,straight:false straight:false right:false right:true right:true, |
 
-    @anticipate @todo @bug @2661
+    @anticipate @todo @2661
     Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
         Given the node map
             |   |   | e |   |   |
@@ -667,7 +667,7 @@ Feature: Turn Lane Guidance
             | a,f       | abc,bdeh,feg,feg | depart,turn right,turn right,arrive | ,none:false none:false right:false right:true,left:false none:false none:false right:true, |
 
     @anticipate
-    Scenario: Tripple Right keeping Left
+    Scenario: Triple Right keeping Left
         Given the node map
             | a |   |   |   | b |   | i |
             |   |   |   |   |   |   |   |
@@ -691,7 +691,11 @@ Feature: Turn Lane Guidance
             | a,f       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,turn left,arrive  | ,none:false none:false right:true right:false,none:false none:false right:true right:false,none:false none:false right:true right:false,left:true right:false right:false, |
             | a,g       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,turn right,arrive | ,none:false none:false right:true right:true,none:false none:false right:true right:true,none:false none:false right:true right:true,left:false right:true right:true,     |
 
+<<<<<<< HEAD
     @anticipate
+=======
+    @anticipate @todo
+>>>>>>> cb7d8bd... It's alive
     Scenario: Tripple Left keeping Right
         Given the node map
             | i |   | b |   |   |   | a |

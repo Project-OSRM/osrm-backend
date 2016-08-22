@@ -1,8 +1,11 @@
-var path = require('path');
-var util = require('util');
-var fs = require('fs');
-var d3 = require('d3-queue');
-var child_process = require('child_process');
+'use strict';
+
+const path = require('path');
+const util = require('util');
+const fs = require('fs');
+const d3 = require('d3-queue');
+const child_process = require('child_process');
+const tryConnect = require('../lib/try_connect');
 
 // Sets up all constants that are valid for all features
 module.exports = function () {
@@ -73,7 +76,7 @@ module.exports = function () {
     };
 
     this.verifyOSRMIsNotRunning = (callback) => {
-        this.osrmLoader.waitForConnection((err) => {
+        tryConnect(this.OSRM_PORT, (err) => {
             if (!err) return callback(new Error('*** osrm-routed is already running.'));
             else callback();
         });
@@ -82,12 +85,11 @@ module.exports = function () {
     this.verifyExistenceOfBinaries = (callback) => {
         var verify = (binPath, cb) => {
             fs.exists(binPath, (exists) => {
-                if (!exists) throw new Error(util.format('%s is missing. Build failed?', binPath));
+                if (!exists) return cb(new Error(util.format('%s is missing. Build failed?', binPath)));
                 var helpPath = util.format('%s --help > /dev/null 2>&1', binPath);
                 child_process.exec(helpPath, (err) => {
                     if (err) {
-                        this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
-                        throw new Error(util.format('*** %s exited with code %d', helpPath, err.code));
+                        return cb(new Error(util.format('*** %s exited with code %d', helpPath, err.code)));
                     }
                     cb();
                 });
@@ -96,9 +98,7 @@ module.exports = function () {
 
         var q = d3.queue();
         [this.OSRM_EXTRACT_PATH, this.OSRM_CONTRACT_PATH, this.OSRM_ROUTED_PATH].forEach(bin => { q.defer(verify, bin); });
-        q.awaitAll(() => {
-            callback();
-        });
+        q.awaitAll(callback);
     };
 
     process.on('exit', () => {
