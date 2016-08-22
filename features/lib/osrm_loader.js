@@ -87,7 +87,11 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback();
 
-        this.child = this.scope.runBin('osrm-routed', util.format("%s -p %d", this.inputFile, this.scope.OSRM_PORT));
+        this.child = this.scope.runBin('osrm-routed', util.format("%s -p %d", this.inputFile, this.scope.OSRM_PORT), (err) => {
+          if (err) {
+              throw new Error(util.format('osrm-routed exited with code %d', err.code));
+          }
+        });
         callback();
     }
 };
@@ -117,10 +121,11 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
     osrmUp (callback) {
         if (this.osrmIsRunning()) return callback();
 
-        this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT));
-        this.child.on('exit', function(code) {
-            this.scope.log("*** osrm-routed exited with code " + code);
-        }.bind(this));
+        this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT), (err) => {
+          if (err) {
+              throw new Error(util.format('osrm-routed exited with code %d', err.code));
+          }
+        });
 
         callback();
     }

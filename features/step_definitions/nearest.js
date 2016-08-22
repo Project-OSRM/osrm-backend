@@ -35,11 +35,6 @@ module.exports = function () {
                             }
                         });
 
-                        if (!ok) {
-                            var failed = { attempt: 'nearest', query: this.query, response: response };
-                            this.logFail(row, got, [failed]);
-                        }
-
                         cb(null, got);
                     }
                     else {

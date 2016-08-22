@@ -137,18 +137,10 @@ module.exports = function () {
                             putValue('destinations', destinations);
                         }
 
-                        var ok = true;
-
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {
                                 got[key] = row[key];
-                            } else {
-                                ok = false;
                             }
-                        }
-
-                        if (!ok) {
-                            this.logFail(row, got, { route: { query: this.query, response: res }});
                         }
 
                         cb(null, got);

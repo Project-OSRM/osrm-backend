@@ -66,11 +66,6 @@ module.exports = function () {
                         }
                     }
 
-                    if (!ok) {
-                        var failed = { attempt: 'distance_matrix', query: this.query, response: response };
-                        this.logFail(row, result[ri], [failed]);
-                    }
-
                     result[ri][''] = row[''];
                     cb(null, result[ri]);
                 };
