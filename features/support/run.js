@@ -27,10 +27,13 @@ module.exports = function () {
 
     this.runBin = (bin, options, callback) => {
         let cmd = util.format('%s%s/%s%s%s %s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ, options);
-        this.log(cmd);
+        this.log(util.format('*** running %s\n', cmd));
         let child = child_process.exec(cmd, callback);
         child.stdout.on('data', this.log.bind(this));
         child.stderr.on('data', this.log.bind(this));
+        child.on('exit', function(code) {
+          this.log(util.format('*** %s exited with code %d\n', bin, code));
+        }.bind(this));
         return child;
     };
 };

@@ -22,6 +22,8 @@ class OSRMBaseLoader{
     }
 
     shutdown (callback) {
+        if (!this.osrmIsRunning()) return callback();
+
         var limit = Timeout(this.scope.TIMEOUT, { err: new Error('*** Shutting down osrm-routed timed out.')});
 
         var runShutdown = (cb) => {
@@ -116,6 +118,9 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
         if (this.osrmIsRunning()) return callback();
 
         this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT));
+        this.child.on('exit', function(code) {
+            this.scope.log("*** osrm-routed exited with code " + code);
+        }.bind(this));
 
         callback();
     }

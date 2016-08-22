@@ -31,9 +31,9 @@ module.exports = function () {
 
             request(this.query, (err, res, body) => {
                 if (err && err.code === 'ECONNREFUSED') {
-                    throw new Error('*** osrm-routed is not running.');
+                    return cb(new Error('*** osrm-routed is not running.'));
                 } else if (err && err.statusCode === 408) {
-                    throw new Error();
+                    return cb(new Error());
                 }
 
                 return cb(err, res, body);

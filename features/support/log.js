@@ -13,7 +13,7 @@ module.exports = function () {
     };
 
     this.log = (message) => {
-        fs.appendFile(this.scenarioLogFile, message + '\n', err => {
+        fs.appendFile(this.scenarioLogFile, message, err => {
             if (err) throw err;
         });
     };

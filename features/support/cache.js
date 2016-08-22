@@ -62,7 +62,7 @@ module.exports = function() {
     // setup cache for feature data
     this.hashOfFiles([uri], (hash) => {
       // shorten uri to be realtive to 'features/'
-      let featurePath = path.relative(path.resolve('./features'), uri).replace('.feature', '');
+      let featurePath = path.relative(path.resolve('./features'), uri);
       // bicycle/bollards/{HASH}/
       let featureID = path.join(featurePath, hash);
 
@@ -77,7 +77,8 @@ module.exports = function() {
 
   // converts the scenario titles in file prefixes
   this.getScenarioID = (scenario) => {
-    return scenario.getName().toLowerCase().replace(/\//g, '').replace(/-/g, '').replace(/\s/g, '_').replace(/__/g, '_');
+    let name = scenario.getName().toLowerCase().replace(/\//g, '').replace(/-/g, '').replace(/\s/g, '_').replace(/__/g, '_').replace(/'/g, '');
+    return name;
   };
 
   // test/cache/{feature_path}/{feature_hash}/{scenario}.osm
