@@ -41,6 +41,14 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     {
         return SPECIAL_EDGEID;
     }
+
+    EdgeID FindSmallestEdge(const NodeID /* from */,
+                            const NodeID /* to */,
+                            std::function<bool(EdgeData)> /* filter */) const override
+    {
+        return SPECIAL_EDGEID;
+    }
+
     EdgeID FindEdgeIndicateIfReverse(const NodeID /* from */,
                                      const NodeID /* to */,
                                      bool & /* result */) const override
