@@ -740,8 +740,8 @@ Feature: Turn Lane Guidance
 
         And the ways
             | nodes | name | highway | turn:lanes:forward |
-            | ab    | road | primary | through,right      |
-            | bc    | road | primary | through,right      |
+            | ab    | road | primary | through;right      |
+            | bc    | road | primary | through;right      |
             | cd    | road | primary |                    |
             | xa    | road | primary |                    |
             | be    | turn | primary |                    |
@@ -862,3 +862,24 @@ Feature: Turn Lane Guidance
             | waypoints | route     | turns                   | lanes                  |
             | d,a ||||
             # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
+
+    @reverse @2730 @todo
+    Scenario: Reverse on the right
+        Given the node map
+            | a |   |   | c |   |
+            |   |   |   | b | d |
+            | f |   |   | e |   |
+
+        And the ways
+            | nodes | highway | name    | turn:lanes:forward           | oneway |
+            | ab    | primary | in      | left\|through\|right;reverse | yes    |
+            | bc    | primary | left    |                              | no     |
+            | bd    | primary | through |                              | no     |
+            | be    | primary | right   |                              | no     |
+            | bf    | primary | in      |                              | yes    |
+
+        When I route I should get
+            | waypoints | route              | turns                           | lanes                                        |
+            | a,c       | in,left,left       | depart,turn left,arrive         | ,left:true straight:false right;uturn:false, |
+            | a,d       | in,through,through | depart,new name straight,arrive | ,left:false straight:true right;uturn:false, |
+            | a,e       | in,right,right     | depart,turn right,arrive        | ,left:false straight:false right;uturn:true, |

@@ -130,6 +130,8 @@ maxspeed_table = {
   ["uk:nsl_single"] = (60*1609)/1000,
   ["uk:nsl_dual"] = (70*1609)/1000,
   ["uk:motorway"] = (70*1609)/1000,
+  ["nl:rural"] = 80,
+  ["nl:trunk"] = 100,
   ["none"] = 140
 }
 
@@ -150,7 +152,7 @@ local turn_bias                  = properties.left_hand_driving and 1/1.2 or 1.2
 local obey_oneway                = true
 local ignore_areas               = true
 local ignore_hov_ways            = true
-local ignore_toll_ways           = true
+local ignore_toll_ways           = false
 
 local abs = math.abs
 local min = math.min

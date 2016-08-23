@@ -389,3 +389,105 @@ Feature: Basic Roundabout
            | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive | 0->180,180->224,180->0 |
            | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    | 0->180,180->224,270->0 |
 
+    Scenario: Enter and Exit - Bearings
+        Given the node map
+            |   |   |   | a |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   | i | b | l |   |   |
+            | h |   | g |   | c |   | d |
+            |   |   | j | e | k |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   | f |   |   |   |
+
+       And the ways
+            | nodes      | junction   |
+            | ab         |            |
+            | cd         |            |
+            | ef         |            |
+            | gh         |            |
+            | bigjekclb  | roundabout |
+
+       When I route I should get
+           | waypoints | route    | turns                                         | bearing                |
+           | a,d       | ab,cd,cd | depart,roundabout turn left exit-3,arrive     | 0->180,180->270,90->0  |
+           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive | 0->180,180->270,180->0 |
+           | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    | 0->180,180->270,270->0 |
+
+    Scenario: Large radius Roundabout Intersection and ways modelled out: East Mission St, North 7th St
+    # http://www.openstreetmap.org/way/348812150
+    # Note: grid size is 3 meter, this roundabout is more like 5-10 meters in radius
+        Given the node map
+           |   |   |   | a |   |   |   |   |   |
+           |   |   |   |   |   |   |   |   |   |
+           |   |   |   | b |   | n |   |   |   |
+           |   |   |   |   |   |   |   |   |   |
+           |   |   | c |   |   |   | m |   |   |
+           |   |   |   |   |   |   |   |   |   |
+           | e |   | d |   |   |   | k |   | l |
+           |   |   |   |   |   |   |   |   |   |
+           |   |   | f |   |   |   | j |   |   |
+           |   |   |   |   |   |   |   |   |   |
+           |   |   |   | g |   | i |   |   |   |
+           |   |   |   |   |   |   |   |   |   |
+           |   |   |   | h |   |   |   |   |   |
+
+       And the ways
+            | nodes       | junction   | highway  | name            |
+            | ab          |            | tertiary | North 7th St    |
+            | ed          |            | tertiary | East Mission St |
+            | hg          |            | tertiary | North 7th St    |
+            | lk          |            | tertiary | East Mission St |
+            | bcdfgijkmnb | roundabout | tertiary | Roundabout      |
+
+       When I route I should get
+           | waypoints | route                                           | turns                                         |
+           | a,e       | North 7th St,East Mission St,East Mission St    | depart,roundabout turn right exit-1,arrive    |
+           | a,h       | North 7th St,North 7th St,North 7th St          | depart,roundabout turn straight exit-2,arrive |
+           | a,l       | North 7th St,East Mission St,East Mission St    | depart,roundabout turn left exit-3,arrive     |
+           | h,l       | North 7th St,East Mission St,East Mission St    | depart,roundabout turn right exit-1,arrive    |
+           | h,a       | North 7th St,North 7th St,North 7th St          | depart,roundabout turn straight exit-2,arrive |
+           | h,e       | North 7th St,East Mission St,East Mission St    | depart,roundabout turn left exit-3,arrive     |
+           | e,h       | East Mission St,North 7th St,North 7th St       | depart,roundabout turn right exit-1,arrive    |
+           | e,l       | East Mission St,East Mission St,East Mission St | depart,roundabout turn straight exit-2,arrive |
+           | e,a       | East Mission St,North 7th St,North 7th St       | depart,roundabout turn left exit-3,arrive     |
+           | l,a       | East Mission St,North 7th St,North 7th St       | depart,roundabout turn right exit-1,arrive    |
+           | l,e       | East Mission St,East Mission St,East Mission St | depart,roundabout turn straight exit-2,arrive |
+           | l,h       | East Mission St,North 7th St,North 7th St       | depart,roundabout turn left exit-3,arrive     |
+
+    Scenario: Enter and Exit - Traffic Signals
+        Given the node map
+            |   |   | a |   |   |
+            |   | i | b | l |   |
+            | h | g |   | c | d |
+            |   | j | e | k |   |
+            |   |   | f |   |   |
+
+       And the nodes
+            | node | highway         |
+            | i    | traffic_signals |
+            | j    | traffic_signals |
+            | k    | traffic_signals |
+            | l    | traffic_signals |
+
+       And the ways
+            | nodes     | junction   |
+            | ab        |            |
+            | cd        |            |
+            | ef        |            |
+            | gh        |            |
+            | bigjekclb | roundabout |
+
+       When I route I should get
+           | waypoints | route    | turns                                         |
+           | a,d       | ab,cd,cd | depart,roundabout turn left exit-3,arrive     |
+           | a,f       | ab,ef,ef | depart,roundabout turn straight exit-2,arrive |
+           | a,h       | ab,gh,gh | depart,roundabout turn right exit-1,arrive    |
+           | d,f       | cd,ef,ef | depart,roundabout turn left exit-3,arrive     |
+           | d,h       | cd,gh,gh | depart,roundabout turn straight exit-2,arrive |
+           | d,a       | cd,ab,ab | depart,roundabout turn right exit-1,arrive    |
+           | f,h       | ef,gh,gh | depart,roundabout turn left exit-3,arrive     |
+           | f,a       | ef,ab,ab | depart,roundabout turn straight exit-2,arrive |
+           | f,d       | ef,cd,cd | depart,roundabout turn right exit-1,arrive    |
+           | h,a       | gh,ab,ab | depart,roundabout turn left exit-3,arrive     |
+           | h,d       | gh,cd,cd | depart,roundabout turn straight exit-2,arrive |
+           | h,f       | gh,ef,ef | depart,roundabout turn right exit-1,arrive    |

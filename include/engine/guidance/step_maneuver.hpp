@@ -17,9 +17,10 @@ namespace guidance
 
 enum class WaypointType : std::uint8_t
 {
-    None,
-    Arrive,
-    Depart,
+    None = 0,
+    Arrive = 1,
+    Depart = 2,
+    MaxWaypointType = 3
 };
 
 struct StepManeuver
