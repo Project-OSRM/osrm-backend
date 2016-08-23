@@ -4,6 +4,7 @@
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
+#include "engine/edge_unpacker.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/typedefs.hpp"
 
@@ -221,14 +222,6 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_segment_id.id);
 
         BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
-        std::stack<std::pair<NodeID, NodeID>> recursion_stack;
-
-        // We have to push the path in reverse order onto the stack because it's LIFO.
-        for (auto current = std::prev(packed_path_end); current != packed_path_begin;
-             current = std::prev(current))
-        {
-            recursion_stack.emplace(*std::prev(current), *current);
-        }
 
         BOOST_ASSERT(*packed_path_begin == phantom_node_pair.source_phantom.forward_segment_id.id ||
                      *packed_path_begin == phantom_node_pair.source_phantom.reverse_segment_id.id);
@@ -236,69 +229,26 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             *std::prev(packed_path_end) == phantom_node_pair.target_phantom.forward_segment_id.id ||
             *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
 
-        std::pair<NodeID, NodeID> edge;
-        while (!recursion_stack.empty())
-        {
-            // edge.first         edge.second
-            //     *------------------>*
-            //            edge_id
-            edge = recursion_stack.top();
-            recursion_stack.pop();
+        UnpackCHEdge(
+            facade,
+            packed_path_begin,
+            packed_path_end,
+            [this,
+             &unpacked_path,
+             &phantom_node_pair,
+             &start_traversed_in_reverse,
+             &target_traversed_in_reverse](std::pair<NodeID, NodeID> & /* edge */,
+                                           const EdgeData &data) {
 
-            // Contraction might introduce double edges by inserting shortcuts
-            // this searching for the smallest upwards edge found by the forward search
-            EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            EdgeWeight edge_weight = std::numeric_limits<EdgeWeight>::max();
-            for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
-            {
-                const EdgeWeight weight = facade->GetEdgeData(edge_id).distance;
-                if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
-                    facade->GetEdgeData(edge_id).forward)
-                {
-                    smaller_edge_id = edge_id;
-                    edge_weight = weight;
-                }
-            }
-
-            // edge.first         edge.second
-            //     *<------------------*
-            //            edge_id
-            // if we don't find a forward edge, this edge must have been an downwards edge
-            // found by the reverse search.
-            if (SPECIAL_EDGEID == smaller_edge_id)
-            {
-                for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
-                {
-                    const EdgeWeight weight = facade->GetEdgeData(edge_id).distance;
-                    if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
-                        facade->GetEdgeData(edge_id).backward)
-                    {
-                        smaller_edge_id = edge_id;
-                        edge_weight = weight;
-                    }
-                }
-            }
-            BOOST_ASSERT_MSG(edge_weight != INVALID_EDGE_WEIGHT, "edge id invalid");
-
-            const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
-            if (ed.shortcut)
-            { // unpack
-                const NodeID middle_node_id = ed.id;
-                // again, we need to this in reversed order
-                recursion_stack.emplace(middle_node_id, edge.second);
-                recursion_stack.emplace(edge.first, middle_node_id);
-            }
-            else
-            {
-                BOOST_ASSERT_MSG(!ed.shortcut, "original edge flagged as shortcut");
-                unsigned name_index = facade->GetNameIndexFromEdgeID(ed.id);
-                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
+                BOOST_ASSERT_MSG(!data.shortcut, "original edge flagged as shortcut");
+                unsigned name_index = facade->GetNameIndexFromEdgeID(data.id);
+                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(data.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
                         ? phantom_node_pair.source_phantom.backward_travel_mode
-                        : facade->GetTravelModeForEdgeID(ed.id);
+                        : facade->GetTravelModeForEdgeID(data.id);
 
-                const auto geometry_index = facade->GetGeometryIndexForEdgeID(ed.id);
+                const auto geometry_index = facade->GetGeometryIndexForEdgeID(data.id);
                 std::vector<NodeID> id_vector;
                 facade->GetUncompressedGeometry(geometry_index, id_vector);
                 BOOST_ASSERT(id_vector.size() > 0);
@@ -339,14 +289,14 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                  datasource_vector[i]});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
-                if (facade->hasLaneData(ed.id))
-                    unpacked_path.back().lane_data = facade->GetLaneData(ed.id);
+                if (facade->hasLaneData(data.id))
+                    unpacked_path.back().lane_data = facade->GetLaneData(data.id);
 
-                unpacked_path.back().entry_classid = facade->GetEntryClassID(ed.id);
+                unpacked_path.back().entry_classid = facade->GetEntryClassID(data.id);
                 unpacked_path.back().turn_instruction = turn_instruction;
-                unpacked_path.back().duration_until_turn += (ed.distance - total_weight);
-            }
-        }
+                unpacked_path.back().duration_until_turn += (data.distance - total_weight);
+            });
+
         std::size_t start_index = 0, end_index = 0;
         std::vector<unsigned> id_vector;
         std::vector<EdgeWeight> weight_vector;
@@ -455,124 +405,24 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         }
     }
 
-    void UnpackEdge(const NodeID s, const NodeID t, std::vector<NodeID> &unpacked_path) const
-    {
-        std::stack<std::pair<NodeID, NodeID>> recursion_stack;
-        recursion_stack.emplace(s, t);
-
-        std::pair<NodeID, NodeID> edge;
-        while (!recursion_stack.empty())
-        {
-            edge = recursion_stack.top();
-            recursion_stack.pop();
-
-            EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            EdgeWeight edge_weight = std::numeric_limits<EdgeWeight>::max();
-            for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
-            {
-                const EdgeWeight weight = facade->GetEdgeData(edge_id).distance;
-                if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
-                    facade->GetEdgeData(edge_id).forward)
-                {
-                    smaller_edge_id = edge_id;
-                    edge_weight = weight;
-                }
-            }
-
-            if (SPECIAL_EDGEID == smaller_edge_id)
-            {
-                for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
-                {
-                    const EdgeWeight weight = facade->GetEdgeData(edge_id).distance;
-                    if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
-                        facade->GetEdgeData(edge_id).backward)
-                    {
-                        smaller_edge_id = edge_id;
-                        edge_weight = weight;
-                    }
-                }
-            }
-            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(),
-                             "edge weight invalid");
-
-            const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
-            if (ed.shortcut)
-            { // unpack
-                const NodeID middle_node_id = ed.id;
-                // again, we need to this in reversed order
-                recursion_stack.emplace(middle_node_id, edge.second);
-                recursion_stack.emplace(edge.first, middle_node_id);
-            }
-            else
-            {
-                BOOST_ASSERT_MSG(!ed.shortcut, "edge must be shortcut");
-                unpacked_path.emplace_back(edge.first);
-            }
-        }
-        unpacked_path.emplace_back(t);
-    }
-
     /**
-     * A duplicate of the above `UnpackEdge` function, but returning full EdgeData
-     * objects for the unpacked path. Used in the tile plugin to find outgoing
-     * edges from a given turn.
+     * Unpacks a single edge (NodeID->NodeID) from the CH graph down to it's original non-shortcut
+     * route.
+     * @param from the node the CH edge starts at
+     * @param to the node the CH edge finishes at
+     * @param unpacked_path the sequence of original NodeIDs that make up the expanded CH edge
      */
-
-    void
-    UnpackEdgeToEdges(const NodeID s, const NodeID t, std::vector<EdgeData> &unpacked_path) const
+    void UnpackEdge(const NodeID from, const NodeID to, std::vector<NodeID> &unpacked_path) const
     {
-        std::stack<std::pair<NodeID, NodeID>> recursion_stack;
-        recursion_stack.emplace(s, t);
-
-        std::pair<NodeID, NodeID> edge;
-        while (!recursion_stack.empty())
-        {
-            edge = recursion_stack.top();
-            recursion_stack.pop();
-
-            EdgeID smaller_edge_id = SPECIAL_EDGEID;
-            EdgeWeight edge_weight = std::numeric_limits<EdgeWeight>::max();
-            for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.first))
-            {
-                const EdgeWeight weight = facade->GetEdgeData(edge_id).distance;
-                if ((facade->GetTarget(edge_id) == edge.second) && (weight < edge_weight) &&
-                    facade->GetEdgeData(edge_id).forward)
-                {
-                    smaller_edge_id = edge_id;
-                    edge_weight = weight;
-                }
-            }
-
-            if (SPECIAL_EDGEID == smaller_edge_id)
-            {
-                for (const auto edge_id : facade->GetAdjacentEdgeRange(edge.second))
-                {
-                    const EdgeWeight weight = facade->GetEdgeData(edge_id).distance;
-                    if ((facade->GetTarget(edge_id) == edge.first) && (weight < edge_weight) &&
-                        facade->GetEdgeData(edge_id).backward)
-                    {
-                        smaller_edge_id = edge_id;
-                        edge_weight = weight;
-                    }
-                }
-            }
-            BOOST_ASSERT_MSG(edge_weight != std::numeric_limits<EdgeWeight>::max(),
-                             "edge weight invalid");
-
-            const EdgeData &ed = facade->GetEdgeData(smaller_edge_id);
-            if (ed.shortcut)
-            { // unpack
-                const NodeID middle_node_id = ed.id;
-                // again, we need to this in reversed order
-                recursion_stack.emplace(middle_node_id, edge.second);
-                recursion_stack.emplace(edge.first, middle_node_id);
-            }
-            else
-            {
-                BOOST_ASSERT_MSG(!ed.shortcut, "edge must be shortcut");
-                unpacked_path.emplace_back(ed);
-            }
-        }
+        std::array<NodeID, 2> path{{from, to}};
+        UnpackCHEdge(
+            facade,
+            path.begin(),
+            path.end(),
+            [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const EdgeData & /* data */) {
+                unpacked_path.emplace_back(edge.first);
+            });
+        unpacked_path.emplace_back(to);
     }
 
     void RetrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,

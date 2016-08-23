@@ -25,13 +25,8 @@ namespace plugins
 
 class TilePlugin final : public BasePlugin
 {
-  private:
-    routing_algorithms::BasicRoutingInterface<
-        datafacade::BaseDataFacade,
-        routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade>> routing_base;
-
   public:
-    TilePlugin(datafacade::BaseDataFacade &facade) : BasePlugin(facade), routing_base(&facade) {}
+    TilePlugin(datafacade::BaseDataFacade &facade) : BasePlugin(facade) {}
 
     Status HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer);
 };

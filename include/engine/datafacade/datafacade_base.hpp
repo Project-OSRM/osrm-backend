@@ -66,6 +66,10 @@ class BaseDataFacade
     virtual EdgeID
     FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const = 0;
 
+    virtual EdgeID FindSmallestEdge(const NodeID from,
+                                    const NodeID to,
+                                    const std::function<bool(EdgeData)> filter) const = 0;
+
     // node and edge information access
     virtual util::Coordinate GetCoordinateOfNode(const unsigned id) const = 0;
     virtual OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const = 0;

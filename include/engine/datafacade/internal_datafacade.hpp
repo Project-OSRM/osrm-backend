@@ -472,6 +472,13 @@ class InternalDataFacade final : public BaseDataFacade
         return m_query_graph->FindEdgeIndicateIfReverse(from, to, result);
     }
 
+    EdgeID FindSmallestEdge(const NodeID from,
+                            const NodeID to,
+                            std::function<bool(EdgeData)> filter) const override final
+    {
+        return m_query_graph->FindSmallestEdge(from, to, filter);
+    }
+
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const unsigned id) const override final
     {

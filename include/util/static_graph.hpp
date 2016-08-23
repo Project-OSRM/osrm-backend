@@ -148,19 +148,32 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         return SPECIAL_EDGEID;
     }
 
-    // searches for a specific edge
-    EdgeIterator FindSmallestEdge(const NodeIterator from, const NodeIterator to) const
+    /**
+     * Finds the edge with the smallest `.distance` going from `from` to `to`
+     * @param from the source node ID
+     * @param to the target node ID
+     * @param filter a functor that returns a `bool` that determines whether an edge should be
+     * tested or not.
+     *   Takes `EdgeData` as a parameter.
+     * @return the ID of the smallest edge if any were found that satisfied *filter*, or
+     * `SPECIAL_EDGEID` if no
+     *   matching edge is found.
+     */
+    template <typename FilterFunction>
+    EdgeIterator FindSmallestEdge(const NodeIterator from,
+                                  const NodeIterator to,
+                                  const FilterFunction filter) const
     {
         EdgeIterator smallest_edge = SPECIAL_EDGEID;
         EdgeWeight smallest_weight = INVALID_EDGE_WEIGHT;
         for (auto edge : GetAdjacentEdgeRange(from))
         {
             const NodeID target = GetTarget(edge);
-            const EdgeWeight weight = GetEdgeData(edge).distance;
-            if (target == to && weight < smallest_weight)
+            const auto data = GetEdgeData(edge);
+            if (target == to && data.distance < smallest_weight && filter(data))
             {
                 smallest_edge = edge;
-                smallest_weight = weight;
+                smallest_weight = data.distance;
             }
         }
         return smallest_edge;

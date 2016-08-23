@@ -1,5 +1,6 @@
 #include "engine/plugins/tile.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/edge_unpacker.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/vector_tile.hpp"
@@ -13,11 +14,11 @@
 #include <protozero/pbf_writer.hpp>
 #include <protozero/varint.hpp>
 
+#include <algorithm>
+#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
-#include <algorithm>
-#include <numeric>
 
 #include <cmath>
 #include <cstdint>
@@ -211,6 +212,27 @@ FixedPoint coordinatesToTilePoint(const util::Coordinate point, const detail::BB
 
     return FixedPoint{px, py};
 }
+
+/**
+ * Unpacks a single CH edge (NodeID->NodeID) down to the original edges, and returns a list of the edge data
+ * @param from the node the CH edge starts at
+ * @param to the node the CH edge finishes at
+ * @param unpacked_path the sequence of EdgeData objects along the unpacked path
+ */
+void UnpackEdgeToEdges(const datafacade::BaseDataFacade &facade,
+                       const NodeID from,
+                       const NodeID to,
+                       std::vector<datafacade::BaseDataFacade::EdgeData> &unpacked_path)
+{
+    std::array<NodeID, 2> path{{from, to}};
+    UnpackCHEdge(
+        &facade,
+        path.begin(),
+        path.end(),
+        [&unpacked_path](const std::pair<NodeID, NodeID> & /* edge */, const datafacade::BaseDataFacade::EdgeData &data) {
+            unpacked_path.emplace_back(data);
+        });
+}
 }
 
 Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer)
@@ -236,13 +258,11 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     std::vector<std::string> names;
     std::unordered_map<std::string, std::size_t> name_offsets;
 
-
     std::vector<int> used_point_ints;
     std::unordered_map<int, std::size_t> point_int_offsets;
     std::vector<std::vector<detail::TurnData>> all_turn_data;
 
-    const auto use_line_value = [&used_line_ints, &line_int_offsets](const int &value)
-    {
+    const auto use_line_value = [&used_line_ints, &line_int_offsets](const int &value) {
         const auto found = line_int_offsets.find(value);
 
         if (found == line_int_offsets.end())
@@ -254,8 +274,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         return;
     };
 
-    const auto use_point_value = [&used_point_ints, &point_int_offsets](const int &value)
-    {
+    const auto use_point_value = [&used_point_ints, &point_int_offsets](const int &value) {
         const auto found = point_int_offsets.find(value);
         std::size_t offset;
 
@@ -336,9 +355,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         continue;
                     }
 
-                    routing_base.UnpackEdgeToEdges(edge.forward_segment_id.id,
-                                                   facade.GetTarget(adj_shortcut),
-                                                   unpacked_shortcut);
+                    detail::UnpackEdgeToEdges(facade,
+                                              edge.forward_segment_id.id,
+                                              facade.GetTarget(adj_shortcut),
+                                              unpacked_shortcut);
 
                     // Sometimes a "shortcut" is just an edge itself: this will not return a turn
                     if (unpacked_shortcut.size() < 2)
@@ -376,8 +396,14 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                             util::coordinate_calculation::bearing(coord_b, coord_c));
 
                         auto turn_angle = c_bearing - angle_in;
-                        while (turn_angle > 180) { turn_angle -= 360; }
-                        while (turn_angle < -180) { turn_angle += 360; }
+                        while (turn_angle > 180)
+                        {
+                            turn_angle -= 360;
+                        }
+                        while (turn_angle < -180)
+                        {
+                            turn_angle += 360;
+                        }
 
                         const auto turn_angle_offset = use_point_value(turn_angle);
                         const auto angle_weight_offset = use_point_value(possible_next_node.second);
@@ -413,7 +439,6 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         // data to the layer attribute values
         max_datasource_id = std::max(max_datasource_id, forward_datasource);
         max_datasource_id = std::max(max_datasource_id, reverse_datasource);
-
 
         std::string name = facade.GetNameForID(edge.name_id);
         if (name_offsets.find(name) == name_offsets.end())
@@ -507,65 +532,64 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     max_datasource_id = std::max(max_datasource_id, forward_datasource);
                     max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
-                    const auto encode_tile_line = [&line_layer_writer,
-                                                   &edge,
-                                                   &id,
-                                                   &max_datasource_id,
-                                                   &used_line_ints](const detail::FixedLine &tile_line,
-                                                                    const std::uint32_t speed_kmh,
-                                                                    const std::size_t duration,
-                                                                    const DatasourceID datasource,
-                                                                    const std::size_t name,
-                                                                    std::int32_t &start_x,
-                                                                    std::int32_t &start_y)
-                    {
-                        // Here, we save the two attributes for our feature: the speed and the
-                        // is_small
-                        // boolean.  We only serve up speeds from 0-139, so all we do is save the
-                        // first
-                        protozero::pbf_writer feature_writer(line_layer_writer,
-                                                             util::vector_tile::FEATURE_TAG);
-                        // Field 3 is the "geometry type" field.  Value 2 is "line"
-                        feature_writer.add_enum(
-                            util::vector_tile::GEOMETRY_TAG,
-                            util::vector_tile::GEOMETRY_TYPE_LINE); // geometry type
-                        // Field 1 for the feature is the "id" field.
-                        feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
-                        {
-                            // When adding attributes to a feature, we have to write
-                            // pairs of numbers.  The first value is the index in the
-                            // keys array (written later), and the second value is the
-                            // index into the "values" array (also written later).  We're
-                            // not writing the actual speed or bool value here, we're saving
-                            // an index into the "values" array.  This means many features
-                            // can share the same value data, leading to smaller tiles.
-                            protozero::packed_field_uint32 field(
-                                feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
+                    const auto encode_tile_line =
+                        [&line_layer_writer, &edge, &id, &max_datasource_id, &used_line_ints](
+                            const detail::FixedLine &tile_line,
+                            const std::uint32_t speed_kmh,
+                            const std::size_t duration,
+                            const DatasourceID datasource,
+                            const std::size_t name,
+                            std::int32_t &start_x,
+                            std::int32_t &start_y) {
+                            // Here, we save the two attributes for our feature: the speed and the
+                            // is_small
+                            // boolean.  We only serve up speeds from 0-139, so all we do is save
+                            // the
+                            // first
+                            protozero::pbf_writer feature_writer(line_layer_writer,
+                                                                 util::vector_tile::FEATURE_TAG);
+                            // Field 3 is the "geometry type" field.  Value 2 is "line"
+                            feature_writer.add_enum(
+                                util::vector_tile::GEOMETRY_TAG,
+                                util::vector_tile::GEOMETRY_TYPE_LINE); // geometry type
+                            // Field 1 for the feature is the "id" field.
+                            feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
+                            {
+                                // When adding attributes to a feature, we have to write
+                                // pairs of numbers.  The first value is the index in the
+                                // keys array (written later), and the second value is the
+                                // index into the "values" array (also written later).  We're
+                                // not writing the actual speed or bool value here, we're saving
+                                // an index into the "values" array.  This means many features
+                                // can share the same value data, leading to smaller tiles.
+                                protozero::packed_field_uint32 field(
+                                    feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
 
-                            field.add_element(0); // "speed" tag key offset
-                            field.add_element(
-                                std::min(speed_kmh, 127u)); // save the speed value, capped at 127
-                            field.add_element(1);           // "is_small" tag key offset
-                            field.add_element(128 +
-                                              (edge.component.is_tiny ? 0 : 1)); // is_small feature
-                            field.add_element(2);                // "datasource" tag key offset
-                            field.add_element(130 + datasource); // datasource value offset
-                            field.add_element(3);                // "duration" tag key offset
-                            field.add_element(130 + max_datasource_id + 1 +
-                                              duration); // duration value offset
-                            field.add_element(4);                // "name" tag key offset
+                                field.add_element(0); // "speed" tag key offset
+                                field.add_element(std::min(
+                                    speed_kmh, 127u)); // save the speed value, capped at 127
+                                field.add_element(1);  // "is_small" tag key offset
+                                field.add_element(
+                                    128 + (edge.component.is_tiny ? 0 : 1)); // is_small feature
+                                field.add_element(2);                // "datasource" tag key offset
+                                field.add_element(130 + datasource); // datasource value offset
+                                field.add_element(3);                // "duration" tag key offset
+                                field.add_element(130 + max_datasource_id + 1 +
+                                                  duration); // duration value offset
+                                field.add_element(4);        // "name" tag key offset
 
-                            field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
-                                              name); // name value offset
-                        }
-                        {
+                                field.add_element(130 + max_datasource_id + 1 +
+                                                  used_line_ints.size() +
+                                                  name); // name value offset
+                            }
+                            {
 
-                            // Encode the geometry for the feature
-                            protozero::packed_field_uint32 geometry(
-                                feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
-                            encodeLinestring(tile_line, geometry, start_x, start_y);
-                        }
-                    };
+                                // Encode the geometry for the feature
+                                protozero::packed_field_uint32 geometry(
+                                    feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
+                                encodeLinestring(tile_line, geometry, start_x, start_y);
+                            }
+                        };
 
                     // If this is a valid forward edge, go ahead and add it to the tile
                     if (forward_weight != 0 && edge.forward_segment_id.enabled)
@@ -668,9 +692,11 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 values_writer.add_double(util::vector_tile::VARIANT_TYPE_DOUBLE, value / 10.);
             }
 
-            for (const auto &name : names) {
+            for (const auto &name : names)
+            {
                 // Writing field type 4 == variant type
-                protozero::pbf_writer values_writer(line_layer_writer, util::vector_tile::VARIANT_TAG);
+                protozero::pbf_writer values_writer(line_layer_writer,
+                                                    util::vector_tile::VARIANT_TAG);
                 // Attribute value 1 == string type
                 values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING, name);
             }
@@ -716,34 +742,33 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
                     const auto encode_tile_point =
                         [&point_layer_writer, &edge, &id](const detail::FixedPoint &tile_point,
-                                                          const detail::TurnData &point_turn_data)
-                    {
-                        protozero::pbf_writer feature_writer(point_layer_writer,
-                                                             util::vector_tile::FEATURE_TAG);
-                        // Field 3 is the "geometry type" field.  Value 1 is "point"
-                        feature_writer.add_enum(
-                            util::vector_tile::GEOMETRY_TAG,
-                            util::vector_tile::GEOMETRY_TYPE_POINT); // geometry type
-                        // Field 1 for the feature is the "id" field.
-                        feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
-                        {
-                            // See above for explanation
-                            protozero::packed_field_uint32 field(
-                                feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
+                                                          const detail::TurnData &point_turn_data) {
+                            protozero::pbf_writer feature_writer(point_layer_writer,
+                                                                 util::vector_tile::FEATURE_TAG);
+                            // Field 3 is the "geometry type" field.  Value 1 is "point"
+                            feature_writer.add_enum(
+                                util::vector_tile::GEOMETRY_TAG,
+                                util::vector_tile::GEOMETRY_TYPE_POINT); // geometry type
+                            // Field 1 for the feature is the "id" field.
+                            feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
+                            {
+                                // See above for explanation
+                                protozero::packed_field_uint32 field(
+                                    feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
 
-                            field.add_element(0); // "bearing_in" tag key offset
-                            field.add_element(point_turn_data.in_angle_offset);
-                            field.add_element(1); // "turn_angle" tag key offset
-                            field.add_element(point_turn_data.turn_angle_offset);
-                            field.add_element(2); // "weight" tag key offset
-                            field.add_element(point_turn_data.weight_offset);
-                        }
-                        {
-                            protozero::packed_field_uint32 geometry(
-                                feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
-                            encodePoint(tile_point, geometry);
-                        }
-                    };
+                                field.add_element(0); // "bearing_in" tag key offset
+                                field.add_element(point_turn_data.in_angle_offset);
+                                field.add_element(1); // "turn_angle" tag key offset
+                                field.add_element(point_turn_data.turn_angle_offset);
+                                field.add_element(2); // "weight" tag key offset
+                                field.add_element(point_turn_data.weight_offset);
+                            }
+                            {
+                                protozero::packed_field_uint32 geometry(
+                                    feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
+                                encodePoint(tile_point, geometry);
+                            }
+                        };
 
                     const auto turn_coordinate = facade.GetCoordinateOfNode(edge.v);
                     const auto tile_point = coordinatesToTilePoint(turn_coordinate, tile_bbox);
