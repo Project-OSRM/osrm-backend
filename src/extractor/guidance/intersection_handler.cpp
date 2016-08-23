@@ -449,15 +449,30 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         }
     }
 
+    // We don't consider empty names a valid continue feature. This distinguishes between missing
+    // names and actual continuing roads.
+    if (in_data.name_id == EMPTY_NAMEID)
+        best_continue = 0;
+
     if (best == 0)
         return 0;
 
-    const std::size_t num_continue_names = [&]() {
-        std::size_t count = 0;
-        for (const auto &road : intersection)
-            if (in_data.name_id == node_based_graph.GetEdgeData(road.turn.eid).name_id)
-                ++count;
-        return count;
+    const std::pair<std::size_t, std::size_t> num_continue_names = [&]() {
+        std::size_t count = 0, count_valid = 0;
+        if (in_data.name_id != EMPTY_NAMEID)
+        {
+            for (std::size_t i = 1; i < intersection.size(); ++i)
+            {
+                const auto &road = intersection[i];
+                if ((in_data.name_id == node_based_graph.GetEdgeData(road.turn.eid).name_id))
+                {
+                    ++count;
+                    if (road.entry_allowed)
+                        ++count_valid;
+                }
+            }
+        }
+        return std::make_pair(count, count_valid);
     }();
 
     if (0 != best_continue && best != best_continue &&
@@ -473,8 +488,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 
     // has no obvious continued road
     const auto &best_data = node_based_graph.GetEdgeData(intersection[best].turn.eid);
-    if (best_continue == 0 || num_continue_names > 2 ||
-        (num_continue_names > 2 && best_continue_deviation >= 2 * NARROW_TURN_ANGLE) ||
+    if (best_continue == 0 || (num_continue_names.first >= 2 && intersection.size() >= 4) ||
+        (num_continue_names.second >= 2 && best_continue_deviation >= 2 * NARROW_TURN_ANGLE) ||
         (best_deviation < FUZZY_ANGLE_DIFFERENCE && !best_data.road_classification.IsRampClass()))
     {
         // Find left/right deviation
