@@ -31,6 +31,9 @@ namespace plugins
 {
 namespace detail
 {
+// TODO: Port all this encoding logic to https://github.com/mapbox/vector-tile, which wasn't available
+//       when this code was originally written.
+
 // Simple container class for WGS84 coordinates
 template <typename T> struct Point final
 {
@@ -39,12 +42,6 @@ template <typename T> struct Point final
     const T x;
     const T y;
 };
-
-// from mapnik-vector-tile
-namespace pbf
-{
-inline unsigned encode_length(const unsigned len) { return (len << 3u) | 2u; }
-}
 
 struct BBox final
 {
@@ -110,15 +107,20 @@ inline bool encodeLinestring(const FixedLine &line,
         return false;
     }
 
-    const unsigned line_to_length = static_cast<const unsigned>(line_size) - 1;
+    const unsigned LINETO_count = static_cast<const unsigned>(line_size) - 1;
 
     auto pt = line.begin();
-    geometry.add_element(9); // move_to | (1 << 3)
+    const constexpr int MOVETO_COMMAND = 9;
+    geometry.add_element(MOVETO_COMMAND); // move_to | (1 << 3)
     geometry.add_element(protozero::encode_zigzag32(pt->x - start_x));
     geometry.add_element(protozero::encode_zigzag32(pt->y - start_y));
     start_x = pt->x;
     start_y = pt->y;
-    geometry.add_element(detail::pbf::encode_length(line_to_length));
+    // This means LINETO repeated N times
+    // See: https://github.com/mapbox/vector-tile-spec/tree/master/2.1#example-command-integers
+    geometry.add_element((LINETO_count << 3u) | 2u);
+    // Now that we've issued the LINETO REPEAT N command, we append
+    // N coordinate pairs immediately after the command.
     for (++pt; pt != line.end(); ++pt)
     {
         const std::int32_t dx = pt->x - start_x;
@@ -135,7 +137,8 @@ inline bool encodeLinestring(const FixedLine &line,
 // Encodes a point
 inline bool encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &geometry)
 {
-    geometry.add_element(9);
+    const constexpr int MOVETO_COMMAND = 9;
+    geometry.add_element(MOVETO_COMMAND);
     const std::int32_t dx = pt.x;
     const std::int32_t dy = pt.y;
     // Manual zigzag encoding.
@@ -252,14 +255,23 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     // This hits the OSRM StaticRTree
     const auto edges = facade.GetEdgesInBox(southwest, northeast);
 
+    // Vector tiles encode data values as lookup tables.  This vector is the lookup table
+    // for integer values
     std::vector<int> used_line_ints;
+    // While constructing the tile, we keep track of which integers we have in our table
+    // and their offsets, so multiple features can re-use the same values
     std::unordered_map<int, std::size_t> line_int_offsets;
-    uint8_t max_datasource_id = 0;
+
+    // Same idea for street names - one lookup table for names for all features
     std::vector<std::string> names;
+    // And an index of the names and their position in the list
     std::unordered_map<std::string, std::size_t> name_offsets;
 
+    // And again for integer values used by points.
     std::vector<int> used_point_ints;
     std::unordered_map<int, std::size_t> point_int_offsets;
+
+    uint8_t max_datasource_id = 0;
     std::vector<std::vector<detail::TurnData>> all_turn_data;
 
     const auto use_line_value = [&used_line_ints, &line_int_offsets](const int &value) {
