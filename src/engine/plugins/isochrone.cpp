@@ -148,11 +148,13 @@ void IsochronePlugin::dijkstraByDuration(IsochroneVector &isochroneSet,
     isochroneSet.emplace_back(
         IsochroneNode(coordinate_list[source], coordinate_list[source], 0, 0));
 
+    int steps = 0;
     int MAX_DURATION = duration * 60 * 10;
     {
         // Standard Dijkstra search, terminating when path length > MAX
         while (!heap.Empty())
         {
+            steps++;
             const NodeID source = heap.DeleteMin();
             const std::int32_t weight = heap.GetKey(source);
 
@@ -190,6 +192,7 @@ void IsochronePlugin::dijkstraByDuration(IsochroneVector &isochroneSet,
             }
         }
     }
+    util::SimpleLogger().Write() << "Steps took: " << steps;
 }
 void IsochronePlugin::dijkstraByDistance(IsochroneVector &isochroneSet,
                                          NodeID &source,
@@ -200,12 +203,13 @@ void IsochronePlugin::dijkstraByDistance(IsochroneVector &isochroneSet,
 
     isochroneSet.emplace_back(
         IsochroneNode(coordinate_list[source], coordinate_list[source], 0, 0));
-
+    int steps = 0;
     int MAX_DISTANCE = distance;
     {
         // Standard Dijkstra search, terminating when path length > MAX
         while (!heap.Empty())
         {
+            steps++;
             NodeID source = heap.DeleteMin();
             std::int32_t weight = heap.GetKey(source);
 
@@ -250,6 +254,7 @@ void IsochronePlugin::dijkstraByDistance(IsochroneVector &isochroneSet,
             }
         }
     }
+    util::SimpleLogger().Write() << "Steps took: " << steps;
 }
 std::size_t IsochronePlugin::loadGraph(const std::string &path,
                                        std::vector<extractor::QueryNode> &coordinate_list,
