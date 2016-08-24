@@ -11,6 +11,7 @@ access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = t
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
+service_tag_forbidden = { ["emergency_access"] = true }
 restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
 
 -- A list of suffixes to suppress in name change instructions
@@ -38,6 +39,11 @@ speed_profile = {
   ["default"] = 10
 }
 
+-- service speeds
+service_speeds = {
+  ["alley"] = 5,
+  ["parking_aisle"] = 5
+}
 
 -- surface/trackype/smoothness
 -- values were estimated from looking at the photos at the relevant wiki pages
@@ -421,9 +427,18 @@ function way_function (way, result)
     result.is_access_restricted = true
   end
 
-  -- Set access restriction flag if service is allowed under certain restrictions only
-  if service and service ~= "" and service_tag_restricted[service] then
-    result.is_access_restricted = true
+  if service and service ~= "" then
+    -- Set access restriction flag if service is allowed under certain restrictions only
+    if service_tag_restricted[service] then
+      result.is_access_restricted = true
+    end
+
+    -- Set don't allow access to certain service roads
+    if service_tag_forbidden[service] then
+      result.forward_mode = mode.inaccessible
+      result.backward_mode = mode.inaccessible
+      return
+    end
   end
 
   -- Set direction according to tags on way
@@ -505,7 +520,9 @@ function way_function (way, result)
   if result.forward_speed > 0 then
     local scaled_speed = result.forward_speed*speed_reduction + 11
     local penalized_speed = math.huge
-    if width <= 3 or (lanes <= 1 and is_bidirectional) then
+    if service and service ~= "" and service_speeds[service] then
+      penalized_speed = service_speeds[service]
+    elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
       penalized_speed = result.forward_speed / 2
     end
     result.forward_speed = math.min(penalized_speed, scaled_speed)
@@ -514,7 +531,9 @@ function way_function (way, result)
   if result.backward_speed > 0 then
     local scaled_speed = result.backward_speed*speed_reduction + 11
     local penalized_speed = math.huge
-    if width <= 3 or (lanes <= 1 and is_bidirectional) then
+    if service and service ~= "" and service_speeds[service]then
+      penalized_speed = service_speeds[service]
+    elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
       penalized_speed = result.backward_speed / 2
     end
     result.backward_speed = math.min(penalized_speed, scaled_speed)
