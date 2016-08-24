@@ -6,9 +6,14 @@ const mkdirp = require('mkdirp');
 const d3 = require('d3-queue');
 
 module.exports = function () {
+    this.setupLogs = () => {
+        this.logQueue = d3.queue(1);
+    };
+
     this.setupScenarioLogFile = (featureID, scenarioID, callback) => {
         let logPath = path.join(this.LOGS_PATH, featureID);
         this.scenarioLogFile = path.join(logPath, scenarioID) + '.log';
+
 
         d3.queue(1)
           .defer(mkdirp, logPath)
@@ -16,9 +21,11 @@ module.exports = function () {
           .awaitAll(callback);
     };
 
+    this.finishLogs = (callback) => {
+        this.logQueue.awaitAll(callback);
+    };
+
     this.log = (message) => {
-        fs.appendFile(this.scenarioLogFile, message, err => {
-            if (err) throw err;
-        });
+        this.logQueue.defer(fs.appendFile, this.scenarioLogFile, message);
     };
 };

@@ -123,10 +123,11 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
 
         this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT), (err) => {
           if (err) {
-              throw new Error(util.format('osrm-routed exited with code %d', err.code));
+              throw new Error(util.format('osrm-routed exited with code %d: %s', err.code, err));
           }
         });
 
+        // we call the callback here, becuase we don't want to wait for the child process to finish
         callback();
     }
 };
