@@ -169,7 +169,7 @@ module.exports = function () {
 
             this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), (err) => {
                 if (err) {
-                    return callback(new Error(util.format('osrm-extract exited with code %d', err.code)));
+                    return callback(new Error(util.format('osrm-extract exited with code %d: %s', err.code, err)));
                 }
                 fs.writeFile(this.processedCacheFile + '.extract', "ok", callback);
             });
@@ -182,7 +182,7 @@ module.exports = function () {
 
             this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), (err) => {
                 if (err) {
-                    return callback(new Error(util.format('osrm-contract exited with code %d', err.code)));
+                    return callback(new Error(util.format('osrm-contract exited with code %d: %s', err.code, err)));
                 }
                 fs.writeFile(this.processedCacheFile + '.contract', "ok", callback);
             });
