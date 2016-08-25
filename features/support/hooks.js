@@ -7,8 +7,6 @@ var OSRMLoader = require('../lib/osrm_loader');
 
 module.exports = function () {
     this.BeforeFeatures((features, callback) => {
-        this.setupLogs();
-
         this.osrmLoader = new OSRMLoader(this);
         this.OSMDB = new OSM.DB();
 
@@ -43,7 +41,7 @@ module.exports = function () {
         this.setupScenarioLogFile(this.featureID, this.scenarioID, callback);
     });
 
-    this.AfterFeatures((scenario, callback) => {
-        this.finishLogs(callback);
+    this.After((scenario, callback) => {
+        this.finishScenarioLogs(callback);
     });
 };
