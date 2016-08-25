@@ -2,6 +2,7 @@
 
 const d3 = require('d3-queue');
 const fs = require('fs');
+const util = require('util');
 const path = require('path');
 const mkdirp = require('mkdirp');
 
@@ -77,7 +78,7 @@ module.exports = function() {
     // converts the scenario titles in file prefixes
     this.getScenarioID = (scenario) => {
         let name = scenario.getName().toLowerCase().replace(/[\/\-'=]/g, '').replace(/\s/g, '_').replace(/__/g, '_').replace(/\.\./g, '.');
-        return name;
+        return util.format("%s_%d", name, scenario.getLine());
     };
 
     // test/cache/{feature_path}/{feature_hash}/{scenario}.osm
