@@ -164,34 +164,36 @@ module.exports = function () {
     };
 
     this.extractData = (callback) => {
-        this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), (err) => {
-            if (err) {
-                return callback(new Error(util.format('osrm-extract exited with code %d', err.code)));
-            }
-            callback();
+        fs.exists(this.processedCacheFile + '.extract', (exists) => {
+            if (exists) return callback();
+
+            this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), (err) => {
+                if (err) {
+                    return callback(new Error(util.format('osrm-extract exited with code %d', err.code)));
+                }
+                fs.writeFile(this.processedCacheFile + '.extract', "ok", callback);
+            });
         });
     };
 
     this.contractData = (callback) => {
-        this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), (err) => {
-            if (err) {
-                return callback(new Error(util.format('osrm-contract exited with code %d', err.code)));
-            }
-            callback();
+        fs.exists(this.processedCacheFile + '.contract', (exists) => {
+            if (exists) return callback();
+
+            this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), (err) => {
+                if (err) {
+                    return callback(new Error(util.format('osrm-contract exited with code %d', err.code)));
+                }
+                fs.writeFile(this.processedCacheFile + '.contract', "ok", callback);
+            });
         });
     };
 
     this.extractAndContract = (callback) => {
-        fs.exists(this.processedCacheFile, (exists) => {
-            if (exists) {
-                callback();
-            } else {
-                let queue = d3.queue(1);
-                queue.defer(this.extractData.bind(this));
-                queue.defer(this.contractData.bind(this));
-                queue.awaitAll(callback);
-            }
-        });
+        let queue = d3.queue(1);
+        queue.defer(this.extractData.bind(this));
+        queue.defer(this.contractData.bind(this));
+        queue.awaitAll(callback);
     };
 
     this.reprocess = (callback) => {
