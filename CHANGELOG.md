@@ -3,6 +3,7 @@
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
       - added left_hand_driving flag in global profile properties
+      - refactor of turn penalties: turn penalties are now specified in seconds, just as all other penalties. Previously tenths of a second.
     - Guidance
       - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
     - API:

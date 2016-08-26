@@ -363,7 +363,9 @@ int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle)
                 luabind::call_function<double>(context.state, "turn_function", angle);
             BOOST_ASSERT(penalty < std::numeric_limits<int32_t>::max());
             BOOST_ASSERT(penalty > std::numeric_limits<int32_t>::min());
-            return boost::numeric_cast<int32_t>(penalty);
+            // OSRM operates in 10ths of a second. Penalties are specified in seconds in the
+            // profile. Here we adjust this accordingly.
+            return boost::numeric_cast<int32_t>(10 * penalty);
         }
         catch (const luabind::error &er)
         {
