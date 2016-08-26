@@ -25,7 +25,6 @@ class MatchPlugin : public BasePlugin
     using SubMatchingList = routing_algorithms::SubMatchingList;
     using CandidateLists = routing_algorithms::CandidateLists;
     static const constexpr double DEFAULT_GPS_PRECISION = 5;
-    static const constexpr double RADIUS_MULTIPLIER = 3;
 
     MatchPlugin(datafacade::BaseDataFacade &facade_, const int max_locations_map_matching)
         : BasePlugin(facade_), map_matching(&facade_, heaps, DEFAULT_GPS_PRECISION),

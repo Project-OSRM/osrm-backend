@@ -67,10 +67,13 @@ struct MatchParameters : public RouteParameters
     }
 
     std::vector<unsigned> timestamps;
+    double search_radius_multiplier = 3;
+
     bool IsValid() const
     {
         return RouteParameters::IsValid() &&
-               (timestamps.empty() || timestamps.size() == coordinates.size());
+               (timestamps.empty() || timestamps.size() == coordinates.size()) &&
+               search_radius_multiplier > 0;
     }
 };
 }

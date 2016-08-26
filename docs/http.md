@@ -259,14 +259,15 @@ http://{server}/match/v1/{profile}/{coordinates}?steps={true|false}&geometries={
 In addition to the [general options](#general-options) the following options are supported for this service:
 
 
-|Option      |Values                                          |Description                                                                               |
-|------------|------------------------------------------------|------------------------------------------------------------------------------------------|
-|steps       |`true`, `false` (default)                       |Return route steps for each route                                                         |
-|geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)                        |
-|annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                |
-|overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
-|timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamp of the input location.                                                          |
-|radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
+|Option                   |Values                                          |Description                                                                               |
+|-------------------------|------------------------------------------------|------------------------------------------------------------------------------------------|
+|steps                    |`true`, `false` (default)                       |Return route steps for each route                                                         |
+|geometries               |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)                        |
+|annotations              |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                |
+|overview                 |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
+|timestamps               |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamp of the input location.                                                          |
+|radiuses                 |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
+|search_radius_multiplier |`double > 0` (default 3)                        |Multiplied by `radius` for each point to get search radius for candidate segments. Has a quartic (O(n^4)) effect on running time, use with care!|
 
 |Parameter   |Values                        |
 |------------|------------------------------|
