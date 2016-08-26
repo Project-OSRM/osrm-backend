@@ -46,6 +46,7 @@ if(WIN32 AND MSVC_VERSION LESS 1900)
   message(FATAL_ERROR "Building with Microsoft compiler needs Latest Visual Studio 2015 (Community or better)")
 endif()
 
+option(ENABLE_TCMALLOC "Use the TCMalloc memory allocator" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
@@ -484,6 +485,24 @@ if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_C
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     set(ENV{CCACHE_CPP2} "true")
+  endif()
+endif()
+
+if(ENABLE_TCMALLOC)
+  # See the Wiki for Heap and CPU profiler:
+  # https://github.com/gperftools/gperftools/wiki
+  # See "Modifying Runtime Behavior" for fine-tuning the allocator:
+  # http://htmlpreview.github.io/?https://github.com/gperftools/gperftools/blob/master/doc/tcmalloc.html
+  find_library(TCMALLOC_LIBRARIES NAMES tcmalloc tcmalloc_minimal)
+  find_path(TCMALLOC_INCLUDE_DIRS NAMES gperftools/tcmalloc.h)
+
+  if(TCMALLOC_LIBRARIES AND TCMALLOC_INCLUDE_DIRS)
+    message(STATUS "TCMalloc library found at: ${TCMALLOC_LIBRARIES}")
+    message(STATUS "TCMalloc header found in: ${TCMALLOC_INCLUDE_DIRS}")
+    target_link_libraries(osrm-routed ${TCMALLOC_LIBRARIES})
+    set_target_properties(osrm-routed PROPERTIES COMPILE_FLAGS "-fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
+  else()
+    message(FATAL_ERROR "TCMalloc not found")
   endif()
 endif()
 
