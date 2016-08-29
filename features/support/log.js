@@ -6,9 +6,15 @@ const mkdirp = require('mkdirp');
 const d3 = require('d3-queue');
 
 module.exports = function () {
-    this.setupScenarioLogFile = (featureID, scenarioID, callback) => {
+    this.setupLogs = () => {
         this.logQueue = d3.queue(1);
+    };
 
+    this.finishLogs = (callback) => {
+        this.logQueue.awaitAll(callback);
+    };
+
+    this.setupScenarioLogFile = (featureID, scenarioID, callback) => {
         let logPath = path.join(this.LOGS_PATH, featureID);
         let scenarioLogFile = path.join(logPath, scenarioID) + '.log';
 
@@ -18,22 +24,21 @@ module.exports = function () {
           this.logStream.on('error', (err) => { throw err; })
         }
 
-
         d3.queue(1)
           .defer(mkdirp, logPath)
           .defer(openLogFile.bind(this), scenarioLogFile)
           .awaitAll(callback);
     };
 
-    this.finishScenarioLogs = (callback) => {
-        function finishStream(err) {
+    this.finishScenarioLogs = () => {
+        function finishStream(logStream, callback) {
           if (err) return callback(err);
 
-          this.logStream.on('finish', callback);
-          this.logStream.end();
-          this.logStream = null;
+          logStream.on('finish', callback);
+          logStream.end();
         }
-        this.logQueue.awaitAll(finishStream.bind(this));
+        this.logQueue.defer(finishStream.bind(this, this.logStream));
+        this.logStream = null;
     };
 
     this.log = (message) => {
