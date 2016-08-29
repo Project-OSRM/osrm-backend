@@ -26,11 +26,7 @@ class OSRMBaseLoader{
 
         var limit = Timeout(this.scope.TIMEOUT, { err: new Error('*** Shutting down osrm-routed timed out.')});
 
-        var runShutdown = (cb) => {
-            this.osrmDown(cb);
-        };
-
-        runShutdown(limit((e) => { if (e) callback(e); else callback(); }));
+        this.osrmDown(limit(callback));
     }
 
     osrmIsRunning () {
@@ -39,8 +35,8 @@ class OSRMBaseLoader{
 
     osrmDown (callback) {
         if (this.osrmIsRunning()) {
-            process.kill(this.child.pid, this.scope.TERMSIGNAL);
-            this.waitForShutdown(callback);
+            this.child.on('exit', (code, signal) => {callback();});
+            this.child.kill();
         } else callback();
     }
 
@@ -63,13 +59,6 @@ class OSRMBaseLoader{
 
         tryConnect(this.scope.OSRM_PORT, retry);
     }
-
-    waitForShutdown (callback) {
-        var check = () => {
-            if (!this.osrmIsRunning()) return callback();
-        };
-        setTimeout(check, 100);
-    }
 };
 
 class OSRMDirectLoader extends OSRMBaseLoader {
@@ -85,7 +74,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
     }
 
     osrmUp (callback) {
-        if (this.osrmIsRunning()) return callback();
+        if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
         this.child = this.scope.runBin('osrm-routed', util.format("%s -p %d", this.inputFile, this.scope.OSRM_PORT), this.scope.environment, (err) => {
           if (err) {

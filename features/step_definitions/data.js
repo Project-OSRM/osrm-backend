@@ -270,7 +270,7 @@ module.exports = function () {
     });
 
     this.Given(/^data is loaded with datastore$/, (callback) => {
-        this.osrmLoader.setLoadMethod('directly');
+        this.osrmLoader.setLoadMethod('datastore');
         callback();
     });
 
