@@ -12,12 +12,12 @@ module.exports = function () {
     });
 
     this.Given(/^the extract extra arguments "(.*?)"$/, (args, callback) => {
-        this.extractArgs = args;
+        this.extractArgs = this.expandOptions(args);
         callback();
     });
 
     this.Given(/^the contract extra arguments "(.*?)"$/, (args, callback) => {
-        this.contractArgs = args;
+        this.contractArgs = this.expandOptions(args);
         callback();
     });
 
@@ -232,15 +232,18 @@ module.exports = function () {
     });
 
     this.Given(/^the raster source$/, (data, callback) => {
-        fs.writeFile(path.resolve(this.TEST_PATH, 'rastersource.asc'), data, callback);
+        // TODO: Don't overwrite if it exists
+        fs.writeFile(this.rasterCacheFile, data, callback);
     });
 
     this.Given(/^the speed file$/, (data, callback) => {
-        fs.writeFile(path.resolve(this.TEST_PATH, 'speeds.csv'), data, callback);
+        // TODO: Don't overwrite if it exists
+        fs.writeFile(this.speedsCacheFile, data, callback);
     });
 
     this.Given(/^the turn penalty file$/, (data, callback) => {
-        fs.writeFile(path.resolve(this.TEST_PATH, 'penalties.csv'), data, callback);
+        // TODO: Don't overwrite if it exists
+        fs.writeFile(this.penaltiesCacheFile, data, callback);
     });
 
     this.Given(/^the data has been saved to disk$/, (callback) => {
