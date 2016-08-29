@@ -2,7 +2,7 @@
 Feature: osrm-contract command line options: help
 
     Scenario: osrm-contract - Help should be shown when no options are passed
-        When I run "osrm-contract"
+        When I try to run "osrm-contract"
         Then stderr should be empty
         And stdout should contain "osrm-contract <input.osrm> [options]:"
         And stdout should contain "Options:"

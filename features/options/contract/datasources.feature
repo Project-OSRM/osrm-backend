@@ -23,7 +23,6 @@ Feature: osrm-contract command line options: datasources
         And the data has been extracted
 
     Scenario: osrm-contract - Passing base file
-        When I run "osrm-contract --segment-speed-file speeds.csv {processed_file}"
-        Then stderr should be empty
-        And datasource names should contain "lua profile,speeds"
-        And it should exit with an error
+        When I run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
+        Then datasource names should contain "lua profile,25_osrmcontract_passing_base_file_speeds"
+        And it should exit successfully

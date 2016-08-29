@@ -5,7 +5,7 @@ Feature: osrm-extract command line options: invalid options
         Given the profile "testbot"
 
     Scenario: osrm-extract - Non-existing option
-        When I run "osrm-extract --fly-me-to-the-moon"
+        When I try to run "osrm-extract --fly-me-to-the-moon"
         Then stdout should be empty
         And stderr should contain "option"
         And stderr should contain "fly-me-to-the-moon"
