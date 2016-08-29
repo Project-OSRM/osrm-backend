@@ -6,18 +6,18 @@ const child_process = require('child_process');
 module.exports = function () {
     // replaces placeholders for in user supplied commands
     this.expandOptions = (options) => {
-        var opts = options.slice();
+        let opts = options.slice();
+        let table = {
+          '{osm_file}': this.inputCacheFile,
+          '{processed_file}': this.processedCacheFile,
+          '{profile_file}': this.profileFile,
+          '{rastersource_file}': this.rasterCacheFile,
+          '{speeds_file}': this.speedsCacheFile,
+          '{penalties_file}': this.penaltiesCacheFile
+        };
 
-        if (opts.match('{osm_file}')) {
-            opts = opts.replace('{osm_file}', this.inputCacheFile);
-        }
-
-        if (opts.match('{processed_file}')) {
-            opts = opts.replace('{processed_file}', this.processedCacheFile);
-        }
-
-        if (opts.match('{profile_file}')) {
-            opts = opts.replace('{profile_file}', this.profileFile);
+        for (let k in table) {
+            opts = opts.replace(k, table[k]);
         }
 
         return opts;

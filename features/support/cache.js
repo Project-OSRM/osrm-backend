@@ -28,6 +28,9 @@ module.exports = function() {
         this.scenarioCacheFile = this.getScenarioCacheFile(this.featureCacheDirectory, scenarioID);
         this.processedCacheFile = this.getProcessedCacheFile(this.featureProcessedCacheDirectory, scenarioID);
         this.inputCacheFile = this.getInputCacheFile(this.featureProcessedCacheDirectory, scenarioID);
+        this.rasterCacheFile = this.getRasterCacheFile(this.featureProcessedCacheDirectory, scenarioID);
+        this.speedsCacheFile = this.getSpeedsCacheFile(this.featureProcessedCacheDirectory, scenarioID);
+        this.PenaltiesCacheFile = this.getPenaltiesCacheFile(this.featureProcessedCacheDirectory, scenarioID);
     };
 
     // returns a hash of all OSRM code side dependencies
@@ -79,6 +82,21 @@ module.exports = function() {
     this.getScenarioID = (scenario) => {
         let name = scenario.getName().toLowerCase().replace(/[\/\-'=,\(\)]/g, '').replace(/\s/g, '_').replace(/__/g, '_').replace(/\.\./g, '.');
         return util.format("%d_%s", scenario.getLine(), name);
+    };
+
+    // test/cache/{feature_path}/{feature_hash}/{scenario}_raster.asc
+    this.getRasterCacheFile = (featureCacheDirectory, scenarioID) => {
+        return path.join(featureCacheDirectory, scenarioID) + '_raster.asc';
+    };
+
+    // test/cache/{feature_path}/{feature_hash}/{scenario}_speeds.csv
+    this.getSpeedsCacheFile = (featureCacheDirectory, scenarioID) => {
+        return path.join(featureCacheDirectory, scenarioID) + '_speeds.csv';
+    };
+
+    // test/cache/{feature_path}/{feature_hash}/{scenario}_penalties.csv
+    this.getPenaltiesCacheFile = (featureCacheDirectory, scenarioID) => {
+        return path.join(featureCacheDirectory, scenarioID) + '_penalties.csv';
     };
 
     // test/cache/{feature_path}/{feature_hash}/{scenario}.osm
