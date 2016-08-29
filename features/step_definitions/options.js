@@ -2,8 +2,9 @@ var assert = require('assert');
 var fs = require('fs');
 
 module.exports = function () {
-    function runAndSafeOutput(binary, options, callback) {
+    this.runAndSafeOutput = (binary, options, callback) => {
         this.runBin(binary, this.expandOptions(options), (err, stdout, stderr) => {
+            console.log(JSON.stringify(err));
             this.stdout = stdout;
             this.stderr = stderr;
             this.exitCode = err && err.code || 0;
@@ -12,19 +13,23 @@ module.exports = function () {
     }
 
     this.When(/^I run "osrm\-routed\s?(.*?)"$/, { timeout: this.TIMEOUT }, (options, callback) => {
-        runAndSafeOutput('osrm-routed', options, callback);
+        this.runAndSafeOutput('osrm-routed', options, callback);
     });
 
     this.When(/^I run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
-        runAndSafeOutput('osrm-extract', options, callback);
+        this.runAndSafeOutput('osrm-extract', options, callback);
     });
 
     this.When(/^I run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
-        runAndSafeOutput('osrm-contract', options, callback);
+        this.runAndSafeOutput('osrm-contract', options, callback);
+    });
+
+    this.When(/^I try to run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
+        this.runAndSafeOutput('osrm-contract', options, (err) => { callback(); });
     });
 
     this.When(/^I run "osrm\-datastore\s?(.*?)"$/, (options, callback) => {
-        runAndSafeOutput('osrm-datastore', options, callback);
+        this.runAndSafeOutput('osrm-datastore', options, callback);
     });
 
     this.Then(/^it should exit with code (\d+)$/, (code) => {
