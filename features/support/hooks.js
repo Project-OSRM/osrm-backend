@@ -16,16 +16,15 @@ module.exports = function () {
         queue.defer(this.verifyOSRMIsNotRunning.bind(this));
         queue.defer(this.verifyExistenceOfBinaries.bind(this));
         queue.defer(this.initializeCache.bind(this));
+        queue.defer(this.setupFeatures.bind(this, features));
         queue.awaitAll(callback);
     });
 
     this.BeforeFeature((feature, callback) => {
         this.profile = this.DEFAULT_PROFILE;
         this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
-        this.getFeatureID(feature, (featureID) => {
-            this.featureID = featureID;
-            this.setupFeatureCache(this.featureID, callback);
-        });
+        this.setupFeatureCache(feature);
+        callback();
     });
 
     this.Before((scenario, callback) => {
