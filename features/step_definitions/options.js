@@ -2,12 +2,19 @@ var assert = require('assert');
 var fs = require('fs');
 
 module.exports = function () {
+    this.resetOptionsOutput = () => {
+        this.stdout = null;
+        this.stderr = null;
+        this.exitCode = null;
+        this.termSignal = null;
+    };
+
     this.runAndSafeOutput = (binary, options, callback) => {
         this.runBin(binary, this.expandOptions(options), (err, stdout, stderr) => {
-            console.log(JSON.stringify(err));
             this.stdout = stdout;
             this.stderr = stderr;
             this.exitCode = err && err.code || 0;
+            this.termSignal = err && err.signal || '';
             callback(err);
         });
     }
@@ -32,12 +39,13 @@ module.exports = function () {
         this.runAndSafeOutput('osrm-datastore', options, callback);
     });
 
-    this.Then(/^it should exit with code (\d+)$/, (code) => {
-        assert.equal(this.exitCode, parseInt(code));
+    this.Then(/^it should exit successfully$/, () => {
+        assert.equal(this.exitCode, 0);
+        assert.equal(this.termSignal, '');
     });
 
-    this.Then(/^it should exit with code not (\d+)$/, (code) => {
-        assert.notEqual(this.exitCode, parseInt(code));
+    this.Then(/^it should exit with an error$/, () => {
+        assert.ok(this.exitCode !== 0 || this.termSignal);
     });
 
     this.Then(/^stdout should contain "(.*?)"$/, (str) => {

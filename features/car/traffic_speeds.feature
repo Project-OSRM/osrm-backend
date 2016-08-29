@@ -124,4 +124,4 @@ Feature: Traffic - speeds
         And the data has been extracted
         When I try to run "osrm-contract --segment-speed-file test/speeds.csv {processed_file}"
         And stderr should contain "malformed"
-        And it should exit with code not 0
+        And it should exit with an error

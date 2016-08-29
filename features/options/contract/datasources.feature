@@ -26,4 +26,4 @@ Feature: osrm-contract command line options: datasources
         When I run "osrm-contract --segment-speed-file speeds.csv {processed_file}"
         Then stderr should be empty
         And datasource names should contain "lua profile,speeds"
-        And it should exit with code 0
+        And it should exit with an error

@@ -15,4 +15,4 @@ Feature: osrm-extract with a profile containing raster source
         When I run "osrm-extract {osm_base}.osm -p {profile}"
         Then stderr should be empty
         And stdout should contain "source loader"
-        And it should exit with code 0
+        And it should exit successfully
