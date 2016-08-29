@@ -19,7 +19,6 @@ module.exports = function() {
         this.featureProcessedCacheDirectory = this.getFeatureProcessedCacheDirectory(this.featureCacheDirectory, this.osrmHash);
 
         d3.queue(1)
-            .defer(mkdirp, this.featureCacheDirectory)
             .defer(mkdirp, this.featureProcessedCacheDirectory)
             .awaitAll(callback);
     };
