@@ -167,7 +167,7 @@ module.exports = function () {
         fs.exists(this.processedCacheFile + '.extract', (exists) => {
             if (exists) return callback();
 
-            this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), (err) => {
+            this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), this.environment, (err) => {
                 if (err) {
                     return callback(new Error(util.format('osrm-extract exited with code %d: %s', err.code, err)));
                 }
@@ -180,7 +180,7 @@ module.exports = function () {
         fs.exists(this.processedCacheFile + '.contract', (exists) => {
             if (exists) return callback();
 
-            this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), (err) => {
+            this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), this.environment, (err) => {
                 if (err) {
                     return callback(new Error(util.format('osrm-contract exited with code %d: %s', err.code, err)));
                 }

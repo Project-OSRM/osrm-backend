@@ -30,7 +30,7 @@ module.exports = function() {
         this.inputCacheFile = this.getInputCacheFile(this.featureProcessedCacheDirectory, scenarioID);
         this.rasterCacheFile = this.getRasterCacheFile(this.featureProcessedCacheDirectory, scenarioID);
         this.speedsCacheFile = this.getSpeedsCacheFile(this.featureProcessedCacheDirectory, scenarioID);
-        this.PenaltiesCacheFile = this.getPenaltiesCacheFile(this.featureProcessedCacheDirectory, scenarioID);
+        this.penaltiesCacheFile = this.getPenaltiesCacheFile(this.featureProcessedCacheDirectory, scenarioID);
     };
 
     // returns a hash of all OSRM code side dependencies

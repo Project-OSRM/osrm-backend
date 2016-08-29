@@ -10,7 +10,7 @@ module.exports = function () {
     };
 
     this.runAndSafeOutput = (binary, options, callback) => {
-        this.runBin(binary, this.expandOptions(options), (err, stdout, stderr) => {
+        this.runBin(binary, this.expandOptions(options), this.environment, (err, stdout, stderr) => {
             this.stdout = stdout;
             this.stderr = stderr;
             this.exitCode = err && err.code || 0;
@@ -29,6 +29,14 @@ module.exports = function () {
 
     this.When(/^I run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
         this.runAndSafeOutput('osrm-contract', options, callback);
+    });
+
+    this.When(/^I try to run "osrm\-routed\s?(.*?)"$/, (options, callback) => {
+        this.runAndSafeOutput('osrm-routed', options, (err) => { callback(); });
+    });
+
+    this.When(/^I try to run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
+        this.runAndSafeOutput('osrm-extract', options, (err) => { callback(); });
     });
 
     this.When(/^I try to run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
@@ -79,7 +87,7 @@ module.exports = function () {
     });
 
     this.Then(/^datasource names should contain "(.+)"$/, (expectedData) => {
-        var actualData = fs.readFileSync(this.osmData.extractedFile + '.osrm.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
+        var actualData = fs.readFileSync(this.processedCacheFile + '.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
         assert.equal(actualData, expectedData);
     });
 

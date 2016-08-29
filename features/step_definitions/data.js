@@ -234,6 +234,8 @@ module.exports = function () {
     this.Given(/^the raster source$/, (data, callback) => {
         // TODO: Don't overwrite if it exists
         fs.writeFile(this.rasterCacheFile, data, callback);
+        // we need this to pass it to the profiles
+        this.environment += util.format(' OSRM_RASTER_SOURCE="%s"', this.rasterCacheFile);
     });
 
     this.Given(/^the speed file$/, (data, callback) => {

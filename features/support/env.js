@@ -23,6 +23,7 @@ module.exports = function () {
         this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
         this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_PATH, 'build');
 
+        this.DEFAULT_ENVIRONMENT = '';
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
         this.DEFAULT_LOAD_METHOD = 'datastore';
