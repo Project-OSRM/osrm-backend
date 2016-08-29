@@ -42,6 +42,7 @@ module.exports = function () {
     });
 
     this.After((scenario, callback) => {
+        this.resetOptionsOutput();
         this.finishScenarioLogs(callback);
     });
 };

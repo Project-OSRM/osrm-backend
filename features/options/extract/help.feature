@@ -16,7 +16,7 @@ Feature: osrm-extract command line options: help
         And stdout should contain "--threads"
         And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
-        And it should exit with code 0
+        And it should exit successfully
 
     Scenario: osrm-extract - Help, short
         When I run "osrm-extract -h"
@@ -30,7 +30,7 @@ Feature: osrm-extract command line options: help
         And stdout should contain "--threads"
         And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
-        And it should exit with code 0
+        And it should exit successfully
 
     Scenario: osrm-extract - Help, long
         When I run "osrm-extract --help"
@@ -44,4 +44,4 @@ Feature: osrm-extract command line options: help
         And stdout should contain "--threads"
         And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
-        And it should exit with code 0
+        And it should exit successfully

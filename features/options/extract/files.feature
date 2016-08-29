@@ -16,15 +16,15 @@ Feature: osrm-extract command line options: files
     Scenario: osrm-extract - Passing base file
         When I run "osrm-extract {osm_base}.osm --profile {profile}"
         Then stderr should be empty
-        And it should exit with code 0
+        And it should exit successfully
 
     Scenario: osrm-extract - Order of options should not matter
         When I run "osrm-extract --profile {profile} {osm_base}.osm"
         Then stderr should be empty
-        And it should exit with code 0
+        And it should exit successfully
 
     Scenario: osrm-extract - Missing input file
         When I run "osrm-extract over-the-rainbow.osrm --profile {profile}"
         And stderr should contain "over-the-rainbow.osrm"
         And stderr should contain "not found"
-        And it should exit with code 1
+        And it should exit with an error

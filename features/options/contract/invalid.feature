@@ -9,4 +9,4 @@ Feature: osrm-contract command line options: invalid options
         Then stdout should be empty
         And stderr should contain "option"
         And stderr should contain "fly-me-to-the-moon"
-        And it should exit with code 1
+        And it should exit with an error

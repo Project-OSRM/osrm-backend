@@ -12,10 +12,10 @@ Feature: osrm-contract command line options: files
     Scenario: osrm-contract - Passing base file
         When I run "osrm-contract {processed_file}"
         Then stderr should be empty
-        And it should exit with code 0
+        And it should exit successfully
 
     Scenario: osrm-contract - Missing input file
         When I run "osrm-contract over-the-rainbow.osrm"
         And stderr should contain "over-the-rainbow.osrm"
         And stderr should contain "not found"
-        And it should exit with code 1
+        And it should exit with an error
