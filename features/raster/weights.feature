@@ -44,7 +44,7 @@ Feature: Raster - weights
 
     Scenario: Weighting based on raster sources
         Given the profile "rasterbot"
-        When I run "osrm-extract {osm_file}.osm -p {profile_file}"
+        When I run "osrm-extract {osm_file} -p {profile_file}"
         Then stdout should contain "evaluating segment"
         And I run "osrm-contract {processed_file}"
         And I route I should get
