@@ -5,22 +5,56 @@ const fs = require('fs');
 const util = require('util');
 const path = require('path');
 const mkdirp = require('mkdirp');
+const hash = require('../lib/hash');
 
 module.exports = function() {
     this.initializeCache = (callback) => {
-        this.getOSRMHash((osrmHash) => {
+        this.getOSRMHash((err, osrmHash) => {
+            if (err) return callback(err);
             this.osrmHash = osrmHash;
             callback();
         });
     };
 
-    this.setupFeatureCache = (featureID, callback) => {
-        this.featureCacheDirectory = this.getFeatureCacheDirectory(featureID);
-        this.featureProcessedCacheDirectory = this.getFeatureProcessedCacheDirectory(this.featureCacheDirectory, this.osrmHash);
+    // computes all paths for every feature
+    this.setupFeatures = (features, callback) => {
+        this.featureIDs = {};
+        this.featureCacheDirectories = {};
+        this.featureProcessedCacheDirectories = {};
+        let queue = d3.queue();
 
-        d3.queue(1)
-            .defer(mkdirp, this.featureProcessedCacheDirectory)
-            .awaitAll(callback);
+        function initializeFeature(feature, callback) {
+            let uri = feature.getUri();
+
+            // setup cache for feature data
+            hash.hashOfFile(uri, (err, hash) => {
+                if (err) return callback(err);
+
+                // shorten uri to be realtive to 'features/'
+                let featurePath = path.relative(path.resolve('./features'), uri);
+                // bicycle/bollards/{HASH}/
+                let featureID = path.join(featurePath, hash);
+                let featureCacheDirectory = this.getFeatureCacheDirectory(featureID);
+                let featureProcessedCacheDirectory = this.getFeatureProcessedCacheDirectory(featureCacheDirectory, this.osrmHash);
+                this.featureIDs[uri] = featureID;
+                this.featureCacheDirectories[uri] = featureCacheDirectory;
+                this.featureProcessedCacheDirectories[uri] = featureProcessedCacheDirectory;
+
+                mkdirp(featureProcessedCacheDirectory, callback);
+            });
+        }
+
+        for (let i = 0; i < features.length; ++i) {
+            queue.defer(initializeFeature.bind(this), features[i]);
+        }
+        queue.awaitAll(callback);
+    };
+
+    this.setupFeatureCache = (feature) => {
+        let uri = feature.getUri();
+        this.featureID = this.featureIDs[uri];
+        this.featureCacheDirectory = this.featureCacheDirectories[uri];
+        this.featureProcessedCacheDirectory = this.featureProcessedCacheDirectories[uri];
     };
 
     this.setupScenarioCache = (scenarioID) => {
@@ -55,21 +89,7 @@ module.exports = function() {
         d3.queue()
             .defer(addLuaFiles, this.PROFILES_PATH)
             .defer(addLuaFiles, this.PROFILES_PATH + '/lib')
-            .awaitAll(this.hashOfFiles.bind(this, dependencies, callback));
-    };
-
-    this.getFeatureID = (feature, callback) => {
-        let uri = feature.getUri();
-
-        // setup cache for feature data
-        this.hashOfFiles([uri], (hash) => {
-            // shorten uri to be realtive to 'features/'
-            let featurePath = path.relative(path.resolve('./features'), uri);
-            // bicycle/bollards/{HASH}/
-            let featureID = path.join(featurePath, hash);
-
-            callback(featureID);
-        });
+            .awaitAll(hash.hashOfFiles.bind(hash, dependencies, callback));
     };
 
     // test/cache/bicycle/bollards/{HASH}/

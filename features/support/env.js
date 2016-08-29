@@ -47,7 +47,8 @@ module.exports = function () {
         } else {
             this.TERMSIGNAL = 'SIGTERM';
             this.EXE = '';
-            this.LIB = '.so';
+            // TODO autodetect if this was build with shared or static libraries
+            this.LIB = process.env.BUILD_SHARED_LIBS && '.so' || '.a';
             this.QQ = '';
         }
 
