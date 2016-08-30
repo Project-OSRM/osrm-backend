@@ -60,19 +60,19 @@ module.exports = function() {
         fs.readdir(parentPath, (err, files) => {
             let q = d3.queue();
             function runStats(path, callback) {
-              fs.stat(path, (err, stat) => {
-                if (err) return callback(err);
-                callback(null, {file: path, stat: stat});
-              });
+                fs.stat(path, (err, stat) => {
+                    if (err) return callback(err);
+                    callback(null, {file: path, stat: stat});
+                });
             }
             files.map(f => { q.defer(runStats, path.join(parentPath, f)); });
             q.awaitAll((err, results) => {
                 if (err) return callback(err);
                 let q = d3.queue();
                 results.forEach(r => {
-                  if (r.stat.isDirectory() && r.file.search(osrmHash) < 0) {
-                    q.defer(rimraf, r.file);
-                  }
+                    if (r.stat.isDirectory() && r.file.search(osrmHash) < 0) {
+                        q.defer(rimraf, r.file);
+                    }
                 });
                 q.awaitAll(callback);
             });
