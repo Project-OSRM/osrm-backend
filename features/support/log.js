@@ -19,9 +19,9 @@ module.exports = function () {
         let scenarioLogFile = path.join(logPath, scenarioID) + '.log';
 
         function openLogFile(file, callback) {
-          this.logStream = fs.createWriteStream(file);
-          this.logStream.on('open', () => { callback(); })
-          this.logStream.on('error', (err) => { throw err; })
+            this.logStream = fs.createWriteStream(file);
+            this.logStream.on('open', () => { callback(); });
+            this.logStream.on('error', (err) => { throw err; });
         }
 
         d3.queue(1)
@@ -32,10 +32,8 @@ module.exports = function () {
 
     this.finishScenarioLogs = () => {
         function finishStream(logStream, callback) {
-          if (err) return callback(err);
-
-          logStream.on('finish', callback);
-          logStream.end();
+            logStream.on('finish', callback);
+            logStream.end();
         }
         this.logQueue.defer(finishStream.bind(this, this.logStream));
         this.logStream = null;
@@ -43,10 +41,10 @@ module.exports = function () {
 
     this.log = (message) => {
         function writeToStream(message, callback) {
-          let wrote = this.logStream.write(message);
-          if (wrote) return callback();
+            let wrote = this.logStream.write(message);
+            if (wrote) return callback();
 
-          this.logStream.once('drain', writeToStream.bind(this, message, callback));
+            this.logStream.once('drain', writeToStream.bind(this, message, callback));
         }
         this.logQueue.defer(writeToStream.bind(this), message);
     };

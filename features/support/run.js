@@ -8,12 +8,12 @@ module.exports = function () {
     this.expandOptions = (options) => {
         let opts = options.slice();
         let table = {
-          '{osm_file}': this.inputCacheFile,
-          '{processed_file}': this.processedCacheFile,
-          '{profile_file}': this.profileFile,
-          '{rastersource_file}': this.rasterCacheFile,
-          '{speeds_file}': this.speedsCacheFile,
-          '{penalties_file}': this.penaltiesCacheFile
+            '{osm_file}': this.inputCacheFile,
+            '{processed_file}': this.processedCacheFile,
+            '{profile_file}': this.profileFile,
+            '{rastersource_file}': this.rasterCacheFile,
+            '{speeds_file}': this.speedsCacheFile,
+            '{penalties_file}': this.penaltiesCacheFile
         };
 
         for (let k in table) {

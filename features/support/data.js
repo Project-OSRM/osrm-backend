@@ -171,7 +171,7 @@ module.exports = function () {
                 if (err) {
                     return callback(new Error(util.format('osrm-extract exited with code %d: %s', err.code, err)));
                 }
-                fs.writeFile(this.processedCacheFile + '.extract', "ok", callback);
+                fs.writeFile(this.processedCacheFile + '.extract', 'ok', callback);
             });
         });
     };
@@ -184,7 +184,7 @@ module.exports = function () {
                 if (err) {
                     return callback(new Error(util.format('osrm-contract exited with code %d: %s', err.code, err)));
                 }
-                fs.writeFile(this.processedCacheFile + '.contract', "ok", callback);
+                fs.writeFile(this.processedCacheFile + '.contract', 'ok', callback);
             });
         });
     };
