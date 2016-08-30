@@ -424,8 +424,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             bool crosses_through_traffic = false;
             const EdgeData &edge_data_from_u = m_node_based_graph->GetEdgeData(edge_from_u);
-            const TurnSegment approach_segment = {static_cast<double>(edge_data_from_u.distance),
-                                                  static_cast<double>(edge_data_from_u.distance)};
             const IntersectionProperties intersection_properties = {
                 crosses_traffic_light, false, false};
             for (const auto turn : possible_turns)
@@ -470,12 +468,45 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 const TurnProperties turn_properties = {
                     180. - turn.angle, turn.angle, crosses_through_traffic, requires_announcement};
 
-                const TurnSegment exit_segment = {static_cast<double>(edge_data2.distance),
-                                                  static_cast<double>(edge_data2.distance)};
+
+                const bool isTrivial = m_compressed_edge_container.IsTrivial(edge_from_u);
+
+                const auto &approach_node =
+                        isTrivial
+                            ? m_node_info_list[node_u]
+                            : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(
+                                  edge_from_u)];
+                const auto &intersection_node =
+                        m_node_info_list[m_compressed_edge_container.GetLastEdgeTargetID(
+                            edge_from_u)];
+
+                const auto &exit_node =
+                        m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
+                            turn.eid)];
+
+                const double approach_segment_length =
+                            util::coordinate_calculation::greatCircleDistance(approach_node, intersection_node);
+                const double exit_segment_length =
+                            util::coordinate_calculation::greatCircleDistance(intersection_node, exit_node);
+
+                const auto approach_road_segments =
+                    m_compressed_edge_container.GetBucketReference(edge_from_u);
+                const auto exit_road_segments =
+                    m_compressed_edge_container.GetBucketReference(turn.eid);
+
+                // segment_length is in metres, weight is in deciseconds, this converts those
+                // to km/h
+                const double approach_speed = approach_segment_length / (approach_road_segments.back().weight/10) * 3.6;  // km/h
+                const double exit_speed = exit_segment_length / (exit_road_segments.front().weight/10) * 3.6;  // km/h
+
+                const TurnSegment approach_segment = {approach_segment_length,approach_speed};
+                const TurnSegment exit_segment = {exit_segment_length,exit_speed};
+
+                const auto turn_instruction = turn.instruction;
 
                 const int32_t turn_penalty = scripting_environment.GetTurnPenalty(
                     turn_properties, intersection_properties, approach_segment, exit_segment);
-                const auto turn_instruction = turn.instruction;
+
 
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
                 {

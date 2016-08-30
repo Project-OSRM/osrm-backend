@@ -605,8 +605,6 @@ function way_function (way, result)
   result.is_startpoint = result.forward_mode == mode.driving or result.backward_mode == mode.driving
 end
 
--- a detailed turn function as an alternative to turn function, offering more properties to decide on a good penalty
--- returns penalty in seconds
 function turn_function(angle, turn_properties, intersection_properties, approach_segment, exit_segment)
   local penalty = 0;
   if turn_properties.angle>=0 then

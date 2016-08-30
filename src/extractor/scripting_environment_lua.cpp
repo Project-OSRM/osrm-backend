@@ -395,6 +395,8 @@ std::int32_t LuaScriptingEnvironment::GetTurnPenalty(
                                                       boost::cref(intersection_properties),
                                                       boost::cref(approach_segment),
                                                       boost::cref(exit_segment));
+            BOOST_ASSERT(penalty < std::numeric_limits<int32_t>::max());
+            BOOST_ASSERT(penalty > std::numeric_limits<int32_t>::min());
             return boost::numeric_cast<int32_t>(penalty);
         }
         catch (const luabind::error &er)
