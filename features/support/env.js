@@ -22,8 +22,11 @@ module.exports = function () {
         this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
         this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
         this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_PATH, 'build');
-
-        this.DEFAULT_ENVIRONMENT = '';
+        var stxxl_config = path.resolve(this.ROOT_PATH, 'test/.stxxl');
+        if (!fs.existsSync(stxxl_config)) {
+            return callback(new Error('*** '+stxxl_config+ 'does not exist'));
+        }
+        this.DEFAULT_ENVIRONMENT = 'STXXLCFG=' + stxxl_config;
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
         this.DEFAULT_LOAD_METHOD = 'datastore';
