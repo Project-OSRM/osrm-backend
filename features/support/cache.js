@@ -84,7 +84,7 @@ module.exports = function() {
         fs.readdir(parentPath, (err, files) => {
             let q = d3.queue();
             files.filter(name => { return name !== featureHash;})
-                 .map((f) => { q.queue(rimraf, path.join(parentPath, f)); });
+                 .map((f) => { q.defer(rimraf, path.join(parentPath, f)); });
             q.awaitAll(callback);
         });
     };
