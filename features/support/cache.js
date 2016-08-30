@@ -100,7 +100,7 @@ module.exports = function() {
     // converts the scenario titles in file prefixes
     this.getScenarioID = (scenario) => {
         let name = scenario.getName().toLowerCase().replace(/[\/\-'=,\(\)]/g, '').replace(/\s/g, '_').replace(/__/g, '_').replace(/\.\./g, '.');
-        return util.format("%d_%s", scenario.getLine(), name);
+        return util.format('%d_%s', scenario.getLine(), name);
     };
 
     // test/cache/{feature_path}/{feature_hash}/{scenario}_raster.asc

@@ -17,7 +17,7 @@ module.exports = function () {
             this.termSignal = err && err.signal || '';
             callback(err);
         });
-    }
+    };
 
     this.When(/^I run "osrm\-routed\s?(.*?)"$/, { timeout: this.TIMEOUT }, (options, callback) => {
         this.runAndSafeOutput('osrm-routed', options, callback);
@@ -32,15 +32,15 @@ module.exports = function () {
     });
 
     this.When(/^I try to run "osrm\-routed\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-routed', options, (err) => { callback(); });
+        this.runAndSafeOutput('osrm-routed', options, () => { callback(); });
     });
 
     this.When(/^I try to run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-extract', options, (err) => { callback(); });
+        this.runAndSafeOutput('osrm-extract', options, () => { callback(); });
     });
 
     this.When(/^I try to run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-contract', options, (err) => { callback(); });
+        this.runAndSafeOutput('osrm-contract', options, () => { callback(); });
     });
 
     this.When(/^I run "osrm\-datastore\s?(.*?)"$/, (options, callback) => {
