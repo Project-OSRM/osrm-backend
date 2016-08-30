@@ -423,8 +423,38 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.traffic_signal_penalty;
                 }
 
+                const bool isTrivial = m_compressed_edge_container.IsTrivial(edge_from_u);
+
+                const auto &approach_node =
+                        isTrivial
+                            ? m_node_info_list[node_u]
+                            : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(
+                                  edge_from_u)];
+                const auto &intersection_node =
+                        m_node_info_list[m_compressed_edge_container.GetLastEdgeTargetID(
+                            edge_from_u)];
+
+                const auto &exit_node =
+                        m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
+                            turn.eid)];
+
+                const double approach_segment_length =
+                            util::coordinate_calculation::greatCircleDistance(approach_node, intersection_node);
+                const double exit_segment_length =
+                            util::coordinate_calculation::greatCircleDistance(intersection_node, exit_node);
+
+                const auto approach_road_segments =
+                    m_compressed_edge_container.GetBucketReference(edge_from_u);
+                const auto exit_road_segments =
+                    m_compressed_edge_container.GetBucketReference(turn.eid);
+
+                // segment_length is in metres, weight is in deciseconds, this converts those
+                // to km/h
+                const double approach_speed = approach_segment_length / (approach_road_segments.back().weight/10) * 3.6;  // km/h
+                const double exit_speed = exit_segment_length / (exit_road_segments.front().weight/10) * 3.6;  // km/h
+
                 const int32_t turn_penalty =
-                    scripting_environment.GetTurnPenalty(180. - turn.angle);
+                    scripting_environment.GetTurnPenalty(180. - turn.angle, approach_speed, exit_speed);
                 const auto turn_instruction = turn.instruction;
 
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)

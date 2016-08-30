@@ -350,7 +350,7 @@ void LuaScriptingEnvironment::SetupSources()
     }
 }
 
-int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle)
+int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle, const double approach_road_speed, const double exit_road_speed)
 {
     auto &context = GetLuaContext();
     if (context.has_turn_penalty_function)
@@ -360,7 +360,7 @@ int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle)
         {
             // call lua profile to compute turn penalty
             const double penalty =
-                luabind::call_function<double>(context.state, "turn_function", angle);
+                luabind::call_function<double>(context.state, "turn_function", angle, approach_road_speed, exit_road_speed);
             BOOST_ASSERT(penalty < std::numeric_limits<int32_t>::max());
             BOOST_ASSERT(penalty > std::numeric_limits<int32_t>::min());
             return boost::numeric_cast<int32_t>(penalty);
