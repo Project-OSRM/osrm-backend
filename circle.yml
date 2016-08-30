@@ -1,0 +1,41 @@
+machine:
+  xcode:
+    version: 7.3
+  environment:
+    XCODE_SCHEME: "no"
+    XCODE_WORKSPACE: "no"
+    CCACHE_COMPRESS: 1
+    CCACHE_TEMPDIR: /tmp/.ccache-temp
+
+dependencies:
+  cache_directories:
+    - '~/.ccache'
+    - '~/.apt-cache'
+    - 'test/data'
+  pre:
+    - |
+      if [[ "$(uname -s)" == "Linux" ]]; then
+        echo "Setting up apt-cache on linux"
+        # https://discuss.circleci.com/t/add-ability-to-cache-apt-get-programs/598/3
+        sudo rm -rf /var/cache/apt/archives && sudo ln -s ~/.apt-cache /var/cache/apt/archives && mkdir -p ~/.apt-cache/partial
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        sudo apt-get update -y
+        echo "Installing apt deps"
+        sudo apt-get install -y libstdc++-5-dev pkg-config wget
+      else
+        brew install pkg-config wget || true
+      fi
+
+  override:
+    - which ccache
+    - ccache -s
+    - |
+      if [[ "$(uname -s)" == "Linux" ]]; then
+        JOBS=2 ./scripts/ci-build.sh $(pwd)/local-install
+      else
+        JOBS=4 ./scripts/ci-build.sh $(pwd)/local-install
+      fi
+
+test:
+  override:
+    - echo "success"
