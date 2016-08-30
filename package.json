@@ -11,6 +11,7 @@
     "node-timeout": "0.0.4",
     "polyline": "^0.2.0",
     "request": "^2.69.0",
+    "rimraf": "^2.5.4",
     "xmlbuilder": "^4.2.1"
   },
   "bin": {
