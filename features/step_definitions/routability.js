@@ -13,7 +13,7 @@ module.exports = function () {
             }
 
             this.reprocessAndLoadData((e) => {
-                if (e) callback(e);
+                if (e) return callback(e);
                 var testRow = (row, i, cb) => {
                     var outputRow = row;
 
@@ -112,7 +112,7 @@ module.exports = function () {
                     sq.defer(parseRes, key);
                 });
 
-                sq.awaitAll(() => { cb(null, result); });
+                sq.awaitAll((err) => { cb(err, result); });
             });
     };
 };
