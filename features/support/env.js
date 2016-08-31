@@ -26,7 +26,8 @@ module.exports = function () {
         if (!fs.existsSync(stxxl_config)) {
             return callback(new Error('*** '+stxxl_config+ 'does not exist'));
         }
-        this.DEFAULT_ENVIRONMENT = 'STXXLCFG=' + stxxl_config;
+
+        this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: 'stxxl_config'}, process.env);
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
         this.DEFAULT_LOAD_METHOD = 'datastore';
