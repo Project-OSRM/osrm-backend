@@ -266,7 +266,7 @@ Feature: Via points
     # See issue #2706
     # this case is currently broken. It simply works as put here due to staggered intersections triggering a name collapse.
     # See 2824 for further information
-    @TODO
+    @todo
     Scenario: Incorrect ordering of nodes can produce multiple U-turns
         Given the node map
             |   | a |   |   |   |
