@@ -3,6 +3,7 @@ local find_access_tag = require("lib/access").find_access_tag
 local get_destination = require("lib/destination").get_destination
 local set_classification = require("lib/guidance").set_classification
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
+local set_option = require("lib/set_option")
 
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
@@ -158,7 +159,7 @@ local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1
 local obey_oneway                = true
 local ignore_areas               = true
 local ignore_hov_ways            = true
-local ignore_toll_ways           = false
+local ignore_toll_ways = set_option("ignore_toll_ways", false)
 
 local abs = math.abs
 local min = math.min
