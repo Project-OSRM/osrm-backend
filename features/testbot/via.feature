@@ -264,6 +264,9 @@ Feature: Via points
             | 9,8,7     | cd,da,ab,bc,cd,cd,cd,da,ab,bc,cd,cd | 3000m +-1    |
 
     # See issue #2706
+    # this case is currently broken. It simply works as put here due to staggered intersections triggering a name collapse.
+    # See 2824 for further information
+    @todo
     Scenario: Incorrect ordering of nodes can produce multiple U-turns
         Given the node map
             |   | a |   |   |   |
