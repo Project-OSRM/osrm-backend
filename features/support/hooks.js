@@ -34,7 +34,7 @@ module.exports = function () {
         this.queryParams = {};
         this.extractArgs = '';
         this.contractArgs = '';
-        this.environment = this.DEFAULT_ENVIRONMENT;
+        this.environment = Object.assign(this.DEFAULT_ENVIRONMENT);
         this.resetOSM();
 
         this.scenarioID = this.getScenarioID(scenario);

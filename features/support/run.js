@@ -24,11 +24,12 @@ module.exports = function () {
     };
 
     this.runBin = (bin, options, env, callback) => {
-        let cmd = util.format('%s %s%s/%s%s%s %s', env, this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ, options);
+        let cmd = util.format('%s%s/%s%s%s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ);
+        let opts = options.split(' ').filter((x) => { return x && x.length > 0; });
         this.log(util.format('*** running %s\n', cmd));
         // we need to set a large maxbuffer here because we have long running processes like osrm-routed
         // with lots of log output
-        let child = child_process.exec(cmd, {maxBuffer: 1024 * 1024 * 1000}, callback);
+        let child = child_process.execFile(cmd, opts, {maxBuffer: 1024 * 1024 * 1000, env: env}, callback);
         child.stdout.on('data', this.log.bind(this));
         child.stderr.on('data', this.log.bind(this));
         child.on('exit', function(code) {
