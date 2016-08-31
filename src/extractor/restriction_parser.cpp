@@ -96,10 +96,13 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         if (value.find("only_") == 0)
         {
             is_only_restriction = true;
-        } else if (value.find("no_") == 0)
+        }
+        else if (value.find("no_") == 0)
         {
             is_only_restriction = false;
-        } else // unrecognized value type
+        }
+        else // unrecognized value type
+        {
             return {};
         }
 

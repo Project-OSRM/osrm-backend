@@ -430,3 +430,27 @@ Feature: Car - Turn restrictions
             | a    | b  | ax,xy,yb,yb |
             | b    | a  | yb,xy,ax,ax |
 
+    @specific
+    Scenario: Car - Ignore unrecognized restriction
+        Given the node map
+            |   | n |   |
+            | w | j | e |
+            |   | s |   |
+
+        And the ways
+            | nodes | oneway |
+            | sj    | yes    |
+            | nj    | -1     |
+            | wj    | -1     |
+            | ej    | -1     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | sj       | wj     | j        | yield        |
+
+        When I route I should get
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
+
