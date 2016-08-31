@@ -55,8 +55,21 @@ Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
 {
     Intersection intersection;
     const NodeID turn_node = node_based_graph.GetTarget(via_eid);
-    const NodeID only_restriction_to_node =
-        restriction_map.CheckForEmanatingIsOnlyTurn(from_node, turn_node);
+    const NodeID only_restriction_to_node = [&]() {
+        // If only restrictions refer to invalid ways somewhere far away, we rather ignore the
+        // restriction than to not route over the intersection at all.
+        const auto only_restriction_to_node =
+            restriction_map.CheckForEmanatingIsOnlyTurn(from_node, turn_node);
+        if (only_restriction_to_node != SPECIAL_NODEID)
+        {
+            // check if we can find an edge in the edge-rage
+            for (const auto onto_edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
+                if (only_restriction_to_node == node_based_graph.GetTarget(onto_edge))
+                    return only_restriction_to_node;
+        }
+        // Ignore broken only restrictions.
+        return SPECIAL_NODEID;
+    }();
     const bool is_barrier_node = barrier_nodes.find(turn_node) != barrier_nodes.end();
 
     bool has_uturn_edge = false;

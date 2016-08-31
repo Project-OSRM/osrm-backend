@@ -149,11 +149,27 @@ Feature: Car - Turn restrictions
             | type        | way:from | way:to | node:via | restriction    |
             | restriction | sj       | wj     | j        | only_left_turn |
 
+    Scenario: Car - Only right turn, invalid
+        Given the node map
+            |   | n |   |   |
+            | w | j | e | r |
+            |   | s |   |   |
+
+        And the ways
+            | nodes | oneway |
+            | sj    | yes    |
+            | nj    | -1     |
+            | wj    | -1     |
+            | ej    | -1     |
+            | re    | -1     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | sj       | er     | j        | only_right_on |
+
         When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  |          |
-            | s    | e  |          |
+            | from | to | route       |
+            | s    | r  | sj,ej,re,re |
 
     @only_turning
     Scenario: Car - Only right turn

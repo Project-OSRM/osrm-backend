@@ -10,6 +10,7 @@
       - Reduced semantic of merge to refer only to merges from a lane onto a motorway-like road
     - Bugfixes
       - Fixed an issue that would result in segfaults for viaroutes with an invalid intermediate segment when u-turns were allowed at the via-location
+      - Invalid only_* restrictions could result in loss of connectivity. As a fallback, we assume all turns allowed when the restriction is not valid
 
 # 5.3.0
   Changes from 5.3.0-rc.3

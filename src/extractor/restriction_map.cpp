@@ -143,11 +143,9 @@ bool RestrictionMap::CheckIfTurnIsRestricted(const NodeID node_u,
         {
             return true;
         }
-        if (node_w != restriction_target.target_node && // target not found
-            restriction_target.is_only)                 // and is an only restriction
-        {
-            return true;
-        }
+        // We could be tempted to check for `only` restrictions here as well. However, that check is
+        // actually perfomed in intersection generation where we can also verify if the only
+        // restriction is valid at all.
     }
     return false;
 }
