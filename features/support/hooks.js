@@ -43,9 +43,12 @@ module.exports = function () {
     });
 
     this.After((scenario, callback) => {
-        this.resetOptionsOutput();
-        this.finishScenarioLogs();
-        callback();
+        var that = this;
+        this.osrmLoader.shutdown(function() {
+            that.resetOptionsOutput();
+            that.finishScenarioLogs();
+            callback();
+        });
     });
 
     this.AfterFeatures((features, callback) => {
