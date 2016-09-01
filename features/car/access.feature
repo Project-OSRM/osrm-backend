@@ -181,9 +181,7 @@ Feature: Car - Restricted access
             | primary | no          | x     |
             | primary | snowmobile  | x     |
 
-     # To test this we need issue #2781
-     @todo
      Scenario: Car - only toll=yes ways are ignored by default
         Then routability should be
             | highway | toll        | bothw |
-            | primary | yes         |       |
+            | primary | yes         | x     |
