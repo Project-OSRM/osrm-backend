@@ -48,8 +48,8 @@ RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment
 }
 
 /**
- * Tries to parse an relation as turn restriction. This can fail for a number of
- * reasons, this the return type is a boost::optional<T>.
+ * Tries to parse a relation as a turn restriction. This can fail for a number of
+ * reasons. The return type is a boost::optional<T>.
  *
  * Some restrictions can also be ignored: See the ```get_exceptions``` function
  * in the corresponding profile.
@@ -71,7 +71,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
     osmium::tags::KeyPrefixFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
     osmium::tags::KeyPrefixFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
 
-    // if it's a restriction, continue;
+    // if it's not a restriction, continue;
     if (std::distance(fi_begin, fi_end) == 0)
     {
         return {};
@@ -91,9 +91,19 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         const std::string key(fi_begin->key());
         const std::string value(fi_begin->value());
 
+        // documented OSM restriction tags start either with only_* or no_*;
+        // check and return on these values, and ignore unrecognized values
         if (value.find("only_") == 0)
         {
             is_only_restriction = true;
+        }
+        else if (value.find("no_") == 0)
+        {
+            is_only_restriction = false;
+        }
+        else // unrecognized value type
+        {
+            return {};
         }
 
         // if the "restriction*" key is longer than 11 chars, it is a conditional exception (i.e.

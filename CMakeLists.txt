@@ -55,6 +55,7 @@ option(COVERAGE OFF)
 option(SANITIZER OFF)
 option(ENABLE_LTO "Use LTO if available" ON)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
+option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -116,6 +117,26 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 
   endif()
 endif()
+
+if(ENABLE_GOLD_LINKER)
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
+    if("${LD_VERSION}" MATCHES "GNU gold")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+        message(STATUS "Using GNU gold as linker.")
+
+        # Issue 2785: check gold binutils version and don't use gc-sections for versions prior 2.25
+        string(REGEX REPLACE ".*\\(GNU Binutils[^\\)0-9]+([0-9]+\\.[0-9]+)[^\\)]*\\).*" "\\1" GOLD_BINUTILS_VERSION "${LD_VERSION}")
+        if ("${GOLD_BINUTILS_VERSION}" VERSION_LESS "2.25")
+          message(STATUS "Disabling gc-sections on gold binutils < 2.25, see: https://sourceware.org/bugzilla/show_bug.cgi?id=17639")
+          set(LD_AVOID_GC_SECTIONS TRUE)
+        endif()
+    else()
+        message(WARNING "GNU gold linker isn't available.")
+        set(ENABLE_GOLD_LINKER OFF)
+    endif()
+endif()
+
 if(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
   # Check if LTO is available
@@ -206,7 +227,7 @@ execute_process(COMMAND ${CMAKE_CXX_COMPILER} "-Wl,--version" ERROR_QUIET OUTPUT
 # For ld.gold and ld.bfs (the GNU linkers) we optimize hard
 if("${LINKER_VERSION}" MATCHES "GNU gold" OR "${LINKER_VERSION}" MATCHES "GNU ld")
   message(STATUS "Setting linker optimizations")
-  if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+  if(NOT (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC" OR "${LD_AVOID_GC_SECTIONS}"))
     # Tell compiler to put every function in separate section, linker can then match sections and functions
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
     # Tell linker to do dead code and data eminination during link time discarding sections
@@ -221,9 +242,9 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-# Activate C++11
+# Activate C++1y
 if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
 endif()
 
 # Configuring other platform dependencies
@@ -418,7 +439,7 @@ file(GLOB VariantGlob third_party/variant/*.hpp)
 file(GLOB LibraryGlob include/osrm/*.hpp)
 file(GLOB ParametersGlob include/engine/api/*_parameters.hpp)
 set(EngineHeader include/engine/status.hpp include/engine/engine_config.hpp include/engine/hint.hpp include/engine/bearing.hpp include/engine/phantom_node.hpp)
-set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp include/util/typedefs.hpp include/util/strong_typedef.hpp)
+set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp include/util/typedefs.hpp include/util/strong_typedef.hpp include/util/exception.hpp)
 set(ExtractorHeader include/extractor/extractor.hpp include/extractor/extractor_config.hpp include/extractor/travel_mode.hpp)
 set(ContractorHeader include/contractor/contractor.hpp include/contractor/contractor_config.hpp)
 set(StorageHeader include/storage/storage.hpp include/storage/storage_config.hpp)

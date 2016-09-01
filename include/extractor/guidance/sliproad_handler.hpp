@@ -42,9 +42,6 @@ class SliproadHandler : public IntersectionHandler
     Intersection operator()(const NodeID nid,
                             const EdgeID via_eid,
                             Intersection intersection) const override final;
-
-  private:
-    const IntersectionGenerator &intersection_generator;
 };
 
 } // namespace guidance

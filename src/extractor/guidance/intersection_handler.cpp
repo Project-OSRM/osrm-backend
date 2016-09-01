@@ -1,5 +1,5 @@
-#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -7,6 +7,7 @@
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
+#include <cstddef>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
 using osrm::util::guidance::getTurnDirection;
@@ -22,16 +23,18 @@ namespace detail
 {
 inline bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
 {
-    return !from.IsCompatibleTo(to);
+    return !from.CanCombineWith(to);
 }
 }
 
 IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                                          const std::vector<QueryNode> &node_info_list,
                                          const util::NameTable &name_table,
-                                         const SuffixTable &street_name_suffix_table)
+                                         const SuffixTable &street_name_suffix_table,
+                                         const IntersectionGenerator &intersection_generator)
     : node_based_graph(node_based_graph), node_info_list(node_info_list), name_table(name_table),
-      street_name_suffix_table(street_name_suffix_table)
+      street_name_suffix_table(street_name_suffix_table),
+      intersection_generator(intersection_generator)
 {
 }
 
@@ -341,15 +344,28 @@ bool IntersectionHandler::isThroughStreet(const std::size_t index,
 {
     if (node_based_graph.GetEdgeData(intersection[index].turn.eid).name_id == EMPTY_NAMEID)
         return false;
-    for (const auto &road : intersection)
+
+    const auto &data_at_index = node_based_graph.GetEdgeData(intersection[index].turn.eid);
+
+    // a through street cannot start at our own position -> index 1
+    for (std::size_t road_index = 1; road_index < intersection.size(); ++road_index)
     {
-        // a through street cannot start at our own position
-        if (road.turn.angle < std::numeric_limits<double>::epsilon())
+        if (road_index == index)
             continue;
-        if (angularDeviation(road.turn.angle, intersection[index].turn.angle) >
-                (STRAIGHT_ANGLE - NARROW_TURN_ANGLE) &&
-            node_based_graph.GetEdgeData(road.turn.eid).name_id ==
-                node_based_graph.GetEdgeData(intersection[index].turn.eid).name_id)
+
+        const auto &road = intersection[road_index];
+        const auto &road_data = node_based_graph.GetEdgeData(road.turn.eid);
+
+        // roads have a near straight angle (180 degree)
+        const bool is_nearly_straight =
+            angularDeviation(road.turn.angle, intersection[index].turn.angle) >
+            (STRAIGHT_ANGLE - FUZZY_ANGLE_DIFFERENCE);
+
+        const bool have_same_name = data_at_index.name_id == road_data.name_id;
+        const bool have_same_category =
+            data_at_index.road_classification == road_data.road_classification;
+
+        if (is_nearly_straight && have_same_name && have_same_category)
             return true;
     }
     return false;
@@ -375,19 +391,30 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 
     const EdgeData &in_data = node_based_graph.GetEdgeData(via_edge);
     const auto in_classification = in_data.road_classification;
+
+    const auto obvious_by_road_class = [](const RoadClassification in_classification,
+                                          const RoadClassification obvious_candidate,
+                                          const RoadClassification compare_candidate) {
+        const bool has_high_priority =
+            PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
+            compare_candidate.GetPriority();
+        const bool continues_on_same_class = in_classification == obvious_candidate;
+        return (has_high_priority && continues_on_same_class) ||
+               (!obvious_candidate.IsLowPriorityRoadClass() &&
+                compare_candidate.IsLowPriorityRoadClass());
+    };
+
     for (std::size_t i = 1; i < intersection.size(); ++i)
     {
         const double deviation = angularDeviation(intersection[i].turn.angle, STRAIGHT_ANGLE);
-        if (intersection[i].entry_allowed && deviation < best_deviation)
-        {
-            best_deviation = deviation;
-            best = i;
-        }
+        if (!intersection[i].entry_allowed)
+            continue;
 
         const auto out_data = node_based_graph.GetEdgeData(intersection[i].turn.eid);
-        auto continue_class =
+        const auto continue_class =
             node_based_graph.GetEdgeData(intersection[best_continue].turn.eid).road_classification;
-        if (intersection[i].entry_allowed && out_data.name_id == in_data.name_id &&
+
+        if (out_data.name_id == in_data.name_id &&
             (best_continue == 0 ||
              (continue_class.GetPriority() > out_data.road_classification.GetPriority() &&
               in_classification != continue_class) ||
@@ -399,18 +426,71 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             best_continue_deviation = deviation;
             best_continue = i;
         }
+
+        const auto current_best_class =
+            node_based_graph.GetEdgeData(intersection[best_continue].turn.eid).road_classification;
+
+        // don't prefer low priority classes
+        if (out_data.road_classification.IsLowPriorityRoadClass() &&
+            !current_best_class.IsLowPriorityRoadClass())
+            continue;
+
+        const bool is_better_choice_by_priority = obvious_by_road_class(
+            in_data.road_classification, out_data.road_classification, current_best_class);
+
+        const bool other_is_better_choice_by_priority = obvious_by_road_class(
+            in_data.road_classification, current_best_class, out_data.road_classification);
+
+        if ((!other_is_better_choice_by_priority && deviation < best_deviation) ||
+            is_better_choice_by_priority)
+        {
+            best_deviation = deviation;
+            best = i;
+        }
     }
+
+    // We don't consider empty names a valid continue feature. This distinguishes between missing
+    // names and actual continuing roads.
+    if (in_data.name_id == EMPTY_NAMEID)
+        best_continue = 0;
 
     if (best == 0)
         return 0;
 
-    if (best_deviation >= 2 * NARROW_TURN_ANGLE)
+    const std::pair<std::size_t, std::size_t> num_continue_names = [&]() {
+        std::size_t count = 0, count_valid = 0;
+        if (in_data.name_id != EMPTY_NAMEID)
+        {
+            for (std::size_t i = 1; i < intersection.size(); ++i)
+            {
+                const auto &road = intersection[i];
+                if ((in_data.name_id == node_based_graph.GetEdgeData(road.turn.eid).name_id))
+                {
+                    ++count;
+                    if (road.entry_allowed)
+                        ++count_valid;
+                }
+            }
+        }
+        return std::make_pair(count, count_valid);
+    }();
+
+    if (0 != best_continue && best != best_continue &&
+        angularDeviation(intersection[best].turn.angle, STRAIGHT_ANGLE) <
+            MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
+        node_based_graph.GetEdgeData(intersection[best_continue].turn.eid).road_classification ==
+            node_based_graph.GetEdgeData(intersection[best].turn.eid).road_classification)
+    {
+        // if the best angle is going straight but the road is turning, we don't name anything
+        // obvious
         return 0;
+    }
+
     // has no obvious continued road
-    if (best_continue == 0 || best_continue_deviation >= 2 * NARROW_TURN_ANGLE ||
-        (node_based_graph.GetEdgeData(intersection[best_continue].turn.eid).road_classification ==
-             node_based_graph.GetEdgeData(intersection[best].turn.eid).road_classification &&
-         std::abs(best_continue_deviation) > 1 && best_deviation / best_continue_deviation < 0.75))
+    const auto &best_data = node_based_graph.GetEdgeData(intersection[best].turn.eid);
+    if (best_continue == 0 || (num_continue_names.first >= 2 && intersection.size() >= 4) ||
+        (num_continue_names.second >= 2 && best_continue_deviation >= 2 * NARROW_TURN_ANGLE) ||
+        (best_deviation < FUZZY_ANGLE_DIFFERENCE && !best_data.road_classification.IsRampClass()))
     {
         // Find left/right deviation
         const double left_deviation = angularDeviation(
@@ -422,23 +502,43 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             std::min(left_deviation, right_deviation) > FUZZY_ANGLE_DIFFERENCE)
             return best;
 
+        const auto left_index = (best + 1) % intersection.size();
+        const auto right_index = best - 1;
+        const auto &left_data = node_based_graph.GetEdgeData(intersection[left_index].turn.eid);
+        const auto &right_data = node_based_graph.GetEdgeData(intersection[right_index].turn.eid);
+
+        const bool obvious_to_left =
+            left_index == 0 || obvious_by_road_class(in_data.road_classification,
+                                                     best_data.road_classification,
+                                                     left_data.road_classification);
+        const bool obvious_to_right =
+            right_index == 0 || obvious_by_road_class(in_data.road_classification,
+                                                      best_data.road_classification,
+                                                      right_data.road_classification);
+
         // other narrow turns?
-        if (angularDeviation(intersection[best - 1].turn.angle, STRAIGHT_ANGLE) <=
-            FUZZY_ANGLE_DIFFERENCE)
-            return 0;
-        if (angularDeviation(intersection[(best + 1) % intersection.size()].turn.angle,
-                             STRAIGHT_ANGLE) <= FUZZY_ANGLE_DIFFERENCE)
+        if (angularDeviation(intersection[right_index].turn.angle, STRAIGHT_ANGLE) <=
+                FUZZY_ANGLE_DIFFERENCE &&
+            !obvious_to_right)
             return 0;
 
+        if (angularDeviation(intersection[left_index].turn.angle, STRAIGHT_ANGLE) <=
+                FUZZY_ANGLE_DIFFERENCE &&
+            !obvious_to_left)
+            return 0;
+
+        const bool distinct_to_left =
+            left_deviation / best_deviation >= DISTINCTION_RATIO ||
+            (left_deviation > best_deviation &&
+             (!intersection[left_index].entry_allowed && in_data.distance > 30));
+        const bool distinct_to_right =
+            right_deviation / best_deviation >= DISTINCTION_RATIO ||
+            (right_deviation > best_deviation &&
+             (!intersection[right_index].entry_allowed && in_data.distance > 30));
+
         // Well distinct turn that is nearly straight
-        if ((left_deviation / best_deviation >= DISTINCTION_RATIO ||
-             (left_deviation > best_deviation &&
-              !intersection[(best + 1) % intersection.size()].entry_allowed)) &&
-            (right_deviation / best_deviation >= DISTINCTION_RATIO ||
-             (right_deviation > best_deviation && !intersection[best - 1].entry_allowed)))
-        {
+        if ((distinct_to_left || obvious_to_left) && (distinct_to_right || obvious_to_right))
             return best;
-        }
     }
     else
     {
@@ -455,12 +555,88 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             if (i == best_continue || !intersection[i].entry_allowed)
                 continue;
 
-            if (angularDeviation(intersection[i].turn.angle, STRAIGHT_ANGLE) / deviation < 1.1 &&
-                continue_data.road_classification ==
-                    node_based_graph.GetEdgeData(intersection[i].turn.eid).road_classification)
+            const auto &turn_data = node_based_graph.GetEdgeData(intersection[i].turn.eid);
+            const bool is_obvious_by_road_class =
+                obvious_by_road_class(in_data.road_classification,
+                                      continue_data.road_classification,
+                                      turn_data.road_classification);
+
+            // if the main road is obvious by class, we ignore the current road as a potential
+            // prevention of obviousness
+            if (is_obvious_by_road_class)
+                continue;
+
+            // continuation could be grouped with a straight turn and the turning road is a ramp
+            if (turn_data.road_classification.IsRampClass() && deviation < GROUP_ANGLE)
+                continue;
+
+            // perfectly straight turns prevent obviousness
+            const auto turn_deviation =
+                angularDeviation(intersection[i].turn.angle, STRAIGHT_ANGLE);
+            if (turn_deviation < FUZZY_ANGLE_DIFFERENCE)
+                return 0;
+
+            const auto deviation_ratio = turn_deviation / deviation;
+
+            // in comparison to normal devitions, a continue road can offer a smaller distinction
+            // ratio. Other roads close to the turn angle are not as obvious, if one road continues.
+            if (deviation_ratio < DISTINCTION_RATIO / 1.5)
+                return 0;
+
+            // in comparison to another continuing road, we need a better distinction. This prevents
+            // situations where the turn is probably less obvious. An example are places that have a
+            // road with the same name entering/exiting:
+            //
+            //         d
+            //        /
+            //       /
+            // a -- b
+            //       \
+            //        \
+            //         c
+
+            if (turn_data.name_id == continue_data.name_id &&
+                deviation_ratio < 1.5 * DISTINCTION_RATIO)
                 return 0;
         }
-        return best_continue; // no obvious turn
+
+        // Segregated intersections can result in us finding an obvious turn, even though its only
+        // obvious due to a very short segment in between. So if the segment coming in is very
+        // short, we check the previous intersection for other continues in the opposite bearing.
+        const auto node_at_intersection = node_based_graph.GetTarget(via_edge);
+        const util::Coordinate coordinate_at_intersection = node_info_list[node_at_intersection];
+
+        const auto node_at_u_turn = node_based_graph.GetTarget(intersection[0].turn.eid);
+        const util::Coordinate coordinate_at_u_turn = node_info_list[node_at_u_turn];
+
+        const double constexpr MAX_COLLAPSE_DISTANCE = 30;
+        if (util::coordinate_calculation::haversineDistance(
+                coordinate_at_intersection, coordinate_at_u_turn) < MAX_COLLAPSE_DISTANCE)
+        {
+            // this request here actually goes against the direction of the ingoing edgeid. This can
+            // even reverse the direction. Since we don't want to compute actual turns but simply
+            // try to find whether there is a turn going to the opposite direction of our obvious
+            // turn, this should be alright.
+            const auto previous_intersection = intersection_generator.GetActualNextIntersection(
+                node_at_intersection, intersection[0].turn.eid, nullptr, nullptr);
+
+            const auto continue_road = intersection[best_continue];
+            for (const auto &comparison_road : previous_intersection)
+            {
+                // since we look at the intersection in the wrong direction, a similar angle
+                // actually represents a near 180 degree different in bearings between the two
+                // roads. So if there is a road that is enterable in the opposite direction just
+                // prior, a turn is not obvious
+                const auto &turn_data = node_based_graph.GetEdgeData(comparison_road.turn.eid);
+                if (angularDeviation(comparison_road.turn.angle, STRAIGHT_ANGLE) > GROUP_ANGLE &&
+                    angularDeviation(comparison_road.turn.angle, continue_road.turn.angle) <
+                        FUZZY_ANGLE_DIFFERENCE &&
+                    !turn_data.reversed && continue_data.CanCombineWith(turn_data))
+                    return 0;
+            }
+        }
+
+        return best_continue;
     }
 
     return 0;

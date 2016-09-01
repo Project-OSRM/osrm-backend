@@ -20,6 +20,16 @@
             "object_types": [ "way" ]
         },
         {
+            "key": "service",
+            "value": "alley",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "service",
+            "value": "emergency_access",
+            "object_types": [ "way" ]
+        },
+        {
             "key": "oneway",
             "value": "true",
             "object_types": [ "way" ]

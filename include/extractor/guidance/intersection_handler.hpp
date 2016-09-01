@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HANDLER_HPP_
 
 #include "extractor/guidance/intersection.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 
@@ -28,7 +29,8 @@ class IntersectionHandler
     IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                         const std::vector<QueryNode> &node_info_list,
                         const util::NameTable &name_table,
-                        const SuffixTable &street_name_suffix_table);
+                        const SuffixTable &street_name_suffix_table,
+                        const IntersectionGenerator &intersection_generator);
 
     virtual ~IntersectionHandler() = default;
 
@@ -45,6 +47,7 @@ class IntersectionHandler
     const std::vector<QueryNode> &node_info_list;
     const util::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
+    const IntersectionGenerator &intersection_generator;
 
     // counts the number on allowed entry roads
     std::size_t countValid(const Intersection &intersection) const;
@@ -52,10 +55,16 @@ class IntersectionHandler
     // Decide on a basic turn types
     TurnType::Enum findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
 
-    // Find the most obvious turn to follow
+    // Find the most obvious turn to follow. The function returns an index into the intersection
+    // determining whether there is a road that can be seen as obvious turn in the presence of many
+    // other possible turns. The function will consider road categories and other inputs like the
+    // turn angles.
     std::size_t findObviousTurn(const EdgeID via_edge, const Intersection &intersection) const;
 
-    // Get the Instruction for an obvious turn
+    // Obvious turns can still take multiple forms. This function looks at the turn onto a road
+    // candidate when coming from a via_edge and determines the best instruction to emit.
+    // `through_street` indicates if the street turned onto is a through sreet (think mergees and
+    // similar)
     TurnInstruction getInstructionForObvious(const std::size_t number_of_candidates,
                                              const EdgeID via_edge,
                                              const bool through_street,

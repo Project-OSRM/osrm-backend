@@ -136,6 +136,12 @@ Feature: Collapse
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads
         Given the node map
+            |   | n |   | m |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
             |   | g |   | h |   |
             |   |   |   |   |   |
             |   |   |   |   |   |
@@ -144,6 +150,12 @@ Feature: Collapse
             |   |   |   |   |   |
             |   |   |   |   |   |
             |   | j |   | i |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   | k |   | l |   |
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -152,8 +164,8 @@ Feature: Collapse
             | de    | primary | first  | yes    |
             | ef    | primary | first  | yes    |
             | be    | primary | first  | no     |
-            | gbh   | primary | second | yes    |
-            | iej   | primary | second | yes    |
+            | ngbhm | primary | second | yes    |
+            | liejk | primary | second | yes    |
 
        When I route I should get
             | waypoints | route                | turns                        |
@@ -176,6 +188,10 @@ Feature: Collapse
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads, Intersection belongs to Second
         Given the node map
+            |   | n |   | m |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
             |   | g |   | h |   |
             |   |   |   |   |   |
             |   |   |   |   |   |
@@ -184,6 +200,10 @@ Feature: Collapse
             |   |   |   |   |   |
             |   |   |   |   |   |
             |   | j |   | i |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   | k |   | l |   |
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -192,8 +212,8 @@ Feature: Collapse
             | de    | primary | first  | yes    |
             | ef    | primary | first  | yes    |
             | be    | primary | second | no     |
-            | gbh   | primary | second | yes    |
-            | iej   | primary | second | yes    |
+            | ngbhm | primary | second | yes    |
+            | liejk | primary | second | yes    |
 
        When I route I should get
             | waypoints | route                | turns                        |
@@ -302,12 +322,12 @@ Feature: Collapse
 
     Scenario: Entering a segregated road
         Given the node map
-            |   | a | f |   |   |
-            |   |   |   |   | g |
-            |   | b | e |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            | c | d |   |   |   |
+            |   | a | f |   |   |   | g |
+            |   |   |   |   |   |   |   |
+            |   | b | e |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            | c | d |   |   |   |   |   |
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -325,7 +345,6 @@ Feature: Collapse
             | g,f       | second,first,first  | depart,turn right,arrive       |
             | g,c       | second,first,first  | depart,end of road left,arrive |
 
-
     Scenario: Do not collapse turning roads
         Given the node map
             |   |   | e |   |   |
@@ -333,12 +352,12 @@ Feature: Collapse
             | a |   | b | f |   |
 
         And the ways
-            | nodes | highway | name   |
-            | ab    | primary | first  |
-            | bc    | primary | first  |
-            | cd    | primary | first  |
-            | ce    | primary | second |
-            | bf    | primary | third  |
+            | nodes | highway | name   | oneway |
+            | ab    | primary | first  | yes    |
+            | bc    | primary | first  | yes    |
+            | cd    | primary | first  | yes    |
+            | ce    | primary | second | yes    |
+            | bf    | primary | third  | yes    |
 
         When I route I should get
             | waypoints | route                   | turns                                      |
@@ -383,13 +402,13 @@ Feature: Collapse
 
     Scenario: Pankenbruecke
         Given the node map
-            | h |   |   |   |   |   | i |   |   |   |   |   |   |
-            |   |   | b | c | d | e | f |   |   |   |   |   | g |
-            | a |   |   |   |   |   |   |   |   |   |   |   |   |
+            | j |   |   |   | h |   |   |   |   |   | i |   |   |   |   |   |   |
+            |   |   |   |   |   |   | b | c | d | e | f |   |   |   |   |   | g |
+            | k |   |   |   | a |   |   |   |   |   |   |   |   |   |   |   |   |
 
         And the ways
             | nodes | highway | name    | oneway |
-            | abh   | primary | inroad  | yes    |
+            | kabhj | primary | inroad  | yes    |
             | bc    | primary | inroad  | no     |
             | cd    | primary | bridge  | no     |
             | defg  | primary | outroad | no     |
@@ -601,26 +620,28 @@ Feature: Collapse
             | bd    | road  | yes    | primary   |
             | bc    | road  | yes    | primary   |
             | de    | road  | yes    | primary   |
-            | fdcg  | cross | no     | secondary |
+            | fd    | cross | no     | secondary |
+            | dc    | cross | no     | secondary |
+            | cg    | cross | no     | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | fdcg   | d        | no_left_turn  |
-            | restriction | bc       | fdcg   | c        | no_right_turn |
+            | restriction | bd       | dc     | d        | no_left_turn  |
+            | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-          | waypoints | route            | turns                   |
-          | a,g       | road,cross,cross | depart,turn left,arrive |
-          | a,e       | road,road        | depart,arrive           |
+            | waypoints | route            | turns                   |
+            | a,g       | road,cross,cross | depart,turn left,arrive |
+            | a,e       | road,road        | depart,arrive           |
 
     Scenario: Forking before a turn (forky)
         Given the node map
-            |   |   |   | g |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   | c |   |   |
-            | a | b |   |   |   |   |
-            |   |   |   |   | d |   |
-            |   |   |   |   | f | e |
+            |   |   |   |   |   | g |   |   |
+            |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | c |   |   |
+            | a |   |   | b |   |   |   |   |
+            |   |   |   |   |   |   | d |   |
+            |   |   |   |   |   |   | f | e |
 
         And the ways
             | nodes | name  | oneway | highway   |
@@ -628,12 +649,14 @@ Feature: Collapse
             | bd    | road  | yes    | primary   |
             | bc    | road  | yes    | primary   |
             | de    | road  | yes    | primary   |
-            | fdcg  | cross | no     | secondary |
+            | fd    | cross | no     | secondary |
+            | dc    | cross | no     | secondary |
+            | cg    | cross | no     | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | fdcg   | d        | no_left_turn  |
-            | restriction | bc       | fdcg   | c        | no_right_turn |
+            | restriction | bd       | dc     | d        | no_left_turn  |
+            | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
             | waypoints | route                 | turns                                          |
@@ -683,3 +706,43 @@ Feature: Collapse
             | a,c       | main,main                 | depart,arrive                          |
             | a,e       | main,straight,straight    | depart,turn straight,arrive            |
             | a,f       | main,straight,right,right | depart,turn straight,turn right,arrive |
+
+    Scenario: Entering a segregated road
+        Given the node map
+            |   | a | f |   |   |
+            |   |   |   |   | g |
+            |   | b | e |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | c | d |   |   |   |
+
+        And the ways
+            | nodes | highway | name   | oneway |
+            | abc   | primary | first  | yes    |
+            | def   | primary | first  | yes    |
+            | be    | primary | first  | no     |
+            | ge    | primary | second | no     |
+
+        When I route I should get
+            | waypoints | route               | turns                          |
+            | d,c       | first,first,first   | depart,continue uturn,arrive   |
+
+    Scenario: Entering a segregated road slight turn
+        Given the node map
+            |   |   | a | f |   |
+            |   |   |   |   | g |
+            |   | b | e |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | c | d |   |   |   |
+
+        And the ways
+            | nodes | highway | name   | oneway |
+            | abc   | primary | first  | yes    |
+            | def   | primary | first  | yes    |
+            | be    | primary | first  | no     |
+            | ge    | primary | second | no     |
+
+        When I route I should get
+            | waypoints | route               | turns                          |
+            | d,c       | first,first,first   | depart,continue uturn,arrive   |

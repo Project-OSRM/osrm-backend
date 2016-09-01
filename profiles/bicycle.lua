@@ -99,7 +99,7 @@ properties.continue_straight_at_waypoint = false
 
 local obey_oneway               = true
 local ignore_areas              = true
-local turn_penalty              = 60
+local turn_penalty              = 6
 local turn_bias                 = 1.4
 -- reduce the driving speed by 30% for unsafe roads
 -- local safety_penalty            = 0.7
@@ -402,7 +402,8 @@ end
 
 function turn_function (angle)
   -- compute turn penalty as angle^2, with a left/right bias
-  k = turn_penalty/(90.0*90.0)
+  -- multiplying by 10 converts to deci-seconds see issue #1318
+  k = 10*turn_penalty/(90.0*90.0)
   if angle>=0 then
     return angle*angle*k/turn_bias
   else

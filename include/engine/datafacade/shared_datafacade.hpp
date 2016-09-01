@@ -276,11 +276,6 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadCoreInformation()
     {
-        if (data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER] <= 0)
-        {
-            return;
-        }
-
         auto core_marker_ptr = data_layout->GetBlockPtr<unsigned>(
             shared_memory, storage::SharedDataLayout::CORE_MARKER);
         util::ShM<bool, true>::vector is_core_node(
