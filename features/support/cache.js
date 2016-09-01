@@ -116,7 +116,7 @@ module.exports = function() {
 
         var addLuaFiles = (directory, callback) => {
             fs.readdir(path.normalize(directory), (err, files) => {
-                if (err) callback(err);
+                if (err) return callback(err);
 
                 var luaFiles = files.filter(f => !!f.match(/\.lua$/)).map(f => path.normalize(directory + '/' + f));
                 Array.prototype.push.apply(dependencies, luaFiles);
