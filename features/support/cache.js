@@ -125,7 +125,9 @@ module.exports = function() {
             });
         };
 
-        d3.queue()
+        // Note: we need a serialized queue here to ensure that the order of the files
+        // passed is stable. Otherwise the hash will not be stable
+        d3.queue(1)
             .defer(addLuaFiles, this.PROFILES_PATH)
             .defer(addLuaFiles, this.PROFILES_PATH + '/lib')
             .awaitAll(hash.hashOfFiles.bind(hash, dependencies, callback));
