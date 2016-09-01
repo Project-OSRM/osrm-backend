@@ -15,8 +15,6 @@ branches:
     - master
 
 cache:
-  ccache: true
-  apt: true
   directories:
     - test/cache
 
