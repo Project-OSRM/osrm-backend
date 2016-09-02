@@ -854,9 +854,9 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 
     // handle final sliproad
     if (steps.size() >= 3 &&
-        steps[steps.size() - 2].maneuver.instruction.type == TurnType::Sliproad)
+        steps[getPreviousIndex(steps.size() - 1)].maneuver.instruction.type == TurnType::Sliproad)
     {
-        steps[steps.size() - 2].maneuver.instruction.type = TurnType::Turn;
+        steps[getPreviousIndex(steps.size() - 1)].maneuver.instruction.type = TurnType::Turn;
     }
 
     BOOST_ASSERT(steps.front().intersections.size() >= 1);

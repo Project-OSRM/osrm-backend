@@ -52,16 +52,15 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
         return intersection;
 
     const auto findNextIntersectionForRoad =
-        [&](const NodeID at_node, const ConnectedRoad &road, NodeID *output_node) {
+        [&](const NodeID at_node, const ConnectedRoad &road, NodeID &output_node) {
             auto intersection = intersection_generator(at_node, road.turn.eid);
             auto in_edge = road.turn.eid;
             // skip over traffic lights
-            if (intersection.size() == 2)
+            while (intersection.size() == 2)
             {
                 const auto node = node_based_graph.GetTarget(in_edge);
                 in_edge = intersection[1].turn.eid;
-                if (output_node)
-                    *output_node = node_based_graph.GetTarget(in_edge);
+                output_node = node_based_graph.GetTarget(in_edge);
                 intersection = intersection_generator(node, in_edge);
             }
             return intersection;
@@ -78,10 +77,14 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
             // a one-sided sliproad, however, the non-sliproad can be considered `obvious`. Here we
             // assume that this could be the case and check for a potential sliproad/non-sliproad
             // situation.
-            const auto intersection_following_index_one =
-                findNextIntersectionForRoad(intersection_node_id, intersection[1], NULL);
-            const auto intersection_following_index_two =
-                findNextIntersectionForRoad(intersection_node_id, intersection[2], NULL);
+            NodeID intersection_node_one, intersection_node_two;
+            const auto intersection_following_index_one = findNextIntersectionForRoad(
+                intersection_node_id, intersection[1], intersection_node_one);
+            const auto intersection_following_index_two = findNextIntersectionForRoad(
+                intersection_node_id, intersection[2], intersection_node_two);
+
+            // In case of loops at the end of the road, we will arrive back at the intersection
+            // itself. If that is the case, the road is obviously not a sliproad.
 
             // a sliproad has to enter a road without choice
             const auto couldBeSliproad = [](const Intersection &intersection) {
@@ -93,9 +96,11 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                 return true;
             };
 
-            if (couldBeSliproad(intersection_following_index_one))
+            if (couldBeSliproad(intersection_following_index_one) &&
+                intersection_node_id != intersection_node_two)
                 return 2;
-            else if (couldBeSliproad(intersection_following_index_two))
+            else if (couldBeSliproad(intersection_following_index_two) &&
+                     intersection_node_id != intersection_node_one)
                 return 1;
             else
                 return 0;
@@ -149,7 +154,11 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     auto next_intersection_node = node_based_graph.GetTarget(next_road.turn.eid);
 
     const auto next_road_next_intersection =
-        findNextIntersectionForRoad(intersection_node_id, next_road, &next_intersection_node);
+        findNextIntersectionForRoad(intersection_node_id, next_road, next_intersection_node);
+
+    // If we are at a traffic loop at the end of a road, don't consider it a sliproad
+    if (intersection_node_id == next_intersection_node)
+        return intersection;
 
     std::unordered_set<NameID> target_road_names;
 
