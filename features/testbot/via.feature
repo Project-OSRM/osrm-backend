@@ -173,7 +173,7 @@ Feature: Via points
             | c,d,a     | abc,bd,bd,bd,abc,abc |
 
     # See issue #2349
-    @bug @todo
+    @todo
     Scenario: Via point at a dead end with oneway
         Given the node map
             | a | b | c |

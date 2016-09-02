@@ -85,21 +85,12 @@ module.exports = function () {
                     } else {
                         got.trips = encodedResult;
                         got.trips = extendedTarget;
-                        this.logFail(row, got, { trip: { query: this.query, response: res }});
                     }
-
-                    ok = true;
 
                     for (var key in row) {
                         if (this.FuzzyMatch.match(got[key], row[key])) {
                             got[key] = row[key];
-                        } else {
-                            ok = false;
                         }
-                    }
-
-                    if (!ok) {
-                        this.logFail(row, got, { trip: { query: this.query, response: res }});
                     }
 
                     cb(null, got);

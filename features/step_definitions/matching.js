@@ -157,7 +157,6 @@ module.exports = function () {
                         } else {
                             got.matchings = encodedResult;
                             row.matchings = extendedTarget;
-                            this.logFail(row, got, { matching: { query: this.query, response: res } });
                         }
 
                         cb(null, got);

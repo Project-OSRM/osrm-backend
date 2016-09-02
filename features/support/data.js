@@ -1,11 +1,13 @@
-var fs = require('fs');
-var path = require('path');
-var util = require('util');
-var exec = require('child_process').exec;
-var d3 = require('d3-queue');
+'use strict';
 
-var OSM = require('./build_osm');
-var classes = require('./data_classes');
+const fs = require('fs');
+const util = require('util');
+const d3 = require('d3-queue');
+
+const OSM = require('../lib/osm');
+const classes = require('./data_classes');
+const tableDiff = require('../lib/table_diff');
+const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
     this.setGridSize = (meters) => {
@@ -94,13 +96,8 @@ module.exports = function () {
         q.awaitAll(callback);
     };
 
-    this.ensureDecimal = (i) => {
-        if (parseInt(i) === i) return i.toFixed(1);
-        else return i;
-    };
-
     this.tableCoordToLonLat = (ci, ri) => {
-        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(this.ensureDecimal);
+        return [this.origin[0] + ci * this.zoom, this.origin[1] - ri * this.zoom].map(ensureDecimal);
     };
 
     this.addOSMNode = (name, lon, lat, id) => {
@@ -132,10 +129,6 @@ module.exports = function () {
         return this.nameWayHash[s.toString()] || this.nameWayHash[s.toString().split('').reverse().join('')];
     };
 
-    this.resetData = () => {
-        this.resetOSM();
-    };
-
     this.makeOSMId = () => {
         this.osmID = this.osmID + 1;
         return this.osmID;
@@ -143,206 +136,81 @@ module.exports = function () {
 
     this.resetOSM = () => {
         this.OSMDB.clear();
-        this.osmData.reset();
         this.nameNodeHash = {};
         this.locationHash = {};
+        this.shortcutsHash = {};
         this.nameWayHash = {};
         this.osmID = 0;
     };
 
     this.writeOSM = (callback) => {
-        fs.exists(this.DATA_FOLDER, (exists) => {
-            var mkDirFn = exists ? (cb) => { cb(); } : fs.mkdir.bind(fs.mkdir, this.DATA_FOLDER);
-            mkDirFn((err) => {
-                if (err) return callback(err);
-                var osmPath = path.resolve(this.DATA_FOLDER, util.format('%s.osm', this.osmData.osmFile));
-                fs.exists(osmPath, (exists) => {
-                    if (!exists) fs.writeFile(osmPath, this.osmData.str, callback);
-                    else callback();
+        fs.exists(this.scenarioCacheFile, (exists) => {
+            if (exists) callback();
+            else {
+                this.OSMDB.toXML((xml) => {
+                    fs.writeFile(this.scenarioCacheFile, xml, callback);
                 });
-            });
+            }
         });
     };
 
-    this.isExtracted = (callback) => {
-        fs.exists(util.format('%s.osrm', this.osmData.extractedFile), (core) => {
-            if (!core) return callback(false);
-            fs.exists(util.format('%s.osrm.names', this.osmData.extractedFile), (names) => {
-                if (!names) return callback(false);
-                fs.exists(util.format('%s.osrm.restrictions', this.osmData.extractedFile), (restrictions) => {
-                    return callback(restrictions);
-                });
-            });
-        });
-    };
-
-    this.isContracted = (callback) => {
-        fs.exists(util.format('%s.osrm.hsgr', this.osmData.contractedFile), callback);
-    };
-
-    this.writeTimestamp = (callback) => {
-        fs.writeFile(util.format('%s.osrm.timestamp', this.osmData.contractedFile), this.OSM_TIMESTAMP, callback);
-    };
-
-    this.writeInputData = (callback) => {
-        this.writeOSM((err) => {
-            if (err) return callback(err);
-            this.writeTimestamp(callback);
+    this.linkOSM = (callback) => {
+        fs.exists(this.inputCacheFile, (exists) => {
+            if (exists) callback();
+            else {
+                fs.link(this.scenarioCacheFile, this.inputCacheFile, callback);
+            }
         });
     };
 
     this.extractData = (callback) => {
-        this.logPreprocessInfo();
-        this.log(util.format('== Extracting %s.osm...', this.osmData.osmFile), 'preprocess');
-        var cmd = util.format('%s/osrm-extract %s.osm %s --profile %s/%s.lua >>%s 2>&1',
-            this.BIN_PATH, this.osmData.osmFile, this.extractArgs || '', this.PROFILES_PATH, this.profile, this.PREPROCESS_LOG_FILE);
-        this.log(cmd);
-        process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err) => {
-            if (err) {
-                this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
-                process.chdir('../');
-                return callback(this.ExtractError(err.code, util.format('osrm-extract exited with code %d', err.code)));
-            }
+        fs.exists(this.processedCacheFile + '.extract', (exists) => {
+            if (exists) return callback();
 
-            var q = d3.queue();
-
-            var rename = (file, cb) => {
-                this.log(util.format('Renaming %s.%s to %s.%s', this.osmData.osmFile, file, this.osmData.extractedFile, file), 'preprocess');
-                fs.rename([this.osmData.osmFile, file].join('.'), [this.osmData.extractedFile, file].join('.'), (err) => {
-                    if (err) return cb(this.FileError(null, 'failed to rename data file after extracting'));
-                    cb();
-                });
-            };
-
-            var renameIfExists = (file, cb) => {
-                fs.stat([this.osmData.osmFile, file].join('.'), (doesNotExistErr, exists) => {
-                    if (exists) rename(file, cb);
-                    else cb();
-                });
-            };
-
-            ['osrm', 'osrm.ebg', 'osrm.edges', 'osrm.enw', 'osrm.fileIndex', 'osrm.geometry', 'osrm.icd',
-             'osrm.names', 'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions', 'osrm.tld', 'osrm.tls'].forEach(file => {
-                 q.defer(rename, file);
-             });
-
-            ['osrm.edge_penalties', 'osrm.edge_segment_lookup'].forEach(file => {
-                q.defer(renameIfExists, file);
-            });
-
-            q.awaitAll((err) => {
-                this.log('Finished extracting ' + this.osmData.extractedFile, 'preprocess');
-                process.chdir('../');
-                callback(err);
+            this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), this.environment, (err) => {
+                if (err) {
+                    return callback(new Error(util.format('osrm-extract exited with code %d: %s', err.code, err)));
+                }
+                fs.writeFile(this.processedCacheFile + '.extract', 'ok', callback);
             });
         });
     };
 
     this.contractData = (callback) => {
-        this.logPreprocessInfo();
-        this.log(util.format('== Contracting %s.osm...', this.osmData.extractedFile), 'preprocess');
-        var cmd = util.format('%s/osrm-contract %s %s.osrm >>%s 2>&1',
-            this.BIN_PATH, this.contractArgs || '', this.osmData.extractedFile, this.PREPROCESS_LOG_FILE);
-        this.log(cmd);
-        process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err) => {
-            if (err) {
-                this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
-                process.chdir('../');
-                return callback(this.ContractError(err.code, util.format('osrm-contract exited with code %d', err.code)));
-            }
+        fs.exists(this.processedCacheFile + '.contract', (exists) => {
+            if (exists) return callback();
 
-            var rename = (file, cb) => {
-                this.log(util.format('Renaming %s.%s to %s.%s', this.osmData.extractedFile, file, this.osmData.contractedFile, file), 'preprocess');
-                fs.rename([this.osmData.extractedFile, file].join('.'), [this.osmData.contractedFile, file].join('.'), (err) => {
-                    if (err) return cb(this.FileError(null, 'failed to rename data file after contracting.'));
-                    cb();
-                });
-            };
-
-            var renameIfExists = (file, cb) => {
-                fs.stat([this.osmData.extractedFile, file].join('.'), (doesNotExistErr, exists) => {
-                    if (exists) rename(file, cb);
-                    else cb();
-                });
-            };
-
-            var copy = (file, cb) => {
-                this.log(util.format('Copying %s.%s to %s.%s', this.osmData.extractedFile, file, this.osmData.contractedFile, file), 'preprocess');
-                fs.createReadStream([this.osmData.extractedFile, file].join('.'))
-                    .pipe(fs.createWriteStream([this.osmData.contractedFile, file].join('.'))
-                            .on('finish', cb)
-                        )
-                    .on('error', () => {
-                        return cb(this.FileError(null, 'failed to copy data after contracting.'));
-                    });
-            };
-
-            var q = d3.queue();
-
-            ['osrm', 'osrm.core', 'osrm.datasource_indexes', 'osrm.datasource_names', 'osrm.ebg','osrm.edges',
-             'osrm.enw', 'osrm.fileIndex', 'osrm.geometry', 'osrm.hsgr', 'osrm.icd','osrm.level', 'osrm.names',
-             'osrm.nodes', 'osrm.properties', 'osrm.ramIndex', 'osrm.restrictions', 'osrm.tld', 'osrm.tls'].forEach((file) => {
-                 q.defer(rename, file);
-             });
-
-            ['osrm.edge_penalties', 'osrm.edge_segment_lookup'].forEach(file => {
-                q.defer(renameIfExists, file);
-            });
-
-            [].forEach((file) => {
-                q.defer(copy, file);
-            });
-
-            q.awaitAll((err) => {
-                this.log('Finished contracting ' + this.osmData.contractedFile, 'preprocess');
-                process.chdir('../');
-                callback(err);
+            this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), this.environment, (err) => {
+                if (err) {
+                    return callback(new Error(util.format('osrm-contract exited with code %d: %s', err.code, err)));
+                }
+                fs.writeFile(this.processedCacheFile + '.contract', 'ok', callback);
             });
         });
     };
 
-    var noop = (cb) => cb();
+    this.extractAndContract = (callback) => {
+        let queue = d3.queue(1);
+        queue.defer(this.extractData.bind(this));
+        queue.defer(this.contractData.bind(this));
+        queue.awaitAll(callback);
+    };
 
     this.reprocess = (callback) => {
-        this.osmData.populate(() => {
-            this.isContracted((isContracted) => {
-                if (!isContracted) {
-                    this.writeAndExtract((e) => {
-                        if (e) return callback(e);
-                        this.contractData((e) => {
-                            if (e) return callback(e);
-                            this.logPreprocessDone();
-                            callback();
-                        });
-                    });
-                } else {
-                    this.log('Already contracted ' + this.osmData.contractedFile, 'preprocess');
-                    callback();
-                }
-            });
-        });
-    };
-
-    this.writeAndExtract = (callback) => {
-        this.writeInputData((e) => {
-            if (e) return callback(e);
-            this.isExtracted((isExtracted) => {
-                var extractFn = isExtracted ? noop : this.extractData;
-                if (isExtracted) this.log('Already extracted ' + this.osmData.extractedFile, 'preprocess');
-                extractFn((e) => {
-                    callback(e);
-                });
-            });
-        });
+        let queue = d3.queue(1);
+        queue.defer(this.writeOSM.bind(this));
+        queue.defer(this.linkOSM.bind(this));
+        queue.defer(this.extractAndContract.bind(this));
+        queue.awaitAll(callback);
     };
 
     this.reprocessAndLoadData = (callback) => {
-        this.reprocess((e) => {
-            if (e) return callback(e);
-            this.OSRMLoader.load(util.format('%s.osrm', this.osmData.contractedFile), callback);
-        });
+        let queue = d3.queue(1);
+        queue.defer(this.writeOSM.bind(this));
+        queue.defer(this.linkOSM.bind(this));
+        queue.defer(this.extractAndContract.bind(this));
+        queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
+        queue.awaitAll(callback);
     };
 
     this.processRowsAndDiff = (table, fn, callback) => {
@@ -352,7 +220,9 @@ module.exports = function () {
 
         q.awaitAll((err, actual) => {
             if (err) return callback(err);
-            this.diffTables(table, actual, {}, callback);
+            let diff = tableDiff(table, actual);
+            if (diff) callback(new Error(diff));
+            else callback();
         });
     };
 };

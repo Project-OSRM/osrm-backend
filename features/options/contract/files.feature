@@ -1,9 +1,5 @@
 @prepare @options @files
 Feature: osrm-contract command line options: files
-# expansions:
-# {extracted_base} => path to current extracted input file
-# {profile} => path to current profile script
-
     Background:
         Given the profile "testbot"
         And the node map
@@ -14,12 +10,11 @@ Feature: osrm-contract command line options: files
         And the data has been extracted
 
     Scenario: osrm-contract - Passing base file
-        When I run "osrm-contract {extracted_base}.osrm"
-        Then stderr should be empty
-        And it should exit with code 0
+        When I run "osrm-contract {processed_file}"
+        Then it should exit successfully
 
     Scenario: osrm-contract - Missing input file
-        When I run "osrm-contract over-the-rainbow.osrm"
+        When I try to run "osrm-contract over-the-rainbow.osrm"
         And stderr should contain "over-the-rainbow.osrm"
         And stderr should contain "not found"
-        And it should exit with code 1
+        And it should exit with an error

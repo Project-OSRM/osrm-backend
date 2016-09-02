@@ -12,11 +12,11 @@ Feature: osrm-routed command line options: version
         Then stderr should be empty
         And stdout should contain 1 line
         And stdout should contain /(v\d{1,2}\.\d{1,2}\.\d{1,2}|\w*-\d+-\w+)/
-        And it should exit with code 0
+        And it should exit successfully
 
     Scenario: osrm-routed - Version, long
         When I run "osrm-routed --version"
         Then stderr should be empty
         And stdout should contain 1 line
         And stdout should contain /(v\d{1,2}\.\d{1,2}\.\d{1,2}|\w*-\d+-\w+)/
-        And it should exit with code 0
+        And it should exit successfully

@@ -26,7 +26,7 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
             1,2,5,0,comment
             3,4,7,-20
             """
-        And the contract extra arguments "--turn-penalty-file penalties.csv"
+        And the contract extra arguments "--turn-penalty-file {penalties_file}"
         When I route I should get
             | from | to | route    | speed   | time    |
             | a    | e  | ab,be,be | 36 km/h | 40s +-1 |

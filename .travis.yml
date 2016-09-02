@@ -1,4 +1,4 @@
-language: cpp
+language: generic
 
 git:
   depth: 10
@@ -15,13 +15,12 @@ branches:
     - master
 
 cache:
-  ccache: true
-  apt: true
   directories:
     - test/cache
 
 env:
   global:
+   - CCACHE_DISABLE=1
    - CCACHE_TEMPDIR=/tmp/.ccache-temp
    - CCACHE_COMPRESS=1
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
@@ -35,38 +34,38 @@ matrix:
 
     # Debug Builds
     - os: linux
-      compiler: "gcc-5-debug"
+      compiler: gcc
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
+      env: CACHE_NAME=gcc-5-debug CC='gcc-5' CXX='g++-5' BUILD_TYPE='Debug' COVERAGE=ON
 
     - os: linux
-      compiler: "clang-3.8-debug"
+      compiler: clang
       addons: &clang38
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CLANG_VERSION='3.8.0' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
+      env: CACHE_NAME=clang-3.8-debug CLANG_VERSION='3.8.0' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON
 
     - os: osx
-      osx_image: xcode7.3
       compiler: clang
-      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
+      osx_image: xcode7.3
+      env: CACHE_NAME=clang-3.8-debug CC='clang' CXX='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
 
     # Release Builds
     - os: linux
-      compiler: "gcc-5-release"
+      compiler: gcc
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
+      env: CACHE_NAME=gcc-5-release CC='gcc-5' CXX='g++-5' BUILD_TYPE='Release'
 
     - os: linux
-      compiler: "gcc-5-release-i686"
-      env: TARGET_ARCH='i686' CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release'
+      compiler: gcc
+      env: CACHE_NAME=gcc-5-release-i686 TARGET_ARCH='i686' CC='gcc-5' CXX='g++-5' BUILD_TYPE='Release'
 
       # Disabled because of CI slowness
       #- os: linux
@@ -75,22 +74,22 @@ matrix:
       #-   apt:
       #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
       #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release'
+      #- env: CC='clang-3.8' CXX='clang++-3.8' BUILD_TYPE='Release'
 
       # Disabled because of CI slowness
       #- os: osx
       #- osx_image: xcode7.3
       #- compiler: clang
-      #- env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
+      #- env: CC='clang' CXX='clang++' BUILD_TYPE='Release'
 
     # Shared Library
     - os: linux
-      compiler: "gcc-5-release-shared"
+      compiler: gcc
       addons: &gcc5
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-5', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-5' CXXCOMPILER='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+      env: CACHE_NAME=gcc-5-release-shared CC='gcc-5' CXX='g++-5' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
       # Disabled because CI slowness
       #- os: linux
@@ -99,7 +98,7 @@ matrix:
       #-   apt:
       #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
       #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+      #- env: CC='clang-3.8' CXX='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
@@ -112,8 +111,8 @@ before_install:
   - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR} || exit 1
   - |
     if [[ ${CLANG_VERSION:-false} != false ]]; then
-      export CCOMPILER='clang'
-      export CXXCOMPILER='clang++'
+      export CC='clang'
+      export CXX='clang++'
       CLANG_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/clang/${CLANG_VERSION}.tar.gz"
       travis_retry wget --quiet -O - ${CLANG_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR} || exit 1
     fi
@@ -129,7 +128,6 @@ install:
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
   - mkdir build && pushd build
-  - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DCOVERAGE=${COVERAGE:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=ON -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
   - make osrm-extract --jobs=3

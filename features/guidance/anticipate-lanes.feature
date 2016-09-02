@@ -259,7 +259,7 @@ Feature: Turn Lane Guidance
             | waypoints | route                 | turns                                                   | lanes                                                                                                                                                  |
             | a,f       | abx,bcy,cdz,dew,ef,ef | depart,turn right,turn left,turn right,turn left,arrive | ,straight:false right:false right:true right:false,left:false left:true straight:false,straight:false right:true right:false,left:true straight:false, |
 
-    @anticipate @todo @bug @2661
+    @anticipate @todo @2661
     Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
         Given the node map
             |   |   | e |   |   |
@@ -480,7 +480,7 @@ Feature: Turn Lane Guidance
             | waypoints | route           | turns                                            | lanes                                                                                      |
             | a,h       | abx,bc,fg,gh,gh | depart,turn right,cdefc-exit-2,turn right,arrive | ,straight:false right:false right:false right:false right:true,,straight:false right:true, |
 
-    @anticipate @bug @todo
+    @anticipate @todo
     Scenario: Tripple Right keeping Left
         Given the node map
             | a |   |   |   | b |   | i |
@@ -505,7 +505,7 @@ Feature: Turn Lane Guidance
             | a,f       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,end of road left,arrive  | ,none:false none:true right:false right:false,none:false none:true right:false right:false,none:false none:true right:false right:false,left:true right:false right:false, |
             | a,g       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,end of road right,arrive | ,none:false none:false right:true right:true,none:false none:false right:true right:true,none:false none:false right:true right:true,left:false right:true right:true,     |
 
-    @anticipate @bug @todo
+    @anticipate @todo
     Scenario: Tripple Left keeping Right
         Given the node map
             | i |   | b |   |   |   | a |
