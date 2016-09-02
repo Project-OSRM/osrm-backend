@@ -13,6 +13,8 @@
 #include <exception>
 #include <new>
 
+#include "util/meminfo.hpp"
+
 using namespace osrm;
 
 enum class return_code : unsigned
@@ -153,7 +155,11 @@ int main(int argc, char *argv[]) try
     // setup scripting environment
     extractor::LuaScriptingEnvironment scripting_environment(
         extractor_config.profile_path.string().c_str());
-    return extractor::Extractor(extractor_config).run(scripting_environment);
+    auto exitcode = extractor::Extractor(extractor_config).run(scripting_environment);
+
+    util::DumpMemoryStats();
+
+    return exitcode;
 }
 catch (const std::bad_alloc &e)
 {

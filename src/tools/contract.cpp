@@ -15,6 +15,8 @@
 #include <new>
 #include <ostream>
 
+#include "util/meminfo.hpp"
+
 using namespace osrm;
 
 enum class return_code : unsigned
@@ -166,7 +168,11 @@ int main(int argc, char *argv[]) try
 
     tbb::task_scheduler_init init(contractor_config.requested_num_threads);
 
-    return contractor::Contractor(contractor_config).Run();
+    auto exitcode = contractor::Contractor(contractor_config).Run();
+
+    util::DumpMemoryStats();
+
+    return exitcode;
 }
 catch (const std::bad_alloc &e)
 {
