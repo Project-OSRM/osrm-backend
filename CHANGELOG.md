@@ -12,6 +12,7 @@
       - Fixed an issue that would result in segfaults for viaroutes with an invalid intermediate segment when u-turns were allowed at the via-location
       - Invalid only_* restrictions could result in loss of connectivity. As a fallback, we assume all turns allowed when the restriction is not valid
       - Fixed a bug that could result in an infinite loop when finding information about an upcoming intersection
+      - Fixed a bug that led to not discovering if a road simply looses a considered prefix
 
 # 5.3.0
   Changes from 5.3.0-rc.3
