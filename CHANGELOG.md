@@ -3,6 +3,7 @@
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
       - added left_hand_driving flag in global profile properties
+      - modified turn penalty function for car profile - better fit to real data
     - Guidance
       - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
     - API:
