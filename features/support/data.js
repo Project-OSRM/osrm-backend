@@ -163,36 +163,36 @@ module.exports = function () {
         });
     };
 
-    this.extractData = (callback) => {
-        fs.exists(this.processedCacheFile + '.extract', (exists) => {
+    this.extractData = (stamp, callback) => {
+        fs.exists(stamp, (exists) => {
             if (exists) return callback();
 
             this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), this.environment, (err) => {
                 if (err) {
                     return callback(new Error(util.format('osrm-extract exited with code %d: %s', err.code, err)));
                 }
-                fs.writeFile(this.processedCacheFile + '.extract', 'ok', callback);
+                fs.writeFile(stamp, 'ok', callback);
             });
         });
     };
 
-    this.contractData = (callback) => {
-        fs.exists(this.processedCacheFile + '.contract', (exists) => {
+    this.contractData = (stamp, callback) => {
+        fs.exists(stamp, (exists) => {
             if (exists) return callback();
 
             this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), this.environment, (err) => {
                 if (err) {
                     return callback(new Error(util.format('osrm-contract exited with code %d: %s', err.code, err)));
                 }
-                fs.writeFile(this.processedCacheFile + '.contract', 'ok', callback);
+                fs.writeFile(stamp, 'ok', callback);
             });
         });
     };
 
     this.extractAndContract = (callback) => {
         let queue = d3.queue(1);
-        queue.defer(this.extractData.bind(this));
-        queue.defer(this.contractData.bind(this));
+        queue.defer(this.extractData.bind(this), this.processedCacheFile + '.extract');
+        queue.defer(this.contractData.bind(this), this.processedCacheFile + '.contract');
         queue.awaitAll(callback);
     };
 
