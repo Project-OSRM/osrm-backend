@@ -2,12 +2,12 @@
 
 var d3 = require('d3-queue');
 var path = require('path');
+var mkdirp = require('mkdirp');
 var OSM = require('../lib/osm');
 var OSRMLoader = require('../lib/osrm_loader');
 
 module.exports = function () {
     this.BeforeFeatures((features, callback) => {
-        this.setupLogs();
         this.osrmLoader = new OSRMLoader(this);
         this.OSMDB = new OSM.DB();
 
@@ -39,19 +39,24 @@ module.exports = function () {
 
         this.scenarioID = this.getScenarioID(scenario);
         this.setupScenarioCache(this.scenarioID);
-        this.setupScenarioLogFile(this.featureID, this.scenarioID, callback);
+
+        // setup output logging
+        let logDir = path.join(this.LOGS_PATH, this.featureID);
+        this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
+        d3.queue(1)
+            .defer(mkdirp, logDir)
+            .awaitAll(callback);
     });
 
     this.After((scenario, callback) => {
         var that = this;
         this.osrmLoader.shutdown(function() {
             that.resetOptionsOutput();
-            that.finishScenarioLogs();
             callback();
         });
     });
 
     this.AfterFeatures((features, callback) => {
-        this.finishLogs(callback);
+        callback();
     });
 };
