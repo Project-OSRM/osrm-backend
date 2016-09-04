@@ -84,7 +84,7 @@ local function get_psv_counts(way)
     if( psv_backward and psv_backward ~= "" ) then
         bw = tonumber(psv_backward);
         if( bw == nil ) then
-            fw = 0
+            bw = 0
         end
     end
     return fw, bw

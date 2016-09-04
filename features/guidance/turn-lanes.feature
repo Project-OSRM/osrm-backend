@@ -120,6 +120,24 @@ Feature: Turn Lane Guidance
             | a,d       | road,turn,turn | depart,turn right,arrive | ,straight:false right:true, |
             | a,c       | road,road      | depart,arrive            | ,                           |
 
+    # This tests whether empty/invalid PSV tags cause osrm-extract to crash
+    @bug
+    Scenario: Turn with Bus-Lane
+        Given the node map
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   | d |   |   |
+
+        And the ways
+            | nodes | name | turn:lanes:forward | lanes:psv:forward | lanes:psv:backward |
+            | ab    | road | through\|right\|   | 1                 | foo                |
+            | bc    | road |                    |                   |                    |
+            | bd    | turn |                    |                   |                    |
+
+        When I route I should get
+            | waypoints | route          | turns                    | lanes                       |
+            | a,d       | road,turn,turn | depart,turn right,arrive | ,straight:false right:true, |
+
     @PROFILE @LANES
     Scenario: Turn with Bus-Lane but without lanes
         Given the node map
