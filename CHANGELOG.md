@@ -13,6 +13,7 @@
       - Invalid only_* restrictions could result in loss of connectivity. As a fallback, we assume all turns allowed when the restriction is not valid
       - Fixed a bug that could result in an infinite loop when finding information about an upcoming intersection
       - Fixed a bug that led to not discovering if a road simply looses a considered prefix
+      - BREAKING: Fixed a bug that could crash postprocessing of instructions on invalid roundabout taggings. This change requires reprocessing datasets with osrm-extract and osrm-contract
 
 # 5.3.0
   Changes from 5.3.0-rc.3
