@@ -1,9 +1,10 @@
 'use strict';
 
-var fs = require('fs');
-var util = require('util');
-var Timeout = require('node-timeout');
-var tryConnect = require('../lib/try_connect');
+const fs = require('fs');
+const util = require('util');
+const Timeout = require('node-timeout');
+const tryConnect = require('../lib/try_connect');
+const errorReason = require('./utils').errorReason;
 
 class OSRMBaseLoader{
     constructor (scope) {
@@ -78,7 +79,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
 
         this.child = this.scope.runBin('osrm-routed', util.format("%s -p %d", this.inputFile, this.scope.OSRM_PORT), this.scope.environment, (err) => {
           if (err) {
-              throw new Error(util.format('osrm-routed exited with code %d', err.code));
+              throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
           }
         });
         callback();
@@ -111,9 +112,9 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
         if (this.osrmIsRunning()) return callback();
 
         this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT), this.scope.environment, (err) => {
-          if (err) {
-              throw new Error(util.format('osrm-routed exited with code %d: %s', err.code, err));
-          }
+            if (err) {
+                throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
+            }
         });
 
         // we call the callback here, becuase we don't want to wait for the child process to finish

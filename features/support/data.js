@@ -8,6 +8,7 @@ const OSM = require('../lib/osm');
 const classes = require('./data_classes');
 const tableDiff = require('../lib/table_diff');
 const ensureDecimal = require('../lib/utils').ensureDecimal;
+const errorReason = require('../lib/utils').errorReason;
 
 module.exports = function () {
     this.setGridSize = (meters) => {
@@ -169,7 +170,7 @@ module.exports = function () {
 
             this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), this.environment, (err) => {
                 if (err) {
-                    return callback(new Error(util.format('osrm-extract exited with code %d: %s', err.code, err)));
+                    return callback(new Error(util.format('osrm-extract %s: %s', errorReason(err), err.cmd)));
                 }
                 fs.writeFile(stamp, 'ok', callback);
             });
@@ -182,7 +183,7 @@ module.exports = function () {
 
             this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), this.environment, (err) => {
                 if (err) {
-                    return callback(new Error(util.format('osrm-contract exited with code %d: %s', err.code, err)));
+                    return callback(new Error(util.format('osrm-contract %s: %s', errorReason(err), err)));
                 }
                 fs.writeFile(stamp, 'ok', callback);
             });
