@@ -96,8 +96,11 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
 
         this.loadData((err) => {
             if (err) return callback(err);
-            if (this.osrmIsRunning()) return callback();
-            else this.launch(callback);
+            if (!this.osrmIsRunning()) this.launch(callback);
+            else {
+                this.scope.setupOutputLog(this.child, fs.createWriteStream(this.scope.scenarioLogFile, {'flags': 'a'}));
+                callback();
+            }
         });
     }
 

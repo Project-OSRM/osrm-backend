@@ -691,11 +691,7 @@ Feature: Turn Lane Guidance
             | a,f       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,turn left,arrive  | ,none:false none:false right:true right:false,none:false none:false right:true right:false,none:false none:false right:true right:false,left:true right:false right:false, |
             | a,g       | start,first,second,third,fourth,fourth | depart,turn right,turn right,turn right,turn right,arrive | ,none:false none:false right:true right:true,none:false none:false right:true right:true,none:false none:false right:true right:true,left:false right:true right:true,     |
 
-<<<<<<< HEAD
     @anticipate
-=======
-    @anticipate @todo
->>>>>>> cb7d8bd... It's alive
     Scenario: Tripple Left keeping Right
         Given the node map
             | i |   | b |   |   |   | a |

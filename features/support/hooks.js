@@ -3,6 +3,7 @@
 var d3 = require('d3-queue');
 var path = require('path');
 var mkdirp = require('mkdirp');
+var rimraf = require('rimraf');
 var OSM = require('../lib/osm');
 var OSRMLoader = require('../lib/osrm_loader');
 
@@ -45,15 +46,13 @@ module.exports = function () {
         this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
         d3.queue(1)
             .defer(mkdirp, logDir)
+            .defer(rimraf, this.scenarioLogFile)
             .awaitAll(callback);
     });
 
     this.After((scenario, callback) => {
-        var that = this;
-        this.osrmLoader.shutdown(function() {
-            that.resetOptionsOutput();
-            callback();
-        });
+        this.resetOptionsOutput();
+        callback();
     });
 
     this.AfterFeatures((features, callback) => {
