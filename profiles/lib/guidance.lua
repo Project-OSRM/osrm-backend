@@ -95,7 +95,7 @@ local function process_lanes(turn_lane,vehicle_lane,first_count,second_count)
     if turn_lane and turn_lane ~= "" then
         if vehicle_lane and vehicle_lane ~= "" then
             turn_lane = applyAccessTokens(turn_lane,vehicle_lane)
-        elseif fw_count ~= 0 or bw_count ~= 0 then
+        elseif first_count ~= 0 or second_count ~= 0 then
             turn_lane = trimLaneString(turn_lane, first_count, second_count)
         end
     end
