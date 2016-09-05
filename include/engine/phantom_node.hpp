@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PHANTOM_NODES_H
 
 #include "extractor/travel_mode.hpp"
+#include "extractor/edge_based_node.hpp"
 #include "util/typedefs.hpp"
 
 #include "util/coordinate.hpp"
@@ -46,66 +47,51 @@ namespace engine
 
 struct PhantomNode
 {
-    PhantomNode(SegmentID forward_segment_id,
-                SegmentID reverse_segment_id,
-                unsigned name_id,
+    PhantomNode(extractor::EdgeBasedNode edge_data&,
                 int forward_weight,
                 int reverse_weight,
                 int forward_offset,
                 int reverse_offset,
-                unsigned forward_packed_geometry_id_,
-                unsigned reverse_packed_geometry_id_,
-                bool is_tiny_component,
-                unsigned component_id,
                 util::Coordinate location,
                 util::Coordinate input_location,
-                unsigned short fwd_segment_position,
                 extractor::TravelMode forward_travel_mode,
                 extractor::TravelMode backward_travel_mode)
-        : forward_segment_id(forward_segment_id), reverse_segment_id(reverse_segment_id),
-          name_id(name_id), forward_weight(forward_weight), reverse_weight(reverse_weight),
+        : edge_data(edge_data), forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
-          forward_packed_geometry_id(forward_packed_geometry_id_),
-          reverse_packed_geometry_id(reverse_packed_geometry_id_),
-          component{component_id, is_tiny_component}, location(std::move(location)),
-          input_location(std::move(input_location)), fwd_segment_position(fwd_segment_position),
+          location(std::move(location)), input_location(std::move(input_location)),
           forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
     {
     }
 
     PhantomNode()
-        : forward_segment_id{SPECIAL_SEGMENTID, false},
-          reverse_segment_id{SPECIAL_SEGMENTID, false},
-          name_id(std::numeric_limits<unsigned>::max()), forward_weight(INVALID_EDGE_WEIGHT),
-          reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0), reverse_offset(0),
-          forward_packed_geometry_id(SPECIAL_EDGEID), reverse_packed_geometry_id(SPECIAL_EDGEID),
-          component{INVALID_COMPONENTID, false}, fwd_segment_position(0),
-          forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
+        : edge_data(extractor::EdgeBasedNode), forward_weight(INVALID_EDGE_WEIGHT),
+          reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0),
+          reverse_offset(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
 
     int GetForwardWeightPlusOffset() const
     {
-        BOOST_ASSERT(forward_segment_id.enabled);
+        BOOST_ASSERT(edge_data->forward_segment_id.enabled);
         return forward_offset + forward_weight;
     }
 
     int GetReverseWeightPlusOffset() const
     {
-        BOOST_ASSERT(reverse_segment_id.enabled);
+        BOOST_ASSERT(edge_data->reverse_segment_id.enabled);
         return reverse_offset + reverse_weight;
     }
 
-    bool IsBidirected() const { return forward_segment_id.enabled && reverse_segment_id.enabled; }
+    bool IsBidirected() const { return edge_data->forward_segment_id.enabled && edge_data->reverse_segment_id.enabled; }
 
     bool IsValid(const unsigned number_of_nodes) const
     {
-        return location.IsValid() && ((forward_segment_id.id < number_of_nodes) ||
-                                      (reverse_segment_id.id < number_of_nodes)) &&
+        return location.IsValid() && ((edge_data->forward_segment_id.id < number_of_nodes) ||
+                                      (edge_data->reverse_segment_id.id < number_of_nodes)) &&
                ((forward_weight != INVALID_EDGE_WEIGHT) ||
                 (reverse_weight != INVALID_EDGE_WEIGHT)) &&
-               (component.id != INVALID_COMPONENTID) && (name_id != INVALID_NAMEID);
+               (edge_data->component.id != INVALID_COMPONENTID) && (edge_data->name_id != INVALID_NAMEID);
     }
 
     bool IsValid(const unsigned number_of_nodes, const util::Coordinate queried_coordinate) const
@@ -113,40 +99,15 @@ struct PhantomNode
         return queried_coordinate == input_location && IsValid(number_of_nodes);
     }
 
-    bool IsValid() const { return location.IsValid() && (name_id != INVALID_NAMEID); }
+    bool IsValid() const { return location.IsValid() && (edge_data->name_id != INVALID_NAMEID); }
 
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
-    template <class OtherT>
-    explicit PhantomNode(const OtherT &other,
-                         int forward_weight_,
-                         int forward_offset_,
-                         int reverse_weight_,
-                         int reverse_offset_,
-                         const util::Coordinate location_,
-                         const util::Coordinate input_location_)
-        : forward_segment_id{other.forward_segment_id},
-          reverse_segment_id{other.reverse_segment_id}, name_id{other.name_id},
-          forward_weight{forward_weight_}, reverse_weight{reverse_weight_},
-          forward_offset{forward_offset_}, reverse_offset{reverse_offset_},
-          forward_packed_geometry_id{other.forward_packed_geometry_id},
-          reverse_packed_geometry_id{other.reverse_packed_geometry_id},
-          component{other.component.id, other.component.is_tiny}, location{location_},
-          input_location{input_location_}, fwd_segment_position{other.fwd_segment_position},
-          forward_travel_mode{other.forward_travel_mode},
-          backward_travel_mode{other.backward_travel_mode}
-    {
-    }
-
-    SegmentID forward_segment_id;
-    SegmentID reverse_segment_id;
-    unsigned name_id;
+    EdgeBasedNode& edge_data;
     int forward_weight;
     int reverse_weight;
     int forward_offset;
     int reverse_offset;
-    unsigned forward_packed_geometry_id;
-    unsigned reverse_packed_geometry_id;
     struct ComponentType
     {
         std::uint32_t id : 31;
@@ -156,7 +117,6 @@ struct PhantomNode
 
     util::Coordinate location;
     util::Coordinate input_location;
-    unsigned short fwd_segment_position;
     // note 4 bits would suffice for each,
     // but the saved byte would be padding anyway
     extractor::TravelMode forward_travel_mode;
