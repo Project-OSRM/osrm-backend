@@ -1,5 +1,5 @@
-#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -503,8 +503,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                 steps[one_back_index] =
                     elongate(std::move(steps[one_back_index]), steps[next_step_index]);
                 invalidateStep(steps[next_step_index]); // will be skipped due to the
-                                                       // continue statement at the
-                                                       // beginning of this function
+                                                        // continue statement at the
+                                                        // beginning of this function
             }
 
             steps[one_back_index].name = steps[two_back_index].name;
@@ -528,12 +528,22 @@ bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current
     // Base decision on distance since the zig-zag is a visual clue.
     const constexpr auto MAX_STAGGERED_DISTANCE = 3; // debatable, but keep short to be on safe side
 
-    using namespace util::guidance;
+    const auto angle = [](const RouteStep &step) {
+        const auto &intersection = step.intersections.front();
+        const auto entry_bearing = intersection.bearings[intersection.in];
+        const auto exit_bearing = intersection.bearings[intersection.out];
+        return turn_angle(entry_bearing, exit_bearing);
+    };
 
-    const auto left_right = isLeftTurn(previous.maneuver.instruction) && //
-                            isRightTurn(current.maneuver.instruction);
-    const auto right_left = isRightTurn(previous.maneuver.instruction) && //
-                            isLeftTurn(current.maneuver.instruction);
+    // Instead of using turn modifiers (e.g. as in isRightTurn) we want to be more strict here.
+    // We do not want to trigger e.g. on sharp uturn'ish turns or going straight "turns".
+    // Therefore we use the turn angle to derive 90 degree'ish right / left turns.
+    // This more closely resembles what we understand as Staggered Intersection.
+    const auto is_right = [](const double angle) { return angle > 45 && angle < 135; };
+    const auto is_left = [](const double angle) { return angle > 225 && angle < 315; };
+
+    const auto left_right = is_left(angle(previous)) && is_right(angle(current));
+    const auto right_left = is_right(angle(previous)) && is_left(angle(current));
 
     // A RouteStep holds distance/duration from the maneuver to the subsequent step.
     // We are only interested in the distance between the first and the second.
