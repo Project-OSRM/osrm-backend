@@ -7,7 +7,7 @@ var OSM = require('../lib/osm');
 var OSRMLoader = require('../lib/osrm_loader');
 
 module.exports = function () {
-    this.BeforeFeatures((features, callback) => {
+    this.registerHandler('BeforeFeatures', {timeout: 30000},  (features, callback) => {
         this.osrmLoader = new OSRMLoader(this);
         this.OSMDB = new OSM.DB();
 
