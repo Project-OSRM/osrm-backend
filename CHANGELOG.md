@@ -4,11 +4,13 @@
       - includes library guidance.lua that offers preliminary configuration on guidance.
       - added left_hand_driving flag in global profile properties
       - modified turn penalty function for car profile - better fit to real data
+      - return `ref` and `name` as separate fields. Do no use ref or destination as fallback for name value
     - Guidance
       - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
     - API:
       - `annotations=true` now returns the data source id for each segment as `datasources`
       - Reduced semantic of merge to refer only to merges from a lane onto a motorway-like road
+      - new `ref` field in the `RouteStep` object. It contains the reference code or name of a way. Previously merged into the `name` property like `name (ref)` and are now separate fields.
     - Bugfixes
       - Fixed an issue that would result in segfaults for viaroutes with an invalid intermediate segment when u-turns were allowed at the via-location
       - Invalid only_* restrictions could result in loss of connectivity. As a fallback, we assume all turns allowed when the restriction is not valid

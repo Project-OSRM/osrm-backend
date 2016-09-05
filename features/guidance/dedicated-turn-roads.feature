@@ -165,8 +165,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | qe    | secondary_link | Ettlinger Allee    |      | yes    |
 
         When I route I should get
-            | waypoints | route                                                     | turns                    |
-            | a,o       | Schwarzwaldstrasse (L561),Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive |
+            | waypoints | route                                                    | turns                    | ref        |
+            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee       | depart,turn right,arrive | L561,,     |
 
     Scenario: Traffic Lights everywhere
         #http://map.project-osrm.org/?z=18&center=48.995336%2C8.383813&loc=48.995467%2C8.384548&loc=48.995115%2C8.382761&hl=en&alt=0

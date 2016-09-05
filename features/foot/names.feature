@@ -16,7 +16,7 @@ Feature: Foot - Street names in instructions
 
         When I route I should get
             | from | to | route                                   |
-            | a    | c  | My Way (A6),Your Way (B7),Your Way (B7) |
+            | a    | c  | My Way,Your Way,Your Way                |
 
     @unnamed
     Scenario: Foot - Use way type to describe unnamed ways

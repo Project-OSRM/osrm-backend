@@ -150,15 +150,14 @@ function way_function (way, result)
   local surface = way:get_value_by_key("surface")
 
    -- name
-  if ref and "" ~= ref and name and "" ~= name then
-    result.name = name .. " (" .. ref .. ")"
-    elseif ref and "" ~= ref then
-      result.name = ref
-  elseif name and "" ~= name then
+  if name and "" ~= name then
     result.name = name
   elseif highway and fallback_names then
     result.name = "{highway:"..highway.."}"  -- if no name exists, use way type
                                             -- this encoding scheme is excepted to be a temporary solution
+  end
+  if ref and "" ~= ref then
+    result.ref = ref
   end
 
     -- roundabouts

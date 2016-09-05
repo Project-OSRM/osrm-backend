@@ -152,6 +152,8 @@ class BaseDataFacade
 
     virtual std::string GetNameForID(const unsigned name_id) const = 0;
 
+    virtual std::string GetRefForID(const unsigned name_id) const = 0;
+
     virtual std::string GetPronunciationForID(const unsigned name_id) const = 0;
 
     virtual std::string GetDestinationsForID(const unsigned name_id) const = 0;

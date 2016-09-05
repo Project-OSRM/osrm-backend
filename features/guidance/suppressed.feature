@@ -32,8 +32,8 @@ Feature: Suppressed Turns
             | ef    | motorway | highway  | A1    |
 
         When I route I should get
-            | waypoints | route                     | turns         |
-            | a,f       | highway (A1),highway (A1) | depart,arrive |
+            | waypoints | route                     | turns         | ref    |
+            | a,f       | highway,highway           | depart,arrive | A1,A1  |
 
 
     Scenario: Don't Announce Turn on following major road class -- service

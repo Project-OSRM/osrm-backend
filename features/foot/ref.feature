@@ -14,7 +14,7 @@ Feature: Foot - Way ref
 
         When I route I should get
             | from | to | route                               |
-            | a    | b  | Utopia Drive (E7),Utopia Drive (E7) |
+            | a    | b  | Utopia Drive,Utopia Drive           |
 
     Scenario: Foot - Way with only ref
         Given the node map
@@ -25,8 +25,8 @@ Feature: Foot - Way ref
             | ab    |      | E7  |
 
         When I route I should get
-            | from | to | route |
-            | a    | b  | E7,E7 |
+            | from | to | route                               |
+            | a    | b  | {highway:primary},{highway:primary} |
 
     Scenario: Foot - Way with only name
         Given the node map

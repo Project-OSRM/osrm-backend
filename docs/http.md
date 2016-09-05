@@ -40,7 +40,7 @@ http://{server}/{service}/{version}/{profile}/{coordinates}[.{format}]?option=va
 - `version`: Version of the protocol implemented by the service.
 - `profile`: Mode of transportation, is determined by the profile that is used to prepare the data
 - `coordinates`: String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` or `polyline({polyline})`.
-- `format`: Only `json` is supportest at the moment. This parameter is optional and defaults to `json`.
+- `format`: Only `json` is supported at the moment. This parameter is optional and defaults to `json`.
 
 Passing any `option=value` is optional. `polyline` follows Google's polyline format with precision 5 and can be generated using [this package](https://www.npmjs.com/package/polyline).
 To pass parameters to each location some options support an array like encoding:
@@ -469,6 +469,7 @@ step.
   | geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) or [GeoJSON `Point`](http://geojson.org/geojson-spec.html#point) if it is only one coordinate (not wrapped by a GeoJSON feature)|
   
 - `name`: The name of the way along which travel proceeds.
+- `ref`: A reference number or code for the way. Optionally included, if ref data is available for the given way.
 - `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `mode`: A string signifying the mode of transportation.

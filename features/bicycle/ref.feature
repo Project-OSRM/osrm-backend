@@ -13,8 +13,8 @@ Feature: Bike - Way ref
             | ab    | Utopia Drive | E7  |
 
         When I route I should get
-            | from | to | route                               |
-            | a    | b  | Utopia Drive (E7),Utopia Drive (E7) |
+            | from | to | route                               | ref   |
+            | a    | b  | Utopia Drive,Utopia Drive           | E7,E7 |
 
     Scenario: Bike - Way with only ref
         Given the node map
@@ -25,8 +25,8 @@ Feature: Bike - Way ref
             | ab    |      | E7  |
 
         When I route I should get
-            | from | to | route |
-            | a    | b  | E7,E7 |
+            | from | to | route                               | ref   |
+            | a    | b  | {highway:primary},{highway:primary} | E7,E7 |
 
     Scenario: Bike - Way with only name
         Given the node map

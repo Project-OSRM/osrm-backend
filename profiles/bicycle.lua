@@ -211,17 +211,18 @@ function way_function (way, result)
   local bicycle = way:get_value_by_key("bicycle")
 
   -- name
-  if ref and "" ~= ref and name and "" ~= name then
-    result.name = name .. " (" .. ref .. ")"
-  elseif ref and "" ~= ref then
-    result.name = ref
-  elseif name and "" ~= name then
+  if name and "" ~= name then
     result.name = name
   -- TODO find a better solution for encoding way type
   elseif fallback_names and highway then
     -- if no name exists, use way type
-    -- this encoding scheme is excepted to be a temporary solution
+    -- this encoding scheme is expected to be a temporary solution
     result.name = "{highway:"..highway.."}"
+  end
+
+  -- ref
+  if ref and "" ~= ref then
+    result.ref = ref
   end
 
   -- roundabout handling

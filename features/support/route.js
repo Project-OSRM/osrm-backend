@@ -139,6 +139,10 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.name);
     };
 
+    this.refList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.ref || '');
+    };
+
     this.pronunciationList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.pronunciation || '');
     };

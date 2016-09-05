@@ -52,6 +52,8 @@ inline void forwardStepSignage(RouteStep &destination, const RouteStep &origin)
     destination.name = origin.name;
     destination.pronunciation = origin.pronunciation;
     destination.destinations = origin.destinations;
+    destination.destinations = origin.destinations;
+    destination.ref = origin.ref;
 }
 
 inline bool choiceless(const RouteStep &step, const RouteStep &previous)

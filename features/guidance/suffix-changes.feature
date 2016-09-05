@@ -28,8 +28,8 @@ Feature: Suppress New Names on dedicated Suffices
             | bc     | 42 S | 101 |
 
        When I route I should get
-            | waypoints | route           | turns         |
-            | a,c       | 42 N,42 S (101) | depart,arrive |
+            | waypoints | route           | turns         | ref   |
+            | a,c       | 42 N,42 S       | depart,arrive | ,101  |
 
     Scenario: Prefix Change
         Given the node map
@@ -67,8 +67,8 @@ Feature: Suppress New Names on dedicated Suffices
             | bc     | East 42 |     |
 
        When I route I should get
-            | waypoints | route                 | turns         |
-            | a,c       | West 42 (101),East 42 | depart,arrive |
+            | waypoints | route                 | turns         | ref  |
+            | a,c       | West 42,East 42       | depart,arrive | 101, |
 
     Scenario: Suffix To Suffix - Turn
         Given the node map

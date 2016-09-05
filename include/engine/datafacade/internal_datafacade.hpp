@@ -636,6 +636,15 @@ class InternalDataFacade final : public BaseDataFacade
         return result;
     }
 
+    std::string GetRefForID(const unsigned name_id) const override final
+    {
+        // We store the ref after the name, destination and pronunciation of a street.
+        // We do this to get around the street length limit of 255 which would hit
+        // if we concatenate these. Order (see extractor_callbacks):
+        // name (0), destination (1), pronunciation (2), ref (3)
+        return GetNameForID(name_id + 3);
+    }
+
     std::string GetPronunciationForID(const unsigned name_id) const override final
     {
         // We store the pronunciation after the name and destination of a street.

@@ -15,8 +15,8 @@ Feature: Car - Street names in instructions
             | bc    | Your Way | A1  |
 
         When I route I should get
-            | from | to | route                              |
-            | a    | c  | My Way,Your Way (A1),Your Way (A1) |
+            | from | to | route                              | ref  |
+            | a    | c  | My Way,Your Way,Your Way           | ,A1,A1|
 
     Scenario: Car - A named street with pronunciation
         Given the node map
@@ -25,15 +25,15 @@ Feature: Car - Street names in instructions
             |   | c |   |
 
         And the ways
-            | nodes | name     |name:pronunciation | ref |
+            | nodes | name     |name:pronunciation  | ref |
             | ab    | My Way   |                    |     |
             | bd    | My Way   | meyeway            | A1  |
             | cd    | Your Way | yourewaye          |     |
 
         When I route I should get
-            | from | to | route              | pronunciations      |
-            | a    | d  | My Way,My Way (A1) | ,meyeway             |
-            | 1    | c  | Your Way,Your Way  | yourewaye,yourewaye  |
+            | from | to | route              | pronunciations       | ref   |
+            | a    | d  | My Way,My Way      | ,meyeway             | ,A1   |
+            | 1    | c  | Your Way,Your Way  | yourewaye,yourewaye  | ,     |
 
     @todo
     Scenario: Car - Use way type to describe unnamed ways
