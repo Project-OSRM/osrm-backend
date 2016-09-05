@@ -832,8 +832,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 invalidateStep(steps[step_index]);
                 invalidateStep(steps[next_step_index]);
             }
-            else if (one_back_index > 0 && (choiceless(current_step, one_back_step) ||
-                     one_back_step.distance <= MAX_COLLAPSE_DISTANCE))
+            else if (choiceless(current_step, one_back_step) ||
+                     one_back_step.distance <= MAX_COLLAPSE_DISTANCE)
             {
                 // check for one of the multiple collapse scenarios and, if possible, collapse the
                 // turn
