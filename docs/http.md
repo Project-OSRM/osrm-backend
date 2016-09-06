@@ -181,6 +181,14 @@ In case of error the following `code`s are supported in addition to the general 
 
 All other fields might be undefined.
 
+### Example
+
+Query on Berlin with three coordinates and no overview geometry returned:
+
+```
+http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?overview=false
+```
+
 ## Service `table`
 ### Request
 ```
