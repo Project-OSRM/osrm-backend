@@ -132,55 +132,7 @@ Feature: Turn Lane Guidance
             | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
 
     @todo @bug @2650 @sliproads
-    #market and haight in SF
-    #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
-    Scenario: Through Street Crossing Mid-Turn
-        Given the node map
-            |   |   |   |   |   |   |   | g | j |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   | k |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   | f |
-            |   |   |   |   |   |   |   |   | e |   |
-            |   |   |   |   |   |   |   | d |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            | a |   |   | b |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   | c |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   |   | l |   |   |   |   | h | i |   |
-
-        And the ways
-            | nodes | name   | highway     | oneway | turn:lanes:forward |
-            | ab    | ghough | secondary   | yes    |                    |
-            | bc    | ghough | secondary   | yes    | through\|through   |
-            | bd    | ghough | secondary   | yes    | none\|through      |
-            | def   | ghough | secondary   | yes    |                    |
-            | gd    | market | primary     | yes    |                    |
-            |  dc   | market | primary     | yes    |                    |
-            |   ch  | market | primary     | yes    |                    |
-            | iej   | market | primary     | yes    |                    |
-            | gkb   | haight | residential | yes    |                    |
-            | bl    | haight | residential | yes    | left\|none         |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction   |
-            | relation    | bd       | dc     | d        | no_right_turn |
-
-        When I route I should get
-            | waypoints | route                | turns                              | lanes                                                    |
-            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, |
-            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
-            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
-            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
-
-    @todo @bug @2650 @sliproads
-    #market and haight in SF
+    #market and haight in SF, restricted turn
     #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
     Scenario: Market/Haight without Through Street
         Given the node map
@@ -209,8 +161,8 @@ Feature: Turn Lane Guidance
             | bd    | ghough | secondary   | yes    | none\|through      |
             | def   | ghough | secondary   | yes    |                    |
             | gd    | market | primary     | yes    |                    |
-            |  dc   | market | primary     | yes    |                    |
-            |   ch  | market | primary     | yes    |                    |
+            | dc    | market | primary     | yes    |                    |
+            | ch    | market | primary     | yes    |                    |
             | iej   | market | primary     | yes    |                    |
             | bl    | haight | residential | yes    | left\|none         |
 
@@ -226,7 +178,7 @@ Feature: Turn Lane Guidance
             | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
 
     @todo @2650 @bug @sliproads
-    #market and haight in SF
+    #market and haight in SF, unrestricted
     #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
     Scenario: Market/Haight without Through Street
         Given the node map
@@ -255,8 +207,8 @@ Feature: Turn Lane Guidance
             | bd    | ghough | secondary   | yes    | none\|through      |
             | def   | ghough | secondary   | yes    |                    |
             | gd    | market | primary     | yes    |                    |
-            |  dc   | market | primary     | yes    |                    |
-            |   ch  | market | primary     | yes    |                    |
+            | dc    | market | primary     | yes    |                    |
+            | ch    | market | primary     | yes    |                    |
             | iej   | market | primary     | yes    |                    |
             | bl    | haight | residential | yes    | left\|none         |
 

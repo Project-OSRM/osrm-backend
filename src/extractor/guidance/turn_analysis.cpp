@@ -1,6 +1,6 @@
+#include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/road_classification.hpp"
-#include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"

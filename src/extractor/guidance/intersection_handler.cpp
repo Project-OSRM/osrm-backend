@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -457,8 +457,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     if (best == 0)
         return 0;
 
-    const std::pair<std::size_t, std::size_t> num_continue_names = [&]() {
-        std::size_t count = 0, count_valid = 0;
+    const std::pair<std::int64_t, std::int64_t> num_continue_names = [&]() {
+        std::int64_t count = 0, count_valid = 0;
         if (in_data.name_id != EMPTY_NAMEID)
         {
             for (std::size_t i = 1; i < intersection.size(); ++i)
@@ -486,11 +486,25 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         return 0;
     }
 
+    const bool all_continues_are_narrow = [&]() {
+        if (in_data.name_id == EMPTY_NAMEID)
+            return false;
+
+        return std::count_if(
+                   intersection.begin() + 1, intersection.end(), [&](const ConnectedRoad &road) {
+                       return (in_data.name_id ==
+                               node_based_graph.GetEdgeData(road.turn.eid).name_id) &&
+                              angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE;
+                   }) == num_continue_names.first;
+    }();
+
     // has no obvious continued road
     const auto &best_data = node_based_graph.GetEdgeData(intersection[best].turn.eid);
-    if (best_continue == 0 || (num_continue_names.first >= 2 && intersection.size() >= 4) ||
+    if (best_continue == 0 || (!all_continues_are_narrow &&
+                               (num_continue_names.first >= 2 && intersection.size() >= 4)) ||
         (num_continue_names.second >= 2 && best_continue_deviation >= 2 * NARROW_TURN_ANGLE) ||
-        (best_deviation < FUZZY_ANGLE_DIFFERENCE && !best_data.road_classification.IsRampClass()))
+        (best_deviation != best_continue_deviation && best_deviation < FUZZY_ANGLE_DIFFERENCE &&
+         !best_data.road_classification.IsRampClass()))
     {
         // Find left/right deviation
         const double left_deviation = angularDeviation(

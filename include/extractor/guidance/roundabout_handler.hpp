@@ -3,8 +3,8 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/roundabout_type.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"

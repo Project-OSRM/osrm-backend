@@ -42,6 +42,7 @@ TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_g
       turn_lane_masks(turn_lane_masks), lane_description_map(lane_description_map),
       node_info_list(node_info_list), turn_analysis(turn_analysis), id_map(id_map)
 {
+    count_handled = count_called = 0;
 }
 
 TurnLaneHandler::~TurnLaneHandler()
@@ -285,12 +286,10 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
     // At b-c, we get access to either a new set of lanes, or -- via the previous intersection
     // -- to
     // the second part of | left | through | right |. Lane anticipation can then deduce which
-    // lanes
-    // correspond to what and suppress unnecessary instructions.
+    // lanes correspond to what and suppress unnecessary instructions.
     //
     // For our initial case, we consider only the turns that are available at the current
-    // location,
-    // which are given by partitioning the lane data and selecting the first part.
+    // location, which are given by partitioning the lane data and selecting the first part.
     if (!lane_data.empty())
     {
         if (lane_data.size() >= possible_entries)
@@ -355,21 +354,22 @@ void TurnLaneHandler::extractLaneData(const EdgeID via_edge,
                                       LaneDataVector &lane_data) const
 {
     const auto &edge_data = node_based_graph.GetEdgeData(via_edge);
-    // TODO access correct data
     lane_description_id = edge_data.lane_description_id;
-    const auto lane_description =
-        lane_description_id != INVALID_LANE_DESCRIPTIONID
-            ? TurnLaneDescription(turn_lane_masks.begin() + turn_lane_offsets[lane_description_id],
-                                  turn_lane_masks.begin() +
-                                      turn_lane_offsets[lane_description_id + 1])
-            : TurnLaneDescription();
+    // create an empty lane data
+    if (INVALID_LANE_DESCRIPTIONID != lane_description_id)
+    {
+        const auto lane_description = TurnLaneDescription(
+            turn_lane_masks.begin() + turn_lane_offsets[lane_description_id],
+            turn_lane_masks.begin() + turn_lane_offsets[lane_description_id + 1]);
 
-    if (!lane_description.empty())
         lane_data = laneDataFromDescription(lane_description);
-
-    BOOST_ASSERT(lane_description.empty() ||
-                 lane_description.size() == (turn_lane_offsets[lane_description_id + 1] -
-                                             turn_lane_offsets[lane_description_id]));
+        BOOST_ASSERT(lane_description.size() == (turn_lane_offsets[lane_description_id + 1] -
+                                                 turn_lane_offsets[lane_description_id]));
+    }
+    else
+    {
+        lane_data.clear();
+    }
 }
 
 /* A simple intersection does not depend on the next intersection coming up. This is important
@@ -401,8 +401,7 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
     }
 
     // in case an intersection offers far more lane data items than actual turns, some of them
-    // have
-    // to be for another intersection. A single additional item can be for an invalid bus lane.
+    // have to be for another intersection. A single additional item can be for an invalid bus lane.
     const auto num_turns = [&]() {
         auto count = getNumberOfTurns(intersection);
         if (count < lane_data.size() && !intersection[0].entry_allowed &&
@@ -476,6 +475,7 @@ bool TurnLaneHandler::isSimpleIntersection(const LaneDataVector &lane_data,
 
             return intersection.begin();
         }();
+        BOOST_ASSERT(best_match != intersection.end());
         std::size_t match_index = std::distance(intersection.begin(), best_match);
         all_simple &= (matched_indices.count(match_index) == 0);
         matched_indices.insert(match_index);
@@ -521,10 +521,8 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
      * look back between (1) and (2) to make sure we find the correct lane for the left-turn.
      *
      * Intersections like these have two parts. Turns that can be made at the first intersection
-     * and
-     * turns that have to be made at the second. The partitioning returns the lane data split
-     * into
-     * two parts, one for the first and one for the second intersection.
+     * and turns that have to be made at the second. The partitioning returns the lane data split
+     * into two parts, one for the first and one for the second intersection.
      */
 
     // Try and maitch lanes to available turns. For Turns that are not directly matchable, check

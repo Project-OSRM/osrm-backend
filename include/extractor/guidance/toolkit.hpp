@@ -211,7 +211,7 @@ inline bool requiresNameAnnounced(const std::string &from,
         const auto first_prefix_and_suffixes = getPrefixAndSuffix(first);
         const auto second_prefix_and_suffixes = getPrefixAndSuffix(second);
         // reverse strings, get suffices and reverse them to get prefixes
-        const auto checkTable = [&](const std::string& str) {
+        const auto checkTable = [&](const std::string &str) {
             return str.empty() || suffix_table.isSuffix(str);
         };
 

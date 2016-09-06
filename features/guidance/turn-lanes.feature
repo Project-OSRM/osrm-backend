@@ -499,11 +499,11 @@ Feature: Turn Lane Guidance
     @reverse @previous-lanes
     Scenario: U-Turn Road at Intersection
         Given the node map
-            |   |   |   |   |   | h |   |
-            |   |   |   |   | f | e | j |
-            | a | b |   |   |   |   |   |
-            |   |   |   |   | c | d | i |
-            |   |   |   |   |   | g |   |
+            |   |   |   |   |   |   | h |   |
+            |   |   |   |   | f |   | e | j |
+            | a | b |   |   |   |   |   |   |
+            |   |   |   |   | c |   | d | i |
+            |   |   |   |   |   |   | g |   |
 
         And the ways
             | nodes | name  | turn:lanes:forward | oneway | highway  |

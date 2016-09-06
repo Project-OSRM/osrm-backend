@@ -105,6 +105,9 @@ bool isValidMatch(const TurnLaneType::Mask tag, const TurnInstruction instructio
 double getMatchingQuality(const TurnLaneType::Mask tag, const ConnectedRoad &road)
 {
     const constexpr double idealized_turn_angles[] = {0, 35, 90, 135, 180, 225, 270, 315};
+    const auto modifier = getMatchingModifier(tag);
+    BOOST_ASSERT(static_cast<std::size_t>(modifier) <
+                 sizeof(idealized_turn_angles) / sizeof(*idealized_turn_angles));
     const auto idealized_angle = idealized_turn_angles[getMatchingModifier(tag)];
     return angularDeviation(idealized_angle, road.turn.angle);
 }

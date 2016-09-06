@@ -1,6 +1,6 @@
+#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
-#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"
@@ -128,10 +128,6 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
         return intersection;
 
     const auto source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
-
-    const bool hasNext = obvious_turn_index != 0;
-    if (!hasNext)
-        return intersection;
 
     // check whether the continue road is valid
     const auto check_valid = [this, source_edge_data](const ConnectedRoad &road) {

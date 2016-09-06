@@ -702,15 +702,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             }
         }
 
-        const auto insertInCoreHeap =
-            [](const CoreEntryPoint &p, SearchEngineData::QueryHeap &core_heap) {
-                NodeID id;
-                EdgeWeight weight;
-                NodeID parent;
-                // TODO this should use std::apply when we get c++17 support
-                std::tie(id, weight, parent) = p;
-                core_heap.Insert(id, weight, parent);
-            };
+        const auto insertInCoreHeap = [](const CoreEntryPoint &p,
+                                         SearchEngineData::QueryHeap &core_heap) {
+            NodeID id;
+            EdgeWeight weight;
+            NodeID parent;
+            // TODO this should use std::apply when we get c++17 support
+            std::tie(id, weight, parent) = p;
+            core_heap.Insert(id, weight, parent);
+        };
 
         forward_core_heap.Clear();
         for (const auto &p : forward_entry_points)
