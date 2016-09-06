@@ -216,9 +216,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     std::vector<PathData> &unpacked_path) const
     {
         const bool start_traversed_in_reverse =
-            (*packed_path_begin != phantom_node_pair.source_phantom.forward_segment_id.id);
+            (*packed_path_begin != phantom_node_pair.source_phantom.edge_data.forward_segment_id.id);
         const bool target_traversed_in_reverse =
-            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_segment_id.id);
+            (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.edge_data.forward_segment_id.id);
 
         BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
@@ -230,11 +230,11 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             recursion_stack.emplace(*std::prev(current), *current);
         }
 
-        BOOST_ASSERT(*packed_path_begin == phantom_node_pair.source_phantom.forward_segment_id.id ||
-                     *packed_path_begin == phantom_node_pair.source_phantom.reverse_segment_id.id);
+        BOOST_ASSERT(*packed_path_begin == phantom_node_pair.source_phantom.edge_data.forward_segment_id.id ||
+                     *packed_path_begin == phantom_node_pair.source_phantom.edge_data.reverse_segment_id.id);
         BOOST_ASSERT(
-            *std::prev(packed_path_end) == phantom_node_pair.target_phantom.forward_segment_id.id ||
-            *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
+            *std::prev(packed_path_end) == phantom_node_pair.target_phantom.edge_data.forward_segment_id.id ||
+            *std::prev(packed_path_end) == phantom_node_pair.target_phantom.edge_data.reverse_segment_id.id);
 
         std::pair<NodeID, NodeID> edge;
         while (!recursion_stack.empty())
@@ -295,7 +295,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 const auto turn_instruction = facade->GetTurnInstructionForEdgeID(ed.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
-                        ? phantom_node_pair.source_phantom.backward_travel_mode
+                        ? phantom_node_pair.source_phantom.edge_data.backward_travel_mode
                         : facade->GetTravelModeForEdgeID(ed.id);
 
                 const auto geometry_index = facade->GetGeometryIndexForEdgeID(ed.id);
@@ -319,8 +319,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     (is_first_segment
                          ? ((start_traversed_in_reverse)
                                 ? id_vector.size() -
-                                      phantom_node_pair.source_phantom.fwd_segment_position - 1
-                                : phantom_node_pair.source_phantom.fwd_segment_position)
+                                      phantom_node_pair.source_phantom.edge_data.fwd_segment_position - 1
+                                : phantom_node_pair.source_phantom.edge_data.fwd_segment_position)
                          : 0);
                 const std::size_t end_index = id_vector.size();
 
@@ -351,44 +351,44 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         std::vector<unsigned> id_vector;
         std::vector<EdgeWeight> weight_vector;
         std::vector<DatasourceID> datasource_vector;
-        const bool is_local_path = (phantom_node_pair.source_phantom.forward_packed_geometry_id ==
-                                    phantom_node_pair.target_phantom.forward_packed_geometry_id) &&
+        const bool is_local_path = (phantom_node_pair.source_phantom.edge_data.forward_packed_geometry_id ==
+                                    phantom_node_pair.target_phantom.edge_data.forward_packed_geometry_id) &&
                                    unpacked_path.empty();
 
         if (target_traversed_in_reverse)
         {
             facade->GetUncompressedGeometry(
-                phantom_node_pair.target_phantom.reverse_packed_geometry_id, id_vector);
+                phantom_node_pair.target_phantom.edge_data.reverse_packed_geometry_id, id_vector);
 
             facade->GetUncompressedWeights(
-                phantom_node_pair.target_phantom.reverse_packed_geometry_id, weight_vector);
+                phantom_node_pair.target_phantom.edge_data.reverse_packed_geometry_id, weight_vector);
 
             facade->GetUncompressedDatasources(
-                phantom_node_pair.target_phantom.reverse_packed_geometry_id, datasource_vector);
+                phantom_node_pair.target_phantom.edge_data.reverse_packed_geometry_id, datasource_vector);
 
             if (is_local_path)
             {
                 start_index =
-                    id_vector.size() - phantom_node_pair.source_phantom.fwd_segment_position - 1;
+                    id_vector.size() - phantom_node_pair.source_phantom.edge_data.fwd_segment_position - 1;
             }
             end_index =
-                id_vector.size() - phantom_node_pair.target_phantom.fwd_segment_position - 1;
+                id_vector.size() - phantom_node_pair.target_phantom.edge_data.fwd_segment_position - 1;
         }
         else
         {
             if (is_local_path)
             {
-                start_index = phantom_node_pair.source_phantom.fwd_segment_position;
+                start_index = phantom_node_pair.source_phantom.edge_data.fwd_segment_position;
             }
-            end_index = phantom_node_pair.target_phantom.fwd_segment_position;
+            end_index = phantom_node_pair.target_phantom.edge_data.fwd_segment_position;
             facade->GetUncompressedGeometry(
-                phantom_node_pair.target_phantom.forward_packed_geometry_id, id_vector);
+                phantom_node_pair.target_phantom.edge_data.forward_packed_geometry_id, id_vector);
 
             facade->GetUncompressedWeights(
-                phantom_node_pair.target_phantom.forward_packed_geometry_id, weight_vector);
+                phantom_node_pair.target_phantom.edge_data.forward_packed_geometry_id, weight_vector);
 
             facade->GetUncompressedDatasources(
-                phantom_node_pair.target_phantom.forward_packed_geometry_id, datasource_vector);
+                phantom_node_pair.target_phantom.edge_data.forward_packed_geometry_id, datasource_vector);
         }
 
         // Given the following compressed geometry:
@@ -401,15 +401,15 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         for (std::size_t i = start_index; i != end_index; (start_index < end_index ? ++i : --i))
         {
             BOOST_ASSERT(i < id_vector.size());
-            BOOST_ASSERT(phantom_node_pair.target_phantom.forward_travel_mode > 0);
+            BOOST_ASSERT(phantom_node_pair.target_phantom.edge_data.forward_travel_mode > 0);
             unpacked_path.push_back(PathData{
                 id_vector[i],
-                phantom_node_pair.target_phantom.name_id,
+                phantom_node_pair.target_phantom.edge_data.name_id,
                 weight_vector[i],
                 extractor::guidance::TurnInstruction::NO_TURN(),
                 {{0, INVALID_LANEID}, INVALID_LANE_DESCRIPTIONID},
-                target_traversed_in_reverse ? phantom_node_pair.target_phantom.backward_travel_mode
-                                            : phantom_node_pair.target_phantom.forward_travel_mode,
+                target_traversed_in_reverse ? phantom_node_pair.target_phantom.edge_data.backward_travel_mode
+                                            : phantom_node_pair.target_phantom.edge_data.forward_travel_mode,
                 INVALID_ENTRY_CLASSID,
                 datasource_vector[i]});
         }
@@ -816,9 +816,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     bool NeedsLoopForward(const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom) const
     {
-        return source_phantom.forward_segment_id.enabled &&
-               target_phantom.forward_segment_id.enabled &&
-               source_phantom.forward_segment_id.id == target_phantom.forward_segment_id.id &&
+        return source_phantom.edge_data.forward_segment_id.enabled &&
+               target_phantom.edge_data.forward_segment_id.enabled &&
+               source_phantom.edge_data.forward_segment_id.id == target_phantom.edge_data.forward_segment_id.id &&
                source_phantom.GetForwardWeightPlusOffset() >
                    target_phantom.GetForwardWeightPlusOffset();
     }
@@ -826,9 +826,9 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     bool NeedsLoopBackwards(const PhantomNode &source_phantom,
                             const PhantomNode &target_phantom) const
     {
-        return source_phantom.reverse_segment_id.enabled &&
-               target_phantom.reverse_segment_id.enabled &&
-               source_phantom.reverse_segment_id.id == target_phantom.reverse_segment_id.id &&
+        return source_phantom.edge_data.reverse_segment_id.enabled &&
+               target_phantom.edge_data.reverse_segment_id.enabled &&
+               source_phantom.edge_data.reverse_segment_id.id == target_phantom.edge_data.reverse_segment_id.id &&
                source_phantom.GetReverseWeightPlusOffset() >
                    target_phantom.GetReverseWeightPlusOffset();
     }
@@ -904,30 +904,30 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
 
-        if (source_phantom.forward_segment_id.enabled)
+        if (source_phantom.edge_data.forward_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.forward_segment_id.id,
+            forward_heap.Insert(source_phantom.edge_data.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_segment_id.id);
+                                source_phantom.edge_data.forward_segment_id.id);
         }
-        if (source_phantom.reverse_segment_id.enabled)
+        if (source_phantom.edge_data.reverse_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.reverse_segment_id.id,
+            forward_heap.Insert(source_phantom.edge_data.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_segment_id.id);
+                                source_phantom.edge_data.reverse_segment_id.id);
         }
 
-        if (target_phantom.forward_segment_id.enabled)
+        if (target_phantom.edge_data.forward_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.forward_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_segment_id.id);
+                                target_phantom.edge_data.forward_segment_id.id);
         }
-        if (target_phantom.reverse_segment_id.enabled)
+        if (target_phantom.edge_data.reverse_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_segment_id.id);
+                                target_phantom.edge_data.reverse_segment_id.id);
         }
 
         const bool constexpr DO_NOT_FORCE_LOOPS =
@@ -965,30 +965,30 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
         BOOST_ASSERT(forward_heap.Empty());
         BOOST_ASSERT(reverse_heap.Empty());
 
-        if (source_phantom.forward_segment_id.enabled)
+        if (source_phantom.edge_data.forward_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.forward_segment_id.id,
+            forward_heap.Insert(source_phantom.edge_data.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_segment_id.id);
+                                source_phantom.edge_data.forward_segment_id.id);
         }
-        if (source_phantom.reverse_segment_id.enabled)
+        if (source_phantom.edge_data.reverse_segment_id.enabled)
         {
-            forward_heap.Insert(source_phantom.reverse_segment_id.id,
+            forward_heap.Insert(source_phantom.edge_data.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_segment_id.id);
+                                source_phantom.edge_data.reverse_segment_id.id);
         }
 
-        if (target_phantom.forward_segment_id.enabled)
+        if (target_phantom.edge_data.forward_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.forward_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_segment_id.id);
+                                target_phantom.edge_data.forward_segment_id.id);
         }
-        if (target_phantom.reverse_segment_id.enabled)
+        if (target_phantom.edge_data.reverse_segment_id.enabled)
         {
-            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_segment_id.id);
+                                target_phantom.edge_data.reverse_segment_id.id);
         }
 
         const bool constexpr DO_NOT_FORCE_LOOPS =

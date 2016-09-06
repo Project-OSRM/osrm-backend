@@ -49,7 +49,7 @@ class BaseAPI
     util::json::Object MakeWaypoint(const PhantomNode &phantom) const
     {
         return json::makeWaypoint(phantom.location,
-                                  facade.GetNameForID(phantom.name_id),
+                                  facade.GetNameForID(phantom.edge_data.name_id),
                                   Hint{phantom, facade.GetCheckSum()});
     }
 

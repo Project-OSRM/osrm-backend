@@ -70,17 +70,17 @@ class ManyToManyRouting final
             query_heap.Clear();
             // insert target(s) at distance 0
 
-            if (phantom.forward_segment_id.enabled)
+            if (phantom.edge_data.forward_segment_id.enabled)
             {
-                query_heap.Insert(phantom.forward_segment_id.id,
+                query_heap.Insert(phantom.edge_data.forward_segment_id.id,
                                   phantom.GetForwardWeightPlusOffset(),
-                                  phantom.forward_segment_id.id);
+                                  phantom.edge_data.forward_segment_id.id);
             }
-            if (phantom.reverse_segment_id.enabled)
+            if (phantom.edge_data.reverse_segment_id.enabled)
             {
-                query_heap.Insert(phantom.reverse_segment_id.id,
+                query_heap.Insert(phantom.edge_data.reverse_segment_id.id,
                                   phantom.GetReverseWeightPlusOffset(),
-                                  phantom.reverse_segment_id.id);
+                                  phantom.edge_data.reverse_segment_id.id);
             }
 
             // explore search space
@@ -97,17 +97,17 @@ class ManyToManyRouting final
             query_heap.Clear();
             // insert target(s) at distance 0
 
-            if (phantom.forward_segment_id.enabled)
+            if (phantom.edge_data.forward_segment_id.enabled)
             {
-                query_heap.Insert(phantom.forward_segment_id.id,
+                query_heap.Insert(phantom.edge_data.forward_segment_id.id,
                                   -phantom.GetForwardWeightPlusOffset(),
-                                  phantom.forward_segment_id.id);
+                                  phantom.edge_data.forward_segment_id.id);
             }
-            if (phantom.reverse_segment_id.enabled)
+            if (phantom.edge_data.reverse_segment_id.enabled)
             {
-                query_heap.Insert(phantom.reverse_segment_id.id,
+                query_heap.Insert(phantom.edge_data.reverse_segment_id.id,
                                   -phantom.GetReverseWeightPlusOffset(),
-                                  phantom.reverse_segment_id.id);
+                                  phantom.edge_data.reverse_segment_id.id);
             }
 
             // explore search space

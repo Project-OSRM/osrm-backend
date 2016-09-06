@@ -56,27 +56,27 @@ class ShortestPathRouting final
         reverse_heap.Clear();
         if (search_from_forward_node)
         {
-            forward_heap.Insert(source_phantom.forward_segment_id.id,
+            forward_heap.Insert(source_phantom.edge_data.forward_segment_id.id,
                                 -source_phantom.GetForwardWeightPlusOffset(),
-                                source_phantom.forward_segment_id.id);
+                                source_phantom.edge_data.forward_segment_id.id);
         }
         if (search_from_reverse_node)
         {
-            forward_heap.Insert(source_phantom.reverse_segment_id.id,
+            forward_heap.Insert(source_phantom.edge_data.reverse_segment_id.id,
                                 -source_phantom.GetReverseWeightPlusOffset(),
-                                source_phantom.reverse_segment_id.id);
+                                source_phantom.edge_data.reverse_segment_id.id);
         }
         if (search_to_forward_node)
         {
-            reverse_heap.Insert(target_phantom.forward_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_segment_id.id);
+                                target_phantom.edge_data.forward_segment_id.id);
         }
         if (search_to_reverse_node)
         {
-            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_segment_id.id);
+                                target_phantom.edge_data.reverse_segment_id.id);
         }
 
         BOOST_ASSERT(forward_heap.Size() > 0);
@@ -145,23 +145,23 @@ class ShortestPathRouting final
         {
             forward_heap.Clear();
             reverse_heap.Clear();
-            reverse_heap.Insert(target_phantom.forward_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.forward_segment_id.id,
                                 target_phantom.GetForwardWeightPlusOffset(),
-                                target_phantom.forward_segment_id.id);
+                                target_phantom.edge_data.forward_segment_id.id);
 
             if (search_from_forward_node)
             {
-                forward_heap.Insert(source_phantom.forward_segment_id.id,
+                forward_heap.Insert(source_phantom.edge_data.forward_segment_id.id,
                                     total_distance_to_forward -
                                         source_phantom.GetForwardWeightPlusOffset(),
-                                    source_phantom.forward_segment_id.id);
+                                    source_phantom.edge_data.forward_segment_id.id);
             }
             if (search_from_reverse_node)
             {
-                forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                forward_heap.Insert(source_phantom.edge_data.reverse_segment_id.id,
                                     total_distance_to_reverse -
                                         source_phantom.GetReverseWeightPlusOffset(),
-                                    source_phantom.reverse_segment_id.id);
+                                    source_phantom.edge_data.reverse_segment_id.id);
             }
             BOOST_ASSERT(forward_heap.Size() > 0);
             BOOST_ASSERT(reverse_heap.Size() > 0);
@@ -196,22 +196,22 @@ class ShortestPathRouting final
         {
             forward_heap.Clear();
             reverse_heap.Clear();
-            reverse_heap.Insert(target_phantom.reverse_segment_id.id,
+            reverse_heap.Insert(target_phantom.edge_data.reverse_segment_id.id,
                                 target_phantom.GetReverseWeightPlusOffset(),
-                                target_phantom.reverse_segment_id.id);
+                                target_phantom.edge_data.reverse_segment_id.id);
             if (search_from_forward_node)
             {
-                forward_heap.Insert(source_phantom.forward_segment_id.id,
+                forward_heap.Insert(source_phantom.edge_data.forward_segment_id.id,
                                     total_distance_to_forward -
                                         source_phantom.GetForwardWeightPlusOffset(),
-                                    source_phantom.forward_segment_id.id);
+                                    source_phantom.edge_data.forward_segment_id.id);
             }
             if (search_from_reverse_node)
             {
-                forward_heap.Insert(source_phantom.reverse_segment_id.id,
+                forward_heap.Insert(source_phantom.edge_data.reverse_segment_id.id,
                                     total_distance_to_reverse -
                                         source_phantom.GetReverseWeightPlusOffset(),
-                                    source_phantom.reverse_segment_id.id);
+                                    source_phantom.edge_data.reverse_segment_id.id);
             }
             BOOST_ASSERT(forward_heap.Size() > 0);
             BOOST_ASSERT(reverse_heap.Size() > 0);
@@ -264,10 +264,10 @@ class ShortestPathRouting final
 
             raw_route_data.source_traversed_in_reverse.push_back(
                 (*leg_begin !=
-                 phantom_nodes_vector[current_leg].source_phantom.forward_segment_id.id));
+                 phantom_nodes_vector[current_leg].source_phantom.edge_data.forward_segment_id.id));
             raw_route_data.target_traversed_in_reverse.push_back(
                 (*std::prev(leg_end) !=
-                 phantom_nodes_vector[current_leg].target_phantom.forward_segment_id.id));
+                 phantom_nodes_vector[current_leg].target_phantom.edge_data.forward_segment_id.id));
         }
     }
 
@@ -292,9 +292,9 @@ class ShortestPathRouting final
         int total_distance_to_forward = 0;
         int total_distance_to_reverse = 0;
         bool search_from_forward_node =
-            phantom_nodes_vector.front().source_phantom.forward_segment_id.enabled;
+            phantom_nodes_vector.front().source_phantom.edge_data.forward_segment_id.enabled;
         bool search_from_reverse_node =
-            phantom_nodes_vector.front().source_phantom.reverse_segment_id.enabled;
+            phantom_nodes_vector.front().source_phantom.edge_data.reverse_segment_id.enabled;
 
         std::vector<NodeID> prev_packed_leg_to_forward;
         std::vector<NodeID> prev_packed_leg_to_reverse;
@@ -318,11 +318,11 @@ class ShortestPathRouting final
             const auto &source_phantom = phantom_node_pair.source_phantom;
             const auto &target_phantom = phantom_node_pair.target_phantom;
 
-            bool search_to_forward_node = target_phantom.forward_segment_id.enabled;
-            bool search_to_reverse_node = target_phantom.reverse_segment_id.enabled;
+            bool search_to_forward_node = target_phantom.edge_data.forward_segment_id.enabled;
+            bool search_to_reverse_node = target_phantom.edge_data.reverse_segment_id.enabled;
 
-            BOOST_ASSERT(!search_from_forward_node || source_phantom.forward_segment_id.enabled);
-            BOOST_ASSERT(!search_from_reverse_node || source_phantom.reverse_segment_id.enabled);
+            BOOST_ASSERT(!search_from_forward_node || source_phantom.edge_data.forward_segment_id.enabled);
+            BOOST_ASSERT(!search_from_reverse_node || source_phantom.edge_data.reverse_segment_id.enabled);
 
             BOOST_ASSERT(search_from_forward_node || search_from_reverse_node);
 
@@ -346,14 +346,14 @@ class ShortestPathRouting final
                                     packed_leg_to_forward);
                     // if only the reverse node is valid (e.g. when using the match plugin) we
                     // actually need to move
-                    if (!target_phantom.forward_segment_id.enabled)
+                    if (!target_phantom.edge_data.forward_segment_id.enabled)
                     {
-                        BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
+                        BOOST_ASSERT(target_phantom.edge_data.reverse_segment_id.enabled);
                         new_total_distance_to_reverse = new_total_distance_to_forward;
                         packed_leg_to_reverse = std::move(packed_leg_to_forward);
                         new_total_distance_to_forward = INVALID_EDGE_WEIGHT;
                     }
-                    else if (target_phantom.reverse_segment_id.enabled)
+                    else if (target_phantom.edge_data.reverse_segment_id.enabled)
                     {
                         new_total_distance_to_reverse = new_total_distance_to_forward;
                         packed_leg_to_reverse = packed_leg_to_forward;
@@ -394,16 +394,16 @@ class ShortestPathRouting final
             {
                 bool forward_to_forward =
                     (new_total_distance_to_forward != INVALID_EDGE_WEIGHT) &&
-                    packed_leg_to_forward.front() == source_phantom.forward_segment_id.id;
+                    packed_leg_to_forward.front() == source_phantom.edge_data.forward_segment_id.id;
                 bool reverse_to_forward =
                     (new_total_distance_to_forward != INVALID_EDGE_WEIGHT) &&
-                    packed_leg_to_forward.front() == source_phantom.reverse_segment_id.id;
+                    packed_leg_to_forward.front() == source_phantom.edge_data.reverse_segment_id.id;
                 bool forward_to_reverse =
                     (new_total_distance_to_reverse != INVALID_EDGE_WEIGHT) &&
-                    packed_leg_to_reverse.front() == source_phantom.forward_segment_id.id;
+                    packed_leg_to_reverse.front() == source_phantom.edge_data.forward_segment_id.id;
                 bool reverse_to_reverse =
                     (new_total_distance_to_reverse != INVALID_EDGE_WEIGHT) &&
-                    packed_leg_to_reverse.front() == source_phantom.reverse_segment_id.id;
+                    packed_leg_to_reverse.front() == source_phantom.edge_data.reverse_segment_id.id;
 
                 BOOST_ASSERT(!forward_to_forward || !reverse_to_forward);
                 BOOST_ASSERT(!forward_to_reverse || !reverse_to_reverse);
@@ -438,7 +438,7 @@ class ShortestPathRouting final
 
             if (new_total_distance_to_forward != INVALID_EDGE_WEIGHT)
             {
-                BOOST_ASSERT(target_phantom.forward_segment_id.enabled);
+                BOOST_ASSERT(target_phantom.edge_data.forward_segment_id.enabled);
 
                 packed_leg_to_forward_begin.push_back(total_packed_path_to_forward.size());
                 total_packed_path_to_forward.insert(total_packed_path_to_forward.end(),
@@ -455,7 +455,7 @@ class ShortestPathRouting final
 
             if (new_total_distance_to_reverse != INVALID_EDGE_WEIGHT)
             {
-                BOOST_ASSERT(target_phantom.reverse_segment_id.enabled);
+                BOOST_ASSERT(target_phantom.edge_data.reverse_segment_id.enabled);
 
                 packed_leg_to_reverse_begin.push_back(total_packed_path_to_reverse.size());
                 total_packed_path_to_reverse.insert(total_packed_path_to_reverse.end(),

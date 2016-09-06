@@ -47,51 +47,47 @@ namespace engine
 
 struct PhantomNode
 {
-    PhantomNode(extractor::EdgeBasedNode edge_data&,
+    PhantomNode(const extractor::EdgeBasedNode &edge_data,
                 int forward_weight,
                 int reverse_weight,
                 int forward_offset,
                 int reverse_offset,
                 util::Coordinate location,
-                util::Coordinate input_location,
-                extractor::TravelMode forward_travel_mode,
-                extractor::TravelMode backward_travel_mode)
+                util::Coordinate input_location)
         : edge_data(edge_data), forward_weight(forward_weight), reverse_weight(reverse_weight),
           forward_offset(forward_offset), reverse_offset(reverse_offset),
-          location(std::move(location)), input_location(std::move(input_location)),
-          forward_travel_mode(forward_travel_mode), backward_travel_mode(backward_travel_mode)
+          location(std::move(location)), input_location(std::move(input_location))
     {
     }
 
     PhantomNode()
-        : edge_data(extractor::EdgeBasedNode), forward_weight(INVALID_EDGE_WEIGHT),
+        : edge_data(extractor::EdgeBasedNode()), forward_weight(INVALID_EDGE_WEIGHT),
           reverse_weight(INVALID_EDGE_WEIGHT), forward_offset(0),
-          reverse_offset(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
-          backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
+          reverse_offset(0)
     {
     }
 
     int GetForwardWeightPlusOffset() const
     {
-        BOOST_ASSERT(edge_data->forward_segment_id.enabled);
+        BOOST_ASSERT(edge_data.forward_segment_id.enabled);
         return forward_offset + forward_weight;
     }
 
     int GetReverseWeightPlusOffset() const
     {
-        BOOST_ASSERT(edge_data->reverse_segment_id.enabled);
+        BOOST_ASSERT(edge_data.reverse_segment_id.enabled);
         return reverse_offset + reverse_weight;
     }
 
-    bool IsBidirected() const { return edge_data->forward_segment_id.enabled && edge_data->reverse_segment_id.enabled; }
+    bool IsBidirected() const { return edge_data.forward_segment_id.enabled && edge_data.reverse_segment_id.enabled; }
 
     bool IsValid(const unsigned number_of_nodes) const
     {
-        return location.IsValid() && ((edge_data->forward_segment_id.id < number_of_nodes) ||
-                                      (edge_data->reverse_segment_id.id < number_of_nodes)) &&
+        return location.IsValid() && ((edge_data.forward_segment_id.id < number_of_nodes) ||
+                                      (edge_data.reverse_segment_id.id < number_of_nodes)) &&
                ((forward_weight != INVALID_EDGE_WEIGHT) ||
                 (reverse_weight != INVALID_EDGE_WEIGHT)) &&
-               (edge_data->component.id != INVALID_COMPONENTID) && (edge_data->name_id != INVALID_NAMEID);
+               (edge_data.component.id != INVALID_COMPONENTID) && (edge_data.name_id != INVALID_NAMEID);
     }
 
     bool IsValid(const unsigned number_of_nodes, const util::Coordinate queried_coordinate) const
@@ -99,11 +95,11 @@ struct PhantomNode
         return queried_coordinate == input_location && IsValid(number_of_nodes);
     }
 
-    bool IsValid() const { return location.IsValid() && (edge_data->name_id != INVALID_NAMEID); }
+    bool IsValid() const { return location.IsValid() && (edge_data.name_id != INVALID_NAMEID); }
 
     bool operator==(const PhantomNode &other) const { return location == other.location; }
 
-    EdgeBasedNode& edge_data;
+    extractor::EdgeBasedNode edge_data;
     int forward_weight;
     int reverse_weight;
     int forward_offset;
@@ -117,13 +113,10 @@ struct PhantomNode
 
     util::Coordinate location;
     util::Coordinate input_location;
-    // note 4 bits would suffice for each,
-    // but the saved byte would be padding anyway
-    extractor::TravelMode forward_travel_mode;
-    extractor::TravelMode backward_travel_mode;
 };
 
-static_assert(sizeof(PhantomNode) == 60, "PhantomNode has more padding then expected");
+// TODO how big should PhantomNodes be now?
+//static_assert(sizeof(PhantomNode) == 60, "PhantomNode has more padding then expected");
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 
@@ -148,17 +141,17 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNodes &pn)
 
 inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
 {
-    out << "node1: " << pn.forward_segment_id.id << ", "
-        << "node2: " << pn.reverse_segment_id.id << ", "
-        << "name: " << pn.name_id << ", "
+    out << "node1: " << pn.edge_data.forward_segment_id.id << ", "
+        << "node2: " << pn.edge_data.reverse_segment_id.id << ", "
+        << "name: " << pn.edge_data.name_id << ", "
         << "fwd-w: " << pn.forward_weight << ", "
         << "rev-w: " << pn.reverse_weight << ", "
         << "fwd-o: " << pn.forward_offset << ", "
         << "rev-o: " << pn.reverse_offset << ", "
-        << "fwd_geom: " << pn.forward_packed_geometry_id << ", "
-        << "rev_geom: " << pn.reverse_packed_geometry_id << ", "
+        << "fwd_geom: " << pn.edge_data.forward_packed_geometry_id << ", "
+        << "rev_geom: " << pn.edge_data.reverse_packed_geometry_id << ", "
         << "comp: " << pn.component.is_tiny << " / " << pn.component.id << ", "
-        << "pos: " << pn.fwd_segment_position << ", "
+        << "pos: " << pn.edge_data.fwd_segment_position << ", "
         << "loc: " << pn.location;
     return out;
 }
