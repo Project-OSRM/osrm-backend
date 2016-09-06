@@ -34,7 +34,7 @@ int main(int argc, const char *argv[])
     config.use_shared_memory = false;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
-    OSRM osrm{config};
+    const OSRM osrm{config};
 
     // The following shows how to use the Route service; configure this service
     RouteParameters params;

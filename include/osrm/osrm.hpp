@@ -83,7 +83,7 @@ class OSRM final
      * \return Status indicating success for the query or failure
      * \see Status, RouteParameters and json::Object
      */
-    Status Route(const RouteParameters &parameters, json::Object &result);
+    Status Route(const RouteParameters &parameters, json::Object &result) const;
 
     /**
      * Distance tables for coordinates.
@@ -92,7 +92,7 @@ class OSRM final
      * \return Status indicating success for the query or failure
      * \see Status, TableParameters and json::Object
      */
-    Status Table(const TableParameters &parameters, json::Object &result);
+    Status Table(const TableParameters &parameters, json::Object &result) const;
 
     /**
      * Nearest street segment for coordinate.
@@ -101,7 +101,7 @@ class OSRM final
      * \return Status indicating success for the query or failure
      * \see Status, NearestParameters and json::Object
      */
-    Status Nearest(const NearestParameters &parameters, json::Object &result);
+    Status Nearest(const NearestParameters &parameters, json::Object &result) const;
 
     /**
      * Trip: shortest round trip between coordinates.
@@ -110,7 +110,7 @@ class OSRM final
      * \return Status indicating success for the query or failure
      * \see Status, TripParameters and json::Object
      */
-    Status Trip(const TripParameters &parameters, json::Object &result);
+    Status Trip(const TripParameters &parameters, json::Object &result) const;
 
     /**
      * Match: snaps noisy coordinate traces to the road network
@@ -119,7 +119,7 @@ class OSRM final
      * \return Status indicating success for the query or failure
      * \see Status, MatchParameters and json::Object
      */
-    Status Match(const MatchParameters &parameters, json::Object &result);
+    Status Match(const MatchParameters &parameters, json::Object &result) const;
 
     /**
      * Tile: vector tiles with internal graph representation
@@ -128,7 +128,7 @@ class OSRM final
      * \return Status indicating success for the query or failure
      * \see Status, TileParameters and json::Object
      */
-    Status Tile(const TileParameters &parameters, std::string &result);
+    Status Tile(const TileParameters &parameters, std::string &result) const;
 
   private:
     std::unique_ptr<engine::Engine> engine_;

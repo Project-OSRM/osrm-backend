@@ -55,7 +55,7 @@ class Engine final
     // Needs to be public
     struct EngineLock;
 
-    explicit Engine(EngineConfig &config);
+    explicit Engine(const EngineConfig &config);
 
     Engine(Engine &&) noexcept;
     Engine &operator=(Engine &&) noexcept;
@@ -63,12 +63,12 @@ class Engine final
     // Impl. in cpp since for unique_ptr of incomplete types
     ~Engine();
 
-    Status Route(const api::RouteParameters &parameters, util::json::Object &result);
-    Status Table(const api::TableParameters &parameters, util::json::Object &result);
-    Status Nearest(const api::NearestParameters &parameters, util::json::Object &result);
-    Status Trip(const api::TripParameters &parameters, util::json::Object &result);
-    Status Match(const api::MatchParameters &parameters, util::json::Object &result);
-    Status Tile(const api::TileParameters &parameters, std::string &result);
+    Status Route(const api::RouteParameters &parameters, util::json::Object &result) const;
+    Status Table(const api::TableParameters &parameters, util::json::Object &result) const;
+    Status Nearest(const api::NearestParameters &parameters, util::json::Object &result) const;
+    Status Trip(const api::TripParameters &parameters, util::json::Object &result) const;
+    Status Match(const api::MatchParameters &parameters, util::json::Object &result) const;
+    Status Tile(const api::TileParameters &parameters, std::string &result) const;
 
   private:
     std::unique_ptr<EngineLock> lock;
