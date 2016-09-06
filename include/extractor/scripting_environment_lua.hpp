@@ -55,7 +55,7 @@ class LuaScriptingEnvironment final : public ScriptingEnvironment
     std::vector<std::string> GetNameSuffixList() override;
     std::vector<std::string> GetExceptions() override;
     void SetupSources() override;
-    int32_t GetTurnPenalty(double angle) override;
+    int32_t GetTurnPenalty(const double angle, const double approach_road_speed, const double exit_road_speed) override;
     void ProcessSegment(const osrm::util::Coordinate &source,
                         const osrm::util::Coordinate &target,
                         double distance,

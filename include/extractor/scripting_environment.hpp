@@ -53,7 +53,7 @@ class ScriptingEnvironment
     virtual std::vector<std::string> GetNameSuffixList() = 0;
     virtual std::vector<std::string> GetExceptions() = 0;
     virtual void SetupSources() = 0;
-    virtual int32_t GetTurnPenalty(double angle) = 0;
+    virtual int32_t GetTurnPenalty(const double angle, const double approach_road_speed, const double exit_road_speed) = 0;
     virtual void ProcessSegment(const osrm::util::Coordinate &source,
                                 const osrm::util::Coordinate &target,
                                 double distance,

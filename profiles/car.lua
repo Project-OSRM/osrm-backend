@@ -543,7 +543,7 @@ function way_function (way, result)
   result.is_startpoint = result.forward_mode == mode.driving or result.backward_mode == mode.driving
 end
 
-function turn_function (angle)
+function turn_function (angle, approach_road_speed, exit_road_speed)
   ---- compute turn penalty as angle^2, with a left/right bias
   -- multiplying by 10 converts to deci-seconds see issue #1318
   k = 10*turn_penalty/(90.0*90.0)
