@@ -150,10 +150,10 @@ properties.left_hand_driving               = false
 
 local side_road_speed_multiplier = 0.8
 
-local turn_penalty               = 1
+local turn_penalty               = 7.5
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
-local turn_bias                  = properties.left_hand_driving and 1/1.2 or 1.2
+local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1.075
 
 local obey_oneway                = true
 local ignore_areas               = true
@@ -544,12 +544,13 @@ function way_function (way, result)
 end
 
 function turn_function (angle)
-  ---- compute turn penalty as angle^2, with a left/right bias
+  -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
+  -- over the space of 0-180 degrees.  Values here were chosen by fitting
+  -- the function to some turn penalty samples from real driving.
   -- multiplying by 10 converts to deci-seconds see issue #1318
-  k = 10*turn_penalty/(90.0*90.0)
   if angle>=0 then
-    return angle*angle*k/turn_bias
+    return 10 * turn_penalty / (1 + 2.718 ^ - ((13 / turn_bias) * angle/180 - 6.5*turn_bias))
   else
-    return angle*angle*k*turn_bias
+    return 10 * turn_penalty / (1 + 2.718 ^  - ((13 * turn_bias) * - angle/180 - 6.5/turn_bias))
   end
 end
