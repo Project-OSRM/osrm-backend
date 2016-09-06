@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -526,6 +526,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current)
 {
     // Base decision on distance since the zig-zag is a visual clue.
+    // If adjusted, make sure to check validity of the is_right/is_left classification below
     const constexpr auto MAX_STAGGERED_DISTANCE = 3; // debatable, but keep short to be on safe side
 
     const auto angle = [](const RouteStep &step) {
@@ -539,6 +540,11 @@ bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current
     // We do not want to trigger e.g. on sharp uturn'ish turns or going straight "turns".
     // Therefore we use the turn angle to derive 90 degree'ish right / left turns.
     // This more closely resembles what we understand as Staggered Intersection.
+    // We have to be careful in cases with larger MAX_STAGGERED_DISTANCE values. If the distance
+    // gets large, sharper angles might be not obvious enough to consider them a staggered
+    // intersection. We might need to consider making the decision here dependent on the actual turn
+    // angle taken. To do so, we could scale the angle-limits by a factor depending on the distance
+    // between the turns.
     const auto is_right = [](const double angle) { return angle > 45 && angle < 135; };
     const auto is_left = [](const double angle) { return angle > 225 && angle < 315; };
 
