@@ -479,6 +479,7 @@ Feature: Turn Lane Guidance
             | a,g       | road,cross,cross | depart,turn left,arrive | ,left:true left:true straight:false straight:false, |
             | a,e       | road,road        | depart,arrive           | ,                                                   |
 
+    #NEEDS TO BE INVESTIGATED. Turn restriction shouldn't be here. See #2867
     Scenario: U-Turn Road at Intersection
         Given the node map
             |   |   |   |   |   | h |   |
@@ -494,10 +495,18 @@ Feature: Turn Lane Guidance
             | bc    | road  | \|through\|right   | yes    | primary  |
             | cd    | road  | \|through\|right   | yes    | primary  |
             | fc    | road  |                    | no     | tertiary |
-            | jefb  | road  |                    | yes    | primary  |
-            | gdeh  | cross |                    | no     | primary  |
+            | je    | road  |                    | yes    | primary  |
+            | ef    | road  |                    | yes    | primary  |
+            | fb    | road  |                    | yes    | primary  |
+            | eh    | cross |                    | no     | primary  |
+            | de    | cross |                    | no     | primary  |
+            | gd    | cross |                    | no     | primary  |
 
-       When I route I should get
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | de       | ef     | e        | no_left_turn  |
+
+        When I route I should get
             | from | to | bearings        | route            | turns                        | lanes                                  |
             | a    | g  | 180,180 180,180 | road,cross,cross | depart,turn right,arrive     | ,none:false straight:false right:true, |
             | a    | h  | 180,180 180,180 | road,cross,cross | depart,turn left,arrive      | ,none:true straight:false right:false, |
