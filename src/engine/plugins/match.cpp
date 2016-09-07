@@ -165,6 +165,10 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
                      json_result);
     }
 
+    // setup logging if enabled
+    if (osrm::util::json::Logger::get())
+        osrm::util::json::Logger::get()->initialize("matching");
+
     // call the actual map matching
     SubMatchingList sub_matchings = map_matching(
         candidates_lists, parameters.coordinates, parameters.timestamps, parameters.radiuses);
@@ -199,6 +203,9 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
 
     api::MatchAPI match_api{BasePlugin::facade, parameters};
     match_api.MakeResponse(sub_matchings, sub_routes, json_result);
+
+    if (osrm::util::json::Logger::get())
+        osrm::util::json::Logger::get()->render("matching", json_result);
 
     return Status::Ok;
 }
