@@ -44,6 +44,16 @@ inline bool hasManeuver(const RouteStep &first, const RouteStep &second)
            second.maneuver.instruction.type != TurnType::Suppressed;
 }
 
+// forward all signage/name data from one step to another.
+// When we collapse a step, we might have to transfer the name, pronunciation and similar tags.
+inline void forwardStepSignage(RouteStep &destination, const RouteStep &origin)
+{
+    destination.name_id = origin.name_id;
+    destination.name = origin.name;
+    destination.pronunciation = origin.pronunciation;
+    destination.destinations = origin.destinations;
+}
+
 inline bool choiceless(const RouteStep &step, const RouteStep &previous)
 {
     // if the next turn is choiceless, we consider longer turn roads collapsable than usually
@@ -156,7 +166,10 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
             // remember the current name as rotary name in tha case we end in a rotary
             if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
                 propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
+            {
                 propagation_step.rotary_name = propagation_step.name;
+                propagation_step.rotary_pronunciation = propagation_step.pronunciation;
+            }
 
             else if (propagation_step.maneuver.instruction.type ==
                          TurnType::EnterRoundaboutIntersection ||
@@ -254,7 +267,10 @@ void closeOffRoundabout(const bool on_roundabout,
         };
         steps[1].maneuver.instruction.type = exitToEnter(step.maneuver.instruction.type);
         if (steps[1].maneuver.instruction.type == TurnType::EnterRotary)
+        {
             steps[1].rotary_name = steps[0].name;
+            steps[1].rotary_pronunciation = steps[0].pronunciation;
+        }
     }
 
     // Normal exit from the roundabout, or exit from a previously fixed roundabout. Propagate the
@@ -266,8 +282,7 @@ void closeOffRoundabout(const bool on_roundabout,
     // intersections are locations passed along the way
     const auto exit_intersection = steps[step_index].intersections.front();
     const auto exit_bearing = exit_intersection.bearings[exit_intersection.out];
-    const auto destination_name = step.name;
-    const auto destinatino_name_id = step.name_id;
+    const auto destination_copy = step;
     if (step_index > 1)
     {
         // The very first route-step is head, so we cannot iterate past that one
@@ -285,6 +300,7 @@ void closeOffRoundabout(const bool on_roundabout,
                     propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
                 {
                     propagation_step.rotary_name = propagation_step.name;
+                    propagation_step.rotary_pronunciation = propagation_step.pronunciation;
                 }
                 else if (propagation_step.maneuver.instruction.type ==
                              TurnType::EnterRoundaboutIntersection ||
@@ -301,8 +317,7 @@ void closeOffRoundabout(const bool on_roundabout,
                         ::osrm::util::guidance::getTurnDirection(angle);
                 }
 
-                propagation_step.name = destination_name;
-                propagation_step.name_id = destinatino_name_id;
+                forwardStepSignage(propagation_step, destination_copy);
                 invalidateStep(steps[propagation_index + 1]);
                 break;
             }
@@ -424,8 +439,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                     util::guidance::mirrorDirectionModifier(
                         steps[one_back_index].maneuver.instruction.direction_modifier);
             }
-            steps[one_back_index].name = current_step.name;
-            steps[one_back_index].name_id = current_step.name_id;
+            forwardStepSignage(steps[one_back_index], current_step);
             invalidateStep(steps[step_index]);
         }
     }
@@ -441,7 +455,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     {
         BOOST_ASSERT(two_back_index < steps.size());
         // the simple case is a u-turn that changes directly into the in-name again
-        const bool direct_u_turn = steps[two_back_index].name == current_step.name;
+        const bool direct_u_turn = steps[two_back_index].name_id == current_step.name_id;
 
         // however, we might also deal with a dual-collapse scenario in which we have to
         // additionall collapse a name-change as welll
@@ -451,7 +465,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             (steps[next_step_index].maneuver.instruction.type == TurnType::UseLane ||
              isCollapsableInstruction(steps[next_step_index].maneuver.instruction));
         const bool u_turn_with_name_change =
-            continues_with_name_change && steps[next_step_index].name == steps[two_back_index].name;
+            continues_with_name_change &&
+            steps[next_step_index].name_id == steps[two_back_index].name_id;
 
         if (direct_u_turn || u_turn_with_name_change)
         {
@@ -466,8 +481,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                                                         // beginning of this function
             }
 
-            steps[one_back_index].name = steps[two_back_index].name;
-            steps[one_back_index].name_id = steps[two_back_index].name_id;
+            forwardStepSignage(steps[one_back_index], steps[two_back_index]);
             steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
             steps[one_back_index].maneuver.instruction.direction_modifier =
                 DirectionModifier::UTurn;
@@ -780,8 +794,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     steps[one_back_index] =
                         elongate(std::move(steps[one_back_index]), steps[step_index]);
 
-                    steps[one_back_index].name_id = steps[step_index].name_id;
-                    steps[one_back_index].name = steps[step_index].name;
+                    forwardStepSignage(steps[one_back_index], steps[step_index]);
                     // the turn lanes for this turn are on the sliproad itself, so we have to
                     // remember  them
                     steps[one_back_index].intersections.front().lanes =
@@ -807,7 +820,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         // These have to be handled in post-processing
         else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
                  current_step.maneuver.instruction.type != TurnType::Suppressed &&
-                 steps[getPreviousNameIndex(step_index)].name == current_step.name &&
+                 steps[getPreviousNameIndex(step_index)].name_id == current_step.name_id &&
                  canCollapseAll(getPreviousNameIndex(step_index) + 1, next_step_index))
         {
             BOOST_ASSERT(step_index > 0);
@@ -831,8 +844,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             const auto two_back_index = getPreviousIndex(one_back_index);
             BOOST_ASSERT(two_back_index < steps.size());
             // valid, since one_back is collapsable or a turn and therefore not depart:
-            const auto &coming_from_name = steps[two_back_index].name;
-            if (current_step.name == coming_from_name)
+            const auto &coming_from_name_id = steps[two_back_index].name_id;
+            if (current_step.name_id == coming_from_name_id)
             {
                 if (compatible(one_back_step, steps[two_back_index]))
                 {
@@ -861,7 +874,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             else if (step_index + 2 < steps.size() &&
                      current_step.maneuver.instruction.type == TurnType::NewName &&
                      steps[next_step_index].maneuver.instruction.type == TurnType::NewName &&
-                     one_back_step.name == steps[next_step_index].name)
+                     one_back_step.name_id == steps[next_step_index].name_id)
             {
                 // if we are crossing an intersection and go immediately after into a name change,
                 // we don't wan't to collapse the initial intersection.
@@ -1077,8 +1090,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // as the segment before it.  Thus, we have to copy the names
         // and travel modes from the new next_to_last step.
         auto &new_next_to_last = *(steps.end() - 2);
-        next_to_last_step.name = new_next_to_last.name;
-        next_to_last_step.name_id = new_next_to_last.name_id;
+        forwardStepSignage(next_to_last_step, new_next_to_last);
         next_to_last_step.mode = new_next_to_last.mode;
         // the geometry indices of the last step are already correct;
     }

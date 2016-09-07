@@ -240,7 +240,13 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     if (!step.destinations.empty())
         route_step.values["destinations"] = std::move(step.destinations);
     if (!step.rotary_name.empty())
+    {
         route_step.values["rotary_name"] = std::move(step.rotary_name);
+        if (!step.rotary_pronunciation.empty())
+        {
+            route_step.values["rotary_pronunciation"] = std::move(step.rotary_pronunciation);
+        }
+    }
 
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));

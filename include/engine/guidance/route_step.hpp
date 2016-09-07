@@ -61,6 +61,7 @@ struct RouteStep
     std::string pronunciation;
     std::string destinations;
     std::string rotary_name;
+    std::string rotary_pronunciation;
     double duration;
     double distance;
     extractor::TravelMode mode;
@@ -74,6 +75,7 @@ struct RouteStep
 inline RouteStep getInvalidRouteStep()
 {
     return {0,
+            "",
             "",
             "",
             "",

@@ -17,6 +17,7 @@
       - BREAKING: Fixed a bug that could crash postprocessing of instructions on invalid roundabout taggings. This change requires reprocessing datasets with osrm-extract and osrm-contract
       - Fixed an issue that could emit `invalid` as instruction when ending on a sliproad after a traffic-light
       - Fixed an issue that would detect turning circles as sliproads
+      - Fixed a bug where post-processing instructions (e.g. left + left -> uturn) could result in false pronunciations
 
 # 5.3.0
   Changes from 5.3.0-rc.3
