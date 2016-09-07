@@ -15,9 +15,15 @@ namespace plugins
 class NearestPlugin final : public BasePlugin
 {
   public:
-    explicit NearestPlugin(datafacade::BaseDataFacade &facade);
+    explicit NearestPlugin(datafacade::BaseDataFacade &facade,
+                           const int max_results,
+                           const int max_radius);
 
     Status HandleRequest(const api::NearestParameters &params, util::json::Object &result);
+
+  private:
+    const int max_results;
+    const int max_radius;
 };
 }
 }
