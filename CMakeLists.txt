@@ -47,7 +47,6 @@ if(WIN32 AND MSVC_VERSION LESS 1900)
 endif()
 
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
-option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_COMPONENTS "Build osrm-components" OFF)
 option(ENABLE_ASSERTIONS OFF)
@@ -331,11 +330,6 @@ add_dependency_includes(${BZIP2_INCLUDE_DIR})
 
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-
-if (ENABLE_JSON_LOGGING)
-  message(STATUS "Enabling json logging")
-  add_dependency_defines(-DENABLE_JSON_LOGGING)
-endif()
 
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${OSRM_INCLUDE_PATHS})

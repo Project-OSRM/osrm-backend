@@ -9,7 +9,6 @@
 
 #include "util/coordinate_calculation.hpp"
 #include "util/for_each_pair.hpp"
-#include "util/json_logger.hpp"
 
 #include <cstddef>
 
