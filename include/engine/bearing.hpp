@@ -38,7 +38,7 @@ struct Bearing
     short bearing;
     short range;
 
-    bool IsValid() const { return bearing >= 0 && bearing <= 360 && range >= 0 && range <= 180; }
+    bool IsValid() const { return bearing >= 0 && bearing <= 360 && range > 0 && range <= 180; }
 };
 
 inline bool operator==(const Bearing lhs, const Bearing rhs)

@@ -16,7 +16,12 @@ namespace engine
 namespace plugins
 {
 
-NearestPlugin::NearestPlugin(datafacade::BaseDataFacade &facade) : BasePlugin{facade} {}
+NearestPlugin::NearestPlugin(datafacade::BaseDataFacade &facade,
+                             const int max_results_,
+                             const double max_radius_when_bearing_)
+    : BasePlugin{facade, max_radius_when_bearing_}, max_results{max_results_}
+{
+}
 
 Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
                                     util::json::Object &json_result)
@@ -29,6 +34,21 @@ Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
     if (params.coordinates.size() != 1)
     {
         return Error("InvalidOptions", "Only one input coordinate is supported", json_result);
+    }
+
+    if (max_results != -1 && params.number_of_results > boost::numeric_cast<unsigned>(max_results))
+    {
+        return Error("TooBig",
+                     "Too many results requested, maximum is " + std::to_string(max_results),
+                     json_result);
+    }
+
+    if (!CheckAllRadiuses(params))
+    {
+        return Error("TooBig",
+                     "When using a bearing filter, the maximum search radius is limited to " +
+                         std::to_string(max_radius_when_bearings) + "m",
+                     json_result);
     }
 
     auto phantom_nodes = GetPhantomNodes(params, params.number_of_results);

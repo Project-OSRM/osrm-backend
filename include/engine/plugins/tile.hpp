@@ -24,7 +24,7 @@ namespace plugins
 class TilePlugin final : public BasePlugin
 {
   public:
-    TilePlugin(datafacade::BaseDataFacade &facade) : BasePlugin(facade) {}
+    TilePlugin(datafacade::BaseDataFacade &facade) : BasePlugin(facade, EngineConfig::UNLIMITED) {}
 
     Status HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer);
 };

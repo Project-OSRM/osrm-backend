@@ -69,7 +69,7 @@ Where the elements follow the following format:
 
 | Element    | Values                                                 |
 |------------|--------------------------------------------------------|
-|bearing     |`{value},{range}` `integer 0 .. 360,integer 0 .. 180`  |
+|bearing     |`{value},{range}` `integer 0 .. 360,integer 1 .. 180`  |
 |radius      |`double >= 0` or `unlimited` (default)                  |
 |hint        |Base64 `string`                                         |
 

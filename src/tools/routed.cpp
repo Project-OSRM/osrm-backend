@@ -63,7 +63,9 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              int &max_locations_trip,
                                              int &max_locations_viaroute,
                                              int &max_locations_distance_table,
-                                             int &max_locations_map_matching)
+                                             int &max_locations_map_matching,
+                                             int &max_results_nearest,
+                                             double &max_radius_when_bearings)
 {
     using boost::program_options::value;
     using boost::filesystem::path;
@@ -100,7 +102,13 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Max. locations supported in distance table query") //
         ("max-matching-size",
          value<int>(&max_locations_map_matching)->default_value(100),
-         "Max. locations supported in map matching query");
+         "Max. locations supported in map matching query") //
+        ("max-nearest-size",
+         value<int>(&max_results_nearest)->default_value(100),
+         "Max. results per location in the nearest query") //
+        ("max-radius-with-bearings",
+         value<double>(&max_radius_when_bearings)->default_value(1'000),
+         "Max. radius per location when using a bearing filter on any query type. Unit is meters.");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -189,7 +197,9 @@ int main(int argc, const char *argv[]) try
                                                               config.max_locations_trip,
                                                               config.max_locations_viaroute,
                                                               config.max_locations_distance_table,
-                                                              config.max_locations_map_matching);
+                                                              config.max_locations_map_matching,
+                                                              config.max_results_nearest,
+                                                              config.max_radius_when_bearings);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;

@@ -3,6 +3,7 @@
 
 #include "engine/api/base_parameters.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
+#include "engine/engine_config.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/status.hpp"
 
@@ -27,7 +28,11 @@ class BasePlugin
 {
   protected:
     datafacade::BaseDataFacade &facade;
-    BasePlugin(datafacade::BaseDataFacade &facade_) : facade(facade_) {}
+    const double max_radius_when_bearings;
+    BasePlugin(datafacade::BaseDataFacade &facade_, const double max_radius_when_bearings_)
+        : facade(facade_), max_radius_when_bearings(max_radius_when_bearings_)
+    {
+    }
 
     bool CheckAllCoordinates(const std::vector<util::Coordinate> &coordinates)
     {
@@ -35,6 +40,20 @@ class BasePlugin
             std::begin(coordinates), std::end(coordinates), [](const util::Coordinate coordinate) {
                 return !coordinate.IsValid();
             });
+    }
+
+    bool CheckAllRadiuses(const api::BaseParameters &parameters)
+    {
+        if (parameters.bearings.empty())
+            return true;
+
+        if (max_radius_when_bearings == EngineConfig::UNLIMITED)
+            return true;
+
+        return !std::any_of(
+            std::begin(parameters.radiuses),
+            std::end(parameters.radiuses),
+            [this](const auto &radius) { return radius && *radius > max_radius_when_bearings; });
     }
 
     Status Error(const std::string &code,
@@ -135,11 +154,13 @@ class BasePlugin
             }
             if (use_bearings && parameters.bearings[i])
             {
-                phantom_nodes[i] =
-                    facade.NearestPhantomNodesInRange(parameters.coordinates[i],
-                                                      radiuses[i],
-                                                      parameters.bearings[i]->bearing,
-                                                      parameters.bearings[i]->range);
+                phantom_nodes[i] = facade.NearestPhantomNodesInRange(
+                    parameters.coordinates[i],
+                    max_radius_when_bearings != EngineConfig::UNLIMITED
+                        ? std::min(radiuses[i], max_radius_when_bearings)
+                        : radiuses[i],
+                    parameters.bearings[i]->bearing,
+                    parameters.bearings[i]->range);
             }
             else
             {
@@ -179,18 +200,34 @@ class BasePlugin
             {
                 if (use_radiuses && parameters.radiuses[i])
                 {
-                    phantom_nodes[i] = facade.NearestPhantomNodes(parameters.coordinates[i],
-                                                                  number_of_results,
-                                                                  *parameters.radiuses[i],
-                                                                  parameters.bearings[i]->bearing,
-                                                                  parameters.bearings[i]->range);
+                    phantom_nodes[i] = facade.NearestPhantomNodes(
+                        parameters.coordinates[i],
+                        number_of_results,
+                        max_radius_when_bearings != EngineConfig::UNLIMITED
+                            ? std::min(*parameters.radiuses[i], max_radius_when_bearings)
+                            : *parameters.radiuses[i],
+                        parameters.bearings[i]->bearing,
+                        parameters.bearings[i]->range);
                 }
                 else
                 {
-                    phantom_nodes[i] = facade.NearestPhantomNodes(parameters.coordinates[i],
-                                                                  number_of_results,
-                                                                  parameters.bearings[i]->bearing,
-                                                                  parameters.bearings[i]->range);
+                    if (max_radius_when_bearings != EngineConfig::UNLIMITED)
+                    {
+                        phantom_nodes[i] =
+                            facade.NearestPhantomNodes(parameters.coordinates[i],
+                                                       number_of_results,
+                                                       parameters.bearings[i]->bearing,
+                                                       parameters.bearings[i]->range);
+                    }
+                    else
+                    {
+                        phantom_nodes[i] =
+                            facade.NearestPhantomNodes(parameters.coordinates[i],
+                                                       number_of_results,
+                                                       max_radius_when_bearings,
+                                                       parameters.bearings[i]->bearing,
+                                                       parameters.bearings[i]->range);
+                    }
                 }
             }
             else
@@ -242,17 +279,31 @@ class BasePlugin
                     phantom_node_pairs[i] =
                         facade.NearestPhantomNodeWithAlternativeFromBigComponent(
                             parameters.coordinates[i],
-                            *parameters.radiuses[i],
+                            max_radius_when_bearings != EngineConfig::UNLIMITED
+                                ? std::min(*parameters.radiuses[i], max_radius_when_bearings)
+                                : *parameters.radiuses[i],
                             parameters.bearings[i]->bearing,
                             parameters.bearings[i]->range);
                 }
                 else
                 {
-                    phantom_node_pairs[i] =
-                        facade.NearestPhantomNodeWithAlternativeFromBigComponent(
-                            parameters.coordinates[i],
-                            parameters.bearings[i]->bearing,
-                            parameters.bearings[i]->range);
+                    if (max_radius_when_bearings == EngineConfig::UNLIMITED)
+                    {
+                        phantom_node_pairs[i] =
+                            facade.NearestPhantomNodeWithAlternativeFromBigComponent(
+                                parameters.coordinates[i],
+                                parameters.bearings[i]->bearing,
+                                parameters.bearings[i]->range);
+                    }
+                    else
+                    {
+                        phantom_node_pairs[i] =
+                            facade.NearestPhantomNodeWithAlternativeFromBigComponent(
+                                parameters.coordinates[i],
+                                max_radius_when_bearings,
+                                parameters.bearings[i]->bearing,
+                                parameters.bearings[i]->range);
+                    }
                 }
             }
             else
