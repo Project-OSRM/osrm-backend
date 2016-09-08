@@ -44,14 +44,22 @@ Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
     // We want to keep the user-interface as is, so make a copy. Should be cheap.
     auto constraint_params = params;
 
-    const auto max_radius_m = static_cast<double>(max_radius);
+    if (max_radius != -1)
+    {
+        const auto max_radius_m = static_cast<double>(max_radius);
 
-    if (constraint_params.radiuses.empty())
-        constraint_params.radiuses.push_back(boost::make_optional(max_radius_m));
-    else if (constraint_params.radiuses[0])
-        boost::algorithm::clamp(*constraint_params.radiuses[0], 0., max_radius_m);
+        if (constraint_params.radiuses.empty())
+            constraint_params.radiuses.push_back(boost::make_optional(max_radius_m));
+        else if (constraint_params.radiuses[0])
+            boost::algorithm::clamp(*constraint_params.radiuses[0], 0., max_radius_m);
+    }
 
-    auto phantom_nodes = GetPhantomNodes(constraint_params, params.number_of_results);
+    if (max_results != -1)
+    {
+        constraint_params.number_of_results = boost::algorithm::clamp(params.number_of_results, 0, max_results);
+    }
+
+    auto phantom_nodes = GetPhantomNodes(constraint_params, constraint_params.number_of_results);
 
     if (phantom_nodes.front().size() == 0)
     {

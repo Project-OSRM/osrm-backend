@@ -395,6 +395,11 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     }
 
     {
+        auto results = query.NearestPhantomNodes(input, 0);
+        BOOST_CHECK_EQUAL(results.size(), 0);
+    }
+
+    {
         auto results = query.NearestPhantomNodes(input, 5, 270, 10);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
@@ -410,6 +415,16 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
         BOOST_CHECK(!results[1].phantom_node.forward_segment_id.enabled);
         BOOST_CHECK(results[1].phantom_node.reverse_segment_id.enabled);
         BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_segment_id.id, 1);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(input, 0, 45, 10);
+        BOOST_CHECK_EQUAL(results.size(), 0);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(input, 5, 45, 0);
+        BOOST_CHECK_EQUAL(results.size(), 0);
     }
 
     {
@@ -434,6 +449,12 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
         BOOST_CHECK(results[1].phantom_node.reverse_segment_id.enabled);
         BOOST_CHECK_EQUAL(results[1].phantom_node.reverse_segment_id.id, 1);
     }
+
+    {
+        auto results = query.NearestPhantomNodesInRange(input, 11000, 45, 0);
+        BOOST_CHECK_EQUAL(results.size(), 0);
+    }
+
 }
 
 BOOST_AUTO_TEST_CASE(bbox_search_tests)

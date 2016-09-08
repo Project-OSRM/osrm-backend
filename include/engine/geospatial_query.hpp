@@ -71,6 +71,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                const int bearing,
                                const int bearing_range) const
     {
+        if (bearing_range == 0) return {};
         auto results = rtree.Nearest(
             input_coordinate,
             [this, bearing, bearing_range, max_distance](const CandidateSegment &segment) {
@@ -93,6 +94,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         const int bearing,
                         const int bearing_range) const
     {
+        if (bearing_range == 0) return {};
         auto results = rtree.Nearest(
             input_coordinate,
             [this, bearing, bearing_range](const CandidateSegment &segment) {
@@ -116,6 +118,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         const int bearing,
                         const int bearing_range) const
     {
+        if (bearing_range == 0) return {};
         auto results = rtree.Nearest(
             input_coordinate,
             [this, bearing, bearing_range](const CandidateSegment &segment) {
@@ -136,6 +139,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate, const unsigned max_results) const
     {
+        if (max_results == 0) return {};
         auto results =
             rtree.Nearest(input_coordinate,
                           [this](const CandidateSegment &segment) { return HasValidEdge(segment); },
@@ -153,6 +157,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         const unsigned max_results,
                         const double max_distance) const
     {
+        if (max_results == 0) return {};
         auto results =
             rtree.Nearest(input_coordinate,
                           [this](const CandidateSegment &segment) { return HasValidEdge(segment); },
@@ -251,6 +256,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::Coordinate input_coordinate, const int bearing, const int bearing_range) const
     {
+        if (bearing_range == 0) return {};
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
@@ -298,6 +304,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                       const int bearing,
                                                       const int bearing_range) const
     {
+        if (bearing_range == 0) return {};
         bool has_small_component = false;
         bool has_big_component = false;
         auto results = rtree.Nearest(
