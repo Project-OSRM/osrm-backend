@@ -20,7 +20,6 @@ bool EngineConfig::IsValid() const
     };
 
     const bool limits_valid = unlimited_or_more_than(max_locations_distance_table, 2) &&
-                              unlimited_or_more_than(max_locations_distance_table, 2) &&
                               unlimited_or_more_than(max_locations_map_matching, 2) &&
                               unlimited_or_more_than(max_locations_trip, 2) &&
                               unlimited_or_more_than(max_locations_viaroute, 2) &&
