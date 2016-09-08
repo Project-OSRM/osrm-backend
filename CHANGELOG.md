@@ -9,6 +9,7 @@
     - API:
       - `annotations=true` now returns the data source id for each segment as `datasources`
       - Reduced semantic of merge to refer only to merges from a lane onto a motorway-like road
+      - Adds libosrm limits: `max_results_nearest` and `max_radius_when_bearings` for system-wide limiting the number of results in the Nearest service and the radius we're looking at for geospatial lookups in all services when bearings are in use, respectively. This prevents exhaustive graph traversals, returning appropriate error codes instead.
     - Bugfixes
       - Fixed an issue that would result in segfaults for viaroutes with an invalid intermediate segment when u-turns were allowed at the via-location
       - Invalid only_* restrictions could result in loss of connectivity. As a fallback, we assume all turns allowed when the restriction is not valid
