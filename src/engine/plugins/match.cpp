@@ -125,7 +125,10 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
 
     if (!CheckAllRadiuses(parameters))
     {
-        return Error("TooBig", "When using a bearing filter, the maximum search radius is limited to " + std::to_string(max_radius_when_bearings) + "m", json_result);
+        return Error("TooBig",
+                     "When using a bearing filter, the maximum search radius is limited to " +
+                         std::to_string(max_radius_when_bearings) + "m",
+                     json_result);
     }
 
     // assuming radius is the standard deviation of a normal distribution

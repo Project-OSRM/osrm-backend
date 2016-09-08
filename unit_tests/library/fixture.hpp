@@ -23,5 +23,4 @@ inline osrm::OSRM getOSRM(const std::string &base_path)
     return getOSRM(base_path, config);
 }
 
-
 #endif

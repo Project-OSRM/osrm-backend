@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <string>
 
-#include <boost/algorithm/clamp.hpp>
 #include <boost/assert.hpp>
 
 namespace osrm
@@ -39,12 +38,17 @@ Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
 
     if (max_results != -1 && params.number_of_results > boost::numeric_cast<unsigned>(max_results))
     {
-        return Error("TooBig", "Too many results requested, maximum is " + std::to_string(max_results), json_result);
+        return Error("TooBig",
+                     "Too many results requested, maximum is " + std::to_string(max_results),
+                     json_result);
     }
 
     if (!CheckAllRadiuses(params))
     {
-        return Error("TooBig", "When using a bearing filter, the maximum search radius is limited to " + std::to_string(max_radius_when_bearings) + "m", json_result);
+        return Error("TooBig",
+                     "When using a bearing filter, the maximum search radius is limited to " +
+                         std::to_string(max_radius_when_bearings) + "m",
+                     json_result);
     }
 
     auto phantom_nodes = GetPhantomNodes(params, params.number_of_results);

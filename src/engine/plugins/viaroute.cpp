@@ -21,9 +21,12 @@ namespace engine
 namespace plugins
 {
 
-ViaRoutePlugin::ViaRoutePlugin(datafacade::BaseDataFacade &facade_, const int max_locations_viaroute, const double max_radius_when_bearings_)
-    : BasePlugin(facade_, max_radius_when_bearings_), shortest_path(&facade_, heaps), alternative_path(&facade_, heaps),
-      direct_shortest_path(&facade_, heaps), max_locations_viaroute(max_locations_viaroute)
+ViaRoutePlugin::ViaRoutePlugin(datafacade::BaseDataFacade &facade_,
+                               const int max_locations_viaroute,
+                               const double max_radius_when_bearings_)
+    : BasePlugin(facade_, max_radius_when_bearings_), shortest_path(&facade_, heaps),
+      alternative_path(&facade_, heaps), direct_shortest_path(&facade_, heaps),
+      max_locations_viaroute(max_locations_viaroute)
 {
 }
 
@@ -49,7 +52,10 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
     if (!CheckAllRadiuses(route_parameters))
     {
-        return Error("TooBig", "When using a bearing filter, the maximum search radius is limited to " + std::to_string(max_radius_when_bearings) + "m", json_result);
+        return Error("TooBig",
+                     "When using a bearing filter, the maximum search radius is limited to " +
+                         std::to_string(max_radius_when_bearings) + "m",
+                     json_result);
     }
 
     auto phantom_node_pairs = GetPhantomNodes(route_parameters);

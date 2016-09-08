@@ -144,11 +144,16 @@ Engine::Engine(EngineConfig &config)
     // Register plugins
     using namespace plugins;
 
-    route_plugin = create<ViaRoutePlugin>(*query_data_facade, config.max_locations_viaroute, config.max_radius_when_bearings);
-    table_plugin = create<TablePlugin>(*query_data_facade, config.max_locations_distance_table, config.max_radius_when_bearings);
-    nearest_plugin = create<NearestPlugin>(*query_data_facade, config.max_results_nearest, config.max_radius_when_bearings);
-    trip_plugin = create<TripPlugin>(*query_data_facade, config.max_locations_trip, config.max_radius_when_bearings);
-    match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching, config.max_radius_when_bearings);
+    route_plugin = create<ViaRoutePlugin>(
+        *query_data_facade, config.max_locations_viaroute, config.max_radius_when_bearings);
+    table_plugin = create<TablePlugin>(
+        *query_data_facade, config.max_locations_distance_table, config.max_radius_when_bearings);
+    nearest_plugin = create<NearestPlugin>(
+        *query_data_facade, config.max_results_nearest, config.max_radius_when_bearings);
+    trip_plugin = create<TripPlugin>(
+        *query_data_facade, config.max_locations_trip, config.max_radius_when_bearings);
+    match_plugin = create<MatchPlugin>(
+        *query_data_facade, config.max_locations_map_matching, config.max_radius_when_bearings);
     tile_plugin = create<TilePlugin>(*query_data_facade);
 }
 

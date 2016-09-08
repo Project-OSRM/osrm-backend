@@ -23,7 +23,9 @@ namespace engine
 namespace plugins
 {
 
-TablePlugin::TablePlugin(datafacade::BaseDataFacade &facade, const int max_locations_distance_table, const double max_radius_when_bearings_)
+TablePlugin::TablePlugin(datafacade::BaseDataFacade &facade,
+                         const int max_locations_distance_table,
+                         const double max_radius_when_bearings_)
     : BasePlugin{facade, max_radius_when_bearings_}, distance_table(&facade, heaps),
       max_locations_distance_table(max_locations_distance_table)
 {
@@ -60,7 +62,10 @@ Status TablePlugin::HandleRequest(const api::TableParameters &params, util::json
 
     if (!CheckAllRadiuses(params))
     {
-        return Error("TooBig", "When using a bearing filter, the maximum search radius is limited to " + std::to_string(max_radius_when_bearings) + "m", result);
+        return Error("TooBig",
+                     "When using a bearing filter, the maximum search radius is limited to " +
+                         std::to_string(max_radius_when_bearings) + "m",
+                     result);
     }
 
     auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(params));

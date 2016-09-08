@@ -4,8 +4,8 @@
 
 #include "args.hpp"
 
-#include "osrm/nearest_parameters.hpp"
 #include "osrm/match_parameters.hpp"
+#include "osrm/nearest_parameters.hpp"
 #include "osrm/route_parameters.hpp"
 #include "osrm/table_parameters.hpp"
 #include "osrm/trip_parameters.hpp"
@@ -174,9 +174,6 @@ BOOST_AUTO_TEST_CASE(test_nearest_limits)
     BOOST_REQUIRE(rc2 == Status::Error);
     const auto code2 = result2.values.at("code").get<json::String>().value;
     BOOST_CHECK_EQUAL(code2, "TooBig");
-
 }
-
-
 
 BOOST_AUTO_TEST_SUITE_END()

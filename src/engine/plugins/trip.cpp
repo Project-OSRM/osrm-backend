@@ -159,7 +159,10 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
 
     if (!CheckAllRadiuses(parameters))
     {
-        return Error("TooBig", "When using a bearing filter, the maximum search radius is limited to " + std::to_string(max_radius_when_bearings) + "m", json_result);
+        return Error("TooBig",
+                     "When using a bearing filter, the maximum search radius is limited to " +
+                         std::to_string(max_radius_when_bearings) + "m",
+                     json_result);
     }
 
     auto phantom_node_pairs = GetPhantomNodes(parameters);
