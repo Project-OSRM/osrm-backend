@@ -176,7 +176,7 @@ Feature: Slipways and Dedicated Turn Lanes
             |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   | e | g |   |
             |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   | 1 |   |   |
             |   |   |   |   |   |   |   | h |   |
             |   |   |   |   |   |   |   |   |   |
             |   |   |   |   |   |   |   | f |   |
@@ -194,7 +194,73 @@ Feature: Slipways and Dedicated Turn Lanes
             | jcghf  | primary        | Brauerstrasse | yes    |
 
         When I route I should get
-            | waypoints | route                                    | turns                    |
-            | a,i       | Ebertstrasse,Ebertstrasse                | depart,arrive            |
-            | a,l       | Ebertstrasse,Ebertstrasse                | depart,arrive            |
-            | a,f       | Ebertstrasse,Brauerstrasse,Brauerstrasse | depart,turn right,arrive |
+            | waypoints | route                                    | turns                           |
+            | a,i       | Ebertstrasse,Ebertstrasse                | depart,arrive                   |
+            | a,l       | Ebertstrasse,Ebertstrasse                | depart,arrive                   |
+            | a,f       | Ebertstrasse,Brauerstrasse,Brauerstrasse | depart,turn right,arrive        |
+            | a,1       | Ebertstrasse,,                           | depart,turn slight right,arrive |
+
+    #2839
+    Scenario: Self-Loop
+        Given the node map
+            # 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | l |   |   | k |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | m |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | i |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | h |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | n |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | g |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | o |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | p |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | e |   |   |   |
+            | a |   |   |   |   | b |   |   |   |   |   |   |   |   | c |   |   |   |   |   |   |   |   |   | d |   |   |   |   |   |   |
+
+     And the ways
+            | nodes           | name    | oneway | highway     | lanes |
+            | abc             | circled | no     | residential | 1     |
+            | cdefghijklmnopc | circled | yes    | residential | 1     |
+
+     When I route I should get
+            | waypoints | bearings     | route           | turns         |
+            | b,a       | 90,10 270,10 | circled,circled | depart,arrive |
+
+    @todo
+    #due to the current turn function, the left turn bcp is exactly the same cost as pcb, a right turn. The right turn should be way faster,though
+    #for that reason we cannot distinguish between driving clockwise through the circle or counter-clockwise. Until this is improved, this case here
+    #has to remain as todo (see #https://github.com/Project-OSRM/osrm-backend/pull/2849)
+    Scenario: Self-Loop - Bidirectional
+        Given the node map
+            # 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | l |   |   | k |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | m |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | i |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | h |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | n |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | g |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | o |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | p |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | e |   |   |   |
+            | a |   |   |   |   | b |   |   |   |   |   |   |   |   | c |   |   |   |   |   |   |   |   |   | d |   |   |   |   |   |   |
+
+     And the ways
+            | nodes           | name    | oneway | highway     | lanes |
+            | abc             | circled | no     | residential | 1     |
+            | cdefghijklmnopc | circled | no     | residential | 1     |
+
+     When I route I should get
+            | waypoints | bearings     | route           | turns         |
+            | b,a       | 90,10 270,10 | circled,circled | depart,arrive |

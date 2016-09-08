@@ -68,8 +68,8 @@ inline bool hasValidLanes(const guidance::Intersection &intersection)
 
 std::string instructionTypeToString(const TurnType::Enum type)
 {
-    static_assert(sizeof(turn_type_names)/sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
-            "Some turn types has not string representation.");
+    static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
+                  "Some turn types has not string representation.");
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
@@ -99,15 +99,17 @@ util::json::Array lanesFromIntersection(const guidance::Intersection &intersecti
 
 std::string instructionModifierToString(const DirectionModifier::Enum modifier)
 {
-    static_assert(sizeof(modifier_names)/sizeof(modifier_names[0]) >= DirectionModifier::MaxDirectionModifier,
-            "Some direction modifiers has not string representation.");
+    static_assert(sizeof(modifier_names) / sizeof(modifier_names[0]) >=
+                      DirectionModifier::MaxDirectionModifier,
+                  "Some direction modifiers has not string representation.");
     return modifier_names[static_cast<std::size_t>(modifier)];
 }
 
 std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
 {
-    static_assert(sizeof(waypoint_type_names)/sizeof(waypoint_type_names[0]) >= static_cast<size_t>(guidance::WaypointType::MaxWaypointType),
-            "Some waypoint types has not string representation.");
+    static_assert(sizeof(waypoint_type_names) / sizeof(waypoint_type_names[0]) >=
+                      static_cast<size_t>(guidance::WaypointType::MaxWaypointType),
+                  "Some waypoint types has not string representation.");
     return waypoint_type_names[static_cast<std::size_t>(waypoint_type)];
 }
 
@@ -238,7 +240,13 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     if (!step.destinations.empty())
         route_step.values["destinations"] = std::move(step.destinations);
     if (!step.rotary_name.empty())
+    {
         route_step.values["rotary_name"] = std::move(step.rotary_name);
+        if (!step.rotary_pronunciation.empty())
+        {
+            route_step.values["rotary_pronunciation"] = std::move(step.rotary_pronunciation);
+        }
+    }
 
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));

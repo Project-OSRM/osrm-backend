@@ -48,3 +48,31 @@ Feature: Car - Street names in instructions
         When I route I should get
             | from | to | route                            |
             | a    | c  | tertiary,residential,residential |
+
+    Scenario: Inner city expressway with on road
+        Given the node map
+            | a | b |   |   |   | c | g |
+            |   |   |   |   | f |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   | d |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |
+            |   |   |   |   |   | e |   |
+
+        And the ways
+            | nodes | highway      | name  | name:pronunciation |
+            | abc   | primary      | road  | roooaad            |
+            | cg    | primary      | road  | roooaad            |
+            | bfd   | trunk_link   |       |                    |
+            | cde   | trunk        | trunk | truank             |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | abc      | cde    | c        | no_right_turn |
+
+       When I route I should get
+            | waypoints | route                | turns                    | pronunciations        |
+            | a,e       | road,trunk,trunk     | depart,turn right,arrive | roooaad,truank,truank |

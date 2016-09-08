@@ -229,7 +229,7 @@ Feature: Basic Roundabout
             | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
             | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
 
-       Scenario: Collinear in Y
+    Scenario: Collinear in Y
         Given the node map
             |   | a |
             |   | b |
@@ -325,3 +325,62 @@ Feature: Basic Roundabout
         When I route I should get
             | waypoints | route                                                   | turns                                                     |
             | a,k       | massachusetts,massachusetts,massachusetts,massachusetts | depart,sheridan circle-exit-2,dupont circle-exit-1,arrive |
+
+    #2856 - http://www.openstreetmap.org/#map=19/47.23318/-1.56563
+    Scenario: Linked Roundabouts
+        Given the node map
+            |   |   |   |   |   |   |   |   |   |   |   |   |   | x |
+            |   | u |   |   |   |   |   |   |   |   |   |   | r |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   | t |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   | s |   |   |   |
+            |   |   | v |   |   | i |   | h |   | g |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   | q |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   | j |   |   |   |   |   |   |   | f |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   | a |   |   |   |   |   |   |   | e |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   | b |   | c |   | d |   | p |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | m |   |   |   |   |   |   |   | n |   |   |   |
+            |   |   |   |   | l |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | k |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   | w |   |   |   |   |   |   |   |   |   | o |   |   |
+
+        And the ways
+            | nodes | junction   | name | highway   | oneway |
+            | abija | roundabout | egg  | primary   | yes    |
+            | defgd | roundabout | egg  | primary   | yes    |
+            | bcd   | roundabout | egg  | primary   | yes    |
+            | ghi   |            | egg  | primary   | yes    |
+            | amklb |            | ll   | primary   | yes    |
+            | wk    |            | ll   | primary   | no     |
+            | dnope |            | lr   | secondary | yes    |
+            | fqrsg |            | tr   | primary   | yes    |
+            | rx    |            | tr   | primary   | no     |
+            | ituvj |            | tl   | primary   | yes    |
+
+        And the nodes
+            | node | highway  |
+            | c    | give_way |
+            | h    | give_way |
+
+        When I route I should get
+            | waypoints | route            | turns                                                   |
+            # since we cannot handle these invalid roundabout tags yet, we cannout output roundabout taggings. This will hopefully change some day
+            #| w,x       | ll,egg,egg,tr,tr | depart,roundabout-exit-1,roundabout-exit-2,arrive       |
+            | w,x       | ll,egg,egg,tr,tr | depart,turn right,continue left,turn slight left,arrive |
+

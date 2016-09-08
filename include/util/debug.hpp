@@ -25,19 +25,17 @@ inline void print(const engine::guidance::RouteStep &step)
               << static_cast<int>(step.maneuver.waypoint_type) << " "
               << " Duration: " << step.duration << " Distance: " << step.distance
               << " Geometry: " << step.geometry_begin << " " << step.geometry_end
-              << " exit: " << step.maneuver.exit << " Intersections: " << step.intersections.size()
-              << " [";
+              << "\n\tIntersections: " << step.intersections.size() << " [";
 
     for (const auto &intersection : step.intersections)
     {
-        std::cout << "(bearings:";
+        std::cout << "(Lanes: " << static_cast<int>(intersection.lanes.lanes_in_turn) << " "
+                  << static_cast<int>(intersection.lanes.first_lane_from_the_right) << " bearings:";
         for (auto bearing : intersection.bearings)
             std::cout << " " << bearing;
         std::cout << ", entry: ";
         for (auto entry : intersection.entry)
             std::cout << " " << (entry ? "true" : "false");
-        std::cout << " Lanes: (" << static_cast<int>(intersection.lanes.lanes_in_turn) << ", "
-                  << static_cast<int>(intersection.lanes.first_lane_from_the_right) << ")";
         std::cout << ")";
     }
     std::cout << "] name[" << step.name_id << "]: " << step.name;
@@ -84,7 +82,9 @@ inline void print(const extractor::guidance::lanes::LaneDataVector &turn_lane_da
         std::cout << "\t" << entry.tag << "("
                   << extractor::guidance::TurnLaneType::toString(entry.tag)
                   << ") from: " << static_cast<int>(entry.from)
-                  << " to: " << static_cast<int>(entry.to) << "\n";
+                  << " to: " << static_cast<int>(entry.to)
+                  << " Can Be Suppresssed: " << (entry.suppress_assignment ? "true" : "false")
+                  << "\n";
     std::cout << std::flush;
 }
 

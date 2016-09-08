@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include <algorithm>
@@ -574,6 +574,9 @@ IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
     NodeID node_at_intersection = starting_node;
     EdgeID incoming_edge = via_edge;
 
+    // to prevent endless loops
+    const auto termination_node = node_based_graph.GetTarget(via_edge);
+
     while (result.size() == 2 &&
            node_based_graph.GetEdgeData(via_edge).IsCompatibleTo(
                node_based_graph.GetEdgeData(result[1].turn.eid)))
@@ -581,6 +584,10 @@ IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
         node_at_intersection = node_based_graph.GetTarget(incoming_edge);
         incoming_edge = result[1].turn.eid;
         result = GetConnectedRoads(node_at_intersection, incoming_edge);
+
+        // When looping back to the original node, we obviously are in a loop. Stop there.
+        if (termination_node == node_based_graph.GetTarget(incoming_edge))
+            break;
     }
 
     // return output if requested

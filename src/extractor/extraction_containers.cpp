@@ -116,11 +116,6 @@ ExtractionContainers::ExtractionContainers()
     name_offsets.push_back(0);
     // Insert the total length sentinel (corresponds to the next name string offset)
     name_offsets.push_back(0);
-
-    // the offsets have to be initialized with two values, since we have the empty turn string for
-    // the first id
-    turn_lane_offsets.push_back(0);
-    turn_lane_offsets.push_back(0);
 }
 
 /**
@@ -136,8 +131,7 @@ ExtractionContainers::ExtractionContainers()
 void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environment,
                                        const std::string &output_file_name,
                                        const std::string &restrictions_file_name,
-                                       const std::string &name_file_name,
-                                       const std::string &turn_lane_file_name)
+                                       const std::string &name_file_name)
 {
     std::ofstream file_out_stream;
     file_out_stream.open(output_file_name.c_str(), std::ios::binary);
@@ -151,35 +145,7 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
 
     PrepareRestrictions();
     WriteRestrictions(restrictions_file_name);
-
     WriteCharData(name_file_name);
-    WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
-}
-
-void ExtractionContainers::WriteTurnLaneMasks(
-    const std::string &file_name,
-    const stxxl::vector<std::uint32_t> &offsets,
-    const stxxl::vector<guidance::TurnLaneType::Mask> &masks) const
-{
-    util::SimpleLogger().Write() << "Writing turn lane masks...";
-    TIMER_START(turn_lane_timer);
-
-    std::ofstream ofs(file_name, std::ios::binary);
-
-    if (!util::serializeVector(ofs, offsets))
-    {
-        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
-        return;
-    }
-
-    if (!util::serializeVector(ofs, masks))
-    {
-        util::SimpleLogger().Write(logWARNING) << "Error while writing.";
-        return;
-    }
-
-    TIMER_STOP(turn_lane_timer);
-    util::SimpleLogger().Write() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
 }
 
 void ExtractionContainers::WriteCharData(const std::string &file_name)

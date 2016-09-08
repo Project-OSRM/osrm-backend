@@ -36,6 +36,8 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
 {
     // we reserved 0, 1, 2 for the empty case
     string_map[MapKey("", "")] = 0;
+
+    // The map should be empty before we start initializing it
     lane_description_map[TurnLaneDescription()] = 0;
 }
 
@@ -165,6 +167,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                                 "reverse",
                                                                 "merge_to_left",
                                                                 "merge_to_right"};
+
         const constexpr TurnLaneType::Mask masks_by_osm_string[num_osm_tags + 1] = {
             TurnLaneType::none,
             TurnLaneType::straight,
@@ -224,16 +227,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             const LaneDescriptionID new_id =
                 boost::numeric_cast<LaneDescriptionID>(lane_description_map.size());
             lane_description_map[lane_description] = new_id;
-
-            // since we are getting a new ID, we can augment the current offsets
-
-            // and store the turn lane masks, sadly stxxl does not support insert
-            for (const auto mask : lane_description)
-                external_memory.turn_lane_masks.push_back(mask);
-
-            external_memory.turn_lane_offsets.push_back(external_memory.turn_lane_offsets.back() +
-                                                        lane_description.size());
-
             return new_id;
         }
         else
@@ -400,5 +393,10 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
              OSMNodeID{static_cast<std::uint64_t>(input_way.nodes()[0].ref())}});
     }
 }
+
+guidance::LaneDescriptionMap &&ExtractorCallbacks::moveOutLaneDescriptionMap()
+{
+    return std::move(lane_description_map);
 }
-}
+} // namespace extractor
+} // namespace osrm

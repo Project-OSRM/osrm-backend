@@ -3,7 +3,7 @@ Feature: Suppress New Names on dedicated Suffices
 
     Background:
         Given the profile "car"
-        Given a grid size of 10 meters
+        Given a grid size of 2000 meters
 
     Scenario: Suffix To Suffix
         Given the node map
@@ -43,6 +43,19 @@ Feature: Suppress New Names on dedicated Suffices
        When I route I should get
             | waypoints | route           | turns         |
             | a,c       | West 42,East 42 | depart,arrive |
+
+    Scenario: Prefix Change ref
+        Given the node map
+            | a |   | b |   | c |
+
+        And the ways
+            | nodes  | name    |
+            | ab     | West 42 |
+            | bc     | 42      |
+
+       When I route I should get
+            | waypoints | route      | turns         |
+            | a,c       | West 42,42 | depart,arrive |
 
     Scenario: Prefix Change and Reference
         Given the node map

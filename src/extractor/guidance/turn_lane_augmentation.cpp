@@ -1,3 +1,5 @@
+#include "util/debug.hpp"
+
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "util/simple_logger.hpp"
@@ -116,7 +118,8 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
             lane_data.push_back({tag_by_modifier[intersection[intersection_index]
                                                      .turn.instruction.direction_modifier],
                                  lane_data[none_index].from,
-                                 lane_data[none_index].to});
+                                 lane_data[none_index].to,
+                                 false});
         }
     }
     lane_data.erase(lane_data.begin() + none_index);
@@ -283,17 +286,15 @@ LaneDataVector handleNoneValueAtSimpleTurn(LaneDataVector lane_data,
         // a pgerequisite is simple turns. Larger differences should not end up here
         // an additional line at the side is only reasonable if it is targeting public
         // service vehicles. Otherwise, we should not have it
-        //
-        // TODO(mokob): #2730 have a look please
-        // BOOST_ASSERT(connection_count + 1 == lane_data.size());
-        //
-        if (connection_count + 1 != lane_data.size())
+        if (connection_count + 1 == lane_data.size())
         {
-            // skip broken intersections
+            lane_data = mergeNoneTag(none_index, std::move(lane_data));
         }
         else
         {
-            lane_data = mergeNoneTag(none_index, std::move(lane_data));
+            // This represents a currently unhandled case. It should not even get here, but to be
+            // sure we return nevertheless.
+            return lane_data;
         }
     }
     // we have to rename and possibly augment existing ones. The pure count remains the

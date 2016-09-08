@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/roundabout_handler.hpp"
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -270,12 +270,29 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     std::set<NodeID> roundabout_nodes; // needs to be sorted
 
     // this value is a hard abort to deal with potential self-loops
+    const auto countRoundaboutFlags = [&](const NodeID at_node) {
+        // FIXME: this would be nicer as boost::count_if, but our integer range does not support
+        // these range based handlers
+        std::size_t count = 0;
+        for (const auto edge : node_based_graph.GetAdjacentEdgeRange(at_node))
+        {
+            const auto &edge_data = node_based_graph.GetEdgeData(edge);
+            if (edge_data.roundabout)
+                count++;
+        }
+        return count;
+    };
+
     NodeID last_node = nid;
     while (0 == roundabout_nodes.count(last_node))
     {
         // only count exits/entry locations
         if (node_based_graph.GetOutDegree(last_node) > 2)
             roundabout_nodes.insert(last_node);
+
+        // detect invalid/complex roundabout taggings
+        if (countRoundaboutFlags(last_node) != 2)
+            return RoundaboutType::None;
 
         const auto eid = getNextOnRoundabout(last_node);
 

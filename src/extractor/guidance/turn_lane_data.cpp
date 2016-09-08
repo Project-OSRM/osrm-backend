@@ -30,6 +30,7 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
     if (to > other.to)
         return false;
 
+    // the suppress-assignment flag is ignored, since it does not influence the order
     const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::sharp_right,
                                                             TurnLaneType::right,
                                                             TurnLaneType::slight_right,
@@ -64,10 +65,12 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
            std::find(tag_by_modifier, tag_by_modifier + 8, other.tag);
 }
 
-LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_description)
+LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description)
 {
     typedef std::unordered_map<TurnLaneType::Mask, std::pair<LaneID, LaneID>> LaneMap;
+    // TODO need to handle cases that have none-in between two identical values
     const auto num_lanes = boost::numeric_cast<LaneID>(turn_lane_description.size());
+
     const auto setLaneData = [&](
         LaneMap &map, TurnLaneType::Mask full_mask, const LaneID current_lane) {
         const auto isSet = [&](const TurnLaneType::Mask test_mask) -> bool {
@@ -104,7 +107,7 @@ LaneDataVector laneDataFromDescription(const TurnLaneDescription &turn_lane_desc
     // transform the map into the lane data vector
     LaneDataVector lane_data;
     for (const auto tag : lane_map)
-        lane_data.push_back({tag.first, tag.second.first, tag.second.second});
+        lane_data.push_back({tag.first, tag.second.first, tag.second.second, false});
 
     std::sort(lane_data.begin(), lane_data.end());
 

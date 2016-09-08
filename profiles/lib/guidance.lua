@@ -84,7 +84,7 @@ local function get_psv_counts(way)
     if( psv_backward and psv_backward ~= "" ) then
         bw = tonumber(psv_backward);
         if( bw == nil ) then
-            fw = 0
+            bw = 0
         end
     end
     return fw, bw
@@ -95,7 +95,7 @@ local function process_lanes(turn_lane,vehicle_lane,first_count,second_count)
     if turn_lane and turn_lane ~= "" then
         if vehicle_lane and vehicle_lane ~= "" then
             turn_lane = applyAccessTokens(turn_lane,vehicle_lane)
-        elseif fw_count ~= 0 or bw_count ~= 0 then
+        elseif first_count ~= 0 or second_count ~= 0 then
             turn_lane = trimLaneString(turn_lane, first_count, second_count)
         end
     end

@@ -746,3 +746,49 @@ Feature: Collapse
         When I route I should get
             | waypoints | route               | turns                          |
             | d,c       | first,first,first   | depart,continue uturn,arrive   |
+
+    Scenario: Do not collapse UseLane step when lanes change
+        Given the node map
+            |   |   |   | f | g |   |
+            |   |   |   |   |   |   |
+            | a | b | c | d |   | e |
+            |   |   |   |   |   |   |
+            |   |   |   | h | i |   |
+
+        And the ways
+            | nodes | turn:lanes:forward                     | name |
+            | ab    |                                        | main |
+            | bc    | left\|through\|through\|through\|right | main |
+            | cd    | left\|through\|right                   | main |
+            | de    |                                        | main |
+            | cf    |                                        | off  |
+            | ch    |                                        | off  |
+            | dg    |                                        | off  |
+            | di    |                                        | off  |
+
+       When I route I should get
+            | waypoints | route          | turns                           |
+            | a,e       | main,main,main | depart,use lane straight,arrive |
+
+    Scenario: But _do_ collapse UseLane step when lanes stay the same
+        Given the node map
+            |   |   |   | f | g |   |
+            |   |   |   |   |   |   |
+            | a | b | c | d |   | e |
+            |   |   |   |   |   |   |
+            |   |   |   | h | i |   |
+
+        And the ways
+            | nodes | turn:lanes:forward                     | name |
+            | ab    |                                        | main |
+            | bc    | left\|through\|through\|through\|right | main |
+            | cd    | left\|through\|through\|through\|right | main |
+            | de    |                                        | main |
+            | cf    |                                        | off  |
+            | ch    |                                        | off  |
+            | dg    |                                        | off  |
+            | di    |                                        | off  |
+
+       When I route I should get
+            | waypoints | route     | turns         |
+            | a,e       | main,main | depart,arrive |

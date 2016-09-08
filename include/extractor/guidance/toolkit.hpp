@@ -205,42 +205,49 @@ inline bool requiresNameAnnounced(const std::string &from,
     const auto name_is_contained =
         boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
 
-    const auto checkForPrefixOrSuffixChange =
-        [](const std::string &first, const std::string &second, const SuffixTable &suffix_table) {
+    const auto checkForPrefixOrSuffixChange = [](
+        const std::string &first, const std::string &second, const SuffixTable &suffix_table) {
 
-            const auto first_prefix_and_suffixes = getPrefixAndSuffix(first);
-            const auto second_prefix_and_suffixes = getPrefixAndSuffix(second);
-            // reverse strings, get suffices and reverse them to get prefixes
-            const auto checkTable = [&](const std::string str) {
-                return str.empty() || suffix_table.isSuffix(str);
-            };
-
-            const bool is_prefix_change = [&]() -> bool {
-                if (!checkTable(first_prefix_and_suffixes.first))
-                    return false;
-                if (!checkTable(first_prefix_and_suffixes.first))
-                    return false;
-                return !first.compare(first_prefix_and_suffixes.first.length(),
-                                      std::string::npos,
-                                      second,
-                                      second_prefix_and_suffixes.first.length(),
-                                      std::string::npos);
-            }();
-
-            const bool is_suffix_change = [&]() -> bool {
-                if (!checkTable(first_prefix_and_suffixes.second))
-                    return false;
-                if (!checkTable(first_prefix_and_suffixes.second))
-                    return false;
-                return !first.compare(0,
-                                      first.length() - first_prefix_and_suffixes.second.length(),
-                                      second,
-                                      0,
-                                      second.length() - second_prefix_and_suffixes.second.length());
-            }();
-
-            return is_prefix_change || is_suffix_change;
+        const auto first_prefix_and_suffixes = getPrefixAndSuffix(first);
+        const auto second_prefix_and_suffixes = getPrefixAndSuffix(second);
+        // reverse strings, get suffices and reverse them to get prefixes
+        const auto checkTable = [&](const std::string &str) {
+            return str.empty() || suffix_table.isSuffix(str);
         };
+
+        const auto getOffset = [](const std::string &str) -> std::size_t {
+            if (str.empty())
+                return 0;
+            else
+                return str.length() + 1;
+        };
+
+        const bool is_prefix_change = [&]() -> bool {
+            if (!checkTable(first_prefix_and_suffixes.first))
+                return false;
+            if (!checkTable(second_prefix_and_suffixes.first))
+                return false;
+            return !first.compare(getOffset(first_prefix_and_suffixes.first),
+                                  std::string::npos,
+                                  second,
+                                  getOffset(second_prefix_and_suffixes.first),
+                                  std::string::npos);
+        }();
+
+        const bool is_suffix_change = [&]() -> bool {
+            if (!checkTable(first_prefix_and_suffixes.second))
+                return false;
+            if (!checkTable(second_prefix_and_suffixes.second))
+                return false;
+            return !first.compare(0,
+                                  first.length() - getOffset(first_prefix_and_suffixes.second),
+                                  second,
+                                  0,
+                                  second.length() - getOffset(second_prefix_and_suffixes.second));
+        }();
+
+        return is_prefix_change || is_suffix_change;
+    };
 
     const auto is_suffix_change = checkForPrefixOrSuffixChange(from_name, to_name, suffix_table);
     const auto names_are_equal = from_name == to_name || name_is_contained || is_suffix_change;
@@ -300,8 +307,11 @@ inline bool hasRoundaboutType(const TurnInstruction instruction)
                                                     TurnType::EnterRoundaboutIntersectionAtExit,
                                                     TurnType::ExitRoundaboutIntersection,
                                                     TurnType::StayOnRoundabout};
-    const auto valid_end = valid_types + 13;
-    return std::find(valid_types, valid_end, instruction.type) != valid_end;
+
+    const auto *first = valid_types;
+    const auto *last = first + sizeof(valid_types) / sizeof(valid_types[0]);
+
+    return std::find(first, last, instruction.type) != last;
 }
 
 // Public service vehicle lanes and similar can introduce additional lanes into the lane string that
