@@ -20,6 +20,7 @@
       - Fixed an issue that could emit `invalid` as instruction when ending on a sliproad after a traffic-light
       - Fixed an issue that would detect turning circles as sliproads
       - Fixed a bug where post-processing instructions (e.g. left + left -> uturn) could result in false pronunciations
+      - Fixes a bug where a bearing range of zero would cause exhaustive graph traversals
 
 # 5.3.0
   Changes from 5.3.0-rc.3
