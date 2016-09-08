@@ -19,7 +19,8 @@ class TablePlugin final : public BasePlugin
 {
   public:
     explicit TablePlugin(datafacade::BaseDataFacade &facade,
-                         const int max_locations_distance_table);
+                         const int max_locations_distance_table,
+                         const double max_radius_when_bearings);
 
     Status HandleRequest(const api::TableParameters &params, util::json::Object &result);
 

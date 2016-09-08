@@ -43,67 +43,6 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_nearest_response_max_results)
-{
-    const auto args = get_args();
-    osrm::EngineConfig config;
-    config.max_results_nearest = 2;
-    // Default radius is unlimited
-    auto osrm = getOSRM(args.at(0), config);
-
-    using namespace osrm;
-
-    NearestParameters params;
-    params.number_of_results = 10;
-    params.coordinates.push_back(get_dummy_location());
-
-    json::Object result;
-    const auto rc = osrm.Nearest(params, result);
-    BOOST_REQUIRE(rc == Status::Ok);
-
-    const auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "Ok");
-
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
-    BOOST_CHECK(waypoints.size() == 2); // make sure our results were capped at max_results_nearest
-
-    // Test that we get nothing when we restrict to no matches
-    config.max_results_nearest = 0;
-    osrm = getOSRM(args.at(0), config);
-
-    json::Object result2;
-    const auto rc2 = osrm.Nearest(params, result2);
-    BOOST_REQUIRE(rc2 == Status::Error);
-    const auto code2 = result2.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code2, "NoSegment");
-}
-
-BOOST_AUTO_TEST_CASE(test_nearest_response_max_radius)
-{
-    const auto args = get_args();
-    osrm::EngineConfig config;
-    config.max_radius_nearest = 1;
-    auto osrm = getOSRM(args.at(0), config);
-
-    using namespace osrm;
-
-    NearestParameters params;
-    params.number_of_results = 10;
-    params.coordinates.push_back(get_dummy_location());
-
-    json::Object result;
-    const auto rc = osrm.Nearest(params, result);
-    BOOST_REQUIRE(rc == Status::Ok);
-
-    const auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "Ok");
-
-    const auto &waypoints = result.values.at("waypoints").get<json::Array>().values;
-    BOOST_CHECK(waypoints.size() == 1); // Check that we only got 1 match within 1m, even though
-                                        // we asked for 10 results.
-}
-
-
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 {
     const auto args = get_args();

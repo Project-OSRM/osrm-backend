@@ -157,6 +157,11 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    if (!CheckAllRadiuses(parameters))
+    {
+        return Error("TooBig", "When using a bearing filter, the maximum search radius is limited to " + std::to_string(max_radius_when_bearings) + "m", json_result);
+    }
+
     auto phantom_node_pairs = GetPhantomNodes(parameters);
     if (phantom_node_pairs.size() != parameters.coordinates.size())
     {

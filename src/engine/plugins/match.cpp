@@ -123,6 +123,11 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
+    if (!CheckAllRadiuses(parameters))
+    {
+        return Error("TooBig", "When using a bearing filter, the maximum search radius is limited to " + std::to_string(max_radius_when_bearings) + "m", json_result);
+    }
+
     // assuming radius is the standard deviation of a normal distribution
     // that models GPS noise (in this model), x3 should give us the correct
     // search radius with > 99% confidence

@@ -32,10 +32,12 @@ class ViaRoutePlugin final : public BasePlugin
     routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
     routing_algorithms::AlternativeRouting<datafacade::BaseDataFacade> alternative_path;
     routing_algorithms::DirectShortestPathRouting<datafacade::BaseDataFacade> direct_shortest_path;
-    int max_locations_viaroute;
+    const int max_locations_viaroute;
 
   public:
-    explicit ViaRoutePlugin(datafacade::BaseDataFacade &facade, int max_locations_viaroute);
+    explicit ViaRoutePlugin(datafacade::BaseDataFacade &facade,
+                            const int max_locations_viaroute,
+                            const double max_radius_when_bearings);
 
     Status HandleRequest(const api::RouteParameters &route_parameters,
                          util::json::Object &json_result);

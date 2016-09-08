@@ -53,6 +53,9 @@ namespace engine
  *  - Match
  *  - Nearest
  *
+ * You can restrict the coordinate search radius when a bearing is supplied.  This helps
+ * prevent the rtree search expanding if a very narrow bearing filter is supplied.
+ *
  * In addition, shared memory can be used for datasets loaded with osrm-datastore.
  *
  * \see OSRM, StorageConfig
@@ -61,13 +64,16 @@ struct EngineConfig final
 {
     bool IsValid() const;
 
+    constexpr static const int UNLIMITED = -1;
+
     storage::StorageConfig storage_config;
-    int max_locations_trip = -1;
-    int max_locations_viaroute = -1;
-    int max_locations_distance_table = -1;
-    int max_locations_map_matching = -1;
-    int max_results_nearest = -1;
-    int max_radius_nearest = -1; // in meters
+    int max_locations_trip = UNLIMITED;
+    int max_locations_viaroute = UNLIMITED;
+    int max_locations_distance_table = UNLIMITED;
+    int max_locations_map_matching = UNLIMITED;
+    int max_results_nearest = UNLIMITED;
+
+    double max_radius_when_bearings = UNLIMITED; // in meters
 
     bool use_shared_memory = true;
 };
