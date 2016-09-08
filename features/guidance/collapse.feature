@@ -792,3 +792,49 @@ Feature: Collapse
        When I route I should get
             | waypoints | route     | turns         |
             | a,e       | main,main | depart,arrive |
+
+    Scenario: Don't collapse different travel modes
+        Given the node map
+            | g |   |   |   |   |   |   | h |   |
+            | a | b |   | c |   |   |   | e | f |
+            |   |   |   |   |   | d |   |   |   |
+            |   |   |   | i | j |   |   |   |   |
+
+        And the ways
+            | nodes | highway | route | name |
+            | ab    | primary |       | road |
+            | bc    | primary | ferry |      |
+            | cd    | primary |       | road |
+            | de    |         | ferry |      |
+            | ef    | primary |       | road |
+            | bg    | service |       | turn |
+            | ci    | service |       | turn |
+            | dj    | service |       | turn |
+            | eh    | service |       | turn |
+
+        When I route I should get
+            | waypoints | route                 |
+            | a,f       | road,,road,,road,road |
+
+    Scenario: U-Turn onto a Ferry
+        Given the node map
+            |   |   |   |   |   |   | i |   |   |
+            | j | e |   |   |   |   | d | c | h |
+            |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |
+            | k | g |   |   |   |   | a | b | f |
+
+        And the ways
+            | nodes | highway | route | name  | oneway |
+            | bf    | primary |       | road  | yes    |
+            | hcd   | primary |       | road  | yes    |
+            | bc    | primary |       |       | yes    |
+            | di    | service |       | serv  | yes    |
+            | ed    |         | ferry | ferry |        |
+            | gab   |         | ferry | ferry |        |
+            | kg    | primary |       | on    | yes    |
+            | ej    | primary |       | off   | yes    |
+
+        When I route I should get
+            | waypoints | route                   | turns                                                                          |
+            | k,j       | on,ferry,,ferry,off,off | depart,new name straight,continue uturn,turn straight,new name straight,arrive |

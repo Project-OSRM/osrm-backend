@@ -108,7 +108,7 @@ double getMatchingQuality(const TurnLaneType::Mask tag, const ConnectedRoad &roa
     const auto modifier = getMatchingModifier(tag);
     BOOST_ASSERT(static_cast<std::size_t>(modifier) <
                  sizeof(idealized_turn_angles) / sizeof(*idealized_turn_angles));
-    const auto idealized_angle = idealized_turn_angles[getMatchingModifier(tag)];
+    const auto idealized_angle = idealized_turn_angles[modifier];
     return angularDeviation(idealized_angle, road.turn.angle);
 }
 

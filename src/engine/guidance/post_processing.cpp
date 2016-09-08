@@ -474,16 +474,19 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         {
             steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
             invalidateStep(steps[step_index]);
-            if (u_turn_with_name_change)
+            if (u_turn_with_name_change &&
+                compatible(steps[one_back_index], steps[next_step_index]))
             {
                 steps[one_back_index] =
                     elongate(std::move(steps[one_back_index]), steps[next_step_index]);
                 invalidateStep(steps[next_step_index]); // will be skipped due to the
                                                         // continue statement at the
                                                         // beginning of this function
-            }
 
-            forwardStepSignage(steps[one_back_index], steps[two_back_index]);
+                forwardStepSignage(steps[one_back_index], steps[two_back_index]);
+            }
+            if (direct_u_turn)
+                forwardStepSignage(steps[one_back_index], steps[two_back_index]);
             steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
             steps[one_back_index].maneuver.instruction.direction_modifier =
                 DirectionModifier::UTurn;
@@ -541,6 +544,7 @@ RouteStep elongate(RouteStep step, const RouteStep &by_step)
 {
     step.duration += by_step.duration;
     step.distance += by_step.distance;
+    BOOST_ASSERT(step.mode == by_step.mode);
 
     // by_step comes after step -> we append at the end
     if (step.geometry_end == by_step.geometry_begin + 1)
@@ -738,6 +742,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             if (steps[index].maneuver.instruction.type != TurnType::Suppressed &&
                 steps[index].maneuver.instruction.type != TurnType::NewName)
                 return false;
+            if (index + 1 < end_index && !compatible(steps[index], steps[index + 1]))
+                return false;
         }
         return true;
     };
@@ -823,6 +829,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
                  current_step.maneuver.instruction.type != TurnType::Suppressed &&
                  steps[getPreviousNameIndex(step_index)].name_id == current_step.name_id &&
+                 // canCollapseAll is also checking for compatible(step,step+1) for all indices
                  canCollapseAll(getPreviousNameIndex(step_index) + 1, next_step_index))
         {
             BOOST_ASSERT(step_index > 0);
@@ -863,14 +870,17 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             else if (nameSegmentLength(one_back_index, steps) < name_segment_cutoff_length &&
                      isBasicNameChange(one_back_step) && isBasicNameChange(current_step))
             {
-                steps[two_back_index] =
-                    elongate(std::move(steps[two_back_index]), steps[one_back_index]);
-                invalidateStep(steps[one_back_index]);
-                if (nameSegmentLength(step_index, steps) < name_segment_cutoff_length)
+                if (compatible(steps[two_back_index], steps[one_back_index]))
                 {
                     steps[two_back_index] =
-                        elongate(std::move(steps[two_back_index]), steps[step_index]);
-                    invalidateStep(steps[step_index]);
+                        elongate(std::move(steps[two_back_index]), steps[one_back_index]);
+                    invalidateStep(steps[one_back_index]);
+                    if (nameSegmentLength(step_index, steps) < name_segment_cutoff_length)
+                    {
+                        steps[two_back_index] =
+                            elongate(std::move(steps[two_back_index]), steps[step_index]);
+                        invalidateStep(steps[step_index]);
+                    }
                 }
             }
             else if (step_index + 2 < steps.size() &&
@@ -878,14 +888,18 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                      steps[next_step_index].maneuver.instruction.type == TurnType::NewName &&
                      one_back_step.name_id == steps[next_step_index].name_id)
             {
-                // if we are crossing an intersection and go immediately after into a name change,
-                // we don't wan't to collapse the initial intersection.
-                // a - b ---BRIDGE -- c
-                steps[one_back_index] =
-                    elongate(std::move(steps[one_back_index]),
-                             elongate(std::move(steps[step_index]), steps[next_step_index]));
-                invalidateStep(steps[step_index]);
-                invalidateStep(steps[next_step_index]);
+                if (compatible(steps[step_index], steps[next_step_index]))
+                {
+                    // if we are crossing an intersection and go immediately after into a name
+                    // change,
+                    // we don't wan't to collapse the initial intersection.
+                    // a - b ---BRIDGE -- c
+                    steps[one_back_index] =
+                        elongate(std::move(steps[one_back_index]),
+                                 elongate(std::move(steps[step_index]), steps[next_step_index]));
+                    invalidateStep(steps[step_index]);
+                    invalidateStep(steps[next_step_index]);
+                }
             }
             else if (choiceless(current_step, one_back_step) ||
                      one_back_step.distance <= MAX_COLLAPSE_DISTANCE)
@@ -903,6 +917,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             // check for one of the multiple collapse scenarios and, if possible, collapse the turn
             const auto two_back_index = getPreviousIndex(one_back_index);
             BOOST_ASSERT(two_back_index < steps.size());
+            // all turns that are handled lower down are also compatible
             collapseTurnAt(steps, two_back_index, one_back_index, step_index);
         }
     }
