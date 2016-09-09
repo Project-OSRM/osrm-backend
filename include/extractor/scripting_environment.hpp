@@ -51,7 +51,7 @@ class ScriptingEnvironment
     virtual const ProfileProperties &GetProfileProperties() = 0;
 
     virtual std::vector<std::string> GetNameSuffixList() = 0;
-    virtual std::vector<std::string> GetExceptions() = 0;
+    virtual std::vector<std::string> GetRestrictions() = 0;
     virtual void SetupSources() = 0;
     virtual int32_t GetTurnPenalty(double angle) = 0;
     virtual void ProcessSegment(const osrm::util::Coordinate &source,

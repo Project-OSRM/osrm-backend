@@ -327,18 +327,17 @@ std::vector<std::string> LuaScriptingEnvironment::GetNameSuffixList()
     return suffixes_vector;
 }
 
-std::vector<std::string> LuaScriptingEnvironment::GetExceptions()
+std::vector<std::string> LuaScriptingEnvironment::GetRestrictions()
 {
     auto &context = GetLuaContext();
     BOOST_ASSERT(context.state != nullptr);
-    std::vector<std::string> restriction_exceptions;
-    if (util::luaFunctionExists(context.state, "get_exceptions"))
+    std::vector<std::string> restrictions;
+    if (util::luaFunctionExists(context.state, "get_restrictions"))
     {
         // get list of turn restriction exceptions
-        luabind::call_function<void>(
-            context.state, "get_exceptions", boost::ref(restriction_exceptions));
+        luabind::call_function<void>(context.state, "get_restrictions", boost::ref(restrictions));
     }
-    return restriction_exceptions;
+    return restrictions;
 }
 
 void LuaScriptingEnvironment::SetupSources()

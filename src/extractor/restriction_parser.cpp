@@ -29,20 +29,19 @@ RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment
 {
     if (use_turn_restrictions)
     {
-        restriction_exceptions = scripting_environment.GetExceptions();
-        const unsigned exception_count = restriction_exceptions.size();
-        if (exception_count)
+        restrictions = scripting_environment.GetRestrictions();
+        const unsigned count = restrictions.size();
+        if (count > 0)
         {
-            util::SimpleLogger().Write() << "Found " << exception_count
-                                         << " exceptions to turn restrictions:";
-            for (const std::string &str : restriction_exceptions)
+            util::SimpleLogger().Write() << "Found " << count << " turn restriction tags:";
+            for (const std::string &str : restrictions)
             {
                 util::SimpleLogger().Write() << "  " << str;
             }
         }
         else
         {
-            util::SimpleLogger().Write() << "Found no exceptions to turn restrictions";
+            util::SimpleLogger().Write() << "Found no turn restriction tags";
         }
     }
 }
@@ -51,8 +50,9 @@ RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment
  * Tries to parse a relation as a turn restriction. This can fail for a number of
  * reasons. The return type is a boost::optional<T>.
  *
- * Some restrictions can also be ignored: See the ```get_exceptions``` function
- * in the corresponding profile.
+ * Some restrictions can also be ignored: See the ```get_restrictions``` function
+ * in the corresponding profile. We use it for both namespacing restrictions, as in
+ * restriction:motorcar as well as whitelisting if its in except:motorcar.
  */
 boost::optional<InputRestrictionContainer>
 RestrictionParser::TryParse(const osmium::Relation &relation) const
@@ -63,13 +63,17 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         return {};
     }
 
-    osmium::tags::KeyPrefixFilter filter(false);
+    osmium::tags::KeyFilter filter(false);
     filter.add(true, "restriction");
+
+    // Not only use restriction= but also e.g. restriction:motorcar=
+    for (const auto &namespaced : restrictions)
+        filter.add(true, "restriction:" + namespaced);
 
     const osmium::TagList &tag_list = relation.tags();
 
-    osmium::tags::KeyPrefixFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
-    osmium::tags::KeyPrefixFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
+    osmium::tags::KeyFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
+    osmium::tags::KeyFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
 
     // if it's not a restriction, continue;
     if (std::distance(fi_begin, fi_end) == 0)
@@ -104,22 +108,6 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         else // unrecognized value type
         {
             return {};
-        }
-
-        // if the "restriction*" key is longer than 11 chars, it is a conditional exception (i.e.
-        // "restriction:<transportation_type>")
-        if (key.size() > 11)
-        {
-            const auto ex_suffix = [&](const std::string &exception) {
-                return boost::algorithm::ends_with(key, exception);
-            };
-            bool is_actually_restricted =
-                std::any_of(begin(restriction_exceptions), end(restriction_exceptions), ex_suffix);
-
-            if (!is_actually_restricted)
-            {
-                return {};
-            }
         }
     }
 
@@ -195,9 +183,8 @@ bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_st
 
     return std::any_of(
         std::begin(exceptions), std::end(exceptions), [&](const std::string &current_string) {
-            return std::end(restriction_exceptions) != std::find(std::begin(restriction_exceptions),
-                                                                 std::end(restriction_exceptions),
-                                                                 current_string);
+            return std::end(restrictions) !=
+                   std::find(std::begin(restrictions), std::end(restrictions), current_string);
         });
 }
 }

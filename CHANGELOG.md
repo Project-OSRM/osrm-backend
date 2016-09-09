@@ -1,6 +1,7 @@
 # 5.5.0
-  - Changes from 5.4.0
+  Changes from 5.4.0
     - Profiles
+      - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
       - replaced lhs/rhs profiles by using test defined profiles
 
 # 5.4.0

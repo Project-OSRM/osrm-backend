@@ -12,7 +12,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 service_tag_forbidden = { ["emergency_access"] = true }
-restriction_exception_tags = { "motorcar", "motor_vehicle", "vehicle" }
+restrictions = { "motorcar", "motor_vehicle", "vehicle" }
 
 -- A list of suffixes to suppress in name change instructions
 suffix_list = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "North", "South", "West", "East" }
@@ -172,8 +172,8 @@ function get_name_suffix_list(vector)
   end
 end
 
-function get_exceptions(vector)
-  for i,v in ipairs(restriction_exception_tags) do
+function get_restrictions(vector)
+  for i,v in ipairs(restrictions) do
     vector:Add(v)
   end
 end

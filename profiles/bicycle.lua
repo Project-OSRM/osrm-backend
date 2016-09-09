@@ -12,7 +12,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
-restriction_exception_tags = { "bicycle", "vehicle", "access" }
+restrictions = { "bicycle" }
 unsafe_highway_list = { ["primary"] = true, ["secondary"] = true, ["tertiary"] = true, ["primary_link"] = true, ["secondary_link"] = true, ["tertiary_link"] = true}
 
 local default_speed = 15
@@ -121,8 +121,8 @@ local function parse_maxspeed(source)
     return n
 end
 
-function get_exceptions(vector)
-  for i,v in ipairs(restriction_exception_tags) do
+function get_restrictions(vector)
+  for i,v in ipairs(restrictions) do
     vector:Add(v)
   end
 end
