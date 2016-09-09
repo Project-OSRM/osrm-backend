@@ -30,11 +30,11 @@ http://{server}/{service}/{version}/{profile}/{coordinates}[.{format}]?option=va
   
     | Service     |           Description                                     |
     |-------------|-----------------------------------------------------------|
-    | [`route`](#service-route)     | shortest path between given coordinates                   |
+    | [`route`](#service-route)     | fastest path between given coordinates                   |
     | [`nearest`](#service-nearest)   | returns the nearest street segment for a given coordinate |
     | [`table`](#service-table)     | computes distance tables for given coordinates            |
     | [`match`](#service-match)     | matches given coordinates to the road network             |
-    | [`trip`](#service-trip)      | Compute the shortest round trip between given coordinates |
+    | [`trip`](#service-trip)      | Compute the fastest round trip between given coordinates |
     | [`tile`](#service-tile)      | Return vector tiles containing debugging info             |
   
 - `version`: Version of the protocol implemented by the service.
@@ -302,7 +302,7 @@ All other fields might be undefined.
 ## Service `trip`
 
 The trip plugin solves the Traveling Salesman Problem using a greedy heuristic (farthest-insertion algorithm).
-The returned path does not have to be the shortest path, as TSP is NP-hard it is only an approximation.
+The returned path does not have to be the fastest path, as TSP is NP-hard it is only an approximation.
 Note that if the input coordinates can not be joined by a single trip (e.g. the coordinates are on several disconnected islands)
 multiple trips for each connected component are returned.
 
