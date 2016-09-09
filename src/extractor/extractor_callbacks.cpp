@@ -1,8 +1,8 @@
+#include "extractor/extractor_callbacks.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
-#include "extractor/extractor_callbacks.hpp"
 #include "extractor/guidance/road_classification.hpp"
 #include "extractor/restriction.hpp"
 
@@ -34,8 +34,8 @@ namespace TurnLaneType = guidance::TurnLaneType;
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers)
     : external_memory(extraction_containers)
 {
-    // we reserved 0, 1, 2 for the empty case
-    string_map[MapKey("", "", "")] = 0;
+    // we reserved 0, 1, 2, 3 for the empty case
+    string_map[MapKey("", "", "", "")] = 0;
     lane_description_map[TurnLaneDescription()] = 0;
 }
 
@@ -233,16 +233,16 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         }
     };
 
-    // Deduplicates street names, destination names and refs based on the string_map map.
-    // In case we do not already store the name, inserts (name, id) tuple and return id.
+    // Deduplicates street names, refs, destinations, pronunciation based on the string_map.
+    // In case we do not already store the key, inserts (key, id) tuple and return id.
     // Otherwise fetches the id based on the name and returns it without insertion.
     const auto turn_lane_id_forward = requestId(parsed_way.turn_lanes_forward);
     const auto turn_lane_id_backward = requestId(parsed_way.turn_lanes_backward);
 
     const constexpr auto MAX_STRING_LENGTH = 255u;
     // Get the unique identifier for the street name, destination, and ref
-    const auto name_iterator =
-        string_map.find(MapKey(parsed_way.name, parsed_way.destinations, parsed_way.ref));
+    const auto name_iterator = string_map.find(
+        MapKey(parsed_way.name, parsed_way.destinations, parsed_way.ref, parsed_way.pronunciation));
     unsigned name_id = EMPTY_NAMEID;
     if (string_map.end() == name_iterator)
     {
@@ -280,7 +280,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                   std::back_inserter(external_memory.name_char_data));
         external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        auto k = MapKey{parsed_way.name, parsed_way.destinations, parsed_way.ref};
+        auto k = MapKey{
+            parsed_way.name, parsed_way.destinations, parsed_way.ref, parsed_way.pronunciation};
         auto v = MapVal{name_id};
         string_map.emplace(std::move(k), std::move(v));
     }

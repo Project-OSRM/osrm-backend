@@ -18,14 +18,17 @@ class Way;
 
 namespace std
 {
-template <> struct hash<std::tuple<std::string, std::string, std::string>>
+template <> struct hash<std::tuple<std::string, std::string, std::string, std::string>>
 {
-    std::size_t operator()(const std::tuple<std::string, std::string, std::string> &mk) const noexcept
+    std::size_t
+    operator()(const std::tuple<std::string, std::string, std::string, std::string> &mk) const
+        noexcept
     {
         std::size_t seed = 0;
         boost::hash_combine(seed, std::get<0>(mk));
         boost::hash_combine(seed, std::get<1>(mk));
         boost::hash_combine(seed, std::get<2>(mk));
+        boost::hash_combine(seed, std::get<3>(mk));
         return seed;
     }
 };
@@ -51,8 +54,9 @@ struct ExtractionWay;
 class ExtractorCallbacks
 {
   private:
-    // used to deduplicate street names and street destinations: actually maps to name ids
-    using MapKey = std::tuple<std::string, std::string, std::string>;
+    // used to deduplicate street names, refs, destinations, pronunciation: actually maps to name
+    // ids
+    using MapKey = std::tuple<std::string, std::string, std::string, std::string>;
     using MapVal = unsigned;
     std::unordered_map<MapKey, MapVal> string_map;
     guidance::LaneDescriptionMap lane_description_map;
