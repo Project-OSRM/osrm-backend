@@ -1,8 +1,8 @@
-#include "extractor/extractor_callbacks.hpp"
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_containers.hpp"
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
+#include "extractor/extractor_callbacks.hpp"
 #include "extractor/guidance/road_classification.hpp"
 #include "extractor/restriction.hpp"
 
@@ -241,7 +241,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     const constexpr auto MAX_STRING_LENGTH = 255u;
     // Get the unique identifier for the street name, destination, and ref
-    const auto name_iterator = string_map.find(MapKey(parsed_way.name, parsed_way.destinations, parsed_way.ref));
+    const auto name_iterator =
+        string_map.find(MapKey(parsed_way.name, parsed_way.destinations, parsed_way.ref));
     unsigned name_id = EMPTY_NAMEID;
     if (string_map.end() == name_iterator)
     {
@@ -256,7 +257,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         name_id = external_memory.name_offsets.size() - 1;
 
         external_memory.name_char_data.reserve(external_memory.name_char_data.size() + name_length +
-                                               destinations_length + pronunciation_length);
+                                               destinations_length + pronunciation_length +
+                                               ref_length);
 
         std::copy(parsed_way.name.c_str(),
                   parsed_way.name.c_str() + name_length,
