@@ -35,6 +35,23 @@ Feature: Car - Street names in instructions
             | a    | d  | My Way,My Way      | ,meyeway             | ,A1   |
             | 1    | c  | Your Way,Your Way  | yourewaye,yourewaye  | ,     |
 
+    # See #2860
+    Scenario: Car - same street name but different pronunciation
+        Given the node map
+            | a | b | c |
+            |   | d |   |
+            |   | e |   |
+
+        And the ways
+            | nodes | name       | name:pronunciation |
+            | abc   | Houston St | hew-stun           |
+            | bde   | Houston St | how-stun           |
+
+        When I route I should get
+            | from | to | route                            | pronunciations             |
+            | a    | c  | Houston St,Houston St            | hew-stun,hew-stun          |
+            | a    | e  | Houston St,Houston St,Houston St | hew-stun,how-stun,how-stun |
+
     @todo
     Scenario: Car - Use way type to describe unnamed ways
         Given the node map
