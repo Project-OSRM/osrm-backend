@@ -37,9 +37,9 @@ SliproadHandler::SliproadHandler(const IntersectionGenerator &intersection_gener
 // included for interface reasons only
 bool SliproadHandler::canProcess(const NodeID /*nid*/,
                                  const EdgeID /*via_eid*/,
-                                 const Intersection & /*intersection*/) const
+                                 const Intersection &intersection) const
 {
-    return true;
+    return intersection.size() > 2;
 }
 
 Intersection SliproadHandler::
@@ -59,6 +59,13 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
             while (intersection.size() == 2)
             {
                 const auto node = node_based_graph.GetTarget(in_edge);
+                if (node == at_node)
+                {
+                    // we ended up in a loop without exit
+                    output_node = SPECIAL_NODEID;
+                    intersection.clear();
+                    return intersection;
+                }
                 in_edge = intersection[1].turn.eid;
                 output_node = node_based_graph.GetTarget(in_edge);
                 intersection = intersection_generator(node, in_edge);
@@ -82,6 +89,10 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                 intersection_node_id, intersection[1], intersection_node_one);
             const auto intersection_following_index_two = findNextIntersectionForRoad(
                 intersection_node_id, intersection[2], intersection_node_two);
+            // in case of broken roads, we return
+            if (intersection_following_index_one.empty() ||
+                intersection_following_index_two.empty())
+                return 0;
 
             // In case of loops at the end of the road, we will arrive back at the intersection
             // itself. If that is the case, the road is obviously not a sliproad.
