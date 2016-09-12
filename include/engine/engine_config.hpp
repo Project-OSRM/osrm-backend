@@ -51,6 +51,7 @@ namespace engine
  *  - Route
  *  - Table
  *  - Match
+ *  - Nearest
  *
  * In addition, shared memory can be used for datasets loaded with osrm-datastore.
  *
@@ -65,6 +66,7 @@ struct EngineConfig final
     int max_locations_viaroute = -1;
     int max_locations_distance_table = -1;
     int max_locations_map_matching = -1;
+    int max_results_nearest = -1;
     bool use_shared_memory = true;
 };
 }

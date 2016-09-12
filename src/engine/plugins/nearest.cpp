@@ -16,12 +16,23 @@ namespace engine
 namespace plugins
 {
 
-NearestPlugin::NearestPlugin(datafacade::BaseDataFacade &facade) : BasePlugin{facade} {}
+NearestPlugin::NearestPlugin(datafacade::BaseDataFacade &facade, const int max_results_)
+    : BasePlugin{facade}, max_results{max_results_}
+{
+}
 
 Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
                                     util::json::Object &json_result)
 {
     BOOST_ASSERT(params.IsValid());
+
+    if (params.number_of_results > max_results)
+    {
+        return Error("TooBig",
+                     "Number of results " + std::to_string(params.number_of_results) +
+                         " is higher than current maximum (" + std::to_string(max_results) + ")",
+                     json_result);
+    }
 
     if (!CheckAllCoordinates(params.coordinates))
         return Error("InvalidOptions", "Coordinates are invalid", json_result);
