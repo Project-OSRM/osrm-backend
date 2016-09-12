@@ -4,6 +4,7 @@
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/guidance/toolkit.hpp"
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
@@ -90,9 +91,11 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
         const auto &in_data = node_based_graph.GetEdgeData(via_edge);
         const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
         if (in_data.name_id != out_data.name_id &&
-            requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
-                                  name_table.GetNameForID(out_data.name_id),
-                                  street_name_suffix_table))
+            util::guidance::requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
+                                                  name_table.GetRefForID(in_data.name_id),
+                                                  name_table.GetNameForID(out_data.name_id),
+                                                  name_table.GetRefForID(out_data.name_id),
+                                                  street_name_suffix_table))
         {
             // obvious turn onto a through street is a merge
             if (through_street)
@@ -597,17 +600,18 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             if (deviation_ratio < DISTINCTION_RATIO / 1.5)
                 return 0;
 
-            // in comparison to another continuing road, we need a better distinction. This prevents
-            // situations where the turn is probably less obvious. An example are places that have a
-            // road with the same name entering/exiting:
-            //
-            //         d
-            //        /
-            //       /
-            // a -- b
-            //       \
-            //        \
-            //         c
+            /* in comparison to another continuing road, we need a better distinction. This prevents
+               situations where the turn is probably less obvious. An example are places that have a
+               road with the same name entering/exiting:
+
+                       d
+                      /
+                     /
+               a -- b
+                     \
+                      \
+                       c
+            */
 
             if (turn_data.name_id == continue_data.name_id &&
                 deviation_ratio < 1.5 * DISTINCTION_RATIO)

@@ -22,6 +22,9 @@ NameTable::NameTable(const std::string &filename)
 
     name_stream >> m_name_table;
 
+    if (!name_stream)
+        throw exception("Unable to deserialize RangeTable for NameTable");
+
     unsigned number_of_chars = 0;
     name_stream.read(reinterpret_cast<char *>(&number_of_chars), sizeof(number_of_chars));
     if (!name_stream)
@@ -64,5 +67,23 @@ std::string NameTable::GetNameForID(const unsigned name_id) const
     }
     return result;
 }
+
+std::string NameTable::GetRefForID(const unsigned name_id) const
+{
+    // Way string data is stored in blocks based on `name_id` as follows:
+    //
+    // | name | destination | pronunciation | ref |
+    //                                      ^     ^
+    //                                      [range)
+    //                                       ^ name_id + 3
+    //
+    // `name_id + offset` gives us the range of chars.
+    //
+    // Offset 0 is name, 1 is destination, 2 is pronunciation, 3 is ref.
+    // See datafacades and extractor callbacks for details.
+    const constexpr auto OFFSET_REF = 3u;
+    return GetNameForID(name_id + OFFSET_REF);
+}
+
 } // namespace util
 } // namespace osrm
