@@ -21,6 +21,7 @@
       - Fixed an issue that would detect turning circles as sliproads
       - Fixed a bug where post-processing instructions (e.g. left + left -> uturn) could result in false pronunciations
       - Fixes a bug where a bearing range of zero would cause exhaustive graph traversals
+      - Fixes a bug where certain looped geometries could cause an infinite loop during extraction
     - Infrastructure:
       - Adds a feature to limit results in nearest service with a default of 100 in `osrm-routed`
 
