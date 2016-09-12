@@ -146,7 +146,7 @@ Engine::Engine(EngineConfig &config)
 
     route_plugin = create<ViaRoutePlugin>(*query_data_facade, config.max_locations_viaroute);
     table_plugin = create<TablePlugin>(*query_data_facade, config.max_locations_distance_table);
-    nearest_plugin = create<NearestPlugin>(*query_data_facade);
+    nearest_plugin = create<NearestPlugin>(*query_data_facade, config.max_results_nearest);
     trip_plugin = create<TripPlugin>(*query_data_facade, config.max_locations_trip);
     match_plugin = create<MatchPlugin>(*query_data_facade, config.max_locations_map_matching);
     tile_plugin = create<TilePlugin>(*query_data_facade);
