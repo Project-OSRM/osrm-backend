@@ -86,6 +86,10 @@ module.exports = function () {
         assert.equal(this.stdout.split('\n').length - 1, parseInt(lines));
     });
 
+    this.Then(/^stderr should contain (\d+) lines?$/, (lines) => {
+        assert.equal(this.stderr.split('\n').length - 1, parseInt(lines));
+    });
+
     this.Then(/^datasource names should contain "(.+)"$/, (expectedData) => {
         var actualData = fs.readFileSync(this.processedCacheFile + '.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
         assert.equal(actualData, expectedData);

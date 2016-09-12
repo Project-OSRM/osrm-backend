@@ -6,7 +6,7 @@ Feature: osrm-contract command line options: version
 
     Background:
         Given the profile "testbot"
-    
+
     Scenario: osrm-contract - Version, short
         When I run "osrm-contract --v"
         Then stderr should be empty
