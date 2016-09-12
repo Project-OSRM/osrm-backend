@@ -222,48 +222,46 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     std::unordered_set<unsigned> roundabout_name_ids;
     std::unordered_set<unsigned> connected_names;
 
-    const auto getNextOnRoundabout =
-        [this, &roundabout_name_ids, &connected_names](const NodeID node) {
-            EdgeID continue_edge = SPECIAL_EDGEID;
-            for (const auto edge : node_based_graph.GetAdjacentEdgeRange(node))
+    const auto getNextOnRoundabout = [this, &roundabout_name_ids, &connected_names](
+        const NodeID node) {
+        EdgeID continue_edge = SPECIAL_EDGEID;
+        for (const auto edge : node_based_graph.GetAdjacentEdgeRange(node))
+        {
+            const auto &edge_data = node_based_graph.GetEdgeData(edge);
+            if (!edge_data.reversed && edge_data.roundabout)
             {
-                const auto &edge_data = node_based_graph.GetEdgeData(edge);
-                if (!edge_data.reversed && edge_data.roundabout)
+                if (SPECIAL_EDGEID != continue_edge)
                 {
-                    if (SPECIAL_EDGEID != continue_edge)
-                    {
-                        // fork in roundabout
-                        return SPECIAL_EDGEID;
-                    }
-
-                    if (EMPTY_NAMEID != edge_data.name_id)
-                    {
-                        bool add = true;
-                        for (auto name_id : roundabout_name_ids)
-                        {
-
-                            if (!requiresNameAnnounced(name_table.GetNameForID(name_id),
-                                                       name_table.GetNameForID(edge_data.name_id),
-                                                       street_name_suffix_table))
-                            {
-                                add = false;
-                                break;
-                            }
-                        }
-                        if (add)
-                            roundabout_name_ids.insert(edge_data.name_id);
-                    }
-
-                    continue_edge = edge;
+                    // fork in roundabout
+                    return SPECIAL_EDGEID;
                 }
-                else if (!edge_data.roundabout)
+
+                if (EMPTY_NAMEID != edge_data.name_id)
                 {
-                    // remember all connected road names
-                    connected_names.insert(edge_data.name_id);
+
+                    const auto announce = [&](unsigned id) {
+                        return util::guidance::requiresNameAnnounced(
+                            name_table.GetNameForID(id),
+                            name_table.GetRefForID(id),
+                            name_table.GetNameForID(edge_data.name_id),
+                            name_table.GetRefForID(edge_data.name_id),
+                            street_name_suffix_table);
+                    };
+
+                    if (std::all_of(begin(roundabout_name_ids), end(roundabout_name_ids), announce))
+                        roundabout_name_ids.insert(edge_data.name_id);
                 }
+
+                continue_edge = edge;
             }
-            return continue_edge;
-        };
+            else if (!edge_data.roundabout)
+            {
+                // remember all connected road names
+                connected_names.insert(edge_data.name_id);
+            }
+        }
+        return continue_edge;
+    };
     // the roundabout radius has to be the same for all locations we look at it from
     // to guarantee this, we search the full roundabout for its vertices
     // and select the three smallest ids

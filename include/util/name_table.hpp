@@ -23,7 +23,13 @@ class NameTable
 
   public:
     NameTable(const std::string &filename);
+
+    // This class provides a limited view over all the string data we serialize out.
+    // The following functions are a subset of what is available.
+    // See the data facades for they provide full access to this serialized string data.
+    // (at time of writing this: get{Name,Ref,Pronunciation,Destinations}ForID(name_id);)
     std::string GetNameForID(const unsigned name_id) const;
+    std::string GetRefForID(const unsigned name_id) const;
 };
 } // namespace util
 } // namespace osrm

@@ -1,5 +1,5 @@
-#include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -83,18 +83,6 @@ bool isCollapsableInstruction(const TurnInstruction instruction)
 
 bool compatible(const RouteStep &lhs, const RouteStep &rhs) { return lhs.mode == rhs.mode; }
 
-double nameSegmentLength(std::size_t at, const std::vector<RouteStep> &steps)
-{
-    double result = steps[at].distance;
-    while (at + 1 < steps.size() && steps[at + 1].name_id == steps[at].name_id)
-    {
-        ++at;
-        result += steps[at].distance;
-    }
-
-    return result;
-}
-
 // invalidate a step and set its content to nothing
 void invalidateStep(RouteStep &step) { step = getInvalidRouteStep(); }
 
@@ -127,6 +115,28 @@ double turn_angle(const double entry_bearing, const double exit_bearing)
 
     const auto angle = 540 - rotated_exit;
     return angle > 360 ? angle - 360 : angle;
+}
+
+// Checks if name change happens the user wants to know about.
+// Treats e.g. "Name (Ref)" -> "Name" changes still as same name.
+bool isNoticeableNameChange(const RouteStep &lhs, const RouteStep &rhs)
+{
+    // TODO: at some point we might want to think about pronunciation here.
+    // Also rotary_name is not handled at the moment.
+    return util::guidance::requiresNameAnnounced(lhs.name, lhs.ref, rhs.name, rhs.ref);
+}
+
+double nameSegmentLength(std::size_t at, const std::vector<RouteStep> &steps)
+{
+    BOOST_ASSERT(at < steps.size());
+
+    double result = steps[at].distance;
+    while (at + 1 < steps.size() && !isNoticeableNameChange(steps[at], steps[at + 1]))
+    {
+        at += 1;
+        result += steps[at].distance;
+    }
+    return result;
 }
 
 OSRM_ATTR_WARN_UNUSED
@@ -409,12 +419,16 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         if (compatible(one_back_step, current_step))
         {
             steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
+
             if ((TurnType::Continue == one_back_step.maneuver.instruction.type ||
                  TurnType::Suppressed == one_back_step.maneuver.instruction.type) &&
-                current_step.name_id != steps[two_back_index].name_id)
+                isNoticeableNameChange(steps[two_back_index], current_step))
+            {
+
                 steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
+            }
             else if (TurnType::Turn == one_back_step.maneuver.instruction.type &&
-                     current_step.name_id == steps[two_back_index].name_id)
+                     !isNoticeableNameChange(steps[two_back_index], current_step))
             {
                 steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
 
@@ -460,7 +474,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     {
         BOOST_ASSERT(two_back_index < steps.size());
         // the simple case is a u-turn that changes directly into the in-name again
-        const bool direct_u_turn = steps[two_back_index].name_id == current_step.name_id;
+        const bool direct_u_turn = !isNoticeableNameChange(steps[two_back_index], current_step);
 
         // however, we might also deal with a dual-collapse scenario in which we have to
         // additionall collapse a name-change as welll
@@ -471,7 +485,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
              isCollapsableInstruction(steps[next_step_index].maneuver.instruction));
         const bool u_turn_with_name_change =
             continues_with_name_change &&
-            steps[next_step_index].name_id == steps[two_back_index].name_id;
+            !isNoticeableNameChange(steps[two_back_index], steps[next_step_index]);
 
         if (direct_u_turn || u_turn_with_name_change)
         {
@@ -795,9 +809,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     // Turn Types in the response depend on whether we find the same road name
                     // (sliproad indcating a u-turn) or if we are turning onto a different road, in
                     // which case we use a turn.
-                    if (steps[getPreviousIndex(one_back_index)].name_id ==
-                            steps[step_index].name_id &&
-                        steps[step_index].name_id != EMPTY_NAMEID)
+                    if (!isNoticeableNameChange(steps[getPreviousIndex(one_back_index)],
+                                                steps[step_index]))
                         steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
                     else
                         steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
@@ -831,7 +844,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         // These have to be handled in post-processing
         else if (isCollapsableInstruction(current_step.maneuver.instruction) &&
                  current_step.maneuver.instruction.type != TurnType::Suppressed &&
-                 steps[getPreviousNameIndex(step_index)].name_id == current_step.name_id &&
+                 !isNoticeableNameChange(steps[getPreviousNameIndex(step_index)], current_step) &&
                  // canCollapseAll is also checking for compatible(step,step+1) for all indices
                  canCollapseAll(getPreviousNameIndex(step_index) + 1, next_step_index))
         {
@@ -856,8 +869,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             const auto two_back_index = getPreviousIndex(one_back_index);
             BOOST_ASSERT(two_back_index < steps.size());
             // valid, since one_back is collapsable or a turn and therefore not depart:
-            const auto &coming_from_name_id = steps[two_back_index].name_id;
-            if (current_step.name_id == coming_from_name_id)
+            if (!isNoticeableNameChange(steps[two_back_index], current_step))
             {
                 if (compatible(one_back_step, steps[two_back_index]))
                 {
@@ -889,7 +901,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             else if (step_index + 2 < steps.size() &&
                      current_step.maneuver.instruction.type == TurnType::NewName &&
                      steps[next_step_index].maneuver.instruction.type == TurnType::NewName &&
-                     one_back_step.name_id == steps[next_step_index].name_id)
+                     !isNoticeableNameChange(one_back_step, steps[next_step_index]))
             {
                 if (compatible(steps[step_index], steps[next_step_index]))
                 {
