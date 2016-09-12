@@ -218,3 +218,19 @@ Feature: Turn Lane Guidance
             | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
             | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
             | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
+
+    Scenario: Check sliproad handler loop's exit condition, Issue #2896
+      # http://www.openstreetmap.org/way/198481519
+        Given the node locations
+            | node | lat        | lon         |
+            | a    | 7.6125350  | 126.5708309 |
+            | b    | 7.6125156  | 126.5707219 |
+            | c    | 7.6125363  | 126.5708337 |
+
+        And the ways
+            | nodes | name |
+            | cbac  |      |
+
+        When I route I should get
+            | from | to | route | turns         |
+            | a    | c  | ,     | depart,arrive |
