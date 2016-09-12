@@ -94,7 +94,8 @@ Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
         }
     }
     // Handle sliproads
-    intersection = sliproad_handler(from_nid, via_eid, std::move(intersection));
+    if (sliproad_handler.canProcess(from_nid, via_eid, intersection))
+        intersection = sliproad_handler(from_nid, via_eid, std::move(intersection));
 
     // Turn On Ramps Into Off Ramps, if we come from a motorway-like road
     if (node_based_graph.GetEdgeData(via_eid).road_classification.IsMotorwayClass())
