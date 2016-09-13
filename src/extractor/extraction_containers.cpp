@@ -110,7 +110,8 @@ ExtractionContainers::ExtractionContainers()
     // Check if stxxl can be instantiated
     stxxl::vector<unsigned> dummy_vector;
 
-    // Insert three empty strings offsets for name, destination and pronunciation
+    // Insert three empty strings offsets for name, ref, destination and pronunciation
+    name_offsets.push_back(0);
     name_offsets.push_back(0);
     name_offsets.push_back(0);
     name_offsets.push_back(0);
