@@ -1,3 +1,9 @@
+# 5.4.0-rc.3
+  Changes from 5.4.0-rc.2
+    - Bugfixes
+      - BREAKING: Fixed a bug where some roads could be falsly identified as sliproadsi This change requires reprocessing datasets with osrm-extract and osrm-contract
+      - BREAKING: Fixed a bug that resulted in false names/ref/destination/pronunciation This change requires reprocessing datasets with osrm-extract and osrm-contract
+
 # 5.4.0
   Changes from 5.3.0
     - Profiles
@@ -22,7 +28,6 @@
       - Fixed a bug where post-processing instructions (e.g. left + left -> uturn) could result in false pronunciations
       - Fixes a bug where a bearing range of zero would cause exhaustive graph traversals
       - Fixes a bug where certain looped geometries could cause an infinite loop during extraction
-      - Fixed a bug where some roads could be falsly identified as sliproads
     - Infrastructure:
       - Adds a feature to limit results in nearest service with a default of 100 in `osrm-routed`
 
