@@ -23,6 +23,7 @@
       - Fixes a bug where a bearing range of zero would cause exhaustive graph traversals
       - Fixes a bug where certain looped geometries could cause an infinite loop during extraction
       - Fixed a bug where some roads could be falsly identified as sliproads
+      - Fixed a bug where roundabout intersections could result in breaking assertions when immediately exited
     - Infrastructure:
       - Adds a feature to limit results in nearest service with a default of 100 in `osrm-routed`
 

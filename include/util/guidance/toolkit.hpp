@@ -113,7 +113,7 @@ inline bool entersRoundabout(const extractor::guidance::TurnInstruction instruct
             instruction.type == extractor::guidance::TurnType::EnterRoundaboutIntersectionAtExit ||
             instruction.type == extractor::guidance::TurnType::EnterAndExitRoundabout ||
             instruction.type == extractor::guidance::TurnType::EnterAndExitRotary ||
-            instruction.type == extractor::guidance::TurnType::EnterAndExitRotary);
+            instruction.type == extractor::guidance::TurnType::EnterAndExitRoundaboutIntersection);
 }
 
 inline bool leavesRoundabout(const extractor::guidance::TurnInstruction instruction)
