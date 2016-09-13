@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -203,6 +203,8 @@ bool setUpRoundabout(RouteStep &step)
         instruction.type == TurnType::EnterRoundaboutAtExit ||
         instruction.type == TurnType::EnterRoundaboutIntersectionAtExit)
     {
+        // Here we consider an actual entry, not an exit. We simply have to count the additional
+        // exit
         step.maneuver.exit = 1;
         // prevent futher special case handling of these two.
         if (instruction.type == TurnType::EnterRotaryAtExit)
@@ -215,6 +217,7 @@ bool setUpRoundabout(RouteStep &step)
 
     if (leavesRoundabout(instruction))
     {
+        // This set-up, even though it looks the same, is actually looking at entering AND exiting
         step.maneuver.exit = 1; // count the otherwise missing exit
 
         // prevent futher special case handling of these two.

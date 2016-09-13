@@ -1,3 +1,8 @@
+# 5.4.0-rc.4
+  Changes from 5.4.0-rc.3
+    - Bugfixes
+      - Fixed a bug where roundabout intersections could result in breaking assertions when immediately exited
+
 # 5.4.0-rc.3
   Changes from 5.4.0-rc.2
     - Bugfixes
@@ -28,6 +33,7 @@
       - Fixed a bug where post-processing instructions (e.g. left + left -> uturn) could result in false pronunciations
       - Fixes a bug where a bearing range of zero would cause exhaustive graph traversals
       - Fixes a bug where certain looped geometries could cause an infinite loop during extraction
+
     - Infrastructure:
       - Adds a feature to limit results in nearest service with a default of 100 in `osrm-routed`
 
