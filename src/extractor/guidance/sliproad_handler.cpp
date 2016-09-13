@@ -139,7 +139,6 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
         return intersection;
 
     const auto source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
-
     // check whether the continue road is valid
     const auto check_valid = [this, source_edge_data](const ConnectedRoad &road) {
         const auto road_edge_data = node_based_graph.GetEdgeData(road.turn.eid);
@@ -191,6 +190,21 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                 }
                 return intersection;
             }(intersection_node_id);
+
+            const auto link_data = node_based_graph.GetEdgeData(road.turn.eid);
+            // Check if the road continues here
+            const bool is_through_street =
+                target_intersection.end() !=
+                std::find_if(target_intersection.begin() + 1,
+                             target_intersection.end(),
+                             [this, &link_data](const ConnectedRoad &road) {
+                                 return node_based_graph.GetEdgeData(road.turn.eid).name_id ==
+                                        link_data.name_id;
+                             });
+
+            // if the sliproad candidate is a through street, we cannot handle it as a sliproad
+            if (is_through_street)
+                continue;
 
             for (const auto &candidate_road : target_intersection)
             {
