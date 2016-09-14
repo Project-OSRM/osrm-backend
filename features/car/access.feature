@@ -181,7 +181,15 @@ Feature: Car - Restricted access
             | primary | no          | x     |
             | primary | snowmobile  | x     |
 
-     Scenario: Car - only toll=yes ways are ignored by default
+     Scenario: Car - ignore_toll_ways is false by default
         Then routability should be
             | highway | toll        | bothw |
             | primary | yes         | x     |
+            | primary | no          | x     |
+
+     Scenario: Car - ignore_toll_ways=true enables toll way ignoring
+        Given the environment variable "ignore_toll_ways" "true"
+        Then routability should be
+            | highway | toll        | bothw |
+            | primary | yes         |       |
+            | primary | no          | x     |

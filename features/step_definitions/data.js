@@ -278,4 +278,9 @@ module.exports = function () {
         this.httpMethod = method;
         callback();
     });
+
+    this.Given(/^the environment variable "([^"]*)" "([^"]*)"$/, function (name, value, callback) {
+      this.setEnvVar(name, value);
+      callback();
+    });
 };
