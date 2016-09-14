@@ -2,6 +2,7 @@
 #define SCRIPTING_ENVIRONMENT_LUA_HPP
 
 #include "extractor/scripting_environment.hpp"
+#include "extractor/turn_penalty.hpp"
 
 #include "extractor/raster_source.hpp"
 
@@ -9,6 +10,7 @@
 
 #include <tbb/enumerable_thread_specific.h>
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -30,6 +32,7 @@ struct LuaScriptingContext final
     util::LuaState state;
 
     bool has_turn_penalty_function;
+    bool has_detailed_penalty_function;
     bool has_node_function;
     bool has_way_function;
     bool has_segment_function;
@@ -55,7 +58,10 @@ class LuaScriptingEnvironment final : public ScriptingEnvironment
     std::vector<std::string> GetNameSuffixList() override;
     std::vector<std::string> GetRestrictions() override;
     void SetupSources() override;
-    int32_t GetTurnPenalty(double angle) override;
+    std::int32_t GetTurnPenalty(const TurnProperties &turn_properties,
+                                const IntersectionProperties &intersection_properties,
+                                const TurnSegment &approach_segment,
+                                const TurnSegment &exit_segment) override;
     void ProcessSegment(const osrm::util::Coordinate &source,
                         const osrm::util::Coordinate &target,
                         double distance,
