@@ -142,7 +142,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     // FIXME this need to be moved into the profiles
     const guidance::RoadClassification road_classification = parsed_way.road_classification;
-    const auto laneStringToDescription = [](std::string lane_string) -> TurnLaneDescription {
+    const auto laneStringToDescription = [](const std::string &lane_string) -> TurnLaneDescription {
         if (lane_string.empty())
             return {};
 
@@ -214,7 +214,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     // convert the lane description into an ID and, if necessary, remembr the description in the
     // description_map
-    const auto requestId = [&](std::string lane_string) {
+    const auto requestId = [&](const std::string &lane_string) {
         if (lane_string.empty())
             return INVALID_LANE_DESCRIPTIONID;
         TurnLaneDescription lane_description = laneStringToDescription(std::move(lane_string));
