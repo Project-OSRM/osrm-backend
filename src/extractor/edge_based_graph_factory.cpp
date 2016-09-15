@@ -431,8 +431,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.traffic_signal_penalty;
                 }
 
+                const auto turn_angle = turn.angle > 180 ? 180 - turn.angle : turn.angle;
                 const int32_t turn_penalty =
-                    scripting_environment.GetTurnPenalty(180. - turn.angle);
+                    scripting_environment.GetTurnPenalty(turn_angle);
                 const auto turn_instruction = turn.instruction;
 
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
