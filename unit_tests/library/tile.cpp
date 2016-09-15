@@ -88,6 +88,9 @@ BOOST_AUTO_TEST_CASE(test_tile)
             case util::vector_tile::VARIANT_TYPE_DOUBLE:
                 value.get_double();
                 break;
+            case util::vector_tile::VARIANT_TYPE_FLOAT:
+                value.get_float();
+                break;
             case util::vector_tile::VARIANT_TYPE_STRING:
                 value.get_string();
                 break;
@@ -160,9 +163,9 @@ BOOST_AUTO_TEST_CASE(test_tile)
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
         *iter++;
-        BOOST_CHECK_EQUAL(*iter++, 1); // bearing_out key
+        BOOST_CHECK_EQUAL(*iter++, 1); // turn_angle key
         *iter++;
-        BOOST_CHECK_EQUAL(*iter++, 2); // weight key
+        BOOST_CHECK_EQUAL(*iter++, 2); // cost key
         *iter++; // skip value check, can be valud uint32
         BOOST_CHECK(iter == value_end);
         // geometry
