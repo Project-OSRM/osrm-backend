@@ -1,5 +1,5 @@
-#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -110,10 +110,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                 else if (in_data.road_classification.IsRampClass() &&
                          out_data.road_classification.IsRampClass())
                 {
-                    if (in_mode == out_mode)
-                        return {TurnType::Suppressed, getTurnDirection(road.turn.angle)};
-                    else
-                        return {TurnType::Notification, getTurnDirection(road.turn.angle)};
+                    return {in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification, getTurnDirection(road.turn.angle)};
                 }
                 else
                 {
@@ -140,15 +137,13 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
             }
             else
             {
-                return {TurnType::NewName, getTurnDirection(road.turn.angle)};
+                return {in_mode == out_mode ? TurnType::NewName : TurnType::Notification, getTurnDirection(road.turn.angle)};
             }
         }
+        // name has not changed, suppress a turn here or indicate mode change
         else
         {
-            if (in_mode == out_mode)
-                return {TurnType::Suppressed, getTurnDirection(road.turn.angle)};
-            else
-                return {TurnType::Notification, getTurnDirection(road.turn.angle)};
+            return {in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification, getTurnDirection(road.turn.angle)};
         }
     }
     BOOST_ASSERT(type == TurnType::Continue);
