@@ -1,6 +1,6 @@
-#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
+#include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"
@@ -84,7 +84,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
             // a one-sided sliproad, however, the non-sliproad can be considered `obvious`. Here we
             // assume that this could be the case and check for a potential sliproad/non-sliproad
             // situation.
-            NodeID intersection_node_one, intersection_node_two;
+            NodeID intersection_node_one = SPECIAL_NODEID, intersection_node_two = SPECIAL_NODEID;
             const auto intersection_following_index_one = findNextIntersectionForRoad(
                 intersection_node_id, intersection[1], intersection_node_one);
             const auto intersection_following_index_two = findNextIntersectionForRoad(
