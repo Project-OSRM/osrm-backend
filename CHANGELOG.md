@@ -1,5 +1,5 @@
 # 5.4.0
-  Changes from 5.3.0
+  - Changes from 5.3.0
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
       - added left_hand_driving flag in global profile properties
@@ -28,7 +28,7 @@
       - Adds a feature to limit results in nearest service with a default of 100 in `osrm-routed`
 
 # 5.3.0
-  Changes from 5.3.0-rc.3
+  - Changes from 5.3.0-rc.3
     - Guidance
       - Only announce `use lane` on required turns (not using all lanes to go straight)
       - Moved `lanes` to the intersection objects. This is BREAKING in relation to other Release Candidates but not with respect to other releases.
@@ -36,7 +36,7 @@
       - Fix BREAKING: bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
       - Fix: bug that results in segfaults when `use lane` instructions are suppressed
 
-  Changes form 5.2.7
+  - Changes form 5.2.7
     - API
       - Introduces new `TurnType` in the form of `use lane`. The type indicates that you have to stick to a lane without turning
       - Introduces `lanes` to the `Intersection` object. The lane data contains both the markings at the intersection and a flag indicating if they can be chosen for the next turn
@@ -60,7 +60,7 @@
       - Fix devide by zero on updating speed data using osrm-contract
 
 # 5.3.0 RC3
-  Changes from 5.3.0-rc.2
+  - Changes from 5.3.0-rc.2
     - Guidance
       - Improved detection of obvious turns
       - Improved turn lane detection
@@ -68,7 +68,7 @@
       - Fix bug that didn't chose minimal weights on overlapping edges
 
 # 5.3.0 RC2
-  Changes from 5.3.0-rc.1
+  - Changes from 5.3.0-rc.1
     - Bugfixes
       - Fixes invalid checks in the lane-extraction part of the car profile
 
