@@ -39,10 +39,6 @@ class ExtractionContainers
     void WriteNodes(std::ofstream &file_out_stream) const;
     void WriteRestrictions(const std::string &restrictions_file_name) const;
     void WriteEdges(std::ofstream &file_out_stream) const;
-    void
-    WriteTurnLaneMasks(const std::string &file_name,
-                       const stxxl::vector<std::uint32_t> &turn_lane_offsets,
-                       const stxxl::vector<guidance::TurnLaneType::Mask> &turn_lane_masks) const;
     void WriteCharData(const std::string &file_name);
 
   public:
