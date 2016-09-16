@@ -164,11 +164,12 @@ module.exports = function () {
         });
     };
 
-    this.extractData = (stamp, callback) => {
+    this.extractData = (p, callback) => {
+        let stamp = p.processedCacheFile + '.extract';
         fs.exists(stamp, (exists) => {
             if (exists) return callback();
 
-            this.runBin('osrm-extract', util.format('%s --profile %s %s', this.extractArgs, this.profileFile, this.inputCacheFile), this.environment, (err) => {
+            this.runBin('osrm-extract', util.format('%s --profile %s %s', p.extractArgs, p.profileFile, p.inputCacheFile), p.environment, (err) => {
                 if (err) {
                     return callback(new Error(util.format('osrm-extract %s: %s', errorReason(err), err.cmd)));
                 }
@@ -177,11 +178,12 @@ module.exports = function () {
         });
     };
 
-    this.contractData = (stamp, callback) => {
+    this.contractData = (p, callback) => {
+        let stamp = p.processedCacheFile + '.contract';
         fs.exists(stamp, (exists) => {
             if (exists) return callback();
 
-            this.runBin('osrm-contract', util.format('%s %s', this.contractArgs, this.processedCacheFile), this.environment, (err) => {
+            this.runBin('osrm-contract', util.format('%s %s', p.contractArgs, p.processedCacheFile), p.environment, (err) => {
                 if (err) {
                     return callback(new Error(util.format('osrm-contract %s: %s', errorReason(err), err)));
                 }
@@ -191,9 +193,14 @@ module.exports = function () {
     };
 
     this.extractAndContract = (callback) => {
+        // a shallow copy of scenario parameters to avoid data inconsistency
+        // if a cucumber timeout occurs during deferred jobs
+        let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
+                 profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
+                 processedCacheFile: this.processedCacheFile, environment: this.environment};
         let queue = d3.queue(1);
-        queue.defer(this.extractData.bind(this), this.processedCacheFile + '.extract');
-        queue.defer(this.contractData.bind(this), this.processedCacheFile + '.contract');
+        queue.defer(this.extractData.bind(this), p);
+        queue.defer(this.contractData.bind(this), p);
         queue.awaitAll(callback);
     };
 
