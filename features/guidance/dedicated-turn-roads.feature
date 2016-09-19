@@ -313,3 +313,39 @@ Feature: Slipways and Dedicated Turn Lanes
             | a,d       | new york,new york                       | depart,arrive                      | this is the sinatra route            |
             | a,j       | new york,1st street,1st street          | depart,turn left,arrive            |                                      |
             | a,1       | new york,m street,1st street,1st street | depart,turn right,turn left,arrive | this can false be seen as a sliproad |
+
+    # Merging into degree two loop on dedicated turn detection / 2927
+    Scenario: Turn Instead of Ramp
+        Given the node map
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   | g |   |   |   |   |   | h |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   | d |   |   | e |
+            | i |   |   |   | c |   |   |   |   |   | j |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | b |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | a |   |   |   |   |   |   |   |   |   |   |   |   |   |
+
+        And the ways
+            | nodes | highway | name | oneway |
+            | abi   | primary | road | yes    |
+            | bcjd  | primary | loop | yes    |
+            | dhgf  | primary | loop | yes    |
+            | fed   | primary | loop | yes    |
+
+        And the nodes
+            | node | highway         |
+            | g    | traffic_signals |
+            | c    | traffic_signals |
+
+        # We don't actually care about routes here, this is all about endless loops in turn discovery
+        When I route I should get
+            | waypoints | route          | turns                          |
+            | a,i       | road,road,road | depart,fork slight left,arrive |

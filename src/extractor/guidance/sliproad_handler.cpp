@@ -56,9 +56,14 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
             auto intersection = intersection_generator(at_node, road.turn.eid);
             auto in_edge = road.turn.eid;
             // skip over traffic lights
-            while (intersection.size() == 2)
+            // to prevent ending up in an endless loop, we remember all visited nodes. This is
+            // necessary, since merging of roads can actually create enterable loops of degree two
+            std::unordered_set<NodeID> visited_nodes;
+            auto node = at_node;
+            while (intersection.size() == 2 && visited_nodes.count(node) == 0)
             {
-                const auto node = node_based_graph.GetTarget(in_edge);
+                visited_nodes.insert(node);
+                node = node_based_graph.GetTarget(in_edge);
                 if (node == at_node)
                 {
                     // we ended up in a loop without exit
@@ -69,6 +74,11 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                 in_edge = intersection[1].turn.eid;
                 output_node = node_based_graph.GetTarget(in_edge);
                 intersection = intersection_generator(node, in_edge);
+            }
+            if (intersection.size() <= 2)
+            {
+                output_node = SPECIAL_NODEID;
+                intersection.clear();
             }
             return intersection;
         };
@@ -162,6 +172,9 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     const auto next_road_next_intersection =
         findNextIntersectionForRoad(intersection_node_id, next_road, next_intersection_node);
 
+    if (next_road_next_intersection.empty())
+        return intersection;
+
     // If we are at a traffic loop at the end of a road, don't consider it a sliproad
     if (intersection_node_id == next_intersection_node)
         return intersection;
@@ -194,13 +207,14 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
             const auto link_data = node_based_graph.GetEdgeData(road.turn.eid);
             // Check if the road continues here
             const bool is_through_street =
+                !target_intersection.empty() &&
                 target_intersection.end() !=
-                std::find_if(target_intersection.begin() + 1,
-                             target_intersection.end(),
-                             [this, &link_data](const ConnectedRoad &road) {
-                                 return node_based_graph.GetEdgeData(road.turn.eid).name_id ==
-                                        link_data.name_id;
-                             });
+                    std::find_if(target_intersection.begin() + 1,
+                                 target_intersection.end(),
+                                 [this, &link_data](const ConnectedRoad &road) {
+                                     return node_based_graph.GetEdgeData(road.turn.eid).name_id ==
+                                            link_data.name_id;
+                                 });
 
             // if the sliproad candidate is a through street, we cannot handle it as a sliproad
             if (is_through_street)
