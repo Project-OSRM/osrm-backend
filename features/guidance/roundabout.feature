@@ -36,6 +36,25 @@ Feature: Basic Roundabout
            | h,c       | gh,bcegb,bcegb | depart,roundabout-exit-undefined,arrive |
            | h,e       | gh,bcegb,bcegb | depart,roundabout-exit-undefined,arrive |
 
+    #2927
+    Scenario: Only Roundabout
+        Given the node map
+            |   |   | a |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | b |   |   |   | d |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   | c |   |   |
+
+       And the ways
+            | nodes  | junction   |
+            | abcda  | roundabout |
+
+       When I route I should get
+           | waypoints | route       | turns         |
+           | a,c       | abcda,abcda | depart,arrive |
+
     Scenario: Only Exit
         Given the node map
             |   |   | a |   |   |
