@@ -238,6 +238,10 @@ function way_function (way, result)
     return
   end
 
+  -- default to driving mode, may get overwritten below
+  result.forward_mode = mode.driving
+  result.backward_mode = mode.driving
+
   -- we dont route over areas
   local area = way:get_value_by_key("area")
   if ignore_areas and area and "yes" == area then
@@ -245,10 +249,58 @@ function way_function (way, result)
   end
 
   -- respect user-preference for HOV-only ways
-  local hov = way:get_value_by_key("hov")
-  if ignore_hov_ways and hov and "designated" == hov then
-    return
-  end
+  if ignore_hov_ways then
+    local hov = way:get_value_by_key("hov")
+    if hov and "designated" == hov then
+      return
+    end
+
+    -- also respect user-preference for HOV-only ways when all lanes are HOV-designated
+    local function has_all_designated_hov_lanes(lanes)
+      local all = true
+      for lane in lanes:gmatch("(%w+)") do
+        if lane and lane ~= "designated" then
+          all = false
+          break
+        end
+      end
+      return all
+    end
+
+    local hov_lanes = way:get_value_by_key("hov:lanes")
+    local hov_lanes_forward = way:get_value_by_key("hov:lanes:forward")
+    local hov_lanes_backward = way:get_value_by_key("hov:lanes:backward")
+
+    local hov_all_designated = hov_lanes and hov_lanes ~= ""
+                               and has_all_designated_hov_lanes(hov_lanes)
+
+    local hov_all_designated_forward = hov_lanes_forward and hov_lanes_forward ~= ""
+                                       and has_all_designated_hov_lanes(hov_lanes_forward)
+
+    local hov_all_designated_backward = hov_lanes_backward and hov_lanes_backward ~= ""
+                                        and has_all_designated_hov_lanes(hov_lanes_backward)
+
+    -- forward/backward lane depend on a way's direction
+    local oneway = way:get_value_by_key("oneway")
+    local reverse = oneway and oneway == "-1"
+
+    if hov_all_designated or hov_all_designated_forward then
+      if reverse then
+        result.backward_mode = mode.inaccessible
+      else
+        result.forward_mode = mode.inaccessible
+      end
+    end
+
+    if hov_all_designated_backward then
+      if reverse then
+        result.forward_mode = mode.inaccessible
+      else
+        result.backward_mode = mode.inaccessible
+      end
+    end
+
+  end -- hov handling
 
   -- respect user-preference for toll=yes ways
   local toll = way:get_value_by_key("toll")
@@ -277,9 +329,6 @@ function way_function (way, result)
   if access_tag_blacklist[access] then
     return
   end
-
-  result.forward_mode = mode.driving
-  result.backward_mode = mode.driving
 
   -- handling ferries and piers
   local route_speed = speed_profile[route]
