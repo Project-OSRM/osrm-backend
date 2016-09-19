@@ -1,40 +1,52 @@
-var fs = require('fs');
-var util = require('util');
-var exec = require('child_process').exec;
+'use strict';
+
+const fs = require('fs');
+const util = require('util');
+const child_process = require('child_process');
 
 module.exports = function () {
-    this.runBin = (bin, options, callback) => {
-        var opts = options.slice();
+    // replaces placeholders for in user supplied commands
+    this.expandOptions = (options) => {
+        let opts = options.slice();
+        let table = {
+            '{osm_file}': this.inputCacheFile,
+            '{processed_file}': this.processedCacheFile,
+            '{profile_file}': this.profileFile,
+            '{rastersource_file}': this.rasterCacheFile,
+            '{speeds_file}': this.speedsCacheFile,
+            '{penalties_file}': this.penaltiesCacheFile
+        };
 
-        if (opts.match('{osm_base}')) {
-            if (!this.osmData.osmFile) throw new Error('*** {osm_base} is missing');
-            opts = opts.replace('{osm_base}', this.osmData.osmFile);
+        for (let k in table) {
+            opts = opts.replace(k, table[k]);
         }
 
-        if (opts.match('{extracted_base}')) {
-            if (!this.osmData.extractedFile) throw new Error('*** {extracted_base} is missing');
-            opts = opts.replace('{extracted_base}', this.osmData.extractedFile);
+        return opts;
+    };
+
+    this.setupOutputLog = (process, log) => {
+        if (process.logFunc) {
+            process.stdout.removeListener('data', process.logFunc);
+            process.stderr.removeListener('data', process.logFunc);
         }
 
-        if (opts.match('{contracted_base}')) {
-            if (!this.osmData.contractedFile) throw new Error('*** {contracted_base} is missing');
-            opts = opts.replace('{contracted_base}', this.osmData.contractedFile);
-        }
+        process.logFunc = (message) => { log.write(message); };
+        process.stdout.on('data', process.logFunc);
+        process.stderr.on('data', process.logFunc);
+    };
 
-        if (opts.match('{profile}')) {
-            opts = opts.replace('{profile}', [this.PROFILES_PATH, this.profile + '.lua'].join('/'));
-        }
-
-        var cmd = util.format('%s%s/%s%s%s %s 2>%s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ, opts, this.ERROR_LOG_FILE);
-        process.chdir(this.TEST_FOLDER);
-        exec(cmd, (err, stdout, stderr) => {
-            this.stdout = stdout.toString();
-            fs.readFile(this.ERROR_LOG_FILE, (e, data) => {
-                this.stderr = data ? data.toString() : '';
-                this.exitCode = err && err.code || 0;
-                process.chdir('../');
-                callback(err, stdout, stderr);
-            });
-        });
+    this.runBin = (bin, options, env, callback) => {
+        let cmd = util.format('%s%s/%s%s%s', this.QQ, this.BIN_PATH, bin, this.EXE, this.QQ);
+        let opts = options.split(' ').filter((x) => { return x && x.length > 0; });
+        let log = fs.createWriteStream(this.scenarioLogFile, {'flags': 'a'});
+        log.write(util.format('*** running %s %s\n', cmd, options));
+        // we need to set a large maxbuffer here because we have long running processes like osrm-routed
+        // with lots of log output
+        let child = child_process.execFile(cmd, opts, {maxBuffer: 1024 * 1024 * 1000, env: env}, callback);
+        child.on('exit', function(code) {
+            log.end(util.format('*** %s exited with code %d\n', bin, code));
+        }.bind(this));
+        this.setupOutputLog(child, log);
+        return child;
     };
 };

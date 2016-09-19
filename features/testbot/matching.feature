@@ -124,7 +124,7 @@ Feature: Basic Map Matching
         1,2,36
         """
 
-        And the contract extra arguments "--segment-speed-file speeds.csv"
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
             | trace | matchings | annotation                                                                                     |

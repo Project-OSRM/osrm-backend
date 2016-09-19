@@ -2,19 +2,23 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 var d3 = require('d3-queue');
-var OSM = require('../support/build_osm');
+var OSM = require('../lib/osm');
 
 module.exports = function () {
     this.Given(/^the profile "([^"]*)"$/, (profile, callback) => {
-        this.setProfile(profile, callback);
+        this.profile = profile;
+        this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
+        callback();
     });
 
     this.Given(/^the extract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setExtractArgs(args, callback);
+        this.extractArgs = this.expandOptions(args);
+        callback();
     });
 
     this.Given(/^the contract extra arguments "(.*?)"$/, (args, callback) => {
-        this.setContractArgs(args, callback);
+        this.contractArgs = this.expandOptions(args);
+        callback();
     });
 
     this.Given(/^a grid size of ([0-9.]+) meters$/, (meters, callback) => {
@@ -228,58 +232,46 @@ module.exports = function () {
     });
 
     this.Given(/^the raster source$/, (data, callback) => {
-        this.updateFingerprintExtract(data);
-        fs.writeFile(path.resolve(this.TEST_FOLDER, 'rastersource.asc'), data, callback);
+        // TODO: Don't overwrite if it exists
+        fs.writeFile(this.rasterCacheFile, data, callback);
+        // we need this to pass it to the profiles
+        this.environment = Object.assign({OSRM_RASTER_SOURCE: this.rasterCacheFile}, this.environment);
     });
 
     this.Given(/^the speed file$/, (data, callback) => {
-        this.updateFingerprintContract(data);
-        fs.writeFile(path.resolve(this.TEST_FOLDER, 'speeds.csv'), data, callback);
+        // TODO: Don't overwrite if it exists
+        fs.writeFile(this.speedsCacheFile, data, callback);
     });
 
     this.Given(/^the turn penalty file$/, (data, callback) => {
-        this.updateFingerprintContract(data);
-        fs.writeFile(path.resolve(this.TEST_FOLDER, 'penalties.csv'), data, callback);
+        // TODO: Don't overwrite if it exists
+        fs.writeFile(this.penaltiesCacheFile, data, callback);
     });
 
     this.Given(/^the data has been saved to disk$/, (callback) => {
-        try {
-            this.reprocess(callback);
-        } catch(e) {
-            this.processError = e;
-            callback(e);
-        }
+        this.reprocess(callback);
     });
 
     this.Given(/^the data has been extracted$/, (callback) => {
-        this.osmData.populate(() => {
-            this.writeAndExtract((err) => {
-                if (err) this.processError = err;
-                callback();
-            });
-        });
+        this.reprocess(callback);
     });
 
     this.Given(/^the data has been contracted$/, (callback) => {
-        this.reprocess((err) => {
-            if (err) this.processError = err;
-            callback();
-        });
+        this.reprocess(callback);
     });
 
     this.Given(/^osrm\-routed is stopped$/, (callback) => {
-        this.OSRMLoader.shutdown((err) => {
-            if (err) this.processError = err;
-            callback();
-        });
+        this.OSRMLoader.shutdown(callback);
     });
 
-    this.Given(/^data is loaded directly/, () => {
-        this.loadMethod = 'directly';
+    this.Given(/^data is loaded directly/, (callback) => {
+        this.osrmLoader.setLoadMethod('directly');
+        callback();
     });
 
-    this.Given(/^data is loaded with datastore$/, () => {
-        this.loadMethod = 'datastore';
+    this.Given(/^data is loaded with datastore$/, (callback) => {
+        this.osrmLoader.setLoadMethod('datastore');
+        callback();
     });
 
     this.Given(/^the HTTP method "([^"]*)"$/, (method, callback) => {
