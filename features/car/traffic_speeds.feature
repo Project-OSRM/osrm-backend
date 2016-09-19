@@ -25,7 +25,7 @@ Feature: Traffic - speeds
             | fb    | primary |
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
-        Given the contract extra arguments "--segment-speed-file speeds.csv"
+        Given the contract extra arguments "--segment-speed-file {speeds_file}"
         Given the speed file
         """
         1,2,0
@@ -69,7 +69,7 @@ Feature: Traffic - speeds
             | fb    | primary |
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
-        Given the contract extra arguments "--segment-speed-file speeds.csv"
+        Given the contract extra arguments "--segment-speed-file {speeds_file}"
         Given the speed file
         """
         1,2,0
@@ -112,7 +112,6 @@ Feature: Traffic - speeds
             | fb    | primary |
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
-        Given the contract extra arguments "--segment-speed-file speeds.csv"
         Given the speed file
         """
         1,2,-10
@@ -123,6 +122,6 @@ Feature: Traffic - speeds
         4,1,-5
         """
         And the data has been extracted
-        When I run "osrm-contract --segment-speed-file speeds.csv {extracted_base}.osrm"
+        When I try to run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
         And stderr should contain "malformed"
-        And it should exit with code not 0
+        And it should exit with an error

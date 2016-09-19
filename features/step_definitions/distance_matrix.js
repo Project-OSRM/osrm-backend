@@ -53,8 +53,6 @@ module.exports = function () {
                 });
 
                 var testRow = (row, ri, cb) => {
-                    var ok = true;
-
                     for (var k in result[ri]) {
                         if (this.FuzzyMatch.match(result[ri][k], row[k])) {
                             result[ri][k] = row[k];
@@ -62,13 +60,7 @@ module.exports = function () {
                             result[ri][k] = '';
                         } else {
                             result[ri][k] = result[ri][k].toString();
-                            ok = false;
                         }
-                    }
-
-                    if (!ok) {
-                        var failed = { attempt: 'distance_matrix', query: this.query, response: response };
-                        this.logFail(row, result[ri], [failed]);
                     }
 
                     result[ri][''] = row[''];
