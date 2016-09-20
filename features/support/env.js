@@ -1,46 +1,32 @@
-'use strict';
+var path = require('path');
+var util = require('util');
+var fs = require('fs');
+var exec = require('child_process').exec;
+var d3 = require('d3-queue');
 
-const path = require('path');
-const util = require('util');
-const fs = require('fs');
-const d3 = require('d3-queue');
-const child_process = require('child_process');
-const tryConnect = require('../lib/try_connect');
-
-// Sets up all constants that are valid for all features
 module.exports = function () {
     this.initializeEnv = (callback) => {
+        this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.TIMEOUT = process.env.CUCUMBER_TIMEOUT && parseInt(process.env.CUCUMBER_TIMEOUT) || 5000;
-        // set cucumber default timeout
         this.setDefaultTimeout(this.TIMEOUT);
-        this.ROOT_PATH = process.cwd();
-
-        this.TEST_PATH = path.resolve(this.ROOT_PATH, 'test');
-        this.CACHE_PATH = path.resolve(this.TEST_PATH, 'cache');
-        this.LOGS_PATH = path.resolve(this.TEST_PATH, 'logs');
-
-        this.PROFILES_PATH = path.resolve(this.ROOT_PATH, 'profiles');
-        this.FIXTURES_PATH = path.resolve(this.ROOT_PATH, 'unit_tests/fixtures');
-        this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_PATH, 'build');
-        var stxxl_config = path.resolve(this.ROOT_PATH, 'test/.stxxl');
-        if (!fs.existsSync(stxxl_config)) {
-            return callback(new Error('*** '+stxxl_config+ 'does not exist'));
-        }
-
-        this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: stxxl_config}, process.env);
-        this.DEFAULT_PROFILE = 'bicycle';
-        this.DEFAULT_INPUT_FORMAT = 'osm';
-        this.DEFAULT_LOAD_METHOD = 'datastore';
-        this.DEFAULT_ORIGIN = [1,1];
+        this.ROOT_FOLDER = process.cwd();
         this.OSM_USER = 'osrm';
         this.OSM_GENERATOR = 'osrm-test';
         this.OSM_UID = 1;
+        this.TEST_FOLDER = path.resolve(this.ROOT_FOLDER, 'test');
+        this.DATA_FOLDER = path.resolve(this.TEST_FOLDER, 'cache');
         this.OSM_TIMESTAMP = '2000-01-01T00:00:00Z';
+        this.DEFAULT_SPEEDPROFILE = 'bicycle';
         this.WAY_SPACING = 100;
-        this.DEFAULT_GRID_SIZE = 100; // meters
-
-        this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
-        this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;
+        this.DEFAULT_GRID_SIZE = 100;    // meters
+        this.PROFILES_PATH = path.resolve(this.ROOT_FOLDER, 'profiles');
+        this.FIXTURES_PATH = path.resolve(this.ROOT_FOLDER, 'unit_tests/fixtures');
+        this.BIN_PATH = process.env.OSRM_BUILD_DIR && process.env.OSRM_BUILD_DIR || path.resolve(this.ROOT_FOLDER, 'build');
+        this.DEFAULT_INPUT_FORMAT = 'osm';
+        this.DEFAULT_ORIGIN = [1,1];
+        this.DEFAULT_LOAD_METHOD = 'datastore';
+        this.OSRM_ROUTED_LOG_FILE = path.resolve(this.TEST_FOLDER, 'osrm-routed.log');
+        this.ERROR_LOG_FILE = path.resolve(this.TEST_FOLDER, 'error.log');
 
         // TODO make sure this works on win
         if (process.platform.match(/indows.*/)) {
@@ -51,49 +37,36 @@ module.exports = function () {
         } else {
             this.TERMSIGNAL = 'SIGTERM';
             this.EXE = '';
-            // TODO autodetect if this was build with shared or static libraries
-            this.LIB = process.env.BUILD_SHARED_LIBS && '.so' || '.a';
+            this.LIB = '.so';
             this.QQ = '';
         }
-
-        this.OSRM_EXTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-extract', this.EXE));
-        this.OSRM_CONTRACT_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-contract', this.EXE));
-        this.OSRM_ROUTED_PATH = path.resolve(util.format('%s/%s%s', this.BIN_PATH, 'osrm-routed', this.EXE));
-        this.LIB_OSRM_EXTRACT_PATH = util.format('%s/libosrm_extract%s', this.BIN_PATH, this.LIB),
-        this.LIB_OSRM_CONTRACT_PATH = util.format('%s/libosrm_contract%s', this.BIN_PATH, this.LIB),
-        this.LIB_OSRM_PATH = util.format('%s/libosrm%s', this.BIN_PATH, this.LIB);
 
         // eslint-disable-next-line no-console
         console.info(util.format('Node Version', process.version));
         if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** PLease upgrade to Node 4.+ to run OSRM cucumber tests');
 
-        fs.exists(this.TEST_PATH, (exists) => {
-            if (exists)
-                return callback();
-            else
-                return callback(new Error('*** Test folder doesn\'t exist.'));
+        fs.exists(this.TEST_FOLDER, (exists) => {
+            if (!exists) throw new Error(util.format('*** Test folder %s doesn\'t exist.', this.TEST_FOLDER));
+            callback();
         });
     };
 
-    this.getProfilePath = (profile) => {
-        return path.resolve(this.PROFILES_PATH, profile + '.lua');
-    };
-
-    this.verifyOSRMIsNotRunning = (callback) => {
-        tryConnect(this.OSRM_PORT, (err) => {
-            if (!err) return callback(new Error('*** osrm-routed is already running.'));
-            else callback();
-        });
+    this.verifyOSRMIsNotRunning = () => {
+        if (this.OSRMLoader.up()) {
+            throw new Error('*** osrm-routed is already running.');
+        }
     };
 
     this.verifyExistenceOfBinaries = (callback) => {
-        var verify = (binPath, cb) => {
+        var verify = (bin, cb) => {
+            var binPath = path.resolve(util.format('%s/%s%s', this.BIN_PATH, bin, this.EXE));
             fs.exists(binPath, (exists) => {
-                if (!exists) return cb(new Error(util.format('%s is missing. Build failed?', binPath)));
+                if (!exists) throw new Error(util.format('%s is missing. Build failed?', binPath));
                 var helpPath = util.format('%s --help > /dev/null 2>&1', binPath);
-                child_process.exec(helpPath, (err) => {
+                exec(helpPath, (err) => {
                     if (err) {
-                        return cb(new Error(util.format('*** %s exited with code %d', helpPath, err.code)));
+                        this.log(util.format('*** Exited with code %d', err.code), 'preprocess');
+                        throw new Error(util.format('*** %s exited with code %d', helpPath, err.code));
                     }
                     cb();
                 });
@@ -101,12 +74,23 @@ module.exports = function () {
         };
 
         var q = d3.queue();
-        [this.OSRM_EXTRACT_PATH, this.OSRM_CONTRACT_PATH, this.OSRM_ROUTED_PATH].forEach(bin => { q.defer(verify, bin); });
-        q.awaitAll(callback);
+        ['osrm-extract', 'osrm-contract', 'osrm-routed'].forEach(bin => { q.defer(verify, bin); });
+        q.awaitAll(() => {
+            callback();
+        });
+    };
+
+    this.AfterConfiguration = (callback) => {
+        this.clearLogFiles(() => {
+            this.verifyOSRMIsNotRunning();
+            this.verifyExistenceOfBinaries(() => {
+                callback();
+            });
+        });
     };
 
     process.on('exit', () => {
-        this.osrmLoader.shutdown(() => {});
+        if (this.OSRMLoader.loader) this.OSRMLoader.shutdown(() => {});
     });
 
     process.on('SIGINT', () => {

@@ -12,11 +12,11 @@ Feature: osrm-extract command line options: version
         Then stderr should be empty
         And stdout should contain 1 line
         And stdout should contain /(v\d{1,2}\.\d{1,2}\.\d{1,2}|\w*-\d+-\w+)/
-        And it should exit successfully
+        And it should exit with code 0
 
     Scenario: osrm-extract - Version, long
         When I run "osrm-extract --version"
         Then stderr should be empty
         And stdout should contain 1 line
         And stdout should contain /(v\d{1,2}\.\d{1,2}\.\d{1,2}|\w*-\d+-\w+)/
-        And it should exit successfully
+        And it should exit with code 0

@@ -29,4 +29,4 @@ Feature: osrm-routed command line options: files
         And stdout should contain /^\[info\] loaded plugin: viaroute/
         And stdout should contain /^\[info\] trial run/
         And stdout should contain /^\[info\] shutdown completed/
-        And it should exit successfully
+        And it should exit with code 0

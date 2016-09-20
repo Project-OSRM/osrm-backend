@@ -2,58 +2,36 @@ var assert = require('assert');
 var fs = require('fs');
 
 module.exports = function () {
-    this.resetOptionsOutput = () => {
-        this.stdout = null;
-        this.stderr = null;
-        this.exitCode = null;
-        this.termSignal = null;
-    };
-
-    this.runAndSafeOutput = (binary, options, callback) => {
-        this.runBin(binary, this.expandOptions(options), this.environment, (err, stdout, stderr) => {
-            this.stdout = stdout;
-            this.stderr = stderr;
-            this.exitCode = err && err.code || 0;
-            this.termSignal = err && err.signal || '';
-            callback(err);
-        });
-    };
-
     this.When(/^I run "osrm\-routed\s?(.*?)"$/, { timeout: this.TIMEOUT }, (options, callback) => {
-        this.runAndSafeOutput('osrm-routed', options, callback);
+        this.runBin('osrm-routed', options, () => {
+            callback();
+        });
     });
 
     this.When(/^I run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-extract', options, callback);
+        this.runBin('osrm-extract', options, () => {
+            callback();
+        });
     });
 
     this.When(/^I run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-contract', options, callback);
-    });
-
-    this.When(/^I try to run "osrm\-routed\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-routed', options, () => { callback(); });
-    });
-
-    this.When(/^I try to run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-extract', options, () => { callback(); });
-    });
-
-    this.When(/^I try to run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-contract', options, () => { callback(); });
+        this.runBin('osrm-contract', options, () => {
+            callback();
+        });
     });
 
     this.When(/^I run "osrm\-datastore\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-datastore', options, callback);
+        this.runBin('osrm-datastore', options, () => {
+            callback();
+        });
     });
 
-    this.Then(/^it should exit successfully$/, () => {
-        assert.equal(this.exitCode, 0);
-        assert.equal(this.termSignal, '');
+    this.Then(/^it should exit with code (\d+)$/, (code) => {
+        assert.equal(this.exitCode, parseInt(code));
     });
 
-    this.Then(/^it should exit with an error$/, () => {
-        assert.ok(this.exitCode !== 0 || this.termSignal);
+    this.Then(/^it should exit with code not (\d+)$/, (code) => {
+        assert.notEqual(this.exitCode, parseInt(code));
     });
 
     this.Then(/^stdout should contain "(.*?)"$/, (str) => {
@@ -87,7 +65,7 @@ module.exports = function () {
     });
 
     this.Then(/^datasource names should contain "(.+)"$/, (expectedData) => {
-        var actualData = fs.readFileSync(this.processedCacheFile + '.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
+        var actualData = fs.readFileSync(this.osmData.extractedFile + '.osrm.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
         assert.equal(actualData, expectedData);
     });
 

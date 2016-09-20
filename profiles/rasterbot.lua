@@ -21,12 +21,8 @@ function way_function (way, result)
 end
 
 function source_function ()
-  local path = os.getenv('OSRM_RASTER_SOURCE')
-  if not path then
-    path = "rastersource.asc"
-  end
   raster_source = sources:load(
-    path,
+    "../test/rastersource.asc",
     0,    -- lon_min
     0.1,  -- lon_max
     0,    -- lat_min

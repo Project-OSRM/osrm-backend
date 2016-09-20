@@ -1,7 +1,11 @@
 'use strict';
 
-const builder = require('xmlbuilder');
-const ensureDecimal = require('./utils').ensureDecimal;
+var builder = require('xmlbuilder');
+
+var ensureDecimal = (i) => {
+    if (parseInt(i) === i) return i.toFixed(1);
+    else return i;
+};
 
 class DB {
     constructor () {

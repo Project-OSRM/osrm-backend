@@ -13,7 +13,7 @@ module.exports = function () {
             }
 
             this.reprocessAndLoadData((e) => {
-                if (e) return callback(e);
+                if (e) callback(e);
                 var testRow = (row, i, cb) => {
                     var outputRow = row;
 
@@ -40,6 +40,10 @@ module.exports = function () {
                                 outputRow[direction] = row[direction];
                             }
                         });
+
+                        if (outputRow != row) {
+                            this.logFail(row, outputRow, result);
+                        }
 
                         cb(null, outputRow);
                     });
@@ -112,7 +116,7 @@ module.exports = function () {
                     sq.defer(parseRes, key);
                 });
 
-                sq.awaitAll((err) => { cb(err, result); });
+                sq.awaitAll(() => { cb(null, result); });
             });
     };
 };

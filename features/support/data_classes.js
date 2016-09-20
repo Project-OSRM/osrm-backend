@@ -1,12 +1,50 @@
 'use strict';
 
-const util = require('util');
+var util = require('util');
+var path = require('path');
 
 module.exports = {
     Location: class {
         constructor (lon, lat) {
             this.lon = lon;
             this.lat = lat;
+        }
+    },
+
+    osmData: class {
+        constructor (scope) {
+            this.scope          = scope;
+            this.str            = null;
+            this.hash           = null;
+            this.fingerprintOSM = null;
+            this.osmFile        = null;
+            this.extractedFile  = null;
+            this.contractedFile   = null;
+        }
+
+        populate (callback) {
+            this.scope.OSMDB.toXML((str) => {
+                this.str = str;
+
+                this.hash = this.scope.hashString(str);
+                this.fingerprintOSM = this.scope.hashString(this.hash);
+
+                this.osmFile        = path.resolve(this.scope.DATA_FOLDER, this.fingerprintOSM);
+
+                this.extractedFile  = path.resolve([this.osmFile, this.scope.fingerprintExtract].join('_'));
+                this.contractedFile   = path.resolve([this.osmFile, this.scope.fingerprintExtract, this.scope.fingerprintContract].join('_'));
+
+                callback();
+            });
+        }
+
+        reset () {
+            this.str            = null;
+            this.hash           = null;
+            this.fingerprintOSM = null;
+            this.osmFile        = null;
+            this.extractedFile  = null;
+            this.contractedFile   = null;
         }
     },
 

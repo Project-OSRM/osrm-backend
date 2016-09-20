@@ -1,61 +1,36 @@
-'use strict';
-
-var d3 = require('d3-queue');
-var path = require('path');
-var mkdirp = require('mkdirp');
-var rimraf = require('rimraf');
-var OSM = require('../lib/osm');
-var OSRMLoader = require('../lib/osrm_loader');
+var util = require('util');
 
 module.exports = function () {
-    this.registerHandler('BeforeFeatures', {timeout: 30000},  (features, callback) => {
-        this.osrmLoader = new OSRMLoader(this);
-        this.OSMDB = new OSM.DB();
-
-        let queue = d3.queue(1);
-        queue.defer(this.initializeEnv.bind(this));
-        queue.defer(this.verifyOSRMIsNotRunning.bind(this));
-        queue.defer(this.verifyExistenceOfBinaries.bind(this));
-        queue.defer(this.initializeCache.bind(this));
-        queue.defer(this.setupFeatures.bind(this, features));
-        queue.awaitAll(callback);
-    });
-
-    this.BeforeFeature((feature, callback) => {
-        this.profile = this.DEFAULT_PROFILE;
-        this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
-        this.setupFeatureCache(feature);
-        callback();
+    this.BeforeFeatures((features, callback) => {
+        this.pid = null;
+        this.initializeEnv(() => {
+            this.initializeOptions(callback);
+        });
     });
 
     this.Before((scenario, callback) => {
-        this.osrmLoader.setLoadMethod(this.DEFAULT_LOAD_METHOD);
+        this.scenarioTitle = scenario.getName();
+
+        this.loadMethod = this.DEFAULT_LOAD_METHOD;
+        this.queryParams = {};
+        var d = new Date();
+        this.scenarioTime = util.format('%d-%d-%dT%s:%s:%sZ', d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds());
+        this.resetData();
+        this.hasLoggedPreprocessInfo = false;
+        this.hasLoggedScenarioInfo = false;
         this.setGridSize(this.DEFAULT_GRID_SIZE);
         this.setOrigin(this.DEFAULT_ORIGIN);
-        this.queryParams = {};
-        this.extractArgs = '';
-        this.contractArgs = '';
-        this.environment = Object.assign(this.DEFAULT_ENVIRONMENT);
-        this.resetOSM();
-
-        this.scenarioID = this.getScenarioID(scenario);
-        this.setupScenarioCache(this.scenarioID);
-
-        // setup output logging
-        let logDir = path.join(this.LOGS_PATH, this.featureID);
-        this.scenarioLogFile = path.join(logDir, this.scenarioID) + '.log';
-        d3.queue(1)
-            .defer(mkdirp, logDir)
-            .defer(rimraf, this.scenarioLogFile)
-            .awaitAll(callback);
+        this.fingerprintExtract = this.hashString([this.luaLibHash, this.binExtractHash].join('-'));
+        this.fingerprintContract = this.hashString(this.binContractHash);
+        callback();
     });
 
     this.After((scenario, callback) => {
-        this.resetOptionsOutput();
-        callback();
-    });
-
-    this.AfterFeatures((features, callback) => {
-        callback();
+        this.setExtractArgs('', () => {
+            this.setContractArgs('', () => {
+                if (this.loadMethod === 'directly' && !!this.OSRMLoader.loader) this.OSRMLoader.shutdown(callback);
+                else callback();
+            });
+        });
     });
 };

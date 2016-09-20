@@ -1,7 +1,8 @@
 @prepare @options @files
 Feature: osrm-contract command line options: datasources
 # expansions:
-# {processed_file} => path to .osrm file
+# {extracted_base} => path to current extracted input file
+# {profile} => path to current profile script
 
     Background:
         Given the profile "testbot"
@@ -23,6 +24,7 @@ Feature: osrm-contract command line options: datasources
         And the data has been extracted
 
     Scenario: osrm-contract - Passing base file
-        When I run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
-        Then datasource names should contain "lua profile,25_osrmcontract_passing_base_file_speeds"
-        And it should exit successfully
+        When I run "osrm-contract --segment-speed-file speeds.csv {extracted_base}.osrm"
+        Then stderr should be empty
+        And datasource names should contain "lua profile,speeds"
+        And it should exit with code 0
