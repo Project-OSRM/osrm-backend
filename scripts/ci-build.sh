@@ -11,6 +11,8 @@ fi
 INSTALL_PREFIX=$(realpath $1)
 
 export CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export BUILD_TYPE=${BUILD_TYPE:-Debug}
+export JOBS=${JOBS:-2}
 
 # ensure we start inside the osrm-backend directory (one level up)
 cd ${CURRENT_DIR}/../
