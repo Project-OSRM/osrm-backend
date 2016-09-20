@@ -44,7 +44,7 @@ module.exports = function () {
         // with lots of log output
         let child = child_process.execFile(cmd, opts, {maxBuffer: 1024 * 1024 * 1000, env: env}, callback);
         child.on('exit', function(code) {
-            log.end(util.format('*** %s exited with code %d\n', bin, code));
+            log.write(util.format('*** %s exited with code %d\n', bin, code));
         }.bind(this));
         this.setupOutputLog(child, log);
         return child;
