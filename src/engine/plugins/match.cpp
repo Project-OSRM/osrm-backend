@@ -153,15 +153,11 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
                        parameters.radiuses.end(),
                        search_radiuses.begin(),
                        [](const boost::optional<double> &maybe_radius) {
-                           if (maybe_radius)
-                           {
-                               return *maybe_radius * RADIUS_MULTIPLIER;
-                           }
-                           else
-                           {
-                               return DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
-                           }
+                           double in_radius = maybe_radius ? *maybe_radius : DEFAULT_GPS_PRECISION;
 
+                           return std::min(
+                               in_radius * parameters.search_radius_multiplier + parameters.search_radius_base,
+                               parameters.search_radius_max);
                        });
     }
 
