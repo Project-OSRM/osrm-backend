@@ -21,7 +21,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-trip-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And it should exit successfully
+        And it should exit with code 0
 
     Scenario: osrm-routed - Help, short
         When I run "osrm-routed -h"
@@ -40,7 +40,7 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-trip-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And it should exit successfully
+        And it should exit with code 0
 
     Scenario: osrm-routed - Help, long
         When I run "osrm-routed --help"
@@ -59,4 +59,4 @@ Feature: osrm-routed command line options: help
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-table-size"
         And stdout should contain "--max-matching-size"
-        And it should exit successfully
+        And it should exit with code 0

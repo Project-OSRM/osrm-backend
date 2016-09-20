@@ -51,7 +51,7 @@ module.exports = function () {
     });
 
     this.Then(/^"([^"]*)" should return code (\d+)$/, (binary, code) => {
-        assert.ok(this.processError instanceof Error);
+        assert.ok(this.processError instanceof this.OSRMError);
         assert.equal(this.processError.process, binary);
         assert.equal(parseInt(this.processError.code), parseInt(code));
     });

@@ -1,8 +1,7 @@
 'use strict';
 
-const Timeout = require('node-timeout');
-const request = require('request');
-const ensureDecimal = require('../lib/utils').ensureDecimal;
+var Timeout = require('node-timeout');
+var request = require('request');
 
 module.exports = function () {
     this.requestPath = (service, params, callback) => {
@@ -43,7 +42,7 @@ module.exports = function () {
     };
 
     var encodeWaypoints = (waypoints) => {
-        return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
+        return waypoints.map(w => [w.lon, w.lat].map(this.ensureDecimal).join(','));
     };
 
     this.requestRoute = (waypoints, bearings, userParams, callback) => {

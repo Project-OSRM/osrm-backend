@@ -620,7 +620,7 @@ Feature: Turn Lane Guidance
             | a,d       | hwy,hwy       | depart,arrive                       | ,                                                                            |
             | a,e       | hwy,ramp,ramp | depart,off ramp slight right,arrive | ,straight:false straight:false straight;slight right:true slight right:true, |
 
-    @todo
+    @bug @todo
     Scenario: Turning Off Ramp
         Given the node map
             |   | a |   |

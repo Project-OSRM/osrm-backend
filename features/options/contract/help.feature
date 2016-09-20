@@ -2,7 +2,7 @@
 Feature: osrm-contract command line options: help
 
     Scenario: osrm-contract - Help should be shown when no options are passed
-        When I try to run "osrm-contract"
+        When I run "osrm-contract"
         Then stderr should be empty
         And stdout should contain "osrm-contract <input.osrm> [options]:"
         And stdout should contain "Options:"
@@ -13,7 +13,7 @@ Feature: osrm-contract command line options: help
         And stdout should contain "--core"
         And stdout should contain "--level-cache"
         And stdout should contain "--segment-speed-file"
-        And it should exit with an error
+        And it should exit with code 1
 
     Scenario: osrm-contract - Help, short
         When I run "osrm-contract -h"
@@ -27,7 +27,7 @@ Feature: osrm-contract command line options: help
         And stdout should contain "--core"
         And stdout should contain "--level-cache"
         And stdout should contain "--segment-speed-file"
-        And it should exit successfully
+        And it should exit with code 0
 
     Scenario: osrm-contract - Help, long
         When I run "osrm-contract --help"
@@ -41,4 +41,4 @@ Feature: osrm-contract command line options: help
         And stdout should contain "--core"
         And stdout should contain "--level-cache"
         And stdout should contain "--segment-speed-file"
-        And it should exit successfully
+        And it should exit with code 0
