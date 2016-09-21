@@ -5,6 +5,7 @@
       - added left_hand_driving flag in global profile properties
       - modified turn penalty function for car profile - better fit to real data
       - return `ref` and `name` as separate fields. Do no use ref or destination as fallback for name value
+      - the default profile for car now ignores HOV only roads
     - Guidance
       - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
     - API:
