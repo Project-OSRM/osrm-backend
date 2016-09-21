@@ -1,5 +1,7 @@
 # 5.4.0-rc.5
   - Changes from 5.4.0-rc.4
+    - Profiles
+      - The defautl profile for car now excludes HOV only routes in navigation by default
     - Bugfixes
       - Fixed a bug that could result in endless loops in combination with sliproads
 
