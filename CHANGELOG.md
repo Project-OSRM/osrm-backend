@@ -1,5 +1,7 @@
 # 5.4.0-rc.5
   - Changes from 5.4.0-rc.4
+    - Guidance
+      - Improved detection of obvious name changes
     - Profiles
       - The defautl profile for car now excludes HOV only routes in navigation by default
     - Bugfixes
