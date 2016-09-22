@@ -152,9 +152,17 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     const auto check_valid = [this, source_edge_data](const ConnectedRoad &road) {
         const auto road_edge_data = node_based_graph.GetEdgeData(road.eid);
         // Test to see if the source edge and the one we're looking at are the same road
+
+        const auto same_name = !util::guidance::requiresNameAnnounced(
+            name_table.GetNameForID(road_edge_data.name_id),
+            name_table.GetRefForID(road_edge_data.name_id),
+            name_table.GetNameForID(source_edge_data.name_id),
+            name_table.GetRefForID(source_edge_data.name_id),
+            street_name_suffix_table);
+
         return road_edge_data.road_classification == source_edge_data.road_classification &&
-               road_edge_data.name_id != EMPTY_NAMEID &&
-               road_edge_data.name_id == source_edge_data.name_id && road.entry_allowed;
+               road_edge_data.name_id != EMPTY_NAMEID && source_edge_data.name_id != EMPTY_NAMEID &&
+               same_name && road.entry_allowed;
     };
 
     if (!check_valid(next_road))
@@ -215,8 +223,17 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                     std::find_if(target_intersection.begin() + 1,
                                  target_intersection.end(),
                                  [this, &link_data](const ConnectedRoad &road) {
-                                     return node_based_graph.GetEdgeData(road.eid).name_id ==
-                                            link_data.name_id;
+                                     const auto &road_edge_data =
+                                         node_based_graph.GetEdgeData(road.eid);
+
+                                     const auto same_name = !util::guidance::requiresNameAnnounced(
+                                         name_table.GetNameForID(road_edge_data.name_id),
+                                         name_table.GetRefForID(road_edge_data.name_id),
+                                         name_table.GetNameForID(link_data.name_id),
+                                         name_table.GetRefForID(link_data.name_id),
+                                         street_name_suffix_table);
+
+                                     return same_name;
                                  });
 
             // if the sliproad candidate is a through street, we cannot handle it as a sliproad
@@ -254,7 +271,15 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     if (next_road.instruction.type == TurnType::Fork)
     {
         const auto &next_data = node_based_graph.GetEdgeData(next_road.eid);
-        if (next_data.name_id == source_edge_data.name_id)
+
+        const auto same_name = !util::guidance::requiresNameAnnounced(
+            name_table.GetNameForID(next_data.name_id),
+            name_table.GetRefForID(next_data.name_id),
+            name_table.GetNameForID(source_edge_data.name_id),
+            name_table.GetRefForID(source_edge_data.name_id),
+            street_name_suffix_table);
+
+        if (same_name)
         {
             if (angularDeviation(next_road.angle, STRAIGHT_ANGLE) < 5)
                 intersection[obvious_turn_index].instruction.type = TurnType::Suppressed;

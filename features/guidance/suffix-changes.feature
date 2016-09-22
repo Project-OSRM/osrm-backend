@@ -94,9 +94,9 @@ Feature: Suppress New Names on dedicated Suffices
             | bd     | 42 E |
 
        When I route I should get
-            | waypoints | route          | turns                    |
-            | a,c       | 42 N,42 S      | depart,arrive            |
-            | a,d       | 42 N,42 E,42 E | depart,turn right,arrive |
+            | waypoints | route          | turns                        |
+            | a,c       | 42 N,42 S      | depart,arrive                |
+            | a,d       | 42 N,42 E,42 E | depart,continue right,arrive |
 
     Scenario: Suffix To No Suffix
         Given the node map

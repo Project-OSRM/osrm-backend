@@ -120,8 +120,17 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         for (const auto &road : intersection)
         {
             const auto &out_data = node_based_graph.GetEdgeData(road.eid);
-            if (road.angle != 0 && in_data.name_id == out_data.name_id &&
-                in_data.name_id != EMPTY_NAMEID && isMotorwayClass(road.eid, node_based_graph))
+
+            const auto same_name =
+                !util::guidance::requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
+                                                       name_table.GetRefForID(in_data.name_id),
+                                                       name_table.GetNameForID(out_data.name_id),
+                                                       name_table.GetRefForID(out_data.name_id),
+                                                       street_name_suffix_table);
+
+            if (road.angle != 0 && in_data.name_id != EMPTY_NAMEID &&
+                out_data.name_id != EMPTY_NAMEID && same_name &&
+                isMotorwayClass(road.eid, node_based_graph))
                 return road.angle;
         }
         return intersection[0].angle;
@@ -352,6 +361,17 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
     }
     else if (intersection.size() == 3)
     {
+        const auto &second_intersection_data =
+            node_based_graph.GetEdgeData(intersection[2].eid);
+        const auto &first_intersection_data =
+            node_based_graph.GetEdgeData(intersection[1].eid);
+        const auto first_second_same_name = !util::guidance::requiresNameAnnounced(
+            name_table.GetNameForID(second_intersection_data.name_id),
+            name_table.GetRefForID(second_intersection_data.name_id),
+            name_table.GetNameForID(first_intersection_data.name_id),
+            name_table.GetRefForID(first_intersection_data.name_id),
+            street_name_suffix_table);
+
         // merging onto a passing highway / or two ramps merging onto the same highway
         if (num_valid_turns == 1)
         {
@@ -367,9 +387,8 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
             if (intersection[1].entry_allowed)
             {
                 if (isMotorwayClass(intersection[1].eid, node_based_graph) &&
-                    node_based_graph.GetEdgeData(intersection[2].eid).name_id != EMPTY_NAMEID &&
-                    node_based_graph.GetEdgeData(intersection[2].eid).name_id ==
-                        node_based_graph.GetEdgeData(intersection[1].eid).name_id)
+                    second_intersection_data.name_id != EMPTY_NAMEID &&
+                    first_intersection_data.name_id != EMPTY_NAMEID && first_second_same_name)
                 {
                     // circular order indicates a merge to the left (0-3 onto 4
                     if (angularDeviation(intersection[1].angle, STRAIGHT_ANGLE) <
@@ -393,9 +412,8 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
             {
                 BOOST_ASSERT(intersection[2].entry_allowed);
                 if (isMotorwayClass(intersection[2].eid, node_based_graph) &&
-                    node_based_graph.GetEdgeData(intersection[1].eid).name_id != EMPTY_NAMEID &&
-                    node_based_graph.GetEdgeData(intersection[2].eid).name_id ==
-                        node_based_graph.GetEdgeData(intersection[1].eid).name_id)
+                    second_intersection_data.name_id != EMPTY_NAMEID &&
+                    first_intersection_data.name_id != EMPTY_NAMEID && first_second_same_name)
                 {
                     // circular order (5-0) onto 4
                     if (angularDeviation(intersection[2].angle, STRAIGHT_ANGLE) <
