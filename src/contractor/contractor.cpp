@@ -46,17 +46,19 @@
 namespace std
 {
 
-template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
+template <> struct hash<std::pair<osrm::OSMNodeID, osrm::OSMNodeID>>
 {
-    std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const noexcept
+    std::size_t operator()(const std::pair<osrm::OSMNodeID, osrm::OSMNodeID> &k) const noexcept
     {
         return static_cast<uint64_t>(k.first) ^ (static_cast<uint64_t>(k.second) << 12);
     }
 };
 
-template <> struct hash<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>>
+template <> struct hash<std::tuple<osrm::OSMNodeID, osrm::OSMNodeID, osrm::OSMNodeID>>
 {
-    std::size_t operator()(const std::tuple<OSMNodeID, OSMNodeID, OSMNodeID> &k) const noexcept
+    std::size_t
+    operator()(const std::tuple<osrm::OSMNodeID, osrm::OSMNodeID, osrm::OSMNodeID> &k) const
+        noexcept
     {
         std::size_t seed = 0;
         boost::hash_combine(seed, static_cast<uint64_t>(std::get<0>(k)));

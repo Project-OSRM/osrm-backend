@@ -23,6 +23,9 @@
 
 namespace
 {
+// for osrm:: prefixed typedefs (e.g. node/way id types)
+using namespace osrm;
+
 namespace oe = osrm::extractor;
 
 // Needed for STXXL comparison - STXXL requires max_value(), min_value(), so we can not use

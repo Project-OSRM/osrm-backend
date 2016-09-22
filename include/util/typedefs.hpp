@@ -36,12 +36,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <limits>
 
+namespace osrm
+{
+
 // OpenStreetMap node ids are higher than 2^32
 OSRM_STRONG_TYPEDEF(std::uint64_t, OSMNodeID)
-OSRM_STRONG_TYPEDEF_HASHABLE(std::uint64_t, OSMNodeID)
 
 OSRM_STRONG_TYPEDEF(std::uint32_t, OSMWayID)
-OSRM_STRONG_TYPEDEF_HASHABLE(std::uint32_t, OSMWayID)
 
 static const OSMNodeID SPECIAL_OSM_NODEID = OSMNodeID{std::numeric_limits<std::uint64_t>::max()};
 static const OSMWayID SPECIAL_OSM_WAYID = OSMWayID{std::numeric_limits<std::uint32_t>::max()};
@@ -114,5 +115,11 @@ struct GeometryID
 
 
 static_assert(sizeof(SegmentID) == 4, "SegmentID needs to be 4 bytes big");
+}
+
+// Hashable specializes std::hash and therefore needs to live in the global namespace
+// so it can expand into namespace std { ..
+OSRM_STRONG_TYPEDEF_HASHABLE(decltype(osrm::OSMNodeID::__value), osrm::OSMNodeID)
+OSRM_STRONG_TYPEDEF_HASHABLE(decltype(osrm::OSMWayID::__value), osrm::OSMWayID)
 
 #endif /* TYPEDEFS_H */
