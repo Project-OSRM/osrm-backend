@@ -3,7 +3,7 @@
     - Guidance
       - Improved detection of obvious name changes
     - Profiles
-      - The defautl profile for car now excludes HOV only routes in navigation by default
+      - The default profile for car now excludes HOV-only routes in navigation by default
     - Bugfixes
       - Fixed a bug that could result in endless loops in combination with sliproads
 
