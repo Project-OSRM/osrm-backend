@@ -1,6 +1,5 @@
 #include "extractor/extractor.hpp"
 #include "extractor/extractor_config.hpp"
-#include "extractor/scripting_environment_lua.hpp"
 #include "util/simple_logger.hpp"
 #include "util/version.hpp"
 
@@ -149,11 +148,7 @@ int main(int argc, char *argv[]) try
             << "Profile " << extractor_config.profile_path.string() << " not found!";
         return EXIT_FAILURE;
     }
-
-    // setup scripting environment
-    extractor::LuaScriptingEnvironment scripting_environment(
-        extractor_config.profile_path.string().c_str());
-    return extractor::Extractor(extractor_config).run(scripting_environment);
+    return extractor::Extractor(extractor_config).run();
 }
 catch (const std::bad_alloc &e)
 {

@@ -44,20 +44,20 @@ namespace osrm
 namespace extractor
 {
 
-class ScriptingEnvironment;
 struct ProfileProperties;
 
 class Extractor
 {
   public:
     Extractor(ExtractorConfig extractor_config) : config(std::move(extractor_config)) {}
-    int run(ScriptingEnvironment &scripting_environment);
+    int run();
 
   private:
     ExtractorConfig config;
 
     std::pair<std::size_t, EdgeID>
-    BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
+    BuildEdgeExpandedGraph(lua_State *lua_state,
+                           const ProfileProperties &profile_properties,
                            std::vector<QueryNode> &internal_to_external_node_map,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
