@@ -419,8 +419,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             for (const auto turn : possible_turns)
             {
-                const double turn_angle = turn.angle;
-
                 // only add an edge if turn is not prohibited
                 const EdgeData &edge_data1 = m_node_based_graph->GetEdgeData(edge_from_u);
                 const EdgeData &edge_data2 = m_node_based_graph->GetEdgeData(turn.eid);
@@ -630,7 +628,7 @@ int EdgeBasedGraphFactory::GetTurnPenalty(double angle, lua_State *lua_state) co
     try
     {
         // call lua profile to compute turn penalty
-        double penalty = luabind::call_function<double>(lua_state, "turn_function", 180. - angle);
+        double penalty = luabind::call_function<double>(lua_state, "turn_function", angle);
         BOOST_ASSERT(penalty < std::numeric_limits<int>::max());
         BOOST_ASSERT(penalty > std::numeric_limits<int>::min());
         return boost::numeric_cast<int>(penalty);

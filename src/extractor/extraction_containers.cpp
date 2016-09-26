@@ -151,7 +151,6 @@ void ExtractionContainers::PrepareData(const std::string &output_file_name,
         WriteRestrictions(restrictions_file_name);
 
         WriteCharData(name_file_name);
-        WriteTurnLaneMasks(turn_lane_file_name, turn_lane_offsets, turn_lane_masks);
 }
 
 void ExtractionContainers::WriteCharData(const std::string &file_name)

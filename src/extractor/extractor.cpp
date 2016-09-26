@@ -111,6 +111,7 @@ transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map
  */
 int Extractor::run()
 {
+    ScriptingEnvironment scripting_environment(config.profile_path.string().c_str());
     {
         util::LogPolicy::GetInstance().Unmute();
         TIMER_START(extracting);
