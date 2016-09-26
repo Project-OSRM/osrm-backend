@@ -69,15 +69,15 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
         raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
         auto &last_inserted = raw_route.segment_end_coordinates.back();
         // enable forward direction if possible
-        if (last_inserted.source_phantom.forward_segment_id.id != SPECIAL_SEGMENTID)
+        if (last_inserted.source_phantom.edge_data.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
-            last_inserted.source_phantom.forward_segment_id.enabled |=
+            last_inserted.source_phantom.edge_data.forward_segment_id.enabled |=
                 !continue_straight_at_waypoint;
         }
         // enable reverse direction if possible
-        if (last_inserted.source_phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
+        if (last_inserted.source_phantom.edge_data.reverse_segment_id.id != SPECIAL_SEGMENTID)
         {
-            last_inserted.source_phantom.reverse_segment_id.enabled |=
+            last_inserted.source_phantom.edge_data.reverse_segment_id.enabled |=
                 !continue_straight_at_waypoint;
         }
     };

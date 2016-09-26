@@ -49,13 +49,13 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     const constexpr char *NO_ROTARY_NAME = "";
     const EdgeWeight source_duration =
         source_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight;
-    const auto source_mode = source_traversed_in_reverse ? source_node.backward_travel_mode
-                                                         : source_node.forward_travel_mode;
+    const auto source_mode = source_traversed_in_reverse ? source_node.edge_data.backward_travel_mode
+                                                         : source_node.edge_data.forward_travel_mode;
 
     const EdgeWeight target_duration =
         target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
-    const auto target_mode = target_traversed_in_reverse ? target_node.backward_travel_mode
-                                                         : target_node.forward_travel_mode;
+    const auto target_mode = target_traversed_in_reverse ? target_node.edge_data.backward_travel_mode
+                                                         : target_node.edge_data.forward_travel_mode;
 
     const auto number_of_segments = leg_geometry.GetNumberOfSegments();
 
@@ -92,7 +92,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
 
         // some name changes are not announced in our processing. For these, we have to keep the
         // first name on the segment
-        auto step_name_id = source_node.name_id;
+        auto step_name_id = source_node.edge_data.name_id;
         for (std::size_t leg_data_index = 0; leg_data_index < leg_data.size(); ++leg_data_index)
         {
             const auto &path_point = leg_data[leg_data_index];
@@ -129,7 +129,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 }
                 else
                 {
-                    step_name_id = target_node.name_id;
+                    step_name_id = target_node.edge_data.name_id;
                 }
 
                 bearings = detail::getIntermediateBearings(leg_geometry, segment_index);
@@ -186,7 +186,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     // In this case the source + target are on the same edge segment
     else
     {
-        BOOST_ASSERT(source_node.fwd_segment_position == target_node.fwd_segment_position);
+        BOOST_ASSERT(source_node.edge_data.fwd_segment_position == target_node.edge_data.fwd_segment_position);
         //     s     t
         // u-------------v
         // |---| source_duration
@@ -195,11 +195,11 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         int duration = target_duration - source_duration;
         BOOST_ASSERT(duration >= 0);
 
-        steps.push_back(RouteStep{source_node.name_id,
-                                  facade.GetNameForID(source_node.name_id),
-                                  facade.GetRefForID(source_node.name_id),
-                                  facade.GetPronunciationForID(source_node.name_id),
-                                  facade.GetDestinationsForID(source_node.name_id),
+        steps.push_back(RouteStep{source_node.edge_data.name_id,
+                                  facade.GetNameForID(source_node.edge_data.name_id),
+                                  facade.GetRefForID(source_node.edge_data.name_id),
+                                  facade.GetPronunciationForID(source_node.edge_data.name_id),
+                                  facade.GetDestinationsForID(source_node.edge_data.name_id),
                                   NO_ROTARY_NAME,
                                   NO_ROTARY_NAME,
                                   duration / 10.,
@@ -231,11 +231,11 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         {}};
 
     BOOST_ASSERT(!leg_geometry.locations.empty());
-    steps.push_back(RouteStep{target_node.name_id,
-                              facade.GetNameForID(target_node.name_id),
-                              facade.GetRefForID(target_node.name_id),
-                              facade.GetPronunciationForID(target_node.name_id),
-                              facade.GetDestinationsForID(target_node.name_id),
+    steps.push_back(RouteStep{target_node.edge_data.name_id,
+                              facade.GetNameForID(target_node.edge_data.name_id),
+                              facade.GetRefForID(target_node.edge_data.name_id),
+                              facade.GetPronunciationForID(target_node.edge_data.name_id),
+                              facade.GetDestinationsForID(target_node.edge_data.name_id),
                               NO_ROTARY_NAME,
                               NO_ROTARY_NAME,
                               ZERO_DURATION,

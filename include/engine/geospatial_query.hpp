@@ -46,7 +46,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return rtree.SearchInBox(bbox);
     }
 
-    // Returns nearest PhantomNodes in the given bearing range within max_distance.
+    // Returns nearest PhantomNodes within the given max_distance.
     // Does not filter by small/big component!
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
@@ -165,8 +165,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return MakePhantomNodes(input_coordinate, results);
     }
 
-    // Returns the nearest phantom node. If this phantom node is not from a big component
-    // a second phantom node is return that is the nearest coordinate in a big component.
+    // Returns the nearest phantom node within max distance. If this phantom node
+    // is not from a big component a second phantom node is return that is the
+    // nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode>
     NearestPhantomNodeWithAlternativeFromBigComponent(const util::Coordinate input_coordinate,
                                                       const double max_distance) const
@@ -246,7 +247,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                               MakePhantomNode(input_coordinate, results.back()).phantom_node);
     }
 
-    // Returns the nearest phantom node. If this phantom node is not from a big component
+    // Returns the nearest phantom node within given bearing range. If this phantom node is not from a big component
     // a second phantom node is return that is the nearest coordinate in a big component.
     std::pair<PhantomNode, PhantomNode> NearestPhantomNodeWithAlternativeFromBigComponent(
         const util::Coordinate input_coordinate, const int bearing, const int bearing_range) const

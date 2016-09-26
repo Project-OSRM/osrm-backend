@@ -76,7 +76,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
     const auto target_duration =
         target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight;
     if (target_duration > 1)
-        segments.push_back({target_duration, index++, target_node.name_id});
+        segments.push_back({target_duration, index++, target_node.edge_data.name_id});
     // this makes sure that the segment with the lowest position comes first
     std::sort(
         segments.begin(), segments.end(), [](const NamedSegment &lhs, const NamedSegment &rhs) {
@@ -173,7 +173,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(
             route_data, target_node, target_traversed_in_reverse);
         if (route_data.empty())
-            summary_array[0] = source_node.name_id;
+            summary_array[0] = source_node.edge_data.name_id;
 
         BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
         BOOST_ASSERT(summary_array.begin() != summary_array.end());

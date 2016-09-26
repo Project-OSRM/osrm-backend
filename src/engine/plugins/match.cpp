@@ -56,14 +56,14 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
         std::sort(candidates.begin(),
                   candidates.end(),
                   [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
-                      return lhs.phantom_node.forward_segment_id.id <
-                                 rhs.phantom_node.forward_segment_id.id ||
-                             (lhs.phantom_node.forward_segment_id.id ==
-                                  rhs.phantom_node.forward_segment_id.id &&
-                              (lhs.phantom_node.reverse_segment_id.id <
-                                   rhs.phantom_node.reverse_segment_id.id ||
-                               (lhs.phantom_node.reverse_segment_id.id ==
-                                    rhs.phantom_node.reverse_segment_id.id &&
+                      return lhs.phantom_node.edge_data.forward_segment_id.id <
+                                 rhs.phantom_node.edge_data.forward_segment_id.id ||
+                             (lhs.phantom_node.edge_data.forward_segment_id.id ==
+                                  rhs.phantom_node.edge_data.forward_segment_id.id &&
+                              (lhs.phantom_node.edge_data.reverse_segment_id.id <
+                                   rhs.phantom_node.edge_data.reverse_segment_id.id ||
+                               (lhs.phantom_node.edge_data.reverse_segment_id.id ==
+                                    rhs.phantom_node.edge_data.reverse_segment_id.id &&
                                 lhs.distance < rhs.distance)));
                   });
 
@@ -71,10 +71,10 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
             std::unique(candidates.begin(),
                         candidates.end(),
                         [](const PhantomNodeWithDistance &lhs, const PhantomNodeWithDistance &rhs) {
-                            return lhs.phantom_node.forward_segment_id.id ==
-                                       rhs.phantom_node.forward_segment_id.id &&
-                                   lhs.phantom_node.reverse_segment_id.id ==
-                                       rhs.phantom_node.reverse_segment_id.id;
+                            return lhs.phantom_node.edge_data.forward_segment_id.id ==
+                                       rhs.phantom_node.edge_data.forward_segment_id.id &&
+                                   lhs.phantom_node.edge_data.reverse_segment_id.id ==
+                                       rhs.phantom_node.edge_data.reverse_segment_id.id;
                         });
         candidates.resize(new_end - candidates.begin());
 
@@ -84,15 +84,15 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
             for (const auto i : util::irange<std::size_t>(0, compact_size))
             {
                 // Split edge if it is bidirectional and append reverse direction to end of list
-                if (candidates[i].phantom_node.forward_segment_id.enabled &&
-                    candidates[i].phantom_node.reverse_segment_id.enabled)
+                if (candidates[i].phantom_node.edge_data.forward_segment_id.enabled &&
+                    candidates[i].phantom_node.edge_data.reverse_segment_id.enabled)
                 {
                     PhantomNode reverse_node(candidates[i].phantom_node);
-                    reverse_node.forward_segment_id.enabled = false;
+                    reverse_node.edge_data.forward_segment_id.enabled = false;
                     candidates.push_back(
                         PhantomNodeWithDistance{reverse_node, candidates[i].distance});
 
-                    candidates[i].phantom_node.reverse_segment_id.enabled = false;
+                    candidates[i].phantom_node.edge_data.reverse_segment_id.enabled = false;
                 }
             }
         }
