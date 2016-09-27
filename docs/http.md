@@ -38,7 +38,7 @@ http://{server}/{service}/{version}/{profile}/{coordinates}[.{format}]?option=va
     | [`tile`](#service-tile)      | Return vector tiles containing debugging info             |
   
 - `version`: Version of the protocol implemented by the service.
-- `profile`: Mode of transportation, is determined by the profile that is used to prepare the data
+- `profile`: Mode of transportation, is determined statically by the Lua profile that is used to prepare the data using `osrm-extract`.
 - `coordinates`: String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` or `polyline({polyline})`.
 - `format`: Only `json` is supported at the moment. This parameter is optional and defaults to `json`.
 
