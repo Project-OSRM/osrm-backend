@@ -307,9 +307,6 @@ include(check_luabind)
 add_dependency_includes(${LUABIND_INCLUDE_DIR})
 
 set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
-if(LUAJIT_FOUND)
-  set(USED_LUA_LIBRARIES, LUAJIT_LIBRARIES)
-endif()
 add_dependency_includes(${LUA_INCLUDE_DIR})
 
 find_package(EXPAT REQUIRED)
