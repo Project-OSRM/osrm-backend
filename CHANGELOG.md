@@ -1,4 +1,9 @@
 # 5.4.0
+  - Changes from 5.4.0
+    - Profiles
+      - replaced lhs/rhs profiles by using test defined profiles
+
+# 5.4.0
   - Changes from 5.3.0
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
