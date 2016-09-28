@@ -132,7 +132,7 @@ module.exports = function () {
 
     this.summary = (instructions) => {
         if (instructions) {
-            return instructions.legs.map(l => l.summary).join(',');
+            return instructions.legs.map(l => l.summary).join(';');
         }
     };
 

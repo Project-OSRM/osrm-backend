@@ -6,6 +6,7 @@
 #include "engine/guidance/route_leg.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/internal_route_result.hpp"
+#include <boost/algorithm/string/join.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -177,16 +178,16 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
 
         BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
         BOOST_ASSERT(summary_array.begin() != summary_array.end());
-        summary = std::accumulate(std::next(summary_array.begin()),
-                                  summary_array.end(),
-                                  facade.GetNameForID(summary_array.front()),
-                                  [&facade](std::string previous, const std::uint32_t name_id) {
-                                      if (name_id != 0)
-                                      {
-                                          previous += ", " + facade.GetNameForID(name_id);
-                                      }
-                                      return previous;
-                                  });
+        std::vector<std::string> summary_names;
+        for (auto nameIt = summary_array.begin(), end = summary_array.end(); nameIt != end; ++nameIt)
+        {
+            auto name = facade.GetNameForID(* nameIt);
+            name = name.empty() ? facade.GetRefForID(* nameIt) : name;
+            if (!name.empty())
+                summary_names.push_back(name);
+        }
+        BOOST_ASSERT(summary_names.size() =< MAX_USED_SEGMENTS);
+        summary = boost::algorithm::join(summary_names, ", ");
     }
 
     return RouteLeg{duration, distance, summary, {}};
