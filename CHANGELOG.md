@@ -3,6 +3,8 @@
     - Profiles
       - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
       - replaced lhs/rhs profiles by using test defined profiles
+    - Trip Plugin
+      - changed internal behaviour to prefer the smallest lexicographic result over the largest one
 
 # 5.4.0
   - Changes from 5.3.0
