@@ -6,6 +6,7 @@
       - The default profile for car now excludes HOV-only routes in navigation by default
     - Bugfixes
       - Fixed a bug that could result in endless loops in combination with sliproads
+      - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
 
 # 5.4.0-rc.4
   - Changes from 5.4.0-rc.3
@@ -17,6 +18,10 @@
     - Bugfixes
       - BREAKING: Fixed a bug where some roads could be falsly identified as sliproadsi This change requires reprocessing datasets with osrm-extract and osrm-contract
       - BREAKING: Fixed a bug that resulted in false names/ref/destination/pronunciation This change requires reprocessing datasets with osrm-extract and osrm-contract
+      - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
+      - replaced lhs/rhs profiles by using test defined profiles
+    - Trip Plugin
+      - changed internal behaviour to prefer the smallest lexicographic result over the largest one
 
 # 5.4.0
   - Changes from 5.3.0
