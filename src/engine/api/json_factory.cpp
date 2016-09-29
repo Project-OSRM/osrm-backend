@@ -234,9 +234,14 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     util::json::Object route_step;
     route_step.values["distance"] = std::round(step.distance * 10) / 10.;
     route_step.values["duration"] = std::round(step.duration * 10) / 10.;
-    route_step.values["name"] = std::move(step.name);
-    if (!step.ref.empty())
+    route_step.values["way_name"] = std::move(step.name);
+    if (step.ref.empty())
+        route.step.values["name"] = std::move(step.name);
+    else
+    {
+        route_step.values["name"] = std::move(step.name) << " (" << std::move(step.ref) << ")";
         route_step.values["ref"] = std::move(step.ref);
+    }
     if (!step.pronunciation.empty())
         route_step.values["pronunciation"] = std::move(step.pronunciation);
     if (!step.destinations.empty())
