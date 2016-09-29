@@ -265,7 +265,7 @@ module.exports = function () {
     });
 
     this.Given(/^the data has been saved to disk$/, (callback) => {
-        this.reprocess(callback);
+        this.writeAndLinkOSM(callback);
     });
 
     this.Given(/^the data has been extracted$/, (callback) => {

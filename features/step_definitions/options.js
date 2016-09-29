@@ -1,5 +1,7 @@
-var assert = require('assert');
-var fs = require('fs');
+'use strict';
+
+const assert = require('assert');
+const fs = require('fs');
 
 module.exports = function () {
     this.resetOptionsOutput = () => {
@@ -24,11 +26,19 @@ module.exports = function () {
     });
 
     this.When(/^I run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-extract', options, callback);
+        const stamp = this.processedCacheFile + '.extract';
+        this.runAndSafeOutput('osrm-extract', options, (err) => {
+            if (err) return callback(err);
+            fs.writeFile(stamp, 'ok', callback);
+        });
     });
 
     this.When(/^I run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-contract', options, callback);
+        const stamp = this.processedCacheFile + '.contract';
+        this.runAndSafeOutput('osrm-contract', options, (err) => {
+            if (err) return callback(err);
+            fs.writeFile(stamp, 'ok', callback);
+        });
     });
 
     this.When(/^I try to run "osrm\-routed\s?(.*?)"$/, (options, callback) => {
@@ -65,12 +75,12 @@ module.exports = function () {
     });
 
     this.Then(/^stdout should contain \/(.*)\/$/, (regexStr) => {
-        var re = new RegExp(regexStr);
+        const re = new RegExp(regexStr);
         assert.ok(this.stdout.match(re));
     });
 
     this.Then(/^stderr should contain \/(.*)\/$/, (regexStr) => {
-        var re = new RegExp(regexStr);
+        const re = new RegExp(regexStr);
         assert.ok(this.stdout.match(re));
     });
 
@@ -91,7 +101,7 @@ module.exports = function () {
     });
 
     this.Then(/^datasource names should contain "(.+)"$/, (expectedData) => {
-        var actualData = fs.readFileSync(this.processedCacheFile + '.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
+        const actualData = fs.readFileSync(this.processedCacheFile + '.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
         assert.equal(actualData, expectedData);
     });
 
