@@ -204,18 +204,23 @@ module.exports = function () {
         queue.awaitAll(callback);
     };
 
-    this.reprocess = (callback) => {
+    this.writeAndLinkOSM = (callback) => {
         let queue = d3.queue(1);
         queue.defer(this.writeOSM.bind(this));
         queue.defer(this.linkOSM.bind(this));
+        queue.awaitAll(callback);
+    };
+
+    this.reprocess = (callback) => {
+        let queue = d3.queue(1);
+        queue.defer(this.writeAndLinkOSM.bind(this));
         queue.defer(this.extractAndContract.bind(this));
         queue.awaitAll(callback);
     };
 
     this.reprocessAndLoadData = (callback) => {
         let queue = d3.queue(1);
-        queue.defer(this.writeOSM.bind(this));
-        queue.defer(this.linkOSM.bind(this));
+        queue.defer(this.writeAndLinkOSM.bind(this));
         queue.defer(this.extractAndContract.bind(this));
         queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
         queue.awaitAll(callback);
