@@ -47,6 +47,9 @@ namespace osmium {
 
         namespace detail {
 
+            template <typename T>
+            using future_queue_type = osmium::thread::Queue<std::future<T>>;
+
             /**
              * This type of queue contains buffers with OSM data in them.
              * The "end of file" is marked by an invalid Buffer.
@@ -54,7 +57,7 @@ namespace osmium {
              * transport exceptions. The future also helps with keeping the
              * data in order.
              */
-            using future_buffer_queue_type = osmium::thread::Queue<std::future<osmium::memory::Buffer>>;
+            using future_buffer_queue_type = future_queue_type<osmium::memory::Buffer>;
 
             /**
              * This type of queue contains OSM file data in the form it is
@@ -71,24 +74,24 @@ namespace osmium {
              * transport exceptions. The future also helps with keeping the
              * data in order.
              */
-            using future_string_queue_type = osmium::thread::Queue<std::future<std::string>>;
+            using future_string_queue_type = future_queue_type<std::string>;
 
             template <typename T>
-            inline void add_to_queue(osmium::thread::Queue<std::future<T>>& queue, T&& data) {
+            inline void add_to_queue(future_queue_type<T>& queue, T&& data) {
                 std::promise<T> promise;
                 queue.push(promise.get_future());
                 promise.set_value(std::forward<T>(data));
             }
 
             template <typename T>
-            inline void add_to_queue(osmium::thread::Queue<std::future<T>>& queue, std::exception_ptr&& exception) {
+            inline void add_to_queue(future_queue_type<T>& queue, std::exception_ptr&& exception) {
                 std::promise<T> promise;
                 queue.push(promise.get_future());
                 promise.set_exception(std::move(exception));
             }
 
             template <typename T>
-            inline void add_end_of_data_to_queue(osmium::thread::Queue<std::future<T>>& queue) {
+            inline void add_end_of_data_to_queue(future_queue_type<T>& queue) {
                 add_to_queue<T>(queue, T{});
             }
 
@@ -103,14 +106,12 @@ namespace osmium {
             template <typename T>
             class queue_wrapper {
 
-                using queue_type = osmium::thread::Queue<std::future<T>>;
-
-                queue_type& m_queue;
+                future_queue_type<T>& m_queue;
                 bool m_has_reached_end_of_data;
 
             public:
 
-                explicit queue_wrapper(queue_type& queue) :
+                explicit queue_wrapper(future_queue_type<T>& queue) :
                     m_queue(queue),
                     m_has_reached_end_of_data(false) {
                 }

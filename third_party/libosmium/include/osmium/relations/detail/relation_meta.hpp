@@ -117,8 +117,8 @@ namespace osmium {
          */
         struct has_all_members {
 
-            typedef RelationMeta& argument_type;
-            typedef bool result_type;
+            using argument_type = RelationMeta&;
+            using result_type = bool;
 
             /**
              * @returns true if this relation is complete, false otherwise.

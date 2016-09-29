@@ -52,10 +52,10 @@ namespace osmium {
 
             public:
 
-                typedef typename std::pair<TId, TValue> element_type;
-                typedef TVector<element_type> vector_type;
-                typedef typename vector_type::iterator iterator;
-                typedef typename vector_type::const_iterator const_iterator;
+                using element_type   = typename std::pair<TId, TValue>;
+                using vector_type    = TVector<element_type>;
+                using iterator       = typename vector_type::iterator;
+                using const_iterator = typename vector_type::const_iterator;
 
             private:
 
@@ -127,7 +127,7 @@ namespace osmium {
                 }
 
                 void remove(const TId id, const TValue value) {
-                    auto r = get_all(id);
+                    const auto r = get_all(id);
                     for (auto it = r.first; it != r.second; ++it) {
                         if (it->second == value) {
                             it->second = 0;

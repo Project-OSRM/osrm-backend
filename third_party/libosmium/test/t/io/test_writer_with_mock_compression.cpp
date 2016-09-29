@@ -15,7 +15,7 @@ class MockCompressor : public osmium::io::Compressor {
 
 public:
 
-    MockCompressor(const std::string& fail_in) :
+    explicit MockCompressor(const std::string& fail_in) :
         Compressor(osmium::io::fsync::no),
         m_fail_in(fail_in) {
         if (m_fail_in == "constructor") {
@@ -56,8 +56,7 @@ TEST_CASE("Write with mock compressor") {
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
     REQUIRE(buffer.committed() > 0);
-    auto num = std::distance(buffer.cbegin<osmium::OSMObject>(), buffer.cend<osmium::OSMObject>());
-    REQUIRE(num > 0);
+    REQUIRE(buffer.select<osmium::OSMObject>().size() > 0);
 
     SECTION("fail on construction") {
 

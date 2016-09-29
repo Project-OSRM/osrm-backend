@@ -333,5 +333,3 @@
         - `properties.use_turn_restrictions`
         - `properties.u_turn_penalty`
         - `properties.allow_u_turn_at_via`
-
-

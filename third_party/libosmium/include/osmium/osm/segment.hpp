@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <utility>
 
 #include <osmium/osm/location.hpp>
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 

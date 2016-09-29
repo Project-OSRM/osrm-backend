@@ -46,7 +46,7 @@ TEST_CASE("Build way") {
 
     osmium::CRC<boost::crc_32_type> crc32;
     crc32.update(way);
-    REQUIRE(crc32().checksum() == 0x7676d0c2);
+    REQUIRE(crc32().checksum() == 0x65f6ba91);
 }
 
 TEST_CASE("build closed way") {

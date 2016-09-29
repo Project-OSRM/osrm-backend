@@ -75,3 +75,47 @@ TEST_CASE("Timestamp") {
     }
 
 }
+
+TEST_CASE("Valid timestamps") {
+
+    std::vector<std::string> test_cases = {
+        "1970-01-01T00:00:01Z",
+        "2000-01-01T00:00:00Z",
+        "2006-12-31T23:59:59Z",
+        "2030-12-31T23:59:59Z",
+        "2016-02-28T23:59:59Z",
+        "2016-03-31T23:59:59Z"
+    };
+
+    for (const auto& tc : test_cases) {
+        osmium::Timestamp t{tc};
+        REQUIRE(tc == t.to_iso());
+    }
+
+}
+
+TEST_CASE("Invalid timestamps") {
+    REQUIRE_THROWS_AS(osmium::Timestamp{""}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"x"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"xxxxxxxxxxxxxxxxxxxx"}, std::invalid_argument);
+
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01x00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00:00x"}, std::invalid_argument);
+
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000x01-01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01x01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00x00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00x00Z"}, std::invalid_argument);
+
+    REQUIRE_THROWS_AS(osmium::Timestamp{"0000-00-01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-00-01T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-00T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T24:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:60:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-01T00:00:61Z"}, std::invalid_argument);
+
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-01-32T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-02-30T00:00:00Z"}, std::invalid_argument);
+    REQUIRE_THROWS_AS(osmium::Timestamp{"2000-03-32T00:00:00Z"}, std::invalid_argument);
+}
+

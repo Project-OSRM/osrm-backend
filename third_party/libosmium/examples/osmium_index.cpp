@@ -12,7 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <boost/program_options.hpp>
+#include <getopt.h>
 
 #include <osmium/index/map/dense_file_array.hpp>
 #include <osmium/index/map/sparse_file_array.hpp>
@@ -31,7 +31,7 @@ class IndexSearch {
     void dump_dense() {
         dense_index_type index(m_fd);
 
-        for (size_t i = 0; i < index.size(); ++i) {
+        for (std::size_t i = 0; i < index.size(); ++i) {
             if (index.get(i) != TValue()) {
                 std::cout << i << " " << index.get(i) << "\n";
             }
@@ -51,9 +51,9 @@ class IndexSearch {
 
         try {
             TValue value = index.get(key);
-            std::cout << key << " " << value << std::endl;
+            std::cout << key << " " << value << "\n";
         } catch (...) {
-            std::cout << key << " not found" << std::endl;
+            std::cout << key << " not found\n";
             return false;
         }
 
@@ -69,7 +69,7 @@ class IndexSearch {
             return lhs.first < rhs.first;
         });
         if (positions.first == positions.second) {
-            std::cout << key << " not found" << std::endl;
+            std::cout << key << " not found\n";
             return false;
         }
 
@@ -103,7 +103,7 @@ public:
         }
     }
 
-    bool search(std::vector<TKey> keys) {
+    bool search(const std::vector<TKey>& keys) {
         bool found_all = true;
 
         for (const auto key : keys) {
@@ -124,82 +124,105 @@ enum return_code : int {
     fatal     = 3
 };
 
-namespace po = boost::program_options;
-
 class Options {
 
-    po::variables_map vm;
+    std::vector<osmium::unsigned_object_id_type> m_ids;
+    std::string m_type;
+    std::string m_filename;
+    bool m_dump = false;
+    bool m_array_format = false;
+    bool m_list_format = false;
+
+    void print_help() {
+        std::cout << "Usage: osmium_index [OPTIONS]\n\n"
+                  << "-h, --help        Print this help message\n"
+                  << "-a, --array=FILE  Read given index file in array format\n"
+                  << "-l, --list=FILE   Read given index file in list format\n"
+                  << "-d, --dump        Dump contents of index file to STDOUT\n"
+                  << "-s, --search=ID   Search for given id (Option can appear multiple times)\n"
+                  << "-t, --type=TYPE   Type of value ('location' or 'offset')\n"
+        ;
+    }
 
 public:
 
     Options(int argc, char* argv[]) {
-        try {
-            po::options_description desc("Allowed options");
-            desc.add_options()
-                ("help,h", "Print this help message")
-                ("array,a", po::value<std::string>(), "Read given index file in array format")
-                ("list,l", po::value<std::string>(), "Read given index file in list format")
-                ("dump,d", "Dump contents of index file to STDOUT")
-                ("search,s", po::value<std::vector<osmium::unsigned_object_id_type>>(), "Search for given id (Option can appear multiple times)")
-                ("type,t", po::value<std::string>(), "Type of value ('location' or 'offset')")
-            ;
+        static struct option long_options[] = {
+            {"array",  required_argument, 0, 'a'},
+            {"dump",         no_argument, 0, 'd'},
+            {"help",         no_argument, 0, 'h'},
+            {"list",   required_argument, 0, 'l'},
+            {"search", required_argument, 0, 's'},
+            {"type",   required_argument, 0, 't'},
+            {0, 0, 0, 0}
+        };
 
-            po::store(po::parse_command_line(argc, argv, desc), vm);
-            po::notify(vm);
-
-            if (vm.count("help")) {
-                std::cout << desc << "\n";
-                exit(return_code::okay);
+        while (true) {
+            int c = getopt_long(argc, argv, "a:dhl:s:t:", long_options, 0);
+            if (c == -1) {
+                break;
             }
 
-            if (vm.count("array") && vm.count("list")) {
-                std::cerr << "Only option --array or --list allowed." << std::endl;
-                exit(return_code::fatal);
+            switch (c) {
+                case 'a':
+                    m_array_format = true;
+                    m_filename = optarg;
+                    break;
+                case 'd':
+                    m_dump = true;
+                    break;
+                case 'h':
+                    print_help();
+                    std::exit(return_code::okay);
+                case 'l':
+                    m_list_format = true;
+                    m_filename = optarg;
+                    break;
+                case 's':
+                    m_ids.push_back(std::atoll(optarg));
+                    break;
+                case 't':
+                    m_type = optarg;
+                    if (m_type != "location" && m_type != "offset") {
+                        std::cerr << "Unknown type '" << m_type << "'. Must be 'location' or 'offset'.\n";
+                        std::exit(return_code::fatal);
+                    }
+                    break;
+                default:
+                    std::exit(return_code::fatal);
             }
-
-            if (!vm.count("array") && !vm.count("list")) {
-                std::cerr << "Need one of option --array or --list." << std::endl;
-                exit(return_code::fatal);
-            }
-
-            if (!vm.count("type")) {
-                std::cerr << "Need --type argument." << std::endl;
-                exit(return_code::fatal);
-            }
-
-            const std::string& type = vm["type"].as<std::string>();
-            if (type != "location" && type != "offset") {
-                std::cerr << "Unknown type '" << type << "'. Must be 'location' or 'offset'." << std::endl;
-                exit(return_code::fatal);
-            }
-        } catch (boost::program_options::error& e) {
-            std::cerr << "Error parsing command line: " << e.what() << std::endl;
-            exit(return_code::fatal);
         }
-    }
 
-    const std::string& filename() const {
-        if (vm.count("array")) {
-            return vm["array"].as<std::string>();
-        } else {
-            return vm["list"].as<std::string>();
+        if (m_array_format == m_list_format) {
+            std::cerr << "Need option --array or --list, but not both\n";
+            std::exit(return_code::fatal);
         }
+
+        if (m_type.empty()) {
+            std::cerr << "Need --type argument.\n";
+            std::exit(return_code::fatal);
+        }
+
     }
 
-    bool dense_format() const {
-        return vm.count("array") != 0;
+    const std::string& filename() const noexcept {
+        return m_filename;
     }
 
-    bool do_dump() const {
-        return vm.count("dump") != 0;
+    bool dense_format() const noexcept {
+        return m_array_format;
     }
 
-    std::vector<osmium::unsigned_object_id_type> search_keys() const {
-        return vm["search"].as<std::vector<osmium::unsigned_object_id_type>>();
+    bool do_dump() const noexcept {
+        return m_dump;
     }
 
-    bool type_is(const char* type) const {
-        return vm["type"].as<std::string>() == type;
+    const std::vector<osmium::unsigned_object_id_type>& search_keys() const noexcept {
+        return m_ids;
+    }
+
+    bool type_is(const char* type) const noexcept {
+        return m_type == type;
     }
 
 }; // class Options
@@ -232,6 +255,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    exit(result_okay ? return_code::okay : return_code::not_found);
+    std::exit(result_okay ? return_code::okay : return_code::not_found);
 }
 

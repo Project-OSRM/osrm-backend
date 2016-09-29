@@ -33,12 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
+#include <osmium/osm/entity.hpp>
 #include <osmium/osm/item_type.hpp>
-#include <osmium/osm/object.hpp>
-#include <osmium/osm/types.hpp>
 #include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/node_ref_list.hpp>
+#include <osmium/osm/object.hpp>
 
 namespace osmium {
 

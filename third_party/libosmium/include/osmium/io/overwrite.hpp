@@ -34,6 +34,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #pragma message("Including overwrite.hpp is deprecated, #include <osmium/io/writer_options.hpp> instead.")
-#include <osmium/io/writer_options.hpp>
+#include <osmium/io/writer_options.hpp> // IWYU pragma: keep
 
 #endif // OSMIUM_IO_OVERWRITE_HPP

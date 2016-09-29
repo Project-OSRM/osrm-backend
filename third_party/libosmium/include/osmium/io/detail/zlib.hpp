@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <memory>
-#include <stdexcept>
 #include <string>
 
 #include <zlib.h>
+
+#include <protozero/types.hpp>
 
 #include <osmium/io/error.hpp>
 #include <osmium/util/cast.hpp>
@@ -62,7 +62,7 @@ namespace osmium {
 
                 std::string output(output_size, '\0');
 
-                auto result = ::compress(
+                const auto result = ::compress(
                     reinterpret_cast<unsigned char*>(const_cast<char *>(output.data())),
                     &output_size,
                     reinterpret_cast<const unsigned char*>(input.data()),
@@ -89,10 +89,10 @@ namespace osmium {
              * @param output Uncompressed result data.
              * @returns Pointer and size to incompressed data.
              */
-            inline std::pair<const char*, size_t> zlib_uncompress_string(const char* input, unsigned long input_size, unsigned long raw_size, std::string& output) {
+            inline protozero::data_view zlib_uncompress_string(const char* input, unsigned long input_size, unsigned long raw_size, std::string& output) {
                 output.resize(raw_size);
 
-                auto result = ::uncompress(
+                const auto result = ::uncompress(
                     reinterpret_cast<unsigned char*>(&*output.begin()),
                     &raw_size,
                     reinterpret_cast<const unsigned char*>(input),
@@ -103,7 +103,7 @@ namespace osmium {
                     throw io_error(std::string("failed to uncompress data: ") + zError(result));
                 }
 
-                return std::make_pair(output.data(), output.size());
+                return protozero::data_view{output.data(), output.size()};
             }
 
         } // namespace detail

@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cassert>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <string>
 #include <utility>
@@ -100,36 +101,57 @@ namespace osmium {
                 static const size_t max_size = 0;
 #endif
 
-                size_t old_size = out.size();
+                const size_t old_size = out.size();
 
-                int len = string_snprintf(out,
-                                          old_size,
-                                          max_size,
-                                          format,
-                                          std::forward<TArgs>(args)...);
+                const int len = string_snprintf(out,
+                                                old_size,
+                                                max_size,
+                                                format,
+                                                std::forward<TArgs>(args)...);
                 assert(len > 0);
 
                 if (size_t(len) >= max_size) {
 #ifndef NDEBUG
-                    int len2 =
+                    const int len2 =
 #endif
-                               string_snprintf(out,
-                                               old_size,
-                                               size_t(len) + 1,
-                                               format,
-                                               std::forward<TArgs>(args)...);
+                                     string_snprintf(out,
+                                                     old_size,
+                                                     size_t(len) + 1,
+                                                     format,
+                                                     std::forward<TArgs>(args)...);
                     assert(len2 == len);
                 }
 
                 out.resize(old_size + size_t(len));
             }
 
+            // Write out the value with exactly two hex digits.
+            inline void append_2_hex_digits(std::string& out, uint32_t value, const char* const hex_digits) {
+                out += hex_digits[(value >> 4) & 0xf];
+                out += hex_digits[ value       & 0xf];
+            }
+
+            // Write out the value with four or more hex digits.
+            inline void append_min_4_hex_digits(std::string& out, uint32_t value, const char* const hex_digits) {
+                auto
+                v = value & 0xf0000000; if (v) out += hex_digits[v >> 28];
+                v = value & 0x0f000000; if (v) out += hex_digits[v >> 24];
+                v = value & 0x00f00000; if (v) out += hex_digits[v >> 20];
+                v = value & 0x000f0000; if (v) out += hex_digits[v >> 16];
+
+                out += hex_digits[(value >> 12) & 0xf];
+                out += hex_digits[(value >>  8) & 0xf];
+                out += hex_digits[(value >>  4) & 0xf];
+                out += hex_digits[ value        & 0xf];
+            }
+
             inline void append_utf8_encoded_string(std::string& out, const char* data) {
+                static const char* lookup_hex = "0123456789abcdef";
                 const char* end = data + std::strlen(data);
 
                 while (data != end) {
                     const char* last = data;
-                    uint32_t c = utf8::next(data, end);
+                    const uint32_t c = utf8::next(data, end);
 
                     // This is a list of Unicode code points that we let
                     // through instead of escaping them. It is incomplete
@@ -148,9 +170,9 @@ namespace osmium {
                     } else {
                         out += '%';
                         if (c <= 0xff) {
-                            append_printf_formatted_string(out, "%02x", c);
+                            append_2_hex_digits(out, c, lookup_hex);
                         } else {
-                            append_printf_formatted_string(out, "%04x", c);
+                            append_min_4_hex_digits(out, c, lookup_hex);
                         }
                         out += '%';
                     }
@@ -174,6 +196,7 @@ namespace osmium {
             }
 
             inline void append_debug_encoded_string(std::string& out, const char* data, const char* prefix, const char* suffix) {
+                static const char* lookup_hex = "0123456789ABCDEF";
                 const char* end = data + std::strlen(data);
 
                 while (data != end) {
@@ -194,7 +217,9 @@ namespace osmium {
                         out.append(last, data);
                     } else {
                         out.append(prefix);
-                        append_printf_formatted_string(out, "<U+%04X>", c);
+                        out.append("<U+");
+                        append_min_4_hex_digits(out, c, lookup_hex);
+                        out.append(">");
                         out.append(suffix);
                     }
                 }

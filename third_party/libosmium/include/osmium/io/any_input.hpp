@@ -45,8 +45,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/io/any_compression.hpp> // IWYU pragma: export
 
+#include <osmium/io/o5m_input.hpp> // IWYU pragma: export
+#include <osmium/io/opl_input.hpp> // IWYU pragma: export
 #include <osmium/io/pbf_input.hpp> // IWYU pragma: export
 #include <osmium/io/xml_input.hpp> // IWYU pragma: export
-#include <osmium/io/o5m_input.hpp> // IWYU pragma: export
 
 #endif // OSMIUM_IO_ANY_INPUT_HPP

@@ -63,12 +63,11 @@ namespace osmium {
 
             public:
 
-                typedef typename std::multimap<const TId, TValue> collection_type;
-                typedef typename collection_type::iterator iterator;
-                typedef typename collection_type::const_iterator const_iterator;
-                typedef typename collection_type::value_type value_type;
-
-                typedef typename std::pair<TId, TValue> element_type;
+                using collection_type = typename std::multimap<const TId, TValue>;
+                using iterator        = typename collection_type::iterator;
+                using const_iterator  = typename collection_type::const_iterator;
+                using value_type      = typename collection_type::value_type;
+                using element_type    = typename std::pair<TId, TValue>;
 
             private:
 

@@ -70,25 +70,3 @@ TEST_CASE("delta encode and decode") {
 
 }
 
-TEST_CASE("delta encode iterator") {
-    std::vector<int> data = { 4, 5, 13, 22, 12 };
-
-    auto l = [](std::vector<int>::const_iterator it) -> int {
-        return *it;
-    };
-
-    typedef osmium::util::DeltaEncodeIterator<std::vector<int>::const_iterator, decltype(l), int> it_type;
-    it_type it(data.begin(), data.end(), l);
-    it_type end(data.end(), data.end(), l);
-
-    REQUIRE(*it == 4);
-    ++it;
-    REQUIRE(*it++ == 1);
-    REQUIRE(*it == 8);
-    ++it;
-    REQUIRE(*it++ == 9);
-    REQUIRE(*it == -10);
-    ++it;
-    REQUIRE(it == end);
-}
-

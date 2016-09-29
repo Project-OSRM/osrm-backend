@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cerrno>
 #include <cstddef>
-#include <errno.h>
 #include <fcntl.h>
 #include <string>
 #include <system_error>
@@ -84,7 +83,7 @@ namespace osmium {
 #ifdef _WIN32
                 flags |= O_BINARY;
 #endif
-                int fd = ::open(filename.c_str(), flags, 0666);
+                const int fd = ::open(filename.c_str(), flags, 0666);
                 if (fd < 0) {
                     throw std::system_error(errno, std::system_category(), std::string("Open failed for '") + filename + "'");
                 }
@@ -108,7 +107,7 @@ namespace osmium {
 #ifdef _WIN32
                 flags |= O_BINARY;
 #endif
-                int fd = ::open(filename.c_str(), flags);
+                const int fd = ::open(filename.c_str(), flags);
                 if (fd < 0) {
                     throw std::system_error(errno, std::system_category(), std::string("Open failed for '") + filename + "'");
                 }
@@ -133,7 +132,7 @@ namespace osmium {
                     if (write_count > max_write) {
                         write_count = max_write;
                     }
-                    auto length = ::write(fd, output_buffer + offset, static_cast<unsigned int>(write_count));
+                    const auto length = ::write(fd, output_buffer + offset, static_cast<unsigned int>(write_count));
                     if (length < 0) {
                         throw std::system_error(errno, std::system_category(), "Write failed");
                     }

@@ -35,13 +35,14 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cassert>
 #include <cctype>
-#include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include <osmium/osm/entity_bits.hpp>
+#include <osmium/osm/item_type.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/util/cast.hpp>
 
@@ -50,7 +51,7 @@ namespace osmium {
     /**
      * Convert string with object id to object_id_type.
      *
-     * @pre input must not be nullptr.
+     * @pre @code input != nullptr @endcode
      *
      * @param input Input string.
      *
@@ -70,23 +71,29 @@ namespace osmium {
 
     /**
      * Parse string with object type identifier followed by object id. This
-     * reads strings like "n1234" and "w10".
+     * reads strings like "n1234" and "w10". If there is no type prefix,
+     * the default_type is returned.
      *
-     * @pre input must not be nullptr.
+     * @pre @code input != nullptr @endcode
+     * @pre @code types != osmium::osm_entity_bits::nothing @endcode
      *
      * @param input Input string.
      * @param types Allowed types. Must not be osmium::osm_entity_bits::nothing.
+     * @param default_type Type used when there is no type prefix.
      *
      * @returns std::pair of type and id.
      *
      * @throws std::range_error if the value is out of range.
      */
-    inline std::pair<osmium::item_type, osmium::object_id_type> string_to_object_id(const char* input, osmium::osm_entity_bits::type types) {
+    inline std::pair<osmium::item_type, osmium::object_id_type>
+    string_to_object_id(const char* input,
+                        osmium::osm_entity_bits::type types,
+                        osmium::item_type default_type = osmium::item_type::undefined) {
         assert(input);
         assert(types != osmium::osm_entity_bits::nothing);
         if (*input != '\0') {
             if (std::isdigit(*input)) {
-                return std::make_pair(osmium::item_type::undefined, string_to_object_id(input));
+                return std::make_pair(default_type, string_to_object_id(input));
             }
             osmium::item_type t = osmium::char_to_item_type(*input);
             if (osmium::osm_entity_bits::from_item_type(t) & types) {
@@ -126,7 +133,7 @@ namespace osmium {
     }
 
     /**
-     * Convert string with object version to object_version_type.
+     * Convert string with changeset id to changeset_id_type.
      *
      * @pre input must not be nullptr.
      *

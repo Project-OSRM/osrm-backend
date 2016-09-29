@@ -54,9 +54,9 @@ namespace osmium {
                 }
                 assert(config.size() > 1);
                 const std::string& filename = config[1];
-                int fd = ::open(filename.c_str(), O_CREAT | O_RDWR, 0644);
+                const int fd = ::open(filename.c_str(), O_CREAT | O_RDWR, 0644);
                 if (fd == -1) {
-                    throw std::runtime_error(std::string("can't open file '") + filename + "': " + strerror(errno));
+                    throw std::runtime_error(std::string("can't open file '") + filename + "': " + std::strerror(errno));
                 }
                 return new T(fd);
             }

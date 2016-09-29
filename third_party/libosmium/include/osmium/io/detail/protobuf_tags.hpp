@@ -146,7 +146,9 @@ namespace osmium {
                     packed_uint32_keys = 2,
                     packed_uint32_vals = 3,
                     optional_Info_info = 4,
-                    packed_sint64_refs = 8
+                    packed_sint64_refs = 8,
+                    packed_sint64_lat  = 9,
+                    packed_sint64_lon  = 10
                 };
 
                 enum class Relation : protozero::pbf_tag_type {

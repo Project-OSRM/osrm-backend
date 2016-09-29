@@ -78,7 +78,7 @@ namespace osmium {
             // between representation as double and as int
             const int64_t lonlat_resolution = 1000 * 1000 * 1000;
 
-            const int64_t resolution_convert = lonlat_resolution / osmium::Location::coordinate_precision;
+            const int64_t resolution_convert = lonlat_resolution / osmium::detail::coordinate_precision;
 
         } // namespace detail
 
