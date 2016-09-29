@@ -5,6 +5,8 @@
       - replaced lhs/rhs profiles by using test defined profiles
     - Trip Plugin
       - changed internal behaviour to prefer the smallest lexicographic result over the largest one
+    - Bugfixes
+      - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
 
 # 5.4.0
   - Changes from 5.3.0
