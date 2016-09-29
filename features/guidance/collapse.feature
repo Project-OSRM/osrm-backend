@@ -836,5 +836,5 @@ Feature: Collapse
             | ej    | primary |       | off   | yes    |
 
         When I route I should get
-            | waypoints | route                   | turns                                                                          |
-            | k,j       | on,ferry,,ferry,off,off | depart,new name straight,continue uturn,turn straight,new name straight,arrive |
+            | waypoints | route                   | turns                                                                                  |
+            | k,j       | on,ferry,,ferry,off,off | depart,notification straight,continue uturn,turn straight,notification straight,arrive |

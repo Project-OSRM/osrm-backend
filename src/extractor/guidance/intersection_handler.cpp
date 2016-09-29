@@ -110,7 +110,11 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                 else if (in_data.road_classification.IsRampClass() &&
                          out_data.road_classification.IsRampClass())
                 {
-                    return {in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification, getTurnDirection(road.turn.angle)};
+                    // This check is more a precaution than anything else. Our current travel modes
+                    // cannot reach this, since all ramps are exposing the same travel type. But we
+                    // could see toll-type at some point.
+                    return {in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification,
+                            getTurnDirection(road.turn.angle)};
                 }
                 else
                 {
@@ -137,13 +141,15 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
             }
             else
             {
-                return {in_mode == out_mode ? TurnType::NewName : TurnType::Notification, getTurnDirection(road.turn.angle)};
+                return {in_mode == out_mode ? TurnType::NewName : TurnType::Notification,
+                        getTurnDirection(road.turn.angle)};
             }
         }
         // name has not changed, suppress a turn here or indicate mode change
         else
         {
-            return {in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification, getTurnDirection(road.turn.angle)};
+            return {in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification,
+                    getTurnDirection(road.turn.angle)};
         }
     }
     BOOST_ASSERT(type == TurnType::Continue);
