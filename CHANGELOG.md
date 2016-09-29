@@ -1,3 +1,8 @@
+# 5.4.0-rc.6
+  - Changes from 5.4.0-rc.5
+    - Bugfixes
+      - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
+
 # 5.4.0-rc.5
   - Changes from 5.4.0-rc.4
     - Guidance
@@ -6,7 +11,6 @@
       - The default profile for car now excludes HOV-only routes in navigation by default
     - Bugfixes
       - Fixed a bug that could result in endless loops in combination with sliproads
-      - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
 
 # 5.4.0-rc.4
   - Changes from 5.4.0-rc.3
