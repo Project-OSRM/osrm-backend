@@ -231,43 +231,6 @@ Feature: Basic Roundabout
            | j,f       | jk,ef,ef | depart,roundabout-exit-2,arrive |
            | j,c       | jk,bc,bc | depart,roundabout-exit-3,arrive |
 
-       Scenario: Collinear in X
-        Given the node map
-            | a | b | c | d | f |
-            |   |   | e |   |   |
-
-        And the ways
-            | nodes | junction   |
-            | ab    |            |
-            | bcdb  | roundabout |
-            | ce    |            |
-            | df    |            |
-
-        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
-
-    Scenario: Collinear in Y
-        Given the node map
-            |   | a |
-            |   | b |
-            | e | c |
-            |   | d |
-            |   | f |
-
-        And the ways
-            | nodes | junction   |
-            | ab    |            |
-            | bcdb  | roundabout |
-            | ce    |            |
-            | df    |            |
-
-        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
-
     Scenario: Motorway Roundabout
     #See 39.933742 -75.082345
         Given the node map

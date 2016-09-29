@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <unordered_set>
 
 #include <boost/assert.hpp>
 
@@ -145,7 +144,7 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
 // Processing segregated roads would technically require an angle of the turn to be available
 // in postprocessing since we correct the turn-angle in turn-generaion.
 bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
-    const std::set<NodeID> &roundabout_nodes) const
+    const std::unordered_set<NodeID> &roundabout_nodes) const
 {
     // translate a node ID into its respective coordinate stored in the node_info_list
     const auto getCoordinate = [this](const NodeID node) {
@@ -262,10 +261,6 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         }
         return continue_edge;
     };
-    // the roundabout radius has to be the same for all locations we look at it from
-    // to guarantee this, we search the full roundabout for its vertices
-    // and select the three smallest ids
-    std::set<NodeID> roundabout_nodes; // needs to be sorted
 
     // this value is a hard abort to deal with potential self-loops
     const auto countRoundaboutFlags = [&](const NodeID at_node) {
@@ -280,6 +275,25 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         }
         return count;
     };
+
+    const auto getEdgeLength = [&](const NodeID source_node, EdgeID eid) {
+        double length = 0.;
+        auto last_coord = getCoordinate(source_node);
+        const auto &edge_bucket = compressed_edge_container.GetBucketReference(eid);
+        for (const auto &compressed_edge : edge_bucket)
+        {
+            const auto next_coord = getCoordinate(compressed_edge.node_id);
+            length += util::coordinate_calculation::haversineDistance(last_coord, next_coord);
+            last_coord = next_coord;
+        }
+        return length;
+    };
+
+    // the roundabout radius has to be the same for all locations we look at it from
+    // to guarantee this, we search the full roundabout for its vertices
+    // and select the three smallest ids
+    std::unordered_set<NodeID> roundabout_nodes;
+    double roundabout_length = 0.;
 
     NodeID last_node = nid;
     while (0 == roundabout_nodes.count(last_node))
@@ -299,6 +313,8 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
             return RoundaboutType::None;
         }
 
+        roundabout_length += getEdgeLength(last_node, eid);
+
         last_node = node_based_graph.GetTarget(eid);
 
         if (last_node == nid)
@@ -315,31 +331,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         return RoundaboutType::RoundaboutIntersection;
     }
 
-    // calculate the radius of the roundabout/rotary. For two coordinates, we assume a minimal
-    // circle
-    // with both vertices right at the other side (so half their distance in meters).
-    // Otherwise, we construct a circle through the first tree vertices.
-    const auto getRadius = [&roundabout_nodes, &getCoordinate]() {
-        auto node_itr = roundabout_nodes.begin();
-        if (roundabout_nodes.size() == 2)
-        {
-            const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++);
-            return 0.5 * util::coordinate_calculation::haversineDistance(first, second);
-        }
-        else
-        {
-            const auto first = getCoordinate(*node_itr++), second = getCoordinate(*node_itr++),
-                       third = getCoordinate(*node_itr++);
-            return util::coordinate_calculation::circleRadius(first, second, third);
-        }
-    };
-    const double radius = getRadius();
-
-    // check whether the circle computation has gone wrong
-    // The radius computation can result in infinity, if the three coordinates are non-distinct.
-    // To stay on the safe side, we say its not a rotary
-    if (std::isinf(radius))
-        return RoundaboutType::Roundabout;
+    const double radius = roundabout_length / (2 * M_PI);
 
     // Looks like a rotary: large roundabout with dedicated name
     // do we have a dedicated name for the rotary, if not its a roundabout

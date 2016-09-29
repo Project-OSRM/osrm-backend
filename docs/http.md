@@ -249,7 +249,7 @@ http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52
 
 Returns a asymmetric 3x2 matrix with from the polyline encoded locations `qikdcB}~dpXkkHz`:
 ```
-http://router.project-osrm.org/table/v1/driving/qikdcB}~dpXkkHz?sources=0;1;3&destinations=2;4
+http://router.project-osrm.org/table/v1/driving/polyline(egs_Iq_aqAppHzbHulFzeMe`EuvKpnCglA)?sources=0;1;3&destinations=2;4
 ```
 
 ## Service `match`

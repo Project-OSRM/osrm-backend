@@ -100,7 +100,7 @@ std::vector<util::Coordinate> decodePolyline(const std::string &geometry_string)
             b = geometry_string.at(index++) - 63;
             result |= (b & 0x1f) << shift;
             shift += 5;
-        } while (b >= 0x20);
+        } while (b >= 0x20 && index < len);
         int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
         lat += dlat;
 
@@ -111,7 +111,7 @@ std::vector<util::Coordinate> decodePolyline(const std::string &geometry_string)
             b = geometry_string.at(index++) - 63;
             result |= (b & 0x1f) << shift;
             shift += 5;
-        } while (b >= 0x20);
+        } while (b >= 0x20 && index < len);
         int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
         lng += dlng;
 

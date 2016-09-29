@@ -243,9 +243,29 @@ Feature: Basic Roundabout
             | df    |            |
 
         When I route I should get
-            | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+            | waypoints | route    | turns                                         |
+            | a,e       | ab,ce,ce | depart,roundabout turn right exit-1,arrive    |
+            | a,f       | ab,df,df | depart,roundabout turn straight exit-2,arrive |
+
+       Scenario: Collinear in Y
+        Given the node map
+            |   | a |
+            |   | b |
+            | e | c |
+            |   | d |
+            |   | f |
+
+        And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | bcdb  | roundabout |
+            | ce    |            |
+            | df    |            |
+
+        When I route I should get
+            | waypoints | route    | turns                                         |
+            | a,e       | ab,ce,ce | depart,roundabout turn right exit-1,arrive    |
+            | a,f       | ab,df,df | depart,roundabout turn straight exit-2,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
