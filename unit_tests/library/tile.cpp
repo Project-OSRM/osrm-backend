@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
             BOOST_CHECK_EQUAL(layer_message.get_uint32(), util::vector_tile::EXTENT);
             break;
         case util::vector_tile::FEATURE_TAG:
-            check_speed_feature(layer_message.get_message());
+            check_feature(layer_message.get_message());
             break;
         case util::vector_tile::KEY_TAG:
             layer_message.get_string();

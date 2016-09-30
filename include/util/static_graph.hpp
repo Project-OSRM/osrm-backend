@@ -160,17 +160,17 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
      *   matching edge is found.
      */
     template <typename FilterFunction>
-    EdgeIterator FindSmallestEdge(const NodeIterator from,
-                                  const NodeIterator to,
-                                  const FilterFunction filter) const
+    EdgeIterator
+    FindSmallestEdge(const NodeIterator from, const NodeIterator to, FilterFunction &&filter) const
     {
         EdgeIterator smallest_edge = SPECIAL_EDGEID;
         EdgeWeight smallest_weight = INVALID_EDGE_WEIGHT;
         for (auto edge : GetAdjacentEdgeRange(from))
         {
             const NodeID target = GetTarget(edge);
-            const auto data = GetEdgeData(edge);
-            if (target == to && data.distance < smallest_weight && filter(data))
+            const auto &data = GetEdgeData(edge);
+            if (target == to && data.distance < smallest_weight &&
+                std::forward<FilterFunction>(filter)(data))
             {
                 smallest_edge = edge;
                 smallest_weight = data.distance;

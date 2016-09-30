@@ -8,8 +8,8 @@
 #include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 
-#include <vector>
 #include <stack>
+#include <vector>
 
 namespace osrm
 {
@@ -37,16 +37,19 @@ namespace engine
  * original edge found.
  */
 
-template <typename DataFacadeT, typename RandomIter, typename Callback>
-inline void UnpackCHEdge(DataFacadeT *facade,
-                  RandomIter packed_path_begin,
-                  RandomIter packed_path_end,
-                  const Callback &callback)
+template <typename DataFacadeT, typename BidirectionalIterator, typename Callback>
+inline void UnpackCHPath(const DataFacadeT &facade,
+                         BidirectionalIterator packed_path_begin,
+                         BidirectionalIterator packed_path_end,
+                         Callback &&callback)
 {
+    // make sure we have at least something to unpack
+    if( packed_path_begin == packed_path_end )
+        return;
 
     using EdgeData = typename DataFacadeT::EdgeData;
 
-    std::stack<std::pair<NodeID, NodeID>> recursion_stack;
+    std::stack<std::pair<NodeID,NodeID>> recursion_stack;
 
     // We have to push the path in reverse order onto the stack because it's LIFO.
     for (auto current = std::prev(packed_path_end); current != packed_path_begin;
@@ -62,7 +65,7 @@ inline void UnpackCHEdge(DataFacadeT *facade,
         recursion_stack.pop();
 
         // Look for an edge on the forward CH graph (.forward)
-        EdgeID smaller_edge_id = facade->FindSmallestEdge(
+        EdgeID smaller_edge_id = facade.FindSmallestEdge(
             edge.first, edge.second, [](const EdgeData &data) { return data.forward; });
 
         // If we didn't find one there, the we might be looking at a part of the path that
@@ -70,7 +73,7 @@ inline void UnpackCHEdge(DataFacadeT *facade,
         // and only consider edges with the `.backward` flag.
         if (SPECIAL_EDGEID == smaller_edge_id)
         {
-            smaller_edge_id = facade->FindSmallestEdge(
+            smaller_edge_id = facade.FindSmallestEdge(
                 edge.second, edge.first, [](const EdgeData &data) { return data.backward; });
         }
 
@@ -78,7 +81,7 @@ inline void UnpackCHEdge(DataFacadeT *facade,
         // called this function with bad values.
         BOOST_ASSERT_MSG(smaller_edge_id != SPECIAL_EDGEID, "Invalid smaller edge ID");
 
-        const auto &data = facade->GetEdgeData(smaller_edge_id);
+        const auto &data = facade.GetEdgeData(smaller_edge_id);
         BOOST_ASSERT_MSG(data.distance != std::numeric_limits<EdgeWeight>::max(),
                          "edge weight invalid");
 
@@ -94,7 +97,7 @@ inline void UnpackCHEdge(DataFacadeT *facade,
         else
         {
             // We found an original edge, call our callback.
-            callback(edge, data);
+            std::forward<Callback>(callback)(edge, data);
         }
     }
 }

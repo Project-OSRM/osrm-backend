@@ -229,8 +229,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
             *std::prev(packed_path_end) == phantom_node_pair.target_phantom.forward_segment_id.id ||
             *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
 
-        UnpackCHEdge(
-            facade,
+        UnpackCHPath(
+            *facade,
             packed_path_begin,
             packed_path_end,
             [this,
@@ -238,17 +238,17 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
              &phantom_node_pair,
              &start_traversed_in_reverse,
              &target_traversed_in_reverse](std::pair<NodeID, NodeID> & /* edge */,
-                                           const EdgeData &data) {
+                                           const EdgeData &edge_data) {
 
-                BOOST_ASSERT_MSG(!data.shortcut, "original edge flagged as shortcut");
-                unsigned name_index = facade->GetNameIndexFromEdgeID(data.id);
-                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(data.id);
+                BOOST_ASSERT_MSG(!edge_data.shortcut, "original edge flagged as shortcut");
+                const auto name_index = facade->GetNameIndexFromEdgeID(edge_data.id);
+                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(edge_data.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
                         ? phantom_node_pair.source_phantom.backward_travel_mode
-                        : facade->GetTravelModeForEdgeID(data.id);
+                        : facade->GetTravelModeForEdgeID(edge_data.id);
 
-                const auto geometry_index = facade->GetGeometryIndexForEdgeID(data.id);
+                const auto geometry_index = facade->GetGeometryIndexForEdgeID(edge_data.id);
                 std::vector<NodeID> id_vector;
                 facade->GetUncompressedGeometry(geometry_index, id_vector);
                 BOOST_ASSERT(id_vector.size() > 0);
@@ -260,7 +260,7 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                 std::vector<DatasourceID> datasource_vector;
                 facade->GetUncompressedDatasources(geometry_index, datasource_vector);
 
-                auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
+                const auto total_weight = std::accumulate(weight_vector.begin(), weight_vector.end(), 0);
 
                 BOOST_ASSERT(weight_vector.size() == id_vector.size());
                 const bool is_first_segment = unpacked_path.empty();
@@ -289,12 +289,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                                  datasource_vector[i]});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
-                if (facade->hasLaneData(data.id))
-                    unpacked_path.back().lane_data = facade->GetLaneData(data.id);
+                if (facade->hasLaneData(edge_data.id))
+                    unpacked_path.back().lane_data = facade->GetLaneData(edge_data.id);
 
-                unpacked_path.back().entry_classid = facade->GetEntryClassID(data.id);
+                unpacked_path.back().entry_classid = facade->GetEntryClassID(edge_data.id);
                 unpacked_path.back().turn_instruction = turn_instruction;
-                unpacked_path.back().duration_until_turn += (data.distance - total_weight);
+                unpacked_path.back().duration_until_turn += (edge_data.distance - total_weight);
             });
 
         std::size_t start_index = 0, end_index = 0;
@@ -415,8 +415,8 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
     void UnpackEdge(const NodeID from, const NodeID to, std::vector<NodeID> &unpacked_path) const
     {
         std::array<NodeID, 2> path{{from, to}};
-        UnpackCHEdge(
-            facade,
+        UnpackCHPath(
+            *facade,
             path.begin(),
             path.end(),
             [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const EdgeData & /* data */) {

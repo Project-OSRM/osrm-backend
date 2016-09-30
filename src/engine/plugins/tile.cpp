@@ -1,6 +1,6 @@
-#include "engine/plugins/tile.hpp"
-#include "engine/plugins/plugin_base.hpp"
 #include "engine/edge_unpacker.hpp"
+#include "engine/plugins/plugin_base.hpp"
+#include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/vector_tile.hpp"
@@ -31,7 +31,7 @@ namespace engine
 {
 namespace plugins
 {
-namespace detail
+namespace
 {
 // TODO: Port all this encoding logic to https://github.com/mapbox/vector-tile, which wasn't
 // available when this code was originally written.
@@ -79,7 +79,7 @@ struct TurnData final
              const std::size_t _in,
              const std::size_t _out,
              const std::size_t _weight)
-        : coordinate(coordinate_), in_angle_offset(_in), turn_angle_offset(_out),
+        : coordinate(std::move(coordinate_)), in_angle_offset(_in), turn_angle_offset(_out),
           weight_offset(_weight)
     {
     }
@@ -90,8 +90,8 @@ struct TurnData final
     const std::size_t weight_offset;
 };
 
-using FixedPoint = detail::Point<std::int32_t>;
-using FloatPoint = detail::Point<double>;
+using FixedPoint = Point<std::int32_t>;
+using FloatPoint = Point<double>;
 
 using FixedLine = std::vector<FixedPoint>;
 using FloatLine = std::vector<FloatPoint>;
@@ -122,7 +122,7 @@ inline bool encodeLinestring(const FixedLine &line,
         return false;
     }
 
-    const unsigned LINETO_count = static_cast<const unsigned>(line_size) - 1;
+    const unsigned lineto_count = static_cast<const unsigned>(line_size) - 1;
 
     auto pt = line.begin();
     const constexpr int MOVETO_COMMAND = 9;
@@ -133,7 +133,7 @@ inline bool encodeLinestring(const FixedLine &line,
     start_y = pt->y;
     // This means LINETO repeated N times
     // See: https://github.com/mapbox/vector-tile-spec/tree/master/2.1#example-command-integers
-    geometry.add_element((LINETO_count << 3u) | 2u);
+    geometry.add_element((lineto_count << 3u) | 2u);
     // Now that we've issued the LINETO REPEAT N command, we append
     // N coordinate pairs immediately after the command.
     for (++pt; pt != line.end(); ++pt)
@@ -150,7 +150,7 @@ inline bool encodeLinestring(const FixedLine &line,
 
 // from mapnik-vctor-tile
 // Encodes a point
-inline bool encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &geometry)
+inline void encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &geometry)
 {
     const constexpr int MOVETO_COMMAND = 9;
     geometry.add_element(MOVETO_COMMAND);
@@ -159,7 +159,6 @@ inline bool encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &ge
     // Manual zigzag encoding.
     geometry.add_element(protozero::encode_zigzag32(dx));
     geometry.add_element(protozero::encode_zigzag32(dy));
-    return true;
 }
 
 /**
@@ -173,7 +172,7 @@ inline bool encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &ge
  */
 FixedLine coordinatesToTileLine(const util::Coordinate start,
                                 const util::Coordinate target,
-                                const detail::BBox &tile_bbox)
+                                const BBox &tile_bbox)
 {
     FloatLine geo_line;
     geo_line.emplace_back(static_cast<double>(util::toFloating(start.lon)),
@@ -228,7 +227,7 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
  * @param tile_bbox the mercator boundaries of the tile
  * @return a point (x,y) on the tile defined by tile_bbox
  */
-FixedPoint coordinatesToTilePoint(const util::Coordinate point, const detail::BBox &tile_bbox)
+FixedPoint coordinatesToTilePoint(const util::Coordinate point, const BBox &tile_bbox)
 {
     const FloatPoint geo_point{static_cast<double>(util::toFloating(point.lon)),
                                static_cast<double>(util::toFloating(point.lat))};
@@ -260,7 +259,7 @@ void UnpackEdgeToEdges(const datafacade::BaseDataFacade &facade,
                        std::vector<datafacade::BaseDataFacade::EdgeData> &unpacked_path)
 {
     std::array<NodeID, 2> path{{from, to}};
-    UnpackCHEdge(&facade,
+    UnpackCHPath(facade,
                  path.begin(),
                  path.end(),
                  [&unpacked_path](const std::pair<NodeID, NodeID> & /* edge */,
@@ -268,7 +267,7 @@ void UnpackEdgeToEdges(const datafacade::BaseDataFacade &facade,
                      unpacked_path.emplace_back(data);
                  });
 }
-} // ::detail namespace
+} // namespace
 
 Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer)
 {
@@ -311,15 +310,15 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     std::vector<float> used_point_floats;
     std::unordered_map<float, std::size_t> point_float_offsets;
 
-    uint8_t max_datasource_id = 0;
+    std::uint8_t max_datasource_id = 0;
 
     // This is where we accumulate information on turns
-    std::vector<detail::TurnData> all_turn_data;
+    std::vector<TurnData> all_turn_data;
 
     // Helper function for adding a new value to the line_ints lookup table.  Returns
     // the index of the value in the table, adding the value if it doesn't already
     // exist
-    const auto use_line_value = [&used_line_ints, &line_int_offsets](const int &value) {
+    const auto use_line_value = [&used_line_ints, &line_int_offsets](const int value) {
         const auto found = line_int_offsets.find(value);
 
         if (found == line_int_offsets.end())
@@ -332,7 +331,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     };
 
     // Same again
-    const auto use_point_int_value = [&used_point_ints, &point_int_offsets](const int &value) {
+    const auto use_point_int_value = [&used_point_ints, &point_int_offsets](const int value) {
         const auto found = point_int_offsets.find(value);
         std::size_t offset;
 
@@ -352,7 +351,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
     // And a third time, should probably template this....
     const auto use_point_float_value = [&used_point_floats,
-                                        &point_float_offsets](const float &value) {
+                                        &point_float_offsets](const float value) {
         const auto found = point_float_offsets.find(value);
         std::size_t offset;
 
@@ -373,7 +372,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     // If we're zooming into 16 or higher, include turn data.  Why?  Because turns make the map
     // really
     // cramped, so we don't bother including the data for tiles that span a large area.
-    if (parameters.z >= detail::MIN_ZOOM_FOR_TURNS)
+    if (parameters.z >= MIN_ZOOM_FOR_TURNS)
     {
         // Struct to hold info on all the EdgeBasedNodes that are visible in our tile
         // When we create these, we insure that (source, target) and packed_geometry_id
@@ -404,10 +403,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 edge_based_node_info.count(edge.forward_segment_id.id) == 0)
             {
                 // Add this edge-based-nodeid as an outgoing from the source intersection
-                auto f = outgoing_edges.find(edge.u);
-                if (f != outgoing_edges.end())
+                const auto outgoing_itr_u = outgoing_edges.find(edge.u);
+                if (outgoing_itr_u != outgoing_edges.end())
                 {
-                    f->second.push_back(edge.forward_segment_id.id);
+                    outgoing_itr_u->second.push_back(edge.forward_segment_id.id);
                 }
                 else
                 {
@@ -415,10 +414,10 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 }
 
                 // Add this edge-based-nodeid as an incoming to the target intersection
-                f = incoming_edges.find(edge.v);
-                if (f != incoming_edges.end())
+                const auto incoming_itr_v = incoming_edges.find(edge.v);
+                if (incoming_itr_v != incoming_edges.end())
                 {
-                    f->second.push_back(edge.forward_segment_id.id);
+                    incoming_itr_v->second.push_back(edge.forward_segment_id.id);
                 }
                 else
                 {
@@ -461,10 +460,13 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
         // Now, for every edge-based-node that we discovered (edge-based-nodes are sources
         // and targets of turns).  EBN is short for edge-based-node
+        std::vector<NodeID> first_geometry, second_geometry;
+        std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
+        std::vector<EdgeWeight> forward_weight_vector;
         for (const auto &source_ebn : edge_based_node_info)
         {
             // Grab a copy of the geometry leading up to the intersection.
-            std::vector<NodeID> first_geometry;
+            first_geometry.clear();
             facade.GetUncompressedGeometry(source_ebn.second.packed_geometry_id, first_geometry);
 
             // We earlier saved the source and target intersection nodes for every road section.
@@ -492,9 +494,9 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 if (SPECIAL_EDGEID == smaller_edge_id)
                 {
                     smaller_edge_id = facade.FindSmallestEdge(
-                        target_ebn, source_ebn.first, [](const contractor::QueryEdge::EdgeData &data) {
-                            return data.backward;
-                        });
+                        target_ebn,
+                        source_ebn.first,
+                        [](const contractor::QueryEdge::EdgeData &data) { return data.backward; });
                 }
 
                 // If no edge was found, it means that there's no connection between these nodes,
@@ -507,27 +509,33 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     // when exactly?  Anyway, unpack it and get the first "real" edgedata
                     // out of it, which should represent the first hop, which is the one
                     // we want to find the turn.
-                    auto data = facade.GetEdgeData(smaller_edge_id);
-                    if (data.shortcut)
-                    {
-                        std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
-                        detail::UnpackEdgeToEdges(facade, source_ebn.first, target_ebn, unpacked_shortcut);
-                        data = unpacked_shortcut.front();
-                    }
+                    const auto &data =
+                        [this, smaller_edge_id, source_ebn, target_ebn, &unpacked_shortcut]() {
+                            const auto inner_data = facade.GetEdgeData(smaller_edge_id);
+                            if (inner_data.shortcut)
+                            {
+                                unpacked_shortcut.clear();
+                                UnpackEdgeToEdges(
+                                    facade, source_ebn.first, target_ebn, unpacked_shortcut);
+                                return unpacked_shortcut.front();
+                            }
+                            else
+                                return inner_data;
+                        }();
                     BOOST_ASSERT_MSG(!data.shortcut, "Connecting edge must not be a shortcut");
 
                     // This is the geometry leading away from the intersection
                     // (i.e. the geometry of the target edge-based-node)
-                    std::vector<NodeID> second_geometry;
+                    second_geometry.clear();
                     facade.GetUncompressedGeometry(
                         edge_based_node_info.at(target_ebn).packed_geometry_id, second_geometry);
 
                     // Now, calculate the sum of the weight of all the segments.
-                    std::vector<EdgeWeight> forward_weight_vector;
+                    forward_weight_vector.clear();
                     facade.GetUncompressedWeights(source_ebn.second.packed_geometry_id,
                                                   forward_weight_vector);
                     const auto sum_node_weight = std::accumulate(
-                        forward_weight_vector.begin(), forward_weight_vector.end(), 0);
+                        forward_weight_vector.begin(), forward_weight_vector.end(), EdgeWeight{0});
 
                     // The edge.distance is the whole edge weight, which includes the turn cost.
                     // The turn cost is the edge.distance minus the sum of the individual road
@@ -581,8 +589,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     // Save everything we need to later add all the points to the tile.
                     // We need the coordinate of the intersection, the angle in, the turn
                     // angle and the turn cost.
-                    all_turn_data.emplace_back(detail::TurnData{
-                        coord_via, angle_in_index, turn_angle_index, turn_cost_index});
+                    all_turn_data.emplace_back(
+                        TurnData{coord_via, angle_in_index, turn_angle_index, turn_cost_index});
                 }
             }
         }
@@ -592,21 +600,23 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     // "pre-loop" over all the edges to create the lookup tables.  Once we have those, we
     // can then encode the features, and we'll know the indexes that feature properties
     // need to refer to.
+    std::vector<EdgeWeight> forward_weight_vector, reverse_weight_vector;
+    std::vector<std::uint8_t> forward_datasource_vector, reverse_datasource_vector;
     for (const auto &edge : edges)
     {
         int forward_weight = 0, reverse_weight = 0;
-        uint8_t forward_datasource = 0;
-        uint8_t reverse_datasource = 0;
+        std::uint8_t forward_datasource = 0;
+        std::uint8_t reverse_datasource = 0;
         // TODO this approach of writing at least an empty vector for any segment is probably stupid
         // (inefficient)
 
         if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
         {
-            std::vector<EdgeWeight> forward_weight_vector;
+            forward_weight_vector.clear();
             facade.GetUncompressedWeights(edge.forward_packed_geometry_id, forward_weight_vector);
             forward_weight = forward_weight_vector[edge.fwd_segment_position];
 
-            std::vector<uint8_t> forward_datasource_vector;
+            forward_datasource_vector.clear();
             facade.GetUncompressedDatasources(edge.forward_packed_geometry_id,
                                               forward_datasource_vector);
             forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
@@ -616,7 +626,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
         if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID)
         {
-            std::vector<EdgeWeight> reverse_weight_vector;
+            reverse_weight_vector.clear();
             facade.GetUncompressedWeights(edge.reverse_packed_geometry_id, reverse_weight_vector);
 
             BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
@@ -624,7 +634,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
             reverse_weight =
                 reverse_weight_vector[reverse_weight_vector.size() - edge.fwd_segment_position - 1];
 
-            std::vector<uint8_t> reverse_datasource_vector;
+            reverse_datasource_vector.clear();
             facade.GetUncompressedDatasources(edge.reverse_packed_geometry_id,
                                               reverse_datasource_vector);
             reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
@@ -648,7 +658,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
     // Convert tile coordinates into mercator coordinates
     util::web_mercator::xyzToMercator(
         parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
-    const detail::BBox tile_bbox{min_lon, min_lat, max_lon, max_lat};
+    const BBox tile_bbox{min_lon, min_lat, max_lon, max_lat};
 
     // Protobuf serializes blocks when objects go out of scope, hence
     // the extra scoping below.
@@ -671,6 +681,9 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
             {
                 // Each feature gets a unique id, starting at 1
                 unsigned id = 1;
+                std::vector<EdgeWeight> forward_weight_vector;
+                std::vector<std::uint8_t> forward_datasource_vector;
+                std::vector<std::uint8_t> reverse_datasource_vector;
                 for (const auto &edge : edges)
                 {
                     // Get coordinates for start/end nodes of segment (NodeIDs u and v)
@@ -683,19 +696,19 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     int forward_weight = 0;
                     int reverse_weight = 0;
 
-                    uint8_t forward_datasource = 0;
-                    uint8_t reverse_datasource = 0;
+                    std::uint8_t forward_datasource = 0;
+                    std::uint8_t reverse_datasource = 0;
 
                     std::string name = facade.GetNameForID(edge.name_id);
 
                     if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
                     {
-                        std::vector<EdgeWeight> forward_weight_vector;
+                        forward_weight_vector.clear();
                         facade.GetUncompressedWeights(edge.forward_packed_geometry_id,
                                                       forward_weight_vector);
                         forward_weight = forward_weight_vector[edge.fwd_segment_position];
 
-                        std::vector<uint8_t> forward_datasource_vector;
+                        forward_datasource_vector.clear();
                         facade.GetUncompressedDatasources(edge.forward_packed_geometry_id,
                                                           forward_datasource_vector);
                         forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
@@ -703,7 +716,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
                     if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID)
                     {
-                        std::vector<EdgeWeight> reverse_weight_vector;
+                        reverse_weight_vector.clear();
                         facade.GetUncompressedWeights(edge.reverse_packed_geometry_id,
                                                       reverse_weight_vector);
 
@@ -712,7 +725,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                         reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
                                                                edge.fwd_segment_position - 1];
 
-                        std::vector<uint8_t> reverse_datasource_vector;
+                        reverse_datasource_vector.clear();
                         facade.GetUncompressedDatasources(edge.reverse_packed_geometry_id,
                                                           reverse_datasource_vector);
                         reverse_datasource =
@@ -725,64 +738,63 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     max_datasource_id = std::max(max_datasource_id, forward_datasource);
                     max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
-                    const auto encode_tile_line =
-                        [&line_layer_writer, &edge, &id, &max_datasource_id, &used_line_ints](
-                            const detail::FixedLine &tile_line,
-                            const std::uint32_t speed_kmh,
-                            const std::size_t duration,
-                            const DatasourceID datasource,
-                            const std::size_t name,
-                            std::int32_t &start_x,
-                            std::int32_t &start_y) {
-                            // Here, we save the two attributes for our feature: the speed and the
-                            // is_small
-                            // boolean.  We only serve up speeds from 0-139, so all we do is save
-                            // the
-                            // first
-                            protozero::pbf_writer feature_writer(line_layer_writer,
-                                                                 util::vector_tile::FEATURE_TAG);
-                            // Field 3 is the "geometry type" field.  Value 2 is "line"
-                            feature_writer.add_enum(
-                                util::vector_tile::GEOMETRY_TAG,
-                                util::vector_tile::GEOMETRY_TYPE_LINE); // geometry type
-                            // Field 1 for the feature is the "id" field.
-                            feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
-                            {
-                                // When adding attributes to a feature, we have to write
-                                // pairs of numbers.  The first value is the index in the
-                                // keys array (written later), and the second value is the
-                                // index into the "values" array (also written later).  We're
-                                // not writing the actual speed or bool value here, we're saving
-                                // an index into the "values" array.  This means many features
-                                // can share the same value data, leading to smaller tiles.
-                                protozero::packed_field_uint32 field(
-                                    feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
+                    const auto encode_tile_line = [&line_layer_writer,
+                                                   &edge,
+                                                   &id,
+                                                   &max_datasource_id,
+                                                   &used_line_ints](const FixedLine &tile_line,
+                                                                    const std::uint32_t speed_kmh,
+                                                                    const std::size_t duration,
+                                                                    const DatasourceID datasource,
+                                                                    const std::size_t name,
+                                                                    std::int32_t &start_x,
+                                                                    std::int32_t &start_y) {
+                        // Here, we save the two attributes for our feature: the speed and the
+                        // is_small boolean.  We only serve up speeds from 0-139, so all we do is
+                        // save the first
+                        protozero::pbf_writer feature_writer(line_layer_writer,
+                                                             util::vector_tile::FEATURE_TAG);
+                        // Field 3 is the "geometry type" field.  Value 2 is "line"
+                        feature_writer.add_enum(
+                            util::vector_tile::GEOMETRY_TAG,
+                            util::vector_tile::GEOMETRY_TYPE_LINE); // geometry type
+                        // Field 1 for the feature is the "id" field.
+                        feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
+                        {
+                            // When adding attributes to a feature, we have to write
+                            // pairs of numbers.  The first value is the index in the
+                            // keys array (written later), and the second value is the
+                            // index into the "values" array (also written later).  We're
+                            // not writing the actual speed or bool value here, we're saving
+                            // an index into the "values" array.  This means many features
+                            // can share the same value data, leading to smaller tiles.
+                            protozero::packed_field_uint32 field(
+                                feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
 
-                                field.add_element(0); // "speed" tag key offset
-                                field.add_element(std::min(
-                                    speed_kmh, 127u)); // save the speed value, capped at 127
-                                field.add_element(1);  // "is_small" tag key offset
-                                field.add_element(
-                                    128 + (edge.component.is_tiny ? 0 : 1)); // is_small feature
-                                field.add_element(2);                // "datasource" tag key offset
-                                field.add_element(130 + datasource); // datasource value offset
-                                field.add_element(3);                // "duration" tag key offset
-                                field.add_element(130 + max_datasource_id + 1 +
-                                                  duration); // duration value offset
-                                field.add_element(4);        // "name" tag key offset
+                            field.add_element(0); // "speed" tag key offset
+                            field.add_element(
+                                std::min(speed_kmh, 127u)); // save the speed value, capped at 127
+                            field.add_element(1);           // "is_small" tag key offset
+                            field.add_element(128 +
+                                              (edge.component.is_tiny ? 0 : 1)); // is_small feature
+                            field.add_element(2);                // "datasource" tag key offset
+                            field.add_element(130 + datasource); // datasource value offset
+                            field.add_element(3);                // "duration" tag key offset
+                            field.add_element(130 + max_datasource_id + 1 +
+                                              duration); // duration value offset
+                            field.add_element(4);        // "name" tag key offset
 
-                                field.add_element(130 + max_datasource_id + 1 +
-                                                  used_line_ints.size() +
-                                                  name); // name value offset
-                            }
-                            {
+                            field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
+                                              name); // name value offset
+                        }
+                        {
 
-                                // Encode the geometry for the feature
-                                protozero::packed_field_uint32 geometry(
-                                    feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
-                                encodeLinestring(tile_line, geometry, start_x, start_y);
-                            }
-                        };
+                            // Encode the geometry for the feature
+                            protozero::packed_field_uint32 geometry(
+                                feature_writer, util::vector_tile::FEATURE_GEOMETRIES_TAG);
+                            encodeLinestring(tile_line, geometry, start_x, start_y);
+                        }
+                    };
 
                     // If this is a valid forward edge, go ahead and add it to the tile
                     if (forward_weight != 0 && edge.forward_segment_id.enabled)
@@ -902,7 +914,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
             // Now write the points layer for turn penalty data:
             // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec (2.1)
             protozero::pbf_writer point_layer_writer(tile_writer, util::vector_tile::LAYER_TAG);
-            point_layer_writer.add_uint32(util::vector_tile::VERSION_TAG, 2); // version
+            point_layer_writer.add_uint32(util::vector_tile::VERSION_TAG, 2);    // version
             point_layer_writer.add_string(util::vector_tile::NAME_TAG, "turns"); // name
             point_layer_writer.add_uint32(util::vector_tile::EXTENT_TAG,
                                           util::vector_tile::EXTENT); // extent
@@ -914,13 +926,13 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
                 // Helper function to encode a new point feature on a vector tile.
                 const auto encode_tile_point = [&point_layer_writer, &used_point_ints, &id](
-                    const detail::FixedPoint &tile_point, const detail::TurnData &point_turn_data) {
+                    const FixedPoint &tile_point, const TurnData &point_turn_data) {
                     protozero::pbf_writer feature_writer(point_layer_writer,
                                                          util::vector_tile::FEATURE_TAG);
                     // Field 3 is the "geometry type" field.  Value 1 is "point"
                     feature_writer.add_enum(
                         util::vector_tile::GEOMETRY_TAG,
-                        util::vector_tile::GEOMETRY_TYPE_POINT); // geometry type
+                        util::vector_tile::GEOMETRY_TYPE_POINT);                // geometry type
                     feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
                     {
                         // Write out the 3 properties we want on the feature.  These
@@ -947,8 +959,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 for (const auto &turndata : all_turn_data)
                 {
                     const auto tile_point = coordinatesToTilePoint(turndata.coordinate, tile_bbox);
-                    if (!boost::geometry::within(detail::point_t(tile_point.x, tile_point.y),
-                                                 detail::clip_box))
+                    if (!boost::geometry::within(point_t(tile_point.x, tile_point.y), clip_box))
                     {
                         continue;
                     }
