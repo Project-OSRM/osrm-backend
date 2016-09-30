@@ -7,12 +7,12 @@ Feature: Traffic - speeds
         Given the node locations
             | node | lat        | lon      |
             | a    | 0.1        | 0.1      |
-            | b    | .05        | 0.1      |
+            | b    | 0.05       | 0.1      |
             | c    | 0.0        | 0.1      |
-            | d    | .05        | .03      |
-            | e    | .05        | .066     |
-            | f    | .075       | .066     |
-            | g    | .075       | 0.1      |
+            | d    | 0.05       | 0.03     |
+            | e    | 0.05       | 0.066    |
+            | f    | 0.075      | 0.066    |
+            | g    | 0.075      | 0.1      |
         And the ways
             | nodes | highway |
             | ab    | primary |
@@ -50,12 +50,12 @@ Feature: Traffic - speeds
         Given the node locations
             | node | lat        | lon      |
             | a    | 0.1        | 0.1      |
-            | b    | .05        | 0.1      |
+            | b    | 0.05       | 0.1      |
             | c    | 0.0        | 0.1      |
-            | d    | .05        | .03      |
-            | e    | .05        | .066     |
-            | f    | .075       | .066     |
-            | g    | .075       | 0.1      |
+            | d    | 0.05       | 0.03     |
+            | e    | 0.05       | 0.066    |
+            | f    | 0.075      | 0.066    |
+            | g    | 0.075      | 0.1      |
             | h    | 2.075      | 19.1     |
         And the ways
             | nodes | highway |
@@ -93,12 +93,12 @@ Feature: Traffic - speeds
         Given the node locations
             | node | lat        | lon      |
             | a    | 0.1        | 0.1      |
-            | b    | .05        | 0.1      |
+            | b    | 0.05       | 0.1      |
             | c    | 0.0        | 0.1      |
-            | d    | .05        | .03      |
-            | e    | .05        | .066     |
-            | f    | .075       | .066     |
-            | g    | .075       | 0.1      |
+            | d    | 0.05       | 0.03     |
+            | e    | 0.05       | 0.066    |
+            | f    | 0.075      | 0.066    |
+            | g    | 0.075      | 0.1      |
             | h    | 1.075      | 10.1     |
         And the ways
             | nodes | highway |
