@@ -23,10 +23,10 @@ Feature: Basic Routing
             | df    | street |
 
         When I route I should get
-            | waypoints | route                               | summary               |
-            | a,e       | road,,1 st,1 st                     | road,1 st             |
-            | a,d,f     | road,,,street,street                | road;street           |
-            | a,e,f     | road,,1 st,1 st,1 st,street,street  | road,1 st;1 st,street |
+            | waypoints | route                               | summary                 |
+            | a,e       | road,,1 st,1 st                     | road, 1 st              |
+            | a,d,f     | road,,,street,street                | road;street             |
+            | a,e,f     | road,,1 st,1 st,1 st,street,street  | road, 1 st;1 st, street |
 
      Scenario: Name Empty
         Given the node map
@@ -51,8 +51,8 @@ Feature: Basic Routing
             | bc    |      | 101 |
 
         When I route I should get
-            | waypoints | route | summary  |
-            | a,c       | road, | road,101 |
+            | waypoints | route | summary   |
+            | a,c       | road, | road, 101 |
 
      Scenario: Only Refs
         Given the node map
@@ -64,8 +64,8 @@ Feature: Basic Routing
             | bc    |      | 101 |
 
         When I route I should get
-            | waypoints | route  | summary |
-            | a,c       | ,      | 100,101 |
+            | waypoints | route  | summary  |
+            | a,c       | ,      | 100, 101 |
 
      Scenario: Single Ref
         Given the node map
