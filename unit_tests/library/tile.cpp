@@ -40,8 +40,6 @@ BOOST_AUTO_TEST_CASE(test_tile)
     protozero::pbf_reader layer_message = tile_message.get_message();
 
     const auto check_feature = [](protozero::pbf_reader feature_message) {
-        protozero::pbf_reader::const_uint32_iterator value_begin;
-        protozero::pbf_reader::const_uint32_iterator value_end;
         feature_message.next(); // advance parser to first entry
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::GEOMETRY_TAG);
         BOOST_CHECK_EQUAL(feature_message.get_enum(), util::vector_tile::GEOMETRY_TYPE_LINE);
@@ -53,7 +51,9 @@ BOOST_AUTO_TEST_CASE(test_tile)
         feature_message.next(); // advance to next entry
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
-        std::tie(value_begin, value_end) = feature_message.get_packed_uint32();
+        auto property_iter_pair = feature_message.get_packed_uint32();
+        auto value_begin = property_iter_pair.first;
+        auto value_end = property_iter_pair.second;
         BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 10);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(test_tile)
         BOOST_CHECK(iter == value_end);
         // geometry
         feature_message.next();
-        std::tie(value_begin, value_end) = feature_message.get_packed_uint32();
-        BOOST_CHECK_GT(std::distance(value_begin, value_end), 1);
+        auto geometry_iter_pair = feature_message.get_packed_uint32();
+        BOOST_CHECK_GT(std::distance(geometry_iter_pair.first, geometry_iter_pair.second), 1);
     };
 
     const auto check_value = [](protozero::pbf_reader value) {

@@ -271,6 +271,9 @@ set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/includ
 find_package(Osmium REQUIRED COMPONENTS io)
 add_dependency_includes(${OSMIUM_INCLUDE_DIR})
 
+# Disallow deprecated protozero APIs
+add_definitions(-DPROTOZERO_STRICT_API)
+
 
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
