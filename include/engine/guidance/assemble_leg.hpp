@@ -198,7 +198,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
 
         const auto summary_names = summary_array | boost::adaptors::transformed(name_id_to_string) |
                                    boost::adaptors::filtered(not_empty);
-        summary = boost::algorithm::join(summary_names, ",");
+        summary = boost::algorithm::join(summary_names, ", ");
     }
 
     return RouteLeg{duration, distance, summary, {}};
