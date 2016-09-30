@@ -1,3 +1,7 @@
+# 5.4.0-rc.7
+  - Chages from 5.4.0-rc.6
+    - Bugfixes re-introduce space between two entries in summaries
+
 # 5.4.0-rc.6
   - Changes from 5.4.0-rc.5
     - Bugfixes
