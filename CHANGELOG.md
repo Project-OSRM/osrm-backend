@@ -2,6 +2,8 @@
   - Changes from 5.4.0-rc.5
     - Bugfixes
       - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
+    - Guidance
+      - Summaries have been improved to consider references as well
 
 # 5.4.0-rc.5
   - Changes from 5.4.0-rc.4

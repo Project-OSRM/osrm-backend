@@ -18,12 +18,12 @@ Feature: Basic Routing
             | de    |
 
         When I route I should get
-            | from | to | route          | summary  |
-            | a    | e  | ab,bc,cd,de,de | ab, bc   |
-            | e    | a  | de,cd,bc,ab,ab | de, bc   |
-            | a    | b  | ab,ab          | ab       |
-            | b    | d  | bc,cd,cd       | bc, cd   |
-            | 1    | c  | bc,bc          | bc       |
+            | from | to | route          | summary |
+            | a    | e  | ab,bc,cd,de,de | ab,bc   |
+            | e    | a  | de,cd,bc,ab,ab | de,bc   |
+            | a    | b  | ab,ab          | ab      |
+            | b    | d  | bc,cd,cd       | bc,cd   |
+            | 1    | c  | bc,bc          | bc      |
 
     @smallest
     Scenario: Check handling empty values
@@ -40,8 +40,8 @@ Feature: Basic Routing
             | df    | df   |
 
         When I route I should get
-            | from | to | route          | summary  |
-            | e    | a  | de,,bc,ab,ab   | de, bc   |
+            | from | to | route          | summary |
+            | e    | a  | de,,bc,ab,ab   | de,bc   |
 
     @smallest @todo
     Scenario: Summaries when routing on a simple network
@@ -53,9 +53,9 @@ Feature: Basic Routing
             | ab    |
 
         When I route I should get
-            | from | to | route | summary  |
-            | a    | b  | ab,ab | ab       |
-            | b    | a  | ab,ab | ab       |
+            | from | to | route | summary |
+            | a    | b  | ab,ab | ab      |
+            | b    | a  | ab,ab | ab      |
 
     @repeated
     Scenario: Check handling empty values
@@ -74,6 +74,6 @@ Feature: Basic Routing
             | xey   | cross  |we need this because phantom node segments are not considered for the summary |
 
         When I route I should get
-            | from | to | route                     | summary       |
-            | a    | 1  | first,first,second,second | first, second |
+            | from | to | route                     | summary      |
+            | a    | 1  | first,first,second,second | first,second |
 
