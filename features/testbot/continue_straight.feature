@@ -7,8 +7,10 @@ Feature: U-turns at via points
 
     Scenario: Continue straight at waypoints enabled by default
         Given the node map
-            | a | b | c | d |
-            |   | e | f | g |
+            """
+            a b c d
+              e f g
+            """
 
         And the ways
             | nodes |
@@ -26,8 +28,10 @@ Feature: U-turns at via points
 
     Scenario: Query parameter to disallow changing direction at all waypoints
         Given the node map
-            | a | b | c | d |
-            |   | e | f | g |
+            """
+            a b c d
+              e f g
+            """
 
         And the query options
             | continue_straight | false |
@@ -48,8 +52,10 @@ Feature: U-turns at via points
 
     Scenario: Instructions at waypoints at u-turns
         Given the node map
-            | a | b | c | d |
-            |   | e | f | g |
+            """
+            a b c d
+              e f g
+            """
 
         And the query options
             | continue_straight | false |
@@ -70,9 +76,11 @@ Feature: U-turns at via points
 
     Scenario: u-turn mixed with non-uturn vias
         Given the node map
-            | a | 1 | b | 3 | c | 5 | d |
-            |   |   | 2 |   |   |   | 4 |
-            |   |   | e |   | f |   | g |
+            """
+            a 1 b 3 c 5 d
+                2       4
+                e   f   g
+            """
 
         And the query options
             | continue_straight | false |

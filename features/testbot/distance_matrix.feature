@@ -9,7 +9,9 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix of minimal network
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes |
@@ -22,7 +24,9 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix with different way speeds
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway   |
@@ -39,7 +43,9 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix with fuzzy match
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes |
@@ -52,8 +58,10 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix of small grid
         Given the node map
-            | a | b | c |
-            | d | e | f |
+            """
+            a b c
+            d e f
+            """
 
         And the ways
             | nodes |
@@ -72,7 +80,9 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix of network with unroutable parts
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | oneway |
@@ -85,8 +95,10 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix of network with oneways
         Given the node map
-            | x | a | b | y |
-            |   | d | e |   |
+            """
+            x a b y
+              d e
+            """
 
         And the ways
             | nodes | oneway |
@@ -103,8 +115,10 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix and with only one source
         Given the node map
-            | a | b | c |
-            | d | e | f |
+            """
+            a b c
+            d e f
+            """
 
         And the ways
             | nodes |
@@ -120,8 +134,10 @@ Feature: Basic Distance Matrix
 
      Scenario: Testbot - Travel time 3x2 matrix
         Given the node map
-            | a | b | c |
-            | d | e | f |
+            """
+            a b c
+            d e f
+            """
 
         And the ways
             | nodes |
@@ -140,8 +156,10 @@ Feature: Basic Distance Matrix
         Given a grid size of 300 meters
         Given the extract extra arguments "--small-component-size 4"
         Given the node map
-            | a | b |  | f |
-            | d | e |  | g |
+            """
+            a b   f
+            d e   g
+            """
 
         And the ways
             | nodes |
@@ -160,8 +178,10 @@ Feature: Basic Distance Matrix
         Given a grid size of 300 meters
         Given the extract extra arguments "--small-component-size 4"
         Given the node map
-            | a | b |  | f | h |
-            | d | e |  | g | i |
+            """
+            a b   f h
+            d e   g i
+            """
 
         And the ways
             | nodes |
@@ -181,8 +201,10 @@ Feature: Basic Distance Matrix
 
     Scenario: Testbot - Travel time matrix with loops
         Given the node map
-            | a | 1 | 2 | b |
-            | d | 4 | 3 | c |
+            """
+            a 1 2 b
+            d 4 3 c
+            """
 
         And the ways
             | nodes | oneway |

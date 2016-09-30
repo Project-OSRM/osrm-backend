@@ -8,9 +8,11 @@ Feature: General Post-Processing related features
     # this testcase used to crash geometry generation (at that time handled during intersection generation)
     Scenario: Regression test #2424
         Given the node map
-            |   |   | e |   |   |   |   |   | i |   |   |   |   |
-            | a |   | b |   | c |   | d |   | h |   | k |   | m |
-            |   |   |   |   | f |   |   |   |   |   | l |   |   |
+            """
+                e           i
+            a   b   c   d   h   k   m
+                    f           l
+            """
 
         And the ways
             | nodes  | name                 |

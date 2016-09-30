@@ -40,7 +40,9 @@ Feature: Bike - Max speed restrictions
 
     Scenario: Bike - Do not use maxspeed when higher that way type speed
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | highway     | maxspeed |

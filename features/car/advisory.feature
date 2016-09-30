@@ -8,7 +8,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Advisory speed overwrites maxspeed
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | highway       | maxspeed | maxspeed:advisory |
@@ -22,7 +24,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Advisory speed overwrites forward maxspeed
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | highway       | maxspeed:forward | maxspeed:advisory:forward |
@@ -36,7 +40,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Advisory speed overwrites backwards maxspeed
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | highway       | maxspeed:backward | maxspeed:advisory:backward |
@@ -50,7 +56,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Advisory speed overwrites backwards maxspeed
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway       | maxspeed:backward | maxspeed:advisory:backward |
@@ -65,7 +73,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Directional advisory speeds play nice with eachother
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | highway       | maxspeed:advisory | maxspeed:advisory:forward | maxspeed:advisory:backward |

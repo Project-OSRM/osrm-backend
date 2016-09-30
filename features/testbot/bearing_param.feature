@@ -7,7 +7,9 @@ Feature: Bearing parameter
 
     Scenario: Testbot - Intial bearing in simple case
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes |
@@ -23,9 +25,11 @@ Feature: Bearing parameter
 
     Scenario: Testbot - Intial bearing in simple case
         Given the node map
-            | a |   |
-            | 0 | c |
-            | b |   |
+            """
+            a
+            0 c
+            b
+            """
 
         And the ways
             | nodes |
@@ -43,8 +47,10 @@ Feature: Bearing parameter
 
     Scenario: Testbot - Initial bearing on split way
         Given the node map
-           | g | d |  |  |  |  | 1 |  |  |  |  | c | f |
-           | h | a |  |  |  |  | 0 |  |  |  |  | b | e |
+           """
+           g d         1         c f
+           h a         0         b e
+           """
 
         And the ways
             | nodes | oneway |
@@ -76,13 +82,15 @@ Feature: Bearing parameter
 
     Scenario: Testbot - Initial bearing in all direction
         Given the node map
-            | h |  | q | a |   |  | b |
-            |   |  |   |   |   |  |   |
-            |   |  | p | i | j |  |   |
-            | g |  | o | 0 | k |  | c |
-            |   |  | n | m | l |  |   |
-            |   |  |   |   |   |  |   |
-            | f |  |   | e |   |  | d |
+            """
+            h   q a     b
+
+                p i j
+            g   o 0 k   c
+                n m l
+
+            f     e     d
+            """
 
         And the ways
             | nodes | oneway | name |

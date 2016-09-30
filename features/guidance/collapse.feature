@@ -7,12 +7,14 @@ Feature: Collapse
 
     Scenario: Segregated Intersection, Cross Belonging to Single Street
         Given the node map
-            |   |   | i | l |   |   |
-            |   |   |   |   |   |   |
-            | d |   | c | b |   | a |
-            | e |   | f | g |   | h |
-            |   |   |   |   |   |   |
-            |   |   | j | k |   |   |
+            """
+                i l
+
+            d   c b   a
+            e   f g   h
+
+                j k
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -50,12 +52,14 @@ Feature: Collapse
 
     Scenario: Segregated Intersection, Cross Belonging to Correct Street
         Given the node map
-            |   |   | i | l |   |   |
-            |   |   |   |   |   |   |
-            | d |   | c | b |   | a |
-            | e |   | f | g |   | h |
-            |   |   |   |   |   |   |
-            |   |   | j | k |   |   |
+            """
+                i l
+
+            d   c b   a
+            e   f g   h
+
+                j k
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -93,12 +97,14 @@ Feature: Collapse
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets
         Given the node map
-            |   |   | i | l |   |   |
-            |   |   |   |   |   |   |
-            | d |   | c | b |   | a |
-            | e |   | f | g |   | h |
-            |   |   |   |   |   |   |
-            |   |   | j | k |   |   |
+            """
+                i l
+
+            d   c b   a
+            e   f g   h
+
+                j k
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -136,26 +142,28 @@ Feature: Collapse
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads
         Given the node map
-            |   | n |   | m |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   | g |   | h |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            | c |   | b |   | a |
-            | d |   | e |   | f |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   | j |   | i |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   | k |   | l |   |
+            """
+              n   m
+
+
+
+
+
+              g   h
+
+
+            c   b   a
+            d   e   f
+
+
+              j   i
+
+
+
+
+
+              k   l
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -188,22 +196,24 @@ Feature: Collapse
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads, Intersection belongs to Second
         Given the node map
-            |   | n |   | m |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   | g |   | h |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            | c |   | b |   | a |
-            | d |   | e |   | f |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   | j |   | i |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   | k |   | l |   |
+            """
+              n   m
+
+
+
+              g   h
+
+
+            c   b   a
+            d   e   f
+
+
+              j   i
+
+
+
+              k   l
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -236,12 +246,14 @@ Feature: Collapse
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets - Slight Angles
         Given the node map
-            |   |   | i | l |   |   |
-            |   |   |   |   |   | a |
-            |   |   | c | b |   | h |
-            | d |   | f | g |   |   |
-            | e |   |   |   |   |   |
-            |   |   | j | k |   |   |
+            """
+                i l
+                      a
+                c b   h
+            d   f g
+            e
+                j k
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -279,12 +291,14 @@ Feature: Collapse
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets - Slight Angles (2)
         Given the node map
-            |   |   | i | l |   |   |
-            |   |   |   |   |   |   |
-            |   |   | c | b |   |   |
-            | d |   | f | g |   | a |
-            | e |   |   |   |   | h |
-            |   |   | j | k |   |   |
+            """
+                i l
+
+                c b
+            d   f g   a
+            e         h
+                j k
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -322,12 +336,14 @@ Feature: Collapse
 
     Scenario: Entering a segregated road
         Given the node map
-            |   | a | f |   |   |   | g |
-            |   |   |   |   |   |   |   |
-            |   | b | e |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            | c | d |   |   |   |   |   |
+            """
+              a f       g
+
+              b e
+
+
+            c d
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -347,9 +363,11 @@ Feature: Collapse
 
     Scenario: Do not collapse turning roads
         Given the node map
-            |   |   | e |   |   |
-            |   |   | c |   | d |
-            | a |   | b | f |   |
+            """
+                e
+                c   d
+            a   b f
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -367,7 +385,9 @@ Feature: Collapse
 
      Scenario: Bridge on unnamed road
         Given the node map
-            | a | b |   |   |   | c | d |
+            """
+            a b       c d
+            """
 
         And the ways
             | nodes | highway | name   |
@@ -381,9 +401,11 @@ Feature: Collapse
 
      Scenario: Crossing Bridge into Segregated Turn
         Given the node map
-            |   |   |   |   |   | f |
-            | i | h |   |   | g | e |
-            | a | b |   |   | c | d |
+            """
+                      f
+            i h     g e
+            a b     c d
+            """
 
         And the ways
             | nodes | highway | oneway | name        |
@@ -402,9 +424,11 @@ Feature: Collapse
 
     Scenario: Pankenbruecke
         Given the node map
-            | j |   |   |   | h |   |   |   |   |   | i |   |   |   |   |   |   |
-            |   |   |   |   |   |   | b | c | d | e | f |   |   |   |   |   | g |
-            | k |   |   |   | a |   |   |   |   |   |   |   |   |   |   |   |   |
+            """
+            j       h           i
+                        b c d e f           g
+            k       a
+            """
 
         And the ways
             | nodes | highway | name    | oneway |
@@ -421,11 +445,13 @@ Feature: Collapse
 
      Scenario: Close Turns - Don't Collapse
         Given the node map
-            |   | g | d |   |
-            |   |   |   |   |
-            | e | b | c | f |
-            |   |   |   |   |
-            |   | a | h |   |
+            """
+              g d
+
+            e b c f
+
+              a h
+            """
 
         And the ways
             | nodes | highway | name     |
@@ -443,8 +469,10 @@ Feature: Collapse
 
      Scenario: No Name During Turns
         Given the node map
-            | a | b |   |
-            |   | c | d |
+            """
+            a b
+              c d
+            """
 
         And the ways
             | nodes | highway  | name |
@@ -458,8 +486,10 @@ Feature: Collapse
 
     Scenario: No Name During Turns, Random Oneway
         Given the node map
-            | a | b |   |
-            |   | c | d |
+            """
+            a b
+              c d
+            """
 
         And the ways
             | nodes | highway  | name | oneway |
@@ -473,9 +503,11 @@ Feature: Collapse
 
     Scenario: Pulled Back Turn
         Given the node map
-            |   |   | d |
-            | a | b | c |
-            |   | e |   |
+            """
+                d
+            a b c
+              e
+            """
 
         And the ways
             | nodes | highway  | name  |
@@ -490,8 +522,10 @@ Feature: Collapse
 
     Scenario: No Name During Turns, keep important turns
         Given the node map
-            | a | b | e |
-            |   | c | d |
+            """
+            a b e
+              c d
+            """
 
         And the ways
             | nodes | highway  | name  |
@@ -506,17 +540,19 @@ Feature: Collapse
 
     Scenario: Segregated Intersection into Slight Turn
         Given the node map
-            | h |   |   |   |   |   |   |
-            | a |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | g |   |   |   |   |
-            |   |   | b | f |   |   |   |
-            |   |   |   | c |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | e |
-            |   |   |   |   |   |   | d |
-            |   |   | j | i |   |   |   |
+            """
+            h
+            a
+
+                g
+                b f
+                  c
+
+
+                        e
+                        d
+                j i
+            """
 
         And the ways
             | nodes | highway   | name | oneway |
@@ -533,20 +569,22 @@ Feature: Collapse
 
     Scenario: Segregated Intersection into Very Slight Turn
         Given the node map
-            | h |   |   |   |   |   |   |
-            | a |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | g |   |   |   |   |
-            |   |   | b |   |   |   |   |
-            |   |   |   | f |   |   |   |
-            |   |   |   | c |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | e |
-            |   |   |   |   |   |   | d |
-            |   |   | j | i |   |   |   |
+            """
+            h
+            a
+
+
+                g
+                b
+                  f
+                  c
+
+
+
+                        e
+                        d
+                j i
+            """
 
         And the ways
             | nodes | highway   | name | oneway |
@@ -563,9 +601,11 @@ Feature: Collapse
 
     Scenario: Don't collapse everything to u-turn / too wide
         Given the node map
-            | a |   | b |   | e |
-            |   |   |   |   |   |
-            | d |   | c |   | f |
+            """
+            a   b   e
+
+            d   c   f
+            """
 
         And the ways
             | nodes | highway   | name   |
@@ -580,12 +620,14 @@ Feature: Collapse
 
     Scenario: Forking before a turn
         Given the node map
-            |   |   |   | g |   |
-            |   |   |   |   |   |
-            |   |   |   | c |   |
-            | a |   | b | d | e |
-            |   |   |   |   |   |
-            |   |   |   | f |   |
+            """
+                  g
+
+                  c
+            a   b d e
+
+                  f
+            """
 
         And the ways
             | nodes | name  | oneway | highway   |
@@ -607,12 +649,14 @@ Feature: Collapse
 
     Scenario: Forking before a turn (narrow)
         Given the node map
-            |   |   |   | g |   |
-            |   |   |   |   |   |
-            |   |   |   | c |   |
-            | a | b |   | d | e |
-            |   |   |   |   |   |
-            |   |   |   | f |   |
+            """
+                  g
+
+                  c
+            a b   d e
+
+                  f
+            """
 
         And the ways
             | nodes | name  | oneway | highway   |
@@ -636,12 +680,14 @@ Feature: Collapse
 
     Scenario: Forking before a turn (forky)
         Given the node map
-            |   |   |   |   |   | g |   |   |
-            |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   | c |   |   |
-            | a |   |   | b |   |   |   |   |
-            |   |   |   |   |   |   | d |   |
-            |   |   |   |   |   |   | f | e |
+            """
+                      g
+
+                      c
+            a     b
+                        d
+                        f e
+            """
 
         And the ways
             | nodes | name  | oneway | highway   |
@@ -667,9 +713,11 @@ Feature: Collapse
 
     Scenario: On-Off on Highway
         Given the node map
-            | f |   |   |   |
-            | a | b | c | d |
-            |   |   |   | e |
+            """
+            f
+            a b c d
+                  e
+            """
 
         And the ways
             | nodes | name | highway       | oneway |
@@ -687,13 +735,15 @@ Feature: Collapse
     @negative @straight
     Scenario: Don't collapse going straight if actual turn
         Given the node map
-            |   | c | e |   |   |
-            |   |   | d |   | f |
-            |   |   |   |   |   |
-            |   |   | b |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   | a |   |   |
+            """
+              c e
+                d   f
+
+                b
+
+
+                a
+            """
 
         And the ways
             | nodes | name     | highway     |
@@ -709,12 +759,14 @@ Feature: Collapse
 
     Scenario: Entering a segregated road
         Given the node map
-            |   | a | f |   |   |
-            |   |   |   |   | g |
-            |   | b | e |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            | c | d |   |   |   |
+            """
+              a f
+                    g
+              b e
+
+
+            c d
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -729,12 +781,14 @@ Feature: Collapse
 
     Scenario: Entering a segregated road slight turn
         Given the node map
-            |   |   | a | f |   |
-            |   |   |   |   | g |
-            |   | b | e |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            | c | d |   |   |   |
+            """
+                a f
+                    g
+              b e
+
+
+            c d
+            """
 
         And the ways
             | nodes | highway | name   | oneway |
@@ -749,11 +803,13 @@ Feature: Collapse
 
     Scenario: Do not collapse UseLane step when lanes change
         Given the node map
-            |   |   |   | f | g |   |
-            |   |   |   |   |   |   |
-            | a | b | c | d |   | e |
-            |   |   |   |   |   |   |
-            |   |   |   | h | i |   |
+            """
+                  f g
+
+            a b c d   e
+
+                  h i
+            """
 
         And the ways
             | nodes | turn:lanes:forward                     | name |
@@ -772,11 +828,13 @@ Feature: Collapse
 
     Scenario: But _do_ collapse UseLane step when lanes stay the same
         Given the node map
-            |   |   |   | f | g |   |
-            |   |   |   |   |   |   |
-            | a | b | c | d |   | e |
-            |   |   |   |   |   |   |
-            |   |   |   | h | i |   |
+            """
+                  f g
+
+            a b c d   e
+
+                  h i
+            """
 
         And the ways
             | nodes | turn:lanes:forward                     | name |
@@ -795,10 +853,12 @@ Feature: Collapse
 
     Scenario: Don't collapse different travel modes
         Given the node map
-            | g |   |   |   |   |   |   | h |   |
-            | a | b |   | c |   |   |   | e | f |
-            |   |   |   |   |   | d |   |   |   |
-            |   |   |   | i | j |   |   |   |   |
+            """
+            g             h
+            a b   c       e f
+                      d
+                  i j
+            """
 
         And the ways
             | nodes | highway | route | name |
@@ -818,11 +878,13 @@ Feature: Collapse
 
     Scenario: U-Turn onto a Ferry
         Given the node map
-            |   |   |   |   |   |   | i |   |   |
-            | j | e |   |   |   |   | d | c | h |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            | k | g |   |   |   |   | a | b | f |
+            """
+                        i
+            j e         d c h
+
+
+            k g         a b f
+            """
 
         And the ways
             | nodes | highway | route | name  | oneway |

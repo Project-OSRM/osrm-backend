@@ -7,9 +7,11 @@ Feature: Notification on turn onto mode change
 
     Scenario: Turn onto a Ferry
         Given the node map
-            | f |   |   |   |   |
-            | b |   |   | d |   |
-            | a |   |   |   | e |
+            """
+            f
+            b     d
+            a       e
+            """
 
         And the ways
             | nodes | highway | route | name  |
@@ -23,9 +25,11 @@ Feature: Notification on turn onto mode change
 
     Scenario: Turn onto a Ferry
         Given the node map
-            | h |   |   | g |
-            | a | c |   | e |
-            | b |   |   | f |
+            """
+            h     g
+            a c   e
+            b     f
+            """
 
         And the ways
             | nodes | highway | route | name  |
@@ -41,10 +45,12 @@ Feature: Notification on turn onto mode change
 
     Scenario: Straight onto a Ferry
         Given the node map
-            |   |   |   |   |   |
-            |   | c | d |   | i |
-            | a |   |   |   |   |
-            |   |   |   | f |   |
+            """
+
+              c d   i
+            a
+                  f
+            """
 
         And the ways
             | nodes | highway | route | name    |

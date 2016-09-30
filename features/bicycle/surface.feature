@@ -41,8 +41,10 @@ Feature: Bike - Surfaces
 
     Scenario: Bicycle - Surfaces should not increase speed when pushing bikes
       Given the node map
-         | a | b |
-         | c | d |
+         """
+         a b
+         c d
+         """
 
       And the ways
         | nodes | highway | oneway | surface |

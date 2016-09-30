@@ -7,11 +7,13 @@ Feature: Basic Roundabout
 
     Scenario: Only Enter
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -39,13 +41,11 @@ Feature: Basic Roundabout
     #2927
     Scenario: Only Roundabout
         Given the node map
-            |   |   | a |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            | b |   |   |   | d |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   | c |   |   |
+            """
+              a
+            b   d
+              c
+            """
 
        And the ways
             | nodes  | junction   |
@@ -57,11 +57,13 @@ Feature: Basic Roundabout
 
     Scenario: Only Exit
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -89,11 +91,13 @@ Feature: Basic Roundabout
 
     Scenario: Drive Around
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -120,11 +124,13 @@ Feature: Basic Roundabout
 
      Scenario: Mixed Entry and Exit
         Given the node map
-           |   | c |   | a |   |
-           | j |   | b |   | f |
-           |   | k |   | e |   |
-           | l |   | h |   | d |
-           |   | g |   | i |   |
+           """
+             c   a
+           j   b   f
+             k   e
+           l   h   d
+             g   i
+           """
 
         And the ways
            | nodes | junction   | oneway |
@@ -155,13 +161,15 @@ Feature: Basic Roundabout
 
     Scenario: Mixed Entry and Exit - segregated roads
         Given the node map
-           |   |   | a |   | c |   |   |
-           |   |   |   |   |   |   |   |
-           | l |   |   | b |   |   | d |
-           |   |   | k |   | e |   |   |
-           | j |   |   | h |   |   | f |
-           |   |   |   |   |   |   |   |
-           |   |   | i |   | g |   |   |
+           """
+               a   c
+
+           l     b     d
+               k   e
+           j     h     f
+
+               i   g
+           """
 
         And the ways
            | nodes | junction   | oneway |
@@ -192,13 +200,15 @@ Feature: Basic Roundabout
 
     Scenario: Mixed Entry and Exit - segregated roads, different names
         Given the node map
-           |   |   | a |   | c |   |   |
-           |   |   |   |   |   |   |   |
-           | l |   |   | b |   |   | d |
-           |   |   | k |   | e |   |   |
-           | j |   |   | h |   |   | f |
-           |   |   |   |   |   |   |   |
-           |   |   | i |   | g |   |   |
+           """
+               a   c
+
+           l     b     d
+               k   e
+           j     h     f
+
+               i   g
+           """
 
         And the ways
            | nodes | junction   | oneway |
@@ -234,21 +244,23 @@ Feature: Basic Roundabout
     Scenario: Motorway Roundabout
     #See 39.933742 -75.082345
         Given the node map
-            |   |   |   |   | l |   |   |   | a |   | i |
-            |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | b |   |   |   |   |
-            |   |   |   | c |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   | h |   |   |
-            | n |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   | d |   |   |   |   |   |   |   | j |
-            |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | m |   |   | g |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   | e |   | f |   |   |   |   |   |   |
+            """
+                    l       a   i
+
+
+                        b
+                  c
+
+                            h
+            n
+
+                d               j
+
+                    m     g
+
+
+                e   f
+            """
 
         And the ways
             | nodes | junction   | name     | highway    | oneway | ref    |
@@ -272,15 +284,17 @@ Feature: Basic Roundabout
     Scenario: Double Roundabout with through-lane
     #http://map.project-osrm.org/?z=18&center=38.911752%2C-77.048667&loc=38.912003%2C-77.050831&loc=38.909277%2C-77.042516&hl=en&alt=0
         Given the node map
-            |   |   |   |   | o |   |   |   |   |   |   |   |   |   |   |   | n |   |   |   |   |
-            |   |   |   |   | e |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | q |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            | a |   | b |   |   |   |   |   | s |   | f |   |   |   | g |   |   |   | i |   | k |
-            |   |   |   |   |   |   | r |   |   |   |   |   |   |   |   |   |   | p |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   | t |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | c |   | d |   |   |   |   |   |   |   |   |   | h |   |   |   |   |
-            |   |   |   |   | l |   |   |   |   |   |   |   |   |   |   |   | m |   |   |   |   |
+            """
+                    o                       n
+                    e                       j
+
+                        q
+            a   b           s   f       g       i   k
+                        r                     p
+                                t
+                    c   d                   h
+                    l                       m
+            """
 
         And the nodes
             | node | highway         |
@@ -311,36 +325,38 @@ Feature: Basic Roundabout
     #2856 - http://www.openstreetmap.org/#map=19/47.23318/-1.56563
     Scenario: Linked Roundabouts
         Given the node map
-            |   |   |   |   |   |   |   |   |   |   |   |   |   | x |
-            |   | u |   |   |   |   |   |   |   |   |   |   | r |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   | t |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   | s |   |   |   |
-            |   |   | v |   |   | i |   | h |   | g |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   | q |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   | j |   |   |   |   |   |   |   | f |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   | a |   |   |   |   |   |   |   | e |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   | b |   | c |   | d |   | p |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   | m |   |   |   |   |   |   |   | n |   |   |   |
-            |   |   |   |   | l |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   | k |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   | w |   |   |   |   |   |   |   |   |   | o |   |   |
+            """
+                                    x
+            u                     r  
+
+                t                    
+                              s      
+              v     i   h   g        
+                                q    
+
+                j               f    
+
+
+                a               e    
+                   
+
+                    b   c   d   p    
+
+              m               n      
+                  l                  
+
+
+
+
+
+
+
+              k                      
+
+
+
+            w                   o    
+            """
 
         And the ways
             | nodes | junction   | name | highway   | oneway |

@@ -7,9 +7,11 @@ Feature: Basic Routing
 
     Scenario: Graph transformation
         Given the node map
-            |   |   | d |
-            | a | b | c |
-            |   |   | e |
+            """
+                d
+            a b c
+                e
+            """
 
         And the ways
             | nodes |
@@ -22,12 +24,14 @@ Feature: Basic Routing
 
     Scenario: Turn instructions on compressed road network geometry
         Given the node map
-            | x | a |   |   |
-            |   | b |   |   |
-            | f |   |   | e |
-            |   |   |   |   |
-            |   |   |   |   |
-            | y | c |   | d |
+            """
+            x a
+              b
+            f     e
+
+
+            y c   d
+            """
 
         And the ways
             | nodes  | name  |

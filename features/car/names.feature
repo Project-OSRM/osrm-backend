@@ -6,8 +6,10 @@ Feature: Car - Street names in instructions
 
     Scenario: Car - A named street
         Given the node map
-            | a | b |
-            |   | c |
+            """
+            a b
+              c
+            """
 
         And the ways
             | nodes | name     | ref |
@@ -20,9 +22,11 @@ Feature: Car - Street names in instructions
 
     Scenario: Car - A named street with pronunciation
         Given the node map
-            | a | b | d |
-            |   | 1 |   |
-            |   | c |   |
+            """
+            a b d
+              1
+              c
+            """
 
         And the ways
             | nodes | name     |name:pronunciation  | ref |
@@ -38,9 +42,11 @@ Feature: Car - Street names in instructions
     # See #2860
     Scenario: Car - same street name but different pronunciation
         Given the node map
-            | a | b | c |
-            |   | d |   |
-            |   | e |   |
+            """
+            a b c
+              d
+              e
+            """
 
         And the ways
             | nodes | name       | name:pronunciation |
@@ -55,7 +61,9 @@ Feature: Car - Street names in instructions
     @todo
     Scenario: Car - Use way type to describe unnamed ways
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway     | name |
@@ -68,16 +76,18 @@ Feature: Car - Street names in instructions
 
     Scenario: Inner city expressway with on road
         Given the node map
-            | a | b |   |   |   | c | g |
-            |   |   |   |   | f |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   | d |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   | e |   |
+            """
+            a b       c g
+                    f
+
+
+
+                      d
+
+
+
+                      e
+            """
 
         And the ways
             | nodes | highway      | name  | name:pronunciation |

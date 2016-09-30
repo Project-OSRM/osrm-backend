@@ -7,15 +7,17 @@ Feature: Simple Turns
 
     Scenario: Turning into splitting road
         Given the node map
-            |   | a |   |   |
-            |   | b |   |   |
-            |   |   |   |   |
-            |   |   |   |   |
-            | c |   | d |   |
-            |   |   |   |   |
-            |   |   |   | e |
-            |   |   |   |   |
-            |   |   | f |   |
+            """
+              a
+              b
+
+
+            c   d
+
+                  e
+
+                f
+            """
 
         And the ways
             | nodes | name | highway | oneway |
@@ -31,18 +33,20 @@ Feature: Simple Turns
 
     Scenario: Middle Island
         Given the node map
-            |   | a |   |
-            |   |   |   |
-            |   | b |   |
-            | c |   | h |
-            |   |   |   |
-            |   |   |   |
-            |   |   |   |
-            |   |   |   |
-            | d |   | g |
-            |   | e |   |
-            |   |   |   |
-            |   | f |   |
+            """
+              a
+
+              b
+            c   h
+
+
+
+
+            d   g
+              e
+
+              f
+            """
 
         And the ways
             | nodes | name | oneway |
@@ -60,18 +64,20 @@ Feature: Simple Turns
 
     Scenario: Middle Island Over Bridge
         Given the node map
-            |   | a |   |
-            |   |   |   |
-            |   | b |   |
-            | c |   | h |
-            |   |   |   |
-            |   |   |   |
-            | 1 |   | 2 |
-            |   |   |   |
-            | d |   | g |
-            |   | e |   |
-            |   |   |   |
-            |   | f |   |
+            """
+              a
+
+              b
+            c   h
+
+
+            1   2
+
+            d   g
+              e
+
+              f
+            """
 
         And the ways
             | nodes | name   | oneway |
@@ -96,19 +102,21 @@ Feature: Simple Turns
     @negative
     Scenario: Don't Collapse Places:
         Given the node map
-            |   |   |   |   |   |   | h |   |   |   |   |   |   |
-            |   |   |   |   |   |   | g |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            | a | b |   |   |   |   |   |   |   |   |   | e | f |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | c |   |   |   |   |   |   |
-            |   |   |   |   |   |   | d |   |   |   |   |   |   |
+            """
+                        h
+                        g
+
+
+
+
+            a b                   e f
+
+
+
+
+                        c
+                        d
+            """
 
         And the ways
             | nodes | name   | oneway |

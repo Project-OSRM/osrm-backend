@@ -6,15 +6,17 @@ Feature: Destination Signs
 
     Scenario: Car - route name assembly with destination signs
         Given the node map
-          | a | b |
-          | c | d |
-          | e | f |
-          | g | h |
-          | i | j |
-          | k | l |
-          | m | n |
-          | o | p |
-          | q | r |
+          """
+          a b
+          c d
+          e f
+          g h
+          i j
+          k l
+          m n
+          o p
+          q r
+          """
 
         And the ways
           | nodes | name | ref | destination    | destination:ref | oneway | #                                    |

@@ -6,8 +6,10 @@ Feature: Foot - Street names in instructions
 
     Scenario: Foot - A named street
         Given the node map
-            | a | b |
-            |   | c |
+            """
+            a b
+              c
+            """
 
         And the ways
             | nodes | name     | ref |
@@ -21,7 +23,9 @@ Feature: Foot - Street names in instructions
     @unnamed
     Scenario: Foot - Use way type to describe unnamed ways
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway | name |

@@ -48,41 +48,26 @@ module.exports = function () {
         q.awaitAll(callback);
     });
 
-    this.Given(/^the node map$/, (table, callback) => {
-        let q = d3.queue();
+    this.Given(/^the node map$/, (docstring, callback) => {
+        var q = d3.queue();
 
-        let addNode = (name, ri, ci, cb) => {
-            if (name) {
-                let nodeWithID = name.match(/([a-z])\:([0-9]*)/);
-                if (nodeWithID) {
-                    let nodeName = nodeWithID[1],
-                        nodeID = nodeWithID[2];
-                    if (this.nameNodeHash[nodeName]) throw new Error(util.format('*** duplicate node %s', name));
-                    let lonLat = this.tableCoordToLonLat(ci, ri);
-                    this.addOSMNode(nodeName, lonLat[0], lonLat[1], nodeID);
-                } else {
-                    if (name.length !== 1) throw new Error(util.format('*** node invalid name %s, must be single characters', name));
-                    if (!name.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name %s, must me alphanumeric', name));
-
-                    if (name.match(/[a-z]/)) {
-                        if (this.nameNodeHash[name]) throw new Error(util.format('*** duplicate node %s', name));
-                        let lonLat = this.tableCoordToLonLat(ci, ri);
-                        this.addOSMNode(name, lonLat[0], lonLat[1], null);
-                    } else {
-                        if (this.locationHash[name]) throw new Error(util.format('*** duplicate node %s'), name);
-                        let lonLat = this.tableCoordToLonLat(ci, ri);
-                        this.addLocation(name, lonLat[0], lonLat[1], null);
-                    }
-                }
-
-                cb();
+        var addNode = (name, ri, ci, cb) => {
+            var lonLat = this.tableCoordToLonLat(ci, ri);
+            if (name.match(/[a-z]/) ) {
+                if (this.nameNodeHash[name]) throw new Error(util.format('*** duplicate node %s', name));
+                this.addOSMNode(name, lonLat[0], lonLat[1], null);
+            } else if (name.match(/[0-9]/) ) {
+                if (this.locationHash[name]) throw new Error(util.format('*** duplicate node %s'), name);
+                this.addLocation(name, lonLat[0], lonLat[1], null);
             }
-            else cb();
+            cb();
         };
 
-        table.raw().forEach((row, ri) => {
-            row.forEach((name, ci) => {
-                q.defer(addNode, name, ri, ci);
+        docstring.split(/\n/).forEach( (row,ri) => {
+            row.split('').forEach( (cell,ci) => {
+                if( cell.match(/[a-z0-9]/) ) {
+                    q.defer(addNode, cell, ri, ci*0.5);
+                }
             });
         });
 
@@ -120,7 +105,11 @@ module.exports = function () {
             delete row.node;
             if (!node) throw new Error(util.format('*** unknown node %s'), name);
             for (let key in row) {
-                node.addTag(key, row[key]);
+                if (key=='id') {
+                    node.setID( row[key] );
+                } else {
+                    node.addTag(key, row[key]);
+                }
             }
             cb();
         };

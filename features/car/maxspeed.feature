@@ -8,7 +8,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Respect maxspeeds when lower that way type speed
         Given the node map
-            | a | b | c | d | e | f | g |
+            """
+            a b c d e f g
+            """
 
         And the ways
             | nodes | highway | maxspeed    |
@@ -30,7 +32,9 @@ OSRM will use 4/5 of the projected free-flow speed.
 
     Scenario: Car - Do not ignore maxspeed when higher than way speed
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway       | maxspeed |

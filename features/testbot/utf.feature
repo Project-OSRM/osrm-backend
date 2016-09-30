@@ -6,7 +6,9 @@ Feature: Handling of UTF characters
 
     Scenario: Streetnames with UTF characters
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | name                   |
@@ -24,7 +26,9 @@ Feature: Handling of UTF characters
     @todo
     Scenario: Up to 255 Unicode Code Points (255 x Panda Code Point)
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | name | highway |

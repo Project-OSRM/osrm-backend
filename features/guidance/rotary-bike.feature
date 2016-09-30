@@ -7,11 +7,13 @@ Feature: Rotary
 
     Scenario: Enter and Exit
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | h | g |   | c | d |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            h g   c d
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -38,11 +40,13 @@ Feature: Rotary
 
     Scenario: Only Enter
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -69,11 +73,13 @@ Feature: Rotary
 
     Scenario: Only Exit
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -101,11 +107,13 @@ Feature: Rotary
 
     Scenario: Drive Around
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -133,11 +141,13 @@ Feature: Rotary
      #needs to be adjusted when name-discovery works for entrys
      Scenario: Mixed Entry and Exit
         Given the node map
-           |   | c |   | a |   |
-           | j |   | b |   | f |
-           |   | k |   | e |   |
-           | l |   | h |   | d |
-           |   | g |   | i |   |
+           """
+             c   a
+           j   b   f
+             k   e
+           l   h   d
+             g   i
+           """
 
         And the ways
            | nodes | junction   | oneway |

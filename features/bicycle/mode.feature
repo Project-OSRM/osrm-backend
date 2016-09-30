@@ -6,8 +6,10 @@ Feature: Bike - Mode flag
 
     Scenario: Bike - Mode when using a ferry
     	Given the node map
-    	 | a | b |   |
-    	 |   | c | d |
+    	 """
+    	 a b
+    	   c d
+    	 """
 
     	And the ways
     	 | nodes | highway | route | duration |
@@ -26,8 +28,10 @@ Feature: Bike - Mode flag
 
      Scenario: Bike - Mode when using a train
      	Given the node map
-     	 | a | b |   |
-     	 |   | c | d |
+     	 """
+     	 a b
+     	   c d
+     	 """
 
      	And the ways
      	 | nodes | highway | railway | bicycle |
@@ -46,8 +50,10 @@ Feature: Bike - Mode flag
 
      Scenario: Bike - Mode when pushing bike against oneways
      	Given the node map
-     	 | a | b | e |
-     	 | f | c | d |
+     	 """
+     	 a b e
+     	 f c d
+     	 """
 
      	And the ways
      	 | nodes | highway | oneway |
@@ -69,8 +75,10 @@ Feature: Bike - Mode flag
 
      Scenario: Bike - Mode when pushing on pedestrain streets
      	Given the node map
-     	 | a | b |   |
-     	 |   | c | d |
+     	 """
+     	 a b
+     	   c d
+     	 """
 
      	And the ways
      	 | nodes | highway    |
@@ -89,8 +97,10 @@ Feature: Bike - Mode flag
 
      Scenario: Bike - Mode when pushing on pedestrain areas
      	Given the node map
-     	 | a | b |   |   |
-     	 |   | c | d | f |
+     	 """
+     	 a b
+     	   c d f
+     	 """
 
      	And the ways
      	 | nodes | highway    | area |
@@ -109,8 +119,10 @@ Feature: Bike - Mode flag
 
      Scenario: Bike - Mode when pushing on steps
      	Given the node map
-     	 | a | b |   |   |
-     	 |   | c | d | f |
+     	 """
+     	 a b
+     	   c d f
+     	 """
 
      	And the ways
     	 | nodes | highway |
@@ -129,8 +141,10 @@ Feature: Bike - Mode flag
 
      Scenario: Bike - Mode when bicycle=dismount
      	Given the node map
-     	 | a | b |   |   |
-     	 |   | c | d | f |
+     	 """
+     	 a b
+     	   c d f
+     	 """
 
      	And the ways
     	 | nodes | highway | bicycle  |
@@ -149,7 +163,9 @@ Feature: Bike - Mode flag
 
     Scenario: Bicycle - Modes when starting on forward oneway
         Given the node map
-         | a | b |
+         """
+         a b
+         """
 
         And the ways
          | nodes | oneway |
@@ -162,7 +178,9 @@ Feature: Bike - Mode flag
 
     Scenario: Bicycle - Modes when starting on reverse oneway
         Given the node map
-         | a | b |
+         """
+         a b
+         """
 
         And the ways
          | nodes | oneway |

@@ -15,7 +15,9 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Always announce mode change
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway     | name |
@@ -30,7 +32,9 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Compressed Modes
         Given the node map
-            | a | b | c | d | e | f | g |
+            """
+            a b c d e f g
+            """
 
         And the ways
             | nodes | highway     | name   |
@@ -45,8 +49,10 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Modes in each direction, different forward/backward speeds
         Given the node map
-            |   | 0 | 1 |   |
-            | a |   |   | b |
+            """
+              0 1
+            a     b
+            """
 
         And the ways
             | nodes | highway | oneway |
@@ -65,8 +71,10 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Modes in each direction, same forward/backward speeds
         Given the node map
-            |   | 0 | 1 |   |
-            | a |   |   | b |
+            """
+              0 1
+            a     b
+            """
 
         And the ways
             | nodes | highway |
@@ -80,7 +88,9 @@ Feature: Testbot - Travel mode
     @oneway
     Scenario: Testbot - Modes for oneway, different forward/backward speeds
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | highway | oneway |
@@ -94,7 +104,9 @@ Feature: Testbot - Travel mode
     @oneway
     Scenario: Testbot - Modes for oneway, same forward/backward speeds
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | highway | oneway |
@@ -108,7 +120,9 @@ Feature: Testbot - Travel mode
     @oneway
     Scenario: Testbot - Modes for reverse oneway, different forward/backward speeds
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | highway | oneway |
@@ -122,7 +136,9 @@ Feature: Testbot - Travel mode
     @oneway
     Scenario: Testbot - Modes for reverse oneway, same forward/backward speeds
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | highway | oneway |
@@ -136,7 +152,9 @@ Feature: Testbot - Travel mode
     @via
     Scenario: Testbot - Mode should be set at via points
         Given the node map
-            | a | 1 | b |
+            """
+            a 1 b
+            """
 
         And the ways
             | nodes | highway |
@@ -149,8 +167,10 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Starting at a tricky node
        Given the node map
-            |  | a |  |   |   |
-            |  |   |  | b | c |
+            """
+              a
+                  b c
+            """
 
        And the ways
             | nodes | highway |
@@ -163,7 +183,9 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Mode changes on straight way without name change
        Given the node map
-            | a | 1 | b | 2 | c |
+            """
+            a 1 b 2 c
+            """
 
        And the ways
             | nodes | highway | name   |
@@ -179,8 +201,10 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Mode for routes
        Given the node map
-            | a | b |   |   |   |
-            |   | c | d | e | f |
+            """
+            a b
+              c d e f
+            """
 
        And the ways
             | nodes | highway | route | duration |
@@ -202,13 +226,15 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - Modes, triangle map
         Given the node map
-            |   |   |   |   |   |   | d |
-            |   |   |   |   |   | 2 |   |
-            |   |   |   |   | 6 |   | 5 |
-            | a | 0 | b | c |   |   |   |
-            |   |   |   |   | 4 |   | 1 |
-            |   |   |   |   |   | 3 |   |
-            |   |   |   |   |   |   | e |
+            """
+                        d
+                      2
+                    6   5
+            a 0 b c
+                    4   1
+                      3
+                        e
+            """
 
        And the ways
             | nodes | highway | oneway |
@@ -236,9 +262,11 @@ Feature: Testbot - Travel mode
 
     Scenario: Testbot - River in the middle
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway |

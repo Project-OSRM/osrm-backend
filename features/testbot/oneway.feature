@@ -7,12 +7,14 @@ Feature: Testbot - oneways
 
     Scenario: Routing on a oneway roundabout
         Given the node map
-        |   |   |   |   | v |   |
-        | x |   | d | c |   |   |
-        |   | e |   |   | b |   |
-        |   | f |   |   | a |   |
-        |   |   | g | h |   | y |
-        |   | z |   |   |   |   |
+        """
+                v
+        x   d c
+          e     b
+          f     a
+            g h   y
+          z
+        """
 
         And the ways
             | nodes | oneway |
@@ -60,8 +62,10 @@ Feature: Testbot - oneways
 
     Scenario: Testbot - Around the Block
         Given the node map
-            |   | a | b |   |
-            | e | d | c | f |
+            """
+              a b
+            e d c f
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -92,7 +96,9 @@ Feature: Testbot - oneways
 
     Scenario: Testbot - Two consecutive oneways
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | oneway |

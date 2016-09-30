@@ -6,9 +6,11 @@ Feature: Alternative route
         And a grid size of 200 meters
 
         And the node map
-            |   | b | c | d |   |   |
-            | a |   | k |   |   | z |
-            |   | g | h | i | j |   |
+            """
+              b c d
+            a   k     z
+              g h i j
+            """
 
         And the ways
             | nodes |

@@ -6,9 +6,11 @@ Feature: Durations
 
     Scenario: Duration of ways
         Given the node map
-            | a | b |  |   |   | f |
-            |   |   |  | e |   |   |
-            |   | c |  |   | d |   |
+            """
+            a b       f
+                  e
+              c     d
+            """
 
         And the ways
             | nodes | highway | duration |
@@ -29,7 +31,9 @@ Feature: Durations
     @todo
     Scenario: Partial duration of ways
         Given the node map
-            | a | b |  | c |
+            """
+            a b   c
+            """
 
         And the ways
             | nodes | highway | duration |

@@ -7,7 +7,9 @@ Feature: Distance calculation
     Scenario: 100m distance
         Given a grid size of 100 meters
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes |
@@ -19,9 +21,11 @@ Feature: Distance calculation
 
     Scenario: Distance should equal sum of segments, leftwinded
         Given the node map
-            | e |   |
-            | d | c |
-            | a | b |
+            """
+            e
+            d c
+            a b
+            """
 
         And the ways
             | nodes |
@@ -33,9 +37,11 @@ Feature: Distance calculation
 
     Scenario: Distance should equal sum of segments, rightwinded
         Given the node map
-            |   | e |
-            | c | d |
-            | b | a |
+            """
+              e
+            c d
+            b a
+            """
 
         And the ways
             | nodes |
@@ -48,8 +54,10 @@ Feature: Distance calculation
     Scenario: 10m distances
         Given a grid size of 10 meters
         Given the node map
-            | a | b |
-            |   | c |
+            """
+            a b
+              c
+            """
 
         And the ways
             | nodes |
@@ -67,8 +75,10 @@ Feature: Distance calculation
     Scenario: 100m distances
         Given a grid size of 100 meters
         Given the node map
-            | a | b |
-            |   | c |
+            """
+            a b
+              c
+            """
 
         And the ways
             | nodes |
@@ -86,8 +96,10 @@ Feature: Distance calculation
     Scenario: 1km distance
         Given a grid size of 1000 meters
         Given the node map
-            | a | b |
-            |   | c |
+            """
+            a b
+              c
+            """
 
         And the ways
             | nodes |
@@ -105,10 +117,12 @@ Feature: Distance calculation
     Scenario: Distance of a winding south-north path
         Given a grid size of 10 meters
         Given the node map
-            | a | b |
-            | d | c |
-            | e | f |
-            | h | g |
+            """
+            a b
+            d c
+            e f
+            h g
+            """
 
         And the ways
             | nodes    |
@@ -127,8 +141,10 @@ Feature: Distance calculation
     Scenario: Distance of a winding east-west path
         Given a grid size of 10 meters
         Given the node map
-            | a | d | e | h |
-            | b | c | f | g |
+            """
+            a d e h
+            b c f g
+            """
 
         And the ways
             | nodes    |
@@ -147,13 +163,15 @@ Feature: Distance calculation
     Scenario: Geometric distances
         Given a grid size of 100 meters
         Given the node map
-            | v | w | y | a | b | c | d |
-            | u |   |   |   |   |   | e |
-            | t |   |   |   |   |   | f |
-            | s |   |   | x |   |   | g |
-            | r |   |   |   |   |   | h |
-            | q |   |   |   |   |   | i |
-            | p | o | n | m | l | k | j |
+            """
+            v w y a b c d
+            u           e
+            t           f
+            s     x     g
+            r           h
+            q           i
+            p o n m l k j
+            """
 
         And the ways
             | nodes |
@@ -213,11 +231,13 @@ Feature: Distance calculation
     Scenario: Distance of a maze of short segments
         Given a grid size of 7 meters
         Given the node map
-            | a | b | s | t |
-            | d | c | r | q |
-            | e | f | o | p |
-            | h | g | n | m |
-            | i | j | k | l |
+            """
+            a b s t
+            d c r q
+            e f o p
+            h g n m
+            i j k l
+            """
 
         And the ways
             | nodes                |

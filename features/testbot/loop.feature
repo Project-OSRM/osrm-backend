@@ -6,9 +6,11 @@ Feature: Avoid weird loops caused by rounding errors
 
     Scenario: Weird sidestreet loops
         Given the node map
-            | a | 1 | b | 2 | c | 3 | d |
-            |   |   |   |   |   |   |   |
-            | e |   | f |   | g |   | h |
+            """
+            a 1 b 2 c 3 d
+
+            e   f   g   h
+            """
 
        And the ways
             | nodes  |
@@ -73,14 +75,16 @@ Feature: Avoid weird loops caused by rounding errors
     @412
     Scenario: Avoid weird loops 3
         And the node map
-            | a |   |   |
-            | b | e |   |
-            | h |   | 1 |
-            |   |   |   |
-            |   |   | 2 |
-            | g |   |   |
-            |   | c | f |
-            | d |   |   |
+            """
+            a
+            b e
+            h   1
+
+                2
+            g
+              c f
+            d
+            """
 
         And the ways
             | nodes | highway     |

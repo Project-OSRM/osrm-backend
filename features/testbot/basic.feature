@@ -7,7 +7,9 @@ Feature: Basic Routing
     @smallest
     Scenario: A single way with two nodes
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes |
@@ -20,7 +22,9 @@ Feature: Basic Routing
 
     Scenario: Routing in between two nodes of way
         Given the node map
-            | a | b | 1 | 2 | c | d |
+            """
+            a b 1 2 c d
+            """
 
         And the ways
             | nodes |
@@ -33,7 +37,9 @@ Feature: Basic Routing
 
     Scenario: Routing between the middle nodes of way
         Given the node map
-            | a | b | c | d | e | f |
+            """
+            a b c d e f
+            """
 
         And the ways
             | nodes  |
@@ -56,7 +62,9 @@ Feature: Basic Routing
 
     Scenario: Two ways connected in a straight line
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes |
@@ -74,8 +82,10 @@ Feature: Basic Routing
 
     Scenario: 2 unconnected parallel ways
         Given the node map
-            | a | b | c |
-            | d | e | f |
+            """
+            a b c
+            d e f
+            """
 
         And the ways
             | nodes |
@@ -113,9 +123,11 @@ Feature: Basic Routing
 
     Scenario: 3 ways connected in a triangle
         Given the node map
-            | a |   | b |
-            |   |   |   |
-            |   | c |   |
+            """
+            a   b
+
+              c
+            """
 
         And the ways
             | nodes |
@@ -135,10 +147,12 @@ Feature: Basic Routing
     Scenario: 3 connected triangles
         Given a grid size of 100 meters
         Given the node map
-            | x | a |   | b | s |
-            | y |   |   |   | t |
-            |   |   | c |   |   |
-            |   | v |   | w |   |
+            """
+            x a   b s
+            y       t
+                c
+              v   w
+            """
 
         And the ways
             | nodes |
@@ -166,9 +180,11 @@ Feature: Basic Routing
 
     Scenario: To ways connected at a 45 degree angle
         Given the node map
-            | a |   |   |
-            | b |   |   |
-            | c | d | e |
+            """
+            a
+            b
+            c d e
+            """
 
         And the ways
             | nodes |
@@ -186,10 +202,12 @@ Feature: Basic Routing
 
     Scenario: Grid city center
         Given the node map
-            | a | b | c | d |
-            | e | f | g | h |
-            | i | j | k | l |
-            | m | n | o | p |
+            """
+            a b c d
+            e f g h
+            i j k l
+            m n o p
+            """
 
         And the ways
             | nodes |
@@ -211,10 +229,12 @@ Feature: Basic Routing
 
     Scenario: Grid city periphery
         Given the node map
-            | a | b | c | d |
-            | e | f | g | h |
-            | i | j | k | l |
-            | m | n | o | p |
+            """
+            a b c d
+            e f g h
+            i j k l
+            m n o p
+            """
 
         And the ways
             | nodes |
@@ -236,9 +256,11 @@ Feature: Basic Routing
 
     Scenario: Testbot - Triangle challenge
         Given the node map
-            |   |   |   | d |
-            | a | b | c |   |
-            |   |   |   | e |
+            """
+                  d
+            a b c
+                  e
+            """
 
         And the ways
             | nodes | highway | oneway |
@@ -254,7 +276,9 @@ Feature: Basic Routing
 
     Scenario: Ambiguous edge weights - Use minimal edge weight
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | highway   | name |
@@ -269,7 +293,9 @@ Feature: Basic Routing
 
     Scenario: Ambiguous edge names - Use lexicographically smallest name
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | highway | name |

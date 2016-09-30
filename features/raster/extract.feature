@@ -3,7 +3,9 @@ Feature: osrm-extract with a profile containing raster source
     Scenario: osrm-extract on a valid profile
         Given the profile "rasterbot"
         And the node map
-            | a | b |
+            """
+            a b
+            """
         And the ways
             | nodes |
             | ab    |

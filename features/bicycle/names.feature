@@ -6,8 +6,10 @@ Feature: Bike - Street names in instructions
 
     Scenario: Bike - A named street
         Given the node map
-            | a | b |
-            |   | c |
+            """
+            a b
+              c
+            """
 
         And the ways
             | nodes | name     | ref |
@@ -21,7 +23,9 @@ Feature: Bike - Street names in instructions
     @unnamed
     Scenario: Bike - Use way type to describe unnamed ways
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway  | name |

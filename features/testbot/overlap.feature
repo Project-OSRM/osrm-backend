@@ -7,7 +7,9 @@ Feature: Testbot - overlapping ways
     Scenario: Testbot - multiple way between same nodes 
     Note that cb is connecting the same two nodes as bc
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway   |
@@ -23,8 +25,10 @@ Feature: Testbot - overlapping ways
 
     Scenario: Testbot - area on top of way
         Given the node map
-            | x | a | b | y |
-            |   | d | c |   |
+            """
+            x a b y
+              d c
+            """
 
         And the ways
             | nodes | highway   | area |

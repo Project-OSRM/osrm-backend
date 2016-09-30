@@ -6,9 +6,11 @@ Feature: Geometry Compression
 
     Scenario: Compressed segments have correct order
         Given the node map
-            | a |   | d |   |   |   | h |
-            | b |   |   |   | e |   | f |
-            |   | c |   |   |   |   | g |
+            """
+            a   d       h
+            b       e   f
+              c         g
+            """
 
         And the ways
             | nodes  |

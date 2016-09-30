@@ -7,8 +7,10 @@ Feature: Continue Instructions
 
     Scenario: Road turning left
         Given the node map
-            |   |   | c |   |
-            | a |   | b | d |
+            """
+                c
+            a   b d
+            """
 
         And the ways
             | nodes  | highway |
@@ -22,8 +24,10 @@ Feature: Continue Instructions
 
     Scenario: Road turning left and straight
         Given the node map
-            |   |   | c |   |
-            | a |   | b | d |
+            """
+                c
+            a   b d
+            """
 
         And the ways
             | nodes  | highway | name |
@@ -37,9 +41,11 @@ Feature: Continue Instructions
 
     Scenario: Road turning left and straight
         Given the node map
-            |   |   | c |   |
-            | a |   | b | d |
-            |   |   | e |   |
+            """
+                c
+            a   b d
+                e
+            """
 
         And the ways
             | nodes  | highway | name |
@@ -55,8 +61,10 @@ Feature: Continue Instructions
 
     Scenario: Road turning right
         Given the node map
-            | a |   | b | d |
-            |   |   | c |   |
+            """
+            a   b d
+                c
+            """
 
         And the ways
             | nodes  | highway |
@@ -70,10 +78,12 @@ Feature: Continue Instructions
 
     Scenario: Road turning slight left
         Given the node map
-            |   |   |   |   | c |
-            |   |   |   |   |   |
-            | a |   | b |   |   |
-            |   |   |   | d |   |
+            """
+                    c
+
+            a   b
+                  d
+            """
 
         And the ways
             | nodes  | highway |
@@ -87,10 +97,12 @@ Feature: Continue Instructions
 
     Scenario: Road turning slight right
         Given the node map
-            |   |   |   | d |   |
-            | a |   | b |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   | c |
+            """
+                  d
+            a   b
+
+                    c
+            """
 
         And the ways
             | nodes  | highway |
@@ -104,11 +116,13 @@ Feature: Continue Instructions
 
     Scenario: Road Loop
        Given the node map
-           |   |   | f |   | e |
-           |   |   |   |   |   |
-           | a |   | b | g |   |
-           |   |   |   |   |   |
-           |   |   | c |   | d |
+           """
+               f   e
+
+           a   b g
+
+               c   d
+           """
 
        And the ways
           | nodes   | highway |

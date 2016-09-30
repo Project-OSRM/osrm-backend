@@ -9,9 +9,11 @@ Feature: Bike - Turn restrictions
     @no_turning
     Scenario: Bike - No left turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -33,9 +35,11 @@ Feature: Bike - Turn restrictions
     @no_turning
     Scenario: Bike - No right turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -57,9 +61,11 @@ Feature: Bike - Turn restrictions
     @no_turning
     Scenario: Bike - No u-turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -81,9 +87,11 @@ Feature: Bike - Turn restrictions
     @no_turning
     Scenario: Bike - Handle any no_* relation
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -105,9 +113,11 @@ Feature: Bike - Turn restrictions
     @only_turning
     Scenario: Bike - Only left turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -129,9 +139,11 @@ Feature: Bike - Turn restrictions
     @only_turning
     Scenario: Bike - Only right turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -153,9 +165,11 @@ Feature: Bike - Turn restrictions
     @only_turning
     Scenario: Bike - Only straight on
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -177,9 +191,11 @@ Feature: Bike - Turn restrictions
     @no_turning
     Scenario: Bike - Handle any only_* restriction
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -201,9 +217,11 @@ Feature: Bike - Turn restrictions
     @except
     Scenario: Bike - Except tag and on no_ restrictions
         Given the node map
-            | b | x | c |
-            | a | j | d |
-            |   | s |   |
+            """
+            b x c
+            a j d
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -231,9 +249,11 @@ Feature: Bike - Turn restrictions
     @except
     Scenario: Bike - Except tag and on only_ restrictions
         Given the node map
-            | a |   | b |
-            |   | j |   |
-            |   | s |   |
+            """
+            a   b
+              j
+              s
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -253,12 +273,14 @@ Feature: Bike - Turn restrictions
     @except
     Scenario: Bike - Multiple except tag values
         Given the node map
-            | s | j | a |
-            |   |   | b |
-            |   |   | c |
-            |   |   | d |
-            |   |   | e |
-            |   |   | f |
+            """
+            s j a
+                b
+                c
+                d
+                e
+                f
+            """
 
         And the ways
             | nodes | oneway | foot |

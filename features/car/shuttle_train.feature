@@ -6,9 +6,11 @@ Feature: Car - Handle ferryshuttle train routes
 
     Scenario: Car - Use a ferry route
         Given the node map
-            | a | b | c |   |   |   |
-            |   |   | d |   |   |   |
-            |   |   | e | f | g | h |
+            """
+            a b c
+                d
+                e f g h
+            """
 
         And the ways
             | nodes | highway | route         | bicycle |

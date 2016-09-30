@@ -8,13 +8,15 @@ Feature: Features related to bugs
     @2852
     Scenario: Loop
         Given the node map
-            | a | 1 |   | g |   |   | b |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            | e |   |   |   |   |   | f |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | 2 |
-            | d |   |   | h |   |   | c |
+            """
+            a 1   g     b
+
+
+            e           f
+
+                        2
+            d     h     c
+            """
 
         And the ways
             | nodes | name   | oneway |

@@ -7,8 +7,10 @@ Feature: Basic trip planning
 
     Scenario: Testbot - Trip planning with less than 10 nodes
         Given the node map
-            | a | b |
-            | c | d |
+            """
+            a b
+            c d
+            """
 
         And the ways
             | nodes |
@@ -24,10 +26,12 @@ Feature: Basic trip planning
 
     Scenario: Testbot - Trip planning with more than 10 nodes
         Given the node map
-            | a | b | c | d |
-            | l |   |   | e |
-            | k |   |   | f |
-            | j | i | h | g |
+            """
+            a b c d
+            l     e
+            k     f
+            j i h g
+            """
 
         And the ways
             | nodes |
@@ -51,13 +55,15 @@ Feature: Basic trip planning
 
     Scenario: Testbot - Trip planning with multiple scc
         Given the node map
-            | a | b | c | d |
-            | l |   |   | e |
-            | k |   |   | f |
-            | j | i | h | g |
-            |   |   |   |   |
-            | q | m | n |   |
-            |   | p | o |   |
+            """
+            a b c d
+            l     e
+            k     f
+            j i h g
+
+            q m n
+              p o
+            """
 
         And the ways
             | nodes |
@@ -87,9 +93,11 @@ Feature: Basic trip planning
     # Test single node in each component #1850
     Scenario: Testbot - Trip planning with less than 10 nodes
         Given the node map
-            | a | 1 | b |
-            |   |   |   |
-            | c | 2 | d |
+            """
+            a 1 b
+
+            c 2 d
+            """
 
         And the ways
             | nodes |

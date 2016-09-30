@@ -6,9 +6,11 @@ Feature: Car - Handle ferry routes
 
     Scenario: Car - Use a ferry route
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | route | bicycle |
@@ -29,9 +31,11 @@ Feature: Car - Handle ferry routes
 
     Scenario: Car - Properly handle simple durations
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | route | duration |
@@ -48,9 +52,11 @@ Feature: Car - Handle ferry routes
 
     Scenario: Car - Properly handle ISO 8601 durations
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | route | duration |

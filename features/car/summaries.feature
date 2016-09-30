@@ -8,11 +8,13 @@ Feature: Basic Routing
     @smallest
     Scenario: Summaries when routing on a simple network
         Given the node map
-            | b |   |   | f |
-            |   |   |   |   |
-            | c | d |   | g |
-            |   |   |   |   |
-            | a |   | e |   |
+            """
+            b     f
+
+            c d   g
+
+            a   e
+            """
 
         And the ways
             | nodes | name   |
@@ -30,7 +32,9 @@ Feature: Basic Routing
 
      Scenario: Name Empty
         Given the node map
-            | a |   | b |   |   | c |
+            """
+            a   b     c
+            """
 
         And the ways
             | nodes | name |
@@ -43,7 +47,9 @@ Feature: Basic Routing
 
      Scenario: Name Empty But Ref
         Given the node map
-            | a |   | b |   |   | c |
+            """
+            a   b     c
+            """
 
         And the ways
             | nodes | name | ref |
@@ -56,7 +62,9 @@ Feature: Basic Routing
 
      Scenario: Only Refs
         Given the node map
-            | a |   | b |   |   | c |
+            """
+            a   b     c
+            """
 
         And the ways
             | nodes | name | ref |
@@ -69,7 +77,9 @@ Feature: Basic Routing
 
      Scenario: Single Ref
         Given the node map
-            | a |   | b |   |   | c |
+            """
+            a   b     c
+            """
 
         And the ways
             | nodes | name | ref |
@@ -82,7 +92,9 @@ Feature: Basic Routing
 
      Scenario: Nothing
         Given the node map
-            | a |   | b |   |   | c |
+            """
+            a   b     c
+            """
 
         And the ways
             | nodes | name |

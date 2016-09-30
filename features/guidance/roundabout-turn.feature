@@ -7,11 +7,13 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | h | g |   | c | d |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            h g   c d
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -38,10 +40,12 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit - Rotated
         Given the node map
-            | a |   |   | d |
-            |   | b | c |   |
-            |   | g | e |   |
-            | h |   |   | f |
+            """
+            a     d
+              b c
+              g e
+            h     f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -68,11 +72,13 @@ Feature: Basic Roundabout
 
     Scenario: Only Enter
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -99,11 +105,13 @@ Feature: Basic Roundabout
 
     Scenario: Only Exit
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -131,11 +139,13 @@ Feature: Basic Roundabout
 
     Scenario: Drive Around
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -162,11 +172,13 @@ Feature: Basic Roundabout
 
      Scenario: Mixed Entry and Exit - Not an Intersection
         Given the node map
-           |   | c |   | a |   |
-           | j |   | b |   | f |
-           |   | k |   | e |   |
-           | l |   | h |   | d |
-           |   | g |   | i |   |
+           """
+             c   a
+           j   b   f
+             k   e
+           l   h   d
+             g   i
+           """
 
         And the ways
            | nodes | junction   | oneway |
@@ -197,11 +209,13 @@ Feature: Basic Roundabout
 
     Scenario: Segregated roads - Not an intersection
         Given the node map
-           |   | a |   | c |   |
-           | l |   | b |   | d |
-           |   | k |   | e |   |
-           | j |   | h |   | f |
-           |   | i |   | g |   |
+           """
+             a   c
+           l   b   d
+             k   e
+           j   h   f
+             i   g
+           """
 
         And the ways
            | nodes | junction   | oneway |
@@ -232,8 +246,10 @@ Feature: Basic Roundabout
 
        Scenario: Collinear in X
         Given the node map
-            | a | b | c | d | f |
-            |   |   | e |   |   |
+            """
+            a b c d f
+                e
+            """
 
         And the ways
             | nodes | junction   |
@@ -249,11 +265,13 @@ Feature: Basic Roundabout
 
        Scenario: Collinear in Y
         Given the node map
-            |   | a |
-            |   | b |
-            | e | c |
-            |   | d |
-            |   | f |
+            """
+              a
+              b
+            e c
+              d
+              f
+            """
 
         And the ways
             | nodes | junction   |
@@ -269,10 +287,12 @@ Feature: Basic Roundabout
 
        Scenario: Collinear in X,Y
         Given the node map
-            | a |   |   |
-            | b |   |   |
-            | c | d | f |
-            | e |   |   |
+            """
+            a
+            b
+            c d f
+            e
+            """
 
         And the ways
             | nodes | junction   |
@@ -288,10 +308,12 @@ Feature: Basic Roundabout
 
        Scenario: Collinear in X,Y
         Given the node map
-            | a |   |   |
-            | d |   |   |
-            | b | c | f |
-            | e |   |   |
+            """
+            a
+            d
+            b c f
+            e
+            """
 
         And the ways
             | nodes | junction   |
@@ -307,10 +329,12 @@ Feature: Basic Roundabout
 
        Scenario: Collinear in X,Y
         Given the node map
-            | a |   |   |
-            | c |   |   |
-            | d | b | f |
-            | e |   |   |
+            """
+            a
+            c
+            d b f
+            e
+            """
 
         And the ways
             | nodes | junction   |
@@ -326,11 +350,13 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit -- too complex
         Given the node map
-            | j |   | a |   |   |
-            |   | i | b |   |   |
-            |   | g |   | c | d |
-            | h |   | e |   |   |
-            |   |   | f |   |   |
+            """
+            j   a
+              i b
+              g   c d
+            h   e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -358,11 +384,13 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit -- Non-Distinct
         Given the node map
-           |   |   | a |   |   |
-           |   |   | b |   |   |
-           |   | g |   | c | d |
-           |   |   | e |   |   |
-           | h |   | f |   |   |
+           """
+               a
+               b
+             g   c d
+               e
+           h   f
+           """
 
        And the ways
             | nodes | junction   |
@@ -389,11 +417,13 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit -- Bearing
         Given the node map
-           |   |   | a |   |   |
-           |   |   | b |   |   |
-           | h | g |   | c | d |
-           |   |   | e |   |   |
-           |   |   | f |   |   |
+           """
+               a
+               b
+           h g   c d
+               e
+               f
+           """
 
        And the ways
             | nodes | junction   |
@@ -411,13 +441,15 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit - Bearings
         Given the node map
-            |   |   |   | a |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | i | b | l |   |   |
-            | h |   | g |   | c |   | d |
-            |   |   | j | e | k |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   | f |   |   |   |
+            """
+                  a
+
+                i b l
+            h   g   c   d
+                j e k
+
+                  f
+            """
 
        And the ways
             | nodes      | junction   |
@@ -437,19 +469,21 @@ Feature: Basic Roundabout
     # http://www.openstreetmap.org/way/348812150
     # Note: grid size is 3 meter, this roundabout is more like 5-10 meters in radius
         Given the node map
-           |   |   |   | a |   |   |   |   |   |
-           |   |   |   |   |   |   |   |   |   |
-           |   |   |   | b |   | n |   |   |   |
-           |   |   |   |   |   |   |   |   |   |
-           |   |   | c |   |   |   | m |   |   |
-           |   |   |   |   |   |   |   |   |   |
-           | e |   | d |   |   |   | k |   | l |
-           |   |   |   |   |   |   |   |   |   |
-           |   |   | f |   |   |   | j |   |   |
-           |   |   |   |   |   |   |   |   |   |
-           |   |   |   | g |   | i |   |   |   |
-           |   |   |   |   |   |   |   |   |   |
-           |   |   |   | h |   |   |   |   |   |
+           """
+                 a
+
+                 b   n
+
+               c       m
+
+           e   d       k   l
+
+               f       j
+
+                 g   i
+
+                 h
+           """
 
        And the ways
             | nodes       | junction   | highway  | name            |
@@ -476,11 +510,13 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit - Traffic Signals
         Given the node map
-            |   |   | a |   |   |
-            |   | i | b | l |   |
-            | h | g |   | c | d |
-            |   | j | e | k |   |
-            |   |   | f |   |   |
+            """
+                a
+              i b l
+            h g   c d
+              j e k
+                f
+            """
 
        And the nodes
             | node | highway         |
@@ -516,11 +552,13 @@ Feature: Basic Roundabout
     #at some point we probably want to recognise these situations and don't mention the roundabout at all here
     Scenario: Enter And Exit Throughabout
         Given the node map
-            |   |   |   |   |   | h |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |
-            | c | b |   | d |   |   |   | e |   | f |
-            |   |   |   |   |   |   |   |   |   |   |
-            |   | a |   |   |   | g |   |   |   |   |
+            """
+                      h
+
+            c b   d       e   f
+
+              a       g
+            """
 
         And the ways
             | nodes | highway       | name    | junction   | oneway |

@@ -55,7 +55,9 @@ Background:
 
 Scenario: Testbot - Straight Road
     Given the node map
-        | a | b | c | d |
+        """
+        a b c d
+        """
 
     And the ways
         | nodes | highway |
@@ -92,7 +94,9 @@ Background:
 
 Scenario: Testbot - Straight Road
     Given the node map
-        | a | b | c | d |
+        """
+        a b c d
+        """
 
     And the ways
         | nodes | highway | name |
@@ -117,8 +121,10 @@ Background:
 
 Scenario: Testbot - Straight Road
     Given the node map
-        | a | b |
-        | d | c |
+        """
+        a b
+        d c
+        """
 
     And the ways
         | nodes | highway | name |
@@ -140,8 +146,10 @@ Background:
 
 Scenario: Testbot - Straight Road
     Given the node map
-        | a | b | e |
-        | d | c |   |
+        """
+        a b e
+        d c
+        """
 
     And the ways
         | nodes | highway | name |
@@ -165,8 +173,10 @@ Scenario: Enter and Exit mini roundabout with sharp angle   # features/guidance/
     Given the profile "car"                                   # features/step_definitions/data.js:8
     Given a grid size of 10 meters                            # features/step_definitions/data.js:20
     Given the node map                                        # features/step_definitions/data.js:45
-        | a | b |   |
-        |   | c | d |
+        """
+        a b
+          c d
+        """
     And the ways                                              # features/step_definitions/data.js:128
         | nodes | highway         | name |
         | ab    | tertiary        | MySt |
@@ -195,9 +205,11 @@ OSRM converts the grid into a so called edge-based graph.
 ```
 Scenario: Testbot - Intersection
     Given the node map
-        |   | e |   |
-        | b | a | d |
-        |   | c |   |
+        """
+          e
+        b a d
+          c
+        """
 
     And the ways
         | nodes | highway | oneway |
@@ -213,11 +225,13 @@ To guarantee discovery, use:
 ```
 Scenario: Testbot - Intersection
     Given the node map
-        |   |   | e |   |   |
-        |   |   | 4 |   |   |
-        | b | 1 | a | 3 | d |
-        |   |   | 2 |   |   |
-        |   |   | c |   |   |
+        """
+            e
+            4
+        b 1 a 3 d
+            2
+            c
+        """
 
     And the ways
         | nodes | highway | oneway |

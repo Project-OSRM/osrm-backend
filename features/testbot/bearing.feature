@@ -6,8 +6,10 @@ Feature: Compass bearing
 
     Scenario: Bearing when going northwest
         Given the node map
-            | b |   |
-            |   | a |
+            """
+            b
+              a
+            """
 
         And the ways
             | nodes |
@@ -19,7 +21,9 @@ Feature: Compass bearing
 
     Scenario: Bearing when going west
         Given the node map
-            | b | a |
+            """
+            b a
+            """
 
         And the ways
             | nodes |
@@ -31,9 +35,11 @@ Feature: Compass bearing
 
     Scenario: Bearing af 45 degree intervals
         Given the node map
-            | b | a | h |
-            | c | x | g |
-            | d | e | f |
+            """
+            b a h
+            c x g
+            d e f
+            """
 
         And the ways
             | nodes |
@@ -59,10 +65,12 @@ Feature: Compass bearing
 
     Scenario: Bearing in a roundabout
         Given the node map
-            | k | d | c | j |
-            | e |   |   | b |
-            | f |   |   | a |
-            | l | g | h | i |
+            """
+            k d c j
+            e     b
+            f     a
+            l g h i
+            """
 
         And the ways
             | nodes | oneway |
@@ -90,10 +98,12 @@ Feature: Compass bearing
 
     Scenario: Bearing should stay constant when zig-zagging
         Given the node map
-            | i | j | k |   |
-            | b | d | f | h |
-            | a | c | e | g |
-            |   | m | n | o |
+            """
+            i j k
+            b d f h
+            a c e g
+              m n o
+            """
 
         And the ways
             | nodes |
@@ -117,7 +127,9 @@ Feature: Compass bearing
 
     Scenario: Bearings on an east-west way.
         Given the node map
-            | a | b | c | d | e | f |
+            """
+            a b c d e f
+            """
 
         And the ways
             | nodes  |

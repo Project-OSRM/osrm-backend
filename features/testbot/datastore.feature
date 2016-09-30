@@ -6,7 +6,9 @@ Feature: Temporary tests related to osrm-datastore
 
     Scenario: Scenario ab
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes |
@@ -19,7 +21,9 @@ Feature: Temporary tests related to osrm-datastore
 
     Scenario: Scenaria xy
         Given the node map
-            | x | y |
+            """
+            x y
+            """
 
         And the ways
             | nodes |

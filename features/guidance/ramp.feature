@@ -7,8 +7,10 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Through Street Right
         Given the node map
-            | a | b | c |
-            |   | d |   |
+            """
+            a b c
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -21,8 +23,10 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Through Street Left
         Given the node map
-            |   | d |   |
-            | a | b | c |
+            """
+              d
+            a b c
+            """
 
         And the ways
             | nodes | highway       |
@@ -35,9 +39,11 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Through Street Left and Right
         Given the node map
-            |   | e |   |
-            | a | b | c |
-            |   | d |   |
+            """
+              e
+            a b c
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -52,8 +58,10 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Three Way Intersection Right
         Given the node map
-            | a | b | c |
-            |   | d |   |
+            """
+            a b c
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -67,9 +75,11 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Three Way Intersection Right
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   | d |   |
+            """
+                c
+            a b
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -83,9 +93,11 @@ Feature: Ramp Guidance
 
     Scenario: Ramp Off Though Street
         Given the node map
-            |   |   |   |   | c |
-            | a |   |   | b |   |
-            |   |   |   | d |   |
+            """
+                    c
+            a     b
+                  d
+            """
 
         And the ways
             | nodes | highway       | oneway |
@@ -99,8 +111,10 @@ Feature: Ramp Guidance
 
     Scenario: Straight Ramp Off Turning Though Street
         Given the node map
-            |   |   | c |
-            | a | b | d |
+            """
+                c
+            a b d
+            """
 
         And the ways
             | nodes | highway       |
@@ -114,9 +128,11 @@ Feature: Ramp Guidance
 
     Scenario: Fork Ramp Off Turning Though Street
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   |   | d |
+            """
+                c
+            a b
+                d
+            """
 
         And the ways
             | nodes | highway       |
@@ -130,9 +146,11 @@ Feature: Ramp Guidance
 
     Scenario: Fork Ramp
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   |   | d |
+            """
+                c
+            a b
+                d
+            """
 
         And the ways
             | nodes | highway       |
@@ -147,9 +165,11 @@ Feature: Ramp Guidance
 
     Scenario: Fork Slight Ramp
         Given the node map
-            |   |   |   | c |
-            | a | b |   |   |
-            |   |   |   | d |
+            """
+                  c
+            a b
+                  d
+            """
 
         And the ways
             | nodes | highway       |
@@ -164,9 +184,11 @@ Feature: Ramp Guidance
 
     Scenario: Fork Slight Ramp on Through Street
         Given the node map
-            |   |   |   | c |
-            | a | b |   |   |
-            |   |   |   | d |
+            """
+                  c
+            a b
+                  d
+            """
 
         And the ways
             | nodes | highway       |
@@ -180,9 +202,11 @@ Feature: Ramp Guidance
 
     Scenario: Fork Slight Ramp on Obvious Through Street
         Given the node map
-            |   |   |   | c |
-            | a | b |   |   |
-            |   |   |   | d |
+            """
+                  c
+            a b
+                  d
+            """
 
         And the ways
             | nodes | highway       |
@@ -196,9 +220,11 @@ Feature: Ramp Guidance
 
     Scenario: Two Ramps Joining into common Motorway
         Given the node map
-            | a |   |   |   |
-            |   |   | c | d |
-            | b |   |   |   |
+            """
+            a
+                c d
+            b
+            """
 
         And the ways
             | nodes | highway       |
@@ -213,9 +239,11 @@ Feature: Ramp Guidance
 
     Scenario: Two Ramps Joining into common Motorway Unnamed
         Given the node map
-            | a |   |   |   |
-            |   |   | c | d |
-            | b |   |   |   |
+            """
+            a
+                c d
+            b
+            """
 
         And the ways
             | nodes | highway       | name |

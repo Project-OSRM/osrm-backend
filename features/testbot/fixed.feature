@@ -28,7 +28,9 @@ Feature: Fixed bugs, kept to check for regressions
     Scenario: Step trimming with very short segments
         Given a grid size of 0.1 meters
         Given the node map
-            | a | 1 | b | c | d | 2 | e |
+            """
+            a 1 b c d 2 e
+            """
 
         Given the ways
             | nodes | oneway |

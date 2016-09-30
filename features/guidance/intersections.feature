@@ -7,8 +7,10 @@ Feature: Intersections Data
 
     Scenario: Passing Three Way South
         Given the node map
-            | a |   | b |   | c |
-            |   |   | d |   |   |
+            """
+            a   b   c
+                d
+            """
 
         And the ways
             | nodes  | name    |
@@ -22,8 +24,10 @@ Feature: Intersections Data
 
     Scenario: Passing Three Way North
         Given the node map
-            |   |   | d |   |   |
-            | a |   | b |   | c |
+            """
+                d
+            a   b   c
+            """
 
         And the ways
             | nodes  | name    |
@@ -37,8 +41,10 @@ Feature: Intersections Data
 
     Scenario: Passing Oneway Street In
         Given the node map
-            |   |   | d |   |   |
-            | a |   | b |   | c |
+            """
+                d
+            a   b   c
+            """
 
         And the ways
             | nodes  | name    | oneway |
@@ -52,8 +58,10 @@ Feature: Intersections Data
 
     Scenario: Passing Oneway Street Out
         Given the node map
-            |   |   | d |   |   |
-            | a |   | b |   | c |
+            """
+                d
+            a   b   c
+            """
 
         And the ways
             | nodes  | name    | oneway |
@@ -67,9 +75,11 @@ Feature: Intersections Data
 
     Scenario: Passing Two Intersections
         Given the node map
-            |   |   | e |   |   |   |   |
-            | a |   | b |   | c |   | d |
-            |   |   |   |   | f |   |   |
+            """
+                e
+            a   b   c   d
+                    f
+            """
 
         And the ways
             | nodes  | name    |
@@ -85,9 +95,11 @@ Feature: Intersections Data
 
     Scenario: Passing Two Intersections, Collapsing
         Given the node map
-            |   |   | e |   |   |   |   |
-            | a |   | b |   | c |   | d |
-            |   |   |   |   | f |   |   |
+            """
+                e
+            a   b   c   d
+                    f
+            """
 
         And the ways
             | nodes  | name          |
@@ -104,17 +116,19 @@ Feature: Intersections Data
 
     Scenario: Roundabouts
         Given the node map
-            |   |   |   |   | e |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | a |   |   |   |   |
-            |   |   |   | 1 |   | 4 |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            | f |   | b |   |   |   | d |   | h |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   | 2 |   | 3 |   |   |   |
-            |   |   |   |   | c |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | g |   |   |   |   |
+            """
+                    e
+
+                    a
+                  1   4
+
+            f   b       d   h
+
+                  2   3
+                    c
+
+                    g
+            """
 
         And the ways
             | nodes | junction   |

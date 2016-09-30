@@ -8,38 +8,40 @@ Feature: General Post-Processing related features
     # this testcase used to crash geometry generation (at that time handled during intersection generation)
     Scenario: Regression Test 2754 
         Given the node map
-            | a | b | c | d | e |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | f | g | h | i | j |
+            """
+            a b c d e
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    f g h i j
+            """
 
         And the ways
             | nodes |

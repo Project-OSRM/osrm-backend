@@ -8,9 +8,11 @@ Feature: Stress testing
     #osrm-routed hangs very often
         Given a grid size of 10000 meters
         Given the node map
-            | h | a | b |
-            | g | x | c |
-            | f | e | d |
+            """
+            h a b
+            g x c
+            f e d
+            """
 
         And the ways
             | nodes | highway |
@@ -31,9 +33,11 @@ Feature: Stress testing
     #osrm-routed hangs sometimes
         Given a grid size of 10000 meters
         Given the node map
-            | h | a | b |
-            | g | x | c |
-            | f | e | d |
+            """
+            h a b
+            g x c
+            f e d
+            """
 
         And the ways
             | nodes | highway |

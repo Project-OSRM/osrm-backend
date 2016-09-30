@@ -6,7 +6,9 @@ Feature: Foot - Way ref
 
     Scenario: Foot - Way with both name and ref
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | name         | ref |
@@ -18,7 +20,9 @@ Feature: Foot - Way ref
 
     Scenario: Foot - Way with only ref
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | name | ref |
@@ -30,7 +34,9 @@ Feature: Foot - Way ref
 
     Scenario: Foot - Way with only name
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | name         |

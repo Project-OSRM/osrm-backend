@@ -7,7 +7,9 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: Suffix To Suffix
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  | name |
@@ -20,7 +22,9 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: Suffix To Suffix Ref
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  | name | ref |
@@ -33,7 +37,9 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: Prefix Change
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  | name    |
@@ -46,7 +52,9 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: Prefix Change ref
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  | name    |
@@ -59,7 +67,9 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: Prefix Change and Reference
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  | name    | ref |
@@ -72,8 +82,10 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: Suffix To Suffix - Turn
         Given the node map
-            | a |   | b |   | c |
-            |   |   | d |   |   |
+            """
+            a   b   c
+                d
+            """
 
         And the ways
             | nodes  | name |
@@ -88,7 +100,9 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: Suffix To No Suffix
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  | name |
@@ -101,7 +115,9 @@ Feature: Suppress New Names on dedicated Suffices
 
     Scenario: No Suffix To Suffix
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  | name |

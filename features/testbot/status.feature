@@ -6,7 +6,9 @@ Feature: Status messages
 
     Scenario: Route found
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         Given the ways
             | nodes |
@@ -19,9 +21,11 @@ Feature: Status messages
 
     Scenario: No route found
         Given the node map
-            | a | b |
-            |   |   |
-            | c | d |
+            """
+            a b
+
+            c d
+            """
 
         Given the ways
             | nodes |

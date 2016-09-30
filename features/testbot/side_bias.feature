@@ -18,9 +18,11 @@ Feature: Testbot - side bias
         end
         """
         Given the node map
-            | a |   | b |   | c |
-            |   |   |   |   |   |
-            |   |   | d |   |   |
+            """
+            a   b   c
+
+                d
+            """
         And the ways
             | nodes |
             | ab    |
@@ -42,9 +44,11 @@ Feature: Testbot - side bias
         end
         """
         And the node map
-            | a |   | b |   | c |
-            |   |   |   |   |   |
-            |   |   | d |   |   |
+            """
+            a   b   c
+
+                d
+            """
         And the ways
             | nodes |
             | ab    |
@@ -59,11 +63,13 @@ Feature: Testbot - side bias
     Scenario: Roundabout exit counting for left sided driving
         And a grid size of 10 meters
         And the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | h | g |   | c | d |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            h g   c d
+                e
+                f
+            """
         And the ways
             | nodes  | junction   |
             | ab     |            |
@@ -81,11 +87,13 @@ Feature: Testbot - side bias
     Scenario: Mixed Entry and Exit
         And a grid size of 10 meters
         And the node map
-           |   | c |   | a |   |
-           | j |   | b |   | f |
-           |   | k |   | e |   |
-           | l |   | h |   | d |
-           |   | g |   | i |   |
+           """
+             c   a
+           j   b   f
+             k   e
+           l   h   d
+             g   i
+           """
 
         And the ways
            | nodes | junction   | oneway |

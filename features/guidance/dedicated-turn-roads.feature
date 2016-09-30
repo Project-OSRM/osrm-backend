@@ -7,15 +7,17 @@ Feature: Slipways and Dedicated Turn Lanes
 
     Scenario: Turn Instead of Ramp
         Given the node map
-            |   |   |   |   | e |   |
-            | a | b |   |   | c | d |
-            |   |   |   | h |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   | 1 |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   | f |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   | g |   |
+            """
+                    e
+            a b     c d
+                  h
+
+                  1
+
+                    f
+
+                    g
+            """
 
         And the ways
             | nodes | highway    | name   |
@@ -34,16 +36,18 @@ Feature: Slipways and Dedicated Turn Lanes
 
     Scenario: Turn Instead of Ramp
         Given the node map
-            |   |   |   |   | e |   |
-            | a | b |   |   | c | d |
-            |   |   |   | h |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   | f |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   |   |   |
-            |   |   |   |   | g |   |
+            """
+                    e
+            a b     c d
+                  h
+
+
+
+                    f
+
+
+                    g
+            """
 
         And the ways
             | nodes | highway       | name   |
@@ -57,16 +61,18 @@ Feature: Slipways and Dedicated Turn Lanes
 
     Scenario: Inner city expressway with on road
         Given the node map
-            | a | b |   |   |   | c | g |
-            |   |   |   |   | f |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   | d |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   | e |   |
+            """
+            a b       c g
+                    f
+
+
+
+                      d
+
+
+
+                      e
+            """
 
         And the ways
             | nodes | highway      | name  |
@@ -86,14 +92,16 @@ Feature: Slipways and Dedicated Turn Lanes
 
     Scenario: Slipway Round U-Turn
         Given the node map
-            | a |   | f |
-            |   |   |   |
-            | b |   | e |
-            |   |   |   |
-            |   |   |   |
-            |   | g |   |
-            |   |   |   |
-            | c |   | d |
+            """
+            a   f
+
+            b   e
+
+
+              g
+
+            c   d
+            """
 
         And the ways
             | nodes | highway      | name | oneway |
@@ -107,13 +115,15 @@ Feature: Slipways and Dedicated Turn Lanes
 
     Scenario: Slipway Steep U-Turn
         Given the node map
-            | a |   | f |
-            |   |   |   |
-            | b |   | e |
-            |   | g |   |
-            |   |   |   |
-            |   |   |   |
-            | c |   | d |
+            """
+            a   f
+
+            b   e
+              g
+
+
+            c   d
+            """
 
         And the ways
             | nodes | highway      | name | oneway |
@@ -127,21 +137,23 @@ Feature: Slipways and Dedicated Turn Lanes
 
     Scenario: Schwarzwaldstrasse Autobahn
         Given the node map
-            |   |   |   |   | i |   |   |   |   |   | h |   |   |   |   | g |
-            |   |   | j |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            | a |   |   |   |   |   |   | k |   |   |   |   |   |   |   |   |
-            |   |   |   | b |   | r | c |   | d |   | e |   |   |   |   | f |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   | l |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   | m |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | n |   | q |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | o |   | p |   |   |   |   |   |   |   |
+            """
+                    i           h         g
+                j
+            a             k
+                  b   r c   d   e         f
+
+
+
+
+                      l
+                      m
+                        n   q
+
+
+
+                        o   p
+            """
 
         And the nodes
             # the traffic light at `l` is not actually in the data, but necessary for the test to check everything
@@ -171,15 +183,17 @@ Feature: Slipways and Dedicated Turn Lanes
     Scenario: Traffic Lights everywhere
         #http://map.project-osrm.org/?z=18&center=48.995336%2C8.383813&loc=48.995467%2C8.384548&loc=48.995115%2C8.382761&hl=en&alt=0
         Given the node map
-            | a |   |   | k | l |   |   | j |   |
-            |   |   |   |   |   | d | b | c | i |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | e | g |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   | 1 |   |   |
-            |   |   |   |   |   |   |   | h |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   | f |   |
+            """
+            a     k l     j
+                      d b c i
+
+                        e g
+
+                        1
+                          h
+
+                          f
+            """
 
         And the nodes
             | node | highway         |
@@ -203,24 +217,25 @@ Feature: Slipways and Dedicated Turn Lanes
     #2839
     Scenario: Self-Loop
         Given the node map
-            # 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | l |   |   | k |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | m |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | i |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | h |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | n |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | g |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | o |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | p |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | e |   |   |   |
-            | a |   |   |   |   | b |   |   |   |   |   |   |   |   | c |   |   |   |   |   |   |   |   |   | d |   |   |   |   |   |   |
+            """
+                                                      l     k
+                                                                  j
+                                                  m
+                                                                      i
+
+
+                                                                        h
+
+                                                n
+
+                                                                        g
+                                                o
+
+                                                                      f
+                                              p
+                                                                  e
+            a         b                 c                   d
+            """
 
      And the ways
             | nodes           | name    | oneway | highway     | lanes |
@@ -237,24 +252,25 @@ Feature: Slipways and Dedicated Turn Lanes
     #has to remain as todo (see #https://github.com/Project-OSRM/osrm-backend/pull/2849)
     Scenario: Self-Loop - Bidirectional
         Given the node map
-            # 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | l |   |   | k |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | m |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | i |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | h |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | n |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | g |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | o |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | p |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | e |   |   |   |
-            | a |   |   |   |   | b |   |   |   |   |   |   |   |   | c |   |   |   |   |   |   |   |   |   | d |   |   |   |   |   |   |
+            """
+                                                      l     k
+                                                                  j
+                                                  m
+                                                                      i
+
+
+                                                                        h
+
+                                                n
+
+                                                                        g
+                                                o
+
+                                                                      f
+                                              p
+                                                                  e
+            a         b                 c                   d
+            """
 
      And the ways
             | nodes           | name    | oneway | highway     | lanes |
@@ -268,34 +284,35 @@ Feature: Slipways and Dedicated Turn Lanes
     #http://www.openstreetmap.org/#map=19/38.90597/-77.01276
     Scenario: Don't falsly classify as sliproads
         Given the node map
-            # 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |   |   |   |   |
-            | a | b |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | c |   |   |   |   |   |   | d |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | e |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | 1 |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |   |   |   |   | g |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | i |   |   |   |   |   |   | h |
+            """
+                                                          j
+            a b                                           c             d
+
+
+
+
+
+                    e
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                          1
+
+                                                f         g
+
+                                                          i             h
+            """
 
         And the ways
             | nodes | name       | highway   | oneway | maxspeed |
@@ -317,21 +334,23 @@ Feature: Slipways and Dedicated Turn Lanes
     # Merging into degree two loop on dedicated turn detection / 2927
     Scenario: Turn Instead of Ramp
         Given the node map
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |
-            |   |   |   |   | g |   |   |   |   |   | h |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   | d |   |   | e |
-            | i |   |   |   | c |   |   |   |   |   | j |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   | b |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   | a |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            """
+                                          f
+                    g           h
+                                    d     e
+            i       c           j
+
+
+
+
+
+
+
+
+                b
+
+                a
+            """
 
         And the ways
             | nodes | highway | name | oneway |

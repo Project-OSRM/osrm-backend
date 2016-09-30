@@ -7,11 +7,13 @@ Feature: Basic Roundabout
 
     Scenario: Enter and Exit
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | h | g |   | c | d |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            h g   c d
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |

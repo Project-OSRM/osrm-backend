@@ -8,8 +8,10 @@ Feature: Turn Lane Guidance
     @simple
     Scenario: Basic Turn Lane 3-way Turn with empty lanes
         Given the node map
-            | a |   | b |   | c |
-            |   |   | d |   |   |
+            """
+            a   b   c
+                d
+            """
 
         And the ways
             | nodes  | turn:lanes     | turn:lanes:forward | turn:lanes:backward | name     |
@@ -26,8 +28,10 @@ Feature: Turn Lane Guidance
 
     Scenario: Basic Turn Lane 3-way Turn with designated lane
         Given the node map
-            | a |   | b |   | c |
-            |   |   | d |   |   |
+            """
+            a   b   c
+                d
+            """
 
         And the ways
             | nodes  | turn:lanes     | turn:lanes:forward      | name     | vehicle:lanes:forward |
@@ -43,9 +47,11 @@ Feature: Turn Lane Guidance
     @simple
     Scenario: Basic Turn Lane 4-Way Turn
         Given the node map
-            |   |   | e |   |   |
-            | a |   | b |   | c |
-            |   |   | d |   |   |
+            """
+                e
+            a   b   c
+                d
+            """
 
         And the ways
             | nodes  | turn:lanes     | turn:lanes:forward | turn:lanes:backward | name     |
@@ -66,9 +72,11 @@ Feature: Turn Lane Guidance
     @simple @none
     Scenario: Basic Turn Lane 4-Way Turn using none
         Given the node map
-            |   |   | e |   |   |
-            | a |   | b |   | c |
-            |   |   | d |   |   |
+            """
+                e
+            a   b   c
+                d
+            """
 
         And the ways
             | nodes  | turn:lanes     | turn:lanes:forward | turn:lanes:backward | name     |
@@ -86,9 +94,11 @@ Feature: Turn Lane Guidance
     @simple @reverse
     Scenario: Basic Turn Lane 4-Way With U-Turn Lane
         Given the node map
-            |   |   | e |   |   |
-            | a | 1 | b |   | c |
-            |   |   | d |   |   |
+            """
+                e
+            a 1 b   c
+                d
+            """
 
         And the ways
             | nodes  | turn:lanes     | turn:lanes:forward          | name     |
@@ -109,9 +119,11 @@ Feature: Turn Lane Guidance
     @simple @psv @none
     Scenario: Turn with Bus-Lane
         Given the node map
-            | a |   | b |   | c |
-            |   |   |   |   |   |
-            |   |   | d |   |   |
+            """
+            a   b   c
+
+                d
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward | lanes:psv:forward |
@@ -126,10 +138,12 @@ Feature: Turn Lane Guidance
 
     Scenario: Turn with Bus-Lane Left
         Given the node map
-            |   |   | d |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            | a |   | b |   | c |   | f |
-            |   |   |   |   | e |   |   |
+            """
+                d
+
+            a   b   c   f
+                    e
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward  | lanes:psv:forward | oneway |
@@ -147,9 +161,11 @@ Feature: Turn Lane Guidance
     # This tests whether empty/invalid PSV tags cause osrm-extract to crash
     Scenario: Turn with Bus-Lane
         Given the node map
-            | a |   | b |   | c |
-            |   |   |   |   |   |
-            |   |   | d |   |   |
+            """
+            a   b   c
+
+                d
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward | lanes:psv:forward | lanes:psv:backward |
@@ -164,9 +180,11 @@ Feature: Turn Lane Guidance
     @simple @psv
     Scenario: Turn with Bus-Lane but without lanes
         Given the node map
-            | a |   | b |   | c |
-            |   |   |   |   |   |
-            |   |   | d |   |   |
+            """
+            a   b   c
+
+                d
+            """
 
         And the ways
             | nodes | name | lanes:psv |
@@ -183,12 +201,14 @@ Feature: Turn Lane Guidance
     @todo @collapse @partition-lanes
     Scenario: Turn Lanes at Segregated Road
         Given the node map
-            |   |   | i | l |   |   |
-            |   |   |   |   |   |   |
-            | h |   | g | f |   | e |
-            | a |   | b | c |   | d |
-            |   |   |   |   |   |   |
-            |   |   | j | k |   |   |
+            """
+                i l
+
+            h   g f   e
+            a   b c   d
+
+                j k
+            """
 
         And the ways
             | nodes | name  | turn:lanes:forward       | oneway |
@@ -228,12 +248,14 @@ Feature: Turn Lane Guidance
     @collapse @partition-lanes
     Scenario: Turn Lanes at Segregated Road
         Given the node map
-            |   |   | i | l |   |   |
-            |   |   |   |   |   |   |
-            | h |   | g | f |   | e |
-            | a |   | b | c |   | d |
-            |   |   |   |   |   |   |
-            |   |   | j | k |   |   |
+            """
+                i l
+
+            h   g f   e
+            a   b c   d
+
+                j k
+            """
 
         And the ways
             | nodes | name  | turn:lanes:forward       | oneway |
@@ -262,10 +284,12 @@ Feature: Turn Lane Guidance
     @partition-lanes
     Scenario: Turn Lanes at Segregated Road
         Given the node map
-            |   |   | g | f |   |   |
-            | a |   | b | c |   | d |
-            |   |   |   |   |   |   |
-            |   |   | j | k |   |   |
+            """
+                g f
+            a   b c   d
+
+                j k
+            """
 
         And the ways
             | nodes | name  | turn:lanes:forward   | oneway |
@@ -285,9 +309,11 @@ Feature: Turn Lane Guidance
     @2654 @previous-lanes
     Scenario: Turn Lanes Given earlier than actual turn
         Given the node map
-            | a |   | b | c |   | d |
-            |   |   |   |   |   |   |
-            |   |   |   | e |   |   |
+            """
+            a   b c   d
+
+                  e
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward |
@@ -304,8 +330,10 @@ Feature: Turn Lane Guidance
     @2654 @previous-lanes
     Scenario: Turn Lanes Given earlier than actual turn
         Given the node map
-            | a |   | b | c | d |   | e |   | f | g | h |   | i |
-            |   |   | j |   |   |   |   |   |   |   | k |   |   |
+            """
+            a   b c d   e   f g h   i
+                j               k
+            """
 
         And the ways
             | nodes | name        | turn:lanes:forward | turn:lanes:backward |
@@ -327,8 +355,10 @@ Feature: Turn Lane Guidance
     @previous-lanes
     Scenario: Passing a one-way street
         Given the node map
-            | e |   |   | f |   |
-            | a |   | b | c | d |
+            """
+            e     f
+            a   b c d
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward | oneway |
@@ -344,9 +374,11 @@ Feature: Turn Lane Guidance
     @partition-lanes
     Scenario: Passing a one-way street, partly pulled back lanes
         Given the node map
-            | e |   |   | f |   |
-            | a |   | b | c | d |
-            |   |   | g |   |   |
+            """
+            e     f
+            a   b c d
+                g
+            """
 
         And the ways
             | nodes | name  | turn:lanes:forward  | oneway |
@@ -365,9 +397,11 @@ Feature: Turn Lane Guidance
     @partition-lanes @previous-lanes
     Scenario: Passing a one-way street, partly pulled back lanes, no through
         Given the node map
-            | e |   |   | f |
-            | a |   | b | c |
-            |   |   | g |   |
+            """
+            e     f
+            a   b c
+                g
+            """
 
         And the ways
             | nodes | name  | turn:lanes:forward  | oneway |
@@ -385,10 +419,12 @@ Feature: Turn Lane Guidance
     @todo @partition-lanes @previous-lanes
     Scenario: Narrowing Turn Lanes
         Given the node map
-            |   |   |   |   | g |   |
-            |   |   |   |   |   |   |
-            | a |   | b | c | d | e |
-            |   |   |   | f |   |   |
+            """
+                    g
+
+            a   b c d e
+                  f
+            """
 
         And the ways
             | nodes | name    | turn:lanes:forward   |
@@ -408,8 +444,10 @@ Feature: Turn Lane Guidance
     @previous-lanes
     Scenario: Turn at a traffic light
         Given the node map
-            | a | b | c | d |
-            |   |   | e |   |
+            """
+            a b c d
+                e
+            """
 
         And the nodes
             | node | highway         |
@@ -430,17 +468,19 @@ Feature: Turn Lane Guidance
     @todo @roundabout
     Scenario: Theodor Heuss Platz
         Given the node map
-            |   |   |   | i | o |   |   | l |   |
-            |   |   | b |   |   |   | a |   | m |
-            |   | c |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   | h |   |
-            |   |   |   |   |   |   |   |   |   |
-            | j |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   | g |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   | d |   |   |   |   |   |   |   |
-            |   |   | e |   |   |   | f |   |   |
-            |   |   |   |   | k |   |   |   | n |
+            """
+                  i o     l
+                b       a   m
+              c
+                          h
+
+            j
+                          g
+
+              d
+                e       f
+                    k       n
+            """
 
         And the nodes
             | node | highway         |
@@ -467,12 +507,14 @@ Feature: Turn Lane Guidance
     @sliproads
     Scenario: Turn Lanes Breaking up
         Given the node map
-            |   |   |   | g |   |
-            |   |   |   |   |   |
-            |   |   |   | c |   |
-            | a | b |   | d | e |
-            |   |   |   |   |   |
-            |   |   |   | f |   |
+            """
+                  g
+
+                  c
+            a b   d e
+
+                  f
+            """
 
         And the ways
             | nodes | name  | turn:lanes:forward                  | oneway | highway   |
@@ -498,11 +540,13 @@ Feature: Turn Lane Guidance
     @reverse @previous-lanes
     Scenario: U-Turn Road at Intersection
         Given the node map
-            |   |   |   |   |   |   | h |   |
-            |   |   |   |   | f |   | e | j |
-            | a | b |   |   |   |   |   |   |
-            |   |   |   |   | c |   | d | i |
-            |   |   |   |   |   |   | g |   |
+            """
+                        h
+                    f   e j
+            a b
+                    c   d i
+                        g
+            """
 
         And the ways
             | nodes | name  | turn:lanes:forward | oneway | highway  |
@@ -532,13 +576,15 @@ Feature: Turn Lane Guidance
     @reverse
     Scenario: Segregated Intersection Merges With Lanes
         Given the node map
-            |   |   |   |   |   |   | f |
-            |   |   |   |   |   |   |   |
-            | e |   |   | d |   |   |   |
-            |   |   |   |   |   | c | g |
-            | a |   |   | b |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   | h |   |
+            """
+                        f
+
+            e     d
+                      c g
+            a     b
+
+                      h
+            """
 
         And the ways
             | nodes | name     | turn:lanes:forward                 | oneway | highway   |
@@ -557,13 +603,15 @@ Feature: Turn Lane Guidance
     @todo @roundabout
     Scenario: Passing Through a Roundabout
         Given the node map
-            |   |   | h |   | g |   |   |
-            |   | a |   |   |   | f | k |
-            | i |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   | b |   |   |   | e |   |
-            |   |   | c |   | d |   |   |
-            |   |   |   |   | j |   |   |
+            """
+                h   g
+              a       f k
+            i
+
+              b       e
+                c   d
+                    j
+            """
 
         And the ways
             | nodes | name   | turn:lanes:forward                     | oneway | highway   | junction   |
@@ -584,8 +632,10 @@ Feature: Turn Lane Guidance
     @previous-lanes
     Scenario: Crossing Traffic Light
         Given the node map
-            | a |   | b |   | c |   | d |
-            |   |   |   |   |   |   | e |
+            """
+            a   b   c   d
+                        e
+            """
 
         And the nodes
             | node | highway         |
@@ -605,8 +655,10 @@ Feature: Turn Lane Guidance
     @ramp
     Scenario: Highway Ramp
         Given the node map
-            | a |   | b |   | c |   | d |
-            |   |   |   |   |   |   | e |
+            """
+            a   b   c   d
+                        e
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward                                   | highway       |
@@ -622,10 +674,12 @@ Feature: Turn Lane Guidance
     @todo
     Scenario: Turning Off Ramp
         Given the node map
-            |   | a |   |
-            | d | c | b |
-            | e | f | g |
-            |   | h |   |
+            """
+              a
+            d c b
+            e f g
+              h
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward | highway       | oneway |
@@ -644,10 +698,12 @@ Feature: Turn Lane Guidance
     @ramp
     Scenario: Off Ramp In a Turn
         Given the node map
-            | a |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   |   | b |   |   |   |   |   | c |
-            |   |   |   |   |   |   |   |   |   |   | d |   |
+            """
+            a
+
+                      b           c
+                                d
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward             | highway       | oneway |
@@ -663,10 +719,12 @@ Feature: Turn Lane Guidance
     @reverse
     Scenario: Reverse Lane in Segregated Road
         Given the node map
-            | h |   |   |   |   | g |   |   |   |   |   | f |
-            |   |   |   |   |   |   |   | e |   |   |   |   |
-            |   |   |   |   |   |   |   | d |   |   |   |   |
-            | a |   |   |   |   | b |   |   |   |   |   | c |
+            """
+            h         g           f
+                          e
+                          d
+            a         b           c
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward        | highway      | oneway |
@@ -682,10 +740,12 @@ Feature: Turn Lane Guidance
     @reverse
     Scenario: Reverse Lane in Segregated Road with none
         Given the node map
-            | h |   |   |   |   | g |   |   |   |   |   | f |
-            |   |   |   |   |   |   |   | e |   |   |   |   |
-            |   |   |   |   |   |   |   | d |   |   |   |   |
-            | a |   |   |   |   | b |   |   |   |   |   | c |
+            """
+            h         g           f
+                          e
+                          d
+            a         b           c
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward     | highway      | oneway |
@@ -701,11 +761,13 @@ Feature: Turn Lane Guidance
     @reverse
     Scenario: Reverse Lane in Segregated Road with none, Service Turn Prior
         Given the node map
-            | h |   |   |   |   | g |   |   |   |   |   | f |
-            |   |   |   |   |   |   |   | e |   |   |   |   |
-            |   |   |   |   |   |   |   | d |   |   |   |   |
-            | a |   | j |   |   | b |   |   |   |   |   | c |
-            |   |   | i |   |   |   |   |   |   |   |   |   |
+            """
+            h         g           f
+                          e
+                          d
+            a   j     b           c
+                i
+            """
 
         And the ways
             | nodes | name | turn:lanes:forward     | highway      | oneway |
@@ -722,9 +784,11 @@ Feature: Turn Lane Guidance
     @simple
     Scenario: Don't collapse everything to u-turn / too wide
         Given the node map
-            | a |   | b |   | e |
-            |   |   |   |   |   |
-            | d |   | c |   | f |
+            """
+            a   b   e
+
+            d   c   f
+            """
 
         And the ways
             | nodes | highway   | name   | turn:lanes:forward |
@@ -742,8 +806,10 @@ Feature: Turn Lane Guidance
     @simple
     Scenario: Merge Lanes Onto Freeway
         Given the node map
-            | a |   |   | b | c |
-            |   | d |   |   |   |
+            """
+            a     b c
+              d
+            """
 
         And the ways
             | nodes | highway       | name | turn:lanes:forward         |
@@ -757,8 +823,10 @@ Feature: Turn Lane Guidance
     @2654 @simple
     Scenario: Fork on motorway links - don't fork on through but use lane
         Given the node map
-            | i |   |   |   |   | a |
-            | j |   | c | b |   | x |
+            """
+            i         a
+            j   c b   x
+            """
 
         And the ways
             | nodes | name | highway       | turn:lanes:forward |
@@ -777,10 +845,12 @@ Feature: Turn Lane Guidance
     @todo @ramp @2645
     Scenario: Kreuz Schoeneberg - Continue on ramp, don't merge
         Given the node map
-            | i |   |   |   |   | j |   |   |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | k |   |   |   |   |   |   |   |   |   |   |   |   |
-            | h | g |   | l |   |   | f |   |   |   |   |   |   |   |   |   | e |
-            | d |   |   |   |   |   |   |   | c |   |   |   |   | b |   |   | a |
+            """
+            i         j
+                    k
+            h g   l     f                   e
+            d               c         b     a
+            """
 
         And the ways
             | nodes | highway       | name  | oneway | lanes | turn:lanes            |
@@ -808,8 +878,10 @@ Feature: Turn Lane Guidance
     @collapse @use-lane
     Scenario: Collapse Multiple Use Lanes
         Given the node map
-            | x | a |   | b |   |   | c |   |   | d |
-            |   |   |   | e |   |   | f |   |   |   |
+            """
+            x a   b     c     d
+                  e     f
+            """
 
         And the ways
             | nodes | name | highway | turn:lanes:forward |
@@ -827,12 +899,14 @@ Feature: Turn Lane Guidance
     @partition-lanes
     Scenario: Partitioned turn, Slight Curve
         Given the node map
-            |   |   | f |   | e |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   | c |
-            | a |   | b |   |   |
-            |   |   | g |   | d |
+            """
+                f   e
+
+
+                    c
+            a   b
+                g   d
+            """
 
         And the ways
             | nodes | name  | highway | oneway | turn:lanes:forward |
@@ -848,9 +922,11 @@ Feature: Turn Lane Guidance
 
     Scenario: Lane Parsing Issue #2694
         Given the node map
-            |   | c |
-            | a | b |
-            |   | d |
+            """
+              c
+            a b
+              d
+            """
 
         And the ways
             | nodes | highway | turn:lanes:forward |
@@ -866,12 +942,14 @@ Feature: Turn Lane Guidance
     @todo
     Scenario: Lane Parsing Issue #2706: None Assignments I
         Given the node map
-            |   | f |   |   | j  |   |
-            |   |   |   |   |    |   |
-            | a | b | c |   | d  | e |
-            |   |   |   |   |    |   |
-            |   |   |   |   | i  |   |
-            |   | g |   |   | h  |   |
+            """
+              f     j
+
+            a b c   d e
+
+                    i
+              g     h
+            """
 
         And the nodes
             | node | highway         |
@@ -906,10 +984,12 @@ Feature: Turn Lane Guidance
     @todo
     Scenario: Lane Parsing Issue #2706: None Assignments II
         Given the node map
-            |   | k | l |   |
-            | j | a | b | f |
-            | i | c | d | e |
-            |   | h | g |   |
+            """
+              k l
+            j a b f
+            i c d e
+              h g
+            """
 
         And the ways
             | nodes | highway        | name           | oneway | turn:lanes                           |
@@ -941,10 +1021,12 @@ Feature: Turn Lane Guidance
     @todo
     Scenario: Lane Parsing Issue #2706: None Assignments III - Minimal reproduction recipe
         Given the node map
-            |   |   | l |   |
-            |   | a | b |   |
-            |   |   | d |   |
-            |   |   |   |   |
+            """
+                l
+              a b
+                d
+
+            """
 
         And the ways
             | nodes | highway        | name           | oneway | turn:lanes                           |
@@ -960,9 +1042,11 @@ Feature: Turn Lane Guidance
     @reverse @2730 @todo
     Scenario: Reverse on the right
         Given the node map
-            | a |   |   | c |   |
-            |   |   |   | b | d |
-            | f |   |   | e |   |
+            """
+            a     c
+                  b d
+            f     e
+            """
 
         And the ways
             | nodes | highway | name    | turn:lanes:forward           | oneway |
@@ -983,12 +1067,14 @@ Feature: Turn Lane Guidance
     #http://www.openstreetmap.org/export#map=19/52.56054/13.32152
     Scenario: Kurt-Schuhmacher-Damm
         Given the node map
-            |   |   |   | g |   | f |
-            |   |   |   |   |   |   |
-            | j |   |   | h |   | e |
-            |   |   |   |   |   |   |
-            | a |   |   | b |   | c |
-            |   |   |   | i |   | d |
+            """
+                  g   f
+
+            j     h   e
+
+            a     b   c
+                  i   d
+            """
 
         And the ways
             | nodes | name | highway        | oneway | turn:lanes        |

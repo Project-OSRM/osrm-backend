@@ -7,7 +7,9 @@ Feature: New-Name Instructions
 
     Scenario: Undisturbed name Change
         Given the node map
-            | a |   | b |   | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes  |
@@ -21,8 +23,10 @@ Feature: New-Name Instructions
 
     Scenario: Undisturbed Name Change with unannounced Turn Right
         Given the node map
-            | a |   | b |   |   |
-            |   |   |   |   | c |
+            """
+            a   b
+                    c
+            """
 
         And the ways
             | nodes  |
@@ -35,8 +39,10 @@ Feature: New-Name Instructions
 
     Scenario: Undisturbed Name Change with unannounced Turn Left
         Given the node map
-            |   |   |   |   | c |
-            | a |   | b |   |   |
+            """
+                    c
+            a   b
+            """
 
         And the ways
             | nodes  |
@@ -49,8 +55,10 @@ Feature: New-Name Instructions
 
     Scenario: Disturbed Name Change with Turn
         Given the node map
-            | a |   | b |   |   |
-            |   | d |   |   | c |
+            """
+            a   b
+              d     c
+            """
 
         And the ways
             | nodes  |
@@ -64,8 +72,10 @@ Feature: New-Name Instructions
 
     Scenario: Undisturbed Name Change with announced Turn Left
         Given the node map
-            |   |   | c |
-            | a |   | b |
+            """
+                c
+            a   b
+            """
 
         And the ways
             | nodes  |
@@ -78,8 +88,10 @@ Feature: New-Name Instructions
 
     Scenario: Undisturbed Name Change with announced Turn Sharp Left
         Given the node map
-            | c |   |   |
-            | a |   | b |
+            """
+            c
+            a   b
+            """
 
         And the ways
             | nodes  |
@@ -92,8 +104,10 @@ Feature: New-Name Instructions
 
     Scenario: Undisturbed Name Change with announced Turn Right
         Given the node map
-            | a |   | b |
-            |   |   | c |
+            """
+            a   b
+                c
+            """
 
         And the ways
             | nodes  |
@@ -106,8 +120,10 @@ Feature: New-Name Instructions
 
     Scenario: Undisturbed Name Change with announced Turn Sharp Right
         Given the node map
-            | a |   | b |
-            | c |   |   |
+            """
+            a   b
+            c
+            """
 
         And the ways
             | nodes  |
@@ -121,8 +137,10 @@ Feature: New-Name Instructions
 
     Scenario: Disturbed Name Change with minor road class
         Given the node map
-            | a |   | b |   | d |
-            |   |   |   |   | c |
+            """
+            a   b   d
+                    c
+            """
 
         And the ways
             | nodes  | highway     | oneway |
@@ -136,7 +154,9 @@ Feature: New-Name Instructions
 
     Scenario: Empty road names - Announce Change From, suppress Change To
         Given the node map
-            | a |  | b | 1 | c |  | d |
+            """
+            a   b 1 c   d
+            """
 
         And the ways
             | nodes | name |
@@ -151,7 +171,9 @@ Feature: New-Name Instructions
 
     Scenario: Empty road names - Loose name shortly
         Given the node map
-            | a |  | b |  | c |  | d |  | e |
+            """
+            a   b   c   d   e
+            """
 
         And the ways
             | nodes | name      |
@@ -167,7 +189,9 @@ Feature: New-Name Instructions
 
     Scenario: Both Name and Ref Empty
         Given the node map
-            | a |  | b |  | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes | name | ref |
@@ -180,7 +204,9 @@ Feature: New-Name Instructions
 
     Scenario: Same Name, Ref Extended
         Given the node map
-            | a |  | b |  | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes | name | ref   |
@@ -193,7 +219,9 @@ Feature: New-Name Instructions
 
     Scenario: Same Name, Ref Removed
         Given the node map
-            | a |  | b |  | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes | name | ref   |
@@ -206,7 +234,9 @@ Feature: New-Name Instructions
 
     Scenario: Name Removed, Ref Extended
         Given the node map
-            | a |  | b |  | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes | name | ref   |
@@ -219,7 +249,9 @@ Feature: New-Name Instructions
 
     Scenario: Name Added, Ref Removed
         Given the node map
-            | a |  | b |  | c |
+            """
+            a   b   c
+            """
 
         And the ways
             | nodes | name | ref   |
@@ -232,7 +264,9 @@ Feature: New-Name Instructions
 
     Scenario: Prefix Change
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name                     | ref   | highway  |
@@ -245,7 +279,9 @@ Feature: New-Name Instructions
 
     Scenario: Prefix Change
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name                     | ref   | highway  |
@@ -258,7 +294,9 @@ Feature: New-Name Instructions
 
     Scenario: No Name, Same Reference
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name               | ref   | highway  |
@@ -271,7 +309,9 @@ Feature: New-Name Instructions
 
     Scenario: No Name, Same Reference
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name               | ref   | highway  |
@@ -284,7 +324,9 @@ Feature: New-Name Instructions
 
     Scenario: No Name, Same Reference
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name | ref         | highway  |
@@ -297,7 +339,9 @@ Feature: New-Name Instructions
 
     Scenario: No Name, Same Reference
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name | ref         | highway  |
@@ -310,7 +354,9 @@ Feature: New-Name Instructions
 
     Scenario: No Name, Same Reference
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name | ref         | highway  |
@@ -323,7 +369,9 @@ Feature: New-Name Instructions
 
     Scenario: No Name, Same Reference
         Given the node map
-            | a |   |   |   | b |   |   |   | c |
+            """
+            a       b       c
+            """
 
         And the ways
             | nodes | name | ref         | highway  |

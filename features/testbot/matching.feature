@@ -9,11 +9,13 @@ Feature: Basic Map Matching
     Scenario: Testbot - Map matching with outlier that has no candidate
         Given a grid size of 100 meters
         Given the node map
-            | a | b | c | d |
-            |   |   |   |   |
-            |   |   |   |   |
-            |   |   |   |   |
-            |   |   | 1 |   |
+            """
+            a b c d
+
+
+
+                1
+            """
 
         And the ways
             | nodes | oneway |
@@ -25,8 +27,10 @@ Feature: Basic Map Matching
 
     Scenario: Testbot - Map matching with trace splitting
         Given the node map
-            | a | b | c | d |
-            |   |   | e |   |
+            """
+            a b c d
+                e
+            """
 
         And the ways
             | nodes | oneway |
@@ -39,8 +43,10 @@ Feature: Basic Map Matching
     Scenario: Testbot - Map matching with core factor
         Given the contract extra arguments "--core 0.8"
         Given the node map
-            | a | b | c | d |
-            |   |   | e |   |
+            """
+            a b c d
+                e
+            """
 
         And the ways
             | nodes | oneway |
@@ -52,12 +58,14 @@ Feature: Basic Map Matching
 
     Scenario: Testbot - Map matching with small distortion
         Given the node map
-            | a | b | c | d | e |
-            |   | f |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   | h |   |   | k |
+            """
+            a b c d e
+              f
+
+
+
+              h     k
+            """
 
         # The second way does not need to be a oneway
         # but the grid spacing triggers the uturn
@@ -74,8 +82,10 @@ Feature: Basic Map Matching
     Scenario: Testbot - Map matching with oneways
         Given a grid size of 10 meters
         Given the node map
-            | a | b | c | d |
-            | e | f | g | h |
+            """
+            a b c d
+            e f g h
+            """
 
         And the ways
             | nodes | oneway |
@@ -89,8 +99,10 @@ Feature: Basic Map Matching
     Scenario: Testbot - Matching with oneway streets
         Given a grid size of 10 meters
         Given the node map
-            | a | b | c | d |
-            | e | f | g | h |
+            """
+            a b c d
+            e f g h
+            """
 
         And the ways
             | nodes | oneway |
@@ -111,8 +123,10 @@ Feature: Basic Map Matching
             | annotations | true |
 
         Given the node map
-            | a | b | c | d | e |   | g | h |
-            |   |   | i |   |   |   |   |   |
+            """
+            a b c d e   g h
+                i
+            """
 
         And the ways
             | nodes    | oneway |
@@ -143,8 +157,10 @@ Feature: Basic Map Matching
             | geometries | polyline |
 
         Given the node map
-            | a | b | c |
-            |   | d |   |
+            """
+            a b c
+              d
+            """
 
         And the ways
             | nodes | oneway |

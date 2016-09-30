@@ -8,9 +8,11 @@ Feature: Merging
     @merge
     Scenario: Merge on Four Way Intersection
         Given the node map
-            | d |   |   |   |   |   |   |   |   |   |
-            | a |   | b |   |   |   |   |   |   | c |
-            | e |   |   |   |   |   |   |   |   |   |
+            """
+            d
+            a   b             c
+            e
+            """
 
         And the ways
             | nodes | highway |
@@ -26,8 +28,10 @@ Feature: Merging
     @merge
     Scenario: Merge on Three Way Intersection Right
         Given the node map
-            | d |   |   |   |   |   |   |   |   |   |
-            | a |   | b |   |   |   |   |   |   | c |
+            """
+            d
+            a   b             c
+            """
 
         And the ways
             | nodes | highway |
@@ -41,8 +45,10 @@ Feature: Merging
     @merge @negative
     Scenario: Don't Merge on Short-Three Way Intersection Right
         Given the node map
-            | d |   |   |   |   |   |   |   |
-            | a |   | b |   |   |   |   | c |
+            """
+            d
+            a   b         c
+            """
 
         And the ways
             | nodes | highway |
@@ -57,8 +63,10 @@ Feature: Merging
     @merge
     Scenario: Merge on Three Way Intersection Right
         Given the node map
-            | a |   | b |   |   |   |   |   |   | c |
-            | d |   |   |   |   |   |   |   |   |   |
+            """
+            a   b             c
+            d
+            """
 
         And the ways
             | nodes | highway |
@@ -72,23 +80,25 @@ Feature: Merging
     @merge
     Scenario: Merge onto a turning road
         Given the node map
-            |   |   |   |   |   |   | e |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   | d |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   | c |   |   |
-            |   |   |   | b |   |   |   |
-            | a |   |   |   |   |   | f |
+            """
+                        e
+
+
+
+
+
+
+
+
+                      d
+
+
+
+
+                    c
+                  b
+            a           f
+            """
 
         And the ways
             | nodes | highway     | name |
@@ -103,8 +113,10 @@ Feature: Merging
     @merge
     Scenario: Merge onto a motorway
         Given the node map
-            | d |   |   |   |   |   |   |   |   |   |
-            | a |   |   | b |   |   |   |   |   | c |
+            """
+            d
+            a     b           c
+            """
 
         And the ways
             | nodes | name | highway       | oneway |

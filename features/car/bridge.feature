@@ -6,9 +6,11 @@ Feature: Car - Handle driving
 
     Scenario: Car - Use a ferry route
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | bridge  | bicycle |
@@ -29,9 +31,11 @@ Feature: Car - Handle driving
 
     Scenario: Car - Properly handle durations
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | bridge  | duration |

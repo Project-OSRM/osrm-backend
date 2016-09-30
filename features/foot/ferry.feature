@@ -6,9 +6,11 @@ Feature: Foot - Handle ferry routes
 
     Scenario: Foot - Ferry route
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | route | foot |
@@ -29,10 +31,12 @@ Feature: Foot - Handle ferry routes
 
     Scenario: Foot - Ferry duration, single node
         Given the node map
-            | a | b | c | d |
-            |   |   | e | f |
-            |   |   | g | h |
-            |   |   | i | j |
+            """
+            a b c d
+                e f
+                g h
+                i j
+            """
 
         And the ways
             | nodes | highway | route | foot | duration |
@@ -48,8 +52,10 @@ Feature: Foot - Handle ferry routes
 
     Scenario: Foot - Ferry duration, multiple nodes
         Given the node map
-            | x |   |   |   |   | y |
-            |   | a | b | c | d |   |
+            """
+            x         y
+              a b c d
+            """
 
         And the ways
             | nodes | highway | route | foot | duration |

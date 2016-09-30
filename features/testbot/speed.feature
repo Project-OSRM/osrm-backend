@@ -19,7 +19,9 @@ Feature: Testbot - speeds
 
     Scenario: Testbot - Speed on rivers, map
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes | highway |

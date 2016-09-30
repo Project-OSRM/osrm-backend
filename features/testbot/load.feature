@@ -9,7 +9,9 @@ Feature: Ways of loading data
     Scenario: Load data with datastore - ab
         Given data is loaded with datastore
         Given the node map
-            | a | b |
+            """
+            a b
+            """
 
         And the ways
             | nodes |
@@ -23,7 +25,9 @@ Feature: Ways of loading data
     Scenario: Load data directly - st
         Given data is loaded directly
         Given the node map
-            | s | t |
+            """
+            s t
+            """
 
         And the ways
             | nodes |
@@ -37,7 +41,9 @@ Feature: Ways of loading data
     Scenario: Load data datastore - xy
         Given data is loaded with datastore
         Given the node map
-            | x | y |
+            """
+            x y
+            """
 
         And the ways
             | nodes |
@@ -51,7 +57,9 @@ Feature: Ways of loading data
     Scenario: Load data directly - cd
         Given data is loaded directly
         Given the node map
-            | c | d |
+            """
+            c d
+            """
 
         And the ways
             | nodes |

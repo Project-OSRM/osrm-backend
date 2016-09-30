@@ -8,10 +8,12 @@ Feature: Collapse
     @reverse
     Scenario: Collapse U-Turn Triangle Intersection
         Given the node map
-            | g |   | f |   | e |   | d |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            | a |   |   | b |   |   | c |
+            """
+            g   f   e   d
+
+
+            a     b     c
+            """
 
         And the ways
             | nodes | highway      | name | oneway |
@@ -28,11 +30,13 @@ Feature: Collapse
     @reverse @traffic-signals
     Scenario: Collapse U-Turn Triangle Intersection
         Given the node map
-            | g |   | f |   | j |   | e |   | d |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   | h |   | i |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            | a |   |   |   | b |   |   |   | c |
+            """
+            g   f   j   e   d
+
+                  h   i
+
+            a       b       c
+            """
 
         And the ways
             | nodes | highway      | name | oneway |

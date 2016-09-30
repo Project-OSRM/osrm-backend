@@ -9,12 +9,14 @@ Feature: Staggered Intersections
     # https://www.openstreetmap.org/#map=19/39.26022/-84.25144
     Scenario: Staggered Intersection: Oak St, Cedar Dr
         Given the node map
-            |   |   | j |   |   |
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
-            |   |   | h |   |   |
-            |   |   | i |   |   |
+            """
+                j
+            a b c
+                d
+                e f g
+                h
+                i
+            """
 
         And the ways
             | nodes  | highway     | name     |
@@ -29,16 +31,18 @@ Feature: Staggered Intersections
 
     Scenario: Staggered Intersection: do not collapse if long segment in between
         Given the node map
-            |   |   | j |   |   |
-            | a | b | c |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   | d |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   | e | f | g |
-            |   |   | h |   |   |
-            |   |   | i |   |   |
+            """
+                j
+            a b c
+
+
+                d
+
+
+                e f g
+                h
+                i
+            """
 
         And the ways
             | nodes  | highway     | name     |
@@ -53,12 +57,14 @@ Feature: Staggered Intersections
 
     Scenario: Staggered Intersection: do not collapse if not left-right or right-left
         Given the node map
-            |   |   | j |   |   |
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            | g | f | e |   |   |
-            |   |   | h |   |   |
-            |   |   | i |   |   |
+            """
+                j
+            a b c
+                d
+            g f e
+                h
+                i
+            """
 
         And the ways
             | nodes  | highway     | name     |
@@ -73,12 +79,14 @@ Feature: Staggered Intersections
 
     Scenario: Staggered Intersection: do not collapse if the names are not the same
         Given the node map
-            |   |   | j |   |   |
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
-            |   |   | h |   |   |
-            |   |   | i |   |   |
+            """
+                j
+            a b c
+                d
+                e f g
+                h
+                i
+            """
 
         And the ways
             | nodes  | highway     | name     |

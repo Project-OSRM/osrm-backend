@@ -6,7 +6,9 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Simple Bridge
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway | bridge | name               |
@@ -20,9 +22,11 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Bridge with Immediate Turn
         Given the node map
-            |   |   |   | d |
-            | a |   | b | c |
-            |   |   |   | e |
+            """
+                  d
+            a   b c
+                  e
+            """
 
         And the ways
             | nodes | highway | bridge | name               |
@@ -39,9 +43,11 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Bridge with Immediate Turn Front and Back
         Given the node map
-            | f |   |   | d |
-            | a |   | b | c |
-            | g |   |   | e |
+            """
+            f     d
+            a   b c
+            g     e
+            """
 
         And the ways
             | nodes | highway | bridge | name               |
@@ -63,7 +69,9 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Simple Tunnel
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway | tunnel | name               |
@@ -77,9 +85,11 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Tunnel with Immediate Turn
         Given the node map
-            |   |   |   | d |
-            | a |   | b | c |
-            |   |   |   | e |
+            """
+                  d
+            a   b c
+                  e
+            """
 
         And the ways
             | nodes | highway | tunnel | name               |
@@ -96,9 +106,11 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Tunnel with Immediate Turn Front and Back
         Given the node map
-            | f |   |   | d |
-            | a |   | b | c |
-            | g |   |   | e |
+            """
+            f     d
+            a   b c
+            g     e
+            """
 
         And the ways
             | nodes | highway | bridge | name               |

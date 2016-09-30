@@ -8,11 +8,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Anticipate Lane Change for subsequent multi-lane intersections
         Given the node map
-            | a |   | b |   | x |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | c |   | d |   | z |
-            |   |   |   |   |   |   |   |
-            |   |   | y |   | e |   |   |
+            """
+            a – b – x
+                |
+                c – d – z
+                |   |
+                y   e
+            """
 
         And the ways
             | nodes | turn:lanes:forward           |
@@ -32,11 +34,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Anticipate Lane Change for quick same direction turns, staying on the same street
         Given the node map
-            | a |   | b | x |
-            |   |   |   |   |
-            |   |   | c |   |
-            |   |   |   |   |
-            | e |   | d | y |
+            """
+            a – b – x
+                |
+                c
+                |
+            e – d – y
+            """
 
         And the ways
             | nodes | turn:lanes:forward    | turn:lanes:backward | name |
@@ -55,11 +59,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Anticipate Lane Change for quick same direction turns, changing between streets
         Given the node map
-            | a |   | b | x |
-            |   |   |   |   |
-            |   |   | c |   |
-            |   |   |   |   |
-            | e |   | d | y |
+            """
+            a – b – x
+                |
+                c
+                |
+            e – d – y
+            """
 
         And the ways
             | nodes | turn:lanes:forward    | turn:lanes:backward | name |
@@ -79,9 +85,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Anticipate Lane Change for quick turns during a merge
         Given the node map
-            | a |   |   |   |   |
-            | x | b |   | c | y |
-            |   |   |   |   | d |
+            """
+            a
+              \
+            x – b – c – y
+                    |
+                    d
+            """
 
         And the ways
             | nodes | turn:lanes:forward       | name | highway       | oneway |
@@ -100,9 +110,12 @@ Feature: Turn Lane Guidance
     Scenario: Schoenefelder Kreuz
     # https://www.openstreetmap.org/way/264306388#map=16/52.3202/13.5568
         Given the node map
-            | a | b | x |   |   | i |
-            |   |   | c | d |   |   |
-            |   |   |   |   |   | j |
+            """
+            a b – x
+                \       / i
+                  c – d
+                        \ j
+            """
 
         And the ways
             | nodes | turn:lanes:forward                                  | lanes | highway       | oneway | name |
@@ -123,8 +136,11 @@ Feature: Turn Lane Guidance
     Scenario: Kreuz Oranienburg
     # https://www.openstreetmap.org/way/4484007#map=18/52.70439/13.20269
         Given the node map
-            | i |   |   |   |   | a |
-            | j |   | c | b |   | x |
+            """
+            i               a
+              ' .       . '
+            j – – c – b – – x
+            """
 
         And the ways
             | nodes | turn:lanes:forward | lanes | highway       | oneway | name |
@@ -143,11 +159,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Lane anticipation for fan-in
         Given the node map
-            | a |   | b |   | x |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | c |   | d |   | z |
-            |   |   |   |   |   |   |   |
-            |   |   | y |   | e |   |   |
+            """
+            a – b – x
+                |
+                c – d – z
+                |   |
+                y   e
+            """
 
         And the ways
             | nodes | turn:lanes:forward           | name |
@@ -166,11 +184,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Lane anticipation for fan-out
         Given the node map
-            | a |   | b |   | x |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | c |   | d |   | z |
-            |   |   |   |   |   |   |   |
-            |   |   | y |   | e |   |   |
+            """
+            a – b – x
+                |
+                c – d – z
+                |   |
+                y   e
+            """
 
         And the ways
             | nodes | turn:lanes:forward           | name |
@@ -189,11 +209,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Lane anticipation for fan-in followed by fan-out
         Given the node map
-            | a |   | b |   | x |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | c |   | d |   | z |
-            |   |   |   |   |   |   |   |
-            |   |   | y |   | e |   |   |
+            """
+            a – b – x
+                |
+                c – d – z
+                |   |
+                y   e
+            """
 
         And the ways
             | nodes | turn:lanes:forward           | name |
@@ -212,11 +234,13 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Lane anticipation for fan-out followed by fan-in
         Given the node map
-            | a |   | b |   | x |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | c |   | d |   | z |
-            |   |   |   |   |   |   |   |
-            |   |   | y |   | e |   |   |
+            """
+            a – b – x
+                |
+                c – d – z
+                |   |
+                y   e
+            """
 
         And the ways
             | nodes | turn:lanes:forward  | name |
@@ -235,13 +259,15 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Lane anticipation for multiple hops with same number of lanes
         Given the node map
-            | a |   | b |   | x |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | c |   | d |   | z |
-            |   |   |   |   |   |   |   |
-            |   |   | y |   | e |   | f |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   | w |   |   |
+            """
+            a – b – x
+                |
+                c – d – z
+                |   |
+                y   e – f
+                    |
+                    w
+            """
 
         And the ways
             | nodes | turn:lanes:forward           | name |
@@ -262,11 +288,13 @@ Feature: Turn Lane Guidance
        @anticipate
        Scenario: Anticipate Lanes for through, through with lanes
            Given the node map
-               |   |   |   | f | g |   |
-               |   |   |   |   |   |   |
-               | a | b | c | d |   | e |
-               |   |   |   |   |   |   |
-               |   |   |   | h | i |   |
+               """
+                         f   g
+                        /   /
+               a – b – c – d – e
+                        \   \
+                         h   i
+               """
 
            And the ways
                | nodes | turn:lanes:forward                     | name |
@@ -286,11 +314,13 @@ Feature: Turn Lane Guidance
        @anticipate
        Scenario: Anticipate Lanes for through and collapse multiple use lanes
            Given the node map
-               |   |   | e | f | g |
-               |   |   |   |   |   |
-               | a | b | c | d |   |
-               |   |   |   |   |   |
-               |   |   | h | i | j |
+               """
+                     e   f   g
+                    /   /   /
+               a – b – c – d
+                    \   \   \
+                     h   i   j
+               """
 
            And the ways
                | nodes | turn:lanes:forward                     | name |
@@ -312,11 +342,13 @@ Feature: Turn Lane Guidance
        @anticipate
        Scenario: Anticipate Lanes for through followed by left/right
            Given the node map
-               |   |   | f | g |   |
-               |   |   |   |   | d |
-               | a | b | c | x |   |
-               |   |   |   |   | e |
-               |   |   | h | i |   |
+               """
+                     f   g   d
+                    /   /   /
+               a – b – c – x
+                    \   \   \
+                     h   i   e
+               """
 
            And the ways
                | nodes | turn:lanes:forward                              | name  |
@@ -338,11 +370,11 @@ Feature: Turn Lane Guidance
        @anticipate
        Scenario: Anticipate Lanes for through with turn before / after
            Given the node map
-               | a | b | c |
-               |   | d |   |
-               | f | e | g |
-               |   | h |   |
-               | j | i | l |
+               """
+               c       g       l
+               b – d – e – h - i
+               a       f       j
+               """
 
            And the ways
                | nodes | turn:lanes:forward                                           | name  | oneway |
@@ -370,10 +402,16 @@ Feature: Turn Lane Guidance
 
        @anticipate
        Scenario: Anticipate Lanes for turns with through before and after
+           Given a grid size of 10 meters
            Given the node map
-               | a | b | q |   | s | h | i |
-               |   |   | e | f | g |   |   |
-               | c | d | r |   | t | j | k |
+               """
+               a – b – q       s   h – i
+                     \       /   /
+                       e – f – g
+                     /       \   \
+               c – d – r       t   j – k
+
+               """
 
            And the ways
                | nodes | turn:lanes:forward                              | name |
@@ -402,10 +440,15 @@ Feature: Turn Lane Guidance
        @anticipate
        Scenario: Anticipate Lanes for turn between throughs
            Given the node map
-               |   | q |   |   |
-               | a | b | c | s |
-               |   | r | d | t |
-               |   |   | e |   |
+               """
+                   q
+                   |
+               a – b – c – s
+                   |   |
+                   r   d – t
+                       |
+                       e
+               """
 
            And the ways
                | nodes | turn:lanes:forward                                       | name |
@@ -425,13 +468,15 @@ Feature: Turn Lane Guidance
     @anticipate @todo @2661
     Scenario: Anticipate with lanes in roundabout: roundabouts as the unit of anticipation
         Given the node map
-            |   |   | e |   |   |
-            | a | b |   | d | f |
-            |   |   | c |   |   |
-            |   |   |   |   |   |
-            |   |   | g |   |   |
-            | k | h |   | j | l |
-            |   |   | i |   |   |
+            """
+                 /e\
+            a – b   d – f
+                 \c/
+                  |
+                 /g\
+            k – h   j – l
+                 \i/
+            """
 
         And the ways
             | nodes | turn:lanes:forward                       | highway | junction   | #   |
@@ -459,9 +504,11 @@ Feature: Turn Lane Guidance
     @anticipate @todo
     Scenario: Roundabout with lanes only tagged on exit
         Given the node map
-            |   |   | e |   |   |
-            | a | b |   | d | f |
-            |   |   | c |   |   |
+            """
+                 /e\
+            a – b   d – f
+                 \c/
+            """
 
         And the ways
             | nodes | turn:lanes:forward                     | highway | junction   |
@@ -479,13 +526,16 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            |   | c |   | g | h |
-            |   |   |   |   |   |
-            |   | d |   | f |   |
-            |   |   | e |   |   |
-            | x |   |   |   | y |
+            """
+                a
+                |
+               /b\
+              c   g – h
+             /|   |
+            | d   f
+            |/ \e/ \
+            x     \ y
+            """
 
         And the ways
             | nodes | turn:lanes:forward         | highway | junction   |
@@ -509,9 +559,11 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
-            |   |   | a |   |   |
-            | x | b |   | d | y |
-            |   |   | c |   |   |
+            """
+                 /a\
+            x – b   d – y
+                 \c/
+            """
 
         And the ways
             | nodes | turn:lanes:forward         | highway | junction   | name       |
@@ -535,13 +587,16 @@ Feature: Turn Lane Guidance
         properties.left_hand_driving = true
         """
         And the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | h | c |   | g |   |
-            |   |   |   |   |   |
-            |   | d |   | f |   |
-            |   |   | e |   |   |
-            | x |   |   |   | y |
+            """
+                  a
+                  |
+                 /b\
+            h – c   g
+                |   |\
+                d   f |
+               / \e/ \|
+              x /     y
+            """
 
         And the ways
             | nodes | turn:lanes:forward         | highway | junction   |
@@ -565,43 +620,45 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
-            |   |   | a |   |   |
-            | x | b |   | d | y |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   |   |   |   |
-            |   |   | c |   |   |
+            """
+                 /a\
+            x – b   d – y
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                |   |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+                  c
+            """
 
         And the ways
             | nodes | turn:lanes:forward         | highway | junction   | name       |
@@ -621,12 +678,15 @@ Feature: Turn Lane Guidance
     @anticipate @todo @2032
     Scenario: No Lanes for Roundabouts, see #2626
         Given the node map
-            | a | b |   |   | x |
-            |   | c |   |   |   |
-            | d |   | f | g | z |
-            |   | e |   | h |   |
-            |   |   |   |   |   |
-            |   | y |   |   |   |
+            """
+            a – b –x
+                |
+               /c\
+              d   f – g – z
+               \e/    |
+                |     h
+                y
+            """
 
         And the ways
             | nodes | turn:lanes:forward                                  | highway | junction   | name  |
@@ -649,10 +709,11 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Anticipate none tags
         Given the node map
-            | a | b | c |
-            |   | d |   |
-            | f | e | g |
-            |   | h |   |
+            """
+            c       g       l
+            b – d – e – h - i
+            a       f       j
+            """
 
         And the ways
             | nodes | turn:lanes:forward       | highway   | name |
@@ -672,14 +733,16 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Triple Right keeping Left
         Given the node map
-            | a |   |   |   | b |   | i |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            | f |   | e |   |   |   | g |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   | j | d |   | c |   |   |
-            |   |   |   |   | h |   |   |
+            """
+                  a – b – i
+                      |
+            f – e – g |
+                |     |
+                |     |
+            j – d – – c
+                      |
+                      h
+            """
 
         And the ways
             | nodes | turn:lanes:forward | highway   | name   |
@@ -697,14 +760,16 @@ Feature: Turn Lane Guidance
     @anticipate
     Scenario: Tripple Left keeping Right
         Given the node map
-            | i |   | b |   |   |   | a |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            | g |   |   |   | e |   | f |
-            |   |   |   |   |   |   |   |
-            |   |   |   |   |   |   |   |
-            |   |   | c |   | d | j |   |
-            |   |   | h |   |   |   |   |
+            """
+            i – b – a
+                |
+                | g – e – f
+                |     |
+                |     |
+                c – – d – j
+                |
+                h
+            """
 
         And the ways
             | nodes | turn:lanes:forward | highway   | name   |
