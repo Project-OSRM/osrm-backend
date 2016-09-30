@@ -21,6 +21,7 @@
     - Guidance
       - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
       - Improved the detection of non-noticeable name-changes
+      - Summaries have been improved to consider references as well
     - API:
       - `annotations=true` now returns the data source id for each segment as `datasources`
       - Reduced semantic of merge to refer only to merges from a lane onto a motorway-like road

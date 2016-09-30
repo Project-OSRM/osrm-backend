@@ -6,7 +6,11 @@
 #include "engine/guidance/route_leg.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/internal_route_result.hpp"
+#include "util/typedefs.hpp"
+
 #include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -108,7 +112,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
         });
 
     std::array<std::uint32_t, SegmentNumber> summary;
-    std::fill(summary.begin(), summary.end(), 0);
+    std::fill(summary.begin(), summary.end(), EMPTY_NAMEID);
     std::transform(segments.begin(),
                    segments.end(),
                    summary.begin(),
@@ -173,21 +177,28 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     {
         auto summary_array = detail::summarizeRoute<detail::MAX_USED_SEGMENTS>(
             route_data, target_node, target_traversed_in_reverse);
-        if (route_data.empty())
-            summary_array[0] = source_node.name_id;
 
         BOOST_ASSERT(detail::MAX_USED_SEGMENTS > 0);
         BOOST_ASSERT(summary_array.begin() != summary_array.end());
-        std::vector<std::string> summary_names;
-        for (auto nameIt = summary_array.begin(), end = summary_array.end(); nameIt != end; ++nameIt)
-        {
-            auto name = facade.GetNameForID(* nameIt);
-            name = name.empty() ? facade.GetRefForID(* nameIt) : name;
+
+        // transform a name_id into a string containing either the name, or -if the name is empty-
+        // the reference.
+        const auto name_id_to_string = [&](const NameID name_id) {
+            const auto name = facade.GetNameForID(name_id);
             if (!name.empty())
-                summary_names.push_back(name);
-        }
-        BOOST_ASSERT(summary_names.size() =< MAX_USED_SEGMENTS);
-        summary = boost::algorithm::join(summary_names, ", ");
+                return name;
+            else
+            {
+                const auto ref = facade.GetRefForID(name_id);
+                return ref;
+            }
+        };
+
+        const auto not_empty = [&](const std::string &name) { return !name.empty(); };
+
+        const auto summary_names = summary_array | boost::adaptors::transformed(name_id_to_string) |
+                                   boost::adaptors::filtered(not_empty);
+        summary = boost::algorithm::join(summary_names, ",");
     }
 
     return RouteLeg{duration, distance, summary, {}};
