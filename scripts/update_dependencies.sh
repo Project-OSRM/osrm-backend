@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Note: once the subtree merge from this script has been committed and pushed to
+# a branch do not attempt to rebase the branch back onto master or the subdirectory
+# structure will be lost.
+# http://git.661346.n2.nabble.com/subtree-merges-lose-prefix-after-rebase-td7332850.html
+
 OSMIUM_REPO=https://github.com/osmcode/libosmium.git
 OSMIUM_TAG=v2.9.0
 
