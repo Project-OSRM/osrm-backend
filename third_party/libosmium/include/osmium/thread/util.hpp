@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <chrono>
 #include <future>
+#include <thread>
+#include <utility>
 
 #ifdef __linux__
 # include <sys/prctl.h>

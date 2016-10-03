@@ -34,8 +34,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cassert>
+#include <cstddef>
 #include <iterator>
 #include <type_traits>
+#include <utility>
 
 #include <osmium/osm/diff_object.hpp>
 
@@ -49,7 +51,7 @@ namespace osmium {
      * underlying OSMObjects.
      */
     template <typename TBasicIterator>
-    class DiffIterator : public std::iterator<std::input_iterator_tag, const osmium::DiffObject> {
+    class DiffIterator {
 
         static_assert(std::is_base_of<osmium::OSMObject, typename TBasicIterator::value_type>::value, "TBasicIterator::value_type must derive from osmium::OSMObject");
 
@@ -75,6 +77,12 @@ namespace osmium {
         }
 
     public:
+
+        using iterator_category = std::input_iterator_tag;
+        using value_type        = const osmium::DiffObject;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = value_type*;
+        using reference         = value_type&;
 
         DiffIterator(TBasicIterator begin, TBasicIterator end) :
             m_prev(begin),

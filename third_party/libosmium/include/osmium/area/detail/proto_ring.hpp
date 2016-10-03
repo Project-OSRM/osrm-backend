@@ -34,10 +34,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
-#include <cstdlib>
 #include <iostream>
-#include <iterator>
 #include <set>
 #include <vector>
 
@@ -46,6 +45,8 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/area/detail/node_ref_segment.hpp>
 
 namespace osmium {
+
+    class Way;
 
     namespace area {
 
@@ -58,214 +59,155 @@ namespace osmium {
 
             public:
 
-                typedef std::vector<NodeRefSegment> segments_type;
+                using segments_type = std::vector<NodeRefSegment*>;
 
             private:
 
-                // segments in this ring
+                // Segments in this ring.
                 segments_type m_segments;
 
-                bool m_outer {true};
-
-                // if this is an outer ring, these point to it's inner rings (if any)
+                // If this is an outer ring, these point to it's inner rings
+                // (if any).
                 std::vector<ProtoRing*> m_inner;
+
+                // The smallest segment. Will be kept current whenever a new
+                // segment is added to the ring.
+                NodeRefSegment* m_min_segment;
+
+                // If this is an inner ring, points to the outer ring.
+                ProtoRing* m_outer_ring;
+
+                int64_t m_sum;
 
             public:
 
-                explicit ProtoRing(const NodeRefSegment& segment) noexcept :
-                    m_segments() {
+                explicit ProtoRing(NodeRefSegment* segment) noexcept :
+                    m_segments(),
+                    m_inner(),
+                    m_min_segment(segment),
+                    m_outer_ring(nullptr),
+                    m_sum(0) {
                     add_segment_back(segment);
                 }
 
-                explicit ProtoRing(segments_type::const_iterator sbegin, segments_type::const_iterator send) :
-                    m_segments(static_cast<size_t>(std::distance(sbegin, send))) {
-                    std::copy(sbegin, send, m_segments.begin());
+                void add_segment_back(NodeRefSegment* segment) {
+                    assert(segment);
+                    if (*segment < *m_min_segment) {
+                        m_min_segment = segment;
+                    }
+                    m_segments.push_back(segment);
+                    segment->set_ring(this);
+                    m_sum += segment->det();
                 }
 
-                bool outer() const noexcept {
-                    return m_outer;
+                NodeRefSegment* min_segment() const noexcept {
+                    return m_min_segment;
                 }
 
-                void set_inner() noexcept {
-                    m_outer = false;
+                ProtoRing* outer_ring() const noexcept {
+                    return m_outer_ring;
                 }
 
-                segments_type& segments() noexcept {
-                    return m_segments;
+                void set_outer_ring(ProtoRing* outer_ring) noexcept {
+                    assert(outer_ring);
+                    assert(m_inner.empty());
+                    m_outer_ring = outer_ring;
+                }
+
+                const std::vector<ProtoRing*>& inner_rings() const noexcept {
+                    return m_inner;
+                }
+
+                void add_inner_ring(ProtoRing* ring) {
+                    assert(ring);
+                    assert(!m_outer_ring);
+                    m_inner.push_back(ring);
+                }
+
+                bool is_outer() const noexcept {
+                    return !m_outer_ring;
                 }
 
                 const segments_type& segments() const noexcept {
                     return m_segments;
                 }
 
-                void remove_segments(segments_type::iterator sbegin, segments_type::iterator send) {
-                    m_segments.erase(sbegin, send);
+                const NodeRef& get_node_ref_start() const noexcept {
+                    return m_segments.front()->start();
                 }
 
-                void add_segment_front(const NodeRefSegment& segment) {
-                    m_segments.insert(m_segments.begin(), segment);
+                const NodeRef& get_node_ref_stop() const noexcept {
+                    return m_segments.back()->stop();
                 }
 
-                void add_segment_back(const NodeRefSegment& segment) {
-                    m_segments.push_back(segment);
+                bool closed() const noexcept {
+                    return get_node_ref_start().location() == get_node_ref_stop().location();
                 }
 
-                const NodeRefSegment& get_segment_front() const {
-                    return m_segments.front();
+                void reverse() {
+                    std::for_each(m_segments.begin(), m_segments.end(), [](NodeRefSegment* segment) {
+                        segment->reverse();
+                    });
+                    std::reverse(m_segments.begin(), m_segments.end());
+                    m_sum = -m_sum;
                 }
 
-                NodeRefSegment& get_segment_front() {
-                    return m_segments.front();
+                void mark_direction_done() {
+                    std::for_each(m_segments.begin(), m_segments.end(), [](NodeRefSegment* segment) {
+                        segment->mark_direction_done();
+                    });
                 }
 
-                const NodeRef& get_node_ref_front() const {
-                    return get_segment_front().first();
+                bool is_cw() const noexcept {
+                    return m_sum <= 0;
                 }
 
-                const NodeRefSegment& get_segment_back() const {
-                    return m_segments.back();
+                int64_t sum() const noexcept {
+                    return m_sum;
                 }
 
-                NodeRefSegment& get_segment_back() {
-                    return m_segments.back();
-                }
-
-                const NodeRef& get_node_ref_back() const {
-                    return get_segment_back().second();
-                }
-
-                bool closed() const {
-                    return m_segments.front().first().location() == m_segments.back().second().location();
-                }
-
-                int64_t sum() const {
-                    int64_t sum = 0;
-
-                    for (const auto& segment : m_segments) {
-                        sum += static_cast<int64_t>(segment.first().location().x()) * static_cast<int64_t>(segment.second().location().y()) -
-                               static_cast<int64_t>(segment.second().location().x()) * static_cast<int64_t>(segment.first().location().y());
+                void fix_direction() noexcept {
+                    if (is_cw() == is_outer()) {
+                        reverse();
                     }
-
-                    return sum;
                 }
 
-                bool is_cw() const {
-                    return sum() <= 0;
+                void reset() {
+                    m_inner.clear();
+                    m_outer_ring = nullptr;
+                    std::for_each(m_segments.begin(), m_segments.end(), [](NodeRefSegment* segment) {
+                        segment->mark_direction_not_done();
+                    });
                 }
 
-                int64_t area() const {
-                    return std::abs(sum()) / 2;
+                void get_ways(std::set<const osmium::Way*>& ways) const {
+                    for (const auto& segment : m_segments) {
+                        ways.insert(segment->way());
+                    }
                 }
 
-                void swap_segments(ProtoRing& other) {
-                    using std::swap;
-                    swap(m_segments, other.m_segments);
+                void join_forward(ProtoRing& other) {
+                    for (NodeRefSegment* segment : other.m_segments) {
+                        add_segment_back(segment);
+                    }
                 }
 
-                void add_inner_ring(ProtoRing* ring) {
-                    m_inner.push_back(ring);
-                }
-
-                const std::vector<ProtoRing*>& inner_rings() const {
-                    return m_inner;
+                void join_backward(ProtoRing& other) {
+                    for (auto it = other.m_segments.rbegin(); it != other.m_segments.rend(); ++it) {
+                        (*it)->reverse();
+                        add_segment_back(*it);
+                    }
                 }
 
                 void print(std::ostream& out) const {
                     out << "[";
-                    bool first = true;
+                    if (!m_segments.empty()) {
+                        out << m_segments.front()->start().ref();
+                    }
                     for (const auto& segment : m_segments) {
-                        if (first) {
-                            out << segment.first().ref();
-                        }
-                        out << ',' << segment.second().ref();
-                        first = false;
+                        out << ',' << segment->stop().ref();
                     }
-                    out << "]";
-                }
-
-                void reverse() {
-                    std::for_each(m_segments.begin(), m_segments.end(), [](NodeRefSegment& segment) {
-                        segment.swap_locations();
-                    });
-                    std::reverse(m_segments.begin(), m_segments.end());
-                }
-
-                /**
-                 * Merge other ring to end of this ring.
-                 */
-                void merge_ring(const ProtoRing& other, bool debug) {
-                    if (debug) {
-                        std::cerr << "        MERGE rings ";
-                        print(std::cerr);
-                        std::cerr << " to ";
-                        other.print(std::cerr);
-                        std::cerr << "\n";
-                    }
-                    m_segments.insert(m_segments.end(), other.m_segments.begin(), other.m_segments.end());
-                    if (debug) {
-                        std::cerr << "          result ring: ";
-                        print(std::cerr);
-                        std::cerr << "\n";
-                    }
-                }
-
-                void merge_ring_reverse(const ProtoRing& other, bool debug) {
-                    if (debug) {
-                        std::cerr << "        MERGE rings (reverse) ";
-                        print(std::cerr);
-                        std::cerr << " to ";
-                        other.print(std::cerr);
-                        std::cerr << "\n";
-                    }
-                    size_t n = m_segments.size();
-                    m_segments.resize(n + other.m_segments.size());
-                    std::transform(other.m_segments.rbegin(), other.m_segments.rend(), m_segments.begin() + static_cast<segments_type::difference_type>(n), [](NodeRefSegment segment) {
-                        segment.swap_locations();
-                        return segment;
-                    });
-                    if (debug) {
-                        std::cerr << "          result ring: ";
-                        print(std::cerr);
-                        std::cerr << "\n";
-                    }
-                }
-
-                const NodeRef& min_node() const {
-                    auto it = std::min_element(m_segments.begin(), m_segments.end());
-                    if (location_less()(it->first(), it->second())) {
-                        return it->first();
-                    } else {
-                        return it->second();
-                    }
-                }
-
-                bool is_in(ProtoRing* outer) {
-                    osmium::Location testpoint = segments().front().first().location();
-                    bool is_in = false;
-
-                    for (size_t i = 0, j = outer->segments().size()-1; i < outer->segments().size(); j = i++) {
-                        if (((outer->segments()[i].first().location().y() > testpoint.y()) != (outer->segments()[j].first().location().y() > testpoint.y())) &&
-                            (testpoint.x() < (outer->segments()[j].first().location().x() - outer->segments()[i].first().location().x()) * (testpoint.y() - outer->segments()[i].first().location().y()) / (outer->segments()[j].first().location().y() - outer->segments()[i].first().location().y()) + outer->segments()[i].first().location().x()) ) {
-                            is_in = !is_in;
-                        }
-                    }
-
-                    return is_in;
-                }
-
-                void get_ways(std::set<const osmium::Way*>& ways) {
-                    for (const auto& segment : m_segments) {
-                        ways.insert(segment.way());
-                    }
-                }
-
-                bool contains(const NodeRefSegment& segment) const {
-                    for (const auto& s : m_segments) {
-                        if (s == segment || (s.first() == segment.second() && s.second() == segment.first())) {
-                            return true;
-                        }
-                    }
-                    return false;
+                    out << "]-" << (is_outer() ? "OUTER" : "INNER");
                 }
 
             }; // class ProtoRing

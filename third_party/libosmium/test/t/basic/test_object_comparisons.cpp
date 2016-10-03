@@ -1,76 +1,80 @@
 #include "catch.hpp"
 
+#include <algorithm>
+#include <functional>
+#include <vector>
+
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/osm.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
-TEST_CASE("Object_Comparisons") {
+using namespace osmium::builder::attr;
 
-    using namespace osmium::builder::attr;
+TEST_CASE("Node comparisons") {
 
-    SECTION("order") {
-        osmium::memory::Buffer buffer(10 * 1000);
+    osmium::memory::Buffer buffer(10 * 1000);
+    std::vector<std::reference_wrapper<osmium::Node>> nodes;
 
-        osmium::builder::add_node(buffer, _id(10), _version(1));
-        osmium::builder::add_node(buffer, _id(15), _version(2));
+    SECTION("nodes are ordered by id, version, and timestamp") {
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(            0), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(            1), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           10), _version(2), _timestamp("2016-01-01T00:01:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           10), _version(3), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:01:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           15), _version(1), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(10000000000ll), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
 
-        auto it = buffer.begin();
-        osmium::Node& node1 = static_cast<osmium::Node&>(*it);
-        osmium::Node& node2 = static_cast<osmium::Node&>(*(++it));
-
-        REQUIRE(node1 < node2);
-        REQUIRE_FALSE(node1 > node2);
-        node1.set_id(20);
-        node1.set_version(1);
-        node2.set_id(20);
-        node2.set_version(2);
-        REQUIRE(node1 < node2);
-        REQUIRE_FALSE(node1 > node2);
-        node1.set_id(-10);
-        node1.set_version(2);
-        node2.set_id(-15);
-        node2.set_version(1);
-        REQUIRE(node1 < node2);
-        REQUIRE_FALSE(node1 > node2);
+        REQUIRE(std::is_sorted(nodes.cbegin(), nodes.cend()));
     }
 
-    SECTION("order_types") {
-        osmium::memory::Buffer buffer(10 * 1000);
+    SECTION("equal nodes are not different") {
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(1), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(1), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
 
-        osmium::builder::add_node(buffer, _id(3), _version(3));
-        osmium::builder::add_node(buffer, _id(3), _version(4));
-        osmium::builder::add_node(buffer, _id(3), _version(4));
-        osmium::builder::add_way(buffer, _id(2), _version(2));
-        osmium::builder::add_relation(buffer, _id(1), _version(1));
+        REQUIRE(nodes[0] == nodes[1]);
+        REQUIRE_FALSE(nodes[0] < nodes[1]);
+        REQUIRE_FALSE(nodes[0] > nodes[1]);
+    }
 
-        auto it = buffer.begin();
-        const osmium::Node& node1 = static_cast<const osmium::Node&>(*it);
-        const osmium::Node& node2 = static_cast<const osmium::Node&>(*(++it));
-        const osmium::Node& node3 = static_cast<const osmium::Node&>(*(++it));
-        const osmium::Way& way = static_cast<const osmium::Way&>(*(++it));
-        const osmium::Relation& relation = static_cast<const osmium::Relation&>(*(++it));
+    SECTION("IDs are ordered by absolute value") {
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(  0))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(  1))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id( -1))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id( 10))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(-10))));
 
-        REQUIRE(node1 < node2);
-        REQUIRE(node2 < way);
-        REQUIRE_FALSE(node2 > way);
-        REQUIRE(way < relation);
-        REQUIRE(node1 < relation);
+        REQUIRE(std::is_sorted(nodes.cbegin(), nodes.cend()));
+    }
 
-        REQUIRE(osmium::object_order_type_id_version()(node1, node2));
-        REQUIRE(osmium::object_order_type_id_reverse_version()(node2, node1));
-        REQUIRE(osmium::object_order_type_id_version()(node1, way));
-        REQUIRE(osmium::object_order_type_id_reverse_version()(node1, way));
+    SECTION("reverse version ordering") {
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(            0), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(            1), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           10), _version(3), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           10), _version(2), _timestamp("2016-01-01T00:01:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:01:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           12), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(           15), _version(1), _timestamp("2016-01-01T00:00:00Z"))));
+        nodes.emplace_back(buffer.get<osmium::Node>(osmium::builder::add_node(buffer, _id(10000000000ll), _version(2), _timestamp("2016-01-01T00:00:00Z"))));
 
-        REQUIRE_FALSE(osmium::object_equal_type_id_version()(node1, node2));
-        REQUIRE(osmium::object_equal_type_id_version()(node2, node3));
-
-        REQUIRE(osmium::object_equal_type_id()(node1, node2));
-        REQUIRE(osmium::object_equal_type_id()(node2, node3));
-
-        REQUIRE_FALSE(osmium::object_equal_type_id_version()(node1, way));
-        REQUIRE_FALSE(osmium::object_equal_type_id_version()(node1, relation));
-        REQUIRE_FALSE(osmium::object_equal_type_id()(node1, relation));
+        REQUIRE(std::is_sorted(nodes.cbegin(), nodes.cend(), osmium::object_order_type_id_reverse_version{}));
     }
 
 }
+
+TEST_CASE("Object comparisons") {
+
+    osmium::memory::Buffer buffer(10 * 1000);
+    std::vector<std::reference_wrapper<osmium::OSMObject>> objects;
+
+    SECTION("types are ordered nodes, then ways, then relations") {
+        objects.emplace_back(buffer.get<osmium::Node>(    osmium::builder::add_node(    buffer, _id(3))));
+        objects.emplace_back(buffer.get<osmium::Way>(     osmium::builder::add_way(     buffer, _id(2))));
+        objects.emplace_back(buffer.get<osmium::Relation>(osmium::builder::add_relation(buffer, _id(1))));
+
+        REQUIRE(std::is_sorted(objects.cbegin(), objects.cend()));
+    }
+
+}
+

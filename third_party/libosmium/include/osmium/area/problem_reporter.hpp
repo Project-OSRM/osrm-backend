@@ -33,11 +33,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstddef>
+
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/types.hpp>
 
 namespace osmium {
+
+    class NodeRef;
+    class Way;
 
     namespace area {
 
@@ -62,6 +67,9 @@ namespace osmium {
             // ID of the relation/way we are currently working on
             osmium::object_id_type m_object_id;
 
+            // Number of nodes in the area
+            size_t m_nodes;
+
         public:
 
             ProblemReporter() = default;
@@ -79,6 +87,10 @@ namespace osmium {
                 m_object_id = object_id;
             }
 
+            void set_nodes(size_t nodes) noexcept {
+                m_nodes = nodes;
+            }
+
 // Disable "unused-parameter" warning, so that the compiler will not complain.
 // We can't remove the parameter names, because then doxygen will complain.
 #pragma GCC diagnostic push
@@ -87,11 +99,21 @@ namespace osmium {
             /**
              * Report a duplicate node, ie. two nodes with the same location.
              *
-             * @param node_id1       ID of the first node.
-             * @param node_id2       ID of the second node.
-             * @param location       Location of both nodes.
+             * @param node_id1  ID of the first node.
+             * @param node_id2  ID of the second node.
+             * @param location  Location of both nodes.
              */
             virtual void report_duplicate_node(osmium::object_id_type node_id1, osmium::object_id_type node_id2, osmium::Location location) {
+            }
+
+            /**
+             * Report a node/location where rings touch. This is often wrong,
+             * but not necessarily so.
+             *
+             * @param node_id   ID of the node.
+             * @param location  Location of the node.
+             */
+            virtual void report_touching_ring(osmium::object_id_type node_id, osmium::Location location) {
             }
 
             /**
@@ -110,20 +132,32 @@ namespace osmium {
             }
 
             /**
+             * Report a duplicate segments. Two or more segments are directly
+             * on top of each other. This can be a problem, if there is a
+             * spike for instance, or it could be okay, if there are touching
+             * inner rings.
+             *
+             * @param nr1  NodeRef of one end of the segment.
+             * @param nr2  NodeRef of the other end of the segment.
+             */
+            virtual void report_duplicate_segment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2) {
+            }
+
+            /**
              * Report an open ring.
              *
-             * @param end1           Location of the first open end.
-             * @param end2           Location of the second open end.
+             * @param nr   NodeRef of one end of the ring.
+             * @param way  Optional pointer to way the end node is in.
              */
-            virtual void report_ring_not_closed(osmium::Location end1, osmium::Location end2) {
+            virtual void report_ring_not_closed(const osmium::NodeRef& nr, const osmium::Way* way = nullptr) {
             }
 
             /**
              * Report a segment that should have role "outer", but has a different role.
              *
-             * @param way_id         ID of the way this segment is in.
-             * @param seg_start      Start of the segment with the wrong role.
-             * @param seg_end        End of the segment with the wrong role.
+             * @param way_id     ID of the way this segment is in.
+             * @param seg_start  Start of the segment with the wrong role.
+             * @param seg_end    End of the segment with the wrong role.
              */
             virtual void report_role_should_be_outer(osmium::object_id_type way_id, osmium::Location seg_start, osmium::Location seg_end) {
             }
@@ -136,6 +170,32 @@ namespace osmium {
              * @param seg_end        End of the segment with the wrong role.
              */
             virtual void report_role_should_be_inner(osmium::object_id_type way_id, osmium::Location seg_start, osmium::Location seg_end) {
+            }
+
+            /**
+             * Report a way that is in multiple rings.
+             *
+             * @param way The way.
+             */
+            virtual void report_way_in_multiple_rings(const osmium::Way& way) {
+            }
+
+            /**
+             * Report a way with role inner that has the same tags as the
+             * relation or outer ways.
+             *
+             * @param way The way.
+             */
+            virtual void report_inner_with_same_tags(const osmium::Way& way) {
+            }
+
+            /**
+             * In addition to reporting specific problems, this is used to
+             * report all ways belonging to areas having problems.
+             *
+             * @param way The way
+             */
+            virtual void report_way(const osmium::Way& way) {
             }
 
 #pragma GCC diagnostic pop

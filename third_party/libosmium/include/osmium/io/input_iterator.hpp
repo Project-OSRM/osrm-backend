@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/memory/buffer.hpp>
 #include <osmium/memory/item.hpp>
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
@@ -57,7 +56,7 @@ namespace osmium {
 
             static_assert(std::is_base_of<osmium::memory::Item, TItem>::value, "TItem must derive from osmium::buffer::Item");
 
-            typedef typename osmium::memory::Buffer::t_iterator<TItem> item_iterator;
+            using item_iterator = typename osmium::memory::Buffer::t_iterator<TItem>;
 
             TSource* m_source;
             std::shared_ptr<osmium::memory::Buffer> m_buffer;
@@ -69,20 +68,20 @@ namespace osmium {
                     if (!m_buffer || !*m_buffer) { // end of input
                         m_source = nullptr;
                         m_buffer.reset();
-                        m_iter = item_iterator();
+                        m_iter = item_iterator{};
                         return;
                     }
-                    m_iter = m_buffer->begin<TItem>();
-                } while (m_iter == m_buffer->end<TItem>());
+                    m_iter = m_buffer->select<TItem>().begin();
+                } while (m_iter == m_buffer->select<TItem>().end());
             }
 
         public:
 
-            typedef std::input_iterator_tag iterator_category;
-            typedef TItem                   value_type;
-            typedef ptrdiff_t               difference_type;
-            typedef TItem*                  pointer;
-            typedef TItem&                  reference;
+            using iterator_category = std::input_iterator_tag;
+            using value_type        = TItem;
+            using difference_type   = ptrdiff_t;
+            using pointer           = value_type*;
+            using reference         = value_type&;
 
             explicit InputIterator(TSource& source) :
                 m_source(&source) {
@@ -99,7 +98,7 @@ namespace osmium {
                 assert(m_buffer);
                 assert(m_iter);
                 ++m_iter;
-                if (m_iter == m_buffer->end<TItem>()) {
+                if (m_iter == m_buffer->select<TItem>().end()) {
                     update_buffer();
                 }
                 return *this;

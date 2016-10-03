@@ -62,8 +62,7 @@ TEST_CASE("Test Writer with MockOutputFormat") {
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
     REQUIRE(buffer.committed() > 0);
-    auto num = std::distance(buffer.cbegin<osmium::OSMObject>(), buffer.cend<osmium::OSMObject>());
-    REQUIRE(num > 0);
+    REQUIRE(buffer.select<osmium::OSMObject>().size() > 0);
 
     SECTION("error in header") {
 

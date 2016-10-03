@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 OSMIUM_REPO=https://github.com/osmcode/libosmium.git
-OSMIUM_TAG=v2.6.1
+OSMIUM_TAG=v2.9.0
 
 VARIANT_REPO=https://github.com/mapbox/variant.git
 VARIANT_TAG=v1.1.0

@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
-#include <utility>
+#include <utility> // IWYU pragma: keep
 
 #include <osmium/osm/tag.hpp>
 

@@ -49,11 +49,11 @@ namespace osmium {
      */
     struct not_found : public std::runtime_error {
 
-        not_found(const std::string& what) :
+        explicit not_found(const std::string& what) :
             std::runtime_error(what) {
         }
 
-        not_found(const char* what) :
+        explicit not_found(const char* what) :
             std::runtime_error(what) {
         }
 

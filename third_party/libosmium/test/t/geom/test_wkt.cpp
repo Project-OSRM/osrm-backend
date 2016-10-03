@@ -1,136 +1,133 @@
 #include "catch.hpp"
 
+#include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/wkt.hpp>
 
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
 
-TEST_CASE("WKT_Geometry") {
+TEST_CASE("WKT geometry for point") {
 
-SECTION("point") {
     osmium::geom::WKTFactory<> factory;
 
-    std::string wkt {factory.create_point(osmium::Location(3.2, 4.2))};
-    REQUIRE(std::string{"POINT(3.2 4.2)"} == wkt);
+    SECTION("point") {
+        const std::string wkt{factory.create_point(osmium::Location{3.2, 4.2})};
+        REQUIRE(wkt == "POINT(3.2 4.2)");
+    }
+
+    SECTION("empty point") {
+        REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), osmium::invalid_location);
+    }
+
 }
 
-SECTION("empty_point") {
+TEST_CASE("WKT geometry for point in ekwt") {
+    osmium::geom::WKTFactory<> factory(7, osmium::geom::wkt_type::ewkt);
+
+    const std::string wkt{factory.create_point(osmium::Location{3.2, 4.2})};
+    REQUIRE(wkt == "SRID=4326;POINT(3.2 4.2)");
+}
+
+TEST_CASE("WKT geometry for point in ekwt in web mercator") {
+    osmium::geom::WKTFactory<osmium::geom::MercatorProjection> factory(2, osmium::geom::wkt_type::ewkt);
+
+    const std::string wkt{factory.create_point(osmium::Location{3.2, 4.2})};
+    REQUIRE(wkt == "SRID=3857;POINT(356222.37 467961.14)");
+}
+
+TEST_CASE("WKT geometry factory") {
     osmium::geom::WKTFactory<> factory;
 
-    REQUIRE_THROWS_AS(factory.create_point(osmium::Location()), osmium::invalid_location);
-}
+    osmium::memory::Buffer buffer{10000};
 
-SECTION("linestring") {
-    osmium::geom::WKTFactory<> factory;
+    SECTION("linestring") {
+        const auto& wnl = create_test_wnl_okay(buffer);
 
-    osmium::memory::Buffer buffer(10000);
-    auto &wnl = create_test_wnl_okay(buffer);
+        SECTION("unique forwards (default)") {
+            const std::string wkt{factory.create_linestring(wnl)};
+            REQUIRE(wkt == "LINESTRING(3.2 4.2,3.5 4.7,3.6 4.9)");
+        }
 
-    {
-        std::string wkt {factory.create_linestring(wnl)};
-        REQUIRE(std::string{"LINESTRING(3.2 4.2,3.5 4.7,3.6 4.9)"} == wkt);
+        SECTION("unique backwards") {
+            const std::string wkt{factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward)};
+            REQUIRE(wkt == "LINESTRING(3.6 4.9,3.5 4.7,3.2 4.2)");
+        }
+
+        SECTION("all forwards") {
+            const std::string wkt{factory.create_linestring(wnl, osmium::geom::use_nodes::all)};
+            REQUIRE(wkt == "LINESTRING(3.2 4.2,3.5 4.7,3.5 4.7,3.6 4.9)");
+        }
+
+        SECTION("all backwards") {
+            const std::string wkt{factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
+            REQUIRE(wkt == "LINESTRING(3.6 4.9,3.5 4.7,3.5 4.7,3.2 4.2)");
+        }
     }
 
-    {
-        std::string wkt {factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward)};
-        REQUIRE(std::string{"LINESTRING(3.6 4.9,3.5 4.7,3.2 4.2)"} == wkt);
+    SECTION("empty linestring") {
+        const auto& wnl = create_test_wnl_empty(buffer);
+
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), osmium::geometry_error);
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), osmium::geometry_error);
     }
 
-    {
-        std::string wkt {factory.create_linestring(wnl, osmium::geom::use_nodes::all)};
-        REQUIRE(std::string{"LINESTRING(3.2 4.2,3.5 4.7,3.5 4.7,3.6 4.9)"} == wkt);
+    SECTION("linestring with two same locations") {
+        const auto& wnl = create_test_wnl_same_location(buffer);
+
+        SECTION("unique forwards") {
+            REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
+
+            try {
+                factory.create_linestring(wnl);
+            } catch (const osmium::geometry_error& e) {
+                REQUIRE(e.id() == 0);
+                REQUIRE(std::string(e.what()) == "need at least two points for linestring");
+            }
+        }
+
+        SECTION("unique backwards") {
+            REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
+        }
+
+        SECTION("all forwards") {
+            const std::string wkt{factory.create_linestring(wnl, osmium::geom::use_nodes::all)};
+            REQUIRE(wkt == "LINESTRING(3.5 4.7,3.5 4.7)");
+        }
+
+        SECTION("all backwards") {
+            const std::string wkt{factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
+            REQUIRE(wkt == "LINESTRING(3.5 4.7,3.5 4.7)");
+        }
     }
 
-    {
-        std::string wkt {factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
-        REQUIRE(std::string{"LINESTRING(3.6 4.9,3.5 4.7,3.5 4.7,3.2 4.2)"} == wkt);
-    }
-}
+    SECTION("linestring with undefined location") {
+        const auto& wnl = create_test_wnl_undefined_location(buffer);
 
-SECTION("empty_linestring") {
-    osmium::geom::WKTFactory<> factory;
-
-    osmium::memory::Buffer buffer(10000);
-    auto &wnl = create_test_wnl_empty(buffer);
-
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all), osmium::geometry_error);
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward), osmium::geometry_error);
-}
-
-SECTION("linestring_with_two_same_locations") {
-    osmium::geom::WKTFactory<> factory;
-
-    osmium::memory::Buffer buffer(10000);
-    auto &wnl = create_test_wnl_same_location(buffer);
-
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::geometry_error);
-
-    try {
-        factory.create_linestring(wnl);
-    } catch (osmium::geometry_error& e) {
-        REQUIRE(e.id() == 0);
-        REQUIRE(std::string(e.what()) == "need at least two points for linestring");
+        REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::invalid_location);
     }
 
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl, osmium::geom::use_nodes::unique, osmium::geom::direction::backward), osmium::geometry_error);
+    SECTION("area with one outer and no inner rings") {
+        const osmium::Area& area = create_test_area_1outer_0inner(buffer);
 
-    {
-        std::string wkt {factory.create_linestring(wnl, osmium::geom::use_nodes::all)};
-        REQUIRE(std::string{"LINESTRING(3.5 4.7,3.5 4.7)"} == wkt);
+        const std::string wkt{factory.create_multipolygon(area)};
+        REQUIRE(wkt == "MULTIPOLYGON(((3.2 4.2,3.5 4.7,3.6 4.9,3.2 4.2)))");
     }
 
-    {
-        std::string wkt {factory.create_linestring(wnl, osmium::geom::use_nodes::all, osmium::geom::direction::backward)};
-        REQUIRE(std::string{"LINESTRING(3.5 4.7,3.5 4.7)"} == wkt);
+    SECTION("area with one outer and one inner ring") {
+        const osmium::Area& area = create_test_area_1outer_1inner(buffer);
+
+        const std::string wkt{factory.create_multipolygon(area)};
+        REQUIRE(wkt == "MULTIPOLYGON(((0.1 0.1,9.1 0.1,9.1 9.1,0.1 9.1,0.1 0.1),(1 1,8 1,8 8,1 8,1 1)))");
     }
-}
 
-SECTION("linestring_with_undefined_location") {
-    osmium::geom::WKTFactory<> factory;
+    SECTION("area with two outer and two inner rings") {
+        const osmium::Area& area = create_test_area_2outer_2inner(buffer);
 
-    osmium::memory::Buffer buffer(10000);
-    auto &wnl = create_test_wnl_undefined_location(buffer);
-
-    REQUIRE_THROWS_AS(factory.create_linestring(wnl), osmium::invalid_location);
-}
-
-SECTION("area_1outer_0inner") {
-    osmium::geom::WKTFactory<> factory;
-
-    osmium::memory::Buffer buffer(10000);
-    const osmium::Area& area = create_test_area_1outer_0inner(buffer);
-
-    {
-        std::string wkt {factory.create_multipolygon(area)};
-        REQUIRE(std::string{"MULTIPOLYGON(((3.2 4.2,3.5 4.7,3.6 4.9,3.2 4.2)))"} == wkt);
+        const std::string wkt{factory.create_multipolygon(area)};
+        REQUIRE(wkt == "MULTIPOLYGON(((0.1 0.1,9.1 0.1,9.1 9.1,0.1 9.1,0.1 0.1),(1 1,4 1,4 4,1 4,1 1),(5 5,5 7,7 7,5 5)),((10 10,11 10,11 11,10 11,10 10)))");
     }
-}
-
-SECTION("area_1outer_1inner") {
-    osmium::geom::WKTFactory<> factory;
-
-    osmium::memory::Buffer buffer(10000);
-    const osmium::Area& area = create_test_area_1outer_1inner(buffer);
-
-    {
-        std::string wkt {factory.create_multipolygon(area)};
-        REQUIRE(std::string{"MULTIPOLYGON(((0.1 0.1,9.1 0.1,9.1 9.1,0.1 9.1,0.1 0.1),(1 1,8 1,8 8,1 8,1 1)))"} == wkt);
-    }
-}
-
-SECTION("area_2outer_2inner") {
-    osmium::geom::WKTFactory<> factory;
-
-    osmium::memory::Buffer buffer(10000);
-    const osmium::Area& area = create_test_area_2outer_2inner(buffer);
-
-    {
-        std::string wkt {factory.create_multipolygon(area)};
-        REQUIRE(std::string{"MULTIPOLYGON(((0.1 0.1,9.1 0.1,9.1 9.1,0.1 9.1,0.1 0.1),(1 1,4 1,4 4,1 4,1 1),(5 5,5 7,7 7,5 5)),((10 10,11 10,11 11,10 11,10 10)))"} == wkt);
-    }
-}
 
 }
 

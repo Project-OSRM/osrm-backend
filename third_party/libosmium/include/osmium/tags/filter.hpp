@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstddef>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -76,8 +77,8 @@ namespace osmium {
         template <typename TKey, typename TValue=void, typename TKeyComp=match_key<TKey>, typename TValueComp=match_value<TValue>>
         class Filter {
 
-            typedef TKey key_type;
-            typedef typename std::conditional<std::is_void<TValue>::value, bool, TValue>::type value_type;
+            using key_type   = TKey;
+            using value_type = typename std::conditional<std::is_void<TValue>::value, bool, TValue>::type;
 
             struct Rule {
                 key_type key;
@@ -106,10 +107,10 @@ namespace osmium {
 
         public:
 
-            typedef Filter<TKey, TValue, TKeyComp, TValueComp> filter_type;
-            typedef const osmium::Tag& argument_type;
-            typedef bool result_type;
-            typedef boost::filter_iterator<filter_type, osmium::TagList::const_iterator> iterator;
+            using filter_type   = Filter<TKey, TValue, TKeyComp, TValueComp>;
+            using argument_type = const osmium::Tag&;
+            using result_type   = bool;
+            using iterator      = boost::filter_iterator<filter_type, osmium::TagList::const_iterator>;
 
             explicit Filter(bool default_result = false) :
                 m_default_result(default_result) {
@@ -151,9 +152,9 @@ namespace osmium {
 
         }; // class Filter
 
-        typedef Filter<std::string, std::string> KeyValueFilter;
-        typedef Filter<std::string> KeyFilter;
-        typedef Filter<std::string, void, match_key_prefix> KeyPrefixFilter;
+        using KeyValueFilter  = Filter<std::string, std::string>;
+        using KeyFilter       = Filter<std::string>;
+        using KeyPrefixFilter = Filter<std::string, void, match_key_prefix>;
 
     } // namespace tags
 

@@ -34,11 +34,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <osmium/area/assembler.hpp>
 #include <osmium/area/multipolygon_collector.hpp>
-#include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/handler/node_locations_for_ways.hpp> // IWYU pragma: keep
 #include <osmium/io/file.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/io/reader.hpp>

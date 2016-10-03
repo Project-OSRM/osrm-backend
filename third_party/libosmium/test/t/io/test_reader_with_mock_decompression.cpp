@@ -19,7 +19,7 @@ class MockDecompressor : public osmium::io::Decompressor {
 
 public:
 
-    MockDecompressor(const std::string& fail_in) :
+    explicit MockDecompressor(const std::string& fail_in) :
         Decompressor(),
         m_fail_in(fail_in) {
         if (m_fail_in == "constructor") {
@@ -87,7 +87,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
         try {
             osmium::io::Reader reader(with_data_dir("t/io/data.osm.gz"));
             REQUIRE(false);
-        } catch (std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error constructor");
         }
     }
@@ -99,7 +99,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
             osmium::io::Reader reader(with_data_dir("t/io/data.osm.gz"));
             reader.read();
             REQUIRE(false);
-        } catch (std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error first read");
         }
     }
@@ -112,7 +112,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
             reader.read();
             reader.read();
             REQUIRE(false);
-        } catch (std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error second read");
         }
     }
@@ -127,7 +127,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
             reader.read();
             reader.close();
             REQUIRE(false);
-        } catch (std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error close");
         }
     }

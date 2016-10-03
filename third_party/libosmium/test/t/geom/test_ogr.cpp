@@ -68,6 +68,7 @@ SECTION("area_1outer_0inner") {
     REQUIRE(1 == mp->getNumGeometries());
 
     const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+    REQUIRE(p0);
     REQUIRE(0 == p0->getNumInteriorRings());
 
     const OGRLineString* l0e = p0->getExteriorRing();
@@ -86,6 +87,7 @@ SECTION("area_1outer_1inner") {
     REQUIRE(1 == mp->getNumGeometries());
 
     const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+    REQUIRE(p0);
     REQUIRE(1 == p0->getNumInteriorRings());
 
     const OGRLineString* l0e = p0->getExteriorRing();
@@ -105,12 +107,14 @@ SECTION("area_2outer_2inner") {
     REQUIRE(2 == mp->getNumGeometries());
 
     const OGRPolygon* p0 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(0));
+    REQUIRE(p0);
     REQUIRE(2 == p0->getNumInteriorRings());
 
     const OGRLineString* l0e = p0->getExteriorRing();
     REQUIRE(5 == l0e->getNumPoints());
 
     const OGRPolygon* p1 = dynamic_cast<const OGRPolygon*>(mp->getGeometryRef(1));
+    REQUIRE(p1);
     REQUIRE(0 == p1->getNumInteriorRings());
 
     const OGRLineString* l1e = p1->getExteriorRing();

@@ -1,6 +1,7 @@
 /* The code in this file is released into the Public Domain. */
 
 #include <iostream>
+#include <string>
 
 #include <gdalcpp.hpp>
 
@@ -12,8 +13,8 @@
 #include <osmium/io/xml_input.hpp>
 #include <osmium/visitor.hpp>
 
-typedef osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location> index_type;
-typedef osmium::handler::NodeLocationsForWays<index_type> location_handler_type;
+using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
+using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 class TestOverviewHandler : public osmium::handler::Handler {
 
@@ -64,7 +65,7 @@ public:
             }
 
             feature.add_to_layer();
-        } catch (osmium::geometry_error&) {
+        } catch (const osmium::geometry_error&) {
             std::cerr << "Ignoring illegal geometry for way " << way.id() << ".\n";
         }
     }
@@ -76,24 +77,24 @@ public:
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " INFILE\n";
-        exit(1);
+        std::exit(1);
     }
 
-    std::string output_format("SQLite");
-    std::string input_filename(argv[1]);
-    std::string output_filename("testdata-overview.db");
+    const std::string output_format{"SQLite"};
+    const std::string input_filename{argv[1]};
+    const std::string output_filename{"testdata-overview.db"};
     ::unlink(output_filename.c_str());
 
     CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "FALSE");
-    gdalcpp::Dataset dataset(output_format, output_filename, gdalcpp::SRS{}, { "SPATIALITE=TRUE" });
+    gdalcpp::Dataset dataset{output_format, output_filename, gdalcpp::SRS{}, {"SPATIALITE=TRUE"}};
 
-    osmium::io::Reader reader(input_filename);
+    osmium::io::Reader reader{input_filename};
 
     index_type index;
-    location_handler_type location_handler(index);
+    location_handler_type location_handler{index};
     location_handler.ignore_errors();
 
-    TestOverviewHandler handler(dataset);
+    TestOverviewHandler handler{dataset};
 
     osmium::apply(reader, location_handler, handler);
     reader.close();

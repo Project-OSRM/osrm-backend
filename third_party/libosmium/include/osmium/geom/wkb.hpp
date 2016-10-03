@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -60,14 +61,13 @@ namespace osmium {
 
             template <typename T>
             inline void str_push(std::string& str, T data) {
-                size_t size = str.size();
-                str.resize(size + sizeof(T));
-                std::copy_n(reinterpret_cast<char*>(&data), sizeof(T), &str[size]);
+                str.append(reinterpret_cast<const char*>(&data), sizeof(T));
             }
 
             inline std::string convert_to_hex(const std::string& str) {
                 static const char* lookup_hex = "0123456789ABCDEF";
                 std::string out;
+                out.reserve(str.size() * 2);
 
                 for (char c : str) {
                     out += lookup_hex[(c >> 4) & 0xf];
@@ -78,9 +78,6 @@ namespace osmium {
             }
 
             class WKBFactoryImpl {
-
-                /// OSM data always uses SRID 4326 (WGS84).
-                static constexpr uint32_t srid = 4326;
 
                 /**
                 * Type of WKB geometry.
@@ -112,6 +109,7 @@ namespace osmium {
 
                 std::string m_data;
                 uint32_t m_points {0};
+                int m_srid;
                 wkb_type m_wkb_type;
                 out_type m_out_type;
 
@@ -130,11 +128,11 @@ namespace osmium {
 #endif
                     if (m_wkb_type == wkb_type::ewkb) {
                         str_push(str, type | wkbSRID);
-                        str_push(str, srid);
+                        str_push(str, m_srid);
                     } else {
                         str_push(str, type);
                     }
-                    size_t offset = str.size();
+                    const size_t offset = str.size();
                     if (add_length) {
                         str_push(str, static_cast<uint32_t>(0));
                     }
@@ -142,18 +140,20 @@ namespace osmium {
                 }
 
                 void set_size(const size_t offset, const size_t size) {
-                    *reinterpret_cast<uint32_t*>(&m_data[offset]) = static_cast_with_assert<uint32_t>(size);
+                    uint32_t s = static_cast_with_assert<uint32_t>(size);
+                    std::copy_n(reinterpret_cast<char*>(&s), sizeof(uint32_t), &m_data[offset]);
                 }
 
             public:
 
-                typedef std::string point_type;
-                typedef std::string linestring_type;
-                typedef std::string polygon_type;
-                typedef std::string multipolygon_type;
-                typedef std::string ring_type;
+                using point_type        = std::string;
+                using linestring_type   = std::string;
+                using polygon_type      = std::string;
+                using multipolygon_type = std::string;
+                using ring_type         = std::string;
 
-                explicit WKBFactoryImpl(wkb_type wtype = wkb_type::wkb, out_type otype = out_type::binary) :
+                explicit WKBFactoryImpl(int srid, wkb_type wtype = wkb_type::wkb, out_type otype = out_type::binary) :
+                    m_srid(srid),
                     m_wkb_type(wtype),
                     m_out_type(otype) {
                 }

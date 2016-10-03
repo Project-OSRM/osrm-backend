@@ -50,10 +50,10 @@ namespace osmium {
             template <typename TId, typename TValue>
             class HybridIterator {
 
-                typedef SparseMemArray<TId, TValue> main_map_type;
-                typedef SparseMemMultimap<TId, TValue> extra_map_type;
+                using main_map_type  = SparseMemArray<TId, TValue>;
+                using extra_map_type = SparseMemMultimap<TId, TValue>;
 
-                typedef typename std::pair<TId, TValue> element_type;
+                using element_type = typename std::pair<TId, TValue>;
 
                 typename main_map_type::iterator m_begin_main;
                 typename main_map_type::iterator m_end_main;
@@ -120,16 +120,16 @@ namespace osmium {
             template <typename TId, typename TValue>
             class Hybrid : public Multimap<TId, TValue> {
 
-                typedef SparseMemArray<TId, TValue> main_map_type;
-                typedef SparseMemMultimap<TId, TValue> extra_map_type;
+                using main_map_type  = SparseMemArray<TId, TValue>;
+                using extra_map_type = SparseMemMultimap<TId, TValue>;
 
                 main_map_type m_main;
                 extra_map_type m_extra;
 
             public:
 
-                typedef HybridIterator<TId, TValue> iterator;
-                typedef const HybridIterator<TId, TValue> const_iterator;
+                using iterator       = HybridIterator<TId, TValue>;
+                using const_iterator = const HybridIterator<TId, TValue>;
 
                 Hybrid() :
                     m_main(),

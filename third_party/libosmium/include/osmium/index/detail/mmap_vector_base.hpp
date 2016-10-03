@@ -33,10 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <new> // IWYU pragma: keep
 #include <stdexcept>
 
+#include <osmium/index/index.hpp>
 #include <osmium/util/memory_mapping.hpp>
 
 namespace osmium {
@@ -63,22 +66,26 @@ namespace osmium {
             mmap_vector_base(int fd, size_t capacity, size_t size = 0) :
                 m_size(size),
                 m_mapping(capacity, osmium::util::MemoryMapping::mapping_mode::write_shared, fd) {
+                assert(size <= capacity);
+                std::fill(data() + size, data() + capacity, osmium::index::empty_value<T>());
+                shrink_to_fit();
             }
 
             explicit mmap_vector_base(size_t capacity = mmap_vector_size_increment) :
                 m_size(0),
                 m_mapping(capacity) {
+                std::fill_n(data(), capacity, osmium::index::empty_value<T>());
             }
 
             ~mmap_vector_base() noexcept = default;
 
-            typedef T value_type;
-            typedef T& reference;
-            typedef const T& const_reference;
-            typedef T* pointer;
-            typedef const T* const_pointer;
-            typedef T* iterator;
-            typedef const T* const_iterator;
+            using value_type      = T;
+            using pointer         = value_type*;
+            using const_pointer   = const value_type*;
+            using reference       = value_type&;
+            using const_reference = const value_type&;
+            using iterator        = value_type*;
+            using const_iterator  = const value_type*;
 
             void close() {
                 m_mapping.unmap();
@@ -105,6 +112,7 @@ namespace osmium {
             }
 
             T& operator[](size_t n) {
+                assert(n < m_size);
                 return data()[n];
             }
 
@@ -120,29 +128,27 @@ namespace osmium {
             }
 
             void shrink_to_fit() {
-                // XXX do something here
+                while (m_size > 0 && data()[m_size - 1] == osmium::index::empty_value<T>()) {
+                    --m_size;
+                }
             }
 
             void push_back(const T& value) {
-                if (m_size >= capacity()) {
-                    resize(m_size+1);
-                }
-                data()[m_size] = value;
-                ++m_size;
+                resize(m_size+1);
+                data()[m_size-1] = value;
             }
 
             void reserve(size_t new_capacity) {
                 if (new_capacity > capacity()) {
+                    const size_t old_capacity = capacity();
                     m_mapping.resize(new_capacity);
+                    std::fill(data() + old_capacity, data() + new_capacity, osmium::index::empty_value<T>());
                 }
             }
 
             void resize(size_t new_size) {
                 if (new_size > capacity()) {
                     reserve(new_size + osmium::detail::mmap_vector_size_increment);
-                }
-                if (new_size > size()) {
-                    new (data() + size()) T[new_size - size()];
                 }
                 m_size = new_size;
             }

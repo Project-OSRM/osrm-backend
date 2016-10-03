@@ -46,8 +46,15 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/builder/builder.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/memory/buffer.hpp>
+#include <osmium/osm/changeset.hpp>
+#include <osmium/osm/item_type.hpp>
+#include <osmium/osm/location.hpp>
+#include <osmium/osm/node.hpp>
+#include <osmium/osm/node_ref.hpp>
+#include <osmium/osm/object.hpp>
+#include <osmium/osm/relation.hpp>
+#include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
-#include <osmium/osm.hpp>
 
 namespace osmium {
 
@@ -260,6 +267,34 @@ namespace osmium {
                 }
 
             }; // class member_type
+
+            class member_type_string {
+
+                osmium::item_type      m_type;
+                osmium::object_id_type m_ref;
+                std::string            m_role;
+
+            public:
+
+                member_type_string(osmium::item_type type, osmium::object_id_type ref, std::string&& role) :
+                    m_type(type),
+                    m_ref(ref),
+                    m_role(std::move(role)) {
+                }
+
+                osmium::item_type type() const noexcept {
+                    return m_type;
+                }
+
+                osmium::object_id_type ref() const noexcept {
+                    return m_ref;
+                }
+
+                const char* role() const noexcept {
+                    return m_role.c_str();
+                }
+
+            }; // class member_type_string
 
             class comment_type {
 

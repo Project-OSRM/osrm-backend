@@ -49,7 +49,7 @@ namespace osmium {
             }
         }; // struct match_value<std::regex>
 
-        typedef Filter<std::string, std::regex> RegexFilter;
+        using RegexFilter = Filter<std::string, std::regex>;
 
     } // namespace tags
 

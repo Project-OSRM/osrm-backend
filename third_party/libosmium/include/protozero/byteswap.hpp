@@ -28,7 +28,7 @@ namespace protozero {
  * be specialized to actually work.
  */
 template <int N>
-inline void byteswap(const char* /*data*/, char* /*result*/) {
+inline void byteswap(const char* /*data*/, char* /*result*/) noexcept {
     static_assert(N == 1, "Can only swap 4 or 8 byte values");
 }
 
@@ -36,7 +36,7 @@ inline void byteswap(const char* /*data*/, char* /*result*/) {
  * Swap 4 byte value (int32_t, uint32_t, float) between endianness formats.
  */
 template <>
-inline void byteswap<4>(const char* data, char* result) {
+inline void byteswap<4>(const char* data, char* result) noexcept {
 #ifdef PROTOZERO_USE_BUILTIN_BSWAP
     *reinterpret_cast<uint32_t*>(result) = __builtin_bswap32(*reinterpret_cast<const uint32_t*>(data));
 #else
@@ -51,7 +51,7 @@ inline void byteswap<4>(const char* data, char* result) {
  * Swap 8 byte value (int64_t, uint64_t, double) between endianness formats.
  */
 template <>
-inline void byteswap<8>(const char* data, char* result) {
+inline void byteswap<8>(const char* data, char* result) noexcept {
 #ifdef PROTOZERO_USE_BUILTIN_BSWAP
     *reinterpret_cast<uint64_t*>(result) = __builtin_bswap64(*reinterpret_cast<const uint64_t*>(data));
 #else
