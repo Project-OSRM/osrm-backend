@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <algorithm>
 #include <exception>
 #include <future>
+#include <memory>
 #include <string>
 
 #include <osmium/io/compression.hpp>

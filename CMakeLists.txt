@@ -24,8 +24,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Cover
 project(libosmium)
 
 set(LIBOSMIUM_VERSION_MAJOR 2)
-set(LIBOSMIUM_VERSION_MINOR 6)
-set(LIBOSMIUM_VERSION_PATCH 1)
+set(LIBOSMIUM_VERSION_MINOR 9)
+set(LIBOSMIUM_VERSION_PATCH 0)
 
 set(LIBOSMIUM_VERSION
     "${LIBOSMIUM_VERSION_MAJOR}.${LIBOSMIUM_VERSION_MINOR}.${LIBOSMIUM_VERSION_PATCH}")
@@ -59,6 +59,27 @@ option(INSTALL_PROTOZERO "also install protozero headers" OFF)
 option(INSTALL_UTFCPP    "also install utfcpp headers" OFF)
 
 option(WITH_PROFILING    "add flags needed for profiling" OFF)
+
+
+#-----------------------------------------------------------------------------
+#
+#  CCache support
+#
+#-----------------------------------------------------------------------------
+
+option(BUILD_WITH_CCACHE "build using ccache" OFF)
+
+if(BUILD_WITH_CCACHE)
+    find_program(CCACHE_PROGRAM ccache)
+    if(CCACHE_PROGRAM)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "CCACHE_CPP2=1 ${CCACHE_PROGRAM}")
+
+        # workaround for some clang versions
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            add_definitions(-Qunused-arguments)
+        endif()
+    endif()
+endif()
 
 
 #-----------------------------------------------------------------------------

@@ -33,9 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstddef>
 #include <string>
 #include <vector>
-#include <iostream>
 
 namespace osmium {
 

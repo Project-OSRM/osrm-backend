@@ -36,11 +36,17 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdint>
 
 #include <osmium/osm/area.hpp>
+#include <osmium/osm/box.hpp>
 #include <osmium/osm/changeset.hpp>
+#include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node.hpp>
+#include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/node_ref_list.hpp>
+#include <osmium/osm/object.hpp>
 #include <osmium/osm/relation.hpp>
+#include <osmium/osm/tag.hpp>
+#include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/util/endian.hpp>
 
@@ -71,8 +77,8 @@ namespace osmium {
 # if defined(__GNUC__) || defined(__clang__)
             return __builtin_bswap64(value);
 # else
-            uint64_t val1 = byte_swap_32(value & 0xFFFFFFFF);
-            uint64_t val2 = byte_swap_32(value >> 32);
+            const uint64_t val1 = byte_swap_32(value & 0xFFFFFFFF);
+            const uint64_t val2 = byte_swap_32(value >> 32);
             return (val1 << 32) | val2;
 # endif
         }
@@ -86,11 +92,11 @@ namespace osmium {
 
     public:
 
-        TCRC& operator()() {
+        TCRC& operator()() noexcept {
             return m_crc;
         }
 
-        const TCRC& operator()() const {
+        const TCRC& operator()() const noexcept {
             return m_crc;
         }
 
@@ -106,7 +112,7 @@ namespace osmium {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint16_t));
 #else
-            uint16_t v = osmium::util::byte_swap_16(value);
+            const uint16_t v = osmium::util::byte_swap_16(value);
             m_crc.process_bytes(&v, sizeof(uint16_t));
 #endif
         }
@@ -115,7 +121,7 @@ namespace osmium {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint32_t));
 #else
-            uint32_t v = osmium::util::byte_swap_32(value);
+            const uint32_t v = osmium::util::byte_swap_32(value);
             m_crc.process_bytes(&v, sizeof(uint32_t));
 #endif
         }
@@ -124,7 +130,7 @@ namespace osmium {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
             m_crc.process_bytes(&value, sizeof(uint64_t));
 #else
-            uint64_t v = osmium::util::byte_swap_64(value);
+            const uint64_t v = osmium::util::byte_swap_64(value);
             m_crc.process_bytes(&v, sizeof(uint64_t));
 #endif
         }
@@ -151,6 +157,7 @@ namespace osmium {
 
         void update(const NodeRef& node_ref) {
             update_int64(node_ref.ref());
+            update(node_ref.location());
         }
 
         void update(const NodeRefList& node_refs) {
@@ -205,10 +212,10 @@ namespace osmium {
 
         void update(const osmium::Area& area) {
             update(static_cast<const osmium::OSMObject&>(area));
-            for (auto it = area.cbegin(); it != area.cend(); ++it) {
-                if (it->type() == osmium::item_type::outer_ring ||
-                    it->type() == osmium::item_type::inner_ring) {
-                    update(static_cast<const osmium::NodeRefList&>(*it));
+            for (const auto& subitem : area) {
+                if (subitem.type() == osmium::item_type::outer_ring ||
+                    subitem.type() == osmium::item_type::inner_ring) {
+                    update(static_cast<const osmium::NodeRefList&>(subitem));
                 }
             }
         }

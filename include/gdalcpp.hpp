@@ -110,8 +110,12 @@ namespace gdalcpp {
     namespace detail {
 
         struct init_wrapper {
+#if GDAL_VERSION_MAJOR >= 2
+            init_wrapper() { GDALAllRegister(); }
+#else
             init_wrapper() { OGRRegisterAll(); }
             ~init_wrapper() { OGRCleanupAll(); }
+#endif
         };
 
         struct init_library {
@@ -237,6 +241,8 @@ namespace gdalcpp {
         detail::Options m_options;
         SRS m_srs;
         std::unique_ptr<gdal_dataset_type, gdal_dataset_deleter> m_dataset;
+        uint64_t m_edit_count = 0;
+        uint64_t m_max_edit_count = 0;
 
     public:
 
@@ -252,6 +258,15 @@ namespace gdalcpp {
 #endif
             if (!m_dataset) {
                 throw gdal_error(std::string("failed to create dataset '") + dataset_name + "'", OGRERR_NONE, driver_name, dataset_name);
+            }
+        }
+
+        ~Dataset() {
+            try {
+                if (m_edit_count > 0) {
+                    commit_transaction();
+                }
+            } catch (...) {
             }
         }
 
@@ -282,10 +297,14 @@ namespace gdalcpp {
             exec(sql.c_str());
         }
 
-
         Dataset& start_transaction() {
 #if GDAL_VERSION_MAJOR >= 2
             m_dataset->StartTransaction();
+#else
+            OGRLayer* layer = m_dataset->GetLayer(0);
+            if (layer) {
+                layer->StartTransaction();
+            }
 #endif
             return *this;
         }
@@ -293,7 +312,38 @@ namespace gdalcpp {
         Dataset& commit_transaction() {
 #if GDAL_VERSION_MAJOR >= 2
             m_dataset->CommitTransaction();
+#else
+            OGRLayer* layer = m_dataset->GetLayer(0);
+            if (layer) {
+                layer->CommitTransaction();
+            }
 #endif
+            m_edit_count = 0;
+            return *this;
+        }
+
+        void prepare_edit() {
+            if (m_max_edit_count != 0 && m_edit_count == 0) {
+                start_transaction();
+            }
+        }
+
+        void finalize_edit() {
+            if (m_max_edit_count != 0 && ++m_edit_count > m_max_edit_count) {
+                commit_transaction();
+            }
+        }
+
+        Dataset& enable_auto_transactions(uint64_t edits = 100000) {
+            m_max_edit_count = edits;
+            return *this;
+        }
+
+        Dataset& disable_auto_transactions() {
+            if (m_max_edit_count != 0 && m_edit_count > 0) {
+                commit_transaction();
+            }
+            m_max_edit_count = 0;
             return *this;
         }
 
@@ -346,19 +396,32 @@ namespace gdalcpp {
             return *this;
         }
 
+        void create_feature(OGRFeature* feature) {
+            dataset().prepare_edit();
+            OGRErr result = m_layer->CreateFeature(feature);
+            if (result != OGRERR_NONE) {
+                throw gdal_error(std::string("creating feature in layer '") + name() + "' failed", result, dataset().driver_name(), dataset().dataset_name());
+            }
+            dataset().finalize_edit();
+        }
+
         Layer& start_transaction() {
+#if GDAL_VERSION_MAJOR < 2
             OGRErr result = m_layer->StartTransaction();
             if (result != OGRERR_NONE) {
                 throw gdal_error(std::string("starting transaction on layer '") + name() + "' failed", result, m_dataset.driver_name(), m_dataset.dataset_name(), name());
             }
+#endif
             return *this;
         }
 
         Layer& commit_transaction() {
+#if GDAL_VERSION_MAJOR < 2
             OGRErr result = m_layer->CommitTransaction();
             if (result != OGRERR_NONE) {
                 throw gdal_error(std::string("committing transaction on layer '") + name() + "' failed", result, m_dataset.driver_name(), m_dataset.dataset_name(), name());
             }
+#endif
             return *this;
          }
 
@@ -366,36 +429,44 @@ namespace gdalcpp {
 
     class Feature {
 
+        struct ogr_feature_deleter {
+
+            void operator()(OGRFeature* feature) {
+                 OGRFeature::DestroyFeature(feature);
+            }
+
+        }; // struct ogr_feature_deleter
+
         Layer& m_layer;
-        OGRFeature m_feature;
+        std::unique_ptr<OGRFeature, ogr_feature_deleter> m_feature;
 
     public:
 
         Feature(Layer& layer, std::unique_ptr<OGRGeometry>&& geometry) :
             m_layer(layer),
-            m_feature(m_layer.get().GetLayerDefn()) {
-            OGRErr result = m_feature.SetGeometryDirectly(geometry.release());
+            m_feature(OGRFeature::CreateFeature(m_layer.get().GetLayerDefn())) {
+            if (!m_feature) {
+                throw std::bad_alloc();
+            }
+            OGRErr result = m_feature->SetGeometryDirectly(geometry.release());
             if (result != OGRERR_NONE) {
                 throw gdal_error(std::string("setting feature geometry in layer '") + m_layer.name() + "' failed", result, m_layer.dataset().driver_name(), m_layer.dataset().dataset_name());
             }
         }
 
         void add_to_layer() {
-            OGRErr result = m_layer.get().CreateFeature(&m_feature);
-            if (result != OGRERR_NONE) {
-                throw gdal_error(std::string("creating feature in layer '") + m_layer.name() + "' failed", result, m_layer.dataset().driver_name(), m_layer.dataset().dataset_name());
-            }
+            m_layer.create_feature(m_feature.get());
         }
 
         template <class T>
         Feature& set_field(int n, T&& arg) {
-            m_feature.SetField(n, std::forward<T>(arg));
+            m_feature->SetField(n, std::forward<T>(arg));
             return *this;
         }
 
         template <class T>
         Feature& set_field(const char* name, T&& arg) {
-            m_feature.SetField(name, std::forward<T>(arg));
+            m_feature->SetField(name, std::forward<T>(arg));
             return *this;
         }
 

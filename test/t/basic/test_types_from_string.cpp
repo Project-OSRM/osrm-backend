@@ -31,9 +31,17 @@ TEST_CASE("set type and ID from string") {
     REQUIRE(r_2.first == osmium::item_type::relation);
     REQUIRE(r_2.second == -2);
 
-    auto x3 = osmium::string_to_object_id("3", osmium::osm_entity_bits::nwr);
-    REQUIRE(x3.first == osmium::item_type::undefined);
-    REQUIRE(x3.second == 3);
+    auto d3 = osmium::string_to_object_id("3", osmium::osm_entity_bits::nwr);
+    REQUIRE(d3.first == osmium::item_type::undefined);
+    REQUIRE(d3.second == 3);
+
+    auto u3 = osmium::string_to_object_id("3", osmium::osm_entity_bits::nwr, osmium::item_type::undefined);
+    REQUIRE(u3.first == osmium::item_type::undefined);
+    REQUIRE(u3.second == 3);
+
+    auto n3 = osmium::string_to_object_id("3", osmium::osm_entity_bits::nwr, osmium::item_type::node);
+    REQUIRE(n3.first == osmium::item_type::node);
+    REQUIRE(n3.second == 3);
 
     REQUIRE_THROWS_AS(osmium::string_to_object_id("", osmium::osm_entity_bits::nwr), std::range_error);
     REQUIRE_THROWS_AS(osmium::string_to_object_id("n", osmium::osm_entity_bits::nwr), std::range_error);

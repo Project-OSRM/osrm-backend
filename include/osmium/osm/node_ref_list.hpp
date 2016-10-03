@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/item_type.hpp>
+#include <osmium/osm/location.hpp>
 #include <osmium/osm/node_ref.hpp>
 
 namespace osmium {
@@ -66,7 +67,7 @@ namespace osmium {
          * Returns the number of NodeRefs in the collection.
          */
         size_t size() const noexcept {
-            auto size_node_refs = byte_size() - sizeof(NodeRefList);
+            const auto size_node_refs = byte_size() - sizeof(NodeRefList);
             assert(size_node_refs % sizeof(NodeRef) == 0);
             return size_node_refs / sizeof(NodeRef);
         }

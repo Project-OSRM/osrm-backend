@@ -78,7 +78,7 @@ TEST_CASE("Test Reader using MockParser") {
         try {
             osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
             reader.header();
-        } catch (std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error in header");
         }
     }
@@ -89,7 +89,7 @@ TEST_CASE("Test Reader using MockParser") {
         reader.header();
         try {
             reader.read();
-        } catch (std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error in read");
         }
         reader.close();
@@ -101,7 +101,7 @@ TEST_CASE("Test Reader using MockParser") {
         reader.header();
         try {
             throw std::runtime_error("error in user code");
-        } catch (std::runtime_error& e) {
+        } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error in user code");
         }
         REQUIRE(reader.read());

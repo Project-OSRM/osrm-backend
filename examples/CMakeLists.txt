@@ -12,13 +12,17 @@ set(EXAMPLES
     area_test
     convert
     count
-    create_node_cache
     debug
     filter_discussions
     index
+    location_cache_create
+    location_cache_use
+    pub_names
     read
+    read_with_progress
+    road_length
     serdump
-    use_node_cache
+    tiles
     CACHE STRING "Example programs"
 )
 
@@ -28,7 +32,7 @@ set(EXAMPLES
 #  Examples depending on wingetopt
 #
 #-----------------------------------------------------------------------------
-set(GETOPT_EXAMPLES area_test convert serdump)
+set(GETOPT_EXAMPLES area_test convert index serdump)
 if(NOT GETOPT_MISSING)
     foreach(example ${GETOPT_EXAMPLES})
         list(APPEND EXAMPLE_LIBS_${example} ${GETOPT_LIBRARY})
@@ -39,36 +43,6 @@ else()
         message(STATUS "  - osmium_${example}")
         list(REMOVE_ITEM EXAMPLES ${example})
     endforeach()
-endif()
-
-
-#-----------------------------------------------------------------------------
-#
-#  Examples depending on SparseHash
-#
-#-----------------------------------------------------------------------------
-if(NOT SPARSEHASH_FOUND)
-    list(REMOVE_ITEM EXAMPLES area_test)
-    message(STATUS "Configuring examples - Skipping examples because Google SparseHash not found:")
-    message(STATUS "  - osmium_area_test")
-endif()
-
-
-#-----------------------------------------------------------------------------
-#
-#  Examples depending on Boost Program Options
-#
-#-----------------------------------------------------------------------------
-unset(Boost_LIBRARIES)
-unset(Boost_FOUND)
-find_package(Boost 1.38 COMPONENTS program_options)
-
-if(Boost_PROGRAM_OPTIONS_FOUND)
-    list(APPEND EXAMPLE_LIBS_index ${Boost_PROGRAM_OPTIONS_LIBRARY})
-else()
-    list(REMOVE_ITEM EXAMPLES index)
-    message(STATUS "Configuring examples - Skipping examples because Boost program_options not found:")
-    message(STATUS "  - osmium_index")
 endif()
 
 

@@ -56,7 +56,7 @@ namespace osmium {
         namespace haversine {
 
             /// @brief Earth's quadratic mean radius for WGS84
-            constexpr double EARTH_RADIUS_IN_METERS = 6372797.560856;
+            constexpr const double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
             /**
              * Calculate distance in meters between two sets of coordinates.

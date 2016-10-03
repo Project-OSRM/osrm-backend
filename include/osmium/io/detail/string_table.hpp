@@ -34,13 +34,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 #include <iterator>
 #include <list>
-#include <map>
 #include <string>
+#include <unordered_map>
+#include <utility>
 
 #include <osmium/io/detail/pbf.hpp>
 
@@ -69,8 +70,8 @@ namespace osmium {
                 std::list<std::string> m_chunks;
 
                 void add_chunk() {
-                    m_chunks.push_front(std::string());
-                    m_chunks.front().reserve(m_chunk_size);
+                    m_chunks.emplace_back();
+                    m_chunks.back().reserve(m_chunk_size);
                 }
 
             public:
@@ -82,6 +83,7 @@ namespace osmium {
                 }
 
                 void clear() noexcept {
+                    assert(!m_chunks.empty());
                     m_chunks.erase(std::next(m_chunks.begin()), m_chunks.end());
                     m_chunks.front().clear();
                 }
@@ -93,30 +95,37 @@ namespace osmium {
                  * allocated.
                  */
                 const char* add(const char* string) {
-                    size_t len = std::strlen(string) + 1;
+                    const size_t len = std::strlen(string) + 1;
 
                     assert(len <= m_chunk_size);
 
-                    size_t chunk_len = m_chunks.front().size();
-                    if (chunk_len + len > m_chunks.front().capacity()) {
+                    size_t chunk_len = m_chunks.back().size();
+                    if (chunk_len + len > m_chunks.back().capacity()) {
                         add_chunk();
                         chunk_len = 0;
                     }
 
-                    m_chunks.front().append(string);
-                    m_chunks.front().append(1, '\0');
+                    m_chunks.back().append(string);
+                    m_chunks.back().append(1, '\0');
 
-                    return m_chunks.front().c_str() + chunk_len;
+                    return m_chunks.back().c_str() + chunk_len;
                 }
 
-                class const_iterator : public std::iterator<std::forward_iterator_tag, const char*> {
+                class const_iterator {
 
-                    typedef std::list<std::string>::const_iterator it_type;
+                    using it_type = std::list<std::string>::const_iterator;
+
                     it_type m_it;
                     const it_type m_last;
                     const char* m_pos;
 
                 public:
+
+                    using iterator_category = std::forward_iterator_tag;
+                    using value_type        = const char*;
+                    using difference_type   = std::ptrdiff_t;
+                    using pointer           = value_type*;
+                    using reference         = value_type&;
 
                     const_iterator(it_type it, it_type last) :
                         m_it(it),
@@ -126,7 +135,7 @@ namespace osmium {
 
                     const_iterator& operator++() {
                         assert(m_it != m_last);
-                        auto last_pos = m_it->c_str() + m_it->size();
+                        const auto last_pos = m_it->c_str() + m_it->size();
                         while (m_pos != last_pos && *m_pos) ++m_pos;
                         if (m_pos != last_pos) ++m_pos;
                         if (m_pos == last_pos) {
@@ -184,18 +193,33 @@ namespace osmium {
                 }
 
                 size_t get_used_bytes_in_last_chunk() const noexcept {
-                    return m_chunks.front().size();
+                    return m_chunks.back().size();
                 }
 
             }; // class StringStore
 
-            struct StrComp {
+            struct str_equal {
 
-                bool operator()(const char* lhs, const char* rhs) const {
-                    return strcmp(lhs, rhs) < 0;
+                bool operator()(const char* lhs, const char* rhs) const noexcept {
+                    return lhs == rhs || std::strcmp(lhs, rhs) == 0;
                 }
 
-            }; // struct StrComp
+            }; // struct str_equal
+
+            struct djb2_hash {
+
+                size_t operator()(const char* str) const noexcept {
+                    size_t hash = 5381;
+                    int c;
+
+                    while ((c = *str++)) {
+                        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+                    }
+
+                    return hash;
+                }
+
+            }; // struct djb2_hash
 
             class StringTable {
 
@@ -206,14 +230,23 @@ namespace osmium {
                 // Blob.
                 static constexpr const uint32_t max_entries = max_uncompressed_blob_size;
 
+                // There is one string table per PBF primitive block. Most of
+                // them are really small, because most blocks are full of nodes
+                // with no tags. But string tables can get really large for
+                // ways with many tags or for large relations.
+                // The chosen size is enough so that 99% of all string tables
+                // in typical OSM files will only need a single memory
+                // allocation.
+                static constexpr const size_t default_stringtable_chunk_size = 100 * 1024;
+
                 StringStore m_strings;
-                std::map<const char*, size_t, StrComp> m_index;
+                std::unordered_map<const char*, size_t, djb2_hash, str_equal> m_index;
                 uint32_t m_size;
 
             public:
 
-                StringTable() :
-                    m_strings(1024 * 1024),
+                explicit StringTable(size_t size = default_stringtable_chunk_size) :
+                    m_strings(size),
                     m_index(),
                     m_size(0) {
                     m_strings.add("");
@@ -231,7 +264,7 @@ namespace osmium {
                 }
 
                 uint32_t add(const char* s) {
-                    auto f = m_index.find(s);
+                    const auto f = m_index.find(s);
                     if (f != m_index.end()) {
                         return uint32_t(f->second);
                     }

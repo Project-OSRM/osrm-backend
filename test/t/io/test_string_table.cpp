@@ -7,6 +7,8 @@ TEST_CASE("String store") {
 
     SECTION("empty") {
         REQUIRE(ss.begin() == ss.end());
+        REQUIRE(ss.get_chunk_size() == 100);
+        REQUIRE(ss.get_chunk_count() == 1);
     }
 
     SECTION("add zero-length string") {
@@ -17,6 +19,8 @@ TEST_CASE("String store") {
         REQUIRE(s1 == *it);
         REQUIRE(std::string(*it) == "");
         REQUIRE(++it == ss.end());
+
+        REQUIRE(ss.get_chunk_count() == 1);
     }
 
     SECTION("add strings") {
@@ -30,6 +34,9 @@ TEST_CASE("String store") {
         REQUIRE(s1 == *it++);
         REQUIRE(s2 == *it++);
         REQUIRE(it == ss.end());
+
+        ss.clear();
+        REQUIRE(ss.begin() == ss.end());
     }
 
     SECTION("add zero-length string and longer strings") {
@@ -45,9 +52,9 @@ TEST_CASE("String store") {
     }
 
     SECTION("add many strings") {
-        for (const char* teststring : {"a", "abc", "abcd", "abcde"}) {
+        for (const char* teststring : {"", "a", "abc", "abcd", "abcde"}) {
             int i = 0;
-            for (; i < 100; ++i) {
+            for (; i < 200; ++i) {
                 ss.add(teststring);
             }
 
@@ -57,7 +64,9 @@ TEST_CASE("String store") {
             }
 
             REQUIRE(i == 0);
+            REQUIRE(ss.get_chunk_count() > 1);
             ss.clear();
+            REQUIRE(ss.get_chunk_count() == 1);
         }
     }
 
@@ -90,5 +99,32 @@ TEST_CASE("String table") {
         REQUIRE(st.size() == 1);
     }
 
+    SECTION("add empty string") {
+        REQUIRE(st.add("") == 1);
+        REQUIRE(st.size() == 2);
+        REQUIRE(st.add("") == 1);
+        REQUIRE(st.size() == 2);
+    }
+
+}
+
+TEST_CASE("lots of strings in string table so chunk overflows") {
+    osmium::io::detail::StringTable st{100};
+    REQUIRE(st.size() == 1);
+
+    const int n = 1000;
+    for (int i = 0; i < n; ++i) {
+        auto s = std::to_string(i);
+        st.add(s.c_str());
+    }
+
+    REQUIRE(st.size() == n + 1);
+
+    auto it = st.begin();
+    REQUIRE(std::string{} == *it++);
+    for (int i = 0; i < n; ++i) {
+        REQUIRE(atoi(*it++) == i);
+    }
+    REQUIRE(it == st.end());
 }
 

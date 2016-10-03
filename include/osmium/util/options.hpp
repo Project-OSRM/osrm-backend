@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstddef>
 #include <initializer_list>
 #include <map>
 #include <string>
@@ -107,7 +108,7 @@ namespace osmium {
              * be set to "true".
              */
             void set(std::string data) {
-                size_t pos = data.find_first_of('=');
+                const size_t pos = data.find_first_of('=');
                 if (pos == std::string::npos) {
                     m_options[data] = "true";
                 } else {
@@ -122,7 +123,7 @@ namespace osmium {
              * empty string) is returned.
              */
             std::string get(const std::string& key, const std::string& default_value="") const noexcept {
-                auto it = m_options.find(key);
+                const auto it = m_options.find(key);
                 if (it == m_options.end()) {
                     return default_value;
                 }
@@ -134,7 +135,7 @@ namespace osmium {
              * Will return false if the value is unset.
              */
             bool is_true(const std::string& key) const noexcept {
-                std::string value = get(key);
+                const std::string value = get(key);
                 return (value == "true" || value == "yes");
             }
 
@@ -143,7 +144,7 @@ namespace osmium {
              * Will return true if the value is unset.
              */
             bool is_not_false(const std::string& key) const noexcept {
-                std::string value = get(key);
+                const std::string value = get(key);
                 return !(value == "false" || value == "no");
             }
 

@@ -9,7 +9,7 @@
 using namespace osmium::builder::attr;
 
 TEST_CASE("Build node") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     osmium::builder::add_node(buffer,
         _id(17),
@@ -36,7 +36,7 @@ TEST_CASE("Build node") {
     REQUIRE(false == node.deleted());
     REQUIRE(333 == node.changeset());
     REQUIRE(21 == node.uid());
-    REQUIRE(std::string("foo") == node.user());
+    REQUIRE(std::string{"foo"} == node.user());
     REQUIRE(123 == uint32_t(node.timestamp()));
     REQUIRE(osmium::Location(3.5, 4.7) == node.location());
     REQUIRE(2 == node.tags().size());
@@ -51,7 +51,7 @@ TEST_CASE("Build node") {
 }
 
 TEST_CASE("default values for node attributes") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     osmium::builder::add_node(buffer, _id(0));
 
@@ -62,22 +62,23 @@ TEST_CASE("default values for node attributes") {
     REQUIRE(true == node.visible());
     REQUIRE(0 == node.changeset());
     REQUIRE(0 == node.uid());
-    REQUIRE(std::string("") == node.user());
+    REQUIRE(std::string{} == node.user());
     REQUIRE(0 == uint32_t(node.timestamp()));
     REQUIRE(osmium::Location() == node.location());
     REQUIRE(0 == node.tags().size());
 }
 
 TEST_CASE("set node attributes from strings") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     osmium::builder::add_node(buffer, _id(0));
 
     osmium::Node& node = buffer.get<osmium::Node>(0);
     node.set_id("-17")
         .set_version("3")
-        .set_visible(true)
+        .set_visible("true")
         .set_changeset("333")
+        .set_timestamp("2014-03-17T16:23:08Z")
         .set_uid("21");
 
     REQUIRE(-17l == node.id());
@@ -85,11 +86,52 @@ TEST_CASE("set node attributes from strings") {
     REQUIRE(3 == node.version());
     REQUIRE(true == node.visible());
     REQUIRE(333 == node.changeset());
+    REQUIRE(std::string{"2014-03-17T16:23:08Z"} == node.timestamp().to_iso());
     REQUIRE(21 == node.uid());
 }
 
+TEST_CASE("set node attributes from strings using set_attribute()") {
+    osmium::memory::Buffer buffer{10000};
+
+    osmium::builder::add_node(buffer, _id(0));
+
+    osmium::Node& node = buffer.get<osmium::Node>(0);
+    node.set_attribute("id", "-17")
+        .set_attribute("version", "3")
+        .set_attribute("visible", "true")
+        .set_attribute("changeset", "333")
+        .set_attribute("timestamp", "2014-03-17T16:23:08Z")
+        .set_attribute("uid", "21");
+
+    REQUIRE(-17l == node.id());
+    REQUIRE(17ul == node.positive_id());
+    REQUIRE(3 == node.version());
+    REQUIRE(true == node.visible());
+    REQUIRE(333 == node.changeset());
+    REQUIRE(std::string{"2014-03-17T16:23:08Z"} == node.timestamp().to_iso());
+    REQUIRE(21 == node.uid());
+}
+
+TEST_CASE("Setting attributes from bad data on strings should fail") {
+    osmium::memory::Buffer buffer{10000};
+
+    osmium::builder::add_node(buffer, _id(0));
+
+    osmium::Node& node = buffer.get<osmium::Node>(0);
+    REQUIRE_THROWS(node.set_id("bar"));
+    REQUIRE_THROWS(node.set_id("123x"));
+    REQUIRE_THROWS(node.set_version("123x"));
+    REQUIRE_THROWS(node.set_visible("foo"));
+    REQUIRE_THROWS(node.set_changeset("123x"));
+    REQUIRE_THROWS(node.set_changeset("NULL"));
+    REQUIRE_THROWS(node.set_timestamp("2014-03-17T16:23:08Zx"));
+    REQUIRE_THROWS(node.set_timestamp("2014-03-17T16:23:99Z"));
+    REQUIRE_THROWS(node.set_uid("123x"));
+    REQUIRE_THROWS(node.set_uid("anonymous"));
+}
+
 TEST_CASE("set large id") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     int64_t id = 3000000000l;
     osmium::builder::add_node(buffer, _id(id));
@@ -104,7 +146,7 @@ TEST_CASE("set large id") {
 }
 
 TEST_CASE("set tags on node") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     osmium::builder::add_node(buffer,
         _user("foo"),
@@ -114,11 +156,11 @@ TEST_CASE("set tags on node") {
 
     const osmium::Node& node = buffer.get<osmium::Node>(0);
     REQUIRE(nullptr == node.tags().get_value_by_key("fail"));
-    REQUIRE(std::string("pub") == node.tags().get_value_by_key("amenity"));
-    REQUIRE(std::string("pub") == node.get_value_by_key("amenity"));
+    REQUIRE(std::string{"pub"} == node.tags().get_value_by_key("amenity"));
+    REQUIRE(std::string{"pub"} == node.get_value_by_key("amenity"));
 
-    REQUIRE(std::string("default") == node.tags().get_value_by_key("fail", "default"));
-    REQUIRE(std::string("pub") == node.tags().get_value_by_key("amenity", "default"));
-    REQUIRE(std::string("pub") == node.get_value_by_key("amenity", "default"));
+    REQUIRE(std::string{"default"} == node.tags().get_value_by_key("fail", "default"));
+    REQUIRE(std::string{"pub"} == node.tags().get_value_by_key("amenity", "default"));
+    REQUIRE(std::string{"pub"} == node.get_value_by_key("amenity", "default"));
 }
 

@@ -13,6 +13,140 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 
+## [2.9.0] - 2016-09-15
+
+### Added
+
+- Support for reading OPL files.
+- For diff output OSM objects in buffers can be marked as only in one or the
+  other file. The OPL and debug output formats support diff output based on
+  this.
+- Add documentation and range checks to `Tile` struct.
+- More documentation.
+- More examples and more extensive comments on examples.
+- Support for a progress report in `osmium::io::Reader()` and a `ProgressBar`
+  utility class to use it.
+- New `OSMObject::set_timestamp(const char*)` function.
+
+### Changed
+
+- Parse coordinates in scientific notations ourselves.
+- Updated included protozero version to 1.4.2.
+- Lots of one-argument constructors are now explicit.
+- Timestamp parser now uses our own implementation instead of strptime.
+  This is faster and independant of locale settings.
+- More cases of invalid areas with duplicate segments are reported as
+  errors.
+
+### Fixed
+
+- Fixed a problem limiting cache file sizes on Windows to 32 bit.
+- Fixed includes.
+- Exception messages for invalid areas do not report "area contains no rings"
+  any more, but "invalid area".
+
+
+## [2.8.0] - 2016-08-04
+
+### Added
+
+- EWKT support.
+- Track `pop` type calls and queue underruns when `OSMIUM_DEBUG_QUEUE_SIZE`
+  environment variable is set.
+
+### Changed
+
+- Switched to newest protozero v1.4.0. This should deliver some speedups
+  when parsing PBF files. This also removes the DeltaEncodeIterator class,
+  which isn't needed any more.
+- Uses `std::unordered_map` instead of `std::map` in PBF string table code
+  speeding up writing of PBF files considerably.
+- Uses less memory when writing PBF files (smaller string table by default).
+- Removes dependency on sparsehash and boost program options libraries for
+  examples.
+- Cleaned up threaded queue code.
+
+### Fixed
+
+- A potentially very bad bug was fixed: When there are many and/or long strings
+  in tag keys and values and/or user names and/or relation roles, the string
+  table inside a PBF block would overflow. I have never seen this happen for
+  normal OSM data, but that doesn't mean it can't happen. The result is that
+  the strings will all be mixed up, keys for values, values for user names or
+  whatever.
+- Automatically set correct SRID when creating WKB and GEOS geometries.
+  Note that this changes the behaviour of libosmium when creating GEOS
+  geometries. Before we created them with -1 as SRID unless set otherwise.
+  Manual setting of the SRID on the GEOSGeometryFactory is now deprecated.
+- Allow coordinates of nodes in scientific notation when reading XML files.
+  This shouldn't be used really, but sometimes you can find them.
+
+
+## [2.7.2] - 2016-06-08
+
+### Changed
+
+- Much faster output of OSM files in XML, OPL, or debug formats.
+
+### Fixed
+
+- Parsing and output of coordinates now faster and always uses decimal dot
+  independant of locale setting.
+- Do not output empty discussion elements in changeset XML output.
+- Data corruption regression in mmap based indexes.
+
+
+## [2.7.1] - 2016-06-01
+
+### Fixes
+
+- Update version number in version.hpp.
+
+
+## [2.7.0] - 2016-06-01
+
+### Added
+
+- New functions for iterating over specific item types in buffers
+  (`osmium::memory::Buffer::select()`), over specific subitems
+  (`osmium::OSMObject::subitems()`), and for iterating over all rings of
+  an area (`osmium::Areas::outer_rings(`), `inner_rings()`).
+- Debug output optionally prints CRC32 when `add_crc32` file option is set.
+
+### Changed
+
+- XML parser will not allow any XML entities which are usually not used in OSM
+  files anyway. This can help avoiding DOS attacks.
+- Removed SortedQueue implementation which was never used.
+- Also incorporate Locations in NodeRefs into CRC32 checksums. This means
+  all checksums will be different compared to earlier versions of libosmium.
+- The completely new algorithm for assembling multipolygons is much faster,
+  has better error reporting, generates statistics and can build more complex
+  multipolygons correctly. The ProblemReporter classes have changed to make
+  this happen, if you have written your own, you have to fix it.
+- Sparse node location stores are now only sorted if needed, ie. when nodes
+  come in unordered.
+
+### Fixed
+
+- Output operator for Location shows full precision.
+- Undefined behaviour in WKB writer and `types_from_string()` function.
+- Fix unsigned overflow in pool.hpp.
+- OSM objects are now ordered by type (nodes, then ways, then relations),
+  then ID, then version, then timestamp. Ordering by timestamp is normally
+  not necessary, because there can't be two objects with same type, ID, and
+  version but different timestamp. But this can happen when diffs are
+  created from OSM extracts, so we check for this here. This change also
+  makes sure IDs are always ordered by absolute IDs, positives first, so
+  order is 0, 1, -1, 2, -2, ...
+- Data corruption bug fixed in disk based indexes (used for the node
+  location store for instance). This only affected you, if you created
+  and index, closed it, and re-opened it (possibly in a different process)
+  and if there were missing nodes. If you looked up those nodes, you got
+  location (0,0) back instead of an error.
+- Memory corruption bug showing up with GDAL 2.
+
+
 ## [2.6.1] - 2016-02-22
 
 ### Added
@@ -276,7 +410,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.6.1...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.9.0...HEAD
+[2.9.0]: https://github.com/osmcode/libosmium/compare/v2.8.0...v2.9.0
+[2.8.0]: https://github.com/osmcode/libosmium/compare/v2.7.2...v2.8.0
+[2.7.2]: https://github.com/osmcode/libosmium/compare/v2.7.1...v2.7.2
+[2.7.1]: https://github.com/osmcode/libosmium/compare/v2.7.0...v2.7.1
+[2.7.0]: https://github.com/osmcode/libosmium/compare/v2.6.1...v2.7.0
 [2.6.1]: https://github.com/osmcode/libosmium/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/osmcode/libosmium/compare/v2.5.4...v2.6.0
 [2.5.4]: https://github.com/osmcode/libosmium/compare/v2.5.3...v2.5.4

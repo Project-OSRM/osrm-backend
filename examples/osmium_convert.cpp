@@ -1,16 +1,32 @@
 /*
 
+  EXAMPLE osmium_convert
+
   Convert OSM files from one format into another.
 
+  DEMONSTRATES USE OF:
+  * file input and output
+  * file types
+  * Osmium buffers
+
+  SIMPLER EXAMPLES you might want to understand first:
+  * osmium_read
+
+  LICENSE
   The code in this example file is released into the Public Domain.
 
 */
 
-#include <iostream>
-#include <getopt.h>
+#include <cstdlib>   // for std::exit
+#include <exception> // for std::exception
+#include <getopt.h>  // for getopt_long
+#include <iostream>  // for std::cout, std::cerr
+#include <string>    // for std::string
 
+// Allow any format of input files (XML, PBF, ...)
 #include <osmium/io/any_input.hpp>
 
+// Allow any format of output files (XML, PBF, ...)
 #include <osmium/io/any_output.hpp>
 
 void print_help() {
@@ -43,9 +59,13 @@ int main(int argc, char* argv[]) {
         {0, 0, 0, 0}
     };
 
+    // Input and output format are empty by default. Later this will mean that
+    // the format should be taken from the input and output file suffix,
+    // respectively.
     std::string input_format;
     std::string output_format;
 
+    // Read options from command line.
     while (true) {
         int c = getopt_long(argc, argv, "dhf:t:", long_options, 0);
         if (c == -1) {
@@ -55,7 +75,7 @@ int main(int argc, char* argv[]) {
         switch (c) {
             case 'h':
                 print_help();
-                exit(0);
+                std::exit(0);
             case 'f':
                 input_format = optarg;
                 break;
@@ -63,49 +83,73 @@ int main(int argc, char* argv[]) {
                 output_format = optarg;
                 break;
             default:
-                exit(1);
+                std::exit(1);
         }
     }
 
-    std::string input;
-    std::string output;
     int remaining_args = argc - optind;
     if (remaining_args > 2) {
-        std::cerr << "Usage: " << argv[0] << " [OPTIONS] [INFILE [OUTFILE]]" << std::endl;
-        exit(1);
-    } else if (remaining_args == 2) {
-        input =  argv[optind];
-        output = argv[optind+1];
-    } else if (remaining_args == 1) {
-        input =  argv[optind];
+        std::cerr << "Usage: " << argv[0] << " [OPTIONS] [INFILE [OUTFILE]]\n";
+        std::exit(1);
     }
 
-    osmium::io::File infile(input, input_format);
+    // Get input file name from command line.
+    std::string input_file_name;
+    if (remaining_args >= 1) {
+        input_file_name = argv[optind];
+    }
 
-    osmium::io::File outfile(output, output_format);
+    // Get output file name from command line.
+    std::string output_file_name;
+    if (remaining_args == 2) {
+        output_file_name = argv[optind+1];
+    }
 
-    if (infile.has_multiple_object_versions() && !outfile.has_multiple_object_versions()) {
+    // This declares the input and output files using either the suffix of
+    // the file names or the format in the 2nd argument. It does not yet open
+    // the files.
+    osmium::io::File input_file{input_file_name, input_format};
+    osmium::io::File output_file{output_file_name, output_format};
+
+    // Input and output files can be OSM data files (without history) or
+    // OSM history files. History files are detected if they use the '.osh'
+    // file suffix.
+    if (  input_file.has_multiple_object_versions() &&
+        !output_file.has_multiple_object_versions()) {
         std::cerr << "Warning! You are converting from an OSM file with (potentially) several versions of the same object to one that is not marked as such.\n";
     }
 
-    int exit_code = 0;
-
     try {
-        osmium::io::Reader reader(infile);
+        // Initialize Reader
+        osmium::io::Reader reader{input_file};
+
+        // Get header from input file and change the "generator" setting to
+        // outselves.
         osmium::io::Header header = reader.header();
         header.set("generator", "osmium_convert");
 
-        osmium::io::Writer writer(outfile, header, osmium::io::overwrite::allow);
+        // Initialize Writer using the header from above and tell it that it
+        // is allowed to overwrite a possibly existing file.
+        osmium::io::Writer writer(output_file, header, osmium::io::overwrite::allow);
+
+        // Copy the contents from the input to the output file one buffer at
+        // a time. This is much easier and faster than copying each object
+        // in the file. Buffers are moved around, so there is no cost for
+        // copying in memory.
         while (osmium::memory::Buffer buffer = reader.read()) {
             writer(std::move(buffer));
         }
+
+        // Explicitly close the writer and reader. Will throw an exception if
+        // there is a problem. If you wait for the destructor to close the writer
+        // and reader, you will not notice the problem, because destructors must
+        // not throw.
         writer.close();
         reader.close();
-    } catch (std::exception& e) {
+    } catch (const std::exception& e) {
+        // All exceptions used by the Osmium library derive from std::exception.
         std::cerr << e.what() << "\n";
-        exit_code = 1;
+        std::exit(1);
     }
-
-    return exit_code;
 }
 

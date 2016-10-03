@@ -23,13 +23,54 @@ documentation.
 namespace protozero {
 
 /**
- * The maximum length of a 64bit varint.
+ * The maximum length of a 64 bit varint.
  */
 constexpr const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
 
-// from https://github.com/facebook/folly/blob/master/folly/Varint.h
+namespace detail {
+
+    // from https://github.com/facebook/folly/blob/master/folly/Varint.h
+    inline uint64_t decode_varint_impl(const char** data, const char* end) {
+        const int8_t* begin = reinterpret_cast<const int8_t*>(*data);
+        const int8_t* iend = reinterpret_cast<const int8_t*>(end);
+        const int8_t* p = begin;
+        uint64_t val = 0;
+
+        if (iend - begin >= max_varint_length) {  // fast path
+            do {
+                int64_t b;
+                b = *p++; val  = uint64_t((b & 0x7f)      ); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) <<  7); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 14); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 21); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 28); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 35); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 42); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 49); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 56); if (b >= 0) break;
+                b = *p++; val |= uint64_t((b & 0x7f) << 63); if (b >= 0) break;
+                throw varint_too_long_exception();
+            } while (false);
+        } else {
+            int shift = 0;
+            while (p != iend && *p < 0) {
+                val |= uint64_t(*p++ & 0x7f) << shift;
+                shift += 7;
+            }
+            if (p == iend) {
+                throw end_of_buffer_exception();
+            }
+            val |= uint64_t(*p++) << shift;
+        }
+
+        *data = reinterpret_cast<const char*>(p);
+        return val;
+    }
+
+} // end namespace detail
+
 /**
- * Decode a 64bit varint.
+ * Decode a 64 bit varint.
  *
  * Strong exception guarantee: if there is an exception the data pointer will
  * not be changed.
@@ -39,54 +80,68 @@ constexpr const int8_t max_varint_length = sizeof(uint64_t) * 8 / 7 + 1;
  * @param[in] end Pointer one past the end of the input data.
  * @returns The decoded integer
  * @throws varint_too_long_exception if the varint is longer then the maximum
- *         length that would fit in a 64bit int. Usually this means your data
+ *         length that would fit in a 64 bit int. Usually this means your data
  *         is corrupted or you are trying to read something as a varint that
  *         isn't.
  * @throws end_of_buffer_exception if the *end* of the buffer was reached
  *         before the end of the varint.
  */
 inline uint64_t decode_varint(const char** data, const char* end) {
-    const int8_t* begin = reinterpret_cast<const int8_t*>(*data);
-    const int8_t* iend = reinterpret_cast<const int8_t*>(end);
-    const int8_t* p = begin;
-    uint64_t val = 0;
-
-    if (iend - begin >= max_varint_length) {  // fast path
-        do {
-            int64_t b;
-            b = *p++; val  = uint64_t((b & 0x7f)      ); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) <<  7); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 14); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 21); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 28); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 35); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 42); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 49); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 56); if (b >= 0) break;
-            b = *p++; val |= uint64_t((b & 0x7f) << 63); if (b >= 0) break;
-            throw varint_too_long_exception();
-        } while (false);
-    } else {
-        int shift = 0;
-        while (p != iend && *p < 0) {
-            val |= uint64_t(*p++ & 0x7f) << shift;
-            shift += 7;
-        }
-        if (p == iend) {
-            throw end_of_buffer_exception();
-        }
-        val |= uint64_t(*p++) << shift;
+    // If this is a one-byte varint, decode it here.
+    if (end != *data && ((**data & 0x80) == 0)) {
+        uint64_t val = uint64_t(**data);
+        ++(*data);
+        return val;
     }
-
-    *data = reinterpret_cast<const char*>(p);
-    return val;
+    // If this varint is more than one byte, defer to complete implementation.
+    return detail::decode_varint_impl(data, end);
 }
 
 /**
- * Varint-encode a 64bit integer.
+ * Skip over a varint.
+ *
+ * Strong exception guarantee: if there is an exception the data pointer will
+ * not be changed.
+ *
+ * @param[in,out] data Pointer to pointer to the input data. After the function
+ *        returns this will point to the next data to be read.
+ * @param[in] end Pointer one past the end of the input data.
+ * @throws end_of_buffer_exception if the *end* of the buffer was reached
+ *         before the end of the varint.
  */
-template <typename OutputIterator>
-inline int write_varint(OutputIterator data, uint64_t value) {
+inline void skip_varint(const char** data, const char* end) {
+    const int8_t* begin = reinterpret_cast<const int8_t*>(*data);
+    const int8_t* iend = reinterpret_cast<const int8_t*>(end);
+    const int8_t* p = begin;
+
+    while (p != iend && *p < 0) {
+        ++p;
+    }
+
+    if (p >= begin + max_varint_length) {
+        throw varint_too_long_exception();
+    }
+
+    if (p == iend) {
+        throw end_of_buffer_exception();
+    }
+
+    ++p;
+
+    *data = reinterpret_cast<const char*>(p);
+}
+
+/**
+ * Varint encode a 64 bit integer.
+ *
+ * @tparam T An output iterator type.
+ * @param data Output iterator the varint encoded value will be written to
+ *             byte by byte.
+ * @param value The integer that will be encoded.
+ * @throws Any exception thrown by increment or dereference operator on data.
+ */
+template <typename T>
+inline int write_varint(T data, uint64_t value) {
     int n=1;
 
     while (value >= 0x80) {

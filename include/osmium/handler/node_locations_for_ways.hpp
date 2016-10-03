@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <limits>
 #include <type_traits>
 
 #include <osmium/handler.hpp>
@@ -50,7 +51,7 @@ namespace osmium {
 
     namespace handler {
 
-        typedef osmium::index::map::Dummy<osmium::unsigned_object_id_type, osmium::Location> dummy_type;
+        using dummy_type = osmium::index::map::Dummy<osmium::unsigned_object_id_type, osmium::Location>;
 
         /**
          * Handler to retrieve locations from nodes and add them to ways.
@@ -69,8 +70,8 @@ namespace osmium {
 
         public:
 
-            typedef TStoragePosIDs index_pos_type;
-            typedef TStorageNegIDs index_neg_type;
+            using index_pos_type = TStoragePosIDs;
+            using index_neg_type = TStorageNegIDs;
 
         private:
 
@@ -79,6 +80,8 @@ namespace osmium {
 
             /// Object that handles the actual storage of the node locations (with negative IDs).
             TStorageNegIDs& m_storage_neg;
+
+            osmium::unsigned_object_id_type m_last_id{0};
 
             bool m_ignore_errors {false};
 
@@ -115,7 +118,11 @@ namespace osmium {
              * Store the location of the node in the storage.
              */
             void node(const osmium::Node& node) {
-                m_must_sort = true;
+                if (node.positive_id() < m_last_id) {
+                    m_must_sort = true;
+                }
+                m_last_id = node.positive_id();
+
                 const osmium::object_id_type id = node.id();
                 if (id >= 0) {
                     m_storage_pos.set(static_cast<osmium::unsigned_object_id_type>( id), node.location());
@@ -144,6 +151,7 @@ namespace osmium {
                     m_storage_pos.sort();
                     m_storage_neg.sort();
                     m_must_sort = false;
+                    m_last_id = std::numeric_limits<osmium::unsigned_object_id_type>::max();
                 }
                 bool error = false;
                 for (auto& node_ref : way.nodes()) {
@@ -152,7 +160,7 @@ namespace osmium {
                         if (!node_ref.location()) {
                             error = true;
                         }
-                    } catch (osmium::not_found&) {
+                    } catch (const osmium::not_found&) {
                         error = true;
                     }
                 }

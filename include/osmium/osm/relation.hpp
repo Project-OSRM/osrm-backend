@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iterator>
 
 #include <osmium/memory/collection.hpp> // IWYU pragma: keep
 #include <osmium/memory/item.hpp>
+#include <osmium/osm/entity.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
@@ -149,7 +149,7 @@ namespace osmium {
 
     public:
 
-        typedef size_t size_type;
+        using size_type = size_t;
 
         RelationMemberList() :
             osmium::memory::Collection<RelationMember, osmium::item_type::relation_member_list>() {
