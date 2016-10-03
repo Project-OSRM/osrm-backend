@@ -5,7 +5,7 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
         Given the node locations
             | node | lat        | lon      |
             | a    | 0.1        | 0.1      |
-            | b    | .05        | 0.1      |
+            | b    | 0.05       | 0.1      |
             | c    | 0.3        | 0.1      |
         And the ways
             | nodes | highway     |
