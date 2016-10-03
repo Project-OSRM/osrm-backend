@@ -29,7 +29,7 @@
 find_path(LUA_INCLUDE_DIR lua.h
   HINTS
     ENV LUA_DIR
-  PATH_SUFFIXES include/lua52 include/lua5.2 include/lua-5.2 include/lua include
+  PATH_SUFFIXES include/lua52 include/lua5.2 include/lua-5.2 include include/lua51 include/lua5.1 include/lua-5.1
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -40,7 +40,7 @@ find_path(LUA_INCLUDE_DIR lua.h
 )
 
 find_library(LUA_LIBRARY
-  NAMES lua52 lua5.2 lua-5.2 lua
+  NAMES lua52 lua5.2 lua-5.2 lua51 lua5.1 lua-5.1
   HINTS
     ENV LUA_DIR
   PATH_SUFFIXES lib
@@ -65,7 +65,19 @@ if(LUA_LIBRARY)
 endif()
 
 if(LUA_INCLUDE_DIR AND EXISTS "${LUA_INCLUDE_DIR}/lua.h")
-  file(STRINGS "${LUA_INCLUDE_DIR}/lua.h" lua_version_str REGEX "^#define[ \t]+LUA_RELEASE[ \t]+\"Lua .+\"")
+  string(REGEX MATCH "[0-9]?$" MINOR_V "${LUA_INCLUDE_DIR}")
+  string(COMPARE GREATER MINOR_V 1 PAST_51)
+  if(PAST_51)
+      file(STRINGS "${LUA_INCLUDE_DIR}/lua.h" RELEASE_V_LINE REGEX "LUA_VERSION_RELEASE[ \t]+\"[0-9]?\"")
+      string(REGEX MATCH "[0-9]" RELEASE_V "${RELEASE_V_LINE}")
+      string(CONCAT lua_version_str "Lua 5." "${MINOR_V}." "${RELEASE_V}")
+      unset(PAST_51)
+      unset(MINOR_V)
+      unset(RELEASE_V)
+      unset(RELEASE_V_LINE)
+  else()
+    file(STRINGS "${LUA_INCLUDE_DIR}/lua.h" lua_version_str REGEX "^#define[ \t]+LUA_RELEASE[ \t]+\"Lua .+\"")
+  endif()
 
   string(REGEX REPLACE "^#define[ \t]+LUA_RELEASE[ \t]+\"Lua ([^\"]+)\".*" "\\1" LUA_VERSION_STRING "${lua_version_str}")
   unset(lua_version_str)
