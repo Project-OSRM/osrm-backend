@@ -91,7 +91,7 @@ struct RouteParameters : public BaseParameters
                     const GeometriesType geometries_,
                     const OverviewType overview_,
                     const boost::optional<bool> continue_straight_,
-                    Args... args_)
+                    Args &&... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
           annotations{annotations_}, geometries{geometries_}, overview{overview_},
           continue_straight{continue_straight_}

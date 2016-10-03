@@ -61,7 +61,7 @@ struct MatchParameters : public RouteParameters
     }
 
     template <typename... Args>
-    MatchParameters(std::vector<unsigned> timestamps_, Args... args_)
+    MatchParameters(std::vector<unsigned> timestamps_, Args &&... args_)
         : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)}
     {
     }

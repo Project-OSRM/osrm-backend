@@ -61,10 +61,11 @@ struct TableParameters : public BaseParameters
     std::vector<std::size_t> destinations;
 
     TableParameters() = default;
+
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
-                    Args... args_)
+                    Args &&... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
           destinations{std::move(destinations_)}
     {
