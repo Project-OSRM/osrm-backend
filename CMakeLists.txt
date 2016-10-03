@@ -126,8 +126,8 @@ if(ENABLE_GOLD_LINKER)
 
         # Issue 2785: check gold binutils version and don't use gc-sections for versions prior 2.25
         string(REGEX REPLACE ".*\\(GNU Binutils[^\\)0-9]+([0-9]+\\.[0-9]+)[^\\)]*\\).*" "\\1" GOLD_BINUTILS_VERSION "${LD_VERSION}")
-        if ("${GOLD_BINUTILS_VERSION}" VERSION_LESS "2.25")
-          message(STATUS "Disabling gc-sections on gold binutils < 2.25, see: https://sourceware.org/bugzilla/show_bug.cgi?id=17639")
+        if ("${GOLD_BINUTILS_VERSION}" VERSION_LESS "2.26")
+          message(STATUS "Disabling gc-sections on gold binutils < 2.26, see: https://sourceware.org/bugzilla/show_bug.cgi?id=17639")
           set(LD_AVOID_GC_SECTIONS TRUE)
         endif()
     else()
