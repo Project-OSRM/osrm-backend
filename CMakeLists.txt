@@ -306,9 +306,7 @@ if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 find_package(Luabind REQUIRED)
-include(check_luabind)
 add_dependency_includes(${LUABIND_INCLUDE_DIR})
-
 set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
 add_dependency_includes(${LUA_INCLUDE_DIR})
 
