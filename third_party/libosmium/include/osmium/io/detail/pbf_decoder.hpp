@@ -33,10 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <algorithm>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -44,35 +42,47 @@ DEALINGS IN THE SOFTWARE.
 #include <utility>
 #include <vector>
 
+#include <protozero/iterators.hpp>
 #include <protozero/pbf_message.hpp>
+#include <protozero/types.hpp>
 
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/detail/pbf.hpp> // IWYU pragma: export
 #include <osmium/io/detail/protobuf_tags.hpp>
 #include <osmium/io/detail/zlib.hpp>
 #include <osmium/io/header.hpp>
+#include <osmium/memory/buffer.hpp>
+#include <osmium/osm/box.hpp>
+#include <osmium/osm/entity_bits.hpp>
+#include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node.hpp>
+#include <osmium/osm/object.hpp>
+#include <osmium/osm/relation.hpp>
+#include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
-#include <osmium/memory/buffer.hpp>
-#include <osmium/osm/entity_bits.hpp>
+#include <osmium/osm/way.hpp>
 #include <osmium/util/cast.hpp>
 #include <osmium/util/delta.hpp>
 
 namespace osmium {
 
+    namespace builder {
+        class Builder;
+    } // namespace builder
+
     namespace io {
 
         namespace detail {
 
-            using ptr_len_type = std::pair<const char*, size_t>;
+            using protozero::data_view;
             using osm_string_len_type = std::pair<const char*, osmium::string_size_type>;
 
             class PBFPrimitiveBlockDecoder {
 
-                static constexpr size_t initial_buffer_size = 2 * 1024 * 1024;
+                static constexpr const size_t initial_buffer_size = 2 * 1024 * 1024;
 
-                ptr_len_type m_data;
+                data_view m_data;
                 std::vector<osm_string_len_type> m_stringtable;
 
                 int64_t m_lon_offset = 0;
@@ -84,18 +94,18 @@ namespace osmium {
 
                 osmium::memory::Buffer m_buffer { initial_buffer_size };
 
-                void decode_stringtable(const ptr_len_type& data) {
+                void decode_stringtable(const data_view& data) {
                     if (!m_stringtable.empty()) {
                         throw osmium::pbf_error("more than one stringtable in pbf file");
                     }
 
                     protozero::pbf_message<OSMFormat::StringTable> pbf_string_table(data);
                     while (pbf_string_table.next(OSMFormat::StringTable::repeated_bytes_s)) {
-                        auto str_len = pbf_string_table.get_data();
-                        if (str_len.second > osmium::max_osm_string_length) {
+                        const auto str_view = pbf_string_table.get_view();
+                        if (str_view.size() > osmium::max_osm_string_length) {
                             throw osmium::pbf_error("overlong string in string table");
                         }
-                        m_stringtable.emplace_back(str_len.first, osmium::string_size_type(str_len.second));
+                        m_stringtable.emplace_back(str_view.data(), osmium::string_size_type(str_view.size()));
                     }
                 }
 
@@ -104,7 +114,7 @@ namespace osmium {
                     while (pbf_primitive_block.next()) {
                         switch (pbf_primitive_block.tag()) {
                             case OSMFormat::PrimitiveBlock::required_StringTable_stringtable:
-                                decode_stringtable(pbf_primitive_block.get_data());
+                                decode_stringtable(pbf_primitive_block.get_view());
                                 break;
                             case OSMFormat::PrimitiveBlock::optional_int32_granularity:
                                 m_granularity = pbf_primitive_block.get_int32();
@@ -132,28 +142,28 @@ namespace osmium {
                             switch (pbf_primitive_group.tag()) {
                                 case OSMFormat::PrimitiveGroup::repeated_Node_nodes:
                                     if (m_read_types & osmium::osm_entity_bits::node) {
-                                        decode_node(pbf_primitive_group.get_data());
+                                        decode_node(pbf_primitive_group.get_view());
                                     } else {
                                         pbf_primitive_group.skip();
                                     }
                                     break;
                                 case OSMFormat::PrimitiveGroup::optional_DenseNodes_dense:
                                     if (m_read_types & osmium::osm_entity_bits::node) {
-                                        decode_dense_nodes(pbf_primitive_group.get_data());
+                                        decode_dense_nodes(pbf_primitive_group.get_view());
                                     } else {
                                         pbf_primitive_group.skip();
                                     }
                                     break;
                                 case OSMFormat::PrimitiveGroup::repeated_Way_ways:
                                     if (m_read_types & osmium::osm_entity_bits::way) {
-                                        decode_way(pbf_primitive_group.get_data());
+                                        decode_way(pbf_primitive_group.get_view());
                                     } else {
                                         pbf_primitive_group.skip();
                                     }
                                     break;
                                 case OSMFormat::PrimitiveGroup::repeated_Relation_relations:
                                     if (m_read_types & osmium::osm_entity_bits::relation) {
-                                        decode_relation(pbf_primitive_group.get_data());
+                                        decode_relation(pbf_primitive_group.get_view());
                                     } else {
                                         pbf_primitive_group.skip();
                                     }
@@ -165,7 +175,7 @@ namespace osmium {
                     }
                 }
 
-                osm_string_len_type decode_info(const ptr_len_type& data, osmium::OSMObject& object) {
+                osm_string_len_type decode_info(const data_view& data, osmium::OSMObject& object) {
                     osm_string_len_type user = std::make_pair("", 0);
 
                     protozero::pbf_message<OSMFormat::Info> pbf_info(data);
@@ -173,7 +183,7 @@ namespace osmium {
                         switch (pbf_info.tag()) {
                             case OSMFormat::Info::optional_int32_version:
                                 {
-                                    auto version = pbf_info.get_int32();
+                                    const auto version = pbf_info.get_int32();
                                     if (version < 0) {
                                         throw osmium::pbf_error("object version must not be negative");
                                     }
@@ -185,7 +195,7 @@ namespace osmium {
                                 break;
                             case OSMFormat::Info::optional_int64_changeset:
                                 {
-                                    auto changeset_id = pbf_info.get_int64();
+                                    const auto changeset_id = pbf_info.get_int64();
                                     if (changeset_id < 0) {
                                         throw osmium::pbf_error("object changeset_id must not be negative");
                                     }
@@ -209,15 +219,15 @@ namespace osmium {
                     return user;
                 }
 
-                using kv_type = std::pair<protozero::pbf_reader::const_uint32_iterator, protozero::pbf_reader::const_uint32_iterator>;
+                using kv_type = protozero::iterator_range<protozero::pbf_reader::const_uint32_iterator>;
 
                 void build_tag_list(osmium::builder::Builder& builder, const kv_type& keys, const kv_type& vals) {
-                    if (keys.first != keys.second) {
+                    if (!keys.empty()) {
                         osmium::builder::TagListBuilder tl_builder(m_buffer, &builder);
-                        auto kit = keys.first;
-                        auto vit = vals.first;
-                        while (kit != keys.second) {
-                            if (vit == vals.second) {
+                        auto kit = keys.begin();
+                        auto vit = vals.begin();
+                        while (kit != keys.end()) {
+                            if (vit == vals.end()) {
                                 // this is against the spec, must have same number of elements
                                 throw osmium::pbf_error("PBF format error");
                             }
@@ -232,7 +242,7 @@ namespace osmium {
                     return int32_t((c * m_granularity + m_lon_offset) / resolution_convert);
                 }
 
-                void decode_node(const ptr_len_type& data) {
+                void decode_node(const data_view& data) {
                     osmium::builder::NodeBuilder builder(m_buffer);
                     osmium::Node& node = builder.object();
 
@@ -256,7 +266,7 @@ namespace osmium {
                                 vals = pbf_node.get_packed_uint32();
                                 break;
                             case OSMFormat::Node::optional_Info_info:
-                                user = decode_info(pbf_node.get_data(), builder.object());
+                                user = decode_info(pbf_node.get_view(), builder.object());
                                 break;
                             case OSMFormat::Node::required_sint64_lat:
                                 lat = pbf_node.get_sint64();
@@ -287,12 +297,14 @@ namespace osmium {
                     m_buffer.commit();
                 }
 
-                void decode_way(const ptr_len_type& data) {
+                void decode_way(const data_view& data) {
                     osmium::builder::WayBuilder builder(m_buffer);
 
                     kv_type keys;
                     kv_type vals;
-                    std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> refs;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> refs;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> lats;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> lons;
 
                     osm_string_len_type user = { "", 0 };
 
@@ -309,10 +321,16 @@ namespace osmium {
                                 vals = pbf_way.get_packed_uint32();
                                 break;
                             case OSMFormat::Way::optional_Info_info:
-                                user = decode_info(pbf_way.get_data(), builder.object());
+                                user = decode_info(pbf_way.get_view(), builder.object());
                                 break;
                             case OSMFormat::Way::packed_sint64_refs:
                                 refs = pbf_way.get_packed_sint64();
+                                break;
+                            case OSMFormat::Way::packed_sint64_lat:
+                                lats = pbf_way.get_packed_sint64();
+                                break;
+                            case OSMFormat::Way::packed_sint64_lon:
+                                lons = pbf_way.get_packed_sint64();
                                 break;
                             default:
                                 pbf_way.skip();
@@ -321,11 +339,26 @@ namespace osmium {
 
                     builder.add_user(user.first, user.second);
 
-                    if (refs.first != refs.second) {
+                    if (!refs.empty()) {
                         osmium::builder::WayNodeListBuilder wnl_builder(m_buffer, &builder);
                         osmium::util::DeltaDecode<int64_t> ref;
-                        while (refs.first != refs.second) {
-                            wnl_builder.add_node_ref(ref.update(*refs.first++));
+                        if (lats.empty()) {
+                            for (const auto& ref_value : refs) {
+                                wnl_builder.add_node_ref(ref.update(ref_value));
+                            }
+                        } else {
+                            osmium::util::DeltaDecode<int64_t> lon;
+                            osmium::util::DeltaDecode<int64_t> lat;
+                            while (!refs.empty() && !lons.empty() && !lats.empty()) {
+                                wnl_builder.add_node_ref(
+                                    ref.update(refs.front()),
+                                    osmium::Location{convert_pbf_coordinate(lon.update(lons.front())),
+                                                     convert_pbf_coordinate(lat.update(lats.front()))}
+                                );
+                                refs.drop_front();
+                                lons.drop_front();
+                                lats.drop_front();
+                            }
                         }
                     }
 
@@ -334,14 +367,14 @@ namespace osmium {
                     m_buffer.commit();
                 }
 
-                void decode_relation(const ptr_len_type& data) {
+                void decode_relation(const data_view& data) {
                     osmium::builder::RelationBuilder builder(m_buffer);
 
                     kv_type keys;
                     kv_type vals;
-                    std::pair<protozero::pbf_reader::const_int32_iterator,  protozero::pbf_reader::const_int32_iterator> roles;
-                    std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> refs;
-                    std::pair<protozero::pbf_reader::const_int32_iterator,  protozero::pbf_reader::const_int32_iterator> types;
+                    protozero::iterator_range<protozero::pbf_reader::const_int32_iterator> roles;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> refs;
+                    protozero::iterator_range<protozero::pbf_reader::const_int32_iterator> types;
 
                     osm_string_len_type user = { "", 0 };
 
@@ -358,7 +391,7 @@ namespace osmium {
                                 vals = pbf_relation.get_packed_uint32();
                                 break;
                             case OSMFormat::Relation::optional_Info_info:
-                                user = decode_info(pbf_relation.get_data(), builder.object());
+                                user = decode_info(pbf_relation.get_view(), builder.object());
                                 break;
                             case OSMFormat::Relation::packed_int32_roles_sid:
                                 roles = pbf_relation.get_packed_int32();
@@ -376,21 +409,24 @@ namespace osmium {
 
                     builder.add_user(user.first, user.second);
 
-                    if (refs.first != refs.second) {
+                    if (!refs.empty()) {
                         osmium::builder::RelationMemberListBuilder rml_builder(m_buffer, &builder);
                         osmium::util::DeltaDecode<int64_t> ref;
-                        while (roles.first != roles.second && refs.first != refs.second && types.first != types.second) {
-                            const auto& r = m_stringtable.at(*roles.first++);
-                            int type = *types.first++;
+                        while (!roles.empty() && !refs.empty() && !types.empty()) {
+                            const auto& r = m_stringtable.at(roles.front());
+                            const int type = types.front();
                             if (type < 0 || type > 2) {
                                 throw osmium::pbf_error("unknown relation member type");
                             }
                             rml_builder.add_member(
                                 osmium::item_type(type + 1),
-                                ref.update(*refs.first++),
+                                ref.update(refs.front()),
                                 r.first,
                                 r.second
                             );
+                            roles.drop_front();
+                            refs.drop_front();
+                            types.drop_front();
                         }
                     }
 
@@ -399,22 +435,22 @@ namespace osmium {
                     m_buffer.commit();
                 }
 
-                void decode_dense_nodes(const ptr_len_type& data) {
+                void decode_dense_nodes(const data_view& data) {
                     bool has_info     = false;
                     bool has_visibles = false;
 
-                    std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> ids;
-                    std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> lats;
-                    std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> lons;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> ids;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> lats;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> lons;
 
-                    std::pair<protozero::pbf_reader::const_int32_iterator,  protozero::pbf_reader::const_int32_iterator>  tags;
+                    protozero::iterator_range<protozero::pbf_reader::const_int32_iterator>  tags;
 
-                    std::pair<protozero::pbf_reader::const_int32_iterator,  protozero::pbf_reader::const_int32_iterator>  versions;
-                    std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> timestamps;
-                    std::pair<protozero::pbf_reader::const_sint64_iterator, protozero::pbf_reader::const_sint64_iterator> changesets;
-                    std::pair<protozero::pbf_reader::const_sint32_iterator, protozero::pbf_reader::const_sint32_iterator> uids;
-                    std::pair<protozero::pbf_reader::const_sint32_iterator, protozero::pbf_reader::const_sint32_iterator> user_sids;
-                    std::pair<protozero::pbf_reader::const_int32_iterator,  protozero::pbf_reader::const_int32_iterator>  visibles;
+                    protozero::iterator_range<protozero::pbf_reader::const_int32_iterator>  versions;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> timestamps;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint64_iterator> changesets;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint32_iterator> uids;
+                    protozero::iterator_range<protozero::pbf_reader::const_sint32_iterator> user_sids;
+                    protozero::iterator_range<protozero::pbf_reader::const_int32_iterator>  visibles;
 
                     protozero::pbf_message<OSMFormat::DenseNodes> pbf_dense_nodes(data);
                     while (pbf_dense_nodes.next()) {
@@ -475,11 +511,11 @@ namespace osmium {
                     osmium::util::DeltaDecode<int64_t> dense_changeset;
                     osmium::util::DeltaDecode<int64_t> dense_timestamp;
 
-                    auto tag_it = tags.first;
+                    auto tag_it = tags.begin();
 
-                    while (ids.first != ids.second) {
-                        if (lons.first == lons.second ||
-                            lats.first == lats.second) {
+                    while (!ids.empty()) {
+                        if (lons.empty() ||
+                            lats.empty()) {
                             // this is against the spec, must have same number of elements
                             throw osmium::pbf_error("PBF format error");
                         }
@@ -489,43 +525,50 @@ namespace osmium {
                         osmium::builder::NodeBuilder builder(m_buffer);
                         osmium::Node& node = builder.object();
 
-                        node.set_id(dense_id.update(*ids.first++));
+                        node.set_id(dense_id.update(ids.front()));
+                        ids.drop_front();
 
                         if (has_info) {
-                            if (versions.first == versions.second ||
-                                changesets.first == changesets.second ||
-                                timestamps.first == timestamps.second ||
-                                uids.first == uids.second ||
-                                user_sids.first == user_sids.second) {
+                            if (versions.empty() ||
+                                changesets.empty() ||
+                                timestamps.empty() ||
+                                uids.empty() ||
+                                user_sids.empty()) {
                                 // this is against the spec, must have same number of elements
                                 throw osmium::pbf_error("PBF format error");
                             }
 
-                            auto version = *versions.first++;
+                            const auto version = versions.front();
+                            versions.drop_front();
                             if (version < 0) {
                                 throw osmium::pbf_error("object version must not be negative");
                             }
                             node.set_version(static_cast<osmium::object_version_type>(version));
 
-                            auto changeset_id = dense_changeset.update(*changesets.first++);
+                            const auto changeset_id = dense_changeset.update(changesets.front());
+                            changesets.drop_front();
                             if (changeset_id < 0) {
                                 throw osmium::pbf_error("object changeset_id must not be negative");
                             }
                             node.set_changeset(static_cast<osmium::changeset_id_type>(changeset_id));
 
-                            node.set_timestamp(dense_timestamp.update(*timestamps.first++) * m_date_factor / 1000);
-                            node.set_uid_from_signed(static_cast<osmium::signed_user_id_type>(dense_uid.update(*uids.first++)));
+                            node.set_timestamp(dense_timestamp.update(timestamps.front()) * m_date_factor / 1000);
+                            timestamps.drop_front();
+                            node.set_uid_from_signed(static_cast<osmium::signed_user_id_type>(dense_uid.update(uids.front())));
+                            uids.drop_front();
 
                             if (has_visibles) {
-                                if (visibles.first == visibles.second) {
+                                if (visibles.empty()) {
                                     // this is against the spec, must have same number of elements
                                     throw osmium::pbf_error("PBF format error");
                                 }
-                                visible = (*visibles.first++) != 0;
+                                visible = (visibles.front() != 0);
+                                visibles.drop_front();
                             }
                             node.set_visible(visible);
 
-                            const auto& u = m_stringtable.at(dense_user_sid.update(*user_sids.first++));
+                            const auto& u = m_stringtable.at(dense_user_sid.update(user_sids.front()));
+                            user_sids.drop_front();
                             builder.add_user(u.first, u.second);
                         } else {
                             builder.add_user("");
@@ -533,8 +576,10 @@ namespace osmium {
 
                         // even if the node isn't visible, there's still a record
                         // of its lat/lon in the dense arrays.
-                        const auto lon = dense_longitude.update(*lons.first++);
-                        const auto lat = dense_latitude.update(*lats.first++);
+                        const auto lon = dense_longitude.update(lons.front());
+                        lons.drop_front();
+                        const auto lat = dense_latitude.update(lats.front());
+                        lats.drop_front();
                         if (visible) {
                             builder.object().set_location(osmium::Location(
                                     convert_pbf_coordinate(lon),
@@ -542,18 +587,18 @@ namespace osmium {
                             ));
                         }
 
-                        if (tag_it != tags.second) {
+                        if (tag_it != tags.end()) {
                             osmium::builder::TagListBuilder tl_builder(m_buffer, &builder);
-                            while (tag_it != tags.second && *tag_it != 0) {
+                            while (tag_it != tags.end() && *tag_it != 0) {
                                 const auto& k = m_stringtable.at(*tag_it++);
-                                if (tag_it == tags.second) {
+                                if (tag_it == tags.end()) {
                                     throw osmium::pbf_error("PBF format error"); // this is against the spec, keys/vals must come in pairs
                                 }
                                 const auto& v = m_stringtable.at(*tag_it++);
                                 tl_builder.add_tag(k.first, k.second, v.first, v.second);
                             }
 
-                            if (tag_it != tags.second) {
+                            if (tag_it != tags.end()) {
                                 ++tag_it;
                             }
                         }
@@ -565,7 +610,7 @@ namespace osmium {
 
             public:
 
-                PBFPrimitiveBlockDecoder(const ptr_len_type& data, osmium::osm_entity_bits::type read_types) :
+                PBFPrimitiveBlockDecoder(const data_view& data, osmium::osm_entity_bits::type read_types) :
                     m_data(data),
                     m_read_types(read_types) {
                 }
@@ -582,7 +627,7 @@ namespace osmium {
                     try {
                         decode_primitive_block_metadata();
                         decode_primitive_block_data();
-                    } catch (std::out_of_range&) {
+                    } catch (const std::out_of_range&) {
                         throw osmium::pbf_error("string id out of range");
                     }
 
@@ -591,17 +636,17 @@ namespace osmium {
 
             }; // class PBFPrimitiveBlockDecoder
 
-            inline ptr_len_type decode_blob(const std::string& blob_data, std::string& output) {
+            inline data_view decode_blob(const std::string& blob_data, std::string& output) {
                 int32_t raw_size = 0;
-                std::pair<const char*, protozero::pbf_length_type> zlib_data = {nullptr, 0};
+                protozero::data_view zlib_data;
 
                 protozero::pbf_message<FileFormat::Blob> pbf_blob(blob_data);
                 while (pbf_blob.next()) {
                     switch (pbf_blob.tag()) {
                         case FileFormat::Blob::optional_bytes_raw:
                             {
-                                auto data_len = pbf_blob.get_data();
-                                if (data_len.second > max_uncompressed_blob_size) {
+                                auto data_len = pbf_blob.get_view();
+                                if (data_len.size() > max_uncompressed_blob_size) {
                                     throw osmium::pbf_error("illegal blob size");
                                 }
                                 return data_len;
@@ -613,7 +658,7 @@ namespace osmium {
                             }
                             break;
                         case FileFormat::Blob::optional_bytes_zlib_data:
-                            zlib_data = pbf_blob.get_data();
+                            zlib_data = pbf_blob.get_view();
                             break;
                         case FileFormat::Blob::optional_bytes_lzma_data:
                             throw osmium::pbf_error("lzma blobs not implemented");
@@ -622,10 +667,10 @@ namespace osmium {
                     }
                 }
 
-                if (zlib_data.second != 0 && raw_size != 0) {
+                if (zlib_data.size() != 0 && raw_size != 0) {
                     return osmium::io::detail::zlib_uncompress_string(
-                        zlib_data.first,
-                        static_cast<unsigned long>(zlib_data.second),
+                        zlib_data.data(),
+                        static_cast<unsigned long>(zlib_data.size()),
                         static_cast<unsigned long>(raw_size),
                         output
                     );
@@ -634,7 +679,7 @@ namespace osmium {
                 throw osmium::pbf_error("blob contains no data");
             }
 
-            inline osmium::Box decode_header_bbox(const ptr_len_type& data) {
+            inline osmium::Box decode_header_bbox(const data_view& data) {
                     int64_t left   = std::numeric_limits<int64_t>::max();
                     int64_t right  = std::numeric_limits<int64_t>::max();
                     int64_t top    = std::numeric_limits<int64_t>::max();
@@ -674,7 +719,7 @@ namespace osmium {
                     return box;
             }
 
-            inline osmium::io::Header decode_header_block(const ptr_len_type& data) {
+            inline osmium::io::Header decode_header_block(const data_view& data) {
                 osmium::io::Header header;
                 int i = 0;
 
@@ -682,20 +727,20 @@ namespace osmium {
                 while (pbf_header_block.next()) {
                     switch (pbf_header_block.tag()) {
                         case OSMFormat::HeaderBlock::optional_HeaderBBox_bbox:
-                            header.add_box(decode_header_bbox(pbf_header_block.get_data()));
+                            header.add_box(decode_header_bbox(pbf_header_block.get_view()));
                             break;
                         case OSMFormat::HeaderBlock::repeated_string_required_features:
                             {
-                                auto feature = pbf_header_block.get_data();
-                                if (!strncmp("OsmSchema-V0.6", feature.first, feature.second)) {
+                                auto feature = pbf_header_block.get_view();
+                                if (!std::strncmp("OsmSchema-V0.6", feature.data(), feature.size())) {
                                     // intentionally left blank
-                                } else if (!strncmp("DenseNodes", feature.first, feature.second)) {
+                                } else if (!std::strncmp("DenseNodes", feature.data(), feature.size())) {
                                     header.set("pbf_dense_nodes", true);
-                                } else if (!strncmp("HistoricalInformation", feature.first, feature.second)) {
+                                } else if (!std::strncmp("HistoricalInformation", feature.data(), feature.size())) {
                                     header.set_has_multiple_object_versions(true);
                                 } else {
                                     std::string msg("required feature not supported: ");
-                                    msg.append(feature.first, feature.second);
+                                    msg.append(feature.data(), feature.size());
                                     throw osmium::pbf_error(msg);
                                 }
                             }
@@ -708,7 +753,7 @@ namespace osmium {
                             break;
                         case OSMFormat::HeaderBlock::optional_int64_osmosis_replication_timestamp:
                             {
-                                auto timestamp = osmium::Timestamp(pbf_header_block.get_int64()).to_iso();
+                                const auto timestamp = osmium::Timestamp(pbf_header_block.get_int64()).to_iso();
                                 header.set("osmosis_replication_timestamp", timestamp);
                                 header.set("timestamp", timestamp);
                             }

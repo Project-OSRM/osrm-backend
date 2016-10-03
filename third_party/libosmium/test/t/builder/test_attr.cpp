@@ -67,14 +67,14 @@ TEST_CASE("create node using builders") {
         osmium::builder::add_node(buffer, _id(5), _visible(true));
         osmium::builder::add_node(buffer, _id(6), _visible(false));
 
-        auto it = buffer.cbegin<osmium::Node>();
+        auto it = buffer.select<osmium::Node>().cbegin();
         REQUIRE_FALSE(it++->visible());
         REQUIRE_FALSE(it++->visible());
         REQUIRE(it++->visible());
         REQUIRE(it++->visible());
         REQUIRE(it++->visible());
         REQUIRE_FALSE(it++->visible());
-        REQUIRE(it == buffer.cend<osmium::Node>());
+        REQUIRE(it == buffer.select<osmium::Node>().cend());
     }
 
     SECTION("order of attributes doesn't matter") {

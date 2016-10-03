@@ -36,10 +36,15 @@ DEALINGS IN THE SOFTWARE.
 #include <memory>
 #include <utility>
 
-#include <osmium/fwd.hpp>
 #include <osmium/handler.hpp>
 
 namespace osmium {
+
+    class Node;
+    class Way;
+    class Relation;
+    class Area;
+    class Changeset;
 
     namespace handler {
 
@@ -143,7 +148,7 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
 
         class DynamicHandler : public osmium::handler::Handler {
 
-            typedef std::unique_ptr<osmium::handler::detail::HandlerWrapperBase> impl_ptr;
+            using impl_ptr = std::unique_ptr<osmium::handler::detail::HandlerWrapperBase>;
             impl_ptr m_impl;
 
         public:

@@ -52,7 +52,7 @@ namespace osmium {
 
                 static_assert(std::is_integral<TId>::value && std::is_unsigned<TId>::value, "TId template parameter for class Multimap must be unsigned integral type");
 
-                typedef typename std::pair<TId, TValue> element_type;
+                using element_type = typename std::pair<TId, TValue>;
 
                 Multimap(const Multimap&) = delete;
                 Multimap& operator=(const Multimap&) = delete;
@@ -65,10 +65,10 @@ namespace osmium {
             public:
 
                 /// The "key" type, usually osmium::unsigned_object_id_type.
-                typedef TId key_type;
+                using key_type = TId;
 
                 /// The "value" type, usually a Location or size_t.
-                typedef TValue value_type;
+                using value_type = TValue;
 
                 Multimap() = default;
 
@@ -77,7 +77,7 @@ namespace osmium {
                 /// Set the field with id to value.
                 virtual void set(const TId id, const TValue value) = 0;
 
-                typedef element_type* iterator;
+                using iterator = element_type*;
 
 //                virtual std::pair<iterator, iterator> get_all(const TId id) const = 0;
 

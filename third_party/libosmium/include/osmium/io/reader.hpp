@@ -62,10 +62,25 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/memory/buffer.hpp>
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/thread/util.hpp>
+#include <osmium/util/config.hpp>
 
 namespace osmium {
 
     namespace io {
+
+        namespace detail {
+
+            inline size_t get_input_queue_size() noexcept {
+                const size_t n = osmium::config::get_max_queue_size("INPUT", 20);
+                return n > 2 ? n : 2;
+            }
+
+            inline size_t get_osmdata_queue_size() noexcept {
+                const size_t n = osmium::config::get_max_queue_size("OSMDATA", 20);
+                return n > 2 ? n : 2;
+            }
+
+        } // namespace detail
 
         /**
          * This is the user-facing interface for reading OSM files. Instantiate
@@ -74,9 +89,6 @@ namespace osmium {
          * Buffer.
          */
         class Reader {
-
-            static constexpr size_t max_input_queue_size = 20; // XXX
-            static constexpr size_t max_osmdata_queue_size = 20; // XXX
 
             osmium::io::File m_file;
             osmium::osm_entity_bits::type m_read_which_entities;
@@ -104,6 +116,8 @@ namespace osmium {
 
             osmium::thread::thread_handler m_thread;
 
+            size_t m_file_size;
+
             // This function will run in a separate thread.
             static void parser_thread(const osmium::io::File& file,
                                       detail::future_string_queue_type& input_queue,
@@ -111,8 +125,8 @@ namespace osmium {
                                       std::promise<osmium::io::Header>&& header_promise,
                                       osmium::osm_entity_bits::type read_which_entities) {
                 std::promise<osmium::io::Header> promise = std::move(header_promise);
-                auto creator = detail::ParserFactory::instance().get_creator_function(file);
-                auto parser = creator(input_queue, osmdata_queue, promise, read_which_entities);
+                const auto creator = detail::ParserFactory::instance().get_creator_function(file);
+                const auto parser = creator(input_queue, osmdata_queue, promise, read_which_entities);
                 parser->parse();
             }
 
@@ -133,7 +147,7 @@ namespace osmium {
                 if (pipe(pipefd) < 0) {
                     throw std::system_error(errno, std::system_category(), "opening pipe failed");
                 }
-                pid_t pid = fork();
+                const pid_t pid = fork();
                 if (pid < 0) {
                     throw std::system_error(errno, std::system_category(), "fork failed");
                 }
@@ -202,16 +216,17 @@ namespace osmium {
                 m_read_which_entities(read_which_entities),
                 m_status(status::okay),
                 m_childpid(0),
-                m_input_queue(max_input_queue_size, "raw_input"),
+                m_input_queue(detail::get_input_queue_size(), "raw_input"),
                 m_decompressor(m_file.buffer() ?
                     osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), m_file.buffer(), m_file.buffer_size()) :
                     osmium::io::CompressionFactory::instance().create_decompressor(file.compression(), open_input_file_or_url(m_file.filename(), &m_childpid))),
                 m_read_thread_manager(*m_decompressor, m_input_queue),
-                m_osmdata_queue(max_osmdata_queue_size, "parser_results"),
+                m_osmdata_queue(detail::get_osmdata_queue_size(), "parser_results"),
                 m_osmdata_queue_wrapper(m_osmdata_queue),
                 m_header_future(),
                 m_header(),
-                m_thread() {
+                m_thread(),
+                m_file_size(m_decompressor->file_size()) {
                 std::promise<osmium::io::Header> header_promise;
                 m_header_future = header_promise.get_future();
                 m_thread = osmium::thread::thread_handler{parser_thread, std::ref(m_file), std::ref(m_input_queue), std::ref(m_osmdata_queue), std::move(header_promise), read_which_entities};
@@ -263,7 +278,7 @@ namespace osmium {
 #ifndef _WIN32
                 if (m_childpid) {
                     int status;
-                    pid_t pid = ::waitpid(m_childpid, &status, 0);
+                    const pid_t pid = ::waitpid(m_childpid, &status, 0);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
                     if (pid < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
@@ -348,6 +363,32 @@ namespace osmium {
              */
             bool eof() const {
                 return m_status == status::eof || m_status == status::closed;
+            }
+
+            /**
+             * Get the size of the input file. Returns 0 if the file size
+             * is not available (for instance when reading from stdin).
+             */
+            size_t file_size() const noexcept {
+                return m_file_size;
+            }
+
+            /**
+             * Returns the current offset into the input file. Returns 0 if
+             * the offset is not available (for instance when reading from
+             * stdin).
+             *
+             * The offset can be used together with the result of file_size()
+             * to estimate how much of the file has been read. Note that due
+             * to buffering inside Osmium, this value will be larger than
+             * the amount of data actually available to the application.
+             *
+             * Do not call this function too often, certainly not for every
+             * object you are reading. Depending on the file type it might
+             * do an expensive system call.
+             */
+            size_t offset() const noexcept {
+                return m_decompressor->offset();
             }
 
         }; // class Reader

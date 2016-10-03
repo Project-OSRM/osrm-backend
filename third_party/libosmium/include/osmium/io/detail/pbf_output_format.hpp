@@ -41,30 +41,34 @@ DEALINGS IN THE SOFTWARE.
 #include <iterator>
 #include <memory>
 #include <string>
-#include <time.h>
 #include <utility>
 
 #include <protozero/pbf_builder.hpp>
+#include <protozero/pbf_writer.hpp>
+#include <protozero/types.hpp>
 
 #include <osmium/handler.hpp>
 #include <osmium/io/detail/output_format.hpp>
 #include <osmium/io/detail/pbf.hpp> // IWYU pragma: export
 #include <osmium/io/detail/protobuf_tags.hpp>
+#include <osmium/io/detail/queue_util.hpp>
 #include <osmium/io/detail/string_table.hpp>
 #include <osmium/io/detail/zlib.hpp>
 #include <osmium/io/file.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
-#include <osmium/memory/collection.hpp>
+#include <osmium/memory/item_iterator.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node.hpp>
+#include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/tag.hpp>
 #include <osmium/osm/timestamp.hpp>
+#include <osmium/osm/types.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/thread/pool.hpp>
 #include <osmium/util/cast.hpp>
@@ -100,6 +104,9 @@ namespace osmium {
 
                 /// Should the visible flag be added to all OSM objects?
                 bool add_visible_flag;
+
+                /// Should node locations be added to ways?
+                bool locations_on_ways;
 
             };
 
@@ -483,6 +490,7 @@ namespace osmium {
                     m_options.add_metadata = file.is_not_false("pbf_add_metadata") && file.is_not_false("add_metadata");
                     m_options.add_historical_information_flag = file.has_multiple_object_versions();
                     m_options.add_visible_flag = file.has_multiple_object_versions();
+                    m_options.locations_on_ways = file.is_true("locations_on_ways");
                 }
 
                 PBFOutputFormat(const PBFOutputFormat&) = delete;
@@ -514,20 +522,24 @@ namespace osmium {
                         pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_required_features, "HistoricalInformation");
                     }
 
+                    if (m_options.locations_on_ways) {
+                        pbf_header_block.add_string(OSMFormat::HeaderBlock::repeated_string_optional_features, "LocationsOnWays");
+                    }
+
                     pbf_header_block.add_string(OSMFormat::HeaderBlock::optional_string_writingprogram, header.get("generator"));
 
-                    std::string osmosis_replication_timestamp = header.get("osmosis_replication_timestamp");
+                    const std::string osmosis_replication_timestamp = header.get("osmosis_replication_timestamp");
                     if (!osmosis_replication_timestamp.empty()) {
                         osmium::Timestamp ts(osmosis_replication_timestamp.c_str());
                         pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_timestamp, uint32_t(ts));
                     }
 
-                    std::string osmosis_replication_sequence_number = header.get("osmosis_replication_sequence_number");
+                    const std::string osmosis_replication_sequence_number = header.get("osmosis_replication_sequence_number");
                     if (!osmosis_replication_sequence_number.empty()) {
                         pbf_header_block.add_int64(OSMFormat::HeaderBlock::optional_int64_osmosis_replication_sequence_number, std::atoll(osmosis_replication_sequence_number.c_str()));
                     }
 
-                    std::string osmosis_replication_base_url = header.get("osmosis_replication_base_url");
+                    const std::string osmosis_replication_base_url = header.get("osmosis_replication_base_url");
                     if (!osmosis_replication_base_url.empty()) {
                         pbf_header_block.add_string(OSMFormat::HeaderBlock::optional_string_osmosis_replication_base_url, osmosis_replication_base_url);
                     }
@@ -571,15 +583,30 @@ namespace osmium {
                     pbf_way.add_int64(OSMFormat::Way::required_int64_id, way.id());
                     add_meta(way, pbf_way);
 
-                    static auto map_node_ref = [](osmium::NodeRefList::const_iterator node_ref) noexcept -> osmium::object_id_type {
-                        return node_ref->ref();
-                    };
-                    typedef osmium::util::DeltaEncodeIterator<osmium::NodeRefList::const_iterator, decltype(map_node_ref), osmium::object_id_type> it_type;
+                    {
+                        osmium::util::DeltaEncode<object_id_type, int64_t> delta_id;
+                        protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_refs)};
+                        for (const auto& node_ref : way.nodes()) {
+                            field.add_element(delta_id.update(node_ref.ref()));
+                        }
+                    }
 
-                    const auto& nodes = way.nodes();
-                    it_type first { nodes.cbegin(), nodes.cend(), map_node_ref };
-                    it_type last { nodes.cend(), nodes.cend(), map_node_ref };
-                    pbf_way.add_packed_sint64(OSMFormat::Way::packed_sint64_refs, first, last);
+                    if (m_options.locations_on_ways) {
+                        {
+                            osmium::util::DeltaEncode<int64_t, int64_t> delta_id;
+                            protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_lon)};
+                            for (const auto& node_ref : way.nodes()) {
+                                field.add_element(delta_id.update(lonlat2int(node_ref.location().lon_without_check())));
+                            }
+                        }
+                        {
+                            osmium::util::DeltaEncode<int64_t, int64_t> delta_id;
+                            protozero::packed_field_sint64 field{pbf_way, protozero::pbf_tag_type(OSMFormat::Way::packed_sint64_lat)};
+                            for (const auto& node_ref : way.nodes()) {
+                                field.add_element(delta_id.update(lonlat2int(node_ref.location().lat_without_check())));
+                            }
+                        }
+                    }
                 }
 
                 void relation(const osmium::Relation& relation) {
@@ -596,14 +623,13 @@ namespace osmium {
                         }
                     }
 
-                    static auto map_member_ref = [](osmium::RelationMemberList::const_iterator member) noexcept -> osmium::object_id_type {
-                        return member->ref();
-                    };
-                    typedef osmium::util::DeltaEncodeIterator<osmium::RelationMemberList::const_iterator, decltype(map_member_ref), osmium::object_id_type> it_type;
-                    const auto& members = relation.members();
-                    it_type first { members.cbegin(), members.cend(), map_member_ref };
-                    it_type last { members.cend(), members.cend(), map_member_ref };
-                    pbf_relation.add_packed_sint64(OSMFormat::Relation::packed_sint64_memids, first, last);
+                    {
+                        osmium::util::DeltaEncode<object_id_type, int64_t> delta_id;
+                        protozero::packed_field_sint64 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_sint64_memids)};
+                        for (const auto& member : relation.members()) {
+                            field.add_element(delta_id.update(member.ref()));
+                        }
+                    }
 
                     {
                         protozero::packed_field_int32 field{pbf_relation, protozero::pbf_tag_type(OSMFormat::Relation::packed_MemberType_types)};

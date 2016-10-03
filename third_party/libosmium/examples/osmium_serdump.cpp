@@ -69,9 +69,9 @@ int main(int argc, char* argv[]) {
         switch (c) {
             case 'h':
                 print_help();
-                exit(0);
+                std::exit(0);
             default:
-                exit(2);
+                std::exit(2);
         }
     }
 
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 
     if (remaining_args != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE DIR\n";
-        exit(2);
+        std::exit(2);
     }
 
     std::string dir(argv[optind+1]);
@@ -90,14 +90,14 @@ int main(int argc, char* argv[]) {
 #endif
     if (result == -1 && errno != EEXIST) {
         std::cerr << "Problem creating directory '" << dir << "': " << strerror(errno) << "\n";
-        exit(2);
+        std::exit(2);
     }
 
     std::string data_file(dir + "/data.osm.ser");
     int data_fd = ::open(data_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (data_fd < 0) {
         std::cerr << "Can't open data file '" << data_file << "': " << strerror(errno) << "\n";
-        exit(2);
+        std::exit(2);
     }
 
     offset_index_type node_index;
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
         int fd = ::open(index_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
             std::cerr << "Can't open nodes index file '" << index_file << "': " << strerror(errno) << "\n";
-            exit(2);
+            std::exit(2);
         }
         node_index.dump_as_list(fd);
         close(fd);
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
         int fd = ::open(index_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
             std::cerr << "Can't open ways index file '" << index_file << "': " << strerror(errno) << "\n";
-            exit(2);
+            std::exit(2);
         }
         way_index.dump_as_list(fd);
         close(fd);
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
         int fd = ::open(index_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
             std::cerr << "Can't open relations index file '" << index_file << "': " << strerror(errno) << "\n";
-            exit(2);
+            std::exit(2);
         }
         relation_index.dump_as_list(fd);
         close(fd);
@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
         int fd = ::open(index_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
             std::cerr << "Can't open node->way map file '" << index_file << "': " << strerror(errno) << "\n";
-            exit(2);
+            std::exit(2);
         }
         map_node2way.dump_as_list(fd);
         close(fd);
@@ -173,7 +173,7 @@ int main(int argc, char* argv[]) {
         int fd = ::open(index_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
             std::cerr << "Can't open node->rel map file '" << index_file << "': " << strerror(errno) << "\n";
-            exit(2);
+            std::exit(2);
         }
         map_node2relation.dump_as_list(fd);
         close(fd);
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
         int fd = ::open(index_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
             std::cerr << "Can't open way->rel map file '" << index_file << "': " << strerror(errno) << "\n";
-            exit(2);
+            std::exit(2);
         }
         map_way2relation.dump_as_list(fd);
         close(fd);
@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
         int fd = ::open(index_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
             std::cerr << "Can't open rel->rel map file '" << index_file << "': " << strerror(errno) << "\n";
-            exit(2);
+            std::exit(2);
         }
         map_relation2relation.dump_as_list(fd);
         close(fd);

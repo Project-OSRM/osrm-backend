@@ -33,56 +33,82 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/fwd.hpp>
-
 namespace osmium {
+
+    class Area;
+    class Changeset;
+    class ChangesetDiscussion;
+    class InnerRing;
+    class Node;
+    class OSMObject;
+    class OuterRing;
+    class Relation;
+    class RelationMemberList;
+    class TagList;
+    class Way;
+    class WayNodeList;
 
     /**
      * @brief Osmium handlers provide callbacks for OSM objects
      */
     namespace handler {
 
+        /**
+         * Handler base class. Never used directly. Derive your own class from
+         * this class and "overwrite" the functions. Your functions must be
+         * named the same, but don't have to be const or noexcept or take
+         * their argument as const.
+         *
+         * Usually you will overwrite the node(), way(), and relation()
+         * functions. If your program supports multipolygons, also the area()
+         * function. You can also use the osm_object() function which is
+         * called for all OSM objects (nodes, ways, relations, and areas)
+         * right before each of their specific callbacks is called.
+         *
+         * If you are working with changesets, implement the changeset()
+         * function.
+         */
         class Handler {
 
         public:
 
-            void osm_object(const osmium::OSMObject&) const {
+            void osm_object(const osmium::OSMObject&) const noexcept {
             }
 
-            void node(const osmium::Node&) const {
+            void node(const osmium::Node&) const noexcept {
             }
 
-            void way(const osmium::Way&) const {
+            void way(const osmium::Way&) const noexcept {
             }
 
-            void relation(const osmium::Relation&) const {
+            void relation(const osmium::Relation&) const noexcept {
             }
 
-            void area(const osmium::Area&) const {
+            void area(const osmium::Area&) const noexcept {
             }
 
-            void changeset(const osmium::Changeset&) const {
+            void changeset(const osmium::Changeset&) const noexcept {
             }
 
-            void tag_list(const osmium::TagList&) const {
+            void tag_list(const osmium::TagList&) const noexcept {
             }
 
-            void way_node_list(const osmium::WayNodeList&) const {
+            void way_node_list(const osmium::WayNodeList&) const noexcept {
             }
 
-            void relation_member_list(const osmium::RelationMemberList&) const {
+            void relation_member_list(const osmium::RelationMemberList&) const noexcept {
             }
 
-            void outer_ring(const osmium::OuterRing&) const {
+            void outer_ring(const osmium::OuterRing&) const noexcept {
             }
 
-            void inner_ring(const osmium::InnerRing&) const {
+            void inner_ring(const osmium::InnerRing&) const noexcept {
             }
 
-            void changeset_discussion(const osmium::ChangesetDiscussion&) const {
+            void changeset_discussion(const osmium::ChangesetDiscussion&) const noexcept {
             }
 
-            void flush() const {
+            void flush() const noexcept {
             }
 
         }; // class Handler

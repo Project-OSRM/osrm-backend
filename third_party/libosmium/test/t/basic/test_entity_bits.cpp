@@ -21,6 +21,7 @@ TEST_CASE("entity_bits") {
         REQUIRE(! (entities & osmium::osm_entity_bits::way));
         REQUIRE(entities == osmium::osm_entity_bits::node);
 
+        REQUIRE(osmium::osm_entity_bits::nothing   == osmium::osm_entity_bits::from_item_type(osmium::item_type::undefined));
         REQUIRE(osmium::osm_entity_bits::node      == osmium::osm_entity_bits::from_item_type(osmium::item_type::node));
         REQUIRE(osmium::osm_entity_bits::way       == osmium::osm_entity_bits::from_item_type(osmium::item_type::way));
         REQUIRE(osmium::osm_entity_bits::relation  == osmium::osm_entity_bits::from_item_type(osmium::item_type::relation));

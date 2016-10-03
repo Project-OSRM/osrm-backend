@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <osmium/geom/geos.hpp>
+#include <osmium/geom/mercator_projection.hpp>
 
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"
@@ -11,16 +12,16 @@ TEST_CASE("GEOS geometry factory - create point") {
     std::unique_ptr<geos::geom::Point> point {factory.create_point(osmium::Location(3.2, 4.2))};
     REQUIRE(3.2 == point->getX());
     REQUIRE(4.2 == point->getY());
-    REQUIRE(-1 == point->getSRID());
+    REQUIRE(4326 == point->getSRID());
 }
 
-TEST_CASE("GEOS geometry factory - create point with non-default srid") {
-    osmium::geom::GEOSFactory<> factory(4326);
+TEST_CASE("GEOS geometry factory - create point in web mercator") {
+    osmium::geom::GEOSFactory<osmium::geom::MercatorProjection> factory;
 
     std::unique_ptr<geos::geom::Point> point {factory.create_point(osmium::Location(3.2, 4.2))};
-    REQUIRE(3.2 == point->getX());
-    REQUIRE(4.2 == point->getY());
-    REQUIRE(4326 == point->getSRID());
+    REQUIRE(Approx(356222.3705384755l) == point->getX());
+    REQUIRE(Approx(467961.143605213l) == point->getY());
+    REQUIRE(3857 == point->getSRID());
 }
 
 TEST_CASE("GEOS geometry factory - create point with externally created GEOS factory") {
@@ -89,6 +90,7 @@ TEST_CASE("GEOS geometry factory - create area with one outer and no inner rings
     REQUIRE(1 == mp->getNumGeometries());
 
     const geos::geom::Polygon* p0 = dynamic_cast<const geos::geom::Polygon*>(mp->getGeometryN(0));
+    REQUIRE(p0);
     REQUIRE(0 == p0->getNumInteriorRing());
 
     const geos::geom::LineString* l0e = p0->getExteriorRing();
@@ -108,6 +110,7 @@ TEST_CASE("GEOS geometry factory - create area with one outer and one inner ring
     REQUIRE(1 == mp->getNumGeometries());
 
     const geos::geom::Polygon* p0 = dynamic_cast<const geos::geom::Polygon*>(mp->getGeometryN(0));
+    REQUIRE(p0);
     REQUIRE(1 == p0->getNumInteriorRing());
 
     const geos::geom::LineString* l0e = p0->getExteriorRing();
@@ -127,12 +130,14 @@ TEST_CASE("GEOS geometry factory - create area with two outer and two inner ring
     REQUIRE(2 == mp->getNumGeometries());
 
     const geos::geom::Polygon* p0 = dynamic_cast<const geos::geom::Polygon*>(mp->getGeometryN(0));
+    REQUIRE(p0);
     REQUIRE(2 == p0->getNumInteriorRing());
 
     const geos::geom::LineString* l0e = p0->getExteriorRing();
     REQUIRE(5 == l0e->getNumPoints());
 
     const geos::geom::Polygon* p1 = dynamic_cast<const geos::geom::Polygon*>(mp->getGeometryN(1));
+    REQUIRE(p1);
     REQUIRE(0 == p1->getNumInteriorRing());
 
     const geos::geom::LineString* l1e = p1->getExteriorRing();

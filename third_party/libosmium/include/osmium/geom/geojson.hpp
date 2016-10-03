@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cassert>
+#include <cstddef>
 #include <string>
 #include <utility>
 
@@ -53,13 +54,13 @@ namespace osmium {
 
             public:
 
-                typedef std::string point_type;
-                typedef std::string linestring_type;
-                typedef std::string polygon_type;
-                typedef std::string multipolygon_type;
-                typedef std::string ring_type;
+                using point_type        = std::string;
+                using linestring_type   = std::string;
+                using polygon_type      = std::string;
+                using multipolygon_type = std::string;
+                using ring_type         = std::string;
 
-                GeoJSONFactoryImpl(int precision = 7) :
+                GeoJSONFactoryImpl(int /* srid */, int precision = 7) :
                     m_precision(precision) {
                 }
 

@@ -34,9 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
-#include <atomic>
 #include <cstddef>
-#include <cstdlib>
 #include <future>
 #include <thread>
 #include <type_traits>
@@ -66,7 +64,7 @@ namespace osmium {
                 }
 
                 if (num_threads < 0) {
-                    num_threads += hardware_concurrency;
+                    num_threads += int(hardware_concurrency);
                 }
 
                 if (num_threads < 1) {
@@ -76,6 +74,11 @@ namespace osmium {
                 }
 
                 return num_threads;
+            }
+
+            inline size_t get_work_queue_size() noexcept {
+                const size_t n = osmium::config::get_max_queue_size("WORK", 10);
+                return n > 2 ? n : 2;
             }
 
         } // namespace detail
@@ -118,13 +121,11 @@ namespace osmium {
                 osmium::thread::set_thread_name("_osmium_worker");
                 while (true) {
                     function_wrapper task;
-                    m_work_queue.wait_and_pop_with_timeout(task);
-                    if (task) {
-                        if (task()) {
-                            // The called tasks returns true only when the
-                            // worker thread should shut down.
-                            return;
-                        }
+                    m_work_queue.wait_and_pop(task);
+                    if (task && task()) {
+                        // The called tasks returns true only when the
+                        // worker thread should shut down.
+                        return;
                     }
                 }
             }
@@ -160,10 +161,9 @@ namespace osmium {
         public:
 
             static constexpr int default_num_threads = 0;
-            static constexpr size_t max_work_queue_size = 10;
 
             static Pool& instance() {
-                static Pool pool(default_num_threads, max_work_queue_size);
+                static Pool pool(default_num_threads, detail::get_work_queue_size());
                 return pool;
             }
 
@@ -176,7 +176,6 @@ namespace osmium {
 
             ~Pool() {
                 shutdown_all_workers();
-                m_work_queue.shutdown();
             }
 
             size_t queue_size() const {
@@ -190,7 +189,7 @@ namespace osmium {
             template <typename TFunction>
             std::future<typename std::result_of<TFunction()>::type> submit(TFunction&& func) {
 
-                typedef typename std::result_of<TFunction()>::type result_type;
+                using result_type = typename std::result_of<TFunction()>::type;
 
                 std::packaged_task<result_type()> task(std::forward<TFunction>(func));
                 std::future<result_type> future_result(task.get_future());

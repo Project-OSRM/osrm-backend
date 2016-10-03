@@ -42,9 +42,9 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <utility>
 
+#include <protozero/exception.hpp>
 #include <protozero/varint.hpp>
 
-#include <osmium/builder/builder.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/detail/input_format.hpp>
 #include <osmium/io/detail/queue_util.hpp>
@@ -52,18 +52,25 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
 #include <osmium/memory/buffer.hpp>
-#include <osmium/osm.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/entity_bits.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
+#include <osmium/osm/node.hpp>
 #include <osmium/osm/object.hpp>
+#include <osmium/osm/relation.hpp>
+#include <osmium/osm/timestamp.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/osm/way.hpp>
 #include <osmium/thread/util.hpp>
 #include <osmium/util/cast.hpp>
 #include <osmium/util/delta.hpp>
 
 namespace osmium {
+
+    namespace builder {
+        class Builder;
+    } // namespace builder
 
     /**
      * Exception thrown when the o5m deocder failed. The exception contains
@@ -529,7 +536,7 @@ namespace osmium {
                             uint64_t length = 0;
                             try {
                                 length = protozero::decode_varint(&m_data, m_end);
-                            } catch (protozero::end_of_buffer_exception&) {
+                            } catch (const protozero::end_of_buffer_exception&) {
                                 throw o5m_error("premature end of file");
                             }
 

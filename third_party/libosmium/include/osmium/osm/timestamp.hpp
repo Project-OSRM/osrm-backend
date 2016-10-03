@@ -40,11 +40,70 @@ DEALINGS IN THE SOFTWARE.
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include <osmium/util/compatibility.hpp>
 #include <osmium/util/minmax.hpp> // IWYU pragma: keep
 
 namespace osmium {
+
+    namespace detail {
+
+        inline time_t parse_timestamp(const char* str) {
+            static const int mon_lengths[] = {
+                31, 29, 31, 30, 31, 30,
+                31, 31, 30, 31, 30, 31
+            };
+            if (str[ 0] >= '0' && str[ 0] <= '9' &&
+                str[ 1] >= '0' && str[ 1] <= '9' &&
+                str[ 2] >= '0' && str[ 2] <= '9' &&
+                str[ 3] >= '0' && str[ 3] <= '9' &&
+                str[ 4] == '-' &&
+                str[ 5] >= '0' && str[ 5] <= '9' &&
+                str[ 6] >= '0' && str[ 6] <= '9' &&
+                str[ 7] == '-' &&
+                str[ 8] >= '0' && str[ 8] <= '9' &&
+                str[ 9] >= '0' && str[ 9] <= '9' &&
+                str[10] == 'T' &&
+                str[11] >= '0' && str[11] <= '9' &&
+                str[12] >= '0' && str[12] <= '9' &&
+                str[13] == ':' &&
+                str[14] >= '0' && str[14] <= '9' &&
+                str[15] >= '0' && str[15] <= '9' &&
+                str[16] == ':' &&
+                str[17] >= '0' && str[17] <= '9' &&
+                str[18] >= '0' && str[18] <= '9' &&
+                str[19] == 'Z') {
+                struct tm tm;
+                tm.tm_year = (str[ 0] - '0') * 1000 +
+                             (str[ 1] - '0') *  100 +
+                             (str[ 2] - '0') *   10 +
+                             (str[ 3] - '0')        - 1900;
+                tm.tm_mon  = (str[ 5] - '0') * 10 + (str[ 6] - '0') - 1;
+                tm.tm_mday = (str[ 8] - '0') * 10 + (str[ 9] - '0');
+                tm.tm_hour = (str[11] - '0') * 10 + (str[12] - '0');
+                tm.tm_min  = (str[14] - '0') * 10 + (str[15] - '0');
+                tm.tm_sec  = (str[17] - '0') * 10 + (str[18] - '0');
+                tm.tm_wday = 0;
+                tm.tm_yday = 0;
+                tm.tm_isdst = 0;
+                if (tm.tm_year >= 0 &&
+                    tm.tm_mon  >= 0 && tm.tm_mon  <= 11 &&
+                    tm.tm_mday >= 1 && tm.tm_mday <= mon_lengths[tm.tm_mon] &&
+                    tm.tm_hour >= 0 && tm.tm_hour <= 23 &&
+                    tm.tm_min  >= 0 && tm.tm_min  <= 59 &&
+                    tm.tm_sec  >= 0 && tm.tm_sec  <= 60) {
+#ifndef _WIN32
+                    return timegm(&tm);
+#else
+                    return _mkgmtime(&tm);
+#endif
+                }
+            }
+            throw std::invalid_argument{"can not parse timestamp"};
+        }
+
+    } // namespace detail
 
     /**
      * A timestamp. Internal representation is an unsigned 32bit integer
@@ -56,7 +115,7 @@ namespace osmium {
     class Timestamp {
 
         // length of ISO timestamp string yyyy-mm-ddThh:mm:ssZ\0
-        static constexpr int timestamp_length = 20 + 1;
+        static constexpr const int timestamp_length = 20 + 1;
 
         // The timestamp format for OSM timestamps in strftime(3) format.
         // This is the ISO-Format "yyyy-mm-ddThh:mm:ssZ".
@@ -97,27 +156,7 @@ namespace osmium {
          * @throws std::invalid_argument if the timestamp can not be parsed.
          */
         explicit Timestamp(const char* timestamp) {
-#ifndef _WIN32
-            struct tm tm {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            };
-            if (strptime(timestamp, timestamp_format(), &tm) == nullptr) {
-                throw std::invalid_argument("can't parse timestamp");
-            }
-            m_timestamp = static_cast<uint32_t>(timegm(&tm));
-#else
-            struct tm tm;
-            int n = sscanf(timestamp, "%4d-%2d-%2dT%2d:%2d:%2dZ", &tm.tm_year, &tm.tm_mon, &tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
-            if (n != 6) {
-                throw std::invalid_argument("can't parse timestamp");
-            }
-            tm.tm_year -= 1900;
-            tm.tm_mon--;
-            tm.tm_wday = 0;
-            tm.tm_yday = 0;
-            tm.tm_isdst = 0;
-            m_timestamp = static_cast<uint32_t>(_mkgmtime(&tm));
-#endif
+            m_timestamp = static_cast<uint32_t>(detail::parse_timestamp(timestamp));
         }
 
         /**

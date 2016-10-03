@@ -38,11 +38,11 @@ DEALINGS IN THE SOFTWARE.
 #include <future>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include <osmium/io/detail/queue_util.hpp>
+#include <osmium/io/error.hpp>
 #include <osmium/io/file.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/header.hpp>
@@ -154,18 +154,14 @@ namespace osmium {
 
             public:
 
-                typedef std::function<
-                            std::unique_ptr<Parser>(
-                                future_string_queue_type&,
-                                future_buffer_queue_type&,
-                                std::promise<osmium::io::Header>& header_promise,
-                                osmium::osm_entity_bits::type read_which_entities
-                            )
-                        > create_parser_type;
+                using create_parser_type = std::function<std::unique_ptr<Parser>(future_string_queue_type&,
+                                                                                 future_buffer_queue_type&,
+                                                                                 std::promise<osmium::io::Header>& header_promise,
+                                                                                 osmium::osm_entity_bits::type read_which_entities)>;
 
             private:
 
-                typedef std::map<osmium::io::file_format, create_parser_type> map_type;
+                using map_type = std::map<osmium::io::file_format, create_parser_type>;
 
                 map_type m_callbacks;
 

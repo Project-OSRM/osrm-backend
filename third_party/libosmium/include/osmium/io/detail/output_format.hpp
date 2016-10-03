@@ -33,16 +33,16 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
 #include <osmium/handler.hpp>
 #include <osmium/io/detail/queue_util.hpp>
-#include <osmium/io/detail/string_util.hpp>
+#include <osmium/io/error.hpp>
 #include <osmium/io/file.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -70,9 +70,28 @@ namespace osmium {
                     m_out(std::make_shared<std::string>()) {
                 }
 
-                template <typename... TArgs>
-                void output_formatted(const char* format, TArgs&&... args) {
-                    append_printf_formatted_string(*m_out, format, std::forward<TArgs>(args)...);
+                // Simple function to convert integer to string. This is much
+                // faster than using sprintf, but could be further optimized.
+                // See https://github.com/miloyip/itoa-benchmark .
+                void output_int(int64_t value) {
+                    if (value < 0) {
+                        *m_out += '-';
+                        value = -value;
+                    }
+
+                    char temp[20];
+                    char *t = temp;
+                    do {
+                        *t++ = char(value % 10) + '0';
+                        value /= 10;
+                    } while (value > 0);
+
+                    const auto old_size = m_out->size();
+                    m_out->resize(old_size + (t - temp));
+                    char* data = &(*m_out)[old_size];
+                    do {
+                        *data++ += *--t;
+                    } while (t != temp);
                 }
 
             }; // class OutputBlock;
@@ -133,11 +152,11 @@ namespace osmium {
 
             public:
 
-                typedef std::function<osmium::io::detail::OutputFormat*(const osmium::io::File&, future_string_queue_type&)> create_output_type;
+                using create_output_type = std::function<osmium::io::detail::OutputFormat*(const osmium::io::File&, future_string_queue_type&)>;
 
             private:
 
-                typedef std::map<osmium::io::file_format, create_output_type> map_type;
+                using map_type = std::map<osmium::io::file_format, create_output_type>;
 
                 map_type m_callbacks;
 

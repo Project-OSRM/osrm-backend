@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 #ifdef _MSC_VER
 # define strcasecmp _stricmp
@@ -44,7 +45,7 @@ namespace osmium {
 
     namespace config {
 
-        inline int get_pool_threads() {
+        inline int get_pool_threads() noexcept {
             const char* env = getenv("OSMIUM_POOL_THREADS");
             if (env) {
                 return std::atoi(env);
@@ -52,7 +53,7 @@ namespace osmium {
             return 0;
         }
 
-        inline bool use_pool_threads_for_pbf_parsing() {
+        inline bool use_pool_threads_for_pbf_parsing() noexcept {
             const char* env = getenv("OSMIUM_USE_POOL_THREADS_FOR_PBF_PARSING");
             if (env) {
                 if (!strcasecmp(env, "off") ||
@@ -63,6 +64,18 @@ namespace osmium {
                 }
             }
             return true;
+        }
+
+        inline size_t get_max_queue_size(const char* queue_name, size_t default_value) noexcept {
+            std::string name {"OSMIUM_MAX_"};
+            name += queue_name;
+            name += "_QUEUE_SIZE";
+            const char* env = getenv(name.c_str());
+            if (env) {
+                auto value = std::atoi(env);
+                return value == 0 ? default_value : value;
+            }
+            return default_value;
         }
 
     } // namespace config
