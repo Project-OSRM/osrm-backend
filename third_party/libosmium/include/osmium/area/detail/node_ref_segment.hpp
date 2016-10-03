@@ -34,11 +34,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
-#include <cstring>
 #include <iosfwd>
 #include <utility>
 
+#include <osmium/area/detail/vector.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node_ref.hpp>
 
@@ -53,108 +54,178 @@ namespace osmium {
          */
         namespace detail {
 
+            class ProtoRing;
+
+            enum class role_type : uint8_t {
+                unknown = 0,
+                outer   = 1,
+                inner   = 2,
+                empty   = 3
+            };
+
             /**
-             * This helper class for the Assembler class models a segment.
-             * Segments are the connection between
-             * two nodes and they all have their smaller coordinate at the
-             * beginning of the segment. Smaller, in this case, means smaller x
-             * coordinate, and if they are the same smaller y coordinate.
+             * This helper class for the Assembler class models a segment,
+             * the connection between two nodes.
+             *
+             * Internally segments have their smaller coordinate at the
+             * beginning of the segment. Smaller, in this case, means smaller
+             * x coordinate, and, if they are the same, smaller y coordinate.
              */
             class NodeRefSegment {
 
+                // First node in order described above.
                 osmium::NodeRef m_first;
+
+                // Second node in order described above.
                 osmium::NodeRef m_second;
 
-                /// Role of the member this segment was from.
-                const char* m_role;
-
-                /// Way this segment was from.
+                // Way this segment was from.
                 const osmium::Way* m_way;
+
+                // The ring this segment is part of. Initially nullptr, this
+                // will be filled in once we know which ring the segment is in.
+                ProtoRing* m_ring;
+
+                // The role of this segment from the member role.
+                role_type m_role;
+
+                // Nodes have to be reversed to get the intended order.
+                bool m_reverse = false;
+
+                // We found the right direction for this segment in the ring.
+                // (This depends on whether it is an inner or outer ring.)
+                bool m_direction_done = false;
 
             public:
 
-                void swap_locations() {
-                    using std::swap;
-                    swap(m_first, m_second);
-                }
-
-                explicit NodeRefSegment() noexcept :
+                NodeRefSegment() noexcept :
                     m_first(),
                     m_second(),
-                    m_role(nullptr),
-                    m_way(nullptr) {
+                    m_way(nullptr),
+                    m_ring(nullptr),
+                    m_role(role_type::unknown) {
                 }
 
-                explicit NodeRefSegment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2, const char* role, const osmium::Way* way) :
+                NodeRefSegment(const osmium::NodeRef& nr1, const osmium::NodeRef& nr2, role_type role = role_type::unknown, const osmium::Way* way = nullptr) noexcept :
                     m_first(nr1),
                     m_second(nr2),
-                    m_role(role),
-                    m_way(way) {
+                    m_way(way),
+                    m_ring(nullptr),
+                    m_role(role) {
                     if (nr2.location() < nr1.location()) {
-                        swap_locations();
+                        using std::swap;
+                        swap(m_first, m_second);
                     }
                 }
 
-                NodeRefSegment(const NodeRefSegment&) = default;
-                NodeRefSegment(NodeRefSegment&&) = default;
+                /**
+                 * The ring this segment is a part of. nullptr if we don't
+                 * have the ring yet.
+                 */
+                ProtoRing* ring() const noexcept {
+                    return m_ring;
+                }
 
-                NodeRefSegment& operator=(const NodeRefSegment&) = default;
-                NodeRefSegment& operator=(NodeRefSegment&&) = default;
+                /**
+                 * Returns true if the segment has already been placed in a
+                 * ring.
+                 */
+                bool is_done() const noexcept {
+                    return m_ring != nullptr;
+                }
 
-                ~NodeRefSegment() = default;
+                void set_ring(ProtoRing* ring) noexcept {
+                    assert(ring);
+                    m_ring = ring;
+                }
 
-                /// Return first NodeRef of Segment according to sorting order (bottom left to top right).
+                bool is_reverse() const noexcept {
+                    return m_reverse;
+                }
+
+                void reverse() noexcept {
+                    m_reverse = !m_reverse;
+                }
+
+                bool is_direction_done() const noexcept {
+                    return m_direction_done;
+                }
+
+                void mark_direction_done() noexcept {
+                    m_direction_done = true;
+                }
+
+                void mark_direction_not_done() noexcept {
+                    m_direction_done = false;
+                }
+
+                /**
+                 * Return first NodeRef of Segment according to sorting
+                 * order (bottom left to top right).
+                 */
                 const osmium::NodeRef& first() const noexcept {
                     return m_first;
                 }
 
-                /// Return second NodeRef of Segment according to sorting order (bottom left to top right).
+                /**
+                 * Return second NodeRef of Segment according to sorting
+                 * order (bottom left to top right).
+                 */
                 const osmium::NodeRef& second() const noexcept {
                     return m_second;
                 }
 
-                bool to_left_of(const osmium::Location& location) const {
-    //                std::cerr << "segment " << first() << "--" << second() << " to_left_of(" << location << "\n";
+                /**
+                 * Return real first NodeRef of Segment.
+                 */
+                const osmium::NodeRef& start() const noexcept {
+                    return m_reverse ? m_second : m_first;
+                }
 
-                    if (first().location() == location || second().location() == location) {
-                        return false;
-                    }
-
-                    const std::pair<osmium::Location, osmium::Location> mm = std::minmax(first().location(), second().location(), [](const osmium::Location a, const osmium::Location b) {
-                        return a.y() < b.y();
-                    });
-
-                    if (mm.first.y() >= location.y() || mm.second.y() < location.y() || first().location().x() > location.x()) {
-    //                    std::cerr << "  false\n";
-                        return false;
-                    }
-
-                    int64_t ax = mm.first.x();
-                    int64_t bx = mm.second.x();
-                    int64_t lx = location.x();
-                    int64_t ay = mm.first.y();
-                    int64_t by = mm.second.y();
-                    int64_t ly = location.y();
-                    return ((bx - ax)*(ly - ay) - (by - ay)*(lx - ax)) <= 0;
+                /**
+                 * Return real second NodeRef of Segment.
+                 */
+                const osmium::NodeRef& stop() const noexcept {
+                    return m_reverse ? m_first : m_second;
                 }
 
                 bool role_outer() const noexcept {
-                    return !strcmp(m_role, "outer");
+                    return m_role == role_type::outer;
                 }
 
                 bool role_inner() const noexcept {
-                    return !strcmp(m_role, "inner");
+                    return m_role == role_type::inner;
+                }
+
+                bool role_empty() const noexcept {
+                    return m_role == role_type::empty;
+                }
+
+                const char* role_name() const noexcept {
+                    static const char* names[] = { "unknown", "outer", "inner", "empty" };
+                    return names[int(m_role)];
                 }
 
                 const osmium::Way* way() const noexcept {
                     return m_way;
                 }
 
+                /**
+                 * The "determinant" of this segment. Used for calculating
+                 * the winding order or a ring.
+                 */
+                int64_t det() const noexcept {
+                    const vec a{start()};
+                    const vec b{stop()};
+                    return a * b;
+                }
+
             }; // class NodeRefSegment
 
             /// NodeRefSegments are equal if both their locations are equal
             inline bool operator==(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
-                return lhs.first().location() == rhs.first().location() && lhs.second().location() == rhs.second().location();
+                return lhs.first().location() == rhs.first().location() &&
+                       lhs.second().location() == rhs.second().location();
             }
 
             inline bool operator!=(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
@@ -162,12 +233,33 @@ namespace osmium {
             }
 
             /**
-             * NodeRefSegments are "smaller" if they are to the left and down of another
-             * segment. The first() location is checked first() and only if they have the
-             * same first() location the second() location is taken into account.
+             * A NodeRefSegment is "smaller" if the first point is to the
+             * left and down of the first point of the second segment.
+             * If both first points are the same, the segment with the higher
+             * slope comes first. If the slope is the same, the shorter
+             * segment comes first.
              */
             inline bool operator<(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
-                return (lhs.first().location() == rhs.first().location() && lhs.second().location() < rhs.second().location()) || lhs.first().location() < rhs.first().location();
+                if (lhs.first().location() == rhs.first().location()) {
+                    const vec p0{lhs.first().location()};
+                    const vec p1{lhs.second().location()};
+                    const vec q0{rhs.first().location()};
+                    const vec q1{rhs.second().location()};
+                    const vec p = p1 - p0;
+                    const vec q = q1 - q0;
+
+                    if (p.x == 0 && q.x == 0) {
+                        return p.y < q.y;
+                    }
+
+                    const auto a = p.y * q.x;
+                    const auto b = q.y * p.x;
+                    if (a == b) {
+                        return p.x < q.x;
+                    }
+                    return a > b;
+                }
+                return lhs.first().location() < rhs.first().location();
             }
 
             inline bool operator>(const NodeRefSegment& lhs, const NodeRefSegment& rhs) noexcept {
@@ -184,7 +276,10 @@ namespace osmium {
 
             template <typename TChar, typename TTraits>
             inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const NodeRefSegment& segment) {
-                return out << segment.first() << "--" << segment.second();
+                return out << segment.start() << "--" << segment.stop()
+                           << "[" << (segment.is_reverse() ? 'R' : '_')
+                                  << (segment.is_done()    ? 'd' : '_')
+                                  << (segment.is_direction_done() ? 'D' : '_') << "]";
             }
 
             inline bool outside_x_range(const NodeRefSegment& s1, const NodeRefSegment& s2) noexcept {
@@ -194,7 +289,7 @@ namespace osmium {
                 return false;
             }
 
-            inline bool y_range_overlap(const NodeRefSegment& s1, const NodeRefSegment& s2) {
+            inline bool y_range_overlap(const NodeRefSegment& s1, const NodeRefSegment& s2) noexcept {
                 const std::pair<int32_t, int32_t> m1 = std::minmax(s1.first().location().y(), s1.second().location().y());
                 const std::pair<int32_t, int32_t> m2 = std::minmax(s2.first().location().y(), s2.second().location().y());
                 if (m1.first > m2.second || m2.first > m1.second) {
@@ -210,55 +305,94 @@ namespace osmium {
              * might be slightly different than the numerically correct
              * location.
              *
-             * This function uses integer arithmentic as much as possible and
+             * This function uses integer arithmetic as much as possible and
              * will not work if the segments are longer than about half the
              * planet. This shouldn't happen with real data, so it isn't a big
              * problem.
              *
-             * If the segments touch in one of their endpoints, it doesn't
-             * count as an intersection.
+             * If the segments touch in one or both of their endpoints, it
+             * doesn't count as an intersection.
              *
              * If the segments intersect not in a single point but in multiple
-             * points, ie if they overlap, this is NOT detected.
+             * points, ie if they are collinear and overlap, the smallest
+             * of the endpoints that is in the overlapping section is returned.
              *
              * @returns Undefined osmium::Location if there is no intersection
              *          or a defined Location if the segments intersect.
              */
-            inline osmium::Location calculate_intersection(const NodeRefSegment& s1, const NodeRefSegment& s2) {
-                if (s1.first().location()  == s2.first().location()  ||
-                    s1.first().location()  == s2.second().location() ||
-                    s1.second().location() == s2.first().location()  ||
-                    s1.second().location() == s2.second().location()) {
+            inline osmium::Location calculate_intersection(const NodeRefSegment& s1, const NodeRefSegment& s2) noexcept {
+                // See http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+                // for some hints about how the algorithm works.
+                const vec p0{s1.first()};
+                const vec p1{s1.second()};
+                const vec q0{s2.first()};
+                const vec q1{s2.second()};
+
+                if ((p0 == q0 && p1 == q1) ||
+                    (p0 == q1 && p1 == q0)) {
+                    // segments are the same
                     return osmium::Location();
                 }
 
-                int64_t s1ax = s1.first().x();
-                int64_t s1ay = s1.first().y();
-                int64_t s1bx = s1.second().x();
-                int64_t s1by = s1.second().y();
-                int64_t s2ax = s2.first().x();
-                int64_t s2ay = s2.first().y();
-                int64_t s2bx = s2.second().x();
-                int64_t s2by = s2.second().y();
-
-                int64_t d = (s2by - s2ay) * (s1bx - s1ax) -
-                            (s2bx - s2ax) * (s1by - s1ay);
+                const vec pd = p1 - p0;
+                const int64_t d = pd * (q1 - q0);
 
                 if (d != 0) {
-                    int64_t na = (s2bx - s2ax) * (s1ay - s2ay) -
-                                 (s2by - s2ay) * (s1ax - s2ax);
+                    // segments are not collinear
 
-                    int64_t nb = (s1bx - s1ax) * (s1ay - s2ay) -
-                                 (s1by - s1ay) * (s1ax - s2ax);
+                    if (p0 == q0 || p0 == q1 || p1 == q0 || p1 == q1) {
+                        // touching at an end point
+                        return osmium::Location();
+                    }
+
+                    // intersection in a point
+
+                    const int64_t na = (q1.x - q0.x) * (p0.y - q0.y) -
+                                       (q1.y - q0.y) * (p0.x - q0.x);
+
+                    const int64_t nb = (p1.x - p0.x) * (p0.y - q0.y) -
+                                       (p1.y - p0.y) * (p0.x - q0.x);
 
                     if ((d > 0 && na >= 0 && na <= d && nb >= 0 && nb <= d) ||
                         (d < 0 && na <= 0 && na >= d && nb <= 0 && nb >= d)) {
+                        const double ua = double(na) / d;
+                        const vec i = p0 + ua * (p1 - p0);
+                        return osmium::Location(int32_t(i.x), int32_t(i.y));
+                    }
 
-                        double ua = double(na) / d;
-                        int32_t ix = int32_t(s1ax + ua*(s1bx - s1ax));
-                        int32_t iy = int32_t(s1ay + ua*(s1by - s1ay));
+                    return osmium::Location();
+                }
 
-                        return osmium::Location(ix, iy);
+                // segments are collinear
+
+                if (pd * (q0 - p0) == 0) {
+                    // segments are on the same line
+
+                    struct seg_loc {
+                        int segment;
+                        osmium::Location location;
+                    };
+
+                    seg_loc sl[4];
+                    sl[0] = {0, s1.first().location() };
+                    sl[1] = {0, s1.second().location()};
+                    sl[2] = {1, s2.first().location() };
+                    sl[3] = {1, s2.second().location()};
+
+                    std::sort(sl, sl+4, [](const seg_loc& a, const seg_loc& b) {
+                        return a.location < b.location;
+                    });
+
+                    if (sl[1].location == sl[2].location) {
+                        return osmium::Location();
+                    }
+
+                    if (sl[0].segment != sl[1].segment) {
+                        if (sl[0].location == sl[1].location) {
+                            return sl[2].location;
+                        } else {
+                            return sl[1].location;
+                        }
                     }
                 }
 

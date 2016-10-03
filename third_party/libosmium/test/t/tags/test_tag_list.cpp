@@ -167,9 +167,15 @@ TEST_CASE("create tag list") {
         });
     }
 
-    const osmium::TagList& tl = *buffer.begin<osmium::TagList>();
+    const osmium::TagList& tl = *buffer.select<osmium::TagList>().cbegin();
     REQUIRE(osmium::item_type::tag_list == tl.type());
     REQUIRE(2 == tl.size());
+
+    REQUIRE(tl.has_key("highway"));
+    REQUIRE_FALSE(tl.has_key("unknown"));
+    REQUIRE(tl.has_tag("highway", "primary"));
+    REQUIRE_FALSE(tl.has_tag("highway", "false"));
+    REQUIRE_FALSE(tl.has_tag("foo", "bar"));
 
     auto it = tl.begin();
     REQUIRE(std::string("highway")     == it->key());

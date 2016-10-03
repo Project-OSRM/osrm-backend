@@ -517,6 +517,16 @@ namespace osmium {
              */
             using const_iterator = t_const_iterator<osmium::OSMEntity>;
 
+            template <typename T>
+            ItemIteratorRange<T> select() {
+                return ItemIteratorRange<T>{m_data, m_data + m_committed};
+            }
+
+            template <typename T>
+            ItemIteratorRange<const T> select() const {
+                return ItemIteratorRange<const T>{m_data, m_data + m_committed};
+            }
+
             /**
              * Get iterator for iterating over all items of type T in the
              * buffer.

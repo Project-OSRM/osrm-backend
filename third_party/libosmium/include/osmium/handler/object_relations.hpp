@@ -52,7 +52,7 @@ namespace osmium {
          */
         class ObjectRelations : public osmium::handler::Handler {
 
-            typedef osmium::index::multimap::Multimap<unsigned_object_id_type, unsigned_object_id_type> index_type;
+            using index_type = osmium::index::multimap::Multimap<unsigned_object_id_type, unsigned_object_id_type>;
 
             index_type& m_index_n2w;
             index_type& m_index_n2r;

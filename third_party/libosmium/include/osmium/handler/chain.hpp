@@ -67,7 +67,7 @@ namespace osmium {
         template <typename... THandler>
         class ChainHandler : public osmium::handler::Handler {
 
-            typedef std::tuple<THandler&...> handlers_type;
+            using handlers_type = std::tuple<THandler&...>;
             handlers_type m_handlers;
 
             template <int N, int SIZE, typename THandlers>

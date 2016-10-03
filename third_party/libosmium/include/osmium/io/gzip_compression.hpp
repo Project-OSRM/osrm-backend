@@ -42,8 +42,12 @@ DEALINGS IN THE SOFTWARE.
  * @attention If you include this file, you'll need to link with `libz`.
  */
 
-#include <stdexcept>
+#include <cstddef>
 #include <string>
+
+#ifndef _MSC_VER
+# include <unistd.h>
+#endif
 
 #include <errno.h>
 #include <zlib.h>
@@ -51,6 +55,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/compression.hpp>
 #include <osmium/io/error.hpp>
 #include <osmium/io/file_compression.hpp>
+#include <osmium/io/detail/read_write.hpp>
 #include <osmium/io/writer_options.hpp>
 #include <osmium/util/cast.hpp>
 #include <osmium/util/compatibility.hpp>
@@ -102,7 +107,7 @@ namespace osmium {
 
             explicit GzipCompressor(int fd, fsync sync) :
                 Compressor(sync),
-                m_fd(dup(fd)),
+                m_fd(::dup(fd)),
                 m_gzfile(::gzdopen(fd, "w")) {
                 if (!m_gzfile) {
                     detail::throw_gzip_error(m_gzfile, "write initialization failed");
@@ -171,6 +176,9 @@ namespace osmium {
                     detail::throw_gzip_error(m_gzfile, "read failed");
                 }
                 buffer.resize(static_cast<std::string::size_type>(nread));
+#if ZLIB_VERNUM >= 0x1240
+                set_offset(size_t(::gzoffset(m_gzfile)));
+#endif
                 return buffer;
             }
 

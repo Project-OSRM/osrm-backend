@@ -40,11 +40,9 @@ DEALINGS IN THE SOFTWARE.
 #include <boost/iterator/indirect_iterator.hpp>
 
 #include <osmium/handler.hpp>
-#include <osmium/memory/item.hpp>
 #include <osmium/osm/object.hpp>
 
 // IWYU pragma: no_forward_declare osmium::OSMObject
-// IWYU pragma: no_forward_declare osmium::memory::Item
 
 namespace osmium {
 
@@ -70,8 +68,8 @@ namespace osmium {
 
     public:
 
-        typedef boost::indirect_iterator<std::vector<osmium::OSMObject*>::iterator, osmium::OSMObject> iterator;
-        typedef boost::indirect_iterator<std::vector<osmium::OSMObject*>::const_iterator, const osmium::OSMObject> const_iterator;
+        using iterator       = boost::indirect_iterator<std::vector<osmium::OSMObject*>::iterator, osmium::OSMObject>;
+        using const_iterator = boost::indirect_iterator<std::vector<osmium::OSMObject*>::const_iterator, const osmium::OSMObject>;
 
         ObjectPointerCollection() noexcept :
             m_objects() {

@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cassert>
 #include <cerrno>
+#include <cstddef>
 #include <stdexcept>
 #include <system_error>
 
@@ -126,22 +127,18 @@ private:
             void make_invalid() noexcept;
 
 #ifdef _WIN32
-            typedef DWORD flag_type;
+            using flag_type = DWORD;
 #else
-            typedef int flag_type;
+            using flag_type = int;
 #endif
 
             flag_type get_protection() const noexcept;
 
             flag_type get_flags() const noexcept;
 
-            // A zero-sized mapping is not allowed by the operating system.
-            // So if the user asks for a mapping of size 0, we map a full
-            // page instead. This way we don't have a special case in the rest
-            // of the code.
-            static size_t initial_size(size_t size) {
+            static size_t check_size(size_t size) {
                 if (size == 0) {
-                    return osmium::util::get_pagesize();
+                    throw std::runtime_error("Zero-sized mapping is not allowed.");
                 }
                 return size;
             }
@@ -218,7 +215,7 @@ private:
             ~MemoryMapping() noexcept {
                 try {
                     unmap();
-                } catch (std::system_error&) {
+                } catch (const std::system_error&) {
                     // Ignore any exceptions because destructor must not throw.
                 }
             }
@@ -306,7 +303,7 @@ private:
 
         public:
 
-            AnonymousMemoryMapping(size_t size) :
+            explicit AnonymousMemoryMapping(size_t size) :
                 MemoryMapping(size, mapping_mode::write_private) {
             }
 
@@ -342,7 +339,7 @@ private:
              * @param size Number of objects of type T to be mapped
              * @throws std::system_error if the mapping fails
              */
-            TypedMemoryMapping(size_t size) :
+            explicit TypedMemoryMapping(size_t size) :
                 m_mapping(sizeof(T) * size, MemoryMapping::mapping_mode::write_private) {
             }
 
@@ -491,7 +488,7 @@ private:
 
         public:
 
-            AnonymousTypedMemoryMapping(size_t size) :
+            explicit AnonymousTypedMemoryMapping(size_t size) :
                 TypedMemoryMapping<T>(size) {
             }
 
@@ -550,7 +547,7 @@ inline int osmium::util::MemoryMapping::get_flags() const noexcept {
 }
 
 inline osmium::util::MemoryMapping::MemoryMapping(size_t size, mapping_mode mode, int fd, off_t offset) :
-    m_size(initial_size(size)),
+    m_size(check_size(size)),
     m_offset(offset),
     m_fd(resize_fd(fd)),
     m_mapping_mode(mode),
@@ -689,7 +686,7 @@ inline void osmium::util::MemoryMapping::make_invalid() noexcept {
 }
 
 inline osmium::util::MemoryMapping::MemoryMapping(size_t size, MemoryMapping::mapping_mode mode, int fd, off_t offset) :
-    m_size(initial_size(size)),
+    m_size(check_size(size)),
     m_offset(offset),
     m_fd(resize_fd(fd)),
     m_mapping_mode(mode),

@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <new>
@@ -101,7 +100,7 @@ namespace osmium {
              *
              */
             void add_padding(bool self = false) {
-                auto padding = osmium::memory::align_bytes - (size() % osmium::memory::align_bytes);
+                const auto padding = osmium::memory::align_bytes - (size() % osmium::memory::align_bytes);
                 if (padding != osmium::memory::align_bytes) {
                     std::fill_n(m_buffer.reserve_space(padding), padding, 0);
                     if (self) {

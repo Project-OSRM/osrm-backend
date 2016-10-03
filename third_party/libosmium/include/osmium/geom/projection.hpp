@@ -70,15 +70,19 @@ namespace osmium {
 
         public:
 
-            CRS(const std::string& crs) :
+            explicit CRS(const std::string& crs) :
                 m_crs(pj_init_plus(crs.c_str()), ProjCRSDeleter()) {
                 if (!m_crs) {
-                    throw osmium::projection_error(std::string("creation of CRS failed: ") + pj_strerrno(*pj_get_errno_ref()));
+                    throw osmium::projection_error(std::string{"creation of CRS failed: "} + pj_strerrno(*pj_get_errno_ref()));
                 }
             }
 
-            CRS(int epsg) :
-                CRS(std::string("+init=epsg:") + std::to_string(epsg)) {
+            explicit CRS(const char* crs) :
+                CRS(std::string{crs}) {
+            }
+
+            explicit CRS(int epsg) :
+                CRS(std::string{"+init=epsg:"} + std::to_string(epsg)) {
             }
 
             /**
@@ -127,13 +131,19 @@ namespace osmium {
 
         public:
 
-            Projection(const std::string& proj_string) :
+            explicit Projection(const std::string& proj_string) :
                 m_epsg(-1),
                 m_proj_string(proj_string),
                 m_crs_user(proj_string) {
             }
 
-            Projection(int epsg) :
+            explicit Projection(const char* proj_string) :
+                m_epsg(-1),
+                m_proj_string(proj_string),
+                m_crs_user(proj_string) {
+            }
+
+            explicit Projection(int epsg) :
                 m_epsg(epsg),
                 m_proj_string(std::string("+init=epsg:") + std::to_string(epsg)),
                 m_crs_user(epsg) {

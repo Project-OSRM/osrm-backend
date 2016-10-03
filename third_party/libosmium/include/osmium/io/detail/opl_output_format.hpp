@@ -33,26 +33,26 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cinttypes>
-#include <cstddef>
 #include <cstdint>
-#include <cstdio>
-#include <future>
 #include <iterator>
 #include <memory>
 #include <string>
-#include <thread>
 #include <utility>
 
 #include <osmium/io/detail/output_format.hpp>
+#include <osmium/io/detail/queue_util.hpp>
+#include <osmium/io/detail/string_util.hpp>
+#include <osmium/io/file.hpp>
 #include <osmium/io/file_format.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/memory/collection.hpp>
+#include <osmium/memory/item_iterator.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/changeset.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node.hpp>
+#include <osmium/osm/node_ref.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/relation.hpp>
 #include <osmium/osm/tag.hpp>
@@ -65,14 +65,18 @@ namespace osmium {
 
     namespace io {
 
-        class File;
-
         namespace detail {
 
             struct opl_output_options {
 
                 /// Should metadata of objects be added?
                 bool add_metadata;
+
+                /// Should node locations be added to ways?
+                bool locations_on_ways;
+
+                /// Write in form of a diff file?
+                bool format_as_diff;
 
             };
 
@@ -87,38 +91,71 @@ namespace osmium {
                     osmium::io::detail::append_utf8_encoded_string(*m_out, data);
                 }
 
-                void write_meta(const osmium::OSMObject& object) {
-                    output_formatted("%" PRId64, object.id());
-                    if (m_options.add_metadata) {
-                        output_formatted(" v%d d", object.version());
-                        *m_out += (object.visible() ? 'V' : 'D');
-                        output_formatted(" c%d t", object.changeset());
-                        *m_out += object.timestamp().to_iso();
-                        output_formatted(" i%d u", object.uid());
-                        append_encoded_string(object.user());
-                    }
+                void write_field_int(char c, int64_t value) {
+                    *m_out += c;
+                    output_int(value);
+                }
+
+                void write_field_timestamp(char c, const osmium::Timestamp& timestamp) {
+                    *m_out += c;
+                    *m_out += timestamp.to_iso();
+                }
+
+                void write_tags(const osmium::TagList& tags) {
                     *m_out += " T";
-                    bool first = true;
-                    for (const auto& tag : object.tags()) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            *m_out += ',';
-                        }
-                        append_encoded_string(tag.key());
+
+                    if (tags.empty()) {
+                        return;
+                    }
+
+                    auto it = tags.begin();
+                    append_encoded_string(it->key());
+                    *m_out += '=';
+                    append_encoded_string(it->value());
+
+                    for (++it; it != tags.end(); ++it) {
+                        *m_out += ',';
+                        append_encoded_string(it->key());
                         *m_out += '=';
-                        append_encoded_string(tag.value());
+                        append_encoded_string(it->value());
                     }
                 }
 
+                void write_meta(const osmium::OSMObject& object) {
+                    output_int(object.id());
+                    if (m_options.add_metadata) {
+                        *m_out += ' ';
+                        write_field_int('v', object.version());
+                        *m_out += " d";
+                        *m_out += (object.visible() ? 'V' : 'D');
+                        *m_out += ' ';
+                        write_field_int('c', object.changeset());
+                        *m_out += ' ';
+                        write_field_timestamp('t', object.timestamp());
+                        *m_out += ' ';
+                        write_field_int('i', object.uid());
+                        *m_out += " u";
+                        append_encoded_string(object.user());
+                    }
+                    write_tags(object.tags());
+                }
+
                 void write_location(const osmium::Location& location, const char x, const char y) {
+                    *m_out += ' ';
+                    *m_out += x;
                     if (location) {
-                        output_formatted(" %c%.7f %c%.7f", x, location.lon_without_check(), y, location.lat_without_check());
-                    } else {
-                        *m_out += ' ';
-                        *m_out += x;
-                        *m_out += ' ';
-                        *m_out += y;
+                        osmium::detail::append_location_coordinate_to_string(std::back_inserter(*m_out), location.x());
+                    }
+                    *m_out += ' ';
+                    *m_out += y;
+                    if (location) {
+                        osmium::detail::append_location_coordinate_to_string(std::back_inserter(*m_out), location.y());
+                    }
+                }
+
+                void write_diff(const osmium::OSMObject& object) {
+                    if (m_options.format_as_diff) {
+                        *m_out += object.diff_as_char();
                     }
                 }
 
@@ -148,70 +185,93 @@ namespace osmium {
                 }
 
                 void node(const osmium::Node& node) {
+                    write_diff(node);
                     *m_out += 'n';
                     write_meta(node);
                     write_location(node.location(), 'x', 'y');
                     *m_out += '\n';
                 }
 
+                void write_field_ref(const osmium::NodeRef& node_ref) {
+                    write_field_int('n', node_ref.ref());
+                    *m_out += 'x';
+                    if (node_ref.location()) {
+                        node_ref.location().as_string(std::back_inserter(*m_out), 'y');
+                    } else {
+                        *m_out += 'y';
+                    }
+                }
+
                 void way(const osmium::Way& way) {
+                    write_diff(way);
                     *m_out += 'w';
                     write_meta(way);
 
                     *m_out += " N";
-                    bool first = true;
-                    for (const auto& node_ref : way.nodes()) {
-                        if (first) {
-                            first = false;
+
+                    if (!way.nodes().empty()) {
+                        auto it = way.nodes().begin();
+                        if (m_options.locations_on_ways) {
+                            write_field_ref(*it);
+                            for (++it; it != way.nodes().end(); ++it) {
+                                *m_out += ',';
+                                write_field_ref(*it);
+                            }
                         } else {
-                            *m_out += ',';
+                            write_field_int('n', it->ref());
+                            for (++it; it != way.nodes().end(); ++it) {
+                                *m_out += ',';
+                                write_field_int('n', it->ref());
+                            }
                         }
-                        output_formatted("n%" PRId64, node_ref.ref());
                     }
+
                     *m_out += '\n';
                 }
 
+                void relation_member(const osmium::RelationMember& member) {
+                    *m_out += item_type_to_char(member.type());
+                    output_int(member.ref());
+                    *m_out += '@';
+                    append_encoded_string(member.role());
+                }
+
                 void relation(const osmium::Relation& relation) {
+                    write_diff(relation);
                     *m_out += 'r';
                     write_meta(relation);
 
                     *m_out += " M";
-                    bool first = true;
-                    for (const auto& member : relation.members()) {
-                        if (first) {
-                            first = false;
-                        } else {
+
+                    if (!relation.members().empty()) {
+                        auto it = relation.members().begin();
+                        relation_member(*it);
+                        for (++it; it != relation.members().end(); ++it) {
                             *m_out += ',';
+                            relation_member(*it);
                         }
-                        *m_out += item_type_to_char(member.type());
-                        output_formatted("%" PRId64 "@", member.ref());
-                        append_encoded_string(member.role());
                     }
+
                     *m_out += '\n';
                 }
 
                 void changeset(const osmium::Changeset& changeset) {
-                    output_formatted("c%d k%d s", changeset.id(), changeset.num_changes());
-                    *m_out += changeset.created_at().to_iso();
-                    *m_out += " e";
-                    *m_out += changeset.closed_at().to_iso();
-                    output_formatted(" d%d i%d u", changeset.num_comments(), changeset.uid());
+                    write_field_int('c', changeset.id());
+                    *m_out += ' ';
+                    write_field_int('k', changeset.num_changes());
+                    *m_out += ' ';
+                    write_field_timestamp('s', changeset.created_at());
+                    *m_out += ' ';
+                    write_field_timestamp('e', changeset.closed_at());
+                    *m_out += ' ';
+                    write_field_int('d', changeset.num_comments());
+                    *m_out += ' ';
+                    write_field_int('i', changeset.uid());
+                    *m_out += " u";
                     append_encoded_string(changeset.user());
                     write_location(changeset.bounds().bottom_left(), 'x', 'y');
                     write_location(changeset.bounds().top_right(), 'X', 'Y');
-                    *m_out += " T";
-                    bool first = true;
-                    for (const auto& tag : changeset.tags()) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            *m_out += ',';
-                        }
-                        append_encoded_string(tag.key());
-                        *m_out += '=';
-                        append_encoded_string(tag.value());
-                    }
-
+                    write_tags(changeset.tags());
                     *m_out += '\n';
                 }
 
@@ -226,7 +286,9 @@ namespace osmium {
                 OPLOutputFormat(const osmium::io::File& file, future_string_queue_type& output_queue) :
                     OutputFormat(output_queue),
                     m_options() {
-                    m_options.add_metadata = file.is_not_false("add_metadata");
+                    m_options.add_metadata      = file.is_not_false("add_metadata");
+                    m_options.locations_on_ways = file.is_true("locations_on_ways");
+                    m_options.format_as_diff    = file.is_true("diff");
                 }
 
                 OPLOutputFormat(const OPLOutputFormat&) = delete;

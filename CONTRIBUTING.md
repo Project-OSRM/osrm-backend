@@ -52,4 +52,3 @@ If a pull request or an issue is applicable for the current or next milestone, d
 Since we use semantic versioning we restrict breaking changes to major releases.
 After a Release Candidate is released we usually don't change the API anymore if it is not critical.
 Bigger code changes after a RC was released should also be avoided.
-

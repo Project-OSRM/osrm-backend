@@ -33,12 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
+#include <type_traits>
+
 #include <osmium/osm/item_type.hpp>
 
 namespace osmium {
 
     /**
-     * @brief Bitfield for OSM entity types.
+     * @brief Bit field for OSM entity types.
      */
     namespace osm_entity_bits {
 
@@ -94,8 +97,19 @@ namespace osmium {
             return lhs;
         }
 
+        /**
+         * Get entity_bits from item_type.
+         *
+         * @pre item_type must be undefined, node, way, relation, area, or
+         *      changeset.
+         */
         inline type from_item_type(osmium::item_type item_type) noexcept {
-            return static_cast<osmium::osm_entity_bits::type>(0x1 << (static_cast<uint16_t>(item_type) - 1));
+            auto ut = static_cast<std::underlying_type<osmium::item_type>::type>(item_type);
+            assert(ut <= 0x05);
+            if (ut == 0) {
+                return nothing;
+            }
+            return static_cast<osmium::osm_entity_bits::type>(0x1 << (ut - 1));
         }
 
     } // namespace osm_entity_bits

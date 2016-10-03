@@ -37,7 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <cstddef>
 #include <iterator>
 #include <map>
-#include <stdexcept>
 #include <vector>
 
 #include <osmium/index/map.hpp>
@@ -98,7 +97,7 @@ namespace osmium {
                 }
 
                 void dump_as_list(const int fd) final {
-                    typedef typename std::map<TId, TValue>::value_type t;
+                    using t = typename std::map<TId, TValue>::value_type;
                     std::vector<t> v;
                     v.reserve(m_elements.size());
                     std::copy(m_elements.cbegin(), m_elements.cend(), std::back_inserter(v));

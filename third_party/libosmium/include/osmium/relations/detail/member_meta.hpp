@@ -33,10 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <algorithm>
 #include <cstddef>
 #include <iosfwd>
-#include <iterator>
 
 #include <osmium/osm/types.hpp>
 
@@ -132,7 +130,7 @@ namespace osmium {
 
         template <typename TChar, typename TTraits>
         inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const MemberMeta& mm) {
-            out << "MemberMeta(member_id=" << mm.member_id() << " relation_pos=" << mm.relation_pos() << " member_pos=" << mm.member_pos() << " buffer_offset=" << mm.buffer_offset() << ")";
+            out << "MemberMeta(member_id=" << mm.member_id() << " relation_pos=" << mm.relation_pos() << " member_pos=" << mm.member_pos() << " buffer_offset=" << mm.buffer_offset() << " removed=" << (mm.removed() ? "yes" : "no") << ")";
             return out;
         }
 

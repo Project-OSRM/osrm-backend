@@ -18,9 +18,9 @@ TEST_CASE("Writer") {
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
     REQUIRE(buffer.committed() > 0);
-    auto num = std::distance(buffer.cbegin<osmium::OSMObject>(), buffer.cend<osmium::OSMObject>());
+    auto num = std::distance(buffer.select<osmium::OSMObject>().cbegin(), buffer.select<osmium::OSMObject>().cend());
     REQUIRE(num > 0);
-    REQUIRE(buffer.cbegin<osmium::OSMObject>()->id() == 1);
+    REQUIRE(buffer.select<osmium::OSMObject>().cbegin()->id() == 1);
 
     std::string filename;
 
@@ -81,9 +81,8 @@ TEST_CASE("Writer") {
         osmium::memory::Buffer buffer_check = reader_check.read();
         REQUIRE(buffer_check);
         REQUIRE(buffer_check.committed() > 0);
-        REQUIRE(std::distance(buffer_check.cbegin<osmium::OSMObject>(), buffer_check.cend<osmium::OSMObject>()) == num);
-        REQUIRE(buffer_check.cbegin<osmium::OSMObject>()->id() == 1);
-
+        REQUIRE(buffer_check.select<osmium::OSMObject>().size() == num);
+        REQUIRE(buffer_check.select<osmium::OSMObject>().cbegin()->id() == 1);
     }
 
     SECTION("Interrupted writer after open") {

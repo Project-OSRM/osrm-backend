@@ -96,7 +96,7 @@ SECTION("area_1outer_0inner") {
 
     REQUIRE(!area.is_multipolygon());
     REQUIRE(std::distance(area.cbegin(), area.cend()) == 2);
-    REQUIRE(std::distance(area.cbegin<osmium::OuterRing>(), area.cend<osmium::OuterRing>()) == area.num_rings().first);
+    REQUIRE(area.subitems<osmium::OuterRing>().size() == area.num_rings().first);
 
     {
         std::string json {factory.create_multipolygon(area)};
@@ -112,8 +112,8 @@ SECTION("area_1outer_1inner") {
 
     REQUIRE(!area.is_multipolygon());
     REQUIRE(std::distance(area.cbegin(), area.cend()) == 3);
-    REQUIRE(std::distance(area.cbegin<osmium::OuterRing>(), area.cend<osmium::OuterRing>()) == area.num_rings().first);
-    REQUIRE(std::distance(area.cbegin<osmium::InnerRing>(), area.cend<osmium::InnerRing>()) == area.num_rings().second);
+    REQUIRE(area.subitems<osmium::OuterRing>().size() == area.num_rings().first);
+    REQUIRE(area.subitems<osmium::InnerRing>().size() == area.num_rings().second);
 
     {
         std::string json {factory.create_multipolygon(area)};
@@ -129,24 +129,24 @@ SECTION("area_2outer_2inner") {
 
     REQUIRE(area.is_multipolygon());
     REQUIRE(std::distance(area.cbegin(), area.cend()) == 5);
-    REQUIRE(std::distance(area.cbegin<osmium::OuterRing>(), area.cend<osmium::OuterRing>()) == area.num_rings().first);
-    REQUIRE(std::distance(area.cbegin<osmium::InnerRing>(), area.cend<osmium::InnerRing>()) == area.num_rings().second);
+    REQUIRE(area.subitems<osmium::OuterRing>().size() == area.num_rings().first);
+    REQUIRE(area.subitems<osmium::InnerRing>().size() == area.num_rings().second);
 
     int outer_ring=0;
     int inner_ring=0;
-    for (auto it_outer = area.cbegin<osmium::OuterRing>(); it_outer !=  area.cend<osmium::OuterRing>(); ++it_outer) {
+    for (const auto& outer : area.outer_rings()) {
         if (outer_ring == 0) {
-            REQUIRE(it_outer->front().ref() == 1);
+            REQUIRE(outer.front().ref() == 1);
         } else if (outer_ring == 1) {
-            REQUIRE(it_outer->front().ref() == 100);
+            REQUIRE(outer.front().ref() == 100);
         } else {
             REQUIRE(false);
         }
-        for (auto it_inner = area.inner_ring_cbegin(it_outer); it_inner != area.inner_ring_cend(it_outer); ++it_inner) {
+        for (const auto& inner : area.inner_rings(outer)) {
             if (outer_ring == 0 && inner_ring == 0) {
-                REQUIRE(it_inner->front().ref() == 5);
+                REQUIRE(inner.front().ref() == 5);
             } else if (outer_ring == 0 && inner_ring == 1) {
-                REQUIRE(it_inner->front().ref() == 10);
+                REQUIRE(inner.front().ref() == 10);
             } else {
                 REQUIRE(false);
             }

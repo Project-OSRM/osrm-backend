@@ -33,7 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstdint>
 #include <cstring>
+#include <iterator>
 
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
@@ -131,7 +133,7 @@ namespace osmium {
 
     public:
 
-        typedef size_t size_type;
+        using size_type = size_t;
 
         ChangesetDiscussion() :
             osmium::memory::Collection<ChangesetComment, osmium::item_type::changeset_discussion>() {
@@ -184,6 +186,11 @@ namespace osmium {
         }
 
     public:
+
+        // Dummy to avoid warning because of unused private fields. Do not use.
+        int32_t do_not_use() const noexcept {
+            return m_padding1 + m_padding2;
+        }
 
         /// Get ID of this changeset
         changeset_id_type id() const noexcept {
@@ -369,23 +376,23 @@ namespace osmium {
          * @param value Value of the attribute
          */
         void set_attribute(const char* attr, const char* value) {
-            if (!strcmp(attr, "id")) {
+            if (!std::strcmp(attr, "id")) {
                 set_id(value);
-            } else if (!strcmp(attr, "num_changes")) {
+            } else if (!std::strcmp(attr, "num_changes")) {
                 set_num_changes(value);
-            } else if (!strcmp(attr, "comments_count")) {
+            } else if (!std::strcmp(attr, "comments_count")) {
                 set_num_comments(value);
-            } else if (!strcmp(attr, "created_at")) {
+            } else if (!std::strcmp(attr, "created_at")) {
                 set_created_at(osmium::Timestamp(value));
-            } else if (!strcmp(attr, "closed_at")) {
+            } else if (!std::strcmp(attr, "closed_at")) {
                 set_closed_at(osmium::Timestamp(value));
-            } else if (!strcmp(attr, "uid")) {
+            } else if (!std::strcmp(attr, "uid")) {
                 set_uid(value);
             }
         }
 
-        typedef osmium::memory::CollectionIterator<Item> iterator;
-        typedef osmium::memory::CollectionIterator<const Item> const_iterator;
+        using iterator       = osmium::memory::CollectionIterator<Item>;
+        using const_iterator = osmium::memory::CollectionIterator<const Item>;
 
         iterator begin() {
             return iterator(subitems_position());

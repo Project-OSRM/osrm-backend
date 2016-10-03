@@ -38,25 +38,25 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     /*
-     * The following typedefs are chosen so that they can represent all needed
+     * The following types are chosen so that they can represent all needed
      * numbers and still be reasonably space efficient. As the OSM database
      * needs 64 bit IDs for nodes, this size is used for all object IDs.
      */
-    typedef int64_t  object_id_type;          ///< Type for OSM object (node, way, or relation) IDs.
-    typedef uint64_t unsigned_object_id_type; ///< Type for OSM object (node, way, or relation) IDs where we only allow positive IDs.
-    typedef uint32_t object_version_type;     ///< Type for OSM object version number.
-    typedef uint32_t changeset_id_type;       ///< Type for OSM changeset IDs.
-    typedef uint32_t user_id_type;            ///< Type for OSM user IDs.
-    typedef int32_t  signed_user_id_type;     ///< Type for signed OSM user IDs.
-    typedef uint32_t num_changes_type;        ///< Type for changeset num_changes.
-    typedef uint32_t num_comments_type;       ///< Type for changeset num_comments.
+    using object_id_type          =  int64_t; ///< Type for OSM object (node, way, or relation) IDs.
+    using unsigned_object_id_type = uint64_t; ///< Type for OSM object (node, way, or relation) IDs where we only allow positive IDs.
+    using object_version_type     = uint32_t; ///< Type for OSM object version number.
+    using changeset_id_type       = uint32_t; ///< Type for OSM changeset IDs.
+    using user_id_type            = uint32_t; ///< Type for OSM user IDs.
+    using signed_user_id_type     =  int32_t; ///< Type for signed OSM user IDs.
+    using num_changes_type        = uint32_t; ///< Type for changeset num_changes.
+    using num_comments_type       = uint32_t; ///< Type for changeset num_comments.
 
     /**
      * Size for strings in OSM data such as user names, tag keys, roles, etc.
      * In Osmium they can be up to 2^16 bytes long, but OSM usually has lower
      * defined limits.
      */
-    typedef uint16_t string_size_type;
+    using string_size_type = uint16_t;
 
     // maximum of 256 characters of max 4 bytes each (in UTF-8 encoding)
     constexpr const int max_osm_string_length = 256 * 4;

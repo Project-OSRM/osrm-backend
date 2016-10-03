@@ -98,10 +98,10 @@ namespace osmium {
             public:
 
                 /// The "key" type, usually osmium::unsigned_object_id_type.
-                typedef TId key_type;
+                using key_type = TId;
 
                 /// The "value" type, usually a Location or size_t.
-                typedef TValue value_type;
+                using value_type = TValue;
 
                 Map() = default;
 
@@ -171,10 +171,10 @@ namespace osmium {
 
         public:
 
-            typedef TId id_type;
-            typedef TValue value_type;
-            typedef osmium::index::map::Map<id_type, value_type> map_type;
-            typedef std::function<map_type*(const std::vector<std::string>&)> create_map_func;
+            using id_type         = TId;
+            using value_type      = TValue;
+            using map_type        = osmium::index::map::Map<id_type, value_type>;
+            using create_map_func = std::function<map_type*(const std::vector<std::string>&)>;
 
         private:
 
@@ -207,7 +207,7 @@ namespace osmium {
             }
 
             bool has_map_type(const std::string& map_type_name) const {
-                return m_callbacks.count(map_type_name);
+                return m_callbacks.count(map_type_name) != 0;
             }
 
             std::vector<std::string> map_types() const {
