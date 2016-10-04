@@ -133,6 +133,22 @@ Feature: Simple Turns
             | d,c       | db,cb,cb | depart,turn right,arrive        |
             | d,a       | db,ab,ab | depart,new name straight,arrive |
 
+    Scenario: Three Way Intersection - Meeting Oneways
+        Given the node map
+            |   | c |   |
+            | a | b | d |
+
+        And the ways
+            | nodes  | highway | oneway |
+            | ab     | primary | yes    |
+            | bc     | primary | yes    |
+            | db     | primary | yes    |
+
+       When I route I should get
+            | waypoints | route    | turns                           |
+            | a,c       | ab,bc,bc | depart,turn left,arrive         |
+            | d,c       | db,bc,bc | depart,turn right,arrive        |
+
     Scenario: Three Way Intersection on Through Street
         Given the node map
             |   | d |   |

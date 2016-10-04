@@ -1,7 +1,7 @@
-#include "extractor/guidance/turn_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_handler.hpp"
 
 #include "util/guidance/toolkit.hpp"
 
@@ -207,18 +207,6 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
         }
     }
 
-    // check whether there is a turn of the same name
-    const auto &in_data = node_based_graph.GetEdgeData(via_edge);
-
-    const bool has_same_name_turn = [&]() {
-        for (std::size_t i = 1; i < intersection.size(); ++i)
-        {
-            if (node_based_graph.GetEdgeData(intersection[i].turn.eid).name_id == in_data.name_id)
-                return true;
-        }
-        return false;
-    }();
-
     // check whether the obvious choice is actually a through street
     if (obvious_index != 0)
     {
@@ -227,26 +215,6 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
                                      via_edge,
                                      isThroughStreet(obvious_index, intersection),
                                      intersection[obvious_index]);
-        if (has_same_name_turn &&
-            node_based_graph.GetEdgeData(intersection[obvious_index].turn.eid).name_id !=
-                in_data.name_id &&
-            intersection[obvious_index].turn.instruction.type == TurnType::NewName)
-        {
-            // this is a special case that is necessary to correctly handle obvious turns on
-            // continuing streets. Right now osrm does not know about right of way. If a street
-            // turns to the left just like:
-            //
-            //       a
-            //       a
-            // aaaaaaa b b
-            //
-            // And another road exits here, we don't want to call it a new name, even though the
-            // turn is obvious and does not require steering. To correctly handle these situations
-            // in turn collapsing, we use the turn + straight combination here
-            intersection[obvious_index].turn.instruction.type = TurnType::Turn;
-            intersection[obvious_index].turn.instruction.direction_modifier =
-                DirectionModifier::Straight;
-        }
 
         // assign left/right turns
         intersection = assignLeftTurns(via_edge, std::move(intersection), obvious_index + 1);
@@ -553,9 +521,26 @@ std::pair<std::size_t, std::size_t> TurnHandler::findFork(const EdgeID via_edge,
             return true;
         }();
 
+        // check if all entries in the fork range allow entry
+        const bool only_valid_entries = [&]() {
+            BOOST_ASSERT(right <= left && left < intersection.size());
+
+            // one past the end of the fork range
+            const auto end_itr = intersection.begin() + left + 1;
+
+            const auto has_entry_forbidden = [](const ConnectedRoad &road) {
+                return !road.entry_allowed;
+            };
+
+            const auto first_disallowed_entry =
+                std::find_if(intersection.begin() + right, end_itr, has_entry_forbidden);
+            // if no entry was found that forbids entry, the intersection entries are all valid.
+            return first_disallowed_entry == end_itr;
+        }();
+
         // TODO check whether 2*NARROW_TURN is too large
         if (valid_indices && separated_at_left_side && separated_at_right_side &&
-            not_more_than_three && !has_obvious && has_compatible_classes)
+            not_more_than_three && !has_obvious && has_compatible_classes && only_valid_entries)
             return std::make_pair(right, left);
     }
     return std::make_pair(std::size_t{0}, std::size_t{0});
