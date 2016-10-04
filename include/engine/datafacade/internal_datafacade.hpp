@@ -80,7 +80,7 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<unsigned, false>::vector m_name_ID_list;
     util::ShM<extractor::guidance::TurnInstruction, false>::vector m_turn_instruction_list;
     util::ShM<LaneDataID, false>::vector m_lane_data_id;
-    util::ShM<util::guidance::LaneTupelIdPair, false>::vector m_lane_tupel_id_pairs;
+    util::ShM<util::guidance::LaneTupleIdPair, false>::vector m_lane_tuple_id_pairs;
     util::ShM<extractor::TravelMode, false>::vector m_travel_mode_list;
     util::ShM<char, false>::vector m_names_char_list;
     util::ShM<unsigned, false>::vector m_geometry_indices;
@@ -123,7 +123,7 @@ class InternalDataFacade final : public BaseDataFacade
                        sizeof(m_profile_properties));
     }
 
-    void LoadLaneTupelIdPairs(const boost::filesystem::path &lane_data_path)
+    void LoadLaneTupleIdPairs(const boost::filesystem::path &lane_data_path)
     {
         boost::filesystem::ifstream in_stream(lane_data_path);
         if (!in_stream)
@@ -132,9 +132,9 @@ class InternalDataFacade final : public BaseDataFacade
         }
         std::uint64_t size;
         in_stream.read(reinterpret_cast<char *>(&size), sizeof(size));
-        m_lane_tupel_id_pairs.resize(size);
-        in_stream.read(reinterpret_cast<char *>(&m_lane_tupel_id_pairs[0]),
-                       sizeof(m_lane_tupel_id_pairs) * size);
+        m_lane_tuple_id_pairs.resize(size);
+        in_stream.read(reinterpret_cast<char *>(&m_lane_tuple_id_pairs[0]),
+                       sizeof(m_lane_tuple_id_pairs) * size);
     }
 
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
@@ -426,7 +426,7 @@ class InternalDataFacade final : public BaseDataFacade
         LoadIntersectionClasses(config.intersection_class_path);
 
         util::SimpleLogger().Write() << "Loading Lane Data Pairs";
-        LoadLaneTupelIdPairs(config.turn_lane_data_path);
+        LoadLaneTupleIdPairs(config.turn_lane_data_path);
     }
 
     // search graph access
@@ -921,10 +921,10 @@ class InternalDataFacade final : public BaseDataFacade
         return m_lane_data_id[id] != INVALID_LANE_DATAID;
     }
 
-    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID id) const override final
+    util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const override final
     {
         BOOST_ASSERT(hasLaneData(id));
-        return m_lane_tupel_id_pairs[m_lane_data_id[id]];
+        return m_lane_tuple_id_pairs[m_lane_data_id[id]];
     }
 
     extractor::guidance::TurnLaneDescription

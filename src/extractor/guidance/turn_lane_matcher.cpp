@@ -205,7 +205,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
     std::size_t road_index = 1, lane = 0;
 
     const auto matchRoad = [&](ConnectedRoad &road, const TurnLaneData &data) {
-        LaneTupelIdPair key{{LaneID(data.to - data.from + 1), data.from}, lane_string_id};
+        LaneTupleIdPair key{{LaneID(data.to - data.from + 1), data.from}, lane_string_id};
 
         auto lane_data_id = boost::numeric_cast<LaneDataID>(lane_data_to_id.size());
         const auto it = lane_data_to_id.find(key);

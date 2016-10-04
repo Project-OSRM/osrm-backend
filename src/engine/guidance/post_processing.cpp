@@ -1,3 +1,4 @@
+#include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
 
@@ -12,6 +13,7 @@
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <boost/range/iterator_range.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -1040,7 +1042,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             designated_depart.maneuver.instruction = TurnInstruction::NO_TURN();
             // we need to make this conform with the intersection format for the first intersection
             auto &first_intersection = designated_depart.intersections.front();
-            designated_depart.intersections.front().lanes = util::guidance::LaneTupel();
+            designated_depart.intersections.front().lanes = util::guidance::LaneTuple();
             designated_depart.intersections.front().lane_description.clear();
             first_intersection.bearings = {first_intersection.bearings[first_intersection.out]};
             first_intersection.entry = {true};
@@ -1110,7 +1112,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         next_to_last_step.maneuver.waypoint_type = WaypointType::Arrive;
         next_to_last_step.maneuver.instruction = TurnInstruction::NO_TURN();
         next_to_last_step.maneuver.bearing_after = 0;
-        next_to_last_step.intersections.front().lanes = util::guidance::LaneTupel();
+        next_to_last_step.intersections.front().lanes = util::guidance::LaneTuple();
         next_to_last_step.intersections.front().lane_description.clear();
         next_to_last_step.geometry_end = next_to_last_step.geometry_begin + 1;
         BOOST_ASSERT(next_to_last_step.intersections.size() == 1);
@@ -1282,6 +1284,9 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
     return removeNoTurnInstructions(std::move(steps));
 }
 
+// `useLane` steps are only returned on `straight` maneuvers when there
+// are surrounding lanes also tagged as `straight`. If there are no other `straight`
+// lanes, it is not an ambiguous maneuver, and we can collapse the `useLane` step.
 std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
 {
     const auto containsTag = [](const extractor::guidance::TurnLaneType::Mask mask,
@@ -1299,33 +1304,30 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         return index;
     };
 
-    const auto canCollapeUseLane =
-        [containsTag](const util::guidance::LaneTupel lanes,
-                      extractor::guidance::TurnLaneDescription lane_description) {
-            // the lane description is given left to right, lanes are counted from the right.
-            // Therefore we access the lane description using the reverse iterator
-            if (lanes.first_lane_from_the_right > 0 &&
-                containsTag(*(lane_description.rbegin() + (lanes.first_lane_from_the_right - 1)),
-                            (extractor::guidance::TurnLaneType::straight |
-                             extractor::guidance::TurnLaneType::none)))
-                return false;
+    const auto canCollapseUseLane = [containsTag](const RouteStep &step) {
+        // the lane description is given left to right, lanes are counted from the right.
+        // Therefore we access the lane description using the reverse iterator
 
-            const auto lane_to_the_right = lanes.first_lane_from_the_right + lanes.lanes_in_turn;
-            if (lane_to_the_right < boost::numeric_cast<int>(lane_description.size()) &&
-                containsTag(*(lane_description.rbegin() + lane_to_the_right),
-                            (extractor::guidance::TurnLaneType::straight |
-                             extractor::guidance::TurnLaneType::none)))
-                return false;
+        auto right_most_lanes = extractor::guidance::lanesToTheRight(step);
+        if (!right_most_lanes.empty() && containsTag(right_most_lanes.front(),
+                                                     (extractor::guidance::TurnLaneType::straight |
+                                                      extractor::guidance::TurnLaneType::none)))
+            return false;
 
-            return true;
-        };
+        auto left_most_lanes = extractor::guidance::lanesToTheLeft(step);
+        if (!left_most_lanes.empty() && containsTag(left_most_lanes.back(),
+                                                    (extractor::guidance::TurnLaneType::straight |
+                                                     extractor::guidance::TurnLaneType::none)))
+            return false;
+
+        return true;
+    };
 
     for (std::size_t step_index = 1; step_index < steps.size(); ++step_index)
     {
         const auto &step = steps[step_index];
         if (step.maneuver.instruction.type == TurnType::UseLane &&
-            canCollapeUseLane(step.intersections.front().lanes,
-                              step.intersections.front().lane_description))
+            canCollapseUseLane(step))
         {
             const auto previous = getPreviousIndex(step_index);
             steps[previous] = elongate(std::move(steps[previous]), steps[step_index]);

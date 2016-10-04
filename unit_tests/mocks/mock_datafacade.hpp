@@ -209,7 +209,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
 
     bool hasLaneData(const EdgeID /*id*/) const override final { return true; };
-    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID /*id*/) const override final
+    util::guidance::LaneTupleIdPair GetLaneData(const EdgeID /*id*/) const override final
     {
         return {{0, 0}, 0};
     }

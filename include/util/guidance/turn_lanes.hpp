@@ -16,16 +16,16 @@ namespace util
 {
 namespace guidance
 {
-class LaneTupel;
+class LaneTuple;
 } // namespace guidance
 } // namespace util
 } // namespace osrm
 
 namespace std
 {
-template <> struct hash<::osrm::util::guidance::LaneTupel>
+template <> struct hash<::osrm::util::guidance::LaneTuple>
 {
-    inline std::size_t operator()(const ::osrm::util::guidance::LaneTupel &bearing_class) const;
+    inline std::size_t operator()(const ::osrm::util::guidance::LaneTuple &bearing_class) const;
 };
 } // namespace std
 
@@ -52,19 +52,19 @@ namespace guidance
 //
 // we generate a set of tuples in the form of:
 // (2,1), (1,1), (1,0) for left, through and right respectively
-class LaneTupel
+class LaneTuple
 {
   public:
-    LaneTupel();
-    LaneTupel(const LaneID lanes_in_turn, const LaneID first_lane_from_the_right);
+    LaneTuple();
+    LaneTuple(const LaneID lanes_in_turn, const LaneID first_lane_from_the_right);
 
-    bool operator==(const LaneTupel other) const;
-    bool operator!=(const LaneTupel other) const;
+    bool operator==(const LaneTuple other) const;
+    bool operator!=(const LaneTuple other) const;
 
     LaneID lanes_in_turn;
     LaneID first_lane_from_the_right;
 
-    friend std::size_t hash_value(const LaneTupel &tup)
+    friend std::size_t hash_value(const LaneTuple &tup)
     {
         std::size_t seed{0};
         boost::hash_combine(seed, tup.lanes_in_turn);
@@ -73,7 +73,7 @@ class LaneTupel
     }
 };
 
-using LaneTupelIdPair = std::pair<util::guidance::LaneTupel, LaneDescriptionID>;
+using LaneTupleIdPair = std::pair<util::guidance::LaneTuple, LaneDescriptionID>;
 } // namespace guidance
 } // namespace util
 } // namespace osrm

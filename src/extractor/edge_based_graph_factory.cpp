@@ -564,7 +564,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     util::SimpleLogger().Write() << "Writing Turn Lane Data to File...";
     std::ofstream turn_lane_data_file(turn_lane_data_filename.c_str(), std::ios::binary);
-    std::vector<util::guidance::LaneTupelIdPair> lane_data(lane_data_map.size());
+    std::vector<util::guidance::LaneTupleIdPair> lane_data(lane_data_map.size());
     // extract lane data sorted by ID
     for (auto itr : lane_data_map)
         lane_data[itr.second] = itr.first;
@@ -574,7 +574,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     if (!lane_data.empty())
         turn_lane_data_file.write(reinterpret_cast<const char *>(&lane_data[0]),
-                                  sizeof(util::guidance::LaneTupelIdPair) * lane_data.size());
+                                  sizeof(util::guidance::LaneTupleIdPair) * lane_data.size());
 
     util::SimpleLogger().Write() << "done.";
 

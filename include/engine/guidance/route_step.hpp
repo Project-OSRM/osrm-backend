@@ -39,7 +39,7 @@ struct Intersection
     std::size_t out;
 
     // turn lane information
-    util::guidance::LaneTupel lanes;
+    util::guidance::LaneTuple lanes;
     extractor::guidance::TurnLaneDescription lane_description;
 };
 
@@ -50,7 +50,7 @@ inline Intersection getInvalidIntersection()
             {},
             Intersection::NO_INDEX,
             Intersection::NO_INDEX,
-            util::guidance::LaneTupel(),
+            util::guidance::LaneTuple(),
             {}};
 }
 

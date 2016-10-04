@@ -388,7 +388,7 @@ int Storage::Run()
     boost::filesystem::ifstream lane_data_stream(config.turn_lane_data_path, std::ios::binary);
     std::uint64_t lane_tupel_count = 0;
     lane_data_stream.read(reinterpret_cast<char *>(&lane_tupel_count), sizeof(lane_tupel_count));
-    shared_layout_ptr->SetBlockSize<util::guidance::LaneTupelIdPair>(
+    shared_layout_ptr->SetBlockSize<util::guidance::LaneTupleIdPair>(
         SharedDataLayout::TURN_LANE_DATA, lane_tupel_count);
 
     if (!static_cast<bool>(intersection_stream))
@@ -463,7 +463,7 @@ int Storage::Run()
 
     // make sure do write canary...
     auto *turn_lane_data_ptr =
-        shared_layout_ptr->GetBlockPtr<util::guidance::LaneTupelIdPair, true>(
+        shared_layout_ptr->GetBlockPtr<util::guidance::LaneTupleIdPair, true>(
             shared_memory_ptr, SharedDataLayout::TURN_LANE_DATA);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::TURN_LANE_DATA) > 0)
     {

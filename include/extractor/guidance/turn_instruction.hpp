@@ -71,7 +71,7 @@ const constexpr Enum MaxTurnType = 27; // Special value for static asserts
 // turn angle in 1.40625 degree -> 128 == 180 degree
 struct TurnInstruction
 {
-    using LaneTupel = util::guidance::LaneTupel;
+    using LaneTuple = util::guidance::LaneTuple;
     TurnInstruction(const TurnType::Enum type = TurnType::Invalid,
                     const DirectionModifier::Enum direction_modifier = DirectionModifier::UTurn)
         : type(type), direction_modifier(direction_modifier)

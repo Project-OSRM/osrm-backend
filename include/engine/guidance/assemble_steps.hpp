@@ -79,7 +79,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                               std::vector<bool>({true}),
                               Intersection::NO_INDEX,
                               0,
-                              util::guidance::LaneTupel(),
+                              util::guidance::LaneTuple(),
                               {}};
 
     if (leg_data.size() > 0)
@@ -227,7 +227,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         std::vector<bool>({true}),
         0,
         Intersection::NO_INDEX,
-        util::guidance::LaneTupel(),
+        util::guidance::LaneTuple(),
         {}};
 
     BOOST_ASSERT(!leg_geometry.locations.empty());

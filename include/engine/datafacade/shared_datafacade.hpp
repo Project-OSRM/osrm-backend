@@ -96,7 +96,7 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<char, true>::vector m_datasource_name_data;
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
     util::ShM<std::size_t, true>::vector m_datasource_name_lengths;
-    util::ShM<util::guidance::LaneTupelIdPair, true>::vector m_lane_tupel_id_pairs;
+    util::ShM<util::guidance::LaneTupleIdPair, true>::vector m_lane_tupel_id_pairs;
 
     std::unique_ptr<SharedRTree> m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
@@ -198,9 +198,9 @@ class SharedDataFacade final : public BaseDataFacade
             lane_data_id_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DATA_ID]);
         m_lane_data_id = std::move(lane_data_id);
 
-        auto lane_tupel_id_pair_ptr = data_layout->GetBlockPtr<util::guidance::LaneTupelIdPair>(
+        auto lane_tupel_id_pair_ptr = data_layout->GetBlockPtr<util::guidance::LaneTupleIdPair>(
             shared_memory, storage::SharedDataLayout::TURN_LANE_DATA);
-        util::ShM<util::guidance::LaneTupelIdPair, true>::vector lane_tupel_id_pair(
+        util::ShM<util::guidance::LaneTupleIdPair, true>::vector lane_tupel_id_pair(
             lane_tupel_id_pair_ptr,
             data_layout->num_entries[storage::SharedDataLayout::TURN_LANE_DATA]);
         m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
@@ -960,7 +960,7 @@ class SharedDataFacade final : public BaseDataFacade
         return INVALID_LANE_DATAID != m_lane_data_id.at(id);
     }
 
-    util::guidance::LaneTupelIdPair GetLaneData(const EdgeID id) const override final
+    util::guidance::LaneTupleIdPair GetLaneData(const EdgeID id) const override final
     {
         BOOST_ASSERT(hasLaneData(id));
         return m_lane_tupel_id_pairs.at(m_lane_data_id.at(id));

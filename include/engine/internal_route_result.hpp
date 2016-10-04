@@ -28,7 +28,7 @@ struct PathData
     // instruction to execute at the turn
     extractor::guidance::TurnInstruction turn_instruction;
     // turn lane data
-    util::guidance::LaneTupelIdPair lane_data;
+    util::guidance::LaneTupleIdPair lane_data;
     // travel mode of the street that leads to the turn
     extractor::TravelMode travel_mode : 4;
     // entry class of the turn, indicating possibility of turns

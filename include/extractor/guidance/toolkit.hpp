@@ -16,6 +16,8 @@
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
+#include "engine/guidance/route_step.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -26,6 +28,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <boost/tokenizer.hpp>
 
 namespace osrm
@@ -35,8 +38,8 @@ namespace extractor
 namespace guidance
 {
 
-using util::guidance::LaneTupelIdPair;
-using LaneDataIdMap = std::unordered_map<LaneTupelIdPair, LaneDataID, boost::hash<LaneTupelIdPair>>;
+using util::guidance::LaneTupleIdPair;
+using LaneDataIdMap = std::unordered_map<LaneTupleIdPair, LaneDataID, boost::hash<LaneTupleIdPair>>;
 
 using util::guidance::angularDeviation;
 using util::guidance::entersRoundabout;
@@ -283,6 +286,32 @@ inline std::string applyAccessTokens(std::string lane_string, const std::string 
         }
     }
     return result_string;
+}
+
+LaneID inline numLanesToTheRight(const engine::guidance::RouteStep &step)
+{
+    return step.intersections.front().lanes.first_lane_from_the_right;
+}
+
+LaneID inline numLanesToTheLeft(const engine::guidance::RouteStep &step)
+{
+    LaneID const total = step.intersections.front().lane_description.size();
+    return total - (step.intersections.front().lanes.lanes_in_turn +
+                    step.intersections.front().lanes.first_lane_from_the_right);
+}
+
+auto inline lanesToTheLeft(const engine::guidance::RouteStep &step)
+{
+    const auto &description = step.intersections.front().lane_description;
+    LaneID num_lanes_left = numLanesToTheLeft(step);
+    return boost::make_iterator_range(description.begin(), description.begin() + num_lanes_left);
+}
+
+auto inline lanesToTheRight(const engine::guidance::RouteStep &step)
+{
+    const auto &description = step.intersections.front().lane_description;
+    LaneID num_lanes_right = numLanesToTheRight(step);
+    return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
 }
 
 } // namespace guidance
