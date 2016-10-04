@@ -51,8 +51,26 @@ module.exports = function () {
         } else {
             this.TERMSIGNAL = 'SIGTERM';
             this.EXE = '';
-            // TODO autodetect if this was build with shared or static libraries
-            this.LIB = process.env.BUILD_SHARED_LIBS && '.so' || '.a';
+
+            // heuristically detect .so/.a suffix
+            this.LIB = null;
+
+            try {
+                const dot_a = util.format('%s/libosrm%s', this.BIN_PATH, '.a');
+                fs.accessSync(dot_a, fs.F_OK);
+                this.LIB = '.a';
+            } catch(e) { /*nop*/ }
+
+            try {
+                const dot_so = util.format('%s/libosrm%s', this.BIN_PATH, '.so');
+                fs.accessSync(dot_so, fs.F_OK);
+                this.LIB = '.so';
+            } catch(e) { /*nop*/ }
+
+            if (!this.LIB) {
+                throw new Error('*** Unable to detect dynamic or static libosrm libraries');
+            }
+
             this.QQ = '';
         }
 
@@ -65,7 +83,7 @@ module.exports = function () {
 
         // eslint-disable-next-line no-console
         console.info(util.format('Node Version', process.version));
-        if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** PLease upgrade to Node 4.+ to run OSRM cucumber tests');
+        if (parseInt(process.version.match(/v(\d)/)[1]) < 4) throw new Error('*** Please upgrade to Node 4.+ to run OSRM cucumber tests');
 
         fs.exists(this.TEST_PATH, (exists) => {
             if (exists)
