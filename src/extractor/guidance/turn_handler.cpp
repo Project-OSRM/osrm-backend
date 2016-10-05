@@ -1,7 +1,7 @@
-#include "extractor/guidance/turn_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/turn_handler.hpp"
 
 #include "util/guidance/toolkit.hpp"
 
@@ -166,6 +166,8 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
     }
     else
     {
+        const auto direction_at_one = getTurnDirection(intersection[1].turn.angle);
+        const auto direction_at_two = getTurnDirection(intersection[2].turn.angle);
         if (obvious_index == 1)
         {
             intersection[1].turn.instruction = getInstructionForObvious(
@@ -173,8 +175,13 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         }
         else
         {
-            intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
-                                                getTurnDirection(intersection[1].turn.angle)};
+            if (obvious_index != 0 && direction_at_one == direction_at_two &&
+                direction_at_one == DirectionModifier::Straight)
+                intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
+                                                    DirectionModifier::SlightRight};
+            else
+                intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
+                                                    direction_at_one};
         }
 
         if (obvious_index == 2)
@@ -184,8 +191,13 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         }
         else
         {
-            intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
-                                                getTurnDirection(intersection[2].turn.angle)};
+            if (obvious_index != 0 && direction_at_one == direction_at_two &&
+                direction_at_two == DirectionModifier::Straight)
+                intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
+                                                    DirectionModifier::SlightLeft};
+            else
+                intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
+                                                    direction_at_two};
         }
     }
     return intersection;

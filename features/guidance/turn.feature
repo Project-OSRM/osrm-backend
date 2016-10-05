@@ -1080,3 +1080,73 @@ Feature: Simple Turns
             | f,a       | depart,arrive | Hermannstr,Hermannstr |
             | y,f       | depart,arrive | Hermannstr,Hermannstr |
             | f,y       | depart,arrive | Hermannstr,Hermannstr |
+
+     # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
+     @3002
+     Scenario: Obvious Index wigh very narrow turn to the right
+        Given the node map
+            | a |   | b |   |   |   |   |   | c |
+            |   |   |   |   |   |   |   |   | d |
+
+        And the ways
+            | nodes | highway      | name |
+            | abc   | primary      | road |
+            | bd    | primary_link |      |
+
+        When I route I should get
+            | waypoints | turns                           | route     |
+            | a,c       | depart,arrive                   | road,road |
+            | a,d       | depart,turn slight right,arrive | road,,    |
+
+     # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
+     @3002
+     Scenario: Obvious Index wigh very narrow turn to the right
+        Given the node map
+            | a |   | b |   |   |   |   |   | c |   |
+            |   |   |   |   | e |   |   |   | d | f |
+
+        And the ways
+            | nodes | highway      | name |
+            | abc   | primary      | road |
+            | bd    | primary_link |      |
+            | edf   | primary_link |      |
+
+        When I route I should get
+            | waypoints | turns                           | route     |
+            | a,c       | depart,arrive                   | road,road |
+            | a,f       | depart,turn slight right,arrive | road,,    |
+
+    # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
+    @3002
+    Scenario: Obvious Index wigh very narrow turn to the left
+        Given the node map
+            |   |   |   |   |   |   |   |   | d |
+            | a |   | b |   |   |   |   |   | c |
+
+        And the ways
+            | nodes | highway      | name |
+            | abc   | primary      | road |
+            | bd    | primary_link |      |
+
+        When I route I should get
+            | waypoints | turns                          | route     |
+            | a,c       | depart,arrive                  | road,road |
+            | a,d       | depart,turn slight left,arrive | road,,    |
+
+     # http://www.openstreetmap.org/#map=18/39.28158/-76.62291
+     @3002
+     Scenario: Obvious Index wigh very narrow turn to the left
+        Given the node map
+            |   |   |   |   | e |   |   |   | d | f |
+            | a |   | b |   |   |   |   |   | c |   |
+
+        And the ways
+            | nodes | highway      | name |
+            | abc   | primary      | road |
+            | bd    | primary_link |      |
+            | edf   | primary_link |      |
+
+        When I route I should get
+            | waypoints | turns                          | route     |
+            | a,f       | depart,turn slight left,arrive | road,,    |
+            | a,c       | depart,arrive                  | road,road |
