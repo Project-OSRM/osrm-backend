@@ -44,12 +44,12 @@ inline void UnpackCHPath(const DataFacadeT &facade,
                          Callback &&callback)
 {
     // make sure we have at least something to unpack
-    if( packed_path_begin == packed_path_end )
+    if (packed_path_begin == packed_path_end)
         return;
 
     using EdgeData = typename DataFacadeT::EdgeData;
 
-    std::stack<std::pair<NodeID,NodeID>> recursion_stack;
+    std::stack<std::pair<NodeID, NodeID>> recursion_stack;
 
     // We have to push the path in reverse order onto the stack because it's LIFO.
     for (auto current = std::prev(packed_path_end); current != packed_path_begin;

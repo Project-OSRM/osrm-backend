@@ -26,7 +26,9 @@ namespace plugins
 class TilePlugin final : public BasePlugin
 {
   public:
-    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade, const api::TileParameters &parameters, std::string &pbf_buffer) const;
+    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                         const api::TileParameters &parameters,
+                         std::string &pbf_buffer) const;
 };
 }
 }

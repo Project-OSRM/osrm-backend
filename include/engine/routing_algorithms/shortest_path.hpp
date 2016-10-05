@@ -290,10 +290,8 @@ class ShortestPathRouting final
             !(continue_straight_at_waypoint ? *continue_straight_at_waypoint
                                             : facade.GetContinueStraightDefault());
 
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            facade.GetNumberOfNodes());
-        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);

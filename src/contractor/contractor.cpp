@@ -104,12 +104,12 @@ EdgeWeight getNewWeight(IterType speed_iter,
         {
             auto speed_file = segment_speed_filenames.at(speed_iter->speed_source.source - 1);
             util::SimpleLogger().Write(logWARNING)
-                << "[weight updates] Edge weight update from " << old_secs << "s to " << new_secs << "s"
-                << ". New speed: " << speed_iter->speed_source.speed << " kph"
+                << "[weight updates] Edge weight update from " << old_secs << "s to " << new_secs
+                << "s  New speed: " << speed_iter->speed_source.speed << " kph"
                 << ". Old speed: " << approx_original_speed << " kph"
                 << ". Segment length: " << segment_length << " m"
-                << ". Segment: " << speed_iter->segment.from << ","
-                << speed_iter->segment.to << " based on " << speed_file;
+                << ". Segment: " << speed_iter->segment.from << "," << speed_iter->segment.to
+                << " based on " << speed_file;
         }
     }
 
@@ -593,12 +593,14 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 extractor::QueryNode *u;
                 extractor::QueryNode *v;
 
-                // forward_packed_geometry_id is the index id for geometry, weight and duration of the segments
+                // forward_packed_geometry_id is the index id for geometry, weight and duration of
+                // the segments
                 if (leaf_object.forward_packed_geometry_id != SPECIAL_EDGEID)
                 {
                     const unsigned forward_begin =
                         m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
-                    const auto current_fwd_segment = &(m_geometry_list[forward_begin + leaf_object.fwd_segment_position]);
+                    const auto current_fwd_segment =
+                        &(m_geometry_list[forward_begin + leaf_object.fwd_segment_position]);
 
                     if (leaf_object.fwd_segment_position == 0)
                     {
@@ -612,8 +614,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                                   [m_geometry_list[forward_begin +
                                                    leaf_object.fwd_segment_position - 1]
                                        .node_id]);
-                        v = &(internal_to_external_node_map
-                                  [current_fwd_segment->node_id]);
+                        v = &(internal_to_external_node_map[current_fwd_segment->node_id]);
                     }
                     const double segment_length = util::coordinate_calculation::greatCircleDistance(
                         util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
@@ -623,12 +624,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
                     if (forward_speed_iter != segment_speed_lookup.end())
                     {
-                        const auto new_segment_weight = getNewWeight(
-                            forward_speed_iter,
-                            segment_length,
-                            segment_speed_filenames,
-                            current_fwd_segment->weight,
-                            log_edge_updates_factor);
+                        const auto new_segment_weight = getNewWeight(forward_speed_iter,
+                                                                     segment_length,
+                                                                     segment_speed_filenames,
+                                                                     current_fwd_segment->weight,
+                                                                     log_edge_updates_factor);
                         current_fwd_segment->weight = new_segment_weight;
                         m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
                             forward_speed_iter->speed_source.source;
@@ -642,7 +642,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                         counters[LUA_SOURCE] += 1;
                     }
                 }
-                // reverse_packed_geometry_id is the index id for geometry, weight and duration of the segment
+                // reverse_packed_geometry_id is the index id for geometry, weight and duration of
+                // the segment
                 if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
                 {
                     const unsigned reverse_begin =
@@ -652,7 +653,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
                     int rev_segment_position =
                         (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
-                    const auto current_rev_segment = &(m_geometry_list[reverse_begin + rev_segment_position]);
+                    const auto current_rev_segment =
+                        &(m_geometry_list[reverse_begin + rev_segment_position]);
                     if (rev_segment_position == 0)
                     {
                         u = &(internal_to_external_node_map[leaf_object.v]);
@@ -665,8 +667,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                             internal_to_external_node_map[m_geometry_list[reverse_begin +
                                                                           rev_segment_position - 1]
                                                               .node_id]);
-                        v = &(internal_to_external_node_map
-                                  [current_rev_segment->node_id]);
+                        v = &(internal_to_external_node_map[current_rev_segment->node_id]);
                     }
                     const double segment_length = util::coordinate_calculation::greatCircleDistance(
                         util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
@@ -675,12 +676,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                         find(segment_speed_lookup, Segment{u->node_id, v->node_id});
                     if (reverse_speed_iter != segment_speed_lookup.end())
                     {
-                        const auto new_segment_weight = getNewWeight(
-                            reverse_speed_iter,
-                            segment_length,
-                            segment_speed_filenames,
-                            current_rev_segment->weight,
-                            log_edge_updates_factor);
+                        const auto new_segment_weight = getNewWeight(reverse_speed_iter,
+                                                                     segment_length,
+                                                                     segment_speed_filenames,
+                                                                     current_rev_segment->weight,
+                                                                     log_edge_updates_factor);
                         current_rev_segment->weight = new_segment_weight;
                         m_geometry_datasource[reverse_begin + rev_segment_position] =
                             reverse_speed_iter->speed_source.source;

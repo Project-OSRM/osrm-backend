@@ -84,11 +84,12 @@ namespace
 // Abstracted away the query locking into a template function
 // Works the same for every plugin.
 template <typename ParameterT, typename PluginT, typename ResultT>
-osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::EngineLock> &lock,
-                              const std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &facade,
-                              const ParameterT &parameters,
-                              PluginT &plugin,
-                              ResultT &result)
+osrm::engine::Status
+RunQuery(const std::unique_ptr<osrm::engine::Engine::EngineLock> &lock,
+         const std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &facade,
+         const ParameterT &parameters,
+         PluginT &plugin,
+         ResultT &result)
 {
     if (!lock)
     {
@@ -130,8 +131,7 @@ Engine::Engine(const EngineConfig &config)
         {
             throw util::exception("Invalid file paths given!");
         }
-        query_data_facade =
-            std::make_shared<datafacade::InternalDataFacade>(config.storage_config);
+        query_data_facade = std::make_shared<datafacade::InternalDataFacade>(config.storage_config);
     }
 
     // Register plugins

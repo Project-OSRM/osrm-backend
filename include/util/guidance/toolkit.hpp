@@ -251,7 +251,7 @@ inline bool requiresNameAnnounced(const std::string &from_name,
     // (Guidance Post-Processing does not keep the suffix table around at the moment)
     struct NopSuffixTable final
     {
-        NopSuffixTable(){}
+        NopSuffixTable() {}
         bool isSuffix(const std::string &) const { return false; }
     } static const table;
 

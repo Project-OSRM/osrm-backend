@@ -56,7 +56,8 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
         "edge-weight-updates-over-factor",
         boost::program_options::value<double>(&contractor_config.log_edge_updates_factor)
             ->default_value(0.0),
-        "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge weights updated by more than this factor");
+        "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge "
+        "weights updated by more than this factor");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");

@@ -1,6 +1,6 @@
+#include "engine/plugins/tile.hpp"
 #include "engine/edge_unpacker.hpp"
 #include "engine/plugins/plugin_base.hpp"
-#include "engine/plugins/tile.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/vector_tile.hpp"
@@ -511,19 +511,23 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                     // when exactly?  Anyway, unpack it and get the first "real" edgedata
                     // out of it, which should represent the first hop, which is the one
                     // we want to find the turn.
-                    const auto &data =
-                        [this, &facade, smaller_edge_id, source_ebn, target_ebn, &unpacked_shortcut]() {
-                            const auto inner_data = facade->GetEdgeData(smaller_edge_id);
-                            if (inner_data.shortcut)
-                            {
-                                unpacked_shortcut.clear();
-                                UnpackEdgeToEdges(
-                                    *facade, source_ebn.first, target_ebn, unpacked_shortcut);
-                                return unpacked_shortcut.front();
-                            }
-                            else
-                                return inner_data;
-                        }();
+                    const auto &data = [this,
+                                        &facade,
+                                        smaller_edge_id,
+                                        source_ebn,
+                                        target_ebn,
+                                        &unpacked_shortcut]() {
+                        const auto inner_data = facade->GetEdgeData(smaller_edge_id);
+                        if (inner_data.shortcut)
+                        {
+                            unpacked_shortcut.clear();
+                            UnpackEdgeToEdges(
+                                *facade, source_ebn.first, target_ebn, unpacked_shortcut);
+                            return unpacked_shortcut.front();
+                        }
+                        else
+                            return inner_data;
+                    }();
                     BOOST_ASSERT_MSG(!data.shortcut, "Connecting edge must not be a shortcut");
 
                     // This is the geometry leading away from the intersection
@@ -535,7 +539,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                     // Now, calculate the sum of the weight of all the segments.
                     forward_weight_vector.clear();
                     facade->GetUncompressedWeights(source_ebn.second.packed_geometry_id,
-                                                  forward_weight_vector);
+                                                   forward_weight_vector);
                     const auto sum_node_weight = std::accumulate(
                         forward_weight_vector.begin(), forward_weight_vector.end(), EdgeWeight{0});
 
@@ -620,7 +624,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 
             forward_datasource_vector.clear();
             facade->GetUncompressedDatasources(edge.forward_packed_geometry_id,
-                                              forward_datasource_vector);
+                                               forward_datasource_vector);
             forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
 
             use_line_value(forward_weight);
@@ -638,7 +642,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 
             reverse_datasource_vector.clear();
             facade->GetUncompressedDatasources(edge.reverse_packed_geometry_id,
-                                              reverse_datasource_vector);
+                                               reverse_datasource_vector);
             reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
                                                            edge.fwd_segment_position - 1];
 
@@ -707,12 +711,12 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                     {
                         forward_weight_vector.clear();
                         facade->GetUncompressedWeights(edge.forward_packed_geometry_id,
-                                                      forward_weight_vector);
+                                                       forward_weight_vector);
                         forward_weight = forward_weight_vector[edge.fwd_segment_position];
 
                         forward_datasource_vector.clear();
                         facade->GetUncompressedDatasources(edge.forward_packed_geometry_id,
-                                                          forward_datasource_vector);
+                                                           forward_datasource_vector);
                         forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
                     }
 
@@ -720,7 +724,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                     {
                         reverse_weight_vector.clear();
                         facade->GetUncompressedWeights(edge.reverse_packed_geometry_id,
-                                                      reverse_weight_vector);
+                                                       reverse_weight_vector);
 
                         BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
 
@@ -729,7 +733,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 
                         reverse_datasource_vector.clear();
                         facade->GetUncompressedDatasources(edge.reverse_packed_geometry_id,
-                                                          reverse_datasource_vector);
+                                                           reverse_datasource_vector);
                         reverse_datasource =
                             reverse_datasource_vector[reverse_datasource_vector.size() -
                                                       edge.fwd_segment_position - 1];

@@ -28,8 +28,8 @@ class MatchPlugin : public BasePlugin
     static const constexpr double RADIUS_MULTIPLIER = 3;
 
     MatchPlugin(const int max_locations_map_matching)
-        : map_matching(heaps, DEFAULT_GPS_PRECISION),
-          shortest_path(heaps), max_locations_map_matching(max_locations_map_matching)
+        : map_matching(heaps, DEFAULT_GPS_PRECISION), shortest_path(heaps),
+          max_locations_map_matching(max_locations_map_matching)
     {
     }
 

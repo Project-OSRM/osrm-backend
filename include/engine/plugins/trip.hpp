@@ -40,8 +40,7 @@ class TripPlugin final : public BasePlugin
 
   public:
     explicit TripPlugin(const int max_locations_trip_)
-        : shortest_path(heaps), duration_table(heaps),
-          max_locations_trip(max_locations_trip_)
+        : shortest_path(heaps), duration_table(heaps), max_locations_trip(max_locations_trip_)
     {
     }
 

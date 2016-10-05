@@ -39,7 +39,7 @@ class DirectShortestPathRouting final
 
     ~DirectShortestPathRouting() {}
 
-    void operator()(const DataFacadeT& facade,
+    void operator()(const DataFacadeT &facade,
                     const std::vector<PhantomNodes> &phantom_nodes_vector,
                     InternalRouteResult &raw_route_data) const
     {
@@ -51,8 +51,7 @@ class DirectShortestPathRouting final
         const auto &source_phantom = phantom_node_pair.source_phantom;
         const auto &target_phantom = phantom_node_pair.target_phantom;
 
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
         forward_heap.Clear();

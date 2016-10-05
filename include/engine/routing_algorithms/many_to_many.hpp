@@ -46,7 +46,7 @@ class ManyToManyRouting final
     {
     }
 
-    std::vector<EdgeWeight> operator()(const DataFacadeT& facade,
+    std::vector<EdgeWeight> operator()(const DataFacadeT &facade,
                                        const std::vector<PhantomNode> &phantom_nodes,
                                        const std::vector<std::size_t> &source_indices,
                                        const std::vector<std::size_t> &target_indices) const
@@ -59,8 +59,7 @@ class ManyToManyRouting final
         std::vector<EdgeWeight> result_table(number_of_entries,
                                              std::numeric_limits<EdgeWeight>::max());
 
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
 

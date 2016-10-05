@@ -21,7 +21,8 @@ OSRM &OSRM::operator=(OSRM &&) noexcept = default;
 
 // Forward to implementation
 
-engine::Status OSRM::Route(const engine::api::RouteParameters &params, util::json::Object &result) const
+engine::Status OSRM::Route(const engine::api::RouteParameters &params,
+                           util::json::Object &result) const
 {
     return engine_->Route(params, result);
 }
@@ -31,7 +32,8 @@ engine::Status OSRM::Table(const engine::api::TableParameters &params, json::Obj
     return engine_->Table(params, result);
 }
 
-engine::Status OSRM::Nearest(const engine::api::NearestParameters &params, json::Object &result) const
+engine::Status OSRM::Nearest(const engine::api::NearestParameters &params,
+                             json::Object &result) const
 {
     return engine_->Nearest(params, result);
 }

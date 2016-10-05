@@ -24,8 +24,7 @@ namespace plugins
 {
 
 TablePlugin::TablePlugin(const int max_locations_distance_table)
-    : distance_table(heaps),
-      max_locations_distance_table(max_locations_distance_table)
+    : distance_table(heaps), max_locations_distance_table(max_locations_distance_table)
 {
 }
 
@@ -61,7 +60,8 @@ Status TablePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
     }
 
     auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(*facade, params));
-    auto result_table = distance_table(*facade, snapped_phantoms, params.sources, params.destinations);
+    auto result_table =
+        distance_table(*facade, snapped_phantoms, params.sources, params.destinations);
 
     if (result_table.empty())
     {

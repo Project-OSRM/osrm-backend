@@ -98,7 +98,9 @@ Status ViaRoutePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataF
     else
     {
         shortest_path(*facade,
-            raw_route.segment_end_coordinates, route_parameters.continue_straight, raw_route);
+                      raw_route.segment_end_coordinates,
+                      route_parameters.continue_straight,
+                      raw_route);
     }
 
     // we can only know this after the fact, different SCC ids still

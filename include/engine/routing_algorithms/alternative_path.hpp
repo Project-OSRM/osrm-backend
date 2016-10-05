@@ -70,12 +70,9 @@ class AlternativeRouting final
         std::vector<SearchSpaceEdge> reverse_search_space;
 
         // Init queues, semi-expensive because access to TSS invokes a sys-call
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            facade.GetNumberOfNodes());
-        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-            facade.GetNumberOfNodes());
-        engine_working_data.InitializeOrClearThirdThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearThirdThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &forward_heap1 = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap1 = *(engine_working_data.reverse_heap_1);
@@ -340,15 +337,14 @@ class AlternativeRouting final
                 (packed_shortest_path.back() !=
                  phantom_node_pair.target_phantom.forward_segment_id.id));
 
-            super::UnpackPath(
-                facade,
-                // -- packed input
-                packed_shortest_path.begin(),
-                packed_shortest_path.end(),
-                // -- start of route
-                phantom_node_pair,
-                // -- unpacked output
-                raw_route_data.unpacked_path_segments.front());
+            super::UnpackPath(facade,
+                              // -- packed input
+                              packed_shortest_path.begin(),
+                              packed_shortest_path.end(),
+                              // -- start of route
+                              phantom_node_pair,
+                              // -- unpacked output
+                              raw_route_data.unpacked_path_segments.front());
             raw_route_data.shortest_path_length = upper_bound_to_shortest_path_distance;
         }
 
@@ -412,15 +408,14 @@ class AlternativeRouting final
     // compute and unpack <s,..,v> and <v,..,t> by exploring search spaces
     // from v and intersecting against queues. only half-searches have to be
     // done at this stage
-    void ComputeLengthAndSharingOfViaPath(const DataFacadeT& facade,
+    void ComputeLengthAndSharingOfViaPath(const DataFacadeT &facade,
                                           const NodeID via_node,
                                           int *real_length_of_via_path,
                                           int *sharing_of_via_path,
                                           const std::vector<NodeID> &packed_shortest_path,
                                           const EdgeWeight min_edge_offset)
     {
-        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &existing_forward_heap = *engine_working_data.forward_heap_1;
         QueryHeap &existing_reverse_heap = *engine_working_data.reverse_heap_1;
@@ -491,8 +486,8 @@ class AlternativeRouting final
             if (packed_s_v_path[current_node] == packed_shortest_path[current_node] &&
                 packed_s_v_path[current_node + 1] == packed_shortest_path[current_node + 1])
             {
-                EdgeID edgeID = facade.FindEdgeInEitherDirection(
-                    packed_s_v_path[current_node], packed_s_v_path[current_node + 1]);
+                EdgeID edgeID = facade.FindEdgeInEitherDirection(packed_s_v_path[current_node],
+                                                                 packed_s_v_path[current_node + 1]);
                 *sharing_of_via_path += facade.GetEdgeData(edgeID).distance;
             }
             else
@@ -525,7 +520,7 @@ class AlternativeRouting final
         {
             EdgeID selected_edge =
                 facade.FindEdgeInEitherDirection(partially_unpacked_via_path[current_node],
-                                                  partially_unpacked_via_path[current_node + 1]);
+                                                 partially_unpacked_via_path[current_node + 1]);
             *sharing_of_via_path += facade.GetEdgeData(selected_edge).distance;
         }
 
@@ -848,8 +843,8 @@ class AlternativeRouting final
             if (current_edge_is_shortcut)
             {
                 const NodeID via_path_middle_node_id = current_edge_data.id;
-                const EdgeID second_segment_edge_id = facade.FindEdgeInEitherDirection(
-                    via_path_middle_node_id, via_path_edge.second);
+                const EdgeID second_segment_edge_id =
+                    facade.FindEdgeInEitherDirection(via_path_middle_node_id, via_path_edge.second);
                 const int second_segment_length =
                     facade.GetEdgeData(second_segment_edge_id).distance;
                 // attention: !unpacking in reverse!
@@ -936,8 +931,7 @@ class AlternativeRouting final
 
         t_test_path_length += unpacked_until_distance;
         // Run actual T-Test query and compare if distances equal.
-        engine_working_data.InitializeOrClearThirdThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearThirdThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &forward_heap3 = *engine_working_data.forward_heap_3;
         QueryHeap &reverse_heap3 = *engine_working_data.reverse_heap_3;

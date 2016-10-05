@@ -114,7 +114,7 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     return SCC_Component(std::move(components), std::move(range));
 }
 
-InternalRouteResult TripPlugin::ComputeRoute(const datafacade::BaseDataFacade& facade,
+InternalRouteResult TripPlugin::ComputeRoute(const datafacade::BaseDataFacade &facade,
                                              const std::vector<PhantomNode> &snapped_phantoms,
                                              const std::vector<NodeID> &trip)
 {

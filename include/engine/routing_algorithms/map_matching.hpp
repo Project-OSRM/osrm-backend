@@ -63,8 +63,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     }
 
   public:
-    MapMatching(SearchEngineData &engine_working_data,
-                const double default_gps_precision)
+    MapMatching(SearchEngineData &engine_working_data, const double default_gps_precision)
         : engine_working_data(engine_working_data),
           default_emission_log_probability(default_gps_precision),
           transition_log_probability(MATCHING_BETA)
@@ -158,10 +157,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             return sub_matchings;
         }
 
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            facade.GetNumberOfNodes());
-        engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-            facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
