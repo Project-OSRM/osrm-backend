@@ -21,13 +21,14 @@ namespace engine
 namespace plugins
 {
 
-ViaRoutePlugin::ViaRoutePlugin(datafacade::BaseDataFacade &facade_, int max_locations_viaroute)
-    : BasePlugin(facade_), shortest_path(&facade_, heaps), alternative_path(&facade_, heaps),
-      direct_shortest_path(&facade_, heaps), max_locations_viaroute(max_locations_viaroute)
+ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute)
+    : shortest_path(heaps), alternative_path(heaps), direct_shortest_path(heaps),
+      max_locations_viaroute(max_locations_viaroute)
 {
 }
 
-Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameters,
+Status ViaRoutePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                                     const api::RouteParameters &route_parameters,
                                      util::json::Object &json_result)
 {
     BOOST_ASSERT(route_parameters.IsValid());
@@ -47,7 +48,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
-    auto phantom_node_pairs = GetPhantomNodes(route_parameters);
+    auto phantom_node_pairs = GetPhantomNodes(*facade, route_parameters);
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
         return Error("NoSegment",
@@ -61,7 +62,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
     const bool continue_straight_at_waypoint = route_parameters.continue_straight
                                                    ? *route_parameters.continue_straight
-                                                   : facade.GetContinueStraightDefault();
+                                                   : facade->GetContinueStraightDefault();
 
     InternalRouteResult raw_route;
     auto build_phantom_pairs = [&raw_route, continue_straight_at_waypoint](
@@ -85,18 +86,18 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
 
     if (1 == raw_route.segment_end_coordinates.size())
     {
-        if (route_parameters.alternatives && facade.GetCoreSize() == 0)
+        if (route_parameters.alternatives && facade->GetCoreSize() == 0)
         {
-            alternative_path(raw_route.segment_end_coordinates.front(), raw_route);
+            alternative_path(*facade, raw_route.segment_end_coordinates.front(), raw_route);
         }
         else
         {
-            direct_shortest_path(raw_route.segment_end_coordinates, raw_route);
+            direct_shortest_path(*facade, raw_route.segment_end_coordinates, raw_route);
         }
     }
     else
     {
-        shortest_path(
+        shortest_path(*facade,
             raw_route.segment_end_coordinates, route_parameters.continue_straight, raw_route);
     }
 
@@ -104,7 +105,7 @@ Status ViaRoutePlugin::HandleRequest(const api::RouteParameters &route_parameter
     // allow for connection in one direction.
     if (raw_route.is_valid())
     {
-        api::RouteAPI route_api{BasePlugin::facade, route_parameters};
+        api::RouteAPI route_api{*facade, route_parameters};
         route_api.MakeResponse(raw_route, json_result);
     }
     else

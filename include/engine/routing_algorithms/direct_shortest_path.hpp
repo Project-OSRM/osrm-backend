@@ -32,14 +32,15 @@ class DirectShortestPathRouting final
     SearchEngineData &engine_working_data;
 
   public:
-    DirectShortestPathRouting(DataFacadeT *facade, SearchEngineData &engine_working_data)
-        : super(facade), engine_working_data(engine_working_data)
+    DirectShortestPathRouting(SearchEngineData &engine_working_data)
+        : engine_working_data(engine_working_data)
     {
     }
 
     ~DirectShortestPathRouting() {}
 
-    void operator()(const std::vector<PhantomNodes> &phantom_nodes_vector,
+    void operator()(const DataFacadeT& facade,
+                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                     InternalRouteResult &raw_route_data) const
     {
         // Get distance to next pair of target nodes.
@@ -51,7 +52,7 @@ class DirectShortestPathRouting final
         const auto &target_phantom = phantom_node_pair.target_phantom;
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            super::facade->GetNumberOfNodes());
+            facade.GetNumberOfNodes());
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
         forward_heap.Clear();
@@ -93,16 +94,17 @@ class DirectShortestPathRouting final
         const bool constexpr DO_NOT_FORCE_LOOPS =
             false; // prevents forcing of loops, since offsets are set correctly
 
-        if (super::facade->GetCoreSize() > 0)
+        if (facade.GetCoreSize() > 0)
         {
             engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-                super::facade->GetNumberOfNodes());
+                facade.GetNumberOfNodes());
             QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
             QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
             forward_core_heap.Clear();
             reverse_core_heap.Clear();
 
-            super::SearchWithCore(forward_heap,
+            super::SearchWithCore(facade,
+                                  forward_heap,
                                   reverse_heap,
                                   forward_core_heap,
                                   reverse_core_heap,
@@ -113,7 +115,8 @@ class DirectShortestPathRouting final
         }
         else
         {
-            super::Search(forward_heap,
+            super::Search(facade,
+                          forward_heap,
                           reverse_heap,
                           distance,
                           packed_leg,
@@ -138,7 +141,8 @@ class DirectShortestPathRouting final
         raw_route_data.target_traversed_in_reverse.push_back(
             (packed_leg.back() != phantom_node_pair.target_phantom.forward_segment_id.id));
 
-        super::UnpackPath(packed_leg.begin(),
+        super::UnpackPath(facade,
+                          packed_leg.begin(),
                           packed_leg.end(),
                           phantom_node_pair,
                           raw_route_data.unpacked_path_segments.front());

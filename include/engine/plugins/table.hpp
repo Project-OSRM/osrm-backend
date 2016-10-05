@@ -18,10 +18,11 @@ namespace plugins
 class TablePlugin final : public BasePlugin
 {
   public:
-    explicit TablePlugin(datafacade::BaseDataFacade &facade,
-                         const int max_locations_distance_table);
+    explicit TablePlugin(const int max_locations_distance_table);
 
-    Status HandleRequest(const api::TableParameters &params, util::json::Object &result);
+    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                         const api::TableParameters &params,
+                         util::json::Object &result);
 
   private:
     SearchEngineData heaps;

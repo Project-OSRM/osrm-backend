@@ -27,13 +27,15 @@ class MatchPlugin : public BasePlugin
     static const constexpr double DEFAULT_GPS_PRECISION = 5;
     static const constexpr double RADIUS_MULTIPLIER = 3;
 
-    MatchPlugin(datafacade::BaseDataFacade &facade_, const int max_locations_map_matching)
-        : BasePlugin(facade_), map_matching(&facade_, heaps, DEFAULT_GPS_PRECISION),
-          shortest_path(&facade_, heaps), max_locations_map_matching(max_locations_map_matching)
+    MatchPlugin(const int max_locations_map_matching)
+        : map_matching(heaps, DEFAULT_GPS_PRECISION),
+          shortest_path(heaps), max_locations_map_matching(max_locations_map_matching)
     {
     }
 
-    Status HandleRequest(const api::MatchParameters &parameters, util::json::Object &json_result);
+    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                         const api::MatchParameters &parameters,
+                         util::json::Object &json_result);
 
   private:
     SearchEngineData heaps;

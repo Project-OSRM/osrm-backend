@@ -63,17 +63,17 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     }
 
   public:
-    MapMatching(DataFacadeT *facade,
-                SearchEngineData &engine_working_data,
+    MapMatching(SearchEngineData &engine_working_data,
                 const double default_gps_precision)
-        : super(facade), engine_working_data(engine_working_data),
+        : engine_working_data(engine_working_data),
           default_emission_log_probability(default_gps_precision),
           transition_log_probability(MATCHING_BETA)
     {
     }
 
     SubMatchingList
-    operator()(const CandidateLists &candidates_list,
+    operator()(const DataFacadeT &facade,
+               const CandidateLists &candidates_list,
                const std::vector<util::Coordinate> &trace_coordinates,
                const std::vector<unsigned> &trace_timestamps,
                const std::vector<boost::optional<double>> &trace_gps_precision) const
@@ -159,9 +159,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         }
 
         engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            super::facade->GetNumberOfNodes());
+            facade.GetNumberOfNodes());
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(
-            super::facade->GetNumberOfNodes());
+            facade.GetNumberOfNodes());
 
         QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
         QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
@@ -261,11 +261,12 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     reverse_heap.Clear();
 
                     double network_distance;
-                    if (super::facade->GetCoreSize() > 0)
+                    if (facade.GetCoreSize() > 0)
                     {
                         forward_core_heap.Clear();
                         reverse_core_heap.Clear();
                         network_distance = super::GetNetworkDistanceWithCore(
+                            facade,
                             forward_heap,
                             reverse_heap,
                             forward_core_heap,
@@ -277,6 +278,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     else
                     {
                         network_distance = super::GetNetworkDistance(
+                            facade,
                             forward_heap,
                             reverse_heap,
                             prev_unbroken_timestamps_list[s].phantom_node,
