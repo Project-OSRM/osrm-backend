@@ -269,7 +269,9 @@ void UnpackEdgeToEdges(const datafacade::BaseDataFacade &facade,
 }
 } // namespace
 
-Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer)
+Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                                 const api::TileParameters &parameters,
+                                 std::string &pbf_buffer) const
 {
     BOOST_ASSERT(parameters.IsValid());
 
@@ -284,7 +286,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
 
     // Fetch all the segments that are in our bounding box.
     // This hits the OSRM StaticRTree
-    const auto edges = facade.GetEdgesInBox(southwest, northeast);
+    const auto edges = facade->GetEdgesInBox(southwest, northeast);
 
     // Vector tiles encode properties as references to a common lookup table.
     // When we add a property to a "feature", we actually attach the index of the value
@@ -467,7 +469,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         {
             // Grab a copy of the geometry leading up to the intersection.
             first_geometry.clear();
-            facade.GetUncompressedGeometry(source_ebn.second.packed_geometry_id, first_geometry);
+            facade->GetUncompressedGeometry(source_ebn.second.packed_geometry_id, first_geometry);
 
             // We earlier saved the source and target intersection nodes for every road section.
             // We can use the target node to find all road sections that lead away from
@@ -481,7 +483,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     continue;
 
                 // Find the connection between our source road and the target node
-                EdgeID smaller_edge_id = facade.FindSmallestEdge(
+                EdgeID smaller_edge_id = facade->FindSmallestEdge(
                     source_ebn.first, target_ebn, [](const contractor::QueryEdge::EdgeData &data) {
                         return data.forward;
                     });
@@ -493,7 +495,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 // If we didn't find a forward edge, try for a backward one
                 if (SPECIAL_EDGEID == smaller_edge_id)
                 {
-                    smaller_edge_id = facade.FindSmallestEdge(
+                    smaller_edge_id = facade->FindSmallestEdge(
                         target_ebn,
                         source_ebn.first,
                         [](const contractor::QueryEdge::EdgeData &data) { return data.backward; });
@@ -510,13 +512,13 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     // out of it, which should represent the first hop, which is the one
                     // we want to find the turn.
                     const auto &data =
-                        [this, smaller_edge_id, source_ebn, target_ebn, &unpacked_shortcut]() {
-                            const auto inner_data = facade.GetEdgeData(smaller_edge_id);
+                        [this, &facade, smaller_edge_id, source_ebn, target_ebn, &unpacked_shortcut]() {
+                            const auto inner_data = facade->GetEdgeData(smaller_edge_id);
                             if (inner_data.shortcut)
                             {
                                 unpacked_shortcut.clear();
                                 UnpackEdgeToEdges(
-                                    facade, source_ebn.first, target_ebn, unpacked_shortcut);
+                                    *facade, source_ebn.first, target_ebn, unpacked_shortcut);
                                 return unpacked_shortcut.front();
                             }
                             else
@@ -527,12 +529,12 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     // This is the geometry leading away from the intersection
                     // (i.e. the geometry of the target edge-based-node)
                     second_geometry.clear();
-                    facade.GetUncompressedGeometry(
+                    facade->GetUncompressedGeometry(
                         edge_based_node_info.at(target_ebn).packed_geometry_id, second_geometry);
 
                     // Now, calculate the sum of the weight of all the segments.
                     forward_weight_vector.clear();
-                    facade.GetUncompressedWeights(source_ebn.second.packed_geometry_id,
+                    facade->GetUncompressedWeights(source_ebn.second.packed_geometry_id,
                                                   forward_weight_vector);
                     const auto sum_node_weight = std::accumulate(
                         forward_weight_vector.begin(), forward_weight_vector.end(), EdgeWeight{0});
@@ -552,9 +554,9 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     const auto node_via = source_ebn.second.target_intersection;
                     const auto node_to = second_geometry.front();
 
-                    const auto coord_from = facade.GetCoordinateOfNode(node_from);
-                    const auto coord_via = facade.GetCoordinateOfNode(node_via);
-                    const auto coord_to = facade.GetCoordinateOfNode(node_to);
+                    const auto coord_from = facade->GetCoordinateOfNode(node_from);
+                    const auto coord_via = facade->GetCoordinateOfNode(node_via);
+                    const auto coord_to = facade->GetCoordinateOfNode(node_to);
 
                     // Calculate the bearing that we approach the intersection at
                     const auto angle_in = static_cast<int>(
@@ -613,11 +615,11 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
         {
             forward_weight_vector.clear();
-            facade.GetUncompressedWeights(edge.forward_packed_geometry_id, forward_weight_vector);
+            facade->GetUncompressedWeights(edge.forward_packed_geometry_id, forward_weight_vector);
             forward_weight = forward_weight_vector[edge.fwd_segment_position];
 
             forward_datasource_vector.clear();
-            facade.GetUncompressedDatasources(edge.forward_packed_geometry_id,
+            facade->GetUncompressedDatasources(edge.forward_packed_geometry_id,
                                               forward_datasource_vector);
             forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
 
@@ -627,7 +629,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID)
         {
             reverse_weight_vector.clear();
-            facade.GetUncompressedWeights(edge.reverse_packed_geometry_id, reverse_weight_vector);
+            facade->GetUncompressedWeights(edge.reverse_packed_geometry_id, reverse_weight_vector);
 
             BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
 
@@ -635,7 +637,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 reverse_weight_vector[reverse_weight_vector.size() - edge.fwd_segment_position - 1];
 
             reverse_datasource_vector.clear();
-            facade.GetUncompressedDatasources(edge.reverse_packed_geometry_id,
+            facade->GetUncompressedDatasources(edge.reverse_packed_geometry_id,
                                               reverse_datasource_vector);
             reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
                                                            edge.fwd_segment_position - 1];
@@ -647,7 +649,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
         max_datasource_id = std::max(max_datasource_id, forward_datasource);
         max_datasource_id = std::max(max_datasource_id, reverse_datasource);
 
-        std::string name = facade.GetNameForID(edge.name_id);
+        std::string name = facade->GetNameForID(edge.name_id);
         if (name_offsets.find(name) == name_offsets.end())
         {
             names.push_back(name);
@@ -687,8 +689,8 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                 for (const auto &edge : edges)
                 {
                     // Get coordinates for start/end nodes of segment (NodeIDs u and v)
-                    const auto a = facade.GetCoordinateOfNode(edge.u);
-                    const auto b = facade.GetCoordinateOfNode(edge.v);
+                    const auto a = facade->GetCoordinateOfNode(edge.u);
+                    const auto b = facade->GetCoordinateOfNode(edge.v);
                     // Calculate the length in meters
                     const double length =
                         osrm::util::coordinate_calculation::haversineDistance(a, b);
@@ -699,17 +701,17 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     std::uint8_t forward_datasource = 0;
                     std::uint8_t reverse_datasource = 0;
 
-                    std::string name = facade.GetNameForID(edge.name_id);
+                    std::string name = facade->GetNameForID(edge.name_id);
 
                     if (edge.forward_packed_geometry_id != SPECIAL_EDGEID)
                     {
                         forward_weight_vector.clear();
-                        facade.GetUncompressedWeights(edge.forward_packed_geometry_id,
+                        facade->GetUncompressedWeights(edge.forward_packed_geometry_id,
                                                       forward_weight_vector);
                         forward_weight = forward_weight_vector[edge.fwd_segment_position];
 
                         forward_datasource_vector.clear();
-                        facade.GetUncompressedDatasources(edge.forward_packed_geometry_id,
+                        facade->GetUncompressedDatasources(edge.forward_packed_geometry_id,
                                                           forward_datasource_vector);
                         forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
                     }
@@ -717,7 +719,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                     if (edge.reverse_packed_geometry_id != SPECIAL_EDGEID)
                     {
                         reverse_weight_vector.clear();
-                        facade.GetUncompressedWeights(edge.reverse_packed_geometry_id,
+                        facade->GetUncompressedWeights(edge.reverse_packed_geometry_id,
                                                       reverse_weight_vector);
 
                         BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
@@ -726,7 +728,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                                                                edge.fwd_segment_position - 1];
 
                         reverse_datasource_vector.clear();
-                        facade.GetUncompressedDatasources(edge.reverse_packed_geometry_id,
+                        facade->GetUncompressedDatasources(edge.reverse_packed_geometry_id,
                                                           reverse_datasource_vector);
                         reverse_datasource =
                             reverse_datasource_vector[reverse_datasource_vector.size() -
@@ -884,7 +886,7 @@ Status TilePlugin::HandleRequest(const api::TileParameters &parameters, std::str
                                                     util::vector_tile::VARIANT_TAG);
                 // Attribute value 1 == string type
                 values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING,
-                                         facade.GetDatasourceName(i));
+                                         facade->GetDatasourceName(i));
             }
             for (auto value : used_line_ints)
             {

@@ -80,7 +80,7 @@ class Engine final
     std::unique_ptr<plugins::MatchPlugin> match_plugin;
     std::unique_ptr<plugins::TilePlugin> tile_plugin;
 
-    std::unique_ptr<datafacade::BaseDataFacade> query_data_facade;
+    std::shared_ptr<datafacade::BaseDataFacade> query_data_facade;
 };
 }
 }
