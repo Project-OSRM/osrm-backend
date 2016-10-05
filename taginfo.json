@@ -125,6 +125,20 @@
         {"key": "side_road", "value": "rotary", "description": "gets speed penalty"},
         {"key": "route", "object_types": ["way"]},
         {"key": "highway", "value": "traffic_signals", "object_types": ["node"]},
+        {"key": "highway", "value": "stop", "object_types": ["node"]},
+        {"key": "highway", "value": "give_way", "object_types": ["node"]},
+        {
+            "key": "direction",
+            "value": "forward",
+            "object_types": ["node"],
+            "description": "Direction stop signs and give ways apply to"
+        },
+        {
+            "key": "direction",
+            "value": "backward",
+            "object_types": ["node"],
+            "description": "Direction stop signs and give ways apply to"
+        },
         {"key": "access", "value": "yes"},
         {"key": "access", "value": "motorcar"},
         {"key": "access", "value": "motor_vehicle"},
