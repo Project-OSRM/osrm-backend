@@ -154,7 +154,21 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
          luabind::class_<ExtractionNode>("ResultNode")
              .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
-             .def_readwrite("barrier", &ExtractionNode::barrier),
+             .def_readwrite("barrier", &ExtractionNode::barrier)
+             .def_readwrite("stop_sign", &ExtractionNode::stop_sign)
+             .def_readwrite("give_way", &ExtractionNode::give_way),
+
+         luabind::class_<TravelMode>("stop_sign")
+             .enum_("enums")[luabind::value("no", StopSign::No),
+                             luabind::value("forward", StopSign::YesForward),
+                             luabind::value("backward", StopSign::YesBackward),
+                             luabind::value("unknown_direction", StopSign::YesUnknownDirection)],
+
+         luabind::class_<TravelMode>("give_way")
+             .enum_("enums")[luabind::value("no", GiveWay::No),
+                             luabind::value("forward", GiveWay::YesForward),
+                             luabind::value("backward", GiveWay::YesBackward),
+                             luabind::value("unknown_direction", GiveWay::YesUnknownDirection)],
 
          // road classification to be set in profile
          luabind::class_<guidance::RoadClassification>("RoadClassification")
