@@ -628,7 +628,6 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
 
         reverse_datasource_vector.clear();
-        // TODO have not tested geom zipping with tiles yet
         reverse_datasource_vector =
             facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
         reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
