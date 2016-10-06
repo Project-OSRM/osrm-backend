@@ -16,6 +16,7 @@
 #include "util/guidance/turn_lanes.hpp"
 
 #include "engine/geospatial_query.hpp"
+#include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
 #include "util/simple_logger.hpp"
@@ -63,11 +64,10 @@ class SharedDataFacade final : public BaseDataFacade
 
     storage::SharedDataLayout *data_layout;
     char *shared_memory;
-    storage::SharedDataTimestamp *data_timestamp_ptr;
 
-    storage::SharedDataType CURRENT_LAYOUT;
-    storage::SharedDataType CURRENT_DATA;
-    unsigned CURRENT_TIMESTAMP;
+    storage::SharedDataType layout_region;
+    storage::SharedDataType data_region;
+    unsigned shared_timestamp;
 
     unsigned m_check_sum;
     std::unique_ptr<QueryGraph> m_query_graph;
@@ -142,6 +142,17 @@ class SharedDataFacade final : public BaseDataFacade
     {
         BOOST_ASSERT_MSG(!m_coordinate_list.empty(), "coordinates must be loaded before r-tree");
 
+        const auto file_index_ptr = data_layout->GetBlockPtr<char>(
+            shared_memory, storage::SharedDataLayout::FILE_INDEX_PATH);
+        file_index_path = boost::filesystem::path(file_index_ptr);
+        if (!boost::filesystem::exists(file_index_path))
+        {
+            util::SimpleLogger().Write(logDEBUG) << "Leaf file name "
+                                                 << file_index_path.string();
+            throw util::exception("Could not load leaf index file. "
+                                  "Is any data loaded into shared memory?");
+        }
+
         auto tree_ptr = data_layout->GetBlockPtr<RTreeNode>(
             shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
         m_static_rtree.reset(
@@ -175,6 +186,11 @@ class SharedDataFacade final : public BaseDataFacade
         m_coordinate_list.reset(
             coordinate_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
+
+        for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
+        {
+            BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
+        }
 
         auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
             shared_memory, storage::SharedDataLayout::OSM_NODE_ID_LIST);
@@ -366,102 +382,32 @@ class SharedDataFacade final : public BaseDataFacade
   public:
     virtual ~SharedDataFacade() {}
 
-    boost::shared_mutex data_mutex;
-
-    SharedDataFacade()
+    SharedDataFacade(storage::SharedDataType layout_region_, storage::SharedDataType data_region_, unsigned shared_timestamp_)
+      : layout_region(layout_region_), data_region(data_region_), shared_timestamp(shared_timestamp_)
     {
-        if (!storage::SharedMemory::RegionExists(storage::CURRENT_REGIONS))
-        {
-            throw util::exception(
-                "No shared memory blocks found, have you forgotten to run osrm-datastore?");
-        }
-        data_timestamp_ptr = static_cast<storage::SharedDataTimestamp *>(
-            storage::makeSharedMemory(
-                storage::CURRENT_REGIONS, sizeof(storage::SharedDataTimestamp), false, false)
-                ->Ptr());
-        CURRENT_LAYOUT = storage::LAYOUT_NONE;
-        CURRENT_DATA = storage::DATA_NONE;
-        CURRENT_TIMESTAMP = 0;
+        util::SimpleLogger().Write(logDEBUG) << "Loading new data with shared timestamp " << shared_timestamp;
 
-        // load data
-        CheckAndReloadFacade();
-    }
+        BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
+        m_layout_memory.reset(storage::makeSharedMemory(layout_region));
 
-    void CheckAndReloadFacade()
-    {
-        if (CURRENT_LAYOUT != data_timestamp_ptr->layout ||
-            CURRENT_DATA != data_timestamp_ptr->data ||
-            CURRENT_TIMESTAMP != data_timestamp_ptr->timestamp)
-        {
-            // Get exclusive lock
-            util::SimpleLogger().Write(logDEBUG) << "Updates available, getting exclusive lock";
-            const boost::lock_guard<boost::shared_mutex> lock(data_mutex);
+        data_layout = static_cast<storage::SharedDataLayout *>(m_layout_memory->Ptr());
 
-            if (CURRENT_LAYOUT != data_timestamp_ptr->layout ||
-                CURRENT_DATA != data_timestamp_ptr->data)
-            {
-                // release the previous shared memory segments
-                storage::SharedMemory::Remove(CURRENT_LAYOUT);
-                storage::SharedMemory::Remove(CURRENT_DATA);
+        BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
+        m_large_memory.reset(storage::makeSharedMemory(data_region));
+        shared_memory = (char *)(m_large_memory->Ptr());
 
-                CURRENT_LAYOUT = data_timestamp_ptr->layout;
-                CURRENT_DATA = data_timestamp_ptr->data;
-                CURRENT_TIMESTAMP = 0; // Force trigger a reload
-
-                util::SimpleLogger().Write(logDEBUG)
-                    << "Current layout was different to new layout, swapping";
-            }
-            else
-            {
-                util::SimpleLogger().Write(logDEBUG)
-                    << "Current layout was same to new layout, not swapping";
-            }
-
-            if (CURRENT_TIMESTAMP != data_timestamp_ptr->timestamp)
-            {
-                CURRENT_TIMESTAMP = data_timestamp_ptr->timestamp;
-
-                util::SimpleLogger().Write(logDEBUG) << "Performing data reload";
-                m_layout_memory.reset(storage::makeSharedMemory(CURRENT_LAYOUT));
-
-                data_layout = static_cast<storage::SharedDataLayout *>(m_layout_memory->Ptr());
-
-                m_large_memory.reset(storage::makeSharedMemory(CURRENT_DATA));
-                shared_memory = (char *)(m_large_memory->Ptr());
-
-                const auto file_index_ptr = data_layout->GetBlockPtr<char>(
-                    shared_memory, storage::SharedDataLayout::FILE_INDEX_PATH);
-                file_index_path = boost::filesystem::path(file_index_ptr);
-                if (!boost::filesystem::exists(file_index_path))
-                {
-                    util::SimpleLogger().Write(logDEBUG) << "Leaf file name "
-                                                         << file_index_path.string();
-                    throw util::exception("Could not load leaf index file. "
-                                          "Is any data loaded into shared memory?");
-                }
-
-                LoadGraph();
-                LoadChecksum();
-                LoadNodeAndEdgeInformation();
-                LoadGeometries();
-                LoadTimestamp();
-                LoadViaNodeList();
-                LoadNames();
-                LoadTurnLaneDescriptions();
-                LoadCoreInformation();
-                LoadProfileProperties();
-                LoadRTree();
-                LoadIntersectionClasses();
-
-                util::SimpleLogger().Write() << "number of geometries: "
-                                             << m_coordinate_list.size();
-                for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
-                {
-                    BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
-                }
-            }
-            util::SimpleLogger().Write(logDEBUG) << "Releasing exclusive lock";
-        }
+        LoadGraph();
+        LoadChecksum();
+        LoadNodeAndEdgeInformation();
+        LoadGeometries();
+        LoadTimestamp();
+        LoadViaNodeList();
+        LoadNames();
+        LoadTurnLaneDescriptions();
+        LoadCoreInformation();
+        LoadProfileProperties();
+        LoadRTree();
+        LoadIntersectionClasses();
     }
 
     // search graph access

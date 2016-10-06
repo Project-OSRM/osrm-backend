@@ -5,6 +5,7 @@
 #include "util/json_container.hpp"
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -53,6 +54,8 @@ namespace datafacade
 class BaseDataFacade;
 }
 
+class DataWatchdog;
+
 class Engine final
 {
   public:
@@ -73,6 +76,7 @@ class Engine final
 
   private:
     std::unique_ptr<storage::SharedBarriers> lock;
+    std::unique_ptr<DataWatchdog> watchdog;
 
     std::unique_ptr<plugins::ViaRoutePlugin> route_plugin;
     std::unique_ptr<plugins::TablePlugin> table_plugin;
@@ -81,7 +85,10 @@ class Engine final
     std::unique_ptr<plugins::MatchPlugin> match_plugin;
     std::unique_ptr<plugins::TilePlugin> tile_plugin;
 
-    std::shared_ptr<datafacade::BaseDataFacade> query_data_facade;
+    // reading and setting this is protected by lock
+    mutable std::shared_ptr<datafacade::BaseDataFacade> query_data_facade;
+    // ensures that when we set facade we can do it without race conditions
+    mutable std::unique_ptr<std::mutex> facade_update_mutex;
 };
 }
 }
