@@ -139,6 +139,42 @@
             "object_types": ["node"],
             "description": "Direction stop signs and give ways apply to"
         },
+        {
+            "key": "priority_road",
+            "value": "designated",
+            "object_types": ["way"],
+            "description": "Designated priority road used for turn penalties"
+        },
+        {
+            "key": "priority_road:forward",
+            "value": "designated",
+            "object_types": ["way"],
+            "description": "Designated directional priority road used for turn penalties"
+        },
+        {
+            "key": "priority_road:backward",
+            "value": "designated",
+            "object_types": ["way"],
+            "description": "Designated directional priority road used for turn penalties"
+        },
+        {
+            "key": "priority_road",
+            "value": "yes_unposted",
+            "object_types": ["way"],
+            "description": "Unposted priority road used for turn penalties"
+        },
+        {
+            "key": "priority_road:forward",
+            "value": "yes_unposted",
+            "object_types": ["way"],
+            "description": "Unposted directional priority road used for turn penalties"
+        },
+        {
+            "key": "priority_road:backward",
+            "value": "yes_unposted",
+            "object_types": ["way"],
+            "description": "Unposted directional priority road used for turn penalties"
+        },
         {"key": "access", "value": "yes"},
         {"key": "access", "value": "motorcar"},
         {"key": "access", "value": "motor_vehicle"},

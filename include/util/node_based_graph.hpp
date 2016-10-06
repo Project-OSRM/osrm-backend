@@ -32,11 +32,15 @@ struct NodeBasedEdgeData
                       bool reversed,
                       bool roundabout,
                       bool startpoint,
+                      bool priority_road_forward,
+                      bool priority_road_backward,
                       extractor::TravelMode travel_mode,
                       const LaneDescriptionID lane_description_id)
         : distance(distance), edge_id(edge_id), name_id(name_id),
           access_restricted(access_restricted), reversed(reversed), roundabout(roundabout),
-          startpoint(startpoint), travel_mode(travel_mode), lane_description_id(lane_description_id)
+          startpoint(startpoint), priority_road_forward(priority_road_forward),
+          priority_road_backward(priority_road_backward), travel_mode(travel_mode),
+          lane_description_id(lane_description_id)
     {
     }
 
@@ -47,6 +51,8 @@ struct NodeBasedEdgeData
     bool reversed : 1;
     bool roundabout : 1;
     bool startpoint : 1;
+    bool priority_road_forward : 1;
+    bool priority_road_backward : 1;
     extractor::TravelMode travel_mode : 4;
     LaneDescriptionID lane_description_id;
     extractor::guidance::RoadClassification road_classification;
@@ -54,7 +60,10 @@ struct NodeBasedEdgeData
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
         return (reversed == other.reversed) && (roundabout == other.roundabout) &&
-               (startpoint == other.startpoint) && (access_restricted == other.access_restricted) &&
+               (startpoint == other.startpoint) &&
+               (priority_road_forward == other.priority_road_forward) &&
+               (priority_road_backward == other.priority_road_backward) &&
+               (access_restricted == other.access_restricted) &&
                (travel_mode == other.travel_mode) &&
                (road_classification == other.road_classification);
     }
@@ -86,6 +95,8 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             output_edge.data.access_restricted = input_edge.access_restricted;
             output_edge.data.travel_mode = input_edge.travel_mode;
             output_edge.data.startpoint = input_edge.startpoint;
+            output_edge.data.priority_road_forward = input_edge.priority_road_forward;
+            output_edge.data.priority_road_backward = input_edge.priority_road_backward;
             output_edge.data.road_classification = input_edge.road_classification;
             output_edge.data.lane_description_id = input_edge.lane_description_id;
         });

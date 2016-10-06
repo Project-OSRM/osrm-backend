@@ -434,6 +434,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += profile_properties.traffic_signal_penalty;
                 }
 
+                // Success - if this compiles!
+                // TODO: Adapt GetTurnPenalty function and pass those flags on
+                (void)edge_data1.priority_road_forward;
+                (void)edge_data1.priority_road_backward;
+                (void)edge_data2.priority_road_forward;
+                (void)edge_data2.priority_road_backward;
+
                 const int32_t turn_penalty =
                     scripting_environment.GetTurnPenalty(180. - turn.angle);
                 const auto turn_instruction = turn.instruction;

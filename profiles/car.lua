@@ -251,11 +251,11 @@ function node_function (node, result)
 
   if tag and "give_way" == tag then
     if forward then
-      result.give_way = give_way.forward
+      result.give_way_sign = give_way_sign.forward
     elseif backward then
-      result.give_way = give_way.backward
+      result.give_way_sign = give_way_sign.backward
     else
-      result.give_way = give_way.unknown_direction
+      result.give_way_sign = give_way_sign.unknown_direction
     end
   end
 
@@ -270,6 +270,16 @@ function way_function (way, result)
     return
   end
 
+  local oneway = way:get_value_by_key("oneway")
+  local oneway_reverse = oneway and oneway == "-1"
+
+  -- Reversible oneways change direction with low frequency (think twice a day):
+  -- do not route over these at all at the moment because of time dependence.
+  -- Note: alternating (high frequency) oneways are handled below with penalty.
+  if oneway and "reversible" == oneway then
+    return
+  end
+
   -- default to driving mode, may get overwritten below
   result.forward_mode = mode.driving
   result.backward_mode = mode.driving
@@ -279,6 +289,37 @@ function way_function (way, result)
   if ignore_areas and area and "yes" == area then
     return
   end
+
+  -- priority roads, signposted or not
+  local priority_road = way:get_value_by_key("priority_road")
+  local priority_road_forward = way:get_value_by_key("priority_road:forward")
+  local priority_road_backward = way:get_value_by_key("priority_road:backward")
+
+  if priority_road and ("designated" == priority_road or "yes_unposted" == priority_road) then
+    if oneway_reverse then
+      way.is_priority_road_backward = true
+    else
+      way.is_priority_road_forward = true
+    end
+  end
+
+  if priority_road_forward and ("designated" == priority_road_forward or "yes_unposted" == priority_road_forward) then
+    if oneway_reverse then
+      way.is_priority_road_backward = true
+    else
+      way.is_priority_road_forward = true
+    end
+  end
+
+  if priority_road_backward and ("designated" == priority_road_backward or "yes_unposted" == priority_road_backward) then
+    if oneway_reverse then
+      way.is_priority_road_forward = true
+    else
+      way.is_priority_road_backward = true
+    end
+  end
+  -- end priority roads
+
 
   -- respect user-preference for HOV-only ways
   if ignore_hov_ways then
@@ -313,11 +354,8 @@ function way_function (way, result)
                                         and has_all_designated_hov_lanes(hov_lanes_backward)
 
     -- forward/backward lane depend on a way's direction
-    local oneway = way:get_value_by_key("oneway")
-    local reverse = oneway and oneway == "-1"
-
     if hov_all_designated or hov_all_designated_forward then
-      if reverse then
+      if oneway_reverse then
         result.backward_mode = mode.inaccessible
       else
         result.forward_mode = mode.inaccessible
@@ -325,7 +363,7 @@ function way_function (way, result)
     end
 
     if hov_all_designated_backward then
-      if reverse then
+      if oneway_reverse then
         result.forward_mode = mode.inaccessible
       else
         result.backward_mode = mode.inaccessible
@@ -337,14 +375,6 @@ function way_function (way, result)
   -- respect user-preference for toll=yes ways
   local toll = way:get_value_by_key("toll")
   if ignore_toll_ways and toll and "yes" == toll then
-    return
-  end
-
-  -- Reversible oneways change direction with low frequency (think twice a day):
-  -- do not route over these at all at the moment because of time dependence.
-  -- Note: alternating (high frequency) oneways are handled below with penalty.
-  local oneway = way:get_value_by_key("oneway")
-  if oneway and "reversible" == oneway then
     return
   end
 
@@ -526,7 +556,7 @@ function way_function (way, result)
 
   -- Set direction according to tags on way
   if obey_oneway then
-    if oneway == "-1" then
+    if oneway_reverse then
       result.forward_mode = mode.inaccessible
 
       local is_forward = false

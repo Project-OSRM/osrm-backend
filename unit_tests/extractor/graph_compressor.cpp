@@ -38,7 +38,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -49,7 +51,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -60,7 +64,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
@@ -71,7 +77,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
@@ -82,7 +90,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {3,
@@ -93,7 +103,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {3,
@@ -104,7 +116,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {4,
@@ -115,7 +129,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID}};
 
@@ -157,7 +173,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {0,
@@ -168,7 +186,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -179,7 +199,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -190,7 +212,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
@@ -201,7 +225,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
@@ -212,7 +238,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {3,
@@ -223,7 +251,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {3,
@@ -234,7 +264,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {4,
@@ -245,7 +277,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {4,
@@ -256,7 +290,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {5,
@@ -267,7 +303,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {5,
@@ -278,7 +316,9 @@ BOOST_AUTO_TEST_CASE(loop_test)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
     };
@@ -332,7 +372,9 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -343,7 +385,9 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -354,7 +398,9 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -365,7 +411,9 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
@@ -376,7 +424,9 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {3,
@@ -387,7 +437,9 @@ BOOST_AUTO_TEST_CASE(t_intersection)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
     };
@@ -428,7 +480,9 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -439,7 +493,9 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -450,7 +506,9 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
@@ -461,7 +519,9 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
     };
@@ -498,7 +558,9 @@ BOOST_AUTO_TEST_CASE(direction_changes)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -509,7 +571,9 @@ BOOST_AUTO_TEST_CASE(direction_changes)
          false,
          true,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {1,
@@ -520,7 +584,9 @@ BOOST_AUTO_TEST_CASE(direction_changes)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
         {2,
@@ -531,7 +597,9 @@ BOOST_AUTO_TEST_CASE(direction_changes)
          false,
          false,
          false,
-         true,
+         true,  // startpoint
+         false, // road_priority_forward
+         false, // road_priority_backward
          TRAVEL_MODE_INACCESSIBLE,
          INVALID_LANE_DESCRIPTIONID},
     };

@@ -8,6 +8,7 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
+#include "extractor/road_signs.hpp"
 #include "util/exception.hpp"
 #include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
@@ -156,19 +157,19 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
              .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
              .def_readwrite("barrier", &ExtractionNode::barrier)
              .def_readwrite("stop_sign", &ExtractionNode::stop_sign)
-             .def_readwrite("give_way", &ExtractionNode::give_way),
+             .def_readwrite("give_way_sign", &ExtractionNode::give_way_sign),
 
-         luabind::class_<TravelMode>("stop_sign")
+         luabind::class_<StopSign::State>("stop_sign")
              .enum_("enums")[luabind::value("no", StopSign::No),
                              luabind::value("forward", StopSign::YesForward),
                              luabind::value("backward", StopSign::YesBackward),
                              luabind::value("unknown_direction", StopSign::YesUnknownDirection)],
 
-         luabind::class_<TravelMode>("give_way")
-             .enum_("enums")[luabind::value("no", GiveWay::No),
-                             luabind::value("forward", GiveWay::YesForward),
-                             luabind::value("backward", GiveWay::YesBackward),
-                             luabind::value("unknown_direction", GiveWay::YesUnknownDirection)],
+         luabind::class_<GiveWaySign::State>("give_way_sign")
+             .enum_("enums")[luabind::value("no", GiveWaySign::No),
+                             luabind::value("forward", GiveWaySign::YesForward),
+                             luabind::value("backward", GiveWaySign::YesBackward),
+                             luabind::value("unknown_direction", GiveWaySign::YesUnknownDirection)],
 
          // road classification to be set in profile
          luabind::class_<guidance::RoadClassification>("RoadClassification")
@@ -196,6 +197,8 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
              .def_readwrite("roundabout", &ExtractionWay::roundabout)
              .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
              .def_readwrite("is_startpoint", &ExtractionWay::is_startpoint)
+             .def_readwrite("is_priority_road_forward", &ExtractionWay::is_priority_road_forward)
+             .def_readwrite("is_priority_road_backward", &ExtractionWay::is_priority_road_backward)
              .def_readwrite("duration", &ExtractionWay::duration)
              .def_readwrite("turn_lanes_forward", &ExtractionWay::turn_lanes_forward)
              .def_readwrite("turn_lanes_backward", &ExtractionWay::turn_lanes_backward)
