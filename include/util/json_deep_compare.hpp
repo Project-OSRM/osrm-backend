@@ -17,7 +17,7 @@ namespace util
 namespace json
 {
 
-struct Comparator : mapbox::util::static_visitor<bool>
+struct Comparator
 {
     Comparator(std::string &reason_, const std::string &lhs_path_, const std::string &rhs_path_)
         : reason(reason_), lhs_path(lhs_path_), rhs_path(rhs_path_)
