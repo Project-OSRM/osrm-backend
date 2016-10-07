@@ -91,7 +91,9 @@ class SharedDataFacade final : public BaseDataFacade
     util::ShM<char, true>::vector m_names_char_list;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
     util::ShM<unsigned, true>::vector m_geometry_indices;
-    util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector m_geometry_list;
+    util::ShM<NodeID, true>::vector m_geometry_node_list;
+    util::ShM<EdgeWeight, true>::vector m_geometry_fwd_weight_list;
+    util::ShM<EdgeWeight, true>::vector m_geometry_rev_weight_list;
     util::ShM<bool, true>::vector m_is_core_node;
     util::ShM<uint8_t, true>::vector m_datasource_list;
     util::ShM<std::uint32_t, true>::vector m_lane_description_offsets;
@@ -327,13 +329,29 @@ class SharedDataFacade final : public BaseDataFacade
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
         m_geometry_indices = std::move(geometry_begin_indices);
 
-        auto geometries_list_ptr =
-            data_layout->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge>(
-                shared_memory, storage::SharedDataLayout::GEOMETRIES_LIST);
-        util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, true>::vector geometry_list(
-            geometries_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_LIST]);
-        m_geometry_list = std::move(geometry_list);
+        auto geometries_node_list_ptr =
+            data_layout->GetBlockPtr<NodeID>(
+                shared_memory, storage::SharedDataLayout::GEOMETRIES_NODE_LIST);
+        util::ShM<NodeID, true>::vector geometry_node_list(
+            geometries_node_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_NODE_LIST]);
+        m_geometry_node_list = std::move(geometry_node_list);
+
+        auto geometries_fwd_weight_list_ptr =
+            data_layout->GetBlockPtr<EdgeWeight>(
+                shared_memory, storage::SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
+        util::ShM<EdgeWeight, true>::vector geometry_fwd_weight_list(
+            geometries_fwd_weight_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
+        m_geometry_fwd_weight_list = std::move(geometry_fwd_weight_list);
+
+        auto geometries_rev_weight_list_ptr =
+            data_layout->GetBlockPtr<EdgeWeight>(
+                shared_memory, storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST);
+        util::ShM<EdgeWeight, true>::vector geometry_rev_weight_list(
+            geometries_rev_weight_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
+        m_geometry_rev_weight_list = std::move(geometry_rev_weight_list);
 
         auto datasources_list_ptr = data_layout->GetBlockPtr<uint8_t>(
             shared_memory, storage::SharedDataLayout::DATASOURCES_LIST);
@@ -532,7 +550,7 @@ class SharedDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector. For
+         * directional edge in the m_geometry_node_list vector. For
          * forward geometries of bi-directional edges, edges 2 to
          * n of that edge need to be read.
          */
@@ -543,10 +561,10 @@ class SharedDataFacade final : public BaseDataFacade
 
         result_nodes.reserve(end - begin);
 
-        std::for_each(m_geometry_list.begin() + begin,
-                      m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_nodes.emplace_back(edge.node_id);
+        std::for_each(m_geometry_node_list.begin() + begin,
+                      m_geometry_node_list.begin() + end,
+                      [&](const NodeID &node_id) {
+                          result_nodes.emplace_back(node_id);
                       });
 
         return result_nodes;
@@ -559,7 +577,7 @@ class SharedDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector.
+         * directional edge in the m_geometry_node_list vector.
          * */
         const signed begin = m_geometry_indices.at(id);
         const signed end = m_geometry_indices.at(id + 1);
@@ -568,10 +586,10 @@ class SharedDataFacade final : public BaseDataFacade
 
         result_nodes.reserve(end - begin);
 
-        std::for_each(m_geometry_list.rbegin() + (m_geometry_list.size() - end),
-                      m_geometry_list.rbegin() + (m_geometry_list.size() - begin),
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_nodes.emplace_back(edge.node_id);
+        std::for_each(m_geometry_node_list.rbegin() + (m_geometry_node_list.size() - end),
+                      m_geometry_node_list.rbegin() + (m_geometry_node_list.size() - begin),
+                      [&](const NodeID &node_id) {
+                          result_nodes.emplace_back(node_id);
                       });
 
         return result_nodes;
@@ -585,7 +603,7 @@ class SharedDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector.
+         * directional edge in the m_geometry_fwd_weight_list vector.
          * */
         const unsigned begin = m_geometry_indices.at(id) + 1;
         const unsigned end = m_geometry_indices.at(id + 1);
@@ -593,10 +611,10 @@ class SharedDataFacade final : public BaseDataFacade
         std::vector<EdgeWeight> result_weights;
         result_weights.reserve(end - begin);
 
-        std::for_each(m_geometry_list.begin() + begin,
-                      m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_weights.emplace_back(edge.forward_weight);
+        std::for_each(m_geometry_fwd_weight_list.begin() + begin,
+                      m_geometry_fwd_weight_list.begin() + end,
+                      [&](const EdgeWeight &forward_weight) {
+                          result_weights.emplace_back(forward_weight);
                       });
 
         return result_weights;
@@ -610,7 +628,7 @@ class SharedDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector. For
+         * directional edge in the m_geometry_rev_weight_list vector. For
          * reverse weights of bi-directional edges, edges 1 to
          * n-1 of that edge need to be read in reverse.
          */
@@ -620,10 +638,10 @@ class SharedDataFacade final : public BaseDataFacade
         std::vector<EdgeWeight> result_weights;
         result_weights.reserve(end - begin);
 
-        std::for_each(m_geometry_list.rbegin() + (m_geometry_list.size() - end),
-                      m_geometry_list.rbegin() + (m_geometry_list.size() - begin),
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_weights.emplace_back(edge.reverse_weight);
+        std::for_each(m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - end),
+                      m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - begin),
+                      [&](const EdgeWeight &reverse_weight) {
+                          result_weights.emplace_back(reverse_weight);
                       });
 
         return result_weights;

@@ -86,7 +86,9 @@ class InternalDataFacade final : public BaseDataFacade
     util::ShM<extractor::TravelMode, false>::vector m_travel_mode_list;
     util::ShM<char, false>::vector m_names_char_list;
     util::ShM<unsigned, false>::vector m_geometry_indices;
-    util::ShM<extractor::CompressedEdgeContainer::CompressedEdge, false>::vector m_geometry_list;
+    util::ShM<NodeID, false>::vector m_geometry_node_list;
+    util::ShM<EdgeWeight, false>::vector m_geometry_fwd_weight_list;
+    util::ShM<EdgeWeight, false>::vector m_geometry_rev_weight_list;
     util::ShM<bool, false>::vector m_is_core_node;
     util::ShM<unsigned, false>::vector m_segment_weights;
     util::ShM<uint8_t, false>::vector m_datasource_list;
@@ -268,14 +270,32 @@ class InternalDataFacade final : public BaseDataFacade
 
         geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
 
+        std::cout << "m_geometry_indices: " << std::endl;
+        std::for_each(m_geometry_indices.begin(),
+                      m_geometry_indices.end(),
+                      [](const auto &index) {
+                          std::cout << index << " ";
+                      });
+        std::cout << std::endl;
+        std::cout << "number_of_compressed_geometries: " << number_of_compressed_geometries << std::endl;
         BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
-        m_geometry_list.resize(number_of_compressed_geometries);
+        m_geometry_node_list.resize(number_of_compressed_geometries);
+        m_geometry_fwd_weight_list.resize(number_of_compressed_geometries);
+        m_geometry_rev_weight_list.resize(number_of_compressed_geometries);
 
         if (number_of_compressed_geometries > 0)
         {
-            geometry_stream.read((char *)&(m_geometry_list[0]),
+            geometry_stream.read((char *)&(m_geometry_node_list[0]),
                                  number_of_compressed_geometries *
-                                     sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+                                     sizeof(NodeID));
+
+            geometry_stream.read((char *)&(m_geometry_fwd_weight_list[0]),
+                                 number_of_compressed_geometries *
+                                     sizeof(EdgeWeight));
+
+            geometry_stream.read((char *)&(m_geometry_rev_weight_list[0]),
+                                 number_of_compressed_geometries *
+                                     sizeof(EdgeWeight));
         }
     }
 
@@ -714,8 +734,10 @@ class InternalDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector.
-         * */
+         * directional edge in the m_geometry_node_list vector. For
+         * forward geometries of bi-directional edges, edges 2 to
+         * n of that edge need to be read.
+         */
         const unsigned begin = m_geometry_indices.at(id);
         const unsigned end = m_geometry_indices.at(id + 1);
 
@@ -723,10 +745,10 @@ class InternalDataFacade final : public BaseDataFacade
 
         result_nodes.reserve(end - begin);
 
-        std::for_each(m_geometry_list.begin() + begin,
-                      m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_nodes.emplace_back(edge.node_id);
+        std::for_each(m_geometry_node_list.begin() + begin,
+                      m_geometry_node_list.begin() + end,
+                      [&](const NodeID &node_id) {
+                          result_nodes.emplace_back(node_id);
                       });
 
         return result_nodes;
@@ -739,19 +761,19 @@ class InternalDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector.
+         * directional edge in the m_geometry_node_list vector.
          * */
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1);
+        const signed begin = m_geometry_indices.at(id);
+        const signed end = m_geometry_indices.at(id + 1);
 
         std::vector<NodeID> result_nodes;
 
         result_nodes.reserve(end - begin);
 
-        std::for_each(m_geometry_list.rbegin() + (m_geometry_list.size() - end),
-                      m_geometry_list.rbegin() + (m_geometry_list.size() - begin),
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_nodes.emplace_back(edge.node_id);
+        std::for_each(m_geometry_node_list.rbegin() + (m_geometry_node_list.size() - end),
+                      m_geometry_node_list.rbegin() + (m_geometry_node_list.size() - begin),
+                      [&](const NodeID &node_id) {
+                          result_nodes.emplace_back(node_id);
                       });
 
         return result_nodes;
@@ -765,20 +787,18 @@ class InternalDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector. For
-         * forward weights of bi-directional edges, edges 2 to
-         * n of that edge need to be read.
-         */
+         * directional edge in the m_geometry_fwd_weight_list vector.
+         * */
         const unsigned begin = m_geometry_indices.at(id) + 1;
         const unsigned end = m_geometry_indices.at(id + 1);
 
         std::vector<EdgeWeight> result_weights;
         result_weights.reserve(end - begin);
 
-        std::for_each(m_geometry_list.begin() + begin,
-                      m_geometry_list.begin() + end,
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_weights.emplace_back(edge.forward_weight);
+        std::for_each(m_geometry_fwd_weight_list.begin() + begin,
+                      m_geometry_fwd_weight_list.begin() + end,
+                      [&](const EdgeWeight &forward_weight) {
+                          result_weights.emplace_back(forward_weight);
                       });
 
         return result_weights;
@@ -792,20 +812,20 @@ class InternalDataFacade final : public BaseDataFacade
          * both forward and reverse segments along the same bi-
          * directional edge. The m_geometry_indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector. For
+         * directional edge in the m_geometry_rev_weight_list vector. For
          * reverse weights of bi-directional edges, edges 1 to
          * n-1 of that edge need to be read in reverse.
          */
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1) - 1;
+        const signed begin = m_geometry_indices.at(id);
+        const signed end = m_geometry_indices.at(id + 1) - 1;
 
         std::vector<EdgeWeight> result_weights;
         result_weights.reserve(end - begin);
 
-        std::for_each(m_geometry_list.rbegin() + (m_geometry_list.size() - end),
-                      m_geometry_list.rbegin() + (m_geometry_list.size() - begin),
-                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_weights.emplace_back(edge.reverse_weight);
+        std::for_each(m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - end),
+                      m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - begin),
+                      [&](const EdgeWeight &reverse_weight) {
+                          result_weights.emplace_back(reverse_weight);
                       });
 
         return result_weights;

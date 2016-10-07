@@ -23,16 +23,7 @@ class CompressedEdgeContainer
         EdgeWeight weight; // the weight of the edge leading to this node
     };
 
-    struct CompressedEdge
-    {
-      public:
-        NodeID node_id;
-        EdgeWeight forward_weight;
-        EdgeWeight reverse_weight;
-    };
-
     using OnewayEdgeBucket = std::vector<OnewayCompressedEdge>;
-    using EdgeBucket = std::vector<CompressedEdge>;
 
     CompressedEdgeContainer();
     void CompressEdge(const EdgeID surviving_edge_id,
@@ -67,7 +58,10 @@ class CompressedEdgeContainer
 
     void IncreaseFreeList();
     std::vector<OnewayEdgeBucket> m_compressed_oneway_geometries;
-    std::vector<EdgeBucket> m_compressed_geometries;
+    std::vector<unsigned> m_compressed_geometry_index;
+    std::vector<NodeID> m_compressed_geometry_nodes;
+    std::vector<EdgeWeight> m_compressed_geometry_fwd_weights;
+    std::vector<EdgeWeight> m_compressed_geometry_rev_weights;
     std::vector<unsigned> m_free_list;
     std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
     std::unordered_map<EdgeID, unsigned> m_forward_edge_id_to_zipped_index_map;
