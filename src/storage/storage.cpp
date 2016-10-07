@@ -739,7 +739,9 @@ int Storage::Run()
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
     {
+        util::SimpleLogger().Write(logDEBUG) << "waiting for all queries to finish";
         boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> query_lock(barrier.query_mutex);
+        util::SimpleLogger().Write(logDEBUG) << "all queries complete, switching over.";
 
         data_timestamp_ptr->layout = layout_region;
         data_timestamp_ptr->data = data_region;

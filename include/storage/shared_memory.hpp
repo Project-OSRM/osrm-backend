@@ -93,6 +93,8 @@ class SharedMemory
         { // read_only
             shm = boost::interprocess::xsi_shared_memory(boost::interprocess::open_only, key);
 
+            util::SimpleLogger().Write(logDEBUG) << "opening " << shm.get_shmid() << " from id "
+                                                 << id;
             region = boost::interprocess::mapped_region(
                 shm,
                 (read_write ? boost::interprocess::read_write : boost::interprocess::read_only));
@@ -106,6 +108,8 @@ class SharedMemory
             }
             shm = boost::interprocess::xsi_shared_memory(
                 boost::interprocess::open_or_create, key, size);
+            util::SimpleLogger().Write(logDEBUG) << "opening/creating " << shm.get_shmid()
+                                                 << " from id " << id << " with size " << size;
 #ifdef __linux__
             if (-1 == shmctl(shm.get_shmid(), SHM_LOCK, nullptr))
             {
@@ -166,8 +170,8 @@ class SharedMemory
         bool ret = false;
         try
         {
-            util::SimpleLogger().Write(logDEBUG) << "deallocating prev memory";
             boost::interprocess::xsi_shared_memory xsi(boost::interprocess::open_only, key);
+            util::SimpleLogger().Write(logDEBUG) << "deallocating prev memory " << xsi.get_shmid();
             ret = boost::interprocess::xsi_shared_memory::remove(xsi.get_shmid());
         }
         catch (const boost::interprocess::interprocess_exception &e)
@@ -306,7 +310,7 @@ class SharedMemory
         bool ret = false;
         try
         {
-            util::SimpleLogger().Write(logDEBUG) << "deallocating prev memory";
+            util::SimpleLogger().Write(logDEBUG) << "deallocating prev memory for key " << key;
             ret = boost::interprocess::shared_memory_object::remove(key);
         }
         catch (const boost::interprocess::interprocess_exception &e)
