@@ -119,7 +119,7 @@ int Storage::Run()
     }();
 
     // Allocate a memory layout in shared memory, deallocate previous
-    auto *layout_memory = makeSharedMemory(layout_region, sizeof(SharedDataLayout));
+    auto layout_memory = makeSharedMemory(layout_region, sizeof(SharedDataLayout));
     auto shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
     auto absolute_file_index_path = boost::filesystem::absolute(config.file_index_path);
 
@@ -406,7 +406,7 @@ int Storage::Run()
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
                                  << shared_layout_ptr->GetSizeOfLayout() << " bytes";
-    auto *shared_memory = makeSharedMemory(data_region, shared_layout_ptr->GetSizeOfLayout());
+    auto shared_memory = makeSharedMemory(data_region, shared_layout_ptr->GetSizeOfLayout());
     char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
 
     // read actual data into shared memory object //
@@ -733,8 +733,7 @@ int Storage::Run()
     }
 
     // acquire lock
-    SharedMemory *data_type_memory =
-        makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true, false);
+    auto data_type_memory = makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true, false, false);
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
