@@ -85,10 +85,8 @@ class Engine final
     std::unique_ptr<plugins::MatchPlugin> match_plugin;
     std::unique_ptr<plugins::TilePlugin> tile_plugin;
 
-    // reading and setting this is protected by lock
+    // reading and setting this is protected by locking in the watchdog
     mutable std::shared_ptr<datafacade::BaseDataFacade> query_data_facade;
-    // ensures that when we set facade we can do it without race conditions
-    mutable std::unique_ptr<std::mutex> facade_update_mutex;
 };
 }
 }

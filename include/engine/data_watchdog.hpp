@@ -6,8 +6,8 @@
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 #include <memory>
 
@@ -29,7 +29,7 @@ class DataWatchdog
   public:
     DataWatchdog()
         : shared_regions(storage::makeSharedMemoryView(storage::CURRENT_REGIONS)),
-        current_timestamp {storage::LAYOUT_NONE, storage::DATA_NONE, 0}
+          current_timestamp{storage::LAYOUT_NONE, storage::DATA_NONE, 0}
     {
     }
 
@@ -47,30 +47,42 @@ class DataWatchdog
         const auto shared_timestamp =
             static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
 
-        return shared_timestamp->layout != current_timestamp.layout ||
-               shared_timestamp->data != current_timestamp.data ||
-               shared_timestamp->timestamp != current_timestamp.timestamp;
+        // sanity check: if the timestamp is the same all other data needs to be the same as well
+        BOOST_ASSERT(shared_timestamp->timestamp != current_timestamp.timestamp ||
+                     (shared_timestamp->layout == current_timestamp.layout &&
+                      shared_timestamp->data == current_timestamp.data));
+
+        return shared_timestamp->timestamp != current_timestamp.timestamp;
     }
 
-    // Note this can still return an emptry pointer if this function got overtaken by another thread
-    std::shared_ptr<datafacade::SharedDataFacade> MaybeLoadNewRegion()
+    // This will either update the contens of facade or just leave it as is
+    // if the update was already done by another thread
+    void MaybeLoadNewRegion(std::shared_ptr<datafacade::BaseDataFacade> &facade)
     {
         const boost::lock_guard<boost::shared_mutex> lock(current_timestamp_mutex);
 
         const auto shared_timestamp =
             static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
 
+        // if more then one request tried to aquire the write lock
+        // we might get overtaken before we actually do the writing
+        // in that case we don't modify anthing
         if (shared_timestamp->timestamp == current_timestamp.timestamp)
         {
             BOOST_ASSERT(shared_timestamp->layout == current_timestamp.layout);
             BOOST_ASSERT(shared_timestamp->data == current_timestamp.data);
-            return std::shared_ptr<datafacade::SharedDataFacade>();
         }
-
-        current_timestamp = *shared_timestamp;
-
-        return std::make_shared<datafacade::SharedDataFacade>(
-            current_timestamp.layout, current_timestamp.data, current_timestamp.timestamp);
+        // this thread has won and can update the data
+        else
+        {
+            current_timestamp = *shared_timestamp;
+            // TODO remove once we allow for more then one SharedMemoryFacade at the same time
+            // at this point no other query is allowed to reference this facade!
+            // the old facade will die exactly here
+            BOOST_ASSERT(!facade || facade.use_count() == 1);
+            facade = std::make_shared<datafacade::SharedDataFacade>(
+                current_timestamp.layout, current_timestamp.data, current_timestamp.timestamp);
+        }
     }
 
   private:
