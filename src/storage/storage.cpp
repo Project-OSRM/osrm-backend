@@ -329,8 +329,12 @@ Storage::ReturnCode Storage::Run(int max_wait)
     boost::iostreams::seek(
         geometry_input_stream, number_of_geometries_indices * sizeof(unsigned), BOOST_IOS::cur);
     geometry_input_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
-    shared_layout_ptr->SetBlockSize<extractor::CompressedEdgeContainer::CompressedEdge>(
-        SharedDataLayout::GEOMETRIES_LIST, number_of_compressed_geometries);
+    shared_layout_ptr->SetBlockSize<NodeID>(
+        SharedDataLayout::GEOMETRIES_NODE_LIST, number_of_compressed_geometries);
+    shared_layout_ptr->SetBlockSize<EdgeWeight>(
+        SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST, number_of_compressed_geometries);
+    shared_layout_ptr->SetBlockSize<EdgeWeight>(
+        SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST, number_of_compressed_geometries);
 
     // load datasource sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist.
@@ -601,19 +605,45 @@ Storage::ReturnCode Storage::Run(int max_wait)
             (char *)geometries_index_ptr,
             shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_INDEX));
     }
-    extractor::CompressedEdgeContainer::CompressedEdge *geometries_list_ptr =
-        shared_layout_ptr->GetBlockPtr<extractor::CompressedEdgeContainer::CompressedEdge, true>(
-            shared_memory_ptr, SharedDataLayout::GEOMETRIES_LIST);
+    NodeID *geometries_node_id_list_ptr =
+        shared_layout_ptr->GetBlockPtr<NodeID, true>(
+            shared_memory_ptr, SharedDataLayout::GEOMETRIES_NODE_LIST);
 
     geometry_input_stream.read((char *)&temporary_value, sizeof(unsigned));
     BOOST_ASSERT(temporary_value ==
-                 shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_LIST]);
+                 shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_NODE_LIST]);
 
-    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_LIST) > 0)
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_NODE_LIST) > 0)
     {
         geometry_input_stream.read(
-            (char *)geometries_list_ptr,
-            shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_LIST));
+            (char *)geometries_node_id_list_ptr,
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_NODE_LIST));
+    }
+    EdgeWeight *geometries_fwd_weight_list_ptr =
+        shared_layout_ptr->GetBlockPtr<EdgeWeight, true>(
+            shared_memory_ptr, SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
+
+    BOOST_ASSERT(temporary_value ==
+                 shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
+
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST) > 0)
+    {
+        geometry_input_stream.read(
+            (char *)geometries_fwd_weight_list_ptr,
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST));
+    }
+    EdgeWeight *geometries_rev_weight_list_ptr =
+        shared_layout_ptr->GetBlockPtr<EdgeWeight, true>(
+            shared_memory_ptr, SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST);
+
+    BOOST_ASSERT(temporary_value ==
+                 shared_layout_ptr->num_entries[SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
+
+    if (shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST) > 0)
+    {
+        geometry_input_stream.read(
+            (char *)geometries_rev_weight_list_ptr,
+            shared_layout_ptr->GetBlockSize(SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST));
     }
 
     // load datasource information (if it exists)
