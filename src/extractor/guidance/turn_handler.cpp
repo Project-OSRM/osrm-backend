@@ -1,7 +1,7 @@
+#include "extractor/guidance/turn_handler.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/intersection_scenario_three_way.hpp"
 #include "extractor/guidance/toolkit.hpp"
-#include "extractor/guidance/turn_handler.hpp"
 
 #include "util/guidance/toolkit.hpp"
 
@@ -164,7 +164,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 intersection[2].turn.instruction = {TurnType::OnRamp, DirectionModifier::Left};
         }
     }
-    else
+    else if (obvious_index != 0) // has an obvious continuing road/obvious turn
     {
         const auto direction_at_one = getTurnDirection(intersection[1].turn.angle);
         const auto direction_at_two = getTurnDirection(intersection[2].turn.angle);
@@ -172,33 +172,36 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         {
             intersection[1].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(1, intersection), intersection[1]);
+
+            const auto second_direction = (direction_at_one == direction_at_two &&
+                                           direction_at_two == DirectionModifier::Straight)
+                                              ? DirectionModifier::SlightLeft
+                                              : direction_at_two;
+
+            intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
+                                                second_direction};
         }
         else
         {
-            if (obvious_index != 0 && direction_at_one == direction_at_two &&
-                direction_at_one == DirectionModifier::Straight)
-                intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
-                                                    DirectionModifier::SlightRight};
-            else
-                intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
-                                                    direction_at_one};
-        }
-
-        if (obvious_index == 2)
-        {
+            BOOST_ASSERT(obvious_index == 2);
             intersection[2].turn.instruction = getInstructionForObvious(
                 3, via_edge, isThroughStreet(2, intersection), intersection[2]);
+
+            const auto first_direction = (direction_at_one == direction_at_two &&
+                                          direction_at_one == DirectionModifier::Straight)
+                                             ? DirectionModifier::SlightRight
+                                             : direction_at_one;
+
+            intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
+                                                first_direction};
         }
-        else
-        {
-            if (obvious_index != 0 && direction_at_one == direction_at_two &&
-                direction_at_two == DirectionModifier::Straight)
-                intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
-                                                    DirectionModifier::SlightLeft};
-            else
-                intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
-                                                    direction_at_two};
-        }
+    }
+    else // basic turn assignment
+    {
+        intersection[1].turn.instruction = {findBasicTurnType(via_edge, intersection[1]),
+                                            getTurnDirection(intersection[1].turn.angle)};
+        intersection[2].turn.instruction = {findBasicTurnType(via_edge, intersection[2]),
+                                            getTurnDirection(intersection[2].turn.angle)};
     }
     return intersection;
 }
