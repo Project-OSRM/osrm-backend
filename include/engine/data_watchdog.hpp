@@ -1,3 +1,6 @@
+#ifndef OSRM_ENGINE_DATA_WATCHDOG_HPP
+#define OSRM_ENGINE_DATA_WATCHDOG_HPP
+
 #include "engine/datafacade/shared_datafacade.hpp"
 
 #include "storage/shared_datatype.hpp"
@@ -82,3 +85,5 @@ class DataWatchdog
 };
 }
 }
+
+#endif
