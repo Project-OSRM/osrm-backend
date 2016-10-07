@@ -1,27 +1,29 @@
 #ifndef SHARED_BARRIERS_HPP
 #define SHARED_BARRIERS_HPP
 
-#include <boost/interprocess/sync/named_condition.hpp>
-#include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/named_sharable_mutex.hpp>
+#include <boost/interprocess/sync/named_upgradable_mutex.hpp>
 
 namespace osrm
 {
 namespace storage
 {
+
 struct SharedBarriers
 {
 
     SharedBarriers()
-        : pending_update_mutex(boost::interprocess::open_or_create, "pending_update"),
-          query_mutex(boost::interprocess::open_or_create, "query")
+        : current_regions_mutex(boost::interprocess::open_or_create, "current_regions"),
+          regions_1_mutex(boost::interprocess::open_or_create, "regions_1"),
+          regions_2_mutex(boost::interprocess::open_or_create, "regions_2")
     {
     }
 
-    // Mutex to protect access to the boolean variable
-    boost::interprocess::named_mutex pending_update_mutex;
-    boost::interprocess::named_sharable_mutex query_mutex;
+    boost::interprocess::named_upgradable_mutex current_regions_mutex;
+    boost::interprocess::named_sharable_mutex regions_1_mutex;
+    boost::interprocess::named_sharable_mutex regions_2_mutex;
 };
+
 }
 }
 
