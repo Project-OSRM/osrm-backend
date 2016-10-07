@@ -10,6 +10,5 @@ int main()
     osrm::storage::SharedBarriers barrier;
     barrier.pending_update_mutex.unlock();
     barrier.query_mutex.unlock();
-    barrier.update_mutex.unlock();
     return 0;
 }
