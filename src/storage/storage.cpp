@@ -42,11 +42,6 @@ namespace osrm
 namespace storage
 {
 
-using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode =
-    util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>::TreeNode;
-using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
-
 // delete a shared memory region. report warning if it could not be deleted
 void deleteRegion(const SharedDataType region)
 {
@@ -75,6 +70,11 @@ void deleteRegion(const SharedDataType region)
         util::SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
     }
 }
+
+using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
+using RTreeNode =
+    util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>::TreeNode;
+using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 
 Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
@@ -738,20 +738,15 @@ int Storage::Run()
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
-    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
-        barrier.query_mutex);
-
-    // notify all processes that were waiting for this condition
-    if (0 < barrier.number_of_queries)
     {
-        barrier.no_running_queries_condition.wait(query_lock);
-    }
+        boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> query_lock(barrier.query_mutex);
 
-    data_timestamp_ptr->layout = layout_region;
-    data_timestamp_ptr->data = data_region;
-    data_timestamp_ptr->timestamp += 1;
-    deleteRegion(previous_data_region);
-    deleteRegion(previous_layout_region);
+        data_timestamp_ptr->layout = layout_region;
+        data_timestamp_ptr->data = data_region;
+        data_timestamp_ptr->timestamp += 1;
+        deleteRegion(previous_data_region);
+        deleteRegion(previous_layout_region);
+    }
     util::SimpleLogger().Write() << "all data loaded";
 
     return EXIT_SUCCESS;

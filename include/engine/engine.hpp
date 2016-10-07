@@ -1,7 +1,6 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
-#include "storage/shared_barriers.hpp"
 #include "engine/status.hpp"
 #include "util/json_container.hpp"
 
@@ -18,6 +17,11 @@ namespace json
 {
 struct Object;
 }
+}
+
+namespace storage
+{
+struct SharedBarriers;
 }
 
 // Fwd decls
@@ -52,9 +56,6 @@ class BaseDataFacade;
 class Engine final
 {
   public:
-    // Needs to be public
-    struct EngineLock;
-
     explicit Engine(const EngineConfig &config);
 
     Engine(Engine &&) noexcept;
@@ -71,7 +72,7 @@ class Engine final
     Status Tile(const api::TileParameters &parameters, std::string &result) const;
 
   private:
-    std::unique_ptr<EngineLock> lock;
+    std::unique_ptr<storage::SharedBarriers> lock;
 
     std::unique_ptr<plugins::ViaRoutePlugin> route_plugin;
     std::unique_ptr<plugins::TablePlugin> table_plugin;

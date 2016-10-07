@@ -1,5 +1,5 @@
-#include "engine/engine.hpp"
 #include "engine/api/route_parameters.hpp"
+#include "engine/engine.hpp"
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
@@ -21,6 +21,7 @@
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/sharable_lock.hpp>
 #include <boost/thread/lock_types.hpp>
 
 #include <algorithm>
@@ -28,68 +29,17 @@
 #include <utility>
 #include <vector>
 
-namespace osrm
-{
-namespace engine
-{
-struct Engine::EngineLock
-{
-    // will only be initialized if shared memory is used
-    storage::SharedBarriers barrier;
-    // decrease number of concurrent queries
-    void DecreaseQueryCount();
-    // increase number of concurrent queries
-    void IncreaseQueryCount();
-};
-
-// decrease number of concurrent queries
-void Engine::EngineLock::DecreaseQueryCount()
-{
-    // lock query
-    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
-        barrier.query_mutex);
-
-    // decrement query count
-    --(barrier.number_of_queries);
-    BOOST_ASSERT_MSG(0 <= barrier.number_of_queries, "invalid number of queries");
-
-    // notify all processes that were waiting for this condition
-    if (0 == barrier.number_of_queries)
-    {
-        barrier.no_running_queries_condition.notify_all();
-    }
-}
-
-// increase number of concurrent queries
-void Engine::EngineLock::IncreaseQueryCount()
-{
-    // lock update pending
-    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> pending_lock(
-        barrier.pending_update_mutex);
-
-    // lock query
-    boost::interprocess::scoped_lock<boost::interprocess::named_mutex> query_lock(
-        barrier.query_mutex);
-
-    // unlock update pending
-    pending_lock.unlock();
-
-    // increment query count
-    ++(barrier.number_of_queries);
-}
-} // ns engine
-} // ns osrm
-
 namespace
 {
 // Abstracted away the query locking into a template function
 // Works the same for every plugin.
 template <typename ParameterT, typename PluginT, typename ResultT>
-osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::EngineLock> &lock,
-                              osrm::engine::datafacade::BaseDataFacade &facade,
-                              const ParameterT &parameters,
-                              PluginT &plugin,
-                              ResultT &result)
+osrm::engine::Status
+RunQuery(const std::unique_ptr<osrm::storage::SharedBarriers> &lock,
+         osrm::engine::datafacade::BaseDataFacade &facade,
+         const ParameterT &parameters,
+         PluginT &plugin,
+         ResultT &result)
 {
     if (!lock)
     {
@@ -97,7 +47,10 @@ osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::Engine
     }
 
     BOOST_ASSERT(lock);
-    lock->IncreaseQueryCount();
+    // this locks aquires shared ownership of the query mutex: other requets are allowed
+    // to run, but data updates need to wait for all queries to finish until they can aquire an exclusive lock
+    boost::interprocess::sharable_lock<boost::interprocess::named_sharable_mutex> query_lock(
+        lock->query_mutex);
 
     auto &shared_facade = static_cast<osrm::engine::datafacade::SharedDataFacade &>(facade);
     shared_facade.CheckAndReloadFacade();
@@ -107,7 +60,6 @@ osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::Engine::Engine
 
     osrm::engine::Status status = plugin.HandleRequest(parameters, result);
 
-    lock->DecreaseQueryCount();
     return status;
 }
 
@@ -125,10 +77,11 @@ namespace engine
 {
 
 Engine::Engine(const EngineConfig &config)
+    : lock(config.use_shared_memory ? std::make_unique<storage::SharedBarriers>()
+                                    : std::unique_ptr<storage::SharedBarriers>())
 {
     if (config.use_shared_memory)
     {
-        lock = util::make_unique<EngineLock>();
         query_data_facade = util::make_unique<datafacade::SharedDataFacade>();
     }
     else
