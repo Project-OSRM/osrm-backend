@@ -6,6 +6,8 @@
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 
+#include <boost/interprocess/sync/named_upgradable_mutex.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
@@ -28,7 +30,8 @@ class DataWatchdog
 {
   public:
     DataWatchdog()
-        : shared_regions(storage::makeSharedMemoryView(storage::CURRENT_REGIONS)),
+        : shared_barriers{std::make_shared<storage::SharedBarriers>()},
+          shared_regions(storage::makeSharedMemoryView(storage::CURRENT_REGIONS)),
           current_timestamp{storage::LAYOUT_NONE, storage::DATA_NONE, 0}
     {
     }
@@ -42,7 +45,8 @@ class DataWatchdog
     // Check if it might be worth to try to aquire a exclusive lock
     bool HasNewRegion() const
     {
-        const boost::shared_lock<boost::shared_mutex> lock(current_timestamp_mutex);
+        const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex> lock(
+            shared_barriers->current_regions_mutex);
 
         const auto shared_timestamp =
             static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
@@ -59,10 +63,13 @@ class DataWatchdog
     // if the update was already done by another thread
     void MaybeLoadNewRegion(std::shared_ptr<datafacade::BaseDataFacade> &facade)
     {
-        const boost::lock_guard<boost::shared_mutex> lock(current_timestamp_mutex);
+        const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex> lock(
+            shared_barriers->current_regions_mutex);
 
         const auto shared_timestamp =
             static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
+
+        boost::upgrade_lock<boost::shared_mutex> facade_lock(facade_mutex);
 
         // if more then one request tried to aquire the write lock
         // we might get overtaken before we actually do the writing
@@ -75,23 +82,29 @@ class DataWatchdog
         // this thread has won and can update the data
         else
         {
+            boost::upgrade_to_unique_lock<boost::upgrade_mutex> unique_facade_lock(facade_lock);
+
             current_timestamp = *shared_timestamp;
             // TODO remove once we allow for more then one SharedMemoryFacade at the same time
             // at this point no other query is allowed to reference this facade!
             // the old facade will die exactly here
             BOOST_ASSERT(!facade || facade.use_count() == 1);
-            facade = std::make_shared<datafacade::SharedDataFacade>(
-                current_timestamp.layout, current_timestamp.data, current_timestamp.timestamp);
+            facade = std::make_shared<datafacade::SharedDataFacade>(shared_barriers,
+                                                                    current_timestamp.layout,
+                                                                    current_timestamp.data,
+                                                                    current_timestamp.timestamp);
         }
     }
 
   private:
+    // mutexes should be mutable even on const objects: This enables
+    // marking functions as logical const and thread-safe.
+    std::shared_ptr<storage::SharedBarriers> shared_barriers;
+
     // shared memory table containing pointers to all shared regions
     std::unique_ptr<storage::SharedMemory> shared_regions;
 
-    // mutexes should be mutable even on const objects: This enables
-    // marking functions as logical const and thread-safe.
-    mutable boost::shared_mutex current_timestamp_mutex;
+    mutable boost::shared_mutex facade_mutex;
     storage::SharedDataTimestamp current_timestamp;
 };
 }
