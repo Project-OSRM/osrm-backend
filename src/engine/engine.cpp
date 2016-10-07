@@ -37,7 +37,6 @@ namespace
 template <typename ParameterT, typename PluginT, typename ResultT>
 osrm::engine::Status
 RunQuery(const std::unique_ptr<osrm::storage::SharedBarriers> &lock,
-         std::mutex &facade_update_mutex,
          osrm::engine::DataWatchdog& watchdog,
          std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &facade,
          const ParameterT &parameters,
@@ -56,31 +55,9 @@ RunQuery(const std::unique_ptr<osrm::storage::SharedBarriers> &lock,
     boost::interprocess::sharable_lock<boost::interprocess::named_sharable_mutex> query_lock(
         lock->query_mutex);
 
+    if (watchdog.HasNewRegion())
     {
-        // this lock ensures that we are never overtaken while creating a new
-        // facade and setting it.
-        // This is important since we need to ensure there is always exactly
-        // one facade per shared memory region.
-        // TODO: Remove this once the SharedDataFacade doesn't own the shared memory
-        // segment anymore.
-        std::lock_guard<std::mutex> update_lock(facade_update_mutex);
-
-        if (watchdog.HasNewRegion())
-        {
-
-            auto new_facade = watchdog.MaybeLoadNewRegion();
-            // for now the external locking will ensure that loading the new region
-            // will ways work. In the future we might allow being overtaken
-            // by other threads and they will also try to update.
-            if (new_facade)
-            {
-                // TODO remove once we allow for more then one SharedMemoryFacade at the same time
-                // at this point no other query is allowed to reference this facade!
-                // the old facade will die exactly here
-                BOOST_ASSERT(facade.use_count() == 1);
-                facade = std::move(new_facade);
-            }
-        }
+        watchdog.MaybeLoadNewRegion(facade);
     }
 
     osrm::engine::Status status = plugin.HandleRequest(facade, parameters, result);
@@ -111,7 +88,7 @@ Engine::Engine(const EngineConfig &config)
         watchdog = std::make_unique<DataWatchdog>();
         // this will always either return a value or throw an exception
         // in the initial run
-        query_data_facade = watchdog->MaybeLoadNewRegion();
+        watchdog->MaybeLoadNewRegion(query_data_facade);
         BOOST_ASSERT(query_data_facade);
         BOOST_ASSERT(watchdog);
         BOOST_ASSERT(lock);
@@ -143,32 +120,32 @@ Engine &Engine::operator=(Engine &&) noexcept = default;
 
 Status Engine::Route(const api::RouteParameters &params, util::json::Object &result) const
 {
-    return RunQuery(lock, *facade_update_mutex, *watchdog, query_data_facade, params, *route_plugin, result);
+    return RunQuery(lock, *watchdog, query_data_facade, params, *route_plugin, result);
 }
 
 Status Engine::Table(const api::TableParameters &params, util::json::Object &result) const
 {
-    return RunQuery(lock, *facade_update_mutex, *watchdog, query_data_facade, params, *table_plugin, result);
+    return RunQuery(lock, *watchdog, query_data_facade, params, *table_plugin, result);
 }
 
 Status Engine::Nearest(const api::NearestParameters &params, util::json::Object &result) const
 {
-    return RunQuery(lock, *facade_update_mutex, *watchdog, query_data_facade, params, *nearest_plugin, result);
+    return RunQuery(lock, *watchdog, query_data_facade, params, *nearest_plugin, result);
 }
 
 Status Engine::Trip(const api::TripParameters &params, util::json::Object &result) const
 {
-    return RunQuery(lock, *facade_update_mutex, *watchdog, query_data_facade, params, *trip_plugin, result);
+    return RunQuery(lock, *watchdog, query_data_facade, params, *trip_plugin, result);
 }
 
 Status Engine::Match(const api::MatchParameters &params, util::json::Object &result) const
 {
-    return RunQuery(lock, *facade_update_mutex, *watchdog, query_data_facade, params, *match_plugin, result);
+    return RunQuery(lock, *watchdog, query_data_facade, params, *match_plugin, result);
 }
 
 Status Engine::Tile(const api::TileParameters &params, std::string &result) const
 {
-    return RunQuery(lock, *facade_update_mutex, *watchdog, query_data_facade, params, *tile_plugin, result);
+    return RunQuery(lock, *watchdog, query_data_facade, params, *tile_plugin, result);
 }
 
 } // engine ns
