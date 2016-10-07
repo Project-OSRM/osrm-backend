@@ -48,25 +48,26 @@ class SharedMemory
     {
       private:
         int m_shmid;
-        bool m_initialized;
 
       public:
-        void SetID(int shmid)
-        {
-            m_shmid = shmid;
-            m_initialized = true;
-        }
+        shm_remove() : m_shmid(INT_MAX) {}
+        shm_remove(int shmid) : m_shmid(shmid) {}
 
-        shm_remove() : m_shmid(INT_MIN), m_initialized(false) {}
-
+        shm_remove(shm_remove &&other) : m_shmid(std::move(other.m_shmid)) {}
         shm_remove(const shm_remove &) = delete;
         shm_remove &operator=(const shm_remove &) = delete;
+        shm_remove &operator=(const shm_remove &&other)
+        {
+            m_shmid = other.m_shmid;
+            return *this;
+        }
 
         ~shm_remove()
         {
-            if (m_initialized)
+            if (m_shmid != INT_MAX)
             {
-                util::SimpleLogger().Write(logDEBUG) << "automatic memory deallocation";
+                util::SimpleLogger().Write(logDEBUG) << "automatic memory deallocation of "
+                                                     << m_shmid;
                 if (!boost::interprocess::xsi_shared_memory::remove(m_shmid))
                 {
                     util::SimpleLogger().Write(logDEBUG) << "could not deallocate id " << m_shmid;
@@ -86,7 +87,8 @@ class SharedMemory
                  const IdentifierT id,
                  const uint64_t size = 0,
                  bool read_write = false,
-                 bool remove_prev = true)
+                 bool remove_prev = true,
+                 bool owner = true)
         : key(lock_file.string().c_str(), id)
     {
         if (0 == size)
@@ -121,9 +123,10 @@ class SharedMemory
 #endif
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
 
-            remover.SetID(shm.get_shmid());
-            util::SimpleLogger().Write(logDEBUG) << "writeable memory allocated " << size
-                                                 << " bytes";
+            if (owner)
+            {
+                remover = shm_remove{shm.get_shmid()};
+            }
         }
     }
 
@@ -200,23 +203,17 @@ class SharedMemory
     {
       private:
         char *m_shmid;
-        bool m_initialized;
 
       public:
-        void SetID(char *shmid)
-        {
-            m_shmid = shmid;
-            m_initialized = true;
-        }
-
-        shm_remove() : m_shmid("undefined"), m_initialized(false) {}
+        shm_remove() : m_shmid(nullptr) {}
+        shm_remove(char *id) : m_shmid(id) {}
 
         shm_remove(const shm_remove &) = delete;
         shm_remove &operator=(const shm_remove &) = delete;
 
         ~shm_remove()
         {
-            if (m_initialized)
+            if (m_shmid != nullptr)
             {
                 util::SimpleLogger().Write(logDEBUG) << "automatic memory deallocation";
                 if (!boost::interprocess::shared_memory_object::remove(m_shmid))
@@ -234,7 +231,8 @@ class SharedMemory
                  const int id,
                  const uint64_t size = 0,
                  bool read_write = false,
-                 bool remove_prev = true)
+                 bool remove_prev = true,
+                 bool owner = false)
     {
         sprintf(key, "%s.%d", "osrm.lock", id);
         if (0 == size)
@@ -258,7 +256,10 @@ class SharedMemory
             shm.truncate(size);
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
 
-            remover.SetID(key);
+            if (owner)
+            {
+                remover = shm_remover{key};
+            }
             util::SimpleLogger().Write(logDEBUG) << "writeable memory allocated " << size
                                                  << " bytes";
         }
@@ -331,10 +332,11 @@ class SharedMemory
 #endif
 
 template <typename IdentifierT, typename LockFileT = OSRMLockFile>
-SharedMemory *makeSharedMemory(const IdentifierT &id,
-                               const uint64_t size = 0,
-                               bool read_write = false,
-                               bool remove_prev = true)
+std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id,
+                                               const uint64_t size = 0,
+                                               bool read_write = false,
+                                               bool remove_prev = true,
+                                               bool owner = false)
 {
     try
     {
@@ -350,7 +352,8 @@ SharedMemory *makeSharedMemory(const IdentifierT &id,
                 boost::filesystem::ofstream ofs(lock_file());
             }
         }
-        return new SharedMemory(lock_file(), id, size, read_write, remove_prev);
+        return std::make_unique<SharedMemory>(
+            lock_file(), id, size, read_write, remove_prev, owner);
     }
     catch (const boost::interprocess::interprocess_exception &e)
     {
@@ -358,6 +361,17 @@ SharedMemory *makeSharedMemory(const IdentifierT &id,
                                                << e.get_error_code();
         throw util::exception(e.what());
     }
+}
+
+template <typename IdentifierT>
+std::unique_ptr<SharedMemory> makeSharedMemoryView(const IdentifierT &id)
+{
+    return makeSharedMemory(id, 0, false, false, false);
+}
+template <typename IdentifierT>
+std::unique_ptr<SharedMemory> makeOwnedSharedMemoryView(const IdentifierT &id)
+{
+    return makeSharedMemory(id, 0, false, false, true);
 }
 }
 }

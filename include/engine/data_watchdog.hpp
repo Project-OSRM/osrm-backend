@@ -28,8 +28,7 @@ class DataWatchdog
 {
   public:
     DataWatchdog()
-        : shared_regions(storage::makeSharedMemory(
-              storage::CURRENT_REGIONS, sizeof(storage::SharedDataTimestamp), false, false)),
+        : shared_regions(storage::makeSharedMemoryView(storage::CURRENT_REGIONS)),
         current_timestamp {storage::LAYOUT_NONE, storage::DATA_NONE, 0}
     {
     }

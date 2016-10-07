@@ -388,12 +388,12 @@ class SharedDataFacade final : public BaseDataFacade
         util::SimpleLogger().Write(logDEBUG) << "Loading new data with shared timestamp " << shared_timestamp;
 
         BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
-        m_layout_memory.reset(storage::makeSharedMemory(layout_region));
+        m_layout_memory = storage::makeOwnedSharedMemoryView(layout_region);
 
         data_layout = static_cast<storage::SharedDataLayout *>(m_layout_memory->Ptr());
 
         BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
-        m_large_memory.reset(storage::makeSharedMemory(data_region));
+        m_large_memory = storage::makeOwnedSharedMemoryView(data_region);
         shared_memory = (char *)(m_large_memory->Ptr());
 
         LoadGraph();
