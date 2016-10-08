@@ -4,6 +4,8 @@
 #  LUABIND_LIBRARIES
 #  LUABIND_INCLUDE_DIR, where to find luabind.hpp
 
+# First we try using EXACT but in some verison of
+# cmake this would also match patch versions
 FIND_PACKAGE(Lua 5.2 EXACT)
 IF (LUA_FOUND)
     MESSAGE(STATUS "Using Lua ${LUA_VERSION_STRING}")
@@ -12,9 +14,22 @@ ELSE()
   IF (LUA_FOUND)
     MESSAGE(STATUS "Using Lua ${LUA_VERSION_STRING}")
   ELSE()
-    MESSAGE(FATAL_ERROR "Lua 5.1 or 5.2 was not found.")
+    # Now fall back to a lua verison without exact
+    # in case this cmake version also forces patch versions
+    FIND_PACKAGE(Lua 5.2)
+    IF (LUA_FOUND)
+        MESSAGE(STATUS "Using Lua ${LUA_VERSION_STRING}")
+    ELSE()
+      FIND_PACKAGE(Lua 5.1)
+      IF (LUA_FOUND)
+        MESSAGE(STATUS "Using Lua ${LUA_VERSION_STRING}")
+      ELSE()
+        MESSAGE(FATAL_ERROR "Lua 5.1 or 5.2 was not found.")
+      ENDIF()
+    ENDIF()
   ENDIF()
 ENDIF()
+
 
 FIND_PATH(LUABIND_INCLUDE_DIR luabind.hpp
   HINTS
