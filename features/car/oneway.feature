@@ -85,3 +85,12 @@ Feature: Car - Oneway streets
         When I route I should get
             | from | to | route    |
             | a    | c  | ab,bc,bc |
+
+
+    # Reversible oneways (low frequency) vs alternating oneways (high frequency).
+    # See: https://github.com/Project-OSRM/osrm-backend/issues/2837
+    Scenario: Car - Route over alternating but not reversible oneways
+        Then routability should be
+            | highway | oneway      | forw | backw |
+            | primary | reversible  |      |       |
+            | primary | alternating | x    | x     |

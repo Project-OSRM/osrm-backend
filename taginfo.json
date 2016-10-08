@@ -46,8 +46,14 @@
         },
         {
             "key": "oneway",
+            "value": "alternating",
+            "description": "high frequency reversible oneways are routed over taking the waiting period into account",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "oneway",
             "value": "reversible",
-            "description": "is marked as non-routable because of time-dependence",
+            "description": "low frequency reversible oneways are marked as non-routable because of time-dependence",
             "object_types": [ "way" ]
         },
         {

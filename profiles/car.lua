@@ -308,7 +308,9 @@ function way_function (way, result)
     return
   end
 
-  -- check if oneway tag is unsupported
+  -- Reversible oneways change direction with low frequency (think twice a day):
+  -- do not route over these at all at the moment because of time dependence.
+  -- Note: alternating (high frequency) oneways are handled below with penalty.
   local oneway = way:get_value_by_key("oneway")
   if oneway and "reversible" == oneway then
     return
@@ -582,6 +584,18 @@ function way_function (way, result)
       penalized_speed = result.backward_speed / 2
     end
     result.backward_speed = math.min(penalized_speed, scaled_speed)
+  end
+
+  -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
+  -- Scaling speed to take average waiting time into account plus some more for start / stop.
+  if oneway and "alternating" == oneway then
+    local scaling_factor = 0.4
+    if result.forward_speed ~= math.huge then
+      result.forward_speed = result.forward_speed * scaling_factor
+    end
+    if result.backward_speed ~= math.huge then
+      result.backward_speed = result.backward_speed * scaling_factor
+    end
   end
 
   -- only allow this road as start point if it not a ferry
