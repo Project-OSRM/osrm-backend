@@ -137,7 +137,7 @@ class OSRM final
      * \return Status indicating success for the query or failure
      * \see Status, NearestParameters and json::Object
      */
-    Status Isochrone(const IsochroneParameters &parameters, json::Object &result);
+    Status Isochrone(const IsochroneParameters &parameters, json::Object &result) const;
 
   private:
     std::unique_ptr<engine::Engine> engine_;

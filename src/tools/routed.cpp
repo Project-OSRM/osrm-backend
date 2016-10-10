@@ -65,7 +65,7 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              int &max_locations_distance_table,
                                              int &max_locations_map_matching,
                                              int &max_results_nearest,
-                                             bool &use_isochrone)
+      					     bool &use_isochrone)
 {
     using boost::program_options::value;
     using boost::filesystem::path;
@@ -199,7 +199,7 @@ int main(int argc, const char *argv[]) try
                                                               config.max_locations_distance_table,
                                                               config.max_locations_map_matching,
                                                               config.max_results_nearest,
-							      config.use_isochrone);
+                                                              config.use_isochrone);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;

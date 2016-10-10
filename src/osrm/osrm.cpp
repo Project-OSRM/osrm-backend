@@ -53,7 +53,7 @@ engine::Status OSRM::Tile(const engine::api::TileParameters &params, std::string
 {
     return engine_->Tile(params, result);
 }
-engine::Status OSRM::Isochrone(const engine::api::IsochroneParameters &params, json::Object &result)
+engine::Status OSRM::Isochrone(const engine::api::IsochroneParameters &params, json::Object &result) const
 {
     return engine_->Isochrone(params, result);
 }

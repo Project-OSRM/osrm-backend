@@ -43,7 +43,7 @@ module.exports = function () {
     };
 
     var encodeWaypoints = (waypoints) => {
-        return waypoints.map(w => [w.lon, w.lat].map(this.ensureDecimal).join(','));
+        return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
     };
 
     this.requestRoute = (waypoints, bearings, userParams, callback) => {
@@ -132,12 +132,16 @@ module.exports = function () {
 
     this.summary = (instructions) => {
         if (instructions) {
-            return instructions.legs.map(l => l.summary).join(',');
+            return instructions.legs.map(l => l.summary).join(';');
         }
     };
 
     this.wayList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.name);
+    };
+
+    this.refList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.ref || '');
     };
 
     this.pronunciationList = (instructions) => {
