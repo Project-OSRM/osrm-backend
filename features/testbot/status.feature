@@ -49,6 +49,7 @@ Feature: Status messages
             | request                             | status | message                                           |
             | route/v1/driving/1,1;1,2            | 200    |                                                   |
             | route/v1/driving/-74697224,5.191564 | 400    | Query string malformed close to position 18       |
+            | route/v1/driving/200,5.191564;44,5  | 400    | Invalid coordinate value.                         |
             | nonsense                            | 400    | URL string malformed close to position 9: "nse"   |
             | nonsense/v1/driving/1,1;1,2         | 400    | Service nonsense not found!                       |
             |                                     | 400    | URL string malformed close to position 1: "/"     |
