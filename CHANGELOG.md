@@ -13,6 +13,11 @@
     - Debug Tiles
       - Added support for turn penalties
 
+# 5.4.1
+  - Changes from 5.4.0
+    - Bugfixes
+      - #3016: Fixes shared memory updates while queries are running
+
 # 5.4.0
   - Changes from 5.3.0
     - Profiles
