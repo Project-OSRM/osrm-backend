@@ -99,24 +99,6 @@ add_library(osrm_extract $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
-# Check the release mode
-if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-  message(STATUS "Configuring OSRM in debug mode")
-  set(ENABLE_ASSERTIONS ON)
-  if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
-
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -fno-omit-frame-pointer")
-
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -ggdb")
-  endif()
-
-  endif()
-endif()
-
 if(ENABLE_GOLD_LINKER)
     execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
     if("${LD_VERSION}" MATCHES "GNU gold")
@@ -136,8 +118,45 @@ if(ENABLE_GOLD_LINKER)
     endif()
 endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Release)
+# Explicitly set the build type to Release if no other type is specified
+# on the command line.  Without this, cmake defaults to an unoptimized,
+# non-debug build, which almost nobody wants.
+if(NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type specified, defaulting to Release")
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  message(STATUS "Configuring OSRM in debug mode")
+elseif(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "Configuring OSRM in release mode")
+elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  message(STATUS "Configuring OSRM in release mode with debug flags")
+elseif(CMAKE_BUILD_TYPE MATCHES MinRelSize)
+  message(STATUS "Configuring OSRM in release mode with minimized size")
+else()
+  message(STATUS "Unrecognized build type - will use cmake defaults")
+endif()
+
+# Additional logic for the different build types
+if(CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  message(STATUS "Configuring debug mode flags")
+  set(ENABLE_ASSERTIONS ON)
+  if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-inline -fno-omit-frame-pointer")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+      if (CMAKE_BUILD_TYPE MATCHES Debug)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Og -ggdb")
+      else()
+        # Don't override the -O parameter for RelWithDebInfo, we want an optimized build
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
+      endif()
+    endif()
+  endif()
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+  message(STATUS "Configuring release mode optimizations")
   # Check if LTO is available
   check_cxx_compiler_flag("-flto" LTO_AVAILABLE)
   if(ENABLE_LTO AND LTO_AVAILABLE)
