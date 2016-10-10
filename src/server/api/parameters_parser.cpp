@@ -55,6 +55,11 @@ boost::optional<ParameterT> parseParameters(std::string::iterator &iter,
         // iterator to the failing position. Extract the position from the exception ourselves.
         iter = failure.first;
     }
+    catch (const boost::numeric::bad_numeric_cast &e)
+    {
+        // this can happen if we get bad numeric values in the request, just handle
+        // as normal parser error
+    }
 
     return boost::none;
 }
