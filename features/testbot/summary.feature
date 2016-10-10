@@ -53,9 +53,9 @@ Feature: Basic Routing
             | ab    |
 
         When I route I should get
-            | from | to | route | summary  |
-            | a    | b  | ab,ab | ab       |
-            | b    | a  | ab,ab | ab       |
+            | from | to | route | summary |
+            | a    | b  | ab,ab | ab      |
+            | b    | a  | ab,ab | ab      |
 
     @repeated
     Scenario: Check handling empty values

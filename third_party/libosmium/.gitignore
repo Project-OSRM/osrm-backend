@@ -1,2 +1,4 @@
 *.swp
 .ycm_extra_conf.pyc
+/build
+/libosmium-deps

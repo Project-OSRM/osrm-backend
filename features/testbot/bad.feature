@@ -11,8 +11,8 @@ Feature: Handle bad data in a graceful manner
         Given the ways
             | nodes |
 
-        When the data has been contracted
-        Then "osrm-extract" should return code 1
+        When I try to run "osrm-extract {osm_file} --profile {profile_file}"
+        Then it should exit with an error
 
     Scenario: Only dead-end oneways
         Given the node map

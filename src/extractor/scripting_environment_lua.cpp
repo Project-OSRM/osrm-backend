@@ -175,6 +175,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
              .def_readwrite("forward_speed", &ExtractionWay::forward_speed)
              .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
              .def_readwrite("name", &ExtractionWay::name)
+             .def_readwrite("ref", &ExtractionWay::ref)
              .def_readwrite("pronunciation", &ExtractionWay::pronunciation)
              .def_readwrite("destinations", &ExtractionWay::destinations)
              .def_readwrite("roundabout", &ExtractionWay::roundabout)
@@ -326,18 +327,17 @@ std::vector<std::string> LuaScriptingEnvironment::GetNameSuffixList()
     return suffixes_vector;
 }
 
-std::vector<std::string> LuaScriptingEnvironment::GetExceptions()
+std::vector<std::string> LuaScriptingEnvironment::GetRestrictions()
 {
     auto &context = GetLuaContext();
     BOOST_ASSERT(context.state != nullptr);
-    std::vector<std::string> restriction_exceptions;
-    if (util::luaFunctionExists(context.state, "get_exceptions"))
+    std::vector<std::string> restrictions;
+    if (util::luaFunctionExists(context.state, "get_restrictions"))
     {
         // get list of turn restriction exceptions
-        luabind::call_function<void>(
-            context.state, "get_exceptions", boost::ref(restriction_exceptions));
+        luabind::call_function<void>(context.state, "get_restrictions", boost::ref(restrictions));
     }
-    return restriction_exceptions;
+    return restrictions;
 }
 
 void LuaScriptingEnvironment::SetupSources()

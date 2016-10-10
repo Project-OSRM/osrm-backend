@@ -17,8 +17,8 @@ namespace engine
 namespace plugins
 {
 
-IsochronePlugin::IsochronePlugin(datafacade::BaseDataFacade &facade, const std::string base)
-    : BasePlugin{facade}, base{base}
+IsochronePlugin::IsochronePlugin(const std::string base)
+    : base{base}
 {
 
     // Loads Graph into memory
@@ -33,7 +33,8 @@ IsochronePlugin::IsochronePlugin(datafacade::BaseDataFacade &facade, const std::
     graph_edge_list.shrink_to_fit();
 }
 
-Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
+Status IsochronePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                                      const api::IsochroneParameters &params,
                                       util::json::Object &json_result)
 {
     BOOST_ASSERT(params.IsValid());
@@ -57,18 +58,22 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
             "InvalidOptions", "If concavehull is set, convexhull must be set too", json_result);
     }
 
-    auto phantomnodes = GetPhantomNodes(params, 1);
+    auto phantomnodes = GetPhantomNodes(*facade, params, 1);
 
     if (phantomnodes.front().size() <= 0)
     {
         return Error("PhantomNode", "PhantomNode couldnt be found for coordinate", json_result);
     }
 
+    util::SimpleLogger().Write() << "asdasd";
     auto phantom = phantomnodes.front();
     std::vector<NodeID> forward_id_vector;
-    facade.GetUncompressedGeometry(phantom.front().phantom_node.reverse_packed_geometry_id,
-                                   forward_id_vector);
-    auto source = forward_id_vector[0];
+
+    auto source = (*facade).GetUncompressedReverseGeometry(phantom.front().phantom_node.packed_geometry_id).front();
+
+//    (*facade).GetUncompressedGeometry(phantom.front().phantom_node.reverse_packed_geometry_id,
+//                                   forward_id_vector);
+//    auto source = phantom.;
 
     IsochroneVector isochroneVector;
     IsochroneVector convexhull;
@@ -124,7 +129,7 @@ Status IsochronePlugin::HandleRequest(const api::IsochroneParameters &params,
     }
 
     TIMER_START(RESPONSE);
-    api::IsochroneAPI isochroneAPI(facade, params);
+    api::IsochroneAPI isochroneAPI{*facade, params};
     isochroneAPI.MakeResponse(isochroneVector, convexhull, concavehull, json_result);
     TIMER_STOP(RESPONSE);
     util::SimpleLogger().Write() << "RESPONSE took: " << TIMER_MSEC(RESPONSE) << "ms";

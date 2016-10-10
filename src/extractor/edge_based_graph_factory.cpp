@@ -34,7 +34,7 @@ namespace extractor
 
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-    const CompressedEdgeContainer &compressed_edge_container,
+    CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
     std::shared_ptr<const RestrictionMap> restriction_map,
@@ -124,10 +124,12 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
     BOOST_ASSERT(forward_geometry.size() ==
                  m_compressed_edge_container.GetBucketReference(edge_id_2).size());
-    const auto geometry_size = forward_geometry.size();
+    const auto segment_count = forward_geometry.size();
 
     // There should always be some geometry
-    BOOST_ASSERT(0 != geometry_size);
+    BOOST_ASSERT(0 != segment_count);
+
+    const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1, edge_id_2);
 
     NodeID current_edge_source_coordinate_id = node_u;
 
@@ -140,12 +142,12 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         return SegmentID{edge_based_node_id, true};
     };
 
-    // traverse arrays from start and end respectively
-    for (const auto i : util::irange(std::size_t{0}, geometry_size))
+    // traverse arrays
+    for (const auto i : util::irange(std::size_t{0}, segment_count))
     {
         BOOST_ASSERT(
             current_edge_source_coordinate_id ==
-            m_compressed_edge_container.GetBucketReference(edge_id_2)[geometry_size - 1 - i]
+            m_compressed_edge_container.GetBucketReference(edge_id_2)[segment_count - 1 - i]
                 .node_id);
         const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
@@ -156,8 +158,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
                                             current_edge_source_coordinate_id,
                                             current_edge_target_coordinate_id,
                                             forward_data.name_id,
-                                            m_compressed_edge_container.GetPositionForID(edge_id_1),
-                                            m_compressed_edge_container.GetPositionForID(edge_id_2),
+                                            packed_geometry_id,
                                             false,
                                             INVALID_COMPONENTID,
                                             i,
@@ -256,6 +257,8 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
 void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 {
     util::Percent progress(m_node_based_graph->GetNumberOfNodes());
+
+    m_compressed_edge_container.InitializeBothwayVector();
 
     // loop over all edges and generate new set of nodes
     for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
@@ -442,14 +445,26 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 distance += turn_penalty;
 
-                BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_from_u));
-                original_edge_data_vector.emplace_back(
-                    m_compressed_edge_container.GetPositionForID(edge_from_u),
-                    edge_data1.name_id,
-                    turn.lane_data_id,
-                    turn_instruction,
-                    entry_class_id,
-                    edge_data1.travel_mode);
+                const bool is_encoded_forwards = m_compressed_edge_container.HasZippedEntryForForwardID(edge_from_u);
+                const bool is_encoded_backwards = m_compressed_edge_container.HasZippedEntryForReverseID(edge_from_u);
+                BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
+                if (is_encoded_forwards) {
+                    original_edge_data_vector.emplace_back(
+                        GeometryID{m_compressed_edge_container.GetZippedPositionForForwardID(edge_from_u), true},
+                        edge_data1.name_id,
+                        turn.lane_data_id,
+                        turn_instruction,
+                        entry_class_id,
+                        edge_data1.travel_mode);
+                } else if (is_encoded_backwards) {
+                    original_edge_data_vector.emplace_back(
+                        GeometryID{m_compressed_edge_container.GetZippedPositionForReverseID(edge_from_u), false},
+                        edge_data1.name_id,
+                        turn.lane_data_id,
+                        turn_instruction,
+                        entry_class_id,
+                        edge_data1.travel_mode);
+                }
 
                 ++original_edges_counter;
 

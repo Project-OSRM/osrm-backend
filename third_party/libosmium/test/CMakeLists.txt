@@ -85,6 +85,40 @@ function(add_unit_test _tgroup _tname)
     endif()
 endfunction()
 
+
+#-----------------------------------------------------------------------------
+#
+#  Prepare some variables so querying it for tests work properly.
+#
+#-----------------------------------------------------------------------------
+
+if(NOT GEOS_FOUND)
+    set(GEOS_FOUND FALSE)
+endif()
+
+if(NOT PROJ_FOUND)
+    set(PROJ_FOUND FALSE)
+endif()
+
+if(NOT SPARSEHASH_FOUND)
+    set(SPARSEHASH_FOUND FALSE)
+endif()
+
+if(NOT BZIP2_FOUND)
+    set(BZIP2_FOUND FALSE)
+endif()
+
+if(NOT Threads_FOUND)
+    set(Threads_FOUND FALSE)
+endif()
+
+if(GEOS_FOUND AND PROJ_FOUND)
+    set(GEOS_AND_PROJ_FOUND TRUE)
+else()
+    set(GEOS_AND_PROJ_FOUND FALSE)
+endif()
+
+
 #-----------------------------------------------------------------------------
 #
 #  Add all tests.
@@ -93,6 +127,7 @@ endfunction()
 add_unit_test(area test_area_id)
 add_unit_test(area test_node_ref_segment)
 
+add_unit_test(basic test_area)
 add_unit_test(basic test_box)
 add_unit_test(basic test_changeset)
 add_unit_test(basic test_crc)
@@ -112,11 +147,6 @@ add_unit_test(buffer test_buffer_purge)
 
 add_unit_test(builder test_attr)
 
-if(GEOS_FOUND AND PROJ_FOUND)
-    set(GEOS_AND_PROJ_FOUND TRUE)
-else()
-    set(GEOS_AND_PROJ_FOUND FALSE)
-endif()
 add_unit_test(geom test_factory_with_projection
     ENABLE_IF ${GEOS_AND_PROJ_FOUND}
     LIBS ${GEOS_LIBRARY} ${PROJ_LIBRARY})
@@ -129,17 +159,19 @@ add_unit_test(geom test_geos_wkb ENABLE_IF ${GEOS_FOUND} LIBS ${GEOS_LIBRARY})
 add_unit_test(geom test_mercator)
 add_unit_test(geom test_ogr ENABLE_IF ${GDAL_FOUND} LIBS ${GDAL_LIBRARY})
 add_unit_test(geom test_projection ENABLE_IF ${PROJ_FOUND} LIBS ${PROJ_LIBRARY})
-add_unit_test(geom test_tile)
+add_unit_test(geom test_tile ENABLE_IF ${GEOS_FOUND})
 add_unit_test(geom test_wkb)
 add_unit_test(geom test_wkt)
 
 add_unit_test(index test_id_to_location ENABLE_IF ${SPARSEHASH_FOUND})
+add_unit_test(index test_file_based_index)
 
 add_unit_test(io test_bzip2 ENABLE_IF ${BZIP2_FOUND} LIBS ${BZIP2_LIBRARIES})
 add_unit_test(io test_file_formats)
 add_unit_test(io test_reader LIBS "${OSMIUM_XML_LIBRARIES};${OSMIUM_PBF_LIBRARIES}")
 add_unit_test(io test_reader_with_mock_decompression ENABLE_IF ${Threads_FOUND} LIBS ${OSMIUM_XML_LIBRARIES})
 add_unit_test(io test_reader_with_mock_parser ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
+add_unit_test(io test_opl_parser)
 add_unit_test(io test_output_utils)
 add_unit_test(io test_output_iterator ENABLE_IF ${Threads_FOUND} LIBS ${CMAKE_THREAD_LIBS_INIT})
 add_unit_test(io test_string_table)

@@ -30,17 +30,17 @@ http://{server}/{service}/{version}/{profile}/{coordinates}[.{format}]?option=va
   
     | Service     |           Description                                     |
     |-------------|-----------------------------------------------------------|
-    | [`route`](#service-route)     | shortest path between given coordinates                   |
+    | [`route`](#service-route)     | fastest path between given coordinates                   |
     | [`nearest`](#service-nearest)   | returns the nearest street segment for a given coordinate |
     | [`table`](#service-table)     | computes distance tables for given coordinates            |
     | [`match`](#service-match)     | matches given coordinates to the road network             |
-    | [`trip`](#service-trip)      | Compute the shortest round trip between given coordinates |
+    | [`trip`](#service-trip)      | Compute the fastest round trip between given coordinates |
     | [`tile`](#service-tile)      | Return vector tiles containing debugging info             |
   
 - `version`: Version of the protocol implemented by the service.
-- `profile`: Mode of transportation, is determined by the profile that is used to prepare the data
+- `profile`: Mode of transportation, is determined statically by the Lua profile that is used to prepare the data using `osrm-extract`.
 - `coordinates`: String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` or `polyline({polyline})`.
-- `format`: Only `json` is supportest at the moment. This parameter is optional and defaults to `json`.
+- `format`: Only `json` is supported at the moment. This parameter is optional and defaults to `json`.
 
 Passing any `option=value` is optional. `polyline` follows Google's polyline format with precision 5 and can be generated using [this package](https://www.npmjs.com/package/polyline).
 To pass parameters to each location some options support an array like encoding:
@@ -249,7 +249,7 @@ http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397634,52
 
 Returns a asymmetric 3x2 matrix with from the polyline encoded locations `qikdcB}~dpXkkHz`:
 ```
-http://router.project-osrm.org/table/v1/driving/qikdcB}~dpXkkHz?sources=0;1;3&destinations=2;4
+http://router.project-osrm.org/table/v1/driving/polyline(egs_Iq_aqAppHzbHulFzeMe`EuvKpnCglA)?sources=0;1;3&destinations=2;4
 ```
 
 ## Service `match`
@@ -302,7 +302,7 @@ All other fields might be undefined.
 ## Service `trip`
 
 The trip plugin solves the Traveling Salesman Problem using a greedy heuristic (farthest-insertion algorithm).
-The returned path does not have to be the shortest path, as TSP is NP-hard it is only an approximation.
+The returned path does not have to be the fastest path, as TSP is NP-hard it is only an approximation.
 Note that if the input coordinates can not be joined by a single trip (e.g. the coordinates are on several disconnected islands)
 multiple trips for each connected component are returned.
 
@@ -469,6 +469,7 @@ step.
   | geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) or [GeoJSON `Point`](http://geojson.org/geojson-spec.html#point) if it is only one coordinate (not wrapped by a GeoJSON feature)|
   
 - `name`: The name of the way along which travel proceeds.
+- `ref`: A reference number or code for the way. Optionally included, if ref data is available for the given way.
 - `pronunciation`: The pronunciation hint of the way name. Will be `undefined` if there is no pronunciation hit.
 - `destinations`: The destinations of the way. Will be `undefined` if there are no destinations.
 - `mode`: A string signifying the mode of transportation.

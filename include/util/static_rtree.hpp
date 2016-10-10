@@ -17,6 +17,7 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/format.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <tbb/parallel_for.h>

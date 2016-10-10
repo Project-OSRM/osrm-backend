@@ -3,14 +3,17 @@
 #  LUABIND_FOUND, if false, do not try to link to Luabind
 #  LUABIND_LIBRARIES
 #  LUABIND_INCLUDE_DIR, where to find luabind.hpp
-#
-# Note that the expected include convention is
-#  #include <luabind/luabind.hpp>
-# and not
-#  #include <luabind.hpp>
 
-IF( NOT LUABIND_FIND_QUIETLY )
-    MESSAGE(STATUS "Looking for Luabind...")
+FIND_PACKAGE(Lua 5.2 EXACT)
+IF (LUA_FOUND)
+    MESSAGE(STATUS "Using Lua ${LUA_VERSION_STRING}")
+ELSE()
+  FIND_PACKAGE(Lua 5.1 EXACT)
+  IF (LUA_FOUND)
+    MESSAGE(STATUS "Using Lua ${LUA_VERSION_STRING}")
+  ELSE()
+    MESSAGE(FATAL_ERROR "Lua 5.1 or 5.2 was not found.")
+  ENDIF()
 ENDIF()
 
 FIND_PATH(LUABIND_INCLUDE_DIR luabind.hpp

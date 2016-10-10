@@ -36,6 +36,25 @@ Feature: Basic Roundabout
            | h,c       | gh,bcegb,bcegb | depart,roundabout-exit-undefined,arrive |
            | h,e       | gh,bcegb,bcegb | depart,roundabout-exit-undefined,arrive |
 
+    #2927
+    Scenario: Only Roundabout
+        Given the node map
+            |   |   | a |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | b |   |   |   | d |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   | c |   |   |
+
+       And the ways
+            | nodes  | junction   |
+            | abcda  | roundabout |
+
+       When I route I should get
+           | waypoints | route       | turns         |
+           | a,c       | abcda,abcda | depart,arrive |
+
     Scenario: Only Exit
         Given the node map
             |   |   | a |   |   |
@@ -212,43 +231,6 @@ Feature: Basic Roundabout
            | j,f       | jk,ef,ef | depart,roundabout-exit-2,arrive |
            | j,c       | jk,bc,bc | depart,roundabout-exit-3,arrive |
 
-       Scenario: Collinear in X
-        Given the node map
-            | a | b | c | d | f |
-            |   |   | e |   |   |
-
-        And the ways
-            | nodes | junction   |
-            | ab    |            |
-            | bcdb  | roundabout |
-            | ce    |            |
-            | df    |            |
-
-        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
-
-    Scenario: Collinear in Y
-        Given the node map
-            |   | a |
-            |   | b |
-            | e | c |
-            |   | d |
-            |   | f |
-
-        And the ways
-            | nodes | junction   |
-            | ab    |            |
-            | bcdb  | roundabout |
-            | ce    |            |
-            | df    |            |
-
-        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
-
     Scenario: Motorway Roundabout
     #See 39.933742 -75.082345
         Given the node map
@@ -283,9 +265,9 @@ Feature: Basic Roundabout
             | dmg   | roundabout |          | trunk_link | yes    |        |
 
         When I route I should get
-            | waypoints | route                                                 | turns                           |
-            | a,e       | crescent (US 130),crescent (US 130),crescent (US 130) | depart,roundabout-exit-3,arrive |
-            | j,l       | NJ 38,NJ 38,NJ 38                                     | depart,roundabout-exit-2,arrive |
+            | waypoints | route                                                 | turns                           | ref                     |
+            | a,e       | crescent,crescent,crescent                            | depart,roundabout-exit-3,arrive | US 130,US 130,US 130    |
+            | j,l       | ,,                                                    | depart,roundabout-exit-2,arrive | NJ 38,NJ 38,NJ 38       |
 
     Scenario: Double Roundabout with through-lane
     #http://map.project-osrm.org/?z=18&center=38.911752%2C-77.048667&loc=38.912003%2C-77.050831&loc=38.909277%2C-77.042516&hl=en&alt=0

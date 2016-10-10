@@ -55,10 +55,10 @@ namespace osmium {
 
             public:
 
-                typedef TValue element_type;
-                typedef TVector vector_type;
-                typedef typename vector_type::iterator iterator;
-                typedef typename vector_type::const_iterator const_iterator;
+                using element_type   = TValue;
+                using vector_type    = TVector;
+                using iterator       = typename vector_type::iterator;
+                using const_iterator = typename vector_type::const_iterator;
 
                 VectorBasedDenseMap() :
                     m_vector() {
@@ -88,7 +88,7 @@ namespace osmium {
                             not_found_error(id);
                         }
                         return value;
-                    } catch (std::out_of_range&) {
+                    } catch (const std::out_of_range&) {
                         not_found_error(id);
                     }
                 }
@@ -146,10 +146,10 @@ namespace osmium {
 
             public:
 
-                typedef typename std::pair<TId, TValue> element_type;
-                typedef TVector<element_type> vector_type;
-                typedef typename vector_type::iterator iterator;
-                typedef typename vector_type::const_iterator const_iterator;
+                using element_type   = typename std::pair<TId, TValue>;
+                using vector_type    = TVector<element_type>;
+                using iterator       = typename vector_type::iterator;
+                using const_iterator = typename vector_type::const_iterator;
 
             private:
 

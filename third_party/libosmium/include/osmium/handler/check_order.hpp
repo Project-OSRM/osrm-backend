@@ -51,11 +51,11 @@ namespace osmium {
      */
     struct out_of_order_error : public std::runtime_error {
 
-        out_of_order_error(const std::string& what) :
+        explicit out_of_order_error(const std::string& what) :
             std::runtime_error(what) {
         }
 
-        out_of_order_error(const char* what) :
+        explicit out_of_order_error(const char* what) :
             std::runtime_error(what) {
         }
 

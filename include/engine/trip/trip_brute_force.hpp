@@ -53,8 +53,7 @@ std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
     const auto component_size = std::distance(start, end);
 
     std::vector<NodeID> perm(start, end);
-    std::vector<NodeID> route;
-    route.reserve(component_size);
+    std::vector<NodeID> route = perm;
 
     EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
 
@@ -68,7 +67,10 @@ std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
     do
     {
         const auto new_distance = ReturnDistance(dist_table, perm, min_route_dist, component_size);
-        if (new_distance <= min_route_dist)
+        // we can use `<` instead of `<=` here, since all distances are `!=` INVALID_EDGE_WEIGHT
+        // In case we really sum up to invalid edge weight for all permutations, keeping the very
+        // first one is fine too.
+        if (new_distance < min_route_dist)
         {
             min_route_dist = new_distance;
             route = perm;

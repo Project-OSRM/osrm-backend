@@ -89,7 +89,8 @@ class Contractor
                           const std::string &geometry_filename,
                           const std::string &datasource_names_filename,
                           const std::string &datasource_indexes_filename,
-                          const std::string &rtree_leaf_filename);
+                          const std::string &rtree_leaf_filename,
+                          const double log_edge_updates_factor);
 };
 }
 }

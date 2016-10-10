@@ -8,6 +8,7 @@
 #include <string>
 
 #include <boost/assert.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 namespace osrm
 {
@@ -16,12 +17,22 @@ namespace engine
 namespace plugins
 {
 
-NearestPlugin::NearestPlugin(datafacade::BaseDataFacade &facade) : BasePlugin{facade} {}
+NearestPlugin::NearestPlugin(const int max_results_) : max_results{max_results_} {}
 
-Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
-                                    util::json::Object &json_result)
+Status NearestPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                                    const api::NearestParameters &params,
+                                    util::json::Object &json_result) const
 {
     BOOST_ASSERT(params.IsValid());
+
+    if (max_results > 0 &&
+        (boost::numeric_cast<std::int64_t>(params.number_of_results) > max_results))
+    {
+        return Error("TooBig",
+                     "Number of results " + std::to_string(params.number_of_results) +
+                         " is higher than current maximum (" + std::to_string(max_results) + ")",
+                     json_result);
+    }
 
     if (!CheckAllCoordinates(params.coordinates))
         return Error("InvalidOptions", "Coordinates are invalid", json_result);
@@ -31,7 +42,7 @@ Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
         return Error("InvalidOptions", "Only one input coordinate is supported", json_result);
     }
 
-    auto phantom_nodes = GetPhantomNodes(params, params.number_of_results);
+    auto phantom_nodes = GetPhantomNodes(*facade, params, params.number_of_results);
 
     if (phantom_nodes.front().size() == 0)
     {
@@ -39,7 +50,7 @@ Status NearestPlugin::HandleRequest(const api::NearestParameters &params,
     }
     BOOST_ASSERT(phantom_nodes.front().size() > 0);
 
-    api::NearestAPI nearest_api(facade, params);
+    api::NearestAPI nearest_api(*facade, params);
     nearest_api.MakeResponse(phantom_nodes, json_result);
 
     return Status::Ok;

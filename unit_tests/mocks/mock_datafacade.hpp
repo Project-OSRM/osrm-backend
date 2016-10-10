@@ -41,6 +41,14 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     {
         return SPECIAL_EDGEID;
     }
+
+    EdgeID FindSmallestEdge(const NodeID /* from */,
+                            const NodeID /* to */,
+                            std::function<bool(EdgeData)> /* filter */) const override
+    {
+        return SPECIAL_EDGEID;
+    }
+
     EdgeID FindEdgeIndicateIfReverse(const NodeID /* from */,
                                      const NodeID /* to */,
                                      bool & /* result */) const override
@@ -53,23 +61,39 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     }
     OSMNodeID GetOSMNodeIDOfNode(const unsigned /* id */) const override { return OSMNodeID{0}; }
     bool EdgeIsCompressed(const unsigned /* id */) const { return false; }
-    unsigned GetGeometryIndexForEdgeID(const unsigned /* id */) const override
+    GeometryID GetGeometryIndexForEdgeID(const unsigned /* id */) const override
     {
-        return SPECIAL_NODEID;
+        return GeometryID{SPECIAL_GEOMETRYID, false};
     }
-    void GetUncompressedGeometry(const EdgeID /* id */,
-                                 std::vector<NodeID> & /* result_nodes */) const override
+    std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
+        return {};
     }
-    void GetUncompressedWeights(const EdgeID /* id */,
-                                std::vector<EdgeWeight> &result_weights) const override
+    std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID /* id */) const override
     {
+        return {};
+    }
+    std::vector<EdgeWeight> GetUncompressedForwardWeights(const EdgeID /* id */) const override
+    {
+        std::vector<EdgeWeight> result_weights;
         result_weights.resize(1);
         result_weights[0] = 1;
+        return result_weights;
     }
-    void GetUncompressedDatasources(const EdgeID /*id*/,
-                                    std::vector<uint8_t> & /*data_sources*/) const override
+    std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID /* id */) const override
     {
+        std::vector<EdgeWeight> result_weights;
+        result_weights.resize(1);
+        result_weights[0] = 1;
+        return result_weights;
+    }
+    std::vector<uint8_t> GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
+    {
+        return {};
+    }
+    std::vector<uint8_t> GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
+    {
+        return {};
     }
     std::string GetDatasourceName(const uint8_t /*datasource_name_id*/) const override
     {
@@ -175,6 +199,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     bool IsCoreNode(const NodeID /* id */) const override { return false; }
     unsigned GetNameIndexFromEdgeID(const unsigned /* id */) const override { return 0; }
     std::string GetNameForID(const unsigned /* name_id */) const override { return ""; }
+    std::string GetRefForID(const unsigned /* name_id */) const override { return ""; }
     std::string GetPronunciationForID(const unsigned /* name_id */) const override { return ""; }
     std::string GetDestinationsForID(const unsigned /* name_id */) const override { return ""; }
     std::size_t GetCoreSize() const override { return 0; }

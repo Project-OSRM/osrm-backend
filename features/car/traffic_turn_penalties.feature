@@ -58,7 +58,7 @@ Feature: Traffic - turn penalties
             8,11,12,23
             1,4,5,-0.2
             """
-        And the contract extra arguments "--turn-penalty-file penalties.csv"
+        And the contract extra arguments "--turn-penalty-file {penalties_file}"
         When I route I should get
             | from | to | route                 | speed   | time      |
             | a    | h  | ad,dhk,dhk            | 63 km/h | 11.5s +-1 |
@@ -81,7 +81,7 @@ Feature: Traffic - turn penalties
                                                                               # double left - hdc penalty ever so slightly higher than imn; forces all the way around
 
     Scenario: Too-negative penalty clamps, but does not fail
-        Given the contract extra arguments "--turn-penalty-file penalties.csv"
+        Given the contract extra arguments "--turn-penalty-file {penalties_file}"
         And the profile "testbot"
         And the turn penalty file
             """

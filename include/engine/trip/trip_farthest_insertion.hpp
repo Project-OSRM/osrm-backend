@@ -119,7 +119,7 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
 
                 // add the location to the current trip such that it results in the shortest total
                 // tour
-                if (insert_candidate.first >= farthest_distance)
+                if (insert_candidate.first > farthest_distance)
                 {
                     farthest_distance = insert_candidate.first;
                     next_node = *i;

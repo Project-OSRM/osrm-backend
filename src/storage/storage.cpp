@@ -497,7 +497,7 @@ int Storage::Run()
     }
 
     // load original edge information
-    NodeID *via_node_ptr = shared_layout_ptr->GetBlockPtr<NodeID, true>(
+    GeometryID *via_geometry_ptr = shared_layout_ptr->GetBlockPtr<GeometryID, true>(
         shared_memory_ptr, SharedDataLayout::VIA_NODE_LIST);
 
     unsigned *name_id_ptr = shared_layout_ptr->GetBlockPtr<unsigned, true>(
@@ -521,7 +521,7 @@ int Storage::Run()
     for (unsigned i = 0; i < number_of_original_edges; ++i)
     {
         edges_input_stream.read((char *)&(current_edge_data), sizeof(extractor::OriginalEdgeData));
-        via_node_ptr[i] = current_edge_data.via_node;
+        via_geometry_ptr[i] = current_edge_data.via_geometry;
         name_id_ptr[i] = current_edge_data.name_id;
         travel_mode_ptr[i] = current_edge_data.travel_mode;
         lane_data_id_ptr[i] = current_edge_data.lane_data_id;

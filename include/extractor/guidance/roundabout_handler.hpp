@@ -13,7 +13,7 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
-#include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -82,7 +82,8 @@ class RoundaboutHandler : public IntersectionHandler
                                    const bool can_exit_roundabout,
                                    Intersection intersection) const;
 
-    bool qualifiesAsRoundaboutIntersection(const std::set<NodeID> &roundabout_nodes) const;
+    bool
+    qualifiesAsRoundaboutIntersection(const std::unordered_set<NodeID> &roundabout_nodes) const;
 
     const CompressedEdgeContainer &compressed_edge_container;
     const ProfileProperties &profile_properties;

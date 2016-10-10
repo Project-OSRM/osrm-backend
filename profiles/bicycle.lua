@@ -12,7 +12,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
 service_tag_restricted = { ["parking_aisle"] = true }
-restriction_exception_tags = { "bicycle", "vehicle", "access" }
+restrictions = { "bicycle" }
 unsafe_highway_list = { ["primary"] = true, ["secondary"] = true, ["tertiary"] = true, ["primary_link"] = true, ["secondary_link"] = true, ["tertiary_link"] = true}
 
 local default_speed = 15
@@ -121,8 +121,8 @@ local function parse_maxspeed(source)
     return n
 end
 
-function get_exceptions(vector)
-  for i,v in ipairs(restriction_exception_tags) do
+function get_restrictions(vector)
+  for i,v in ipairs(restrictions) do
     vector:Add(v)
   end
 end
@@ -211,17 +211,18 @@ function way_function (way, result)
   local bicycle = way:get_value_by_key("bicycle")
 
   -- name
-  if ref and "" ~= ref and name and "" ~= name then
-    result.name = name .. " (" .. ref .. ")"
-  elseif ref and "" ~= ref then
-    result.name = ref
-  elseif name and "" ~= name then
+  if name and "" ~= name then
     result.name = name
   -- TODO find a better solution for encoding way type
   elseif fallback_names and highway then
     -- if no name exists, use way type
-    -- this encoding scheme is excepted to be a temporary solution
+    -- this encoding scheme is expected to be a temporary solution
     result.name = "{highway:"..highway.."}"
+  end
+
+  -- ref
+  if ref and "" ~= ref then
+    result.ref = ref
   end
 
   -- roundabout handling

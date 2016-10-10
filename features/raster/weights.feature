@@ -5,11 +5,11 @@ Feature: Raster - weights
         Given the node locations
             | node | lat        | lon      |
             | a    | 0.1        | 0.1      |
-            | b    | .05        | 0.1      |
+            | b    | 0.05       | 0.1      |
             | c    | 0.0        | 0.1      |
-            | d    | .05        | .03      |
-            | e    | .05        | .066     |
-            | f    | .075       | .066     |
+            | d    | 0.05       | 0.03     |
+            | e    | 0.05       | 0.066    |
+            | f    | 0.075      | 0.066    |
         And the ways
             | nodes | highway |
             | ab    | primary |
@@ -32,8 +32,8 @@ Feature: Raster - weights
 
     Scenario: Weighting not based on raster sources
         Given the profile "testbot"
-        When I run "osrm-extract {osm_base}.osm -p {profile}"
-        And I run "osrm-contract {osm_base}.osm"
+        When I run "osrm-extract {osm_file} -p {profile_file}"
+        And I run "osrm-contract {processed_file}"
         And I route I should get
             | from | to | route    | speed   |
             | a    | b  | ab,ab    | 36 km/h |
@@ -44,9 +44,9 @@ Feature: Raster - weights
 
     Scenario: Weighting based on raster sources
         Given the profile "rasterbot"
-        When I run "osrm-extract {osm_base}.osm -p {profile}"
+        When I run "osrm-extract {osm_file} -p {profile_file}"
         Then stdout should contain "evaluating segment"
-        And I run "osrm-contract {osm_base}.osm"
+        And I run "osrm-contract {processed_file}"
         And I route I should get
             | from | to | route    | speed   |
             | a    | b  | ab,ab    | 8 km/h  |
@@ -62,9 +62,9 @@ Feature: Raster - weights
 
     Scenario: Weighting based on raster sources
         Given the profile "rasterbotinterp"
-        When I run "osrm-extract {osm_base}.osm -p {profile}"
+        When I run "osrm-extract {osm_file} -p {profile_file}"
         Then stdout should contain "evaluating segment"
-        And I run "osrm-contract {osm_base}.osm"
+        And I run "osrm-contract {processed_file}"
         And I route I should get
             | from | to | route    | speed   |
             | a    | b  | ab,ab    | 8 km/h  |

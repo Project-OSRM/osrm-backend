@@ -243,9 +243,29 @@ Feature: Basic Roundabout
             | df    |            |
 
         When I route I should get
-            | waypoints | route    | turns                           |
-            | a,e       | ab,ce,ce | depart,roundabout-exit-1,arrive |
-            | a,f       | ab,df,df | depart,roundabout-exit-2,arrive |
+            | waypoints | route    | turns                                         |
+            | a,e       | ab,ce,ce | depart,roundabout turn right exit-1,arrive    |
+            | a,f       | ab,df,df | depart,roundabout turn straight exit-2,arrive |
+
+       Scenario: Collinear in Y
+        Given the node map
+            |   | a |
+            |   | b |
+            | e | c |
+            |   | d |
+            |   | f |
+
+        And the ways
+            | nodes | junction   |
+            | ab    |            |
+            | bcdb  | roundabout |
+            | ce    |            |
+            | df    |            |
+
+        When I route I should get
+            | waypoints | route    | turns                                         |
+            | a,e       | ab,ce,ce | depart,roundabout turn right exit-1,arrive    |
+            | a,f       | ab,df,df | depart,roundabout turn straight exit-2,arrive |
 
        Scenario: Collinear in X,Y
         Given the node map
@@ -491,3 +511,23 @@ Feature: Basic Roundabout
            | h,a       | gh,ab,ab | depart,roundabout turn left exit-3,arrive     |
            | h,d       | gh,cd,cd | depart,roundabout turn straight exit-2,arrive |
            | h,f       | gh,ef,ef | depart,roundabout turn right exit-1,arrive    |
+
+    #http://www.openstreetmap.org/#map=19/41.03275/-2.18990
+    #at some point we probably want to recognise these situations and don't mention the roundabout at all here
+    Scenario: Enter And Exit Throughabout
+        Given the node map
+            |   |   |   |   |   | h |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |
+            | c | b |   | d |   |   |   | e |   | f |
+            |   |   |   |   |   |   |   |   |   |   |
+            |   | a |   |   |   | g |   |   |   |   |
+
+        And the ways
+            | nodes | highway       | name    | junction   | oneway |
+            | dghd  | tertiary_link |         | roundabout |        |
+            | cbdef | trunk         | through |            | no     |
+            | ab    | residential   | in      |            |        |
+
+        When I route I should get
+            | waypoints | turns                                                    | route                      |
+            | a,f       | depart,turn right,roundabout turn straight exit-1,arrive | in,through,through,through |

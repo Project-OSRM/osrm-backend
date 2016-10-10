@@ -42,6 +42,9 @@ BOOST_AUTO_TEST_CASE(bearing_range_test)
 
     BOOST_CHECK_EQUAL(true, bearing::CheckInBounds(-721, 5, 10));
     BOOST_CHECK_EQUAL(true, bearing::CheckInBounds(719, 5, 10));
+
+    BOOST_CHECK_EQUAL(false, bearing::CheckInBounds(1, 1, -1));
+    BOOST_CHECK_EQUAL(true, bearing::CheckInBounds(1, 1, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

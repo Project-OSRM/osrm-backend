@@ -24,7 +24,7 @@ void check_filter(const osmium::TagList& tag_list, const TFilter filter, const s
 }
 
 const osmium::TagList& make_tag_list(osmium::memory::Buffer& buffer, std::initializer_list<std::pair<const char*, const char*>> tags) {
-    auto pos = osmium::builder::add_tag_list(buffer, osmium::builder::attr::_tags(tags));
+    const auto pos = osmium::builder::add_tag_list(buffer, osmium::builder::attr::_tags(tags));
     return buffer.get<osmium::TagList>(pos);
 }
 
@@ -42,7 +42,7 @@ TEST_CASE("Filter") {
             { "source", "GPS" }        // no match
         });
 
-        std::vector<bool> results = { true, false, false };
+        const std::vector<bool> results = { true, false, false };
 
         check_filter(tag_list, filter, results);
     }
@@ -84,7 +84,7 @@ TEST_CASE("Filter") {
             { "source", "GPS" }
         });
 
-        std::vector<bool> results = {true, true, false};
+        const std::vector<bool> results = {true, true, false};
 
         check_filter(tag_list, filter, results);
     }

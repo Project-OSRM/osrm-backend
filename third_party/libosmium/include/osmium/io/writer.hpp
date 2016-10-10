@@ -34,11 +34,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cassert>
+#include <cstddef>
+#include <exception>
+#include <functional>
 #include <future>
+#include <initializer_list>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <thread>
 #include <utility>
 
 #include <osmium/io/compression.hpp>
@@ -52,10 +54,24 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/writer_options.hpp>
 #include <osmium/memory/buffer.hpp>
 #include <osmium/thread/util.hpp>
+#include <osmium/util/config.hpp>
 
 namespace osmium {
 
+    namespace memory {
+        class Item;
+    } //namespace memory
+
     namespace io {
+
+        namespace detail {
+
+            inline size_t get_output_queue_size() noexcept {
+                size_t n = osmium::config::get_max_queue_size("OUTPUT", 20);
+                return n > 2 ? n : 2;
+            }
+
+        } // namespace detail
 
         /**
          * This is the user-facing interface for writing OSM files. Instantiate
@@ -194,7 +210,7 @@ namespace osmium {
             template <typename... TArgs>
             explicit Writer(const osmium::io::File& file, TArgs&&... args) :
                 m_file(file.check()),
-                m_output_queue(20, "raw_output"), // XXX
+                m_output_queue(detail::get_output_queue_size(), "raw_output"),
                 m_output(osmium::io::detail::OutputFormatFactory::instance().create_output(m_file, m_output_queue)),
                 m_buffer(),
                 m_buffer_size(default_buffer_size),
@@ -304,7 +320,7 @@ namespace osmium {
                     }
                     try {
                         m_buffer.push_back(item);
-                    } catch (osmium::buffer_is_full&) {
+                    } catch (const osmium::buffer_is_full&) {
                         do_flush();
                         m_buffer.push_back(item);
                     }

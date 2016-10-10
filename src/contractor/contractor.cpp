@@ -81,6 +81,41 @@ inline EdgeWeight distanceAndSpeedToWeight(double distance_in_meters, double spe
     return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10)));
 }
 
+// Returns updated edge weight
+template <class IterType>
+EdgeWeight getNewWeight(IterType speed_iter,
+                        const double &segment_length,
+                        const std::vector<std::string> &segment_speed_filenames,
+                        const EdgeWeight old_weight,
+                        const double log_edge_updates_factor)
+{
+    const auto new_segment_weight =
+        (speed_iter->speed_source.speed > 0)
+            ? distanceAndSpeedToWeight(segment_length, speed_iter->speed_source.speed)
+            : INVALID_EDGE_WEIGHT;
+    // the check here is enabled by the `--edge-weight-updates-over-factor` flag
+    // it logs a warning if the new weight exceeds a heuristic of what a reasonable weight update is
+    if (log_edge_updates_factor > 0 && old_weight != 0)
+    {
+        auto new_secs = new_segment_weight / 10.0;
+        auto old_secs = old_weight / 10.0;
+        auto approx_original_speed = (segment_length / old_secs) * 3.6;
+        if (old_weight >= (new_segment_weight * log_edge_updates_factor))
+        {
+            auto speed_file = segment_speed_filenames.at(speed_iter->speed_source.source - 1);
+            util::SimpleLogger().Write(logWARNING)
+                << "[weight updates] Edge weight update from " << old_secs << "s to " << new_secs
+                << "s  New speed: " << speed_iter->speed_source.speed << " kph"
+                << ". Old speed: " << approx_original_speed << " kph"
+                << ". Segment length: " << segment_length << " m"
+                << ". Segment: " << speed_iter->segment.from << "," << speed_iter->segment.to
+                << " based on " << speed_file;
+        }
+    }
+
+    return new_segment_weight;
+}
+
 int Contractor::Run()
 {
 #ifdef WIN32
@@ -113,7 +148,8 @@ int Contractor::Run()
                                                config.geometry_path,
                                                config.datasource_names_path,
                                                config.datasource_indexes_path,
-                                               config.rtree_leaf_path);
+                                               config.rtree_leaf_path,
+                                               config.log_edge_updates_factor);
 
     // Contracting the edge-expanded graph
 
@@ -370,7 +406,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     const std::string &geometry_filename,
     const std::string &datasource_names_filename,
     const std::string &datasource_indexes_filename,
-    const std::string &rtree_leaf_filename)
+    const std::string &rtree_leaf_filename,
+    const double log_edge_updates_factor)
 {
     if (segment_speed_filenames.size() > 255 || turn_penalty_filenames.size() > 255)
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached");
@@ -556,102 +593,66 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 extractor::QueryNode *u;
                 extractor::QueryNode *v;
 
-                if (leaf_object.forward_packed_geometry_id != SPECIAL_EDGEID)
+                const unsigned forward_begin =
+                    m_geometry_indices.at(leaf_object.packed_geometry_id);
+                const auto current_segment =
+                    &(m_geometry_list[forward_begin + leaf_object.fwd_segment_position]);
+
+                u = &(internal_to_external_node_map
+                          [m_geometry_list[forward_begin +
+                                           leaf_object.fwd_segment_position]
+                               .node_id]);
+                v = &(internal_to_external_node_map
+                          [m_geometry_list[forward_begin + leaf_object.fwd_segment_position + 1]
+                               .node_id]);
+
+                const double segment_length = util::coordinate_calculation::greatCircleDistance(
+                    util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
+
+                auto forward_speed_iter =
+                    find(segment_speed_lookup, Segment{u->node_id, v->node_id});
+                if (forward_speed_iter != segment_speed_lookup.end())
                 {
-                    const unsigned forward_begin =
-                        m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
+                    const auto new_segment_weight = getNewWeight(forward_speed_iter,
+                                                                 segment_length,
+                                                                 segment_speed_filenames,
+                                                                 current_segment->forward_weight,
+                                                                 log_edge_updates_factor);
 
-                    if (leaf_object.fwd_segment_position == 0)
-                    {
-                        u = &(internal_to_external_node_map[leaf_object.u]);
-                        v = &(
-                            internal_to_external_node_map[m_geometry_list[forward_begin].node_id]);
-                    }
-                    else
-                    {
-                        u = &(internal_to_external_node_map
-                                  [m_geometry_list[forward_begin +
-                                                   leaf_object.fwd_segment_position - 1]
-                                       .node_id]);
-                        v = &(internal_to_external_node_map
-                                  [m_geometry_list[forward_begin + leaf_object.fwd_segment_position]
-                                       .node_id]);
-                    }
-                    const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                        util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
+                    m_geometry_list[forward_begin + 1 + leaf_object.fwd_segment_position].forward_weight =
+                        new_segment_weight;
+                    m_geometry_datasource[forward_begin + 1 + leaf_object.fwd_segment_position] =
+                        forward_speed_iter->speed_source.source;
 
-                    auto forward_speed_iter =
-                        find(segment_speed_lookup, Segment{u->node_id, v->node_id});
-                    if (forward_speed_iter != segment_speed_lookup.end())
-                    {
-                        auto new_segment_weight =
-                            (forward_speed_iter->speed_source.speed > 0)
-                                ? distanceAndSpeedToWeight(segment_length,
-                                                           forward_speed_iter->speed_source.speed)
-                                : INVALID_EDGE_WEIGHT;
-                        m_geometry_list[forward_begin + leaf_object.fwd_segment_position].weight =
-                            new_segment_weight;
-                        m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
-                            forward_speed_iter->speed_source.source;
-
-                        // count statistics for logging
-                        counters[forward_speed_iter->speed_source.source] += 1;
-                    }
-                    else
-                    {
-                        // count statistics for logging
-                        counters[LUA_SOURCE] += 1;
-                    }
+                    // count statistics for logging
+                    counters[forward_speed_iter->speed_source.source] += 1;
                 }
-                if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
+                else
                 {
-                    const unsigned reverse_begin =
-                        m_geometry_indices.at(leaf_object.reverse_packed_geometry_id);
-                    const unsigned reverse_end =
-                        m_geometry_indices.at(leaf_object.reverse_packed_geometry_id + 1);
+                    // count statistics for logging
+                    counters[LUA_SOURCE] += 1;
+                }
 
-                    int rev_segment_position =
-                        (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
-                    if (rev_segment_position == 0)
-                    {
-                        u = &(internal_to_external_node_map[leaf_object.v]);
-                        v = &(
-                            internal_to_external_node_map[m_geometry_list[reverse_begin].node_id]);
-                    }
-                    else
-                    {
-                        u = &(
-                            internal_to_external_node_map[m_geometry_list[reverse_begin +
-                                                                          rev_segment_position - 1]
-                                                              .node_id]);
-                        v = &(internal_to_external_node_map
-                                  [m_geometry_list[reverse_begin + rev_segment_position].node_id]);
-                    }
-                    const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                        util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
+                const auto reverse_speed_iter =
+                    find(segment_speed_lookup, Segment{v->node_id, u->node_id});
+                if (reverse_speed_iter != segment_speed_lookup.end())
+                {
+                    const auto new_segment_weight = getNewWeight(reverse_speed_iter,
+                                                                 segment_length,
+                                                                 segment_speed_filenames,
+                                                                 current_segment->reverse_weight,
+                                                                 log_edge_updates_factor);
+                    m_geometry_list[forward_begin + leaf_object.fwd_segment_position].reverse_weight =
+                        new_segment_weight;
+                    m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
+                        reverse_speed_iter->speed_source.source;
 
-                    auto reverse_speed_iter =
-                        find(segment_speed_lookup, Segment{u->node_id, v->node_id});
-                    if (reverse_speed_iter != segment_speed_lookup.end())
-                    {
-                        auto new_segment_weight =
-                            (reverse_speed_iter->speed_source.speed > 0)
-                                ? distanceAndSpeedToWeight(segment_length,
-                                                           reverse_speed_iter->speed_source.speed)
-                                : INVALID_EDGE_WEIGHT;
-                        m_geometry_list[reverse_begin + rev_segment_position].weight =
-                            new_segment_weight;
-                        m_geometry_datasource[reverse_begin + rev_segment_position] =
-                            reverse_speed_iter->speed_source.source;
-
-                        // count statistics for logging
-                        counters[reverse_speed_iter->speed_source.source] += 1;
-                    }
-                    else
-                    {
-                        // count statistics for logging
-                        counters[LUA_SOURCE] += 1;
-                    }
+                    // count statistics for logging
+                    counters[reverse_speed_iter->speed_source.source] += 1;
+                }
+                else
+                {
+                    counters[LUA_SOURCE] += 1;
                 }
             }
         }); // parallel_for_each
@@ -783,7 +784,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 {
                     if (speed_iter->speed_source.speed > 0)
                     {
-                        auto new_segment_weight = distanceAndSpeedToWeight(
+                        const auto new_segment_weight = distanceAndSpeedToWeight(
                             segmentblocks[i].segment_length, speed_iter->speed_source.speed);
                         new_weight += new_segment_weight;
                     }

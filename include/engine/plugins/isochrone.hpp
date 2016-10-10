@@ -86,9 +86,11 @@ class IsochronePlugin final : public BasePlugin
     void update(IsochroneVector &s, IsochroneNode node);
 
   public:
-    explicit IsochronePlugin(datafacade::BaseDataFacade &facade, const std::string base);
+    explicit IsochronePlugin(const std::string base);
 
-    Status HandleRequest(const api::IsochroneParameters &params, util::json::Object &json_result);
+    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                         const api::IsochroneParameters &params,
+                         util::json::Object &json_result);
 };
 }
 }

@@ -35,10 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstddef>
 #include <iterator>
-#include <memory>
-#include <utility>
 
-#include <osmium/memory/buffer.hpp>
 #include <osmium/osm/diff_object.hpp>
 #include <osmium/util/compatibility.hpp>
 
@@ -51,11 +48,17 @@ namespace osmium {
     namespace io {
 
         template <typename TDest>
-        class OutputIterator : public std::iterator<std::output_iterator_tag, osmium::memory::Item> {
+        class OutputIterator {
 
             TDest* m_destination;
 
         public:
+
+            using iterator_category = std::output_iterator_tag;
+            using value_type        = void;
+            using difference_type   = void;
+            using pointer           = void;
+            using reference         = void;
 
             explicit OutputIterator(TDest& destination) :
                 m_destination(&destination) {

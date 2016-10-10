@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iterator>
 #include <limits>
+#include <unordered_set>
 #include <utility>
 
 #include <boost/range/algorithm/count_if.hpp>
@@ -268,8 +269,11 @@ bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
         return becomes_narrower;
     };
 
+    const bool is_y_arm_first = isValidYArm(first_index, second_index);
+    const bool is_y_arm_second = isValidYArm(second_index, first_index);
+
     // Only merge valid y-arms
-    if (!isValidYArm(first_index, second_index) || !isValidYArm(second_index, first_index))
+    if (!is_y_arm_first || !is_y_arm_second)
         return false;
 
     if (angle_between < 60)
@@ -577,10 +581,14 @@ IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
     // to prevent endless loops
     const auto termination_node = node_based_graph.GetTarget(via_edge);
 
-    while (result.size() == 2 &&
-           node_based_graph.GetEdgeData(via_edge).IsCompatibleTo(
-               node_based_graph.GetEdgeData(result[1].turn.eid)))
+    // using a maximum lookahead, we make sure not to end up in some form of loop
+    std::unordered_set<NodeID> visited_nodes;
+    while (visited_nodes.count(node_at_intersection) == 0 &&
+           (result.size() == 2 &&
+            node_based_graph.GetEdgeData(via_edge).IsCompatibleTo(
+                node_based_graph.GetEdgeData(result[1].turn.eid))))
     {
+        visited_nodes.insert(node_at_intersection);
         node_at_intersection = node_based_graph.GetTarget(incoming_edge);
         incoming_edge = result[1].turn.eid;
         result = GetConnectedRoads(node_at_intersection, incoming_edge);

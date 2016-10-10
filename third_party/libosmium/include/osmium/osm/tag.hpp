@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <algorithm>
-#include <cstddef>
+#include <cassert>
 #include <cstring>
 #include <iosfwd>
 #include <iterator>
@@ -87,7 +87,7 @@ namespace osmium {
     }; // class Tag
 
     inline bool operator==(const Tag& a, const Tag& b) {
-        return !std::strcmp(a.key(), b.key()) && !strcmp(a.value(), b.value());
+        return !std::strcmp(a.key(), b.key()) && !std::strcmp(a.value(), b.value());
     }
 
     inline bool operator<(const Tag& a, const Tag& b) {
@@ -104,30 +104,70 @@ namespace osmium {
 
     class TagList : public osmium::memory::Collection<Tag, osmium::item_type::tag_list> {
 
+        const_iterator find_key(const char* key) const noexcept {
+            return std::find_if(cbegin(), cend(), [key](const Tag& tag) {
+                return !std::strcmp(tag.key(), key);
+            });
+        }
+
     public:
 
-        typedef size_t size_type;
+        using size_type = size_t;
 
         TagList() :
             osmium::memory::Collection<Tag, osmium::item_type::tag_list>() {
         }
 
+        /**
+         * Returns the number of tags in this tag list.
+         */
         size_type size() const noexcept {
             return static_cast<size_type>(std::distance(begin(), end()));
         }
 
+        /**
+         * Get tag value for the given tag key. If the key is not set, returns
+         * the default_value.
+         *
+         * @pre @code key != nullptr @endcode
+         */
         const char* get_value_by_key(const char* key, const char* default_value = nullptr) const noexcept {
-            auto result = std::find_if(cbegin(), cend(), [key](const Tag& tag) {
-                return !strcmp(tag.key(), key);
-            });
-            if (result == cend()) {
-                return default_value;
-            }
-            return result->value();
+            assert(key);
+            const auto result = find_key(key);
+            return result == cend() ? default_value : result->value();
         }
 
+        /**
+         * Get tag value for the given tag key. If the key is not set, returns
+         * nullptr.
+         *
+         * @pre @code key != nullptr @endcode
+         */
         const char* operator[](const char* key) const noexcept {
             return get_value_by_key(key);
+        }
+
+        /**
+         * Returns true if the tag with the given key is in the tag list.
+         *
+         * @pre @code key != nullptr @endcode
+         */
+        bool has_key(const char* key) const noexcept {
+            assert(key);
+            return find_key(key) != cend();
+        }
+
+        /**
+         * Returns true if the tag with the given key and value is in the
+         * tag list.
+         *
+         * @pre @code key != nullptr && value != nullptr @endcode
+         */
+        bool has_tag(const char* key, const char* value) const noexcept {
+            assert(key);
+            assert(value);
+            const auto result = find_key(key);
+            return result != cend() && !std::strcmp(result->value(), value);
         }
 
     }; // class TagList

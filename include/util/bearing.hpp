@@ -67,7 +67,7 @@ inline bool CheckInBounds(const int A, const int B, const int range)
 
     if (range >= 180)
         return true;
-    if (range <= 0)
+    if (range < 0)
         return false;
 
     // Map both bearings into positive modulo 360 space

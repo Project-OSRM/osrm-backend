@@ -1,5 +1,3 @@
-#include "util/debug.hpp"
-
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "util/simple_logger.hpp"

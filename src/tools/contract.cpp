@@ -52,7 +52,12 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
         "level-cache,o",
         boost::program_options::value<bool>(&contractor_config.use_cached_priority)
             ->default_value(false),
-        "Use .level file to retain the contaction level for each node from the last run.");
+        "Use .level file to retain the contaction level for each node from the last run.")(
+        "edge-weight-updates-over-factor",
+        boost::program_options::value<double>(&contractor_config.log_edge_updates_factor)
+            ->default_value(0.0),
+        "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge "
+        "weights updated by more than this factor");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");

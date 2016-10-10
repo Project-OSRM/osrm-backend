@@ -44,16 +44,22 @@ namespace osmium {
     namespace memory {
 
         template <typename TMember>
-        class CollectionIterator : public std::iterator<std::forward_iterator_tag, TMember> {
+        class CollectionIterator {
 
             // This data_type is either 'unsigned char*' or 'const unsigned char*' depending
             // on whether TMember is const. This allows this class to be used as an iterator and
             // as a const_iterator.
-            typedef typename std::conditional<std::is_const<TMember>::value, const unsigned char*, unsigned char*>::type data_type;
+            using data_type = typename std::conditional<std::is_const<TMember>::value, const unsigned char*, unsigned char*>::type;
 
             data_type m_data;
 
         public:
+
+            using iterator_category = std::forward_iterator_tag;
+            using value_type        = TMember;
+            using difference_type   = std::ptrdiff_t;
+            using pointer           = value_type*;
+            using reference         = value_type&;
 
             CollectionIterator() noexcept :
                 m_data(nullptr) {
@@ -112,9 +118,9 @@ namespace osmium {
 
         public:
 
-            typedef CollectionIterator<TMember> iterator;
-            typedef CollectionIterator<const TMember> const_iterator;
-            typedef TMember value_type;
+            using iterator       = CollectionIterator<TMember>;
+            using const_iterator = CollectionIterator<const TMember>;
+            using value_type     = TMember;
 
             static constexpr osmium::item_type itemtype = TCollectionItemType;
 

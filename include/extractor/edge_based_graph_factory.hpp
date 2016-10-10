@@ -84,7 +84,7 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory &operator=(const EdgeBasedGraphFactory &) = delete;
 
     explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-                                   const CompressedEdgeContainer &compressed_edge_container,
+                                   CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
                                    std::shared_ptr<const RestrictionMap> restriction_map,
@@ -149,7 +149,7 @@ class EdgeBasedGraphFactory
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const std::unordered_set<NodeID> &m_traffic_lights;
-    const CompressedEdgeContainer &m_compressed_edge_container;
+    CompressedEdgeContainer &m_compressed_edge_container;
 
     ProfileProperties profile_properties;
 

@@ -63,6 +63,24 @@
             "description": "Roads with hov=designated are ignored by default."
         },
         {
+            "key": "hov:lanes",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov:lanes all-designated are ignored by default."
+        },
+        {
+            "key": "hov:lanes:forward",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov:lanes:forward all-designated are ignored by default."
+        },
+        {
+            "key": "hov:lanes:backward",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov:lanes:backward all-designated are ignored by default."
+        },
+        {
             "key": "toll",
             "value": "yes",
             "object_types": [ "way" ],

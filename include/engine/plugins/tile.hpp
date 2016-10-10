@@ -3,6 +3,8 @@
 
 #include "engine/api/tile_parameters.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/routing_algorithms/shortest_path.hpp"
 
 #include <string>
 
@@ -24,9 +26,9 @@ namespace plugins
 class TilePlugin final : public BasePlugin
 {
   public:
-    TilePlugin(datafacade::BaseDataFacade &facade) : BasePlugin(facade) {}
-
-    Status HandleRequest(const api::TileParameters &parameters, std::string &pbf_buffer);
+    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                         const api::TileParameters &parameters,
+                         std::string &pbf_buffer) const;
 };
 }
 }

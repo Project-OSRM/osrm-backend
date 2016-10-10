@@ -34,17 +34,19 @@ class TripPlugin final : public BasePlugin
     routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> duration_table;
     int max_locations_trip;
 
-    InternalRouteResult ComputeRoute(const std::vector<PhantomNode> &phantom_node_list,
+    InternalRouteResult ComputeRoute(const datafacade::BaseDataFacade &facade,
+                                     const std::vector<PhantomNode> &phantom_node_list,
                                      const std::vector<NodeID> &trip);
 
   public:
-    explicit TripPlugin(datafacade::BaseDataFacade &facade_, const int max_locations_trip_)
-        : BasePlugin(facade_), shortest_path(&facade_, heaps), duration_table(&facade_, heaps),
-          max_locations_trip(max_locations_trip_)
+    explicit TripPlugin(const int max_locations_trip_)
+        : shortest_path(heaps), duration_table(heaps), max_locations_trip(max_locations_trip_)
     {
     }
 
-    Status HandleRequest(const api::TripParameters &parameters, util::json::Object &json_result);
+    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+                         const api::TripParameters &parameters,
+                         util::json::Object &json_result);
 };
 }
 }

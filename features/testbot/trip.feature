@@ -8,7 +8,7 @@ Feature: Basic trip planning
     Scenario: Testbot - Trip planning with less than 10 nodes
         Given the node map
             | a | b |
-            | d | c |
+            | c | d |
 
         And the ways
             | nodes |
@@ -18,8 +18,9 @@ Feature: Basic trip planning
             | da    |
 
         When I plan a trip I should get
-            | waypoints | trips |
-            | a,b,c,d   | dcba  |
+            | waypoints | trips | durations |
+            | a,b,c,d   | abcd  | 7.6       |
+            | d,b,c,a   | dbca  | 7.6       |
 
     Scenario: Testbot - Trip planning with more than 10 nodes
         Given the node map
@@ -55,8 +56,8 @@ Feature: Basic trip planning
             | k |   |   | f |
             | j | i | h | g |
             |   |   |   |   |
-            | m | n |   |   |
-            | p | o |   |   |
+            | q | m | n |   |
+            |   | p | o |   |
 
         And the ways
             | nodes |
@@ -75,12 +76,13 @@ Feature: Basic trip planning
             | mn    |
             | no    |
             | op    |
-            | pm    |
+            | pq    |
+            | qm    |
 
 
         When I plan a trip I should get
             | waypoints                       | trips              |
-            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | cbalkjihgfedc,ponm |
+            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | cbalkjihgfedc,mnop |
 
     # Test single node in each component #1850
     Scenario: Testbot - Trip planning with less than 10 nodes

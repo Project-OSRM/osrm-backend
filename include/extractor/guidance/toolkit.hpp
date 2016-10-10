@@ -11,7 +11,6 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
-#include "extractor/suffix_table.hpp"
 
 #include "extractor/guidance/discrete_angle.hpp"
 #include "extractor/guidance/intersection.hpp"
@@ -26,7 +25,6 @@
 #include <utility>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -127,7 +125,7 @@ getRepresentativeCoordinate(const NodeID from_node,
     };
 
     // Uncompressed roads are simple, return the coordinate at the end
-    if (!compressed_geometries.HasEntryForID(via_edge_id))
+    if (!compressed_geometries.HasZippedEntryForForwardID(via_edge_id) && !compressed_geometries.HasZippedEntryForReverseID(via_edge_id))
     {
         return extractCoordinateFromNode(traverse_in_reverse ? query_nodes[from_node]
                                                              : query_nodes[to_node]);
@@ -149,122 +147,6 @@ getRepresentativeCoordinate(const NodeID from_node,
             return detail::getCoordinateFromCompressedRange(
                 base_coordinate, geometry.begin(), geometry.end(), final_coordinate, query_nodes);
     }
-}
-
-inline std::pair<std::string, std::string> getPrefixAndSuffix(const std::string &data)
-{
-    const auto suffix_pos = data.find_last_of(' ');
-    if (suffix_pos == std::string::npos)
-        return {};
-
-    const auto prefix_pos = data.find_first_of(' ');
-    auto result = std::make_pair(data.substr(0, prefix_pos), data.substr(suffix_pos + 1));
-    boost::to_lower(result.first);
-    boost::to_lower(result.second);
-    return result;
-}
-
-inline bool requiresNameAnnounced(const std::string &from,
-                                  const std::string &to,
-                                  const SuffixTable &suffix_table)
-{
-    // first is empty and the second is not
-    if (from.empty() && !to.empty())
-        return true;
-
-    // FIXME, handle in profile to begin with?
-    // this uses the encoding of references in the profile, which is very BAD
-    // Input for this function should be a struct separating streetname, suffix (e.g. road,
-    // boulevard, North, West ...), and a list of references
-    std::string from_name;
-    std::string from_ref;
-    std::string to_name;
-    std::string to_ref;
-
-    // Split from the format "{name} ({ref})" -> name, ref
-    auto split = [](const std::string &name, std::string &out_name, std::string &out_ref) {
-        const auto ref_begin = name.find_first_of('(');
-        if (ref_begin != std::string::npos)
-        {
-            if (ref_begin != 0)
-                out_name = name.substr(0, ref_begin - 1);
-            const auto ref_end = name.find_first_of(')');
-            out_ref = name.substr(ref_begin + 1, ref_end - ref_begin - 1);
-        }
-        else
-        {
-            out_name = name;
-        }
-    };
-
-    split(from, from_name, from_ref);
-    split(to, to_name, to_ref);
-
-    // check similarity of names
-    const auto names_are_empty = from_name.empty() && to_name.empty();
-    const auto name_is_contained =
-        boost::starts_with(from_name, to_name) || boost::starts_with(to_name, from_name);
-
-    const auto checkForPrefixOrSuffixChange = [](
-        const std::string &first, const std::string &second, const SuffixTable &suffix_table) {
-
-        const auto first_prefix_and_suffixes = getPrefixAndSuffix(first);
-        const auto second_prefix_and_suffixes = getPrefixAndSuffix(second);
-        // reverse strings, get suffices and reverse them to get prefixes
-        const auto checkTable = [&](const std::string &str) {
-            return str.empty() || suffix_table.isSuffix(str);
-        };
-
-        const auto getOffset = [](const std::string &str) -> std::size_t {
-            if (str.empty())
-                return 0;
-            else
-                return str.length() + 1;
-        };
-
-        const bool is_prefix_change = [&]() -> bool {
-            if (!checkTable(first_prefix_and_suffixes.first))
-                return false;
-            if (!checkTable(second_prefix_and_suffixes.first))
-                return false;
-            return !first.compare(getOffset(first_prefix_and_suffixes.first),
-                                  std::string::npos,
-                                  second,
-                                  getOffset(second_prefix_and_suffixes.first),
-                                  std::string::npos);
-        }();
-
-        const bool is_suffix_change = [&]() -> bool {
-            if (!checkTable(first_prefix_and_suffixes.second))
-                return false;
-            if (!checkTable(second_prefix_and_suffixes.second))
-                return false;
-            return !first.compare(0,
-                                  first.length() - getOffset(first_prefix_and_suffixes.second),
-                                  second,
-                                  0,
-                                  second.length() - getOffset(second_prefix_and_suffixes.second));
-        }();
-
-        return is_prefix_change || is_suffix_change;
-    };
-
-    const auto is_suffix_change = checkForPrefixOrSuffixChange(from_name, to_name, suffix_table);
-    const auto names_are_equal = from_name == to_name || name_is_contained || is_suffix_change;
-    const auto name_is_removed = !from_name.empty() && to_name.empty();
-    // references are contained in one another
-    const auto refs_are_empty = from_ref.empty() && to_ref.empty();
-    const auto ref_is_contained =
-        from_ref.empty() || to_ref.empty() ||
-        (from_ref.find(to_ref) != std::string::npos || to_ref.find(from_ref) != std::string::npos);
-    const auto ref_is_removed = !from_ref.empty() && to_ref.empty();
-
-    const auto obvious_change =
-        (names_are_empty && refs_are_empty) || (names_are_equal && ref_is_contained) ||
-        (names_are_equal && refs_are_empty) || (ref_is_contained && name_is_removed) ||
-        (names_are_equal && ref_is_removed) || is_suffix_change;
-
-    return !obvious_change;
 }
 
 // To simplify handling of Left/Right hand turns, we can mirror turns and write an intersection

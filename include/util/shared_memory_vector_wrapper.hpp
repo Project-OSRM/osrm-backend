@@ -46,6 +46,34 @@ template <typename DataT> class ShMemIterator : public std::iterator<std::input_
     DataT &operator*() { return *p; }
 };
 
+template <typename DataT> class ShMemReverseIterator : public std::iterator<std::input_iterator_tag, DataT>
+{
+    DataT *p;
+
+  public:
+    explicit ShMemReverseIterator(DataT *x) : p(x) {}
+    ShMemReverseIterator(const ShMemReverseIterator &mit) : p(mit.p) {}
+    ShMemReverseIterator &operator++()
+    {
+        --p;
+        return *this;
+    }
+    ShMemReverseIterator operator++(int)
+    {
+        ShMemReverseIterator tmp(*this);
+        operator++();
+        return tmp;
+    }
+    ShMemReverseIterator operator+(std::ptrdiff_t diff)
+    {
+        ShMemReverseIterator tmp(p - diff);
+        return tmp;
+    }
+    bool operator==(const ShMemReverseIterator &rhs) { return p == rhs.p; }
+    bool operator!=(const ShMemReverseIterator &rhs) { return p != rhs.p; }
+    DataT &operator*() { return *p; }
+};
+
 template <typename DataT> class SharedMemoryWrapper
 {
   private:
@@ -70,6 +98,10 @@ template <typename DataT> class SharedMemoryWrapper
     ShMemIterator<DataT> begin() const { return ShMemIterator<DataT>(m_ptr); }
 
     ShMemIterator<DataT> end() const { return ShMemIterator<DataT>(m_ptr + m_size); }
+
+    ShMemReverseIterator<DataT> rbegin() const { return ShMemReverseIterator<DataT>(m_ptr + m_size - 1); }
+
+    ShMemReverseIterator<DataT> rend() const { return ShMemReverseIterator<DataT>(m_ptr - 1); }
 
     std::size_t size() const { return m_size; }
 

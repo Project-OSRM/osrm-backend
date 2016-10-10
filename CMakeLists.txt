@@ -9,7 +9,7 @@ endif()
 
 project(OSRM C CXX)
 set(OSRM_VERSION_MAJOR 5)
-set(OSRM_VERSION_MINOR 3)
+set(OSRM_VERSION_MINOR 4)
 set(OSRM_VERSION_PATCH 0)
 
 # these two functions build up custom variables:
@@ -47,7 +47,6 @@ if(WIN32 AND MSVC_VERSION LESS 1900)
 endif()
 
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
-option(ENABLE_JSON_LOGGING "Adds additional JSON debug logging to the response" OFF)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_COMPONENTS "Build osrm-components" OFF)
 option(ENABLE_ASSERTIONS OFF)
@@ -127,8 +126,8 @@ if(ENABLE_GOLD_LINKER)
 
         # Issue 2785: check gold binutils version and don't use gc-sections for versions prior 2.25
         string(REGEX REPLACE ".*\\(GNU Binutils[^\\)0-9]+([0-9]+\\.[0-9]+)[^\\)]*\\).*" "\\1" GOLD_BINUTILS_VERSION "${LD_VERSION}")
-        if ("${GOLD_BINUTILS_VERSION}" VERSION_LESS "2.25")
-          message(STATUS "Disabling gc-sections on gold binutils < 2.25, see: https://sourceware.org/bugzilla/show_bug.cgi?id=17639")
+        if ("${GOLD_BINUTILS_VERSION}" VERSION_LESS "2.26")
+          message(STATUS "Disabling gc-sections on gold binutils < 2.26, see: https://sourceware.org/bugzilla/show_bug.cgi?id=17639")
           set(LD_AVOID_GC_SECTIONS TRUE)
         endif()
     else()
@@ -193,7 +192,7 @@ endif()
 
 # Configuring compilers
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
@@ -201,7 +200,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(COLOR_FLAG "")
   endif()
   # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=1 -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=1 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 ${COLOR_FLAG} -fPIC")
   if(WIN32) # using mingw
     add_dependency_defines(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
@@ -272,6 +271,9 @@ set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/includ
 find_package(Osmium REQUIRED COMPONENTS io)
 add_dependency_includes(${OSMIUM_INCLUDE_DIR})
 
+# Disallow deprecated protozero APIs
+add_definitions(-DPROTOZERO_STRICT_API)
+
 
 find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
@@ -304,13 +306,8 @@ if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 find_package(Luabind REQUIRED)
-include(check_luabind)
 add_dependency_includes(${LUABIND_INCLUDE_DIR})
-
 set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
-if(LUAJIT_FOUND)
-  set(USED_LUA_LIBRARIES, LUAJIT_LIBRARIES)
-endif()
 add_dependency_includes(${LUA_INCLUDE_DIR})
 
 find_package(EXPAT REQUIRED)
@@ -331,11 +328,6 @@ add_dependency_includes(${BZIP2_INCLUDE_DIR})
 
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-
-if (ENABLE_JSON_LOGGING)
-  message(STATUS "Enabling json logging")
-  add_dependency_defines(-DENABLE_JSON_LOGGING)
-endif()
 
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${OSRM_INCLUDE_PATHS})

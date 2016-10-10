@@ -10,7 +10,7 @@ access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "foot", "access" }
 service_tag_restricted = { ["parking_aisle"] = true }
 ignore_in_grid = { ["ferry"] = true }
-restriction_exception_tags = { "foot" }
+restrictions = { "foot" }
 
 walking_speed = 5
 
@@ -71,8 +71,8 @@ properties.continue_straight_at_waypoint = false
 
 local fallback_names     = true
 
-function get_exceptions(vector)
-  for i,v in ipairs(restriction_exception_tags) do
+function get_restrictions(vector)
+  for i,v in ipairs(restrictions) do
     vector:Add(v)
   end
 end
@@ -150,15 +150,14 @@ function way_function (way, result)
   local surface = way:get_value_by_key("surface")
 
    -- name
-  if ref and "" ~= ref and name and "" ~= name then
-    result.name = name .. " (" .. ref .. ")"
-    elseif ref and "" ~= ref then
-      result.name = ref
-  elseif name and "" ~= name then
+  if name and "" ~= name then
     result.name = name
   elseif highway and fallback_names then
     result.name = "{highway:"..highway.."}"  -- if no name exists, use way type
                                             -- this encoding scheme is excepted to be a temporary solution
+  end
+  if ref and "" ~= ref then
+    result.ref = ref
   end
 
     -- roundabouts

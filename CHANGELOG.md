@@ -1,14 +1,34 @@
+# 5.5.0
+  - Changes from 5.4.0
+    - Profiles
+      - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
+      - replaced lhs/rhs profiles by using test defined profiles
+    - Guidance
+      - Notifications are now exposed more prominently, announcing turns onto a ferry/pushing your bike more prominently
+    - Trip Plugin
+      - changed internal behaviour to prefer the smallest lexicographic result over the largest one
+    - Bugfixes
+      - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
+      - fixed compile errors in tile unit-test framework
+    - Debug Tiles
+      - Added support for turn penalties
+
 # 5.4.0
-  Changes from 5.3.0
+  - Changes from 5.3.0
     - Profiles
       - includes library guidance.lua that offers preliminary configuration on guidance.
       - added left_hand_driving flag in global profile properties
       - modified turn penalty function for car profile - better fit to real data
+      - return `ref` and `name` as separate fields. Do no use ref or destination as fallback for name value
+      - the default profile for car now ignores HOV only roads
     - Guidance
       - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
+      - Improved the detection of non-noticeable name-changes
+      - Summaries have been improved to consider references as well
     - API:
       - `annotations=true` now returns the data source id for each segment as `datasources`
       - Reduced semantic of merge to refer only to merges from a lane onto a motorway-like road
+      - new `ref` field in the `RouteStep` object. It contains the reference code or name of a way. Previously merged into the `name` property like `name (ref)` and are now separate fields.
     - Bugfixes
       - Fixed an issue that would result in segfaults for viaroutes with an invalid intermediate segment when u-turns were allowed at the via-location
       - Invalid only_* restrictions could result in loss of connectivity. As a fallback, we assume all turns allowed when the restriction is not valid
@@ -18,9 +38,15 @@
       - Fixed an issue that could emit `invalid` as instruction when ending on a sliproad after a traffic-light
       - Fixed an issue that would detect turning circles as sliproads
       - Fixed a bug where post-processing instructions (e.g. left + left -> uturn) could result in false pronunciations
+      - Fixes a bug where a bearing range of zero would cause exhaustive graph traversals
+      - Fixes a bug where certain looped geometries could cause an infinite loop during extraction
+      - Fixed a bug where some roads could be falsly identified as sliproads
+      - Fixed a bug where roundabout intersections could result in breaking assertions when immediately exited
+    - Infrastructure:
+      - Adds a feature to limit results in nearest service with a default of 100 in `osrm-routed`
 
 # 5.3.0
-  Changes from 5.3.0-rc.3
+  - Changes from 5.3.0-rc.3
     - Guidance
       - Only announce `use lane` on required turns (not using all lanes to go straight)
       - Moved `lanes` to the intersection objects. This is BREAKING in relation to other Release Candidates but not with respect to other releases.
@@ -28,7 +54,7 @@
       - Fix BREAKING: bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
       - Fix: bug that results in segfaults when `use lane` instructions are suppressed
 
-  Changes form 5.2.7
+  - Changes form 5.2.7
     - API
       - Introduces new `TurnType` in the form of `use lane`. The type indicates that you have to stick to a lane without turning
       - Introduces `lanes` to the `Intersection` object. The lane data contains both the markings at the intersection and a flag indicating if they can be chosen for the next turn
@@ -52,7 +78,7 @@
       - Fix devide by zero on updating speed data using osrm-contract
 
 # 5.3.0 RC3
-  Changes from 5.3.0-rc.2
+  - Changes from 5.3.0-rc.2
     - Guidance
       - Improved detection of obvious turns
       - Improved turn lane detection
@@ -60,7 +86,7 @@
       - Fix bug that didn't chose minimal weights on overlapping edges
 
 # 5.3.0 RC2
-  Changes from 5.3.0-rc.1
+  - Changes from 5.3.0-rc.1
     - Bugfixes
       - Fixes invalid checks in the lane-extraction part of the car profile
 

@@ -145,7 +145,6 @@ Feature: Turn Lane Guidance
             | a,c       | road,road      | depart,arrive           | ,                           |
 
     # This tests whether empty/invalid PSV tags cause osrm-extract to crash
-    @bug
     Scenario: Turn with Bus-Lane
         Given the node map
             | a |   | b |   | c |
@@ -181,7 +180,7 @@ Feature: Turn Lane Guidance
             | a,c       | road,road      | depart,arrive            |
 
     #turn lanes are often drawn at the incoming road, even though the actual turn requires crossing the intersection first
-    @todo @bug @collapse @partition-lanes
+    @todo @collapse @partition-lanes
     Scenario: Turn Lanes at Segregated Road
         Given the node map
             |   |   | i | l |   |   |
@@ -383,7 +382,7 @@ Feature: Turn Lane Guidance
             | a,f       | road,turn,turn   | depart,turn left,arrive  | ,left:true right:false, |
             | a,g       | road,right,right | depart,turn right,arrive | ,left:false right:true, |
 
-    @todo @bug @partition-lanes @previous-lanes
+    @todo @partition-lanes @previous-lanes
     Scenario: Narrowing Turn Lanes
         Given the node map
             |   |   |   |   | g |   |
@@ -428,7 +427,7 @@ Feature: Turn Lane Guidance
             | a,d       | road,road      | depart,arrive            | ,                           |
             | a,e       | road,turn,turn | depart,turn right,arrive | ,straight:false right:true, |
 
-    @bug @todo @roundabout
+    @todo @roundabout
     Scenario: Theodor Heuss Platz
         Given the node map
             |   |   |   | i | o |   |   | l |   |
@@ -555,7 +554,7 @@ Feature: Turn Lane Guidance
             | a,e       | road,road,road         | depart,turn uturn,arrive        | ,left:true left:false left:false straight:false straight:false, |
             | a,g       | road,straight,straight | depart,new name straight,arrive | ,left:false left:false left:false straight:true straight:true,  |
 
-    @bug @todo @roundabout
+    @todo @roundabout
     Scenario: Passing Through a Roundabout
         Given the node map
             |   |   | h |   | g |   |   |
@@ -620,7 +619,7 @@ Feature: Turn Lane Guidance
             | a,d       | hwy,hwy       | depart,arrive                       | ,                                                                            |
             | a,e       | hwy,ramp,ramp | depart,off ramp slight right,arrive | ,straight:false straight:false straight;slight right:true slight right:true, |
 
-    @bug @todo
+    @todo
     Scenario: Turning Off Ramp
         Given the node map
             |   | a |   |
@@ -864,7 +863,7 @@ Feature: Turn Lane Guidance
             | a,c       | ab,bc,bc  | depart,turn left,arrive | ,left:true right:false, |
 
     # http://www.openstreetmap.org/#map=19/47.97685/7.82933&layers=D
-    @bug @todo
+    @todo
     Scenario: Lane Parsing Issue #2706: None Assignments I
         Given the node map
             |   | f |   |   | j  |   |
@@ -904,7 +903,7 @@ Feature: Turn Lane Guidance
             # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
 
     # https://www.openstreetmap.org/#map=19/47.99257/7.83276&layers=D
-    @bug @todo
+    @todo
     Scenario: Lane Parsing Issue #2706: None Assignments II
         Given the node map
             |   | k | l |   |
@@ -939,7 +938,7 @@ Feature: Turn Lane Guidance
             | i,e ||||
             # Note: at the moment we don't care about routes, we care about the extract process triggering assertions
 
-    @bug @todo
+    @todo
     Scenario: Lane Parsing Issue #2706: None Assignments III - Minimal reproduction recipe
         Given the node map
             |   |   | l |   |

@@ -33,11 +33,20 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/osm/node.hpp> // IWYU pragma: export
-#include <osmium/osm/way.hpp> // IWYU pragma: export
-#include <osmium/osm/relation.hpp> // IWYU pragma: export
 #include <osmium/osm/area.hpp> // IWYU pragma: export
 #include <osmium/osm/changeset.hpp> // IWYU pragma: export
+#include <osmium/osm/entity.hpp> // IWYU pragma: export
+#include <osmium/osm/entity_bits.hpp> // IWYU pragma: export
+#include <osmium/osm/item_type.hpp> // IWYU pragma: export
+#include <osmium/osm/location.hpp> // IWYU pragma: export
+#include <osmium/osm/node.hpp> // IWYU pragma: export
+#include <osmium/osm/node_ref.hpp> // IWYU pragma: export
+#include <osmium/osm/node_ref_list.hpp> // IWYU pragma: export
+#include <osmium/osm/object.hpp> // IWYU pragma: export
+#include <osmium/osm/relation.hpp> // IWYU pragma: export
+#include <osmium/osm/timestamp.hpp> // IWYU pragma: export
+#include <osmium/osm/types.hpp> // IWYU pragma: export
+#include <osmium/osm/way.hpp> // IWYU pragma: export
 
 /**
  * @brief Namespace for everything in the Osmium library.

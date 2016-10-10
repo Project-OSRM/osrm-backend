@@ -103,7 +103,7 @@ Feature: Turn Lane Guidance
             | a,j       | in,turn,other,other  | depart,turn right,turn left,arrive  | ,,left:true right:false,               |
             | a,i       | in,turn,other,other  | depart,turn right,turn right,arrive | ,,left:false right:true,               |
 
-    @todo @bug @2654 @none
+    @todo @2654 @none
     #https://github.com/Project-OSRM/osrm-backend/issues/2645
     #http://www.openstreetmap.org/export#map=19/52.56054/13.32152
     Scenario: Kurt-Schuhmacher-Damm
@@ -131,7 +131,7 @@ Feature: Turn Lane Guidance
             | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, |
             | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, |
 
-    @todo @bug @2650 @sliproads
+    @todo @2650 @sliproads
     #market and haight in SF, restricted turn
     #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
     Scenario: Market/Haight without Through Street
@@ -177,7 +177,7 @@ Feature: Turn Lane Guidance
             | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
             | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
 
-    @todo @2650 @bug @sliproads
+    @todo @2650 @sliproads
     #market and haight in SF, unrestricted
     #http://www.openstreetmap.org/#map=19/37.77308/-122.42238
     Scenario: Market/Haight without Through Street
@@ -218,3 +218,19 @@ Feature: Turn Lane Guidance
             | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
             | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
             | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
+
+    Scenario: Check sliproad handler loop's exit condition, Issue #2896
+      # http://www.openstreetmap.org/way/198481519
+        Given the node locations
+            | node | lat        | lon         |
+            | a    | 7.6125350  | 126.5708309 |
+            | b    | 7.6125156  | 126.5707219 |
+            | c    | 7.6125363  | 126.5708337 |
+
+        And the ways
+            | nodes | name |
+            | cbac  |      |
+
+        When I route I should get
+            | from | to | route | turns         |
+            | a    | c  | ,     | depart,arrive |

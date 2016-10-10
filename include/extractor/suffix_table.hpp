@@ -25,6 +25,7 @@ class SuffixTable final
   private:
     std::unordered_set<std::string> suffix_set;
 };
+
 } /* namespace extractor */
 } /* namespace osrm */
 

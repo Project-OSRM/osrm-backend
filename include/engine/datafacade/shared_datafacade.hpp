@@ -79,7 +79,7 @@ class SharedDataFacade final : public BaseDataFacade
 
     util::ShM<util::Coordinate, true>::vector m_coordinate_list;
     util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
-    util::ShM<NodeID, true>::vector m_via_node_list;
+    util::ShM<GeometryID, true>::vector m_via_geometry_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<LaneDataID, true>::vector m_lane_data_id;
     util::ShM<extractor::guidance::TurnInstruction, true>::vector m_turn_instruction_list;
@@ -229,11 +229,12 @@ class SharedDataFacade final : public BaseDataFacade
 
     void LoadViaNodeList()
     {
-        auto via_node_list_ptr = data_layout->GetBlockPtr<NodeID>(
+        auto via_geometry_list_ptr = data_layout->GetBlockPtr<GeometryID>(
             shared_memory, storage::SharedDataLayout::VIA_NODE_LIST);
-        util::ShM<NodeID, true>::vector via_node_list(
-            via_node_list_ptr, data_layout->num_entries[storage::SharedDataLayout::VIA_NODE_LIST]);
-        m_via_node_list = std::move(via_node_list);
+        util::ShM<GeometryID, true>::vector via_geometry_list(
+            via_geometry_list_ptr,
+            data_layout->num_entries[storage::SharedDataLayout::VIA_NODE_LIST]);
+        m_via_geometry_list = std::move(via_geometry_list);
     }
 
     void LoadNames()
@@ -507,6 +508,13 @@ class SharedDataFacade final : public BaseDataFacade
         return m_query_graph->FindEdgeIndicateIfReverse(from, to, result);
     }
 
+    EdgeID FindSmallestEdge(const NodeID from,
+                            const NodeID to,
+                            std::function<bool(EdgeData)> filter) const override final
+    {
+        return m_query_graph->FindSmallestEdge(from, to, filter);
+    }
+
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const NodeID id) const override final
     {
@@ -518,40 +526,113 @@ class SharedDataFacade final : public BaseDataFacade
         return m_osmnodeid_list.at(id);
     }
 
-    virtual void GetUncompressedGeometry(const EdgeID id,
-                                         std::vector<NodeID> &result_nodes) const override final
+    virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
     {
+        /*
+         * NodeID's for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_list vector. For
+         * forward geometries of bi-directional edges, edges 2 to
+         * n of that edge need to be read.
+         */
         const unsigned begin = m_geometry_indices.at(id);
         const unsigned end = m_geometry_indices.at(id + 1);
 
-        result_nodes.clear();
+        std::vector<NodeID> result_nodes;
+
         result_nodes.reserve(end - begin);
+
         std::for_each(m_geometry_list.begin() + begin,
                       m_geometry_list.begin() + end,
                       [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
                           result_nodes.emplace_back(edge.node_id);
                       });
+
+        return result_nodes;
     }
 
-    virtual void
-    GetUncompressedWeights(const EdgeID id,
-                           std::vector<EdgeWeight> &result_weights) const override final
+    virtual std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID id) const override final
     {
-        const unsigned begin = m_geometry_indices.at(id);
+        /*
+         * NodeID's for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_list vector.
+         * */
+        const signed begin = m_geometry_indices.at(id);
+        const signed end = m_geometry_indices.at(id + 1);
+
+        std::vector<NodeID> result_nodes;
+
+        result_nodes.reserve(end - begin);
+
+        std::for_each(m_geometry_list.rbegin() + (m_geometry_list.size() - end),
+                      m_geometry_list.rbegin() + (m_geometry_list.size() - begin),
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
+                          result_nodes.emplace_back(edge.node_id);
+                      });
+
+        return result_nodes;
+    }
+
+    virtual std::vector<EdgeWeight>
+    GetUncompressedForwardWeights(const EdgeID id) const override final
+    {
+        /*
+         * EdgeWeights's for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_list vector.
+         * */
+        const unsigned begin = m_geometry_indices.at(id) + 1;
         const unsigned end = m_geometry_indices.at(id + 1);
 
-        result_weights.clear();
+        std::vector<EdgeWeight> result_weights;
         result_weights.reserve(end - begin);
+
         std::for_each(m_geometry_list.begin() + begin,
                       m_geometry_list.begin() + end,
                       [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
-                          result_weights.emplace_back(edge.weight);
+                          result_weights.emplace_back(edge.forward_weight);
                       });
+
+        return result_weights;
     }
 
-    virtual unsigned GetGeometryIndexForEdgeID(const unsigned id) const override final
+    virtual std::vector<EdgeWeight>
+    GetUncompressedReverseWeights(const EdgeID id) const override final
     {
-        return m_via_node_list.at(id);
+        /*
+         * EdgeWeights for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_list vector. For
+         * reverse weights of bi-directional edges, edges 1 to
+         * n-1 of that edge need to be read in reverse.
+         */
+        const signed begin = m_geometry_indices.at(id);
+        const signed end = m_geometry_indices.at(id + 1) - 1;
+
+        std::vector<EdgeWeight> result_weights;
+        result_weights.reserve(end - begin);
+
+        std::for_each(m_geometry_list.rbegin() + (m_geometry_list.size() - end),
+                      m_geometry_list.rbegin() + (m_geometry_list.size() - begin),
+                      [&](const osrm::extractor::CompressedEdgeContainer::CompressedEdge &edge) {
+                          result_weights.emplace_back(edge.reverse_weight);
+                      });
+
+        return result_weights;
+    }
+
+    virtual GeometryID GetGeometryIndexForEdgeID(const unsigned id) const override final
+    {
+        return m_via_geometry_list.at(id);
     }
 
     extractor::guidance::TurnInstruction
@@ -707,12 +788,21 @@ class SharedDataFacade final : public BaseDataFacade
         return result;
     }
 
+    std::string GetRefForID(const unsigned name_id) const override final
+    {
+        // We store the ref after the name, destination and pronunciation of a street.
+        // We do this to get around the street length limit of 255 which would hit
+        // if we concatenate these. Order (see extractor_callbacks):
+        // name (0), destination (1), pronunciation (2), ref (3)
+        return GetNameForID(name_id + 3);
+    }
+
     std::string GetPronunciationForID(const unsigned name_id) const override final
     {
         // We store the pronunciation after the name and destination of a street.
         // We do this to get around the street length limit of 255 which would hit
         // if we concatenate these. Order (see extractor_callbacks):
-        // name (0), destination (1), pronunciation (2)
+        // name (0), destination (1), pronunciation (2), ref (3)
         return GetNameForID(name_id + 2);
     }
 
@@ -721,7 +811,7 @@ class SharedDataFacade final : public BaseDataFacade
         // We store the destination after the name of a street.
         // We do this to get around the street length limit of 255 which would hit
         // if we concatenate these. Order (see extractor_callbacks):
-        // name (0), destination (1), pronunciation (2)
+        // name (0), destination (1), pronunciation (2), ref (3)
         return GetNameForID(name_id + 1);
     }
 
@@ -739,14 +829,22 @@ class SharedDataFacade final : public BaseDataFacade
 
     // Returns the data source ids that were used to supply the edge
     // weights.
-    virtual void
-    GetUncompressedDatasources(const EdgeID id,
-                               std::vector<uint8_t> &result_datasources) const override final
+    virtual std::vector<uint8_t>
+    GetUncompressedForwardDatasources(const EdgeID id) const override final
     {
-        const unsigned begin = m_geometry_indices.at(id);
+        /*
+         * Data sources for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_list vector. For
+         * forward datasources of bi-directional edges, edges 2 to
+         * n of that edge need to be read.
+         */
+        const unsigned begin = m_geometry_indices.at(id) + 1;
         const unsigned end = m_geometry_indices.at(id + 1);
 
-        result_datasources.clear();
+        std::vector<uint8_t> result_datasources;
         result_datasources.reserve(end - begin);
 
         // If there was no datasource info, return an array of 0's.
@@ -764,6 +862,47 @@ class SharedDataFacade final : public BaseDataFacade
                 m_datasource_list.begin() + end,
                 [&](const uint8_t &datasource_id) { result_datasources.push_back(datasource_id); });
         }
+
+        return result_datasources;
+    }
+
+    // Returns the data source ids that were used to supply the edge
+    // weights.
+    virtual std::vector<uint8_t>
+    GetUncompressedReverseDatasources(const EdgeID id) const override final
+    {
+        /*
+         * Datasources for geometries are stored in one place for
+         * both forward and reverse segments along the same bi-
+         * directional edge. The m_geometry_indices stores
+         * refences to where to find the beginning of the bi-
+         * directional edge in the m_geometry_list vector. For
+         * reverse datasources of bi-directional edges, edges 1 to
+         * n-1 of that edge need to be read in reverse.
+         */
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1) - 1;
+
+        std::vector<uint8_t> result_datasources;
+        result_datasources.reserve(end - begin);
+
+        // If there was no datasource info, return an array of 0's.
+        if (m_datasource_list.empty())
+        {
+            for (unsigned i = 0; i < end - begin; ++i)
+            {
+                result_datasources.push_back(0);
+            }
+        }
+        else
+        {
+            std::for_each(
+                m_datasource_list.rbegin() + (m_datasource_list.size() - end),
+                m_datasource_list.rbegin() + (m_datasource_list.size() - begin),
+                [&](const uint8_t &datasource_id) { result_datasources.push_back(datasource_id); });
+        }
+
+        return result_datasources;
     }
 
     virtual std::string GetDatasourceName(const uint8_t datasource_name_id) const override final

@@ -72,6 +72,21 @@ struct RouteParameters : public BaseParameters
     template <typename... Args>
     RouteParameters(const bool steps_,
                     const bool alternatives_,
+                    const GeometriesType geometries_,
+                    const OverviewType overview_,
+                    const boost::optional<bool> continue_straight_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
+          annotations{false}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}
+    // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one below.
+    {
+    }
+
+    // RouteParameters constructor adding the `annotations` setting in a API-compatible way.
+    template <typename... Args>
+    RouteParameters(const bool steps_,
+                    const bool alternatives_,
                     const bool annotations_,
                     const GeometriesType geometries_,
                     const OverviewType overview_,

@@ -165,8 +165,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | qe    | secondary_link | Ettlinger Allee    |      | yes    |
 
         When I route I should get
-            | waypoints | route                                                     | turns                    |
-            | a,o       | Schwarzwaldstrasse (L561),Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive |
+            | waypoints | route                                                    | turns                    | ref        |
+            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee       | depart,turn right,arrive | L561,,     |
 
     Scenario: Traffic Lights everywhere
         #http://map.project-osrm.org/?z=18&center=48.995336%2C8.383813&loc=48.995467%2C8.384548&loc=48.995115%2C8.382761&hl=en&alt=0
@@ -264,3 +264,88 @@ Feature: Slipways and Dedicated Turn Lanes
      When I route I should get
             | waypoints | bearings     | route           | turns         |
             | b,a       | 90,10 270,10 | circled,circled | depart,arrive |
+
+    #http://www.openstreetmap.org/#map=19/38.90597/-77.01276
+    Scenario: Don't falsly classify as sliproads
+        Given the node map
+            # 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | j |   |   |   |   |   |   |   |
+            | a | b |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | c |   |   |   |   |   |   | d |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   | e |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | 1 |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |   |   |   |   | g |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | i |   |   |   |   |   |   | h |
+
+        And the ways
+            | nodes | name       | highway   | oneway | maxspeed |
+            | abcd  | new york   | primary   | yes    | 35       |
+            | befgh | m street   | secondary | yes    | 35       |
+            | igcj  | 1st street | tertiary  | no     | 20       |
+
+        And the nodes
+            | node | highway         |
+            | c    | traffic_signals |
+            | g    | traffic_signals |
+
+        When I route I should get
+            | waypoints | route                                   | turns                              | #                                    |
+            | a,d       | new york,new york                       | depart,arrive                      | this is the sinatra route            |
+            | a,j       | new york,1st street,1st street          | depart,turn left,arrive            |                                      |
+            | a,1       | new york,m street,1st street,1st street | depart,turn right,turn left,arrive | this can false be seen as a sliproad |
+
+    # Merging into degree two loop on dedicated turn detection / 2927
+    Scenario: Turn Instead of Ramp
+        Given the node map
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | f |
+            |   |   |   |   | g |   |   |   |   |   | h |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   | d |   |   | e |
+            | i |   |   |   | c |   |   |   |   |   | j |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | b |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+            |   |   | a |   |   |   |   |   |   |   |   |   |   |   |   |   |
+
+        And the ways
+            | nodes | highway | name | oneway |
+            | abi   | primary | road | yes    |
+            | bcjd  | primary | loop | yes    |
+            | dhgf  | primary | loop | yes    |
+            | fed   | primary | loop | yes    |
+
+        And the nodes
+            | node | highway         |
+            | g    | traffic_signals |
+            | c    | traffic_signals |
+
+        # We don't actually care about routes here, this is all about endless loops in turn discovery
+        When I route I should get
+            | waypoints | route          | turns                          |
+            | a,i       | road,road,road | depart,fork slight left,arrive |

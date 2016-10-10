@@ -6,17 +6,17 @@ Feature: osrm-contract command line options: version
 
     Background:
         Given the profile "testbot"
-    
+
     Scenario: osrm-contract - Version, short
         When I run "osrm-contract --v"
         Then stderr should be empty
         And stdout should contain 1 line
         And stdout should contain /(v\d{1,2}\.\d{1,2}\.\d{1,2}|\w*-\d+-\w+)/
-        And it should exit with code 0
+        And it should exit successfully
 
     Scenario: osrm-contract - Version, long
         When I run "osrm-contract --version"
         Then stderr should be empty
         And stdout should contain 1 line
         And stdout should contain /(v\d{1,2}\.\d{1,2}\.\d{1,2}|\w*-\d+-\w+)/
-        And it should exit with code 0
+        And it should exit successfully

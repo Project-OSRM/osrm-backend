@@ -164,3 +164,172 @@ Feature: New-Name Instructions
             | waypoints | route                    | turns                           |
             | a,e       | name,with-name,with-name | depart,new name straight,arrive |
             | b,e       | with-name,with-name      | depart,arrive                   |
+
+    Scenario: Both Name and Ref Empty
+        Given the node map
+            | a |  | b |  | c |
+
+        And the ways
+            | nodes | name | ref |
+            | ab    |      |     |
+            | bc    |      |     |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,c       | ,     | depart,arrive |
+
+    Scenario: Same Name, Ref Extended
+        Given the node map
+            | a |  | b |  | c |
+
+        And the ways
+            | nodes | name | ref   |
+            | ab    | A    | B1    |
+            | bc    | C    | B1;B2 |
+
+        When I route I should get
+            | waypoints | route | turns                           |
+            | a,c       | A,C,C | depart,new name straight,arrive |
+
+    Scenario: Same Name, Ref Removed
+        Given the node map
+            | a |  | b |  | c |
+
+        And the ways
+            | nodes | name | ref   |
+            | ab    | A    | B1;B2 |
+            | bc    | C    | B1    |
+
+        When I route I should get
+            | waypoints | route | turns                           |
+            | a,c       | A,C,C | depart,new name straight,arrive |
+
+    Scenario: Name Removed, Ref Extended
+        Given the node map
+            | a |  | b |  | c |
+
+        And the ways
+            | nodes | name | ref   |
+            | ab    | A    | B1    |
+            | bc    |      | B1;B2 |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,c       | A,    | depart,arrive |
+
+    Scenario: Name Added, Ref Removed
+        Given the node map
+            | a |  | b |  | c |
+
+        And the ways
+            | nodes | name | ref   |
+            | ab    |      | B1    |
+            | bc    | A    |       |
+
+        When I route I should get
+            | waypoints | route | turns                           |
+            | a,c       | ,A,A  | depart,new name straight,arrive |
+
+    Scenario: Prefix Change
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name                     | ref   | highway  |
+            | ab    | North Central Expressway | US 75 | motorway |
+            | bc    | Central Expressway       | US 75 | motorway |
+
+        When I route I should get
+            | waypoints | route                                                          | turns                           |
+            | a,c       | North Central Expressway,Central Expressway,Central Expressway | depart,new name straight,arrive |
+
+    Scenario: Prefix Change
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name                     | ref   | highway  |
+            | ba    | North Central Expressway | US 75 | motorway |
+            | cb    | Central Expressway       | US 75 | motorway |
+
+        When I route I should get
+            | waypoints | route                                                                | turns                           |
+            | c,a       | Central Expressway,North Central Expressway,North Central Expressway | depart,new name straight,arrive |
+
+    Scenario: No Name, Same Reference
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name               | ref   | highway  |
+            | ab    | Central Expressway | US 75 | motorway |
+            | bc    |                    | US 75 | motorway |
+
+        When I route I should get
+            | waypoints | route               | turns         |
+            | a,c       | Central Expressway, | depart,arrive |
+
+    Scenario: No Name, Same Reference
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name               | ref   | highway  |
+            | ab    |                    | US 75 | motorway |
+            | bc    | Central Expressway | US 75 | motorway |
+
+        When I route I should get
+            | waypoints | route               | turns         |
+            | a,c       | ,Central Expressway | depart,arrive |
+
+    Scenario: No Name, Same Reference
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name | ref         | highway  |
+            | ab    |      | US 75;US 69 | motorway |
+            | bc    |      | US 75       | motorway |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,c       | ,     | depart,arrive |
+
+    Scenario: No Name, Same Reference
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name | ref         | highway  |
+            | ab    |      | US 69;US 75 | motorway |
+            | bc    |      | US 75       | motorway |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,c       | ,     | depart,arrive |
+
+    Scenario: No Name, Same Reference
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name | ref         | highway  |
+            | ab    |      | US 75       | motorway |
+            | bc    |      | US 75;US 69 | motorway |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,c       | ,     | depart,arrive |
+
+    Scenario: No Name, Same Reference
+        Given the node map
+            | a |   |   |   | b |   |   |   | c |
+
+        And the ways
+            | nodes | name | ref         | highway  |
+            | ab    |      | US 75       | motorway |
+            | bc    |      | US 69;US 75 | motorway |
+
+        When I route I should get
+            | waypoints | route | turns         |
+            | a,c       | ,     | depart,arrive |

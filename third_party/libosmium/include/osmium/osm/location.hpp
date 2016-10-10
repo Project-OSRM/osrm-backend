@@ -35,14 +35,13 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 #include <cstdint>
+#include <cstring>
+#include <functional>
 #include <iosfwd>
+#include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <string>
-
-#include <iostream>
-
-#include <osmium/util/compatibility.hpp>
-#include <osmium/util/double.hpp>
 
 namespace osmium {
 
@@ -61,6 +60,184 @@ namespace osmium {
         }
 
     }; // struct invalid_location
+
+    namespace detail {
+
+        constexpr const int coordinate_precision = 10000000;
+
+        // Convert string with a floating point number into integer suitable
+        // for use as coordinate in a Location.
+        inline int32_t string_to_location_coordinate(const char** data) {
+            const char* str = *data;
+            const char* full = str;
+
+            int64_t result = 0;
+            int sign = 1;
+
+            // one more than significant digits to allow rounding
+            int64_t scale = 8;
+
+            // paranoia check for maximum number of digits
+            int max_digits = 10;
+
+            // optional minus sign
+            if (*str == '-') {
+                sign = -1;
+                ++str;
+            }
+
+            // there has to be at least one digit
+            if (*str >= '0' && *str <= '9') {
+                result = *str - '0';
+                ++str;
+            } else {
+                goto error;
+            }
+
+            // optional additional digits before decimal point
+            while (*str >= '0' && *str <= '9' && max_digits > 0) {
+                result = result * 10 + (*str - '0');
+                ++str;
+                --max_digits;
+            }
+
+            if (max_digits == 0) {
+                goto error;
+            }
+
+            // optional decimal point
+            if (*str == '.') {
+                ++str;
+
+                // read significant digits
+                for (; scale > 0 && *str >= '0' && *str <= '9'; --scale, ++str) {
+                    result = result * 10 + (*str - '0');
+                }
+
+                // ignore non-significant digits
+                max_digits = 20;
+                while (*str >= '0' && *str <= '9' && max_digits > 0) {
+                    ++str;
+                    --max_digits;
+                }
+
+                if (max_digits == 0) {
+                    goto error;
+                }
+            }
+
+            // optional exponent in scientific notation
+            if (*str == 'e' || *str == 'E') {
+                ++str;
+
+                int esign = 1;
+                // optional minus sign
+                if (*str == '-') {
+                    esign = -1;
+                    ++str;
+                }
+
+                int64_t eresult = 0;
+
+                // there has to be at least one digit in exponent
+                if (*str >= '0' && *str <= '9') {
+                    eresult = *str - '0';
+                    ++str;
+                } else {
+                    goto error;
+                }
+
+                // optional additional digits in exponent
+                max_digits = 5;
+                while (*str >= '0' && *str <= '9' && max_digits > 0) {
+                    eresult = eresult * 10 + (*str - '0');
+                    ++str;
+                    --max_digits;
+                }
+
+                if (max_digits == 0) {
+                    goto error;
+                }
+
+                scale += eresult * esign;
+            }
+
+            if (scale < 0) {
+                result = 0;
+            } else {
+                for (; scale > 0; --scale) {
+                    result *= 10;
+                }
+
+                result = (result + 5) / 10 * sign;
+
+                if (result > std::numeric_limits<int32_t>::max() ||
+                    result < std::numeric_limits<int32_t>::min()) {
+                    goto error;
+                }
+            }
+
+            *data = str;
+            return static_cast<int32_t>(result);
+
+        error:
+
+            throw invalid_location{std::string{"wrong format for coordinate: '"} + full + "'"};
+        }
+
+        // Convert integer as used by location for coordinates into a string.
+        template <typename T>
+        inline T append_location_coordinate_to_string(T iterator, int32_t value) {
+            // handle negative values
+            if (value < 0) {
+                *iterator++ = '-';
+                value = -value;
+            }
+
+            // write digits into temporary buffer
+            int32_t v = value;
+            char temp[10];
+            char* t = temp;
+            do {
+                *t++ = char(v % 10) + '0';
+                v /= 10;
+            } while (v != 0);
+
+            while (t-temp < 7) {
+                *t++ = '0';
+            }
+
+            // write out digits before decimal point
+            if (value >= coordinate_precision) {
+                if (value >= 10 * coordinate_precision) {
+                    if (value >= 100 * coordinate_precision) {
+                        *iterator++ = *--t;
+                    }
+                    *iterator++ = *--t;
+                }
+                *iterator++ = *--t;
+            } else {
+                *iterator++ = '0';
+            }
+
+            // remove trailing zeros
+            const char* tn = temp;
+            while (tn < t && *tn == '0') {
+                ++tn;
+            }
+
+            // decimal point
+            if (t != tn) {
+                *iterator++ = '.';
+                while (t != tn) {
+                    *iterator++ = *--t;
+                }
+            }
+
+            return iterator;
+        }
+
+    } // namespace detail
 
     /**
      * Locations define a place on earth.
@@ -89,14 +266,12 @@ namespace osmium {
         // static constexpr int32_t undefined_coordinate = std::numeric_limits<int32_t>::max();
         static constexpr int32_t undefined_coordinate = 2147483647;
 
-        static constexpr int coordinate_precision = 10000000;
-
         static int32_t double_to_fix(const double c) noexcept {
-            return static_cast<int32_t>(std::round(c * coordinate_precision));
+            return static_cast<int32_t>(std::round(c * detail::coordinate_precision));
         }
 
         static constexpr double fix_to_double(const int32_t c) noexcept {
-            return static_cast<double>(c) / coordinate_precision;
+            return static_cast<double>(c) / detail::coordinate_precision;
         }
 
         /**
@@ -154,10 +329,10 @@ namespace osmium {
          * usual bounds (-180<=lon<=180, -90<=lat<=90).
          */
         constexpr bool valid() const noexcept {
-            return m_x >= -180 * coordinate_precision
-                && m_x <=  180 * coordinate_precision
-                && m_y >=  -90 * coordinate_precision
-                && m_y <=   90 * coordinate_precision;
+            return m_x >= -180 * detail::coordinate_precision
+                && m_x <=  180 * detail::coordinate_precision
+                && m_y >=  -90 * detail::coordinate_precision
+                && m_y <=   90 * detail::coordinate_precision;
         }
 
         constexpr int32_t x() const noexcept {
@@ -226,11 +401,47 @@ namespace osmium {
             return *this;
         }
 
+        Location& set_lon(const char* str) {
+            const char** data = &str;
+            m_x = detail::string_to_location_coordinate(data);
+            if (**data != '\0') {
+                throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
+            }
+            return *this;
+        }
+
+        Location& set_lat(const char* str) {
+            const char** data = &str;
+            m_y = detail::string_to_location_coordinate(data);
+            if (**data != '\0') {
+                throw invalid_location{std::string{"characters after coordinate: '"} + *data + "'"};
+            }
+            return *this;
+        }
+
+        Location& set_lon_partial(const char** str) {
+            m_x = detail::string_to_location_coordinate(str);
+            return *this;
+        }
+
+        Location& set_lat_partial(const char** str) {
+            m_y = detail::string_to_location_coordinate(str);
+            return *this;
+        }
+
         template <typename T>
-        T as_string(T iterator, const char separator) const {
-            iterator = osmium::util::double2string(iterator, lon(), 7);
+        T as_string_without_check(T iterator, const char separator = ',') const {
+            iterator = detail::append_location_coordinate_to_string(iterator, x());
             *iterator++ = separator;
-            return osmium::util::double2string(iterator, lat(), 7);
+            return detail::append_location_coordinate_to_string(iterator, y());
+        }
+
+        template <typename T>
+        T as_string(T iterator, const char separator = ',') const {
+            if (!valid()) {
+                throw osmium::invalid_location("invalid location");
+            }
+            return as_string_without_check(iterator, separator);
         }
 
     }; // class Location
@@ -273,13 +484,52 @@ namespace osmium {
     template <typename TChar, typename TTraits>
     inline std::basic_ostream<TChar, TTraits>& operator<<(std::basic_ostream<TChar, TTraits>& out, const osmium::Location& location) {
         if (location) {
-            out << '(' << location.lon() << ',' << location.lat() << ')';
+            out << '(';
+            location.as_string(std::ostream_iterator<char>(out), ',');
+            out << ')';
         } else {
             out << "(undefined,undefined)";
         }
         return out;
     }
 
+    namespace detail {
+
+        template <int N>
+        inline size_t hash(const osmium::Location& location) noexcept {
+            return location.x() ^ location.y();
+        }
+
+        template <>
+        inline size_t hash<8>(const osmium::Location& location) noexcept {
+            size_t h = location.x();
+            h <<= 32;
+            return h ^ location.y();
+        }
+
+    } // namespace detail
+
 } // namespace osmium
+
+namespace std {
+
+// This pragma is a workaround for a bug in an old libc implementation
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+    template <>
+    struct hash<osmium::Location> {
+        using argument_type = osmium::Location;
+        using result_type = size_t;
+        size_t operator()(const osmium::Location& location) const noexcept {
+            return osmium::detail::hash<sizeof(size_t)>(location);
+        }
+    };
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
+} // namespace std
 
 #endif // OSMIUM_OSM_LOCATION_HPP

@@ -1,8 +1,8 @@
 'use strict';
 
-var Timeout = require('node-timeout');
-var request = require('request');
-var util = require('util');
+const Timeout = require('node-timeout');
+const request = require('request');
+const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
     this.requestPath = (service, params, callback) => {
@@ -80,18 +80,7 @@ module.exports = function () {
         return this.requestPath('nearest', params, callback);
     };
 
-    this.requestIsochrone = (node, userParams, callback) => {
-        var defaults = {
-                output: 'json'
-            },
-            params = this.overwriteParams(defaults, userParams);
-        params.coordinates = [[node.lon, node.lat].join(',')];
-        params.distance = 10000;
-
-        return this.requestPath('isochrone', params, callback);
-    };
-
-    this.requestTable = (isochrone, userParams, callback) => {
+    this.requestTable = (waypoints, userParams, callback) => {
         var defaults = {
                 output: 'json'
             },

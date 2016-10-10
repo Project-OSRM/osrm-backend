@@ -33,6 +33,7 @@ struct ExtractionWay
         is_startpoint = true;
         is_access_restricted = false;
         name.clear();
+        ref.clear();
         pronunciation.clear();
         destinations.clear();
         forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
@@ -53,6 +54,7 @@ struct ExtractionWay
     double backward_speed;
     double duration;
     std::string name;
+    std::string ref;
     std::string pronunciation;
     std::string destinations;
     std::string turn_lanes_forward;

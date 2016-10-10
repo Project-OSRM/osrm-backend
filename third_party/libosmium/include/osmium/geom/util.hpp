@@ -44,11 +44,11 @@ namespace osmium {
      */
     struct projection_error : public std::runtime_error {
 
-        projection_error(const std::string& what) :
+        explicit projection_error(const std::string& what) :
             std::runtime_error(what) {
         }
 
-        projection_error(const char* what) :
+        explicit projection_error(const char* what) :
             std::runtime_error(what) {
         }
 

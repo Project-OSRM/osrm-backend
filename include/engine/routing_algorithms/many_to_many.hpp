@@ -41,12 +41,13 @@ class ManyToManyRouting final
     using SearchSpaceWithBuckets = std::unordered_map<NodeID, std::vector<NodeBucket>>;
 
   public:
-    ManyToManyRouting(DataFacadeT *facade, SearchEngineData &engine_working_data)
-        : super(facade), engine_working_data(engine_working_data)
+    ManyToManyRouting(SearchEngineData &engine_working_data)
+        : engine_working_data(engine_working_data)
     {
     }
 
-    std::vector<EdgeWeight> operator()(const std::vector<PhantomNode> &phantom_nodes,
+    std::vector<EdgeWeight> operator()(const DataFacadeT &facade,
+                                       const std::vector<PhantomNode> &phantom_nodes,
                                        const std::vector<std::size_t> &source_indices,
                                        const std::vector<std::size_t> &target_indices) const
     {
@@ -58,8 +59,7 @@ class ManyToManyRouting final
         std::vector<EdgeWeight> result_table(number_of_entries,
                                              std::numeric_limits<EdgeWeight>::max());
 
-        engine_working_data.InitializeOrClearFirstThreadLocalStorage(
-            super::facade->GetNumberOfNodes());
+        engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
 
         QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
 
@@ -86,7 +86,7 @@ class ManyToManyRouting final
             // explore search space
             while (!query_heap.Empty())
             {
-                BackwardRoutingStep(column_idx, query_heap, search_space_with_buckets);
+                BackwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets);
             }
             ++column_idx;
         };
@@ -113,7 +113,8 @@ class ManyToManyRouting final
             // explore search space
             while (!query_heap.Empty())
             {
-                ForwardRoutingStep(row_idx,
+                ForwardRoutingStep(facade,
+                                   row_idx,
                                    number_of_targets,
                                    query_heap,
                                    search_space_with_buckets,
@@ -157,7 +158,8 @@ class ManyToManyRouting final
         return result_table;
     }
 
-    void ForwardRoutingStep(const unsigned row_idx,
+    void ForwardRoutingStep(const DataFacadeT &facade,
+                            const unsigned row_idx,
                             const unsigned number_of_targets,
                             QueryHeap &query_heap,
                             const SearchSpaceWithBuckets &search_space_with_buckets,
@@ -182,7 +184,7 @@ class ManyToManyRouting final
                 const EdgeWeight new_distance = source_distance + target_distance;
                 if (new_distance < 0)
                 {
-                    const EdgeWeight loop_weight = super::GetLoopWeight(node);
+                    const EdgeWeight loop_weight = super::GetLoopWeight(facade, node);
                     const int new_distance_with_loop = new_distance + loop_weight;
                     if (loop_weight != INVALID_EDGE_WEIGHT && new_distance_with_loop >= 0)
                     {
@@ -195,14 +197,15 @@ class ManyToManyRouting final
                 }
             }
         }
-        if (StallAtNode<true>(node, source_distance, query_heap))
+        if (StallAtNode<true>(facade, node, source_distance, query_heap))
         {
             return;
         }
-        RelaxOutgoingEdges<true>(node, source_distance, query_heap);
+        RelaxOutgoingEdges<true>(facade, node, source_distance, query_heap);
     }
 
-    void BackwardRoutingStep(const unsigned column_idx,
+    void BackwardRoutingStep(const DataFacadeT &facade,
+                             const unsigned column_idx,
                              QueryHeap &query_heap,
                              SearchSpaceWithBuckets &search_space_with_buckets) const
     {
@@ -212,25 +215,27 @@ class ManyToManyRouting final
         // store settled nodes in search space bucket
         search_space_with_buckets[node].emplace_back(column_idx, target_distance);
 
-        if (StallAtNode<false>(node, target_distance, query_heap))
+        if (StallAtNode<false>(facade, node, target_distance, query_heap))
         {
             return;
         }
 
-        RelaxOutgoingEdges<false>(node, target_distance, query_heap);
+        RelaxOutgoingEdges<false>(facade, node, target_distance, query_heap);
     }
 
     template <bool forward_direction>
-    inline void
-    RelaxOutgoingEdges(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap) const
+    inline void RelaxOutgoingEdges(const DataFacadeT &facade,
+                                   const NodeID node,
+                                   const EdgeWeight distance,
+                                   QueryHeap &query_heap) const
     {
-        for (auto edge : super::facade->GetAdjacentEdgeRange(node))
+        for (auto edge : facade.GetAdjacentEdgeRange(node))
         {
-            const auto &data = super::facade->GetEdgeData(edge);
+            const auto &data = facade.GetEdgeData(edge);
             const bool direction_flag = (forward_direction ? data.forward : data.backward);
             if (direction_flag)
             {
-                const NodeID to = super::facade->GetTarget(edge);
+                const NodeID to = facade.GetTarget(edge);
                 const int edge_weight = data.distance;
 
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
@@ -254,16 +259,18 @@ class ManyToManyRouting final
 
     // Stalling
     template <bool forward_direction>
-    inline bool
-    StallAtNode(const NodeID node, const EdgeWeight distance, QueryHeap &query_heap) const
+    inline bool StallAtNode(const DataFacadeT &facade,
+                            const NodeID node,
+                            const EdgeWeight distance,
+                            QueryHeap &query_heap) const
     {
-        for (auto edge : super::facade->GetAdjacentEdgeRange(node))
+        for (auto edge : facade.GetAdjacentEdgeRange(node))
         {
-            const auto &data = super::facade->GetEdgeData(edge);
+            const auto &data = facade.GetEdgeData(edge);
             const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
             if (reverse_flag)
             {
-                const NodeID to = super::facade->GetTarget(edge);
+                const NodeID to = facade.GetTarget(edge);
                 const int edge_weight = data.distance;
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 if (query_heap.WasInserted(to))
