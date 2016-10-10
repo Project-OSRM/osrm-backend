@@ -25,6 +25,11 @@
 #include <utility>
 #include <vector>
 
+#include <tbb/task_scheduler_init.h>
+
+// explicit TBB scheduler init to register resources cleanup at exit
+tbb::task_scheduler_init init(2);
+
 BOOST_AUTO_TEST_SUITE(static_rtree)
 
 using namespace osrm;
