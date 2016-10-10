@@ -108,15 +108,15 @@ transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map
  */
 int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
+    util::LogPolicy::GetInstance().Unmute();
+    TIMER_START(extracting);
+
+    const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
+    const auto number_of_threads =
+        std::min(recommended_num_threads, config.requested_num_threads);
+    tbb::task_scheduler_init init(number_of_threads);
+
     {
-        util::LogPolicy::GetInstance().Unmute();
-        TIMER_START(extracting);
-
-        const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
-        const auto number_of_threads =
-            std::min(recommended_num_threads, config.requested_num_threads);
-        tbb::task_scheduler_init init(number_of_threads);
-
         util::SimpleLogger().Write() << "Input file: " << config.input_path.filename().string();
         if (!config.profile_path.empty())
         {
