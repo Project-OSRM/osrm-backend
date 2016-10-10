@@ -35,6 +35,9 @@ template <typename ParameterT> std::size_t testInvalidOptions(std::string option
 
 BOOST_AUTO_TEST_CASE(invalid_route_urls)
 {
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("a;3,4"), 0UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("120;3,4"), 3UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("90000000,2;3,4"), 0UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&bla=foo"), 22UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&bearings=foo"),
                       32UL);
