@@ -20,6 +20,7 @@
 
 #include <chrono>
 #include <limits>
+#include <mutex>
 
 namespace
 {
@@ -67,10 +68,13 @@ struct CmpEdgeByInternalSourceTargetAndName
         if (lhs.result.source != rhs.result.source)
             return lhs.result.source < rhs.result.source;
 
+        if (lhs.result.source == SPECIAL_NODEID)
+            return false;
+
         if (lhs.result.target != rhs.result.target)
             return lhs.result.target < rhs.result.target;
 
-        if (lhs.result.source == SPECIAL_NODEID)
+        if (lhs.result.target == SPECIAL_NODEID)
             return false;
 
         if (lhs.result.name_id == rhs.result.name_id)
@@ -82,6 +86,7 @@ struct CmpEdgeByInternalSourceTargetAndName
         if (rhs.result.name_id == EMPTY_NAMEID)
             return true;
 
+        std::lock_guard<std::mutex> lock(mutex);
         BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
         const oe::ExtractionContainers::STXXLNameCharData::const_iterator data = name_data.begin();
         return std::lexicographical_compare(data + name_offsets[lhs.result.name_id],
@@ -93,6 +98,7 @@ struct CmpEdgeByInternalSourceTargetAndName
     value_type max_value() { return value_type::max_internal_value(); }
     value_type min_value() { return value_type::min_internal_value(); }
 
+    std::mutex& mutex;
     const oe::ExtractionContainers::STXXLNameCharData &name_data;
     const oe::ExtractionContainers::STXXLNameOffsets &name_offsets;
 };
@@ -433,9 +439,10 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     // Sort edges by start.
     std::cout << "[extractor] Sorting edges by renumbered start ... " << std::flush;
     TIMER_START(sort_edges_by_renumbered_start);
+    std::mutex name_data_mutex;
     stxxl::sort(all_edges_list.begin(),
                 all_edges_list.end(),
-                CmpEdgeByInternalSourceTargetAndName{name_char_data, name_offsets},
+                CmpEdgeByInternalSourceTargetAndName{name_data_mutex, name_char_data, name_offsets},
                 stxxl_memory);
     TIMER_STOP(sort_edges_by_renumbered_start);
     std::cout << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s" << std::endl;

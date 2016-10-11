@@ -113,7 +113,7 @@ struct InternalExtractorEdge
     {
         return InternalExtractorEdge(MAX_OSM_NODEID,
                                      MAX_OSM_NODEID,
-                                     0,
+                                     SPECIAL_NODEID,
                                      WeightData(),
                                      false,
                                      false,
