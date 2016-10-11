@@ -1,8 +1,8 @@
-#include "engine/engine.hpp"
 #include "engine/api/route_parameters.hpp"
+#include "engine/data_watchdog.hpp"
+#include "engine/engine.hpp"
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
-#include "engine/data_watchdog.hpp"
 
 #include "engine/plugins/match.hpp"
 #include "engine/plugins/nearest.hpp"
@@ -34,21 +34,23 @@ namespace
 // Abstracted away the query locking into a template function
 // Works the same for every plugin.
 template <typename ParameterT, typename PluginT, typename ResultT>
-osrm::engine::Status
-RunQuery(const std::unique_ptr<osrm::engine::DataWatchdog>& watchdog,
-         std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &facade,
-         const ParameterT &parameters,
-         PluginT &plugin,
-         ResultT &result)
+osrm::engine::Status RunQuery(const std::unique_ptr<osrm::engine::DataWatchdog> &watchdog,
+                              const std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &facade,
+                              const ParameterT &parameters,
+                              PluginT &plugin,
+                              ResultT &result)
 {
-    if (watchdog && watchdog->HasNewRegion())
+    if (watchdog)
     {
-        watchdog->MaybeLoadNewRegion(facade);
+        BOOST_ASSERT(!facade);
+        auto lock_and_facade = watchdog->GetDataFacade();
+
+        return plugin.HandleRequest(lock_and_facade.second, parameters, result);
     }
 
-    osrm::engine::Status status = plugin.HandleRequest(facade, parameters, result);
+    BOOST_ASSERT(facade);
 
-    return status;
+    return plugin.HandleRequest(facade, parameters, result);
 }
 
 } // anon. ns
@@ -71,10 +73,6 @@ Engine::Engine(const EngineConfig &config)
         }
 
         watchdog = std::make_unique<DataWatchdog>();
-        // this will always either return a value or throw an exception
-        // in the initial run
-        watchdog->MaybeLoadNewRegion(query_data_facade);
-        BOOST_ASSERT(query_data_facade);
         BOOST_ASSERT(watchdog);
     }
     else
@@ -83,7 +81,7 @@ Engine::Engine(const EngineConfig &config)
         {
             throw util::exception("Invalid file paths given!");
         }
-        query_data_facade = std::make_shared<datafacade::InternalDataFacade>(config.storage_config);
+        immutable_data_facade = std::make_shared<datafacade::InternalDataFacade>(config.storage_config);
     }
 
     // Register plugins
@@ -104,32 +102,32 @@ Engine &Engine::operator=(Engine &&) noexcept = default;
 
 Status Engine::Route(const api::RouteParameters &params, util::json::Object &result) const
 {
-    return RunQuery(watchdog, query_data_facade, params, *route_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, *route_plugin, result);
 }
 
 Status Engine::Table(const api::TableParameters &params, util::json::Object &result) const
 {
-    return RunQuery(watchdog, query_data_facade, params, *table_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, *table_plugin, result);
 }
 
 Status Engine::Nearest(const api::NearestParameters &params, util::json::Object &result) const
 {
-    return RunQuery(watchdog, query_data_facade, params, *nearest_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, *nearest_plugin, result);
 }
 
 Status Engine::Trip(const api::TripParameters &params, util::json::Object &result) const
 {
-    return RunQuery(watchdog, query_data_facade, params, *trip_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, *trip_plugin, result);
 }
 
 Status Engine::Match(const api::MatchParameters &params, util::json::Object &result) const
 {
-    return RunQuery(watchdog, query_data_facade, params, *match_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, *match_plugin, result);
 }
 
 Status Engine::Tile(const api::TileParameters &params, std::string &result) const
 {
-    return RunQuery(watchdog, query_data_facade, params, *tile_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, *tile_plugin, result);
 }
 
 } // engine ns

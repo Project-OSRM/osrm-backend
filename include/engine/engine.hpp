@@ -85,8 +85,9 @@ class Engine final
     std::unique_ptr<plugins::MatchPlugin> match_plugin;
     std::unique_ptr<plugins::TilePlugin> tile_plugin;
 
-    // reading and setting this is protected by locking in the watchdog
-    mutable std::shared_ptr<datafacade::BaseDataFacade> query_data_facade;
+    // note in case of shared memory this will be empty, since the watchdog
+    // will provide us with the up-to-date facade
+    std::shared_ptr<datafacade::BaseDataFacade> immutable_data_facade;
 };
 }
 }

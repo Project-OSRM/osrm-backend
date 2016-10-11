@@ -183,6 +183,29 @@ struct SharedDataTimestamp
     unsigned timestamp;
 };
 
+inline std::string regionToString(const SharedDataType region)
+{
+    switch (region)
+    {
+    case CURRENT_REGIONS:
+        return "CURRENT_REGIONS";
+    case LAYOUT_1:
+        return "LAYOUT_1";
+    case DATA_1:
+        return "DATA_1";
+    case LAYOUT_2:
+        return "LAYOUT_2";
+    case DATA_2:
+        return "DATA_2";
+    case LAYOUT_NONE:
+        return "LAYOUT_NONE";
+    case DATA_NONE:
+        return "DATA_NONE";
+    default:
+        return "INVALID_REGION";
+    }
+}
+
 static_assert(sizeof(block_id_to_name) / sizeof(*block_id_to_name) == SharedDataLayout::NUM_BLOCKS,
               "Number of blocks needs to match the number of Block names.");
 }
