@@ -1,5 +1,5 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -837,6 +837,11 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     steps[one_back_index].maneuver.instruction.direction_modifier =
                         ::osrm::util::guidance::getTurnDirection(angle);
                     invalidateStep(steps[step_index]);
+                }
+                else
+                {
+                    //the sliproad turn is incompatible. So we handle it as a turn
+                    steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
                 }
             }
         }

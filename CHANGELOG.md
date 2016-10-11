@@ -13,6 +13,11 @@
     - Debug Tiles
       - Added support for turn penalties
 
+# 5.4.2
+  - Changes from 5.4.1
+    - Bugfixes
+      - #3032 Fixed a bug that could result in emitting `invalid` as an instruction type on sliproads with mode changes
+
 # 5.4.1
   - Changes from 5.4.0
     - Bugfixes
