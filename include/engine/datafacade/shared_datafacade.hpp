@@ -3,7 +3,6 @@
 
 // implements all data storage when shared memory _IS_ used
 
-#include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
@@ -66,11 +65,9 @@ class SharedDataFacade final : public BaseDataFacade
     storage::SharedDataLayout *data_layout;
     char *shared_memory;
 
-    std::shared_ptr<storage::SharedBarriers> shared_barriers;
     storage::SharedDataType layout_region;
     storage::SharedDataType data_region;
     unsigned shared_timestamp;
-    boost::interprocess::sharable_lock<boost::interprocess::named_sharable_mutex> regions_lock;
 
     unsigned m_check_sum;
     std::unique_ptr<QueryGraph> m_query_graph;
@@ -384,26 +381,22 @@ class SharedDataFacade final : public BaseDataFacade
   public:
     virtual ~SharedDataFacade() {}
 
-    SharedDataFacade(const std::shared_ptr<storage::SharedBarriers> &shared_barriers_,
-                     storage::SharedDataType layout_region_,
+    SharedDataFacade(storage::SharedDataType layout_region_,
                      storage::SharedDataType data_region_,
                      unsigned shared_timestamp_)
-        : shared_barriers(shared_barriers_),
-          layout_region(layout_region_), data_region(data_region_),
-          shared_timestamp(shared_timestamp_),
-          regions_lock(layout_region == storage::LAYOUT_1 ? shared_barriers->regions_1_mutex
-                                                          : shared_barriers->regions_2_mutex)
+        : layout_region(layout_region_), data_region(data_region_),
+          shared_timestamp(shared_timestamp_)
     {
         util::SimpleLogger().Write(logDEBUG) << "Loading new data with shared timestamp "
                                              << shared_timestamp;
 
         BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
-        m_layout_memory = storage::makeSharedMemoryView(layout_region);
+        m_layout_memory = storage::makeSharedMemory(layout_region);
 
         data_layout = static_cast<storage::SharedDataLayout *>(m_layout_memory->Ptr());
 
         BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
-        m_large_memory = storage::makeSharedMemoryView(data_region);
+        m_large_memory = storage::makeSharedMemory(data_region);
         shared_memory = (char *)(m_large_memory->Ptr());
 
         LoadGraph();

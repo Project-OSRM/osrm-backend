@@ -47,35 +47,6 @@ namespace osrm
 namespace storage
 {
 
-// delete a shared memory region. report warning if it could not be deleted
-void deleteRegion(const SharedDataType region)
-{
-    if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
-    {
-        const std::string name = [&] {
-            switch (region)
-            {
-            case CURRENT_REGIONS:
-                return "CURRENT_REGIONS";
-            case LAYOUT_1:
-                return "LAYOUT_1";
-            case DATA_1:
-                return "DATA_1";
-            case LAYOUT_2:
-                return "LAYOUT_2";
-            case DATA_2:
-                return "DATA_2";
-            case LAYOUT_NONE:
-                return "LAYOUT_NONE";
-            default: // DATA_NONE:
-                return "DATA_NONE";
-            }
-        }();
-
-        util::SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
-    }
-}
-
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
 using RTreeNode =
     util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>::TreeNode;
@@ -83,11 +54,33 @@ using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 
 Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
-bool regionsAvailable(SharedDataType layout, SharedDataType data)
+struct RegionsLayout
 {
-    auto shared_regions = makeSharedMemoryView(CURRENT_REGIONS);
-    const auto shared_timestamp = static_cast<const SharedDataTimestamp *>(shared_regions->Ptr());
-    return shared_timestamp->layout != layout && shared_timestamp->data != data;
+    SharedDataType current_layout_region;
+    SharedDataType current_data_region;
+    boost::interprocess::named_sharable_mutex &current_regions_mutex;
+    SharedDataType old_layout_region;
+    SharedDataType old_data_region;
+    boost::interprocess::named_sharable_mutex &old_regions_mutex;
+};
+
+RegionsLayout getRegionsLayout(SharedBarriers &barriers)
+{
+    if (SharedMemory::RegionExists(CURRENT_REGIONS))
+    {
+        auto shared_regions = makeSharedMemory(CURRENT_REGIONS);
+        const auto shared_timestamp = static_cast<const SharedDataTimestamp *>(shared_regions->Ptr());
+        if (shared_timestamp->data == DATA_1)
+        {
+            BOOST_ASSERT(shared_timestamp->layout == LAYOUT_1);
+            return RegionsLayout {LAYOUT_1, DATA_1, barriers.regions_1_mutex, LAYOUT_2, DATA_2, barriers.regions_2_mutex};
+        }
+
+        BOOST_ASSERT(shared_timestamp->data == DATA_2);
+        BOOST_ASSERT(shared_timestamp->layout == LAYOUT_2);
+    }
+
+    return RegionsLayout {LAYOUT_2, DATA_2, barriers.regions_2_mutex, LAYOUT_1, DATA_1, barriers.regions_1_mutex};
 }
 
 int Storage::Run()
@@ -124,36 +117,27 @@ int Storage::Run()
     }
 #endif
 
-    const auto regions_1_available = regionsAvailable(LAYOUT_1, DATA_1);
-    const auto regions_2_available = regionsAvailable(LAYOUT_2, DATA_2);
+    auto regions_layout = getRegionsLayout(barriers);
+    const SharedDataType layout_region = regions_layout.old_layout_region;
+    const SharedDataType data_region = regions_layout.old_data_region;
 
-    const SharedDataType layout_region = [&] {
-        if (regions_1_available)
-        {
-            return LAYOUT_1;
-        }
-        if (regions_2_available)
-        {
-            return LAYOUT_2;
-        }
-        throw util::exception("No shared memory region free!");
-    }();
-    const SharedDataType data_region = [&] {
-        if (regions_1_available)
-        {
-            return DATA_1;
-        }
-        if (regions_2_available)
-        {
-            return DATA_2;
-        }
-        throw util::exception("No shared memory region free!");
-    }();
+    util::SimpleLogger().Write() << "Waiting for all queries on the old dataset to finish:";
+    boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex>
+        layout_lock(regions_layout.old_regions_mutex);
+    util::SimpleLogger().Write() << "Ok.";
 
-    BOOST_ASSERT(regions_1_available || regions_2_available);
+    // since we can't change the size of a shared memory regions we delete and reallocate
+    if (SharedMemory::RegionExists(layout_region) && !SharedMemory::Remove(layout_region))
+    {
+        throw util::exception("Could not remove " + regionToString(layout_region));
+    }
+    if (SharedMemory::RegionExists(data_region) && !SharedMemory::Remove(data_region))
+    {
+        throw util::exception("Could not remove " + regionToString(data_region));
+    }
 
-    // Allocate a memory layout in shared memory, deallocate previous
-    auto layout_memory = makeSharedMemory(layout_region, sizeof(SharedDataLayout));
+    // Allocate a memory layout in shared memory
+    auto layout_memory = makeSharedMemory(layout_region, sizeof(SharedDataLayout), true);
     auto shared_layout_ptr = new (layout_memory->Ptr()) SharedDataLayout();
     auto absolute_file_index_path = boost::filesystem::absolute(config.file_index_path);
 
@@ -440,7 +424,7 @@ int Storage::Run()
     // allocate shared memory block
     util::SimpleLogger().Write() << "allocating shared memory of "
                                  << shared_layout_ptr->GetSizeOfLayout() << " bytes";
-    auto shared_memory = makeSharedMemory(data_region, shared_layout_ptr->GetSizeOfLayout());
+    auto shared_memory = makeSharedMemory(data_region, shared_layout_ptr->GetSizeOfLayout(), true);
     char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
 
     // read actual data into shared memory object //
@@ -766,9 +750,8 @@ int Storage::Run()
         std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
     }
 
-    // acquire lock
     auto data_type_memory =
-        makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true, false, false);
+        makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true);
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
@@ -779,29 +762,6 @@ int Storage::Run()
         data_timestamp_ptr->layout = layout_region;
         data_timestamp_ptr->data = data_region;
         data_timestamp_ptr->timestamp += 1;
-
-        boost::interprocess::upgradable_lock<boost::interprocess::named_upgradable_mutex>
-            current_regions_upgradable_lock(std::move(current_regions_exclusive_lock));
-
-        util::SimpleLogger().Write(logDEBUG) << "waiting for server to switch dataset and request to finish";
-        if (!regions_1_available)
-        {
-            BOOST_ASSERT(regions_2_available);
-            boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex>
-                regions_1_lock(barriers.regions_1_mutex);
-            util::SimpleLogger().Write(logDEBUG) << "switched. removing old regions 1";
-            deleteRegion(DATA_1);
-            deleteRegion(LAYOUT_1);
-        }
-        else if (!regions_2_available)
-        {
-            BOOST_ASSERT(regions_1_available);
-            boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex>
-                regions_2_lock(barriers.regions_2_mutex);
-            util::SimpleLogger().Write(logDEBUG) << "switched. removing regions 2";
-            deleteRegion(DATA_2);
-            deleteRegion(LAYOUT_2);
-        }
     }
     util::SimpleLogger().Write() << "all data loaded";
 
