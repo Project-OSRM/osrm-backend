@@ -3,9 +3,9 @@
 
 #include "engine/datafacade/shared_datafacade.hpp"
 
+#include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "storage/shared_barriers.hpp"
 
 #include <boost/interprocess/sync/named_upgradable_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -102,8 +102,10 @@ class DataWatchdog
         boost::upgrade_to_unique_lock<boost::upgrade_mutex> unique_facade_lock(facade_lock);
 
         current_timestamp = *shared_timestamp;
-        facade = std::make_shared<datafacade::SharedDataFacade>(
-            current_timestamp.layout, current_timestamp.data, current_timestamp.timestamp);
+        facade = std::make_shared<datafacade::SharedDataFacade>(shared_barriers,
+                                                                current_timestamp.layout,
+                                                                current_timestamp.data,
+                                                                current_timestamp.timestamp);
 
         return get_locked_facade();
     }
