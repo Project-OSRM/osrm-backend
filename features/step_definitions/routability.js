@@ -15,12 +15,21 @@ module.exports = function () {
             this.reprocessAndLoadData((e) => {
                 if (e) return callback(e);
                 var testRow = (row, i, cb) => {
-                    var outputRow = row;
+                    var outputRow = Object.assign({}, row);
 
                     testRoutabilityRow(i, (err, result) => {
                         if (err) return cb(err);
                         directions.filter(d => headers.has(d)).forEach((direction) => {
-                            var want = this.shortcutsHash[row[direction]] || row[direction];
+                            var usingShortcut = false,
+                                want = row[direction];
+                            // shortcuts are when a test has mapped a value like `foot` to
+                            // a value like `5 km/h`, to represent the speed that one
+                            // can travel by foot. we check for these and use the mapped to
+                            // value for later comparison.
+                            if (this.shortcutsHash[row[direction]]) {
+                                want = this.shortcutsHash[row[direction]];
+                                usingShortcut = row[direction];
+                            }
 
                             switch (true) {
                             case '' === want:
@@ -28,23 +37,39 @@ module.exports = function () {
                                 outputRow[direction] = result[direction].status ?
                                     result[direction].status.toString() : '';
                                 break;
-                            case /^\d+s/.test(want):
+                            case /^\d+ s/.test(want):
+                                // the result here can come back as a non-number value like
+                                // `diff`, but we only want to apply the unit when it comes
+                                // back as a number, for tableDiff's literal comparison
+                                if (result[direction].time) {
+                                    outputRow[direction] = !isNaN(result[direction].time) ?
+                                        result[direction].time.toString()+' s' :
+                                        result[direction].time.toString() || '';
+                                } else {
+                                    outputRow[direction] = '';
+                                }
                                 break;
                             case /^\d+ km\/h/.test(want):
+                                if (result[direction].speed) {
+                                    outputRow[direction] = !isNaN(result[direction].speed) ?
+                                        result[direction].speed.toString()+' km/h' :
+                                        result[direction].speed.toString() || '';
+                                } else {
+                                    outputRow[direction] = '';
+                                }
                                 break;
                             default:
                                 throw new Error(util.format('*** Unknown expectation format: %s', want));
                             }
 
                             if (this.FuzzyMatch.match(outputRow[direction], want)) {
-                                outputRow[direction] = row[direction];
+                                outputRow[direction] = [usingShortcut ? usingShortcut : row[direction]];
                             }
                         });
 
                         cb(null, outputRow);
                     });
                 };
-
                 this.processRowsAndDiff(table, testRow, callback);
             });
         });
@@ -102,6 +127,23 @@ module.exports = function () {
                 var parseRes = (key, scb) => {
                     if (result.forw[key] === result.backw[key]) {
                         result.bothw[key] = result.forw[key];
+                    // FIXME these time and speed checks are stopgaps for precision errors in how
+                    // OSRM returns inconsistent durations for rev/for requests along the same way
+                    } else if (key === 'time') {
+                        var range = [result.forw[key] - 1, result.forw[key] + 1];
+                        if (result.backw[key] >= range[0] && result.backw[key] <= range[1])
+                            // usually when we see minor differences here there's an integer
+                            // duration value and one that comes back with a .9 or .1 rounding.
+                            // This returns the integer one
+                            result.bothw[key] = parseInt(result.forw[key]) === result.forw[key] ? result.forw[key] : result.backw[key];
+                        else
+                            result.bothw[key] = 'diff';
+                    } else if (key === 'speed') {
+                        if (Math.abs(result.backw.time - result.forw.time) < 0.2) {
+                            result.bothw[key] = parseInt(result.forw[key]) === result.forw[key] ? result.forw[key] : result.backw[key];
+                        } else {
+                            result.bothw[key] = 'diff';
+                        }
                     } else {
                         result.bothw[key] = 'diff';
                     }

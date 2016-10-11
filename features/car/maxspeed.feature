@@ -52,14 +52,14 @@ OSRM will use 4/5 of the projected free-flow speed.
         Given a grid size of 100 meters
 
         Then routability should be
-            | highway | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
-            | primary |          |                  |                   | 65 km/h | 65 km/h |
-            | primary | 60       |                  |                   | 60 km/h | 60 km/h |
-            | primary |          | 60               |                   | 60 km/h | 65 km/h |
-            | primary |          |                  | 60                | 65 km/h | 60 km/h |
-            | primary | 15       | 60               |                   | 60 km/h | 23 km/h |
-            | primary | 15       |                  | 60                | 23 km/h | 60 km/h |
-            | primary | 15       | 30               | 60                | 34 km/h | 60 km/h |
+            | highway | maxspeed | maxspeed:forward | maxspeed:backward | forw         | backw        |
+            | primary |          |                  |                   | 63 km/h      | 63 km/h      |
+            | primary | 60       |                  |                   | 60 km/h +- 1 | 60 km/h +- 1 |
+            | primary |          | 60               |                   | 60 km/h +- 1 | 63 km/h      |
+            | primary |          |                  | 60                | 63 km/h      | 60 km/h +- 1 |
+            | primary | 15       | 60               |                   | 60 km/h +- 1 | 23 km/h      |
+            | primary | 15       |                  | 60                | 23 km/h +- 1 | 60 km/h +- 1 |
+            | primary | 15       | 30               | 60                | 34 km/h +- 1 | 60 km/h +- 1 |
 
     Scenario: Car - Maxspeed should not allow routing on unroutable ways
         Then routability should be
@@ -85,17 +85,17 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |          |       |                  |                   | 63 km/h | 63 km/h |
             | primary |          |   3   |                  |                   | 32 km/h | 32 km/h |
             | primary | 60       |       |                  |                   | 59 km/h | 59 km/h |
-            | primary | 60       |   3   |                  |                   | 30 km/h | 30 km/h |
+            | primary | 60       |   3   |                  |                   | 29 km/h | 29 km/h |
             | primary |          |       | 60               |                   | 59 km/h | 63 km/h |
-            | primary |          |   3   | 60               |                   | 30 km/h | 32 km/h |
+            | primary |          |   3   | 60               |                   | 29 km/h | 32 km/h |
             | primary |          |       |                  | 60                | 63 km/h | 59 km/h |
-            | primary |          |   3   |                  | 60                | 32 km/h | 30 km/h |
+            | primary |          |   3   |                  | 60                | 32 km/h | 29 km/h |
             | primary | 15       |       | 60               |                   | 59 km/h | 23 km/h |
-            | primary | 15       |   3   | 60               |                   | 30 km/h |  7 km/h |
-            | primary | 15       |       |                  | 60                | 23 km/h | 59 km/h |
-            | primary | 15       |   3   |                  | 60                |  7 km/h | 30 km/h |
-            | primary | 15       |       | 30               | 60                | 34 km/h | 59 km/h |
-            | primary | 15       |   3   | 30               | 60                | 15 km/h | 30 km/h |
+            | primary | 15       |   3   | 60               |                   | 29 km/h |  7 km/h |
+            | primary | 15       |       |                  | 60                | 22 km/h | 59 km/h |
+            | primary | 15       |   3   |                  | 60                |  7 km/h | 29 km/h |
+            | primary | 15       |       | 30               | 60                | 35 km/h | 59 km/h |
+            | primary | 15       |   3   | 30               | 60                | 14 km/h | 29 km/h |
 
     Scenario: Car - Single lane streets be ignored or incur a penalty
         Then routability should be
@@ -104,22 +104,22 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |          |       |                  |                   | 63 km/h | 63 km/h |
             | primary |          |   1   |                  |                   | 32 km/h | 32 km/h |
             | primary | 60       |       |                  |                   | 59 km/h | 59 km/h |
-            | primary | 60       |   1   |                  |                   | 30 km/h | 30 km/h |
+            | primary | 60       |   1   |                  |                   | 29 km/h | 29 km/h |
             | primary |          |       | 60               |                   | 59 km/h | 63 km/h |
-            | primary |          |   1   | 60               |                   | 30 km/h | 32 km/h |
+            | primary |          |   1   | 60               |                   | 29 km/h | 32 km/h |
             | primary |          |       |                  | 60                | 63 km/h | 59 km/h |
-            | primary |          |   1   |                  | 60                | 32 km/h | 30 km/h |
+            | primary |          |   1   |                  | 60                | 32 km/h | 29 km/h |
             | primary | 15       |       | 60               |                   | 59 km/h | 23 km/h |
-            | primary | 15       |   1   | 60               |                   | 30 km/h |  7 km/h |
-            | primary | 15       |       |                  | 60                | 23 km/h | 59 km/h |
-            | primary | 15       |   1   |                  | 60                |  7 km/h | 30 km/h |
-            | primary | 15       |       | 30               | 60                | 34 km/h | 59 km/h |
-            | primary | 15       |   1   | 30               | 60                | 15 km/h | 30 km/h |
+            | primary | 15       |   1   | 60               |                   | 29 km/h |  7 km/h |
+            | primary | 15       |       |                  | 60                | 22 km/h | 59 km/h |
+            | primary | 15       |   1   |                  | 60                |  7 km/h | 29 km/h |
+            | primary | 15       |       | 30               | 60                | 35 km/h | 59 km/h |
+            | primary | 15       |   1   | 30               | 60                | 14 km/h | 29 km/h |
 
     Scenario: Car - Single lane streets only incure a penalty for two-way streets
         Then routability should be
             | highway | maxspeed | lanes  | oneway | forw    | backw   |
-            | primary |   30     |   1    | yes    | 34 km/h |         |
-            | primary |   30     |   1    | -1     |         | 34 km/h |
+            | primary |   30     |   1    | yes    | 35 km/h |         |
+            | primary |   30     |   1    | -1     |         | 35 km/h |
             | primary |   30     |   1    |        | 15 km/h | 15 km/h |
-            | primary |   30     |   2    |        | 34 km/h | 34 km/h |
+            | primary |   30     |   2    |        | 35 km/h | 35 km/h |

@@ -65,6 +65,7 @@ Feature: Bike - Accessability of different way types
             | runway   |      |      |       |
             | runway   | yes  | foot | foot  |
 
+    @todo
     Scenario: Bike - Pushing bikes on ways with foot=yes in one direction
         Then routability should be
             | highway  | foot:forward | foot:backward | forw | backw |

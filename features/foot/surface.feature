@@ -6,10 +6,10 @@ Feature: Foot - Surfaces
 
     Scenario: Foot - Slow surfaces
         Then routability should be
-            | highway | surface     | bothw     |
-            | footway |             | 145s ~10% |
-            | footway | fine_gravel | 193s ~10% |
-            | footway | gravel      | 193s ~10% |
-            | footway | pebblestone | 193s ~10% |
-            | footway | mud         | 289s ~10% |
-            | footway | sand        | 289s ~10% |
+            | highway | surface     | bothw      |
+            | footway |             | 145 s ~10% |
+            | footway | fine_gravel | 193 s ~10% |
+            | footway | gravel      | 193 s ~10% |
+            | footway | pebblestone | 193 s ~10% |
+            | footway | mud         | 289 s ~10% |
+            | footway | sand        | 289 s ~10% |
