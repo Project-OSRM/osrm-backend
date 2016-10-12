@@ -372,8 +372,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     };
 
     // If we're zooming into 16 or higher, include turn data.  Why?  Because turns make the map
-    // really
-    // cramped, so we don't bother including the data for tiles that span a large area.
+    // really cramped, so we don't bother including the data for tiles that span a large area.
     if (parameters.z >= MIN_ZOOM_FOR_TURNS)
     {
         // Struct to hold info on all the EdgeBasedNodes that are visible in our tile
