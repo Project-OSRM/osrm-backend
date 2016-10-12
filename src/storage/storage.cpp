@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #endif
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/exceptions.hpp>
 #include <boost/interprocess/sync/named_sharable_mutex.hpp>
@@ -69,25 +70,33 @@ RegionsLayout getRegionsLayout(SharedBarriers &barriers)
     if (SharedMemory::RegionExists(CURRENT_REGIONS))
     {
         auto shared_regions = makeSharedMemory(CURRENT_REGIONS);
-        const auto shared_timestamp = static_cast<const SharedDataTimestamp *>(shared_regions->Ptr());
+        const auto shared_timestamp =
+            static_cast<const SharedDataTimestamp *>(shared_regions->Ptr());
         if (shared_timestamp->data == DATA_1)
         {
             BOOST_ASSERT(shared_timestamp->layout == LAYOUT_1);
-            return RegionsLayout {LAYOUT_1, DATA_1, barriers.regions_1_mutex, LAYOUT_2, DATA_2, barriers.regions_2_mutex};
+            return RegionsLayout{LAYOUT_1,
+                                 DATA_1,
+                                 barriers.regions_1_mutex,
+                                 LAYOUT_2,
+                                 DATA_2,
+                                 barriers.regions_2_mutex};
         }
 
         BOOST_ASSERT(shared_timestamp->data == DATA_2);
         BOOST_ASSERT(shared_timestamp->layout == LAYOUT_2);
     }
 
-    return RegionsLayout {LAYOUT_2, DATA_2, barriers.regions_2_mutex, LAYOUT_1, DATA_1, barriers.regions_1_mutex};
+    return RegionsLayout{
+        LAYOUT_2, DATA_2, barriers.regions_2_mutex, LAYOUT_1, DATA_1, barriers.regions_1_mutex};
 }
 
-int Storage::Run()
+Storage::ReturnCode Storage::Run(int max_wait)
 {
     BOOST_ASSERT_MSG(config.IsValid(), "Invalid storage config");
 
     util::LogPolicy::GetInstance().Unmute();
+
     SharedBarriers barriers;
 
     boost::interprocess::upgradable_lock<boost::interprocess::named_upgradable_mutex>
@@ -97,7 +106,7 @@ int Storage::Run()
         if (!current_regions_lock.try_lock())
         {
             util::SimpleLogger().Write(logWARNING) << "A data update is in progress";
-            return EXIT_FAILURE;
+            return ReturnCode::Error;
         }
     }
     // hard unlock in case of any exception.
@@ -121,9 +130,46 @@ int Storage::Run()
     const SharedDataType layout_region = regions_layout.old_layout_region;
     const SharedDataType data_region = regions_layout.old_data_region;
 
-    util::SimpleLogger().Write() << "Waiting for all queries on the old dataset to finish:";
-    boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex>
-        layout_lock(regions_layout.old_regions_mutex);
+    if (max_wait > 0)
+    {
+        util::SimpleLogger().Write() << "Waiting for " << max_wait
+                                     << " second for all queries on the old dataset to finish:";
+    }
+    else
+    {
+        util::SimpleLogger().Write() << "Waiting for all queries on the old dataset to finish:";
+    }
+
+    boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> regions_lock(
+        regions_layout.old_regions_mutex, boost::interprocess::defer_lock);
+
+    if (max_wait > 0)
+    {
+        if (!regions_lock.timed_lock(boost::posix_time::microsec_clock::universal_time() +
+                                     boost::posix_time::seconds(max_wait)))
+        {
+            util::SimpleLogger().Write(logWARNING) << "Queries did not finish in " << max_wait
+                                                   << " seconds. Claiming the lock by force.";
+            // WARNING: if queries are still using the old dataset they might crash
+            if (regions_layout.old_layout_region == LAYOUT_1)
+            {
+                BOOST_ASSERT(regions_layout.old_data_region == DATA_1);
+                barriers.resetRegions1();
+            }
+            else
+            {
+                BOOST_ASSERT(regions_layout.old_layout_region == LAYOUT_2);
+                BOOST_ASSERT(regions_layout.old_data_region == DATA_2);
+                barriers.resetRegions2();
+            }
+
+            return ReturnCode::Retry;
+        }
+    }
+    else
+    {
+        regions_lock.lock();
+    }
     util::SimpleLogger().Write() << "Ok.";
 
     // since we can't change the size of a shared memory regions we delete and reallocate
@@ -158,7 +204,6 @@ int Storage::Run()
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::NAME_OFFSETS, name_blocks);
     shared_layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
         SharedDataLayout::NAME_BLOCKS, name_blocks);
-    util::SimpleLogger().Write() << "name offsets size: " << name_blocks;
     BOOST_ASSERT_MSG(0 != name_blocks, "name file broken");
 
     unsigned number_of_chars = 0;
@@ -593,9 +638,6 @@ int Storage::Run()
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_DATA);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_DATA) > 0)
     {
-        util::SimpleLogger().Write()
-            << "Copying " << (m_datasource_name_data.end() - m_datasource_name_data.begin())
-            << " chars into name data ptr";
         std::copy(
             m_datasource_name_data.begin(), m_datasource_name_data.end(), datasource_name_data_ptr);
     }
@@ -750,22 +792,49 @@ int Storage::Run()
         std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
     }
 
-    auto data_type_memory =
-        makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true);
+    auto data_type_memory = makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true);
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
     {
-        boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>
-            current_regions_exclusive_lock(std::move(current_regions_lock));
+
+            boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>
+            current_regions_exclusive_lock;
+
+        if (max_wait > 0)
+        {
+            util::SimpleLogger().Write() << "Waiting for " << max_wait << " seconds to write new dataset timestamp";
+            auto end_time = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::seconds(max_wait);
+            current_regions_exclusive_lock =
+                boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>(
+                    std::move(current_regions_lock), end_time);
+
+            if (!current_regions_exclusive_lock.owns())
+            {
+                util::SimpleLogger().Write(logWARNING) << "Aquiring the lock timed out after " << max_wait << " seconds. Claiming the lock by force.";
+                current_regions_lock.unlock();
+                current_regions_lock.release();
+                storage::SharedBarriers::resetCurrentRegions();
+                return ReturnCode::Retry;
+            }
+        }
+        else
+        {
+            util::SimpleLogger().Write() << "Waiting to write new dataset timestamp";
+            current_regions_exclusive_lock =
+                boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>(
+                    std::move(current_regions_lock));
+        }
+
+        util::SimpleLogger().Write() << "Ok.";
 
         data_timestamp_ptr->layout = layout_region;
         data_timestamp_ptr->data = data_region;
         data_timestamp_ptr->timestamp += 1;
     }
-    util::SimpleLogger().Write() << "all data loaded";
+    util::SimpleLogger().Write() << "All data loaded.";
 
-    return EXIT_SUCCESS;
+    return ReturnCode::Ok;
 }
 }
 }
