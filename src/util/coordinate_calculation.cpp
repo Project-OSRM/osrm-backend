@@ -28,6 +28,10 @@ bool circleCenterTaubin(const std::vector<Coordinate> &coords,
                         std::pair<double, double> &center,
                         double &estimated_radius)
 {
+    // guard against empty coordinates
+    if( coords.empty() )
+        return false;
+
     // Compute mean and covariances with the two-pass algorithm
     double meanX = 0., meanY = 0.;
     for (const auto &c : coords)
@@ -279,16 +283,6 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
 
     BOOST_ASSERT(angle >= 0);
     return angle;
-}
-
-double circleRadius(const Coordinate C1, const Coordinate C2, const Coordinate C3)
-{
-    // a circle by three points requires thee distinct points
-    auto center = circleCenter(C1, C2, C3);
-    if (center)
-        return haversineDistance(C1, *center);
-    else
-        return std::numeric_limits<double>::infinity();
 }
 
 boost::optional<Coordinate> circleCenter(const std::vector<Coordinate> &coords)

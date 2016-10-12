@@ -302,6 +302,72 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
                                  << " nodes in edge-expanded graph";
 }
 
+void EdgeBasedGraphFactory::ComputeTurnFunctionParameters(
+    const NodeID from_node,
+    const EdgeID in_edge,
+    const NodeID intersection_node,
+    const EdgeID out_edge,
+    const NodeID to_node,
+    const double angle,
+    const guidance::TurnInstruction instruction,
+    const bool crosses_through_traffic,
+    TurnProperties &turn_properties,
+    IntersectionProperties &intersection_properties,
+    TurnSegment &approach_segment,
+    TurnSegment &exit_segment)
+{
+
+    bool is_silent = ((instruction.type == guidance::TurnType::Suppressed) ||
+                      (instruction.type == guidance::TurnType::NewName) ||
+                      (instruction.type == guidance::TurnType::Notification));
+
+    const auto is_through = [&]() {
+        if (!is_silent)
+            return false;
+        auto eid = m_node_based_graph->FindEdge(m_node_based_graph->GetTarget(out_edge),
+                                                intersection_node);
+        if (eid == SPECIAL_EDGEID)
+            return false;
+        return !m_node_based_graph->GetEdgeData(eid).reversed;
+    }();
+
+    const double radius = 0;
+    turn_properties = {180 - angle, radius, crosses_through_traffic, is_silent, is_through};
+
+    const bool crosses_traffic_light =
+        m_traffic_lights.find(intersection_node) != m_traffic_lights.end();
+
+    intersection_properties = {crosses_traffic_light, false, false};
+
+    const bool isTrivial = m_compressed_edge_container.IsTrivial(in_edge);
+
+    const auto &approach_coordinate =
+        isTrivial ? m_node_info_list[from_node]
+                  : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(in_edge)];
+
+    const auto intersection_coordinate = m_node_info_list[intersection_node];
+
+    const auto &exit_coordinate = m_node_info_list[to_node];
+
+    const double approach_segment_length = util::coordinate_calculation::greatCircleDistance(
+        approach_coordinate, intersection_coordinate);
+    const double exit_segment_length =
+        util::coordinate_calculation::greatCircleDistance(intersection_coordinate, exit_coordinate);
+
+    const auto approach_road_segments = m_compressed_edge_container.GetBucketReference(in_edge);
+    const auto exit_road_segments = m_compressed_edge_container.GetBucketReference(out_edge);
+
+    // segment_length is in metres, weight is in deciseconds, this converts those
+    // to km/h
+    const double approach_speed =
+        approach_segment_length / (approach_road_segments.back().weight / 10) * 3.6; // km/h
+    const double exit_speed =
+        exit_segment_length / (exit_road_segments.front().weight / 10) * 3.6; // km/h
+
+    approach_segment = {approach_segment_length, approach_speed};
+    exit_segment = {exit_segment_length, exit_speed};
+}
+
 /// Actually it also generates OriginalEdgeData and serializes them...
 void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     ScriptingEnvironment &scripting_environment,
@@ -419,13 +485,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }(turn_classification.second);
             bearing_class_by_node_based_node[node_v] = bearing_class_id;
 
-            const bool crosses_traffic_light =
-                m_traffic_lights.find(node_v) != m_traffic_lights.end();
-
             bool crosses_through_traffic = false;
             const EdgeData &edge_data_from_u = m_node_based_graph->GetEdgeData(edge_from_u);
-            const IntersectionProperties intersection_properties = {
-                crosses_traffic_light, false, false};
             for (const auto turn : possible_turns)
             {
                 // only add an edge if turn is not prohibited
@@ -439,85 +500,40 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 // the following is the core of the loop.
                 unsigned distance = edge_data_from_u.distance;
 
-                if (crosses_traffic_light)
-                {
-                    distance += profile_properties.traffic_signal_penalty;
-                }
-
-                distance += turn_penalty;
-
-                if (crosses_through_traffic)
-                    distance += profile_properties.crossing_through_traffic_penalty;
-
                 // a through street is an obvious turn on which we can expect traffic coming onto
                 // our direction
-                const auto isThrough = [&](const guidance::TurnOperation &turn) {
-                    if (!((turn.instruction.type == guidance::TurnType::Suppressed) ||
-                          (turn.instruction.type == guidance::TurnType::NewName) ||
-                          (turn.instruction.type == guidance::TurnType::Notification)))
-                        return false;
-                    auto eid = m_node_based_graph->FindEdge(m_node_based_graph->GetTarget(turn.eid),
-                                                            node_v);
-                    if (eid == SPECIAL_EDGEID)
-                        return false;
-                    return !m_node_based_graph->GetEdgeData(eid).reversed;
-                };
-
-                const bool requires_announcement = isThrough(turn);
-
-                const TurnProperties turn_properties = {
-                    180. - turn.angle, turn.angle, crosses_through_traffic, requires_announcement};
-
-
-                const bool isTrivial = m_compressed_edge_container.IsTrivial(edge_from_u);
-
-                const auto &approach_node =
-                        isTrivial
-                            ? m_node_info_list[node_u]
-                            : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(
-                                  edge_from_u)];
-                const auto &intersection_node =
-                        m_node_info_list[m_compressed_edge_container.GetLastEdgeTargetID(
-                            edge_from_u)];
-
-                const auto &exit_node =
-                        m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
-                            turn.eid)];
-
-                const double approach_segment_length =
-                            util::coordinate_calculation::greatCircleDistance(approach_node, intersection_node);
-                const double exit_segment_length =
-                            util::coordinate_calculation::greatCircleDistance(intersection_node, exit_node);
-
-                const auto approach_road_segments =
-                    m_compressed_edge_container.GetBucketReference(edge_from_u);
-                const auto exit_road_segments =
-                    m_compressed_edge_container.GetBucketReference(turn.eid);
-
-                // segment_length is in metres, weight is in deciseconds, this converts those
-                // to km/h
-                const double approach_speed = approach_segment_length / (approach_road_segments.back().weight/10) * 3.6;  // km/h
-                const double exit_speed = exit_segment_length / (exit_road_segments.front().weight/10) * 3.6;  // km/h
-
-                const TurnSegment approach_segment = {approach_segment_length,approach_speed};
-                const TurnSegment exit_segment = {exit_segment_length,exit_speed};
-
                 const auto turn_instruction = turn.instruction;
+
+                TurnProperties turn_properties;
+                IntersectionProperties intersection_properties;
+                TurnSegment approach_segment, exit_segment;
+                ComputeTurnFunctionParameters(node_u,
+                                              edge_from_u,
+                                              node_v,
+                                              turn.eid,
+                                              m_node_based_graph->GetTarget(turn.eid),
+                                              turn.angle,
+                                              turn.instruction,
+                                              crosses_through_traffic,
+                                              turn_properties,
+                                              intersection_properties,
+                                              approach_segment,
+                                              exit_segment);
 
                 const int32_t turn_penalty = scripting_environment.GetTurnPenalty(
                     turn_properties, intersection_properties, approach_segment, exit_segment);
 
-
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
-                {
                     distance += profile_properties.u_turn_penalty;
-                }
+
+                if (intersection_properties.traffic_light)
+                    distance += profile_properties.traffic_signal_penalty;
 
                 distance += turn_penalty;
 
                 // if a turn is a through turn, all following turns are crossing through the
                 // opposite traffic
-                if (isThrough(turn))
+                if (turn_properties.is_through_street)
                     crosses_through_traffic = true;
 
                 const bool is_encoded_forwards =
@@ -535,11 +551,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          edge_from_u),
                                      false};
                 original_edge_data_vector.emplace_back(geometry_id,
-                                                       edge_data1.name_id,
+                                                       edge_data_from_u.name_id,
                                                        turn.lane_data_id,
                                                        turn_instruction,
                                                        entry_class_id,
-                                                       edge_data1.travel_mode);
+                                                       edge_data_from_u.travel_mode);
 
                 ++original_edges_counter;
 

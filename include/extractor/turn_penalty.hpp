@@ -20,6 +20,8 @@ struct TurnProperties
     bool crossing_through_traffic;
     // indicate if the turn needs to be announced or if it is a turn following the obvious road
     bool requires_announcement;
+    // check if we are continuing on the normal road on an obvious turn
+    bool is_through_street;
 };
 
 // properties describing intersection related penalties

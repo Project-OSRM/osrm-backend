@@ -374,11 +374,11 @@ void LuaScriptingEnvironment::SetupSources()
     }
 }
 
-std::int32_t LuaScriptingEnvironment::GetTurnPenalty(
-    const TurnProperties &turn_properties,
-    const IntersectionProperties &intersection_properties,
-    const TurnSegment &approach_segment,
-    const TurnSegment &exit_segment)
+std::int32_t
+LuaScriptingEnvironment::GetTurnPenalty(const TurnProperties &turn_properties,
+                                        const IntersectionProperties &intersection_properties,
+                                        const TurnSegment &approach_segment,
+                                        const TurnSegment &exit_segment)
 {
     auto &context = GetLuaContext();
     if (context.has_turn_penalty_function)
@@ -388,13 +388,13 @@ std::int32_t LuaScriptingEnvironment::GetTurnPenalty(
         {
             // call lua profile to compute turn penalty
             const double penalty =
-                10.0 * luabind::call_function<double>(context.state,
-                                                      "turn_function",
-                                                      turn_properties.angle,
-                                                      boost::cref(turn_properties),
-                                                      boost::cref(intersection_properties),
-                                                      boost::cref(approach_segment),
-                                                      boost::cref(exit_segment));
+                luabind::call_function<double>(context.state,
+                                               "turn_function",
+                                               turn_properties.angle,
+                                               boost::cref(turn_properties),
+                                               boost::cref(intersection_properties),
+                                               boost::cref(approach_segment),
+                                               boost::cref(exit_segment));
             BOOST_ASSERT(penalty < std::numeric_limits<int32_t>::max());
             BOOST_ASSERT(penalty > std::numeric_limits<int32_t>::min());
             return boost::numeric_cast<int32_t>(penalty);

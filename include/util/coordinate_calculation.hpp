@@ -6,6 +6,7 @@
 #include <boost/optional.hpp>
 
 #include <utility>
+#include <vector>
 
 namespace osrm
 {

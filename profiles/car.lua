@@ -605,8 +605,29 @@ function way_function (way, result)
   result.is_startpoint = result.forward_mode == mode.driving or result.backward_mode == mode.driving
 end
 
+local function getTurningSpeed(turn_properties,intersection_properties,approach_segment, exit_segment)
+    -- should probably consider the turn angle, radius, ... as well
+    return math.min(approach_segment.speed_in_meters_per_second, exit_segment.speed_in_meters_per_second)
+end
+
+-- compute the time it takes to achieve a speed difference via an acceleration
+local function getDeltaTime(speed_difference,acceleration)
+    local avg_deceleration = 1.9
+    local avg_acceleration = 2.78
+    -- assuming constant acceleration for simplicity
+    if speed_difference > 0 then
+       return speed_difference / avg_acceleration
+    else
+        return math.abs(speed_difference) / avg_deceleration
+    end
+end
+
 function turn_function(angle, turn_properties, intersection_properties, approach_segment, exit_segment)
-  local penalty = 0;
+  local turning_speed = getTurningSpeed(turn_properties,intersection_properties,approach_segment,exit_segment)
+
+  local penalty = getDeltaTime(approach_segment.speed_in_meters_per_second-turning_speed)
+                  + getDeltaTime(exit_segment.speed_in_meters_per_second-turning_speed)
+
   if turn_properties.angle>=0 then
     penalty = turn_penalty / (1 + 2.718 ^ - ((13 / turn_bias) * angle/180 - 6.5*turn_bias))
   else
@@ -626,5 +647,5 @@ function turn_function(angle, turn_properties, intersection_properties, approach
     penalty = penalty + crossing_through_traffic_penalty
   end
 
-  return penalty;
+  return 10 * penalty;
 end
