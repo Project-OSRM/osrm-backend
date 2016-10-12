@@ -1,5 +1,5 @@
-#include "engine/api/route_parameters.hpp"
 #include "engine/engine.hpp"
+#include "engine/api/route_parameters.hpp"
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -47,7 +48,8 @@ RunQuery(const std::unique_ptr<osrm::storage::SharedBarriers> &lock,
 
     BOOST_ASSERT(lock);
     // this locks aquires shared ownership of the query mutex: other requets are allowed
-    // to run, but data updates need to wait for all queries to finish until they can aquire an exclusive lock
+    // to run, but data updates need to wait for all queries to finish until they can aquire an
+    // exclusive lock
     boost::interprocess::sharable_lock<boost::interprocess::named_sharable_mutex> query_lock(
         lock->query_mutex);
 
