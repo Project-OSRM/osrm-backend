@@ -150,7 +150,7 @@ class SharedDataFacade final : public BaseDataFacade
         if (!boost::filesystem::exists(file_index_path))
         {
             util::SimpleLogger().Write(logDEBUG) << "Leaf file name " << file_index_path.string();
-            throw util::exception("Could not load leaf index file. "
+            throw util::exception("Could not load " + file_index_path.string() +
                                   "Is any data loaded into shared memory?");
         }
 

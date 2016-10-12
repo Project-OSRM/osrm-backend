@@ -42,7 +42,15 @@ class Storage
 {
   public:
     Storage(StorageConfig config);
-    int Run();
+
+    enum ReturnCode
+    {
+        Ok,
+        Error,
+        Retry
+    };
+
+    ReturnCode Run(int max_wait);
 
   private:
     StorageConfig config;

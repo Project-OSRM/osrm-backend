@@ -19,11 +19,23 @@ struct SharedBarriers
     {
     }
 
+    static void resetCurrentRegions()
+    {
+        boost::interprocess::named_sharable_mutex::remove("current_regions");
+    }
+    static void resetRegions1()
+    {
+        boost::interprocess::named_sharable_mutex::remove("regions_1");
+    }
+    static void resetRegions2()
+    {
+        boost::interprocess::named_sharable_mutex::remove("regions_2");
+    }
+
     boost::interprocess::named_upgradable_mutex current_regions_mutex;
     boost::interprocess::named_sharable_mutex regions_1_mutex;
     boost::interprocess::named_sharable_mutex regions_2_mutex;
 };
-
 }
 }
 
