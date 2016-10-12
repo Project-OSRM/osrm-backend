@@ -85,15 +85,11 @@ double bearing(const Coordinate first_coordinate, const Coordinate second_coordi
 // Get angle of line segment (A,C)->(C,B)
 double computeAngle(const Coordinate first, const Coordinate second, const Coordinate third);
 
-// find the center of a circle through three coordinates
-boost::optional<Coordinate> circleCenter(const Coordinate first_coordinate,
-                                         const Coordinate second_coordinate,
-                                         const Coordinate third_coordinate);
+// find the center of a circle via fitting
+boost::optional<Coordinate> circleCenter(const std::vector<Coordinate> &coords);
 
-// find the radius of a circle through three coordinates
-double circleRadius(const Coordinate first_coordinate,
-                    const Coordinate second_coordinate,
-                    const Coordinate third_coordinate);
+// find the radius of a circle via curve fitting
+double circleRadius(const std::vector<Coordinate> &coords);
 
 // factor in [0,1]. Returns point along the straight line between from and to. 0 returns from, 1
 // returns to

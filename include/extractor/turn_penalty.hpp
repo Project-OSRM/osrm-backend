@@ -27,7 +27,7 @@ struct IntersectionProperties
 {
     // is the turn at a traffic light
     bool traffic_light;
-    // is the turn at a stop-light
+    // is the turn at a stop-sign
     bool stop_sign;
     // is the turn following a right-of-way situation
     bool right_of_way;
