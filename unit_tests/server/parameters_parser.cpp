@@ -383,10 +383,22 @@ BOOST_AUTO_TEST_CASE(valid_nearest_urls)
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
 }
 
-BOOST_AUTO_TEST_CASE(valid_tile_urls)
+BOOST_AUTO_TEST_CASE(invalid_tile_urls)
 {
     TileParameters reference_1{1, 2, 3};
     auto result_1 = parseParameters<TileParameters>("tile(1,2,3).mvt");
+    BOOST_CHECK(result_1);
+    BOOST_CHECK(!result_1->IsValid());
+    BOOST_CHECK_EQUAL(reference_1.x, result_1->x);
+    BOOST_CHECK_EQUAL(reference_1.y, result_1->y);
+    BOOST_CHECK_EQUAL(reference_1.z, result_1->z);
+}
+
+BOOST_AUTO_TEST_CASE(valid_tile_urls)
+{
+    TileParameters reference_1{1, 2, 12};
+    auto result_1 = parseParameters<TileParameters>("tile(1,2,12).mvt");
+    BOOST_CHECK(result_1->IsValid());
     BOOST_CHECK(result_1);
     BOOST_CHECK_EQUAL(reference_1.x, result_1->x);
     BOOST_CHECK_EQUAL(reference_1.y, result_1->y);
