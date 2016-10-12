@@ -385,8 +385,8 @@ BOOST_AUTO_TEST_CASE(valid_nearest_urls)
 
 BOOST_AUTO_TEST_CASE(valid_tile_urls)
 {
-    TileParameters reference_1{1, 2, 3};
-    auto result_1 = parseParameters<TileParameters>("tile(1,2,3).mvt");
+    TileParameters reference_1{1, 2, 12};
+    auto result_1 = parseParameters<TileParameters>("tile(1,2,12).mvt");
     BOOST_CHECK(result_1);
     BOOST_CHECK_EQUAL(reference_1.x, result_1->x);
     BOOST_CHECK_EQUAL(reference_1.y, result_1->y);
