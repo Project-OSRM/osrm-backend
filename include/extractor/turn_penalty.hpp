@@ -30,7 +30,7 @@ struct TurnProperties
 struct IntersectionProperties
 {
     // is the turn at a traffic light
-    bool traffic_light;
+    bool regulated;
     // is the turn following a right-of-way situation
     bool right_of_way;
     // has to give way describes situations where we have to let traffic pass (e.g. due to stop
@@ -59,7 +59,7 @@ inline std::string toString(const TurnProperties &props)
 inline std::string toString(const IntersectionProperties &props)
 {
     std::string result;
-    result += std::string("[") + "Traffic Light: " + (props.traffic_light ? "true" : "false") +
+    result += std::string("[") + "Regulated: " + (props.regulated ? "true" : "false") +
               " | Right Of Way: " + (props.right_of_way ? "true" : "false") + " | Give Way: " +
               (props.give_way ? "true" : "false") + "]";
     return result;

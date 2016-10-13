@@ -225,7 +225,6 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
     // check whether the obvious choice is actually a through street
     if (obvious_index != 0)
     {
-        std::cout << "Obvious:" << obvious_index << std::endl;
         intersection[obvious_index].turn.instruction =
             getInstructionForObvious(intersection.size(),
                                      via_edge,

@@ -213,7 +213,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
              .def_readonly("requires_announcement", &TurnProperties::requires_announcement),
 
          luabind::class_<IntersectionProperties>("IntersectionProperties")
-             .def_readonly("traffic_light", &IntersectionProperties::traffic_light)
+             .def_readonly("regulated", &IntersectionProperties::regulated)
              .def_readonly("give_way", &IntersectionProperties::give_way)
              .def_readonly("right_of_way", &IntersectionProperties::right_of_way),
 

@@ -488,7 +488,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             bool crosses_through_traffic = false;
             const EdgeData &edge_data_from_u = m_node_based_graph->GetEdgeData(edge_from_u);
-#if 1
+#if 0
             std::cout << "[intersection]\n";
             for (auto road : intersection)
                 std::cout << "\t" << toString(road) << std::endl;
@@ -526,17 +526,26 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                               approach_segment,
                                               exit_segment);
 
-                const int32_t turn_penalty = scripting_environment.GetTurnPenalty(
-                    turn_properties, intersection_properties, approach_segment, exit_segment);
+                const int32_t turn_penalty =
+                    turn.instruction.type != guidance::TurnType::NoTurn
+                        ? scripting_environment.GetTurnPenalty(turn_properties,
+                                                               intersection_properties,
+                                                               approach_segment,
+                                                               exit_segment)
+                        : 0;
 
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
                     distance += profile_properties.u_turn_penalty;
 
-                if (intersection_properties.traffic_light)
+                // add traffic signal penalty, but only if we were not at a traffic light just
+                // before the intersection. If this is the case, we assume a green wave
+                if (intersection_properties.regulated &&
+                    (approach_segment.length_in_meters > 60 ||
+                     m_traffic_lights.find(node_u) == m_traffic_lights.end()))
                     distance += profile_properties.traffic_signal_penalty;
 
                 distance += turn_penalty;
-#if 1
+#if 0
                 std::cout << "Turn Penalty: " << turn_penalty << " for\n";
                 std::cout << "\t" << toString(turn_properties) << std::endl;
                 std::cout << "\t" << toString(intersection_properties) << std::endl;
