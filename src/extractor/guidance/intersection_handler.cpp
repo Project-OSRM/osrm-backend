@@ -510,17 +510,45 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
          !best_data.road_classification.IsRampClass()))
     {
         // Find left/right deviation
-        const double left_deviation = angularDeviation(
-            intersection[(best + 1) % intersection.size()].turn.angle, STRAIGHT_ANGLE);
+        // skipping over service roads
+        const std::size_t left_index = [&]() {
+            const auto index_candidate = (best + 1) % intersection.size();
+            if (index_candidate == 0)
+                return index_candidate;
+            const auto &candidate_data =
+                node_based_graph.GetEdgeData(intersection[index_candidate].turn.eid);
+            if (obvious_by_road_class(in_data.road_classification,
+                                      best_data.road_classification,
+                                      candidate_data.road_classification))
+                return (index_candidate + 1) % intersection.size();
+            else
+                return index_candidate;
+
+        }();
+        const auto right_index = [&]() {
+            BOOST_ASSERT(best > 0);
+            const auto index_candidate = best - 1;
+            if (index_candidate == 0)
+                return index_candidate;
+            const auto candidate_data =
+                node_based_graph.GetEdgeData(intersection[index_candidate].turn.eid);
+            if (obvious_by_road_class(in_data.road_classification,
+                                      best_data.road_classification,
+                                      candidate_data.road_classification))
+                return index_candidate - 1;
+            else
+                return index_candidate;
+        }();
+
+        const double left_deviation =
+            angularDeviation(intersection[left_index].turn.angle, STRAIGHT_ANGLE);
         const double right_deviation =
-            angularDeviation(intersection[best - 1].turn.angle, STRAIGHT_ANGLE);
+            angularDeviation(intersection[right_index].turn.angle, STRAIGHT_ANGLE);
 
         if (best_deviation < MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
             std::min(left_deviation, right_deviation) > FUZZY_ANGLE_DIFFERENCE)
             return best;
 
-        const auto left_index = (best + 1) % intersection.size();
-        const auto right_index = best - 1;
         const auto &left_data = node_based_graph.GetEdgeData(intersection[left_index].turn.eid);
         const auto &right_data = node_based_graph.GetEdgeData(intersection[right_index].turn.eid);
 

@@ -1252,3 +1252,40 @@ Feature: Simple Turns
             | waypoints | turns                          | route     |
             | a,f       | depart,turn slight left,arrive | road,,    |
             | a,c       | depart,arrive                  | road,road |
+
+    Scenario: Non-Obvious Turn Next to service road
+        Given the node map
+            """
+                                c
+                               .
+                               .
+                               .
+                               .
+                               .
+                             .
+                             .
+                             .
+                             .
+                             .
+            a - - - - - - - b - - - d
+                            |
+                            |
+                            |
+                            |
+                            |
+                            |
+                            |
+                            e
+            """
+
+        And the ways
+            | nodes  | highway | name    |
+            | ab     | primary | in      |
+            | bc     | primary | through |
+            | be     | primary | through |
+            | bd     | service |         |
+
+       When I route I should get
+            | waypoints | route              | turns                   |
+            | a,c       | in,through,through | depart,turn left,arrive |
+
