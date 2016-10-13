@@ -91,7 +91,7 @@ bool circleCenterTaubin(const std::vector<Coordinate> &coords,
             break;
 
         const auto ynew = c0 + xnew * (c1 + xnew * (c2 + xnew * c3));
-        if (abs(ynew) >= abs(y))
+        if (std::abs(ynew) >= std::abs(y))
             break;
 
         x = xnew;

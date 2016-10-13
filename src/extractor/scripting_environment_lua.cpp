@@ -214,7 +214,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
          luabind::class_<IntersectionProperties>("IntersectionProperties")
              .def_readonly("traffic_light", &IntersectionProperties::traffic_light)
-             .def_readonly("stop_sign", &IntersectionProperties::stop_sign)
+             .def_readonly("give_way", &IntersectionProperties::give_way)
              .def_readonly("right_of_way", &IntersectionProperties::right_of_way),
 
          luabind::class_<TurnSegment>("TurnSegment")
