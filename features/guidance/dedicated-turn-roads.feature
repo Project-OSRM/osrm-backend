@@ -201,20 +201,20 @@ Feature: Slipways and Dedicated Turn Lanes
     Scenario: Schwarzwaldstrasse Autobahn
         Given the node map
             """
-                    i           h         g
-                j
-            a             k
-                  b   r c   d   e         f
-
-
-
-
-                      l
-                      m
+                  . i . . . . . h . . . . g
+               .j      '.   . '
+            a .           k
+               '  b . r c . d . e . . . . f
+                   .    .   .
+                     .  .   .
+                      . .   .
+                      . .   .
+                      l .   .
+                      m .   .
                         n   q
-
-
-
+                        .   .
+                        .   .
+                        .   .
                         o   p
             """
 
