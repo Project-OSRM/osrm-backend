@@ -1,6 +1,8 @@
 -- Car profile
 local find_access_tag = require("lib/access").find_access_tag
 local get_destination = require("lib/destination").get_destination
+local get_destination_forward = require("lib/destination").get_destination_forward
+local get_destination_backward = require("lib/destination").get_destination_backward
 local set_classification = require("lib/guidance").set_classification
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
 
@@ -497,6 +499,14 @@ function way_function (way, result)
   if obey_oneway then
     if oneway == "-1" then
       result.forward_mode = mode.inaccessible
+
+      -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
+      local destination = get_destination_backward(way)
+      local has_destination = destination and "" ~= destination
+
+      result.destinations = destination
+      -- io.write('\nbackwards destination' .. get_destination_backward(way) .. 'end a line ending\n')
+
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
@@ -506,7 +516,12 @@ function way_function (way, result)
 
       -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
       local destination = get_destination(way)
+      if destination == "" and forward_destination ~= "" then 
+        destination = get_destination_forward(way)
+         io.write('\n\nforwards destination -- ' .. destination .. ' -- end a line ending\n\n')
+      end
       local has_destination = destination and "" ~= destination
+      io.write('\n\nhas_destination  -- ' .. destination .. ' -- end a line ending\n\n')
 
       result.destinations = destination
     end
