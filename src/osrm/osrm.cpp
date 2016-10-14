@@ -7,14 +7,15 @@
 #include "engine/engine.hpp"
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
-#include "util/make_unique.hpp"
+
+#include <memory>
 
 namespace osrm
 {
 
 // Pimpl idiom
 
-OSRM::OSRM(engine::EngineConfig &config) : engine_(util::make_unique<engine::Engine>(config)) {}
+OSRM::OSRM(engine::EngineConfig &config) : engine_(std::make_unique<engine::Engine>(config)) {}
 OSRM::~OSRM() = default;
 OSRM::OSRM(OSRM &&) noexcept = default;
 OSRM &OSRM::operator=(OSRM &&) noexcept = default;

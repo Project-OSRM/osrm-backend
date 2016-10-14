@@ -16,7 +16,6 @@
 #include "util/guidance/turn_lanes.hpp"
 
 #include "engine/geospatial_query.hpp"
-#include "util/make_unique.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
 #include "util/simple_logger.hpp"
@@ -252,7 +251,7 @@ class SharedDataFacade final : public BaseDataFacade
             shared_memory, storage::SharedDataLayout::NAME_CHAR_LIST);
         util::ShM<char, true>::vector names_char_list(
             names_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_CHAR_LIST]);
-        m_name_table = util::make_unique<util::RangeTable<16, true>>(
+        m_name_table = std::make_unique<util::RangeTable<16, true>>(
             name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
 
         m_names_char_list = std::move(names_char_list);
@@ -354,7 +353,7 @@ class SharedDataFacade final : public BaseDataFacade
         util::ShM<IndexBlock, true>::vector bearing_blocks(
             blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::BEARING_BLOCKS]);
 
-        m_bearing_ranges_table = util::make_unique<util::RangeTable<16, true>>(
+        m_bearing_ranges_table = std::make_unique<util::RangeTable<16, true>>(
             bearing_offsets, bearing_blocks, static_cast<unsigned>(m_bearing_values_table.size()));
 
         auto entry_class_ptr = data_layout->GetBlockPtr<util::guidance::EntryClass>(

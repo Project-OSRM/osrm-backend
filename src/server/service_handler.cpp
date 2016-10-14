@@ -9,7 +9,8 @@
 
 #include "server/api/parsed_url.hpp"
 #include "util/json_util.hpp"
-#include "util/make_unique.hpp"
+
+#include <memory>
 
 namespace osrm
 {
@@ -17,12 +18,12 @@ namespace server
 {
 ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(config)
 {
-    service_map["route"] = util::make_unique<service::RouteService>(routing_machine);
-    service_map["table"] = util::make_unique<service::TableService>(routing_machine);
-    service_map["nearest"] = util::make_unique<service::NearestService>(routing_machine);
-    service_map["trip"] = util::make_unique<service::TripService>(routing_machine);
-    service_map["match"] = util::make_unique<service::MatchService>(routing_machine);
-    service_map["tile"] = util::make_unique<service::TileService>(routing_machine);
+    service_map["route"] = std::make_unique<service::RouteService>(routing_machine);
+    service_map["table"] = std::make_unique<service::TableService>(routing_machine);
+    service_map["nearest"] = std::make_unique<service::NearestService>(routing_machine);
+    service_map["trip"] = std::make_unique<service::TripService>(routing_machine);
+    service_map["match"] = std::make_unique<service::MatchService>(routing_machine);
+    service_map["tile"] = std::make_unique<service::TileService>(routing_machine);
 }
 
 engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,

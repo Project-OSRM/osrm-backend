@@ -11,7 +11,6 @@
 #include "extractor/raster_source.hpp"
 #include "util/graph_loader.hpp"
 #include "util/io.hpp"
-#include "util/make_unique.hpp"
 #include "util/name_table.hpp"
 #include "util/range_table.hpp"
 #include "util/simple_logger.hpp"
@@ -51,6 +50,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 namespace osrm
 {
@@ -125,7 +125,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         util::SimpleLogger().Write() << "Threads: " << number_of_threads;
 
         ExtractionContainers extraction_containers;
-        auto extractor_callbacks = util::make_unique<ExtractorCallbacks>(extraction_containers);
+        auto extractor_callbacks = std::make_unique<ExtractorCallbacks>(extraction_containers);
 
         const osmium::io::File input_file(config.input_path.string());
         osmium::io::Reader reader(input_file);
