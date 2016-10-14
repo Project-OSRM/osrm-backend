@@ -107,7 +107,7 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
 
 Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                                   const api::MatchParameters &parameters,
-                                  util::json::Object &json_result)
+                                  util::json::Object &json_result) const
 {
     BOOST_ASSERT(parameters.IsValid());
 

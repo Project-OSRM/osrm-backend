@@ -116,7 +116,7 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
 
 InternalRouteResult TripPlugin::ComputeRoute(const datafacade::BaseDataFacade &facade,
                                              const std::vector<PhantomNode> &snapped_phantoms,
-                                             const std::vector<NodeID> &trip)
+                                             const std::vector<NodeID> &trip) const
 {
     InternalRouteResult min_route;
     // given he final trip, compute total duration and return the route and location permutation
@@ -143,7 +143,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const datafacade::BaseDataFacade &f
 
 Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                                  const api::TripParameters &parameters,
-                                 util::json::Object &json_result)
+                                 util::json::Object &json_result) const
 {
     BOOST_ASSERT(parameters.IsValid());
 

@@ -1,71 +1,44 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
+#include "storage/shared_barriers.hpp"
+#include "engine/api/match_parameters.hpp"
+#include "engine/api/nearest_parameters.hpp"
+#include "engine/api/route_parameters.hpp"
+#include "engine/api/table_parameters.hpp"
+#include "engine/api/tile_parameters.hpp"
+#include "engine/api/trip_parameters.hpp"
+#include "engine/data_watchdog.hpp"
+#include "engine/datafacade/datafacade_base.hpp"
+#include "engine/engine_config.hpp"
+#include "engine/plugins/match.hpp"
+#include "engine/plugins/nearest.hpp"
+#include "engine/plugins/table.hpp"
+#include "engine/plugins/tile.hpp"
+#include "engine/plugins/trip.hpp"
+#include "engine/plugins/viaroute.hpp"
 #include "engine/status.hpp"
 #include "util/json_container.hpp"
 
 #include <memory>
 #include <mutex>
 #include <string>
-#include <unordered_map>
 
 namespace osrm
 {
-
-namespace util
-{
-namespace json
-{
-struct Object;
-}
-}
-
-namespace storage
-{
-struct SharedBarriers;
-}
-
-// Fwd decls
 namespace engine
 {
-struct EngineConfig;
-namespace api
-{
-struct RouteParameters;
-struct TableParameters;
-struct NearestParameters;
-struct TripParameters;
-struct MatchParameters;
-struct TileParameters;
-}
-namespace plugins
-{
-class ViaRoutePlugin;
-class TablePlugin;
-class NearestPlugin;
-class TripPlugin;
-class MatchPlugin;
-class TilePlugin;
-}
-// End fwd decls
-
-namespace datafacade
-{
-class BaseDataFacade;
-}
-
-class DataWatchdog;
 
 class Engine final
 {
   public:
     explicit Engine(const EngineConfig &config);
 
-    Engine(Engine &&) noexcept;
-    Engine &operator=(Engine &&) noexcept;
+    Engine(Engine &&) noexcept = delete;
+    Engine &operator=(Engine &&) noexcept = delete;
 
-    // Impl. in cpp since for unique_ptr of incomplete types
-    ~Engine();
+    Engine(const Engine &) = delete;
+    Engine &operator=(const Engine &) = delete;
 
     Status Route(const api::RouteParameters &parameters, util::json::Object &result) const;
     Status Table(const api::TableParameters &parameters, util::json::Object &result) const;
@@ -78,12 +51,12 @@ class Engine final
     std::unique_ptr<storage::SharedBarriers> lock;
     std::unique_ptr<DataWatchdog> watchdog;
 
-    std::unique_ptr<plugins::ViaRoutePlugin> route_plugin;
-    std::unique_ptr<plugins::TablePlugin> table_plugin;
-    std::unique_ptr<plugins::NearestPlugin> nearest_plugin;
-    std::unique_ptr<plugins::TripPlugin> trip_plugin;
-    std::unique_ptr<plugins::MatchPlugin> match_plugin;
-    std::unique_ptr<plugins::TilePlugin> tile_plugin;
+    const plugins::ViaRoutePlugin route_plugin;
+    const plugins::TablePlugin table_plugin;
+    const plugins::NearestPlugin nearest_plugin;
+    const plugins::TripPlugin trip_plugin;
+    const plugins::MatchPlugin match_plugin;
+    const plugins::TilePlugin tile_plugin;
 
     // note in case of shared memory this will be empty, since the watchdog
     // will provide us with the up-to-date facade

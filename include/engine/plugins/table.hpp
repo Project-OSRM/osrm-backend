@@ -22,12 +22,12 @@ class TablePlugin final : public BasePlugin
 
     Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                          const api::TableParameters &params,
-                         util::json::Object &result);
+                         util::json::Object &result) const;
 
   private:
-    SearchEngineData heaps;
-    routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> distance_table;
-    int max_locations_distance_table;
+    mutable SearchEngineData heaps;
+    mutable routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> distance_table;
+    const int max_locations_distance_table;
 };
 }
 }
