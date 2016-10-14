@@ -502,7 +502,6 @@ function way_function (way, result)
 
       -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
       local destination = get_destination_backward(way)
-      local has_destination = destination and "" ~= destination
 
       result.destinations = destination
       -- io.write('\nbackwards destination' .. get_destination_backward(way) .. 'end a line ending\n')
@@ -518,10 +517,7 @@ function way_function (way, result)
       local destination = get_destination(way)
       if destination == "" and forward_destination ~= "" then 
         destination = get_destination_forward(way)
-         io.write('\n\nforwards destination -- ' .. destination .. ' -- end a line ending\n\n')
       end
-      local has_destination = destination and "" ~= destination
-      io.write('\n\nhas_destination  -- ' .. destination .. ' -- end a line ending\n\n')
 
       result.destinations = destination
     end

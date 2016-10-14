@@ -40,4 +40,4 @@ Feature: Destination Signs
           | k    | l  | KL,KL                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
           | m    | n  | MN,MN                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
           | p    | o  | OP,OP                                                     | Hamburg,Hamburg                                 | ,     |                           |
-          | q    | r  | QR,QR                                                     | Hamburg,Hamburg                                 | ,     |                           |
+          | r    | q  | QR,QR                                                     | Hamburg,Hamburg                                 | ,     |                           |

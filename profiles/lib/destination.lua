@@ -46,8 +46,6 @@ function Destination.get_destination_forward(way)
       rv = rv .. string.gsub(destination_forward, ";", ", ")
   end
 
-  io.write('\n\nrv -- ' .. rv .. ' -- \n\n')
-
   return rv
 end
 
