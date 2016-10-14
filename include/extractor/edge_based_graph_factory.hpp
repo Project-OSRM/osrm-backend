@@ -10,6 +10,7 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
+#include "extractor/turn_penalty.hpp"
 
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -180,6 +181,19 @@ class EdgeBasedGraphFactory
     std::unordered_map<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
     std::vector<BearingClassID> bearing_class_by_node_based_node;
     std::unordered_map<util::guidance::EntryClass, EntryClassID> entry_class_hash;
+
+    void ComputeTurnFunctionParameters(const NodeID from_node,
+                                       const EdgeID in_edge,
+                                       const NodeID intersection_node,
+                                       const EdgeID out_edge,
+                                       const NodeID to_node,
+                                       const double angle,
+                                       guidance::TurnInstruction instruction,
+                                       bool crosses_through_traffic,
+                                       TurnProperties &turn_properties,
+                                       IntersectionProperties &intersection_properties,
+                                       TurnSegment &approach_segment,
+                                       TurnSegment &exit_segment);
 };
 } // namespace extractor
 } // namespace osrm

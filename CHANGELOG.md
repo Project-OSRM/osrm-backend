@@ -4,6 +4,8 @@
       - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
       - replaced lhs/rhs profiles by using test defined profiles
       - Handle `oneway=alternating` (routed over with penalty) separately from `oneway=reversible` (not routed over due to time dependence)
+      - improved data availability in turn function / improved turn penalty calculation in default car profile (requires reprocessing)
+      - only apply traffic signal penalty if the last traffic signal was at least an intersection/minimum distance away
     - Guidance
       - Notifications are now exposed more prominently, announcing turns onto a ferry/pushing your bike more prominently
     - Trip Plugin

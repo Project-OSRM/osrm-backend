@@ -5,6 +5,7 @@
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
+#include "extractor/turn_penalty.hpp"
 
 #include <osmium/memory/buffer.hpp>
 
@@ -12,6 +13,7 @@
 
 #include <tbb/concurrent_vector.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -53,7 +55,10 @@ class ScriptingEnvironment
     virtual std::vector<std::string> GetNameSuffixList() = 0;
     virtual std::vector<std::string> GetRestrictions() = 0;
     virtual void SetupSources() = 0;
-    virtual int32_t GetTurnPenalty(double angle) = 0;
+    virtual std::int32_t GetTurnPenalty(const TurnProperties &turn_properties,
+                                        const IntersectionProperties &intersection_properties,
+                                        const TurnSegment &approach_segment,
+                                        const TurnSegment &exit_segment) = 0;
     virtual void ProcessSegment(const osrm::util::Coordinate &source,
                                 const osrm::util::Coordinate &target,
                                 double distance,

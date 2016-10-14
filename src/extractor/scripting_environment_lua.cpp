@@ -191,6 +191,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
                        &ExtractionWay::get_backward_mode,
                        &ExtractionWay::set_backward_mode),
          luabind::class_<osmium::WayNodeList>("WayNodeList").def(luabind::constructor<>()),
+
          luabind::class_<osmium::NodeRef>("NodeRef")
              .def(luabind::constructor<>())
              // Dear ambitious reader: registering .location() as in:
@@ -198,22 +199,43 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
              // will crash at runtime, since we're not (yet?) using libosnmium's
              // NodeLocationsForWays cache
              .def("id", &osmium::NodeRef::ref),
+
          luabind::class_<osmium::Way>("Way")
              .def("get_value_by_key", &osmium::Way::get_value_by_key)
              .def("get_value_by_key", &get_value_by_key<osmium::Way>)
              .def("id", &osmium::Way::id)
              .def("get_nodes", get_nodes_for_way, luabind::return_stl_iterator),
+
+         luabind::class_<TurnProperties>("TurnProperties")
+             .def_readonly("angle", &TurnProperties::angle)
+             .def_readonly("radius", &TurnProperties::radius)
+             .def_readonly("crossing_through_traffic", &TurnProperties::crossing_through_traffic)
+             .def_readonly("requires_announcement", &TurnProperties::requires_announcement),
+
+         luabind::class_<IntersectionProperties>("IntersectionProperties")
+             .def_readonly("regulated", &IntersectionProperties::regulated)
+             .def_readonly("give_way", &IntersectionProperties::give_way)
+             .def_readonly("right_of_way", &IntersectionProperties::right_of_way),
+
+         luabind::class_<TurnSegment>("TurnSegment")
+             .def_readonly("length_in_meters", &TurnSegment::length_in_meters)
+             .def_readonly("speed_in_meters_per_second", &TurnSegment::speed_in_meters_per_second),
+
          luabind::class_<InternalExtractorEdge>("EdgeSource")
              .def_readonly("source_coordinate", &InternalExtractorEdge::source_coordinate)
              .def_readwrite("weight_data", &InternalExtractorEdge::weight_data),
+
          luabind::class_<InternalExtractorEdge::WeightData>("WeightData")
              .def_readwrite("speed", &InternalExtractorEdge::WeightData::speed),
+
          luabind::class_<ExternalMemoryNode>("EdgeTarget")
              .property("lon", &lonToDouble<ExternalMemoryNode>)
              .property("lat", &latToDouble<ExternalMemoryNode>),
+
          luabind::class_<util::Coordinate>("Coordinate")
              .property("lon", &lonToDouble<util::Coordinate>)
              .property("lat", &latToDouble<util::Coordinate>),
+
          luabind::class_<RasterDatum>("RasterDatum")
              .def_readonly("datum", &RasterDatum::datum)
              .def("invalid_data", &RasterDatum::get_invalid)];
@@ -230,6 +252,8 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
     }
 
     context.has_turn_penalty_function = util::luaFunctionExists(context.state, "turn_function");
+    context.has_detailed_penalty_function =
+        util::luaFunctionExists(context.state, "detailed_turn_function");
     context.has_node_function = util::luaFunctionExists(context.state, "node_function");
     context.has_way_function = util::luaFunctionExists(context.state, "way_function");
     context.has_segment_function = util::luaFunctionExists(context.state, "segment_function");
@@ -350,7 +374,11 @@ void LuaScriptingEnvironment::SetupSources()
     }
 }
 
-int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle)
+std::int32_t
+LuaScriptingEnvironment::GetTurnPenalty(const TurnProperties &turn_properties,
+                                        const IntersectionProperties &intersection_properties,
+                                        const TurnSegment &approach_segment,
+                                        const TurnSegment &exit_segment)
 {
     auto &context = GetLuaContext();
     if (context.has_turn_penalty_function)
@@ -360,7 +388,13 @@ int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle)
         {
             // call lua profile to compute turn penalty
             const double penalty =
-                luabind::call_function<double>(context.state, "turn_function", angle);
+                luabind::call_function<double>(context.state,
+                                               "turn_function",
+                                               turn_properties.angle,
+                                               boost::cref(turn_properties),
+                                               boost::cref(intersection_properties),
+                                               boost::cref(approach_segment),
+                                               boost::cref(exit_segment));
             BOOST_ASSERT(penalty < std::numeric_limits<int32_t>::max());
             BOOST_ASSERT(penalty > std::numeric_limits<int32_t>::min());
             return boost::numeric_cast<int32_t>(penalty);

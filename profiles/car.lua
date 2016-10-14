@@ -31,7 +31,7 @@ speed_profile = {
   ["unclassified"] = 25,
   ["residential"] = 25,
   ["living_street"] = 10,
-  ["service"] = 15,
+  ["service"] = 5,
 --  ["track"] = 5,
   ["ferry"] = 5,
   ["movable"] = 5,
@@ -142,15 +142,19 @@ maxspeed_table = {
 }
 
 -- set profile properties
-properties.u_turn_penalty                  = 20
-properties.traffic_signal_penalty          = 2
-properties.use_turn_restrictions           = true
-properties.continue_straight_at_waypoint   = true
-properties.left_hand_driving               = false
+properties.u_turn_penalty                 = 20
+properties.traffic_signal_penalty         = 2
+-- if we are crossing through traffic on a turn, we add this penalty
+properties.use_turn_restrictions          = true
+properties.continue_straight_at_waypoint  = true
+properties.left_hand_driving              = false
 
 local side_road_speed_multiplier = 0.8
 
 local turn_penalty               = 7.5
+local crossing_through_traffic_penalty = 5
+local stop_sign_penalty          = 5
+local turn_announcement_penalty = 5
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
 local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1.075
@@ -602,14 +606,61 @@ function way_function (way, result)
   result.is_startpoint = result.forward_mode == mode.driving or result.backward_mode == mode.driving
 end
 
-function turn_function (angle)
-  -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
-  -- over the space of 0-180 degrees.  Values here were chosen by fitting
-  -- the function to some turn penalty samples from real driving.
-  -- multiplying by 10 converts to deci-seconds see issue #1318
-  if angle>=0 then
-    return 10 * turn_penalty / (1 + 2.718 ^ - ((13 / turn_bias) * angle/180 - 6.5*turn_bias))
+local function getTurningSpeed(turn_properties,intersection_properties,approach_segment, exit_segment)
+    -- should probably consider the turn angle, radius, ... as well
+    local base_speed = math.min(approach_segment.speed_in_meters_per_second, exit_segment.speed_in_meters_per_second)
+
+    -- uturns are assuming a ten percent turning speed, based on angle and all others are interpolated linear to a hundred percent speed
+    local modifier = 0.9 * (math.abs(turn_properties.angle) / 180.0) + 0.1;
+
+    return base_speed * modifier;
+end
+
+-- compute the time it takes to achieve a speed difference via an acceleration
+local function getDeltaTime(speed_difference,length)
+    -- don't penalise very short segments additionally
+    if( length < 30 ) then
+        return 0;
+    end
+
+    local avg_deceleration = 1.9
+    local avg_acceleration = 2.78
+    -- assuming constant acceleration for simplicity
+    if speed_difference > 0 then
+       return speed_difference / avg_acceleration
+    else
+        return math.abs(speed_difference) / avg_deceleration
+    end
+end
+
+function turn_function(angle, turn_properties, intersection_properties, approach_segment, exit_segment)
+  local turning_speed = getTurningSpeed(turn_properties,intersection_properties,approach_segment,exit_segment)
+
+  local penalty = getDeltaTime(approach_segment.speed_in_meters_per_second-turning_speed, approach_segment.length_in_meters)
+                  + getDeltaTime(exit_segment.speed_in_meters_per_second-turning_speed, exit_segment.length_in_meters)
+
+  if turn_properties.angle>=0 then
+    penalty = turn_penalty / (1 + 2.718 ^ - ((13 / turn_bias) * angle/180 - 6.5*turn_bias))
   else
-    return 10 * turn_penalty / (1 + 2.718 ^  - ((13 * turn_bias) * - angle/180 - 6.5/turn_bias))
+    penalty = turn_penalty / (1 + 2.718 ^  - ((13 * turn_bias) * - angle/180 - 6.5/turn_bias))
   end
+
+  if intersection_properties.give_way then
+      penalty = penalty + stop_sign_penalty;
+  end
+
+  -- we make announced turns more expensive while, at the same time, we reduce the cost of suppressed turns
+  if turn_properties.requires_announcement then
+    penalty = penalty + turn_announcement_penalty
+  else
+    -- unanounced turns are cheaper than normal turns
+    penalty = penalty * 0.8;
+  end
+
+  -- crossing through traffic is expensive
+  if turn_properties.crossing_through_traffic then
+    penalty = penalty + crossing_through_traffic_penalty
+  end
+
+  return 10 * penalty;
 end

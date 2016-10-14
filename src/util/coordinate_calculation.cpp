@@ -18,6 +18,106 @@ namespace util
 namespace coordinate_calculation
 {
 
+namespace
+{
+/// Newton-based Taubin circle algebraic fit in a plain.
+/// Chernov, N. Circular and Linear Regression: Fitting Circles and Lines by Least Squares, 2010
+/// Chapter 5.10 Implementation of the Taubin fit, p. 126
+/// Original code http://people.cas.uab.edu/~mosya/cl/CircleFitByTaubin.cpp
+bool circleCenterTaubin(const std::vector<Coordinate> &coords,
+                        std::pair<double, double> &center,
+                        double &estimated_radius)
+{
+    // guard against empty coordinates
+    if( coords.empty() )
+        return false;
+
+    // Compute mean and covariances with the two-pass algorithm
+    double meanX = 0., meanY = 0.;
+    for (const auto &c : coords)
+    {
+        // Use the equirectangular projection
+        const auto x = static_cast<double>(toFloating(c.lon));
+        const auto y = static_cast<double>(toFloating(c.lat));
+        meanX += x;
+        meanY += y;
+    }
+    meanX /= coords.size();
+    meanY /= coords.size();
+
+    // Compute moments for centered x, y and z = x^2+y^2 coordinates
+    double Mxx = 0., Myy = 0., Mxy = 0., Mxz = 0., Myz = 0., Mzz = 0.;
+    for (auto &c : coords)
+    {
+        const auto Xi = static_cast<double>(toFloating(c.lon)) - meanX;
+        const auto Yi = static_cast<double>(toFloating(c.lat)) - meanY;
+        const auto Zi = Xi * Xi + Yi * Yi;
+
+        Mxx += Xi * Xi;
+        Myy += Yi * Yi;
+        Mzz += Zi * Zi;
+        Mxy += Xi * Yi;
+        Mxz += Xi * Zi;
+        Myz += Yi * Zi;
+    }
+
+    Mxx /= coords.size();
+    Myy /= coords.size();
+    Mxy /= coords.size();
+    Mxz /= coords.size();
+    Myz /= coords.size();
+    Mzz /= coords.size();
+
+    // Compute coefficients of the characteristic polynomial
+    const auto Mz = Mxx + Myy;
+    const auto cov_xy = Mxx * Myy - Mxy * Mxy;
+    const auto var_z = Mzz - Mz * Mz;
+    const auto c3 = 4. * Mz;
+    const auto c2 = -3. * Mz * Mz - Mzz;
+    const auto c1 = var_z * Mz + 4. * cov_xy * Mz - Mxz * Mxz - Myz * Myz;
+    const auto c0 = Mxz * (Mxz * Myy - Myz * Mxy) + Myz * (Myz * Mxx - Mxz * Mxy) - var_z * cov_xy;
+
+    // Find the root of the characteristic polynomial using Newton's method starting at x=0.
+    // It is guaranteed to converge to the smallest characteristic value
+    double x = 0., y = c0;
+    const auto eps = sqrt(std::numeric_limits<double>::epsilon());
+    for (int iter = 0; iter < 5; ++iter)
+    {
+        const auto dy = c1 + x * (2. * c2 + 3. * c3 * x);
+        const auto xnew = x - y / dy;
+        if (!std::isfinite(xnew))
+            return false;
+        if (std::abs(xnew - x) < eps)
+            break;
+
+        const auto ynew = c0 + xnew * (c1 + xnew * (c2 + xnew * c3));
+        if (std::abs(ynew) >= std::abs(y))
+            break;
+
+        x = xnew;
+        y = ynew;
+    }
+
+    // Computing parameters of the fitting circle
+    const auto det = x * x - x * Mz + cov_xy;
+    // Check if line is fitted
+    if (det == 0.)
+        return false;
+
+    const auto centerX = (Mxz * (Myy - x) - Myz * Mxy) / det / 2.0; // a = -B/2/A
+    const auto centerY = (Myz * (Mxx - x) - Mxz * Mxy) / det / 2.0; // b = -C/2/A
+
+    // Translate the center
+    center.first = meanX + centerX;
+    center.second = meanY + centerY;
+
+    // R^2 = (B^2 + C^2 - 4AD) / (4A^2) (3.11), D = -A Mz (5.49)
+    estimated_radius = std::sqrt(centerX * centerX + centerY * centerY + Mz);
+
+    return true;
+}
+} // namespace
+
 // Does not project the coordinates!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs)
 {
@@ -185,94 +285,47 @@ double computeAngle(const Coordinate first, const Coordinate second, const Coord
     return angle;
 }
 
-boost::optional<Coordinate>
-circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
+boost::optional<Coordinate> circleCenter(const std::vector<Coordinate> &coords)
 {
-    // free after http://paulbourke.net/geometry/circlesphere/
-    // require three distinct points
-    if (C1 == C2 || C2 == C3 || C1 == C3)
-    {
-        return boost::none;
-    }
+    std::pair<double, double> center;
+    double radius;
 
-    // define line through c1, c2 and c2,c3
-    const double C2C1_lat = static_cast<double>(toFloating(C2.lat - C1.lat)); // yDelta_a
-    const double C2C1_lon = static_cast<double>(toFloating(C2.lon - C1.lon)); // xDelta_a
-    const double C3C2_lat = static_cast<double>(toFloating(C3.lat - C2.lat)); // yDelta_b
-    const double C3C2_lon = static_cast<double>(toFloating(C3.lon - C2.lon)); // xDelta_b
-
-    // check for collinear points in X-Direction / Y-Direction
-    if ((std::abs(C2C1_lon) < std::numeric_limits<double>::epsilon() &&
-         std::abs(C3C2_lon) < std::numeric_limits<double>::epsilon()) ||
-        (std::abs(C2C1_lat) < std::numeric_limits<double>::epsilon() &&
-         std::abs(C3C2_lat) < std::numeric_limits<double>::epsilon()))
-    {
+    if (!circleCenterTaubin(coords, center, radius))
         return boost::none;
-    }
-    else if (std::abs(C2C1_lon) < std::numeric_limits<double>::epsilon())
-    {
-        // vertical line C2C1
-        // due to c1.lon == c2.lon && c1.lon != c3.lon we can rearrange this way
-        BOOST_ASSERT(std::abs(static_cast<double>(toFloating(C3.lon - C1.lon))) >=
-                         std::numeric_limits<double>::epsilon() &&
-                     std::abs(static_cast<double>(toFloating(C2.lon - C3.lon))) >=
-                         std::numeric_limits<double>::epsilon());
-        return circleCenter(C1, C3, C2);
-    }
-    else if (std::abs(C3C2_lon) < std::numeric_limits<double>::epsilon())
-    {
-        // vertical line C3C2
-        // due to c2.lon == c3.lon && c1.lon != c3.lon we can rearrange this way
-        // after rearrangement both deltas will be zero
-        BOOST_ASSERT(std::abs(static_cast<double>(toFloating(C1.lon - C2.lon))) >=
-                         std::numeric_limits<double>::epsilon() &&
-                     std::abs(static_cast<double>(toFloating(C3.lon - C1.lon))) >=
-                         std::numeric_limits<double>::epsilon());
-        return circleCenter(C2, C1, C3);
-    }
+
+    const double lon = center.first, lat = center.second;
+    if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
+        return boost::none;
     else
-    {
-        const double C2C1_slope = C2C1_lat / C2C1_lon;
-        const double C3C2_slope = C3C2_lat / C3C2_lon;
-
-        if (std::abs(C2C1_slope) < std::numeric_limits<double>::epsilon())
-        {
-            // Three non-collinear points with C2,C1 on same latitude.
-            // Due to the x-values correct, we can swap C3 and C1 to obtain the correct slope value
-            return circleCenter(C3, C2, C1);
-        }
-        // valid slope values for both lines, calculate the center as intersection of the lines
-
-        // can this ever happen?
-        if (std::abs(C2C1_slope - C3C2_slope) < std::numeric_limits<double>::epsilon())
-            return boost::none;
-
-        const double C1_y = static_cast<double>(toFloating(C1.lat));
-        const double C1_x = static_cast<double>(toFloating(C1.lon));
-        const double C2_y = static_cast<double>(toFloating(C2.lat));
-        const double C2_x = static_cast<double>(toFloating(C2.lon));
-        const double C3_y = static_cast<double>(toFloating(C3.lat));
-        const double C3_x = static_cast<double>(toFloating(C3.lon));
-
-        const double lon = (C2C1_slope * C3C2_slope * (C1_y - C3_y) + C3C2_slope * (C1_x + C2_x) -
-                            C2C1_slope * (C2_x + C3_x)) /
-                           (2 * (C3C2_slope - C2C1_slope));
-        const double lat = (0.5 * (C1_x + C2_x) - lon) / C2C1_slope + 0.5 * (C1_y + C2_y);
-        if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
-            return boost::none;
-        else
-            return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
-    }
+        return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
 }
 
-double circleRadius(const Coordinate C1, const Coordinate C2, const Coordinate C3)
+double circleRadius(const std::vector<Coordinate> &coords)
 {
-    // a circle by three points requires thee distinct points
-    auto center = circleCenter(C1, C2, C3);
-    if (center)
-        return haversineDistance(C1, *center);
-    else
+    switch (coords.size())
+    {
+    case 0:
+        return std::numeric_limits<double>::quiet_NaN();
+    case 1:
+        return 0.;
+    case 2:
+        return 0.5 * haversineDistance(coords[0], coords[1]);
+    default:
+        break;
+    }
+
+    std::pair<double, double> center;
+    double radius;
+
+    if (!circleCenterTaubin(coords, center, radius))
         return std::numeric_limits<double>::infinity();
+
+    const double lon = center.first, lat = center.second;
+    if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
+        return std::numeric_limits<double>::infinity();
+
+    // The estimated radius corresponds to the arc angle in degrees, convert it to meters
+    return radius * detail::DEGREE_TO_RAD * detail::EARTH_RADIUS;
 }
 
 Coordinate interpolateLinear(double factor, const Coordinate from, const Coordinate to)
