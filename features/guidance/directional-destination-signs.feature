@@ -4,7 +4,7 @@ Feature: Destination Signs
     Background:
         Given the profile "car"
 
-    Scenario: Car - route name assembly with destination signs with backwards and forwards
+    Scenario: Car - route name assembly with destination signs accounting for directional tags
         Given the node map
           """
           a b
@@ -28,16 +28,16 @@ Feature: Destination Signs
           | kl    | KL   |     |                | A1              | Berlin              |  Hamburg             | yes    |                                      |
           | mn    | MN   |     | Berlin         | A1              | Berlin              |  Hamburg             | yes    |                                      |
           | op    | OP   |     | Berlin         |                 |                     |  Hamburg             | -1     |                                      |
-          | qr    | QR   |     | Berlin;Hamburg | A1;A2           |                     |                      | no     | mis-tagged destination: not a oneway |
+          | qr    | QR   |     |                |                 |                     |  Hamburg             | -1     |                                      |
 
         When I route I should get
           | from | to | route                                                     | destinations                                    | ref   | #                         |
           | a    | b  | AB,AB                                                     | Berlin,Berlin                                   | ,     |                           |
           | c    | d  | CD,CD                                                     | Berlin,Berlin                                   | ,     |                           |
-          | e    | f  | EF,EF                                                     | Hamburg,Hamburg                                 | ,     |                           |
+          | f    | e  | EF,EF                                                     | Hamburg,Hamburg                                 | ,     |                           |
           | g    | h  | GH,GH                                                     | A1,A1                                           | ,     |                           |
           | i    | j  | IJ,IJ                                                     | ,                                               | ,     | guard against mis-tagging |
           | k    | l  | KL,KL                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
-          | m    | n  | MN,MN                                                     | A1: Berlin, A1, Berlin                          | ,     |                           |
-          | o    | p  | OP,OP                                                     | Hamburg, Hamburg                                               | ,     |                           |
-          | q    | r  | QR,QR                                                     | ,                                               | ,     | guard against mis-tagging |
+          | m    | n  | MN,MN                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
+          | p    | o  | OP,OP                                                     | Hamburg,Hamburg                                 | ,     |                           |
+          | q    | r  | QR,QR                                                     | Hamburg,Hamburg                                 | ,     |                           |
