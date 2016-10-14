@@ -175,10 +175,18 @@ std::string modeToString(const extractor::TravelMode mode)
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
+
+    std::string maneuver_type;
+
     if (maneuver.waypoint_type == guidance::WaypointType::None)
-        step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
+        maneuver_type = detail::instructionTypeToString(maneuver.instruction.type);
     else
-        step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
+        maneuver_type = detail::waypointTypeToString(maneuver.waypoint_type);
+
+    // These invalid responses should never happen: log if they do happen
+    BOOST_ASSERT_MSG(maneuver_type != "invalid", "unexpected invalid maneuver type");
+
+    step_maneuver.values["type"] = std::move(maneuver_type);
 
     if (detail::isValidModifier(maneuver))
         step_maneuver.values["modifier"] =
