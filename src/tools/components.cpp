@@ -4,7 +4,6 @@
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/graph_loader.hpp"
-#include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/typedefs.hpp"
@@ -125,7 +124,7 @@ int main(int argc, char *argv[])
     osrm::util::SimpleLogger().Write() << "Starting SCC graph traversal";
 
     auto tarjan =
-        osrm::util::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
+        std::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
     tarjan->Run();
     osrm::util::SimpleLogger().Write() << "identified: " << tarjan->GetNumberOfComponents()
                                        << " many components";

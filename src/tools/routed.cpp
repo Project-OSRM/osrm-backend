@@ -1,5 +1,4 @@
 #include "server/server.hpp"
-#include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 #include "util/version.hpp"
 
@@ -25,6 +24,7 @@
 #include <new>
 #include <string>
 #include <thread>
+#include <memory>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
@@ -318,7 +318,7 @@ int main(int argc, const char *argv[]) try
 #endif
 
     auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
-    auto service_handler = util::make_unique<server::ServiceHandler>(config);
+    auto service_handler = std::make_unique<server::ServiceHandler>(config);
 
     routing_server->RegisterServiceHandler(std::move(service_handler));
 

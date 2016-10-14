@@ -10,7 +10,6 @@
 #include "extractor/restriction_parser.hpp"
 #include "util/exception.hpp"
 #include "util/lua_util.hpp"
-#include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 
@@ -23,6 +22,7 @@
 #include <tbb/parallel_for.h>
 
 #include <sstream>
+#include <memory>
 
 namespace osrm
 {
@@ -247,7 +247,7 @@ LuaScriptingContext &LuaScriptingEnvironment::GetLuaContext()
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = util::make_unique<LuaScriptingContext>();
+        ref = std::make_unique<LuaScriptingContext>();
         InitContext(*ref);
     }
     luabind::set_pcall_callback(&luaErrorCallback);
