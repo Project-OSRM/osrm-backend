@@ -21,6 +21,11 @@
         },
         {
             "key": "service",
+            "value": "driveway",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "service",
             "value": "alley",
             "object_types": [ "way" ]
         },

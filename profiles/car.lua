@@ -42,7 +42,8 @@ speed_profile = {
 -- service speeds
 service_speeds = {
   ["alley"] = 5,
-  ["parking_aisle"] = 5
+  ["parking_aisle"] = 5,
+  ["driveway"] = 5
 }
 
 -- surface/trackype/smoothness
