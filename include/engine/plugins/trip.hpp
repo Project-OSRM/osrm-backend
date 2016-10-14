@@ -29,14 +29,14 @@ namespace plugins
 class TripPlugin final : public BasePlugin
 {
   private:
-    SearchEngineData heaps;
-    routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
-    routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> duration_table;
-    int max_locations_trip;
+    mutable SearchEngineData heaps;
+    mutable routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
+    mutable routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> duration_table;
+    const int max_locations_trip;
 
     InternalRouteResult ComputeRoute(const datafacade::BaseDataFacade &facade,
                                      const std::vector<PhantomNode> &phantom_node_list,
-                                     const std::vector<NodeID> &trip);
+                                     const std::vector<NodeID> &trip) const;
 
   public:
     explicit TripPlugin(const int max_locations_trip_)
@@ -46,7 +46,7 @@ class TripPlugin final : public BasePlugin
 
     Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                          const api::TripParameters &parameters,
-                         util::json::Object &json_result);
+                         util::json::Object &json_result) const;
 };
 }
 }

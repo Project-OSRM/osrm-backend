@@ -28,18 +28,18 @@ namespace plugins
 class ViaRoutePlugin final : public BasePlugin
 {
   private:
-    SearchEngineData heaps;
-    routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
-    routing_algorithms::AlternativeRouting<datafacade::BaseDataFacade> alternative_path;
-    routing_algorithms::DirectShortestPathRouting<datafacade::BaseDataFacade> direct_shortest_path;
-    int max_locations_viaroute;
+    mutable SearchEngineData heaps;
+    mutable routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
+    mutable routing_algorithms::AlternativeRouting<datafacade::BaseDataFacade> alternative_path;
+    mutable routing_algorithms::DirectShortestPathRouting<datafacade::BaseDataFacade> direct_shortest_path;
+    const int max_locations_viaroute;
 
   public:
     explicit ViaRoutePlugin(int max_locations_viaroute);
 
     Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                          const api::RouteParameters &route_parameters,
-                         util::json::Object &json_result);
+                         util::json::Object &json_result) const;
 };
 }
 }

@@ -30,7 +30,7 @@ TablePlugin::TablePlugin(const int max_locations_distance_table)
 
 Status TablePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                                   const api::TableParameters &params,
-                                  util::json::Object &result)
+                                  util::json::Object &result) const
 {
     BOOST_ASSERT(params.IsValid());
 
