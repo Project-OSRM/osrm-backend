@@ -601,50 +601,24 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     // "pre-loop" over all the edges to create the lookup tables.  Once we have those, we
     // can then encode the features, and we'll know the indexes that feature properties
     // need to refer to.
-    std::vector<EdgeWeight> forward_weight_vector, reverse_weight_vector;
-    std::vector<std::uint8_t> forward_datasource_vector, reverse_datasource_vector;
     for (const auto &edge : edges)
     {
-        int forward_weight = 0, reverse_weight = 0;
-        std::uint8_t forward_datasource = 0;
-        std::uint8_t reverse_datasource = 0;
-        // TODO this approach of writing at least an empty vector for any segment is probably stupid
-        // (inefficient)
 
-        forward_weight_vector =
-            facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
-        reverse_weight_vector =
-            facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
-
-        forward_weight = forward_weight_vector[edge.fwd_segment_position];
-
-        BOOST_ASSERT(edge.fwd_segment_position < reverse_weight_vector.size());
-        reverse_weight =
-            reverse_weight_vector[reverse_weight_vector.size() - edge.fwd_segment_position - 1];
-
-        forward_datasource_vector.clear();
-        forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
-        forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
-
-        reverse_datasource_vector.clear();
-        reverse_datasource_vector =
+        const auto forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+        const auto reverse_datasource_vector =
             facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
-        reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
+
+        BOOST_ASSERT(edge.fwd_segment_position < forward_datasource_vector.size());
+        const auto forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
+        BOOST_ASSERT(edge.fwd_segment_position < reverse_datasource_vector.size());
+        const auto reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
                                                        edge.fwd_segment_position - 1];
 
-        use_line_value(reverse_weight);
 
         // Keep track of the highest datasource seen so that we don't write unnecessary
         // data to the layer attribute values
         max_datasource_id = std::max(max_datasource_id, forward_datasource);
         max_datasource_id = std::max(max_datasource_id, reverse_datasource);
-
-        std::string name = facade->GetNameForID(edge.name_id);
-        if (name_offsets.find(name) == name_offsets.end())
-        {
-            names.push_back(name);
-            name_offsets[name] = names.size() - 1;
-        }
     }
 
     // Convert tile coordinates into mercator coordinates
@@ -673,59 +647,38 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
             {
                 // Each feature gets a unique id, starting at 1
                 unsigned id = 1;
-                std::vector<EdgeWeight> forward_weight_vector;
-                std::vector<std::uint8_t> forward_datasource_vector;
-                std::vector<std::uint8_t> reverse_datasource_vector;
                 for (const auto &edge : edges)
                 {
                     // Get coordinates for start/end nodes of segment (NodeIDs u and v)
                     const auto a = facade->GetCoordinateOfNode(edge.u);
                     const auto b = facade->GetCoordinateOfNode(edge.v);
                     // Calculate the length in meters
-                    const double length =
-                        osrm::util::coordinate_calculation::haversineDistance(a, b);
+                    const double length = osrm::util::coordinate_calculation::haversineDistance(a, b);
 
-                    int forward_weight = 0;
-                    int reverse_weight = 0;
+                    const auto forward_weight_vector = facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+                    const auto reverse_weight_vector = facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    const auto forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+                    const auto reverse_datasource_vector = facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
+                    const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
+                    const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() - edge.fwd_segment_position - 1];
+                    const auto forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
+                    const auto reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() - edge.fwd_segment_position - 1];
 
-                    std::uint8_t forward_datasource = 0;
-                    std::uint8_t reverse_datasource = 0;
-                    forward_weight_vector.clear();
-                    forward_weight_vector =
-                        facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
-                    forward_weight = forward_weight_vector[edge.fwd_segment_position];
-
-                    forward_datasource_vector.clear();
-                    forward_datasource_vector =
-                        facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
-                    forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
-
-                    reverse_weight_vector.clear();
-                    reverse_weight_vector =
-                        facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    use_line_value(reverse_weight);
+                    use_line_value(forward_weight);
 
                     std::string name = facade->GetNameForID(edge.name_id);
-
-                    forward_weight_vector = facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
-                    forward_weight = forward_weight_vector[edge.fwd_segment_position];
-
-                    forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
-                    forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
-
-                    reverse_weight_vector = facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
-
-                    reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
-                                                           edge.fwd_segment_position - 1];
-
-                    reverse_datasource_vector = facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
-                    reverse_datasource =
-                        reverse_datasource_vector[reverse_datasource_vector.size() -
-                                                  edge.fwd_segment_position - 1];
-
-                    // Keep track of the highest datasource seen so that we don't write unnecessary
-                    // data to the layer attribute values
-                    max_datasource_id = std::max(max_datasource_id, forward_datasource);
-                    max_datasource_id = std::max(max_datasource_id, reverse_datasource);
+                    const auto name_offset = [&name, &names, &name_offsets]() {
+                        auto iter = name_offsets.find(name);
+                        if (iter == name_offsets.end())
+                        {
+                            auto offset = names.size() - 1;
+                            name_offsets[name] = offset;
+                            return offset;
+                        }
+                        return iter->second;
+                    }();
+                    names.push_back(std::move(name));
 
                     const auto encode_tile_line = [&line_layer_writer,
                                                    &edge,
@@ -735,7 +688,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                                                                     const std::uint32_t speed_kmh,
                                                                     const std::size_t duration,
                                                                     const DatasourceID datasource,
-                                                                    const std::size_t name,
+                                                                    const std::size_t name_idx,
                                                                     std::int32_t &start_x,
                                                                     std::int32_t &start_y) {
                         // Here, we save the two attributes for our feature: the speed and the
@@ -774,7 +727,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                             field.add_element(4);        // "name" tag key offset
 
                             field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
-                                              name); // name value offset
+                                              name_idx); // name value offset
                         }
                         {
 
@@ -802,7 +755,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                                              speed_kmh,
                                              line_int_offsets[forward_weight],
                                              forward_datasource,
-                                             name_offsets[name],
+                                             name_offset,
                                              start_x,
                                              start_y);
                         }
@@ -826,17 +779,11 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                                              speed_kmh,
                                              line_int_offsets[reverse_weight],
                                              reverse_datasource,
-                                             name_offsets[name],
+                                             name_offset,
                                              start_x,
                                              start_y);
                         }
                     }
-                    reverse_datasource_vector.clear();
-                    reverse_datasource_vector =
-                        facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
-                    reverse_datasource =
-                        reverse_datasource_vector[reverse_datasource_vector.size() -
-                                                  edge.fwd_segment_position - 1];
                 }
             }
 
