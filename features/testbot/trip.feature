@@ -108,4 +108,17 @@ Feature: Basic trip planning
             | waypoints | trips |
             | 1,2       |       |
 
+    Scenario: Testbot - Repeated Coordinate
+        Given the node map
+            """
+            a   b
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I plan a trip I should get
+            | waypoints                                         | trips |
+            | a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a |       |
 
