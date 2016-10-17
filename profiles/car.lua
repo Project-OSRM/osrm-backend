@@ -499,26 +499,15 @@ function way_function (way, result)
   if obey_oneway then
     if oneway == "-1" then
       result.forward_mode = mode.inaccessible
-
-      -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
       local destination = get_destination_backward(way)
-
       result.destinations = destination
-      -- io.write('\nbackwards destination' .. get_destination_backward(way) .. 'end a line ending\n')
-
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway" and oneway ~= "no") then
       result.backward_mode = mode.inaccessible
-
-      -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
       local destination = get_destination(way)
-      if destination == "" and forward_destination ~= "" then 
-        destination = get_destination_forward(way)
-      end
-
       result.destinations = destination
     end
   end
