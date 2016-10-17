@@ -148,56 +148,6 @@ NodeID loadEdgesFromFile(std::istream &input_stream,
     return m;
 }
 
-template <typename NodeT, typename EdgeT>
-unsigned readHSGRFromStream(const boost::filesystem::path &hsgr_file,
-                            std::vector<NodeT> &node_list,
-                            std::vector<EdgeT> &edge_list,
-                            unsigned *check_sum)
-{
-    if (!boost::filesystem::exists(hsgr_file))
-    {
-        throw exception("hsgr file does not exist");
-    }
-    if (0 == boost::filesystem::file_size(hsgr_file))
-    {
-        throw exception("hsgr file is empty");
-    }
-
-    boost::filesystem::ifstream hsgr_input_stream(hsgr_file, std::ios::binary);
-
-    const FingerPrint fingerprint_valid = FingerPrint::GetValid();
-    FingerPrint fingerprint_loaded;
-    hsgr_input_stream.read(reinterpret_cast<char *>(&fingerprint_loaded), sizeof(FingerPrint));
-    if (!fingerprint_loaded.TestGraphUtil(fingerprint_valid))
-    {
-        SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build.\n"
-                                            "Reprocess to get rid of this warning.";
-    }
-
-    unsigned number_of_nodes = 0;
-    unsigned number_of_edges = 0;
-    hsgr_input_stream.read(reinterpret_cast<char *>(check_sum), sizeof(unsigned));
-    hsgr_input_stream.read(reinterpret_cast<char *>(&number_of_nodes), sizeof(unsigned));
-    BOOST_ASSERT_MSG(0 != number_of_nodes, "number of nodes is zero");
-    hsgr_input_stream.read(reinterpret_cast<char *>(&number_of_edges), sizeof(unsigned));
-
-    SimpleLogger().Write() << "number_of_nodes: " << number_of_nodes
-                           << ", number_of_edges: " << number_of_edges;
-
-    // BOOST_ASSERT_MSG( 0 != number_of_edges, "number of edges is zero");
-    node_list.resize(number_of_nodes);
-    hsgr_input_stream.read(reinterpret_cast<char *>(&node_list[0]),
-                           number_of_nodes * sizeof(NodeT));
-
-    edge_list.resize(number_of_edges);
-    if (number_of_edges > 0)
-    {
-        hsgr_input_stream.read(reinterpret_cast<char *>(&edge_list[0]),
-                               number_of_edges * sizeof(EdgeT));
-    }
-
-    return number_of_nodes;
-}
 }
 }
 
