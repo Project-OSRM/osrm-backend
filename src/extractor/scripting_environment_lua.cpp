@@ -21,8 +21,8 @@
 
 #include <tbb/parallel_for.h>
 
-#include <sstream>
 #include <memory>
+#include <sstream>
 
 namespace osrm
 {

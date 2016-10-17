@@ -123,8 +123,7 @@ int main(int argc, char *argv[])
 
     osrm::util::SimpleLogger().Write() << "Starting SCC graph traversal";
 
-    auto tarjan =
-        std::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
+    auto tarjan = std::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
     tarjan->Run();
     osrm::util::SimpleLogger().Write() << "identified: " << tarjan->GetNumberOfComponents()
                                        << " many components";

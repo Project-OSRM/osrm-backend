@@ -21,10 +21,10 @@
 #include <chrono>
 #include <future>
 #include <iostream>
+#include <memory>
 #include <new>
 #include <string>
 #include <thread>
-#include <memory>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
