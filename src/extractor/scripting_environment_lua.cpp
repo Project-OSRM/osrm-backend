@@ -209,6 +209,9 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
          luabind::class_<TurnProperties>("TurnProperties")
              .def_readonly("angle", &TurnProperties::angle)
              .def_readonly("radius", &TurnProperties::radius)
+             .def_readonly("on_ramp", &TurnProperties::on_ramp)
+             .def_readonly("off_ramp", &TurnProperties::off_ramp)
+             .def_readonly("through_street", &TurnProperties::is_through_street)
              .def_readonly("crossing_through_traffic", &TurnProperties::crossing_through_traffic)
              .def_readonly("requires_announcement", &TurnProperties::requires_announcement),
 

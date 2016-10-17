@@ -24,6 +24,9 @@ struct TurnProperties
     bool requires_announcement;
     // check if we are continuing on the normal road on an obvious turn
     bool is_through_street;
+    // on/off ramp
+    bool on_ramp;
+    bool off_ramp;
 };
 
 // properties describing intersection related penalties

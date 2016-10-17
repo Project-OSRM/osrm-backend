@@ -348,8 +348,6 @@ void EdgeBasedGraphFactory::ComputeTurnFunctionParameters(
         // even though we might need to announce lanes, but it's still going straight on a major
         // road. Penalising these would be going into the opposite of what we want
         (instruction.type == guidance::TurnType::UseLane) ||
-        // don't double penalise collapse segments
-        (approach_segment.length_in_meters <= 30) ||
         leavesRoundabout(instruction); // don't penalise roundabouts twice
 
     const auto is_through = [&]() {
@@ -363,7 +361,13 @@ void EdgeBasedGraphFactory::ComputeTurnFunctionParameters(
     }();
 
     const double radius = 0;
-    turn_properties = {180 - angle, radius, crosses_through_traffic, !is_silent, is_through};
+    turn_properties = {180 - angle,
+                       radius,
+                       crosses_through_traffic,
+                       !is_silent,
+                       is_through,
+                       instruction.type == guidance::TurnType::OnRamp,
+                       instruction.type == guidance::TurnType::OffRamp};
 
     const bool crosses_traffic_light =
         m_traffic_lights.find(intersection_node) != m_traffic_lights.end();

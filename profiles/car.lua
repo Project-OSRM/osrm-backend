@@ -155,6 +155,8 @@ local turn_penalty               = 7.5
 local crossing_through_traffic_penalty = 5
 local stop_sign_penalty          = 5
 local turn_announcement_penalty = 5
+-- penalty to enter/exit a motorway
+local motorway_penalty = 30
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
 local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1.075
@@ -660,6 +662,10 @@ function turn_function(angle, turn_properties, intersection_properties, approach
   -- crossing through traffic is expensive
   if turn_properties.crossing_through_traffic then
     penalty = penalty + crossing_through_traffic_penalty
+  end
+
+  if turn_properties.off_ramp or turn_properties.on_ramp then
+    penalty = penalty + motorway_penalty
   end
 
   return 10 * penalty;
