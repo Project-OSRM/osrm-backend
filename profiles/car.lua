@@ -1,8 +1,6 @@
 -- Car profile
 local find_access_tag = require("lib/access").find_access_tag
 local get_destination = require("lib/destination").get_destination
-local get_destination_forward = require("lib/destination").get_destination_forward
-local get_destination_backward = require("lib/destination").get_destination_backward
 local set_classification = require("lib/guidance").set_classification
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
 
@@ -499,17 +497,16 @@ function way_function (way, result)
   if obey_oneway then
     if oneway == "-1" then
       result.forward_mode = mode.inaccessible
-      local destination = get_destination_backward(way)
-      result.destinations = destination
+      result.destinations = get_destination(way, "reverse")
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway" and oneway ~= "no") then
       result.backward_mode = mode.inaccessible
-      local destination = get_destination(way)
-      result.destinations = destination
+      result.destinations = get_destination(way, "forward")
     end
+    
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
