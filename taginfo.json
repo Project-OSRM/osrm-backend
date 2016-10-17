@@ -35,6 +35,16 @@
             "object_types": [ "way" ]
         },
         {
+            "key": "service",
+            "value": "drive-through",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "service",
+            "value": "parking",
+            "object_types": [ "way" ]
+        },
+        {
             "key": "oneway",
             "value": "true",
             "object_types": [ "way" ]
