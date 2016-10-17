@@ -10,7 +10,7 @@ access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] 
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true, ["delivery"] = true }
 access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
-service_tag_restricted = { ["parking_aisle"] = true }
+service_tag_restricted = { ["parking_aisle"] = true, ["parking"] = true }
 service_tag_forbidden = { ["emergency_access"] = true }
 restrictions = { "motorcar", "motor_vehicle", "vehicle" }
 
@@ -42,8 +42,10 @@ speed_profile = {
 -- service speeds
 service_speeds = {
   ["alley"] = 5,
+  ["parking"] = 5,
   ["parking_aisle"] = 5,
-  ["driveway"] = 5
+  ["driveway"] = 5,
+  ["drive-through"] = 5
 }
 
 -- surface/trackype/smoothness
