@@ -900,3 +900,27 @@ Feature: Collapse
         When I route I should get
             | waypoints | route                   | turns                                                                                  |
             | k,j       | on,ferry,,ferry,off,off | depart,notification straight,continue uturn,turn straight,notification straight,arrive |
+
+    # http://www.openstreetmap.org/#map=19/37.78090/-122.41251
+    Scenario: U-Turn onto unnamed-road
+        Given the node map
+            """
+            d . _           h
+                  ' b . _   |
+                    |     ' e   g
+                    |       f '
+                    |   1 '
+                    a '
+            """
+
+        And the ways
+            | nodes | highway   | turn:lanes     | name  | oneway |
+            | ab    | secondary |                | up    | yes    |
+            | gfa   | secondary |                |       | yes    |
+            | dbe   | tertiary  |                | turn  | no     |
+            | he    | secondary | through\|right | down  | yes    |
+            | ef    | secondary |                | down  | yes    |
+
+        When I route I should get
+            | waypoints | route         | turns                               |
+            | a,1       | up,turn,down, | depart,turn right,turn right,arrive |

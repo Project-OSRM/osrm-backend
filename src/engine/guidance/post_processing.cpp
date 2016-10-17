@@ -483,10 +483,12 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         const auto next_step_index = step_index + 1;
         const bool continues_with_name_change =
             (next_step_index < steps.size()) &&
-            (steps[next_step_index].maneuver.instruction.type == TurnType::UseLane ||
+            ((steps[next_step_index].maneuver.instruction.type == TurnType::UseLane &&
+              steps[next_step_index].maneuver.instruction.direction_modifier ==
+                  DirectionModifier::Straight) ||
              isCollapsableInstruction(steps[next_step_index].maneuver.instruction));
         const bool u_turn_with_name_change =
-            continues_with_name_change &&
+            continues_with_name_change && steps[next_step_index].name_id != EMPTY_NAMEID &&
             !isNoticeableNameChange(steps[two_back_index], steps[next_step_index]);
 
         if (direct_u_turn || u_turn_with_name_change)
@@ -842,7 +844,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 }
                 else
                 {
-                    //the sliproad turn is incompatible. So we handle it as a turn
+                    // the sliproad turn is incompatible. So we handle it as a turn
                     steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
                 }
             }
@@ -1326,8 +1328,7 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
     for (std::size_t step_index = 1; step_index < steps.size(); ++step_index)
     {
         const auto &step = steps[step_index];
-        if (step.maneuver.instruction.type == TurnType::UseLane &&
-            canCollapseUseLane(step))
+        if (step.maneuver.instruction.type == TurnType::UseLane && canCollapseUseLane(step))
         {
             const auto previous = getPreviousIndex(step_index);
             steps[previous] = elongate(std::move(steps[previous]), steps[step_index]);
