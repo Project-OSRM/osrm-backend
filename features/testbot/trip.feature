@@ -88,7 +88,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints                       | trips              |
-            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | cbalkjihgfedc,mnop |
+            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | defghijklabcd,mnop |
 
     # Test single node in each component #1850
     Scenario: Testbot - Trip planning with less than 10 nodes
