@@ -44,13 +44,13 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <numeric> //partial_sum
 #include <thread>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
 namespace osrm
 {
