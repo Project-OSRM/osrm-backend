@@ -32,6 +32,7 @@ class FingerPrint
     boost::uuids::uuid named_uuid;
 };
 
+static_assert(sizeof(FingerPrint) == 152, "FingerPrint has unexpected size");
 static_assert(std::is_trivial<FingerPrint>::value, "FingerPrint needs to be trivial.");
 }
 }
