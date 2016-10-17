@@ -20,9 +20,9 @@ Feature: Basic trip planning
             | da    |
 
         When I plan a trip I should get
-            | waypoints | trips | durations |
-            | a,b,c,d   | abcd  | 7.6       |
-            | d,b,c,a   | dbca  | 7.6       |
+            | waypoints | trips  | durations |
+            | a,b,c,d   | abcda  | 7.6       |
+            | d,b,c,a   | dbcad  | 7.6       |
 
     Scenario: Testbot - Trip planning with more than 10 nodes
         Given the node map
@@ -87,8 +87,8 @@ Feature: Basic trip planning
 
 
         When I plan a trip I should get
-            | waypoints                       | trips              |
-            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | defghijklabcd,mnop |
+            | waypoints                       | trips               |
+            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | defghijklabcd,mnopm |
 
     # Test single node in each component #1850
     Scenario: Testbot - Trip planning with less than 10 nodes
