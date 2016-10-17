@@ -572,7 +572,7 @@ step.
   
   | `type`                 | Description                                                                                                               |
   |------------------------|---------------------------------------------------------------------------------------------------------------------------|
-  | `roundabout`           | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
+  | `roundabout`/`rotary`         | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
   | else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
 
 
