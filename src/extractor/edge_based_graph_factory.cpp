@@ -316,13 +316,41 @@ void EdgeBasedGraphFactory::ComputeTurnFunctionParameters(
     TurnSegment &approach_segment,
     TurnSegment &exit_segment)
 {
+    const auto get_segment = [this](const NodeID nid, const EdgeID eid) -> TurnSegment {
+        const auto segments = m_compressed_edge_container.GetBucketReference(eid);
+        NodeID last = nid;
+        double length = 0;
+        double weight = 0;
+        for (auto segment : segments)
+        {
+            const auto last_coordinate = m_node_info_list[last];
+            const auto this_coordinate = m_node_info_list[segment.node_id];
+            length +=
+                util::coordinate_calculation::haversineDistance(last_coordinate, this_coordinate);
+            weight += segment.weight;
+        }
+        // speed in meters per second
+        auto speed = length / (weight / 10);
+        return {length, speed};
+    };
 
-    bool is_silent = (instruction.type == guidance::TurnType::Suppressed) ||
-                     (instruction.type == guidance::TurnType::NewName) ||
-                     (instruction.type == guidance::TurnType::Notification) ||
-                     (instruction.type == guidance::TurnType::StayOnRoundabout) ||
-                     (instruction.type == guidance::TurnType::NoTurn) ||
-                     leavesRoundabout(instruction); // don't penalise roundabouts twice
+    approach_segment = get_segment(from_node, in_edge);
+    exit_segment = get_segment(intersection_node, out_edge);
+
+    bool is_silent =
+        (instruction.type == guidance::TurnType::Suppressed) ||
+        (instruction.type == guidance::TurnType::NewName) ||
+        (instruction.type == guidance::TurnType::Notification) ||
+        (instruction.type == guidance::TurnType::StayOnRoundabout) ||
+        (instruction.type == guidance::TurnType::NoTurn) ||
+        // a sliproad will be announced, but we don't want to count the announcement twice
+        (instruction.type == guidance::TurnType::Sliproad) ||
+        // even though we might need to announce lanes, but it's still going straight on a major
+        // road. Penalising these would be going into the opposite of what we want
+        (instruction.type == guidance::TurnType::UseLane) ||
+        // don't double penalise collapse segments
+        (approach_segment.length_in_meters <= 30) ||
+        leavesRoundabout(instruction); // don't penalise roundabouts twice
 
     const auto is_through = [&]() {
         if (!is_silent)
@@ -346,27 +374,6 @@ void EdgeBasedGraphFactory::ComputeTurnFunctionParameters(
     const bool give_way = in_data.road_classification.IsLowPriorityRoadClass() &&
                           !out_data.road_classification.IsLowPriorityRoadClass();
     intersection_properties = {crosses_traffic_light, give_way, false};
-
-    const auto get_segment = [this](const NodeID nid, const EdgeID eid) -> TurnSegment {
-        const auto segments = m_compressed_edge_container.GetBucketReference(eid);
-        NodeID last = nid;
-        double length = 0;
-        double weight = 0;
-        for (auto segment : segments)
-        {
-            const auto last_coordinate = m_node_info_list[last];
-            const auto this_coordinate = m_node_info_list[segment.node_id];
-            length +=
-                util::coordinate_calculation::haversineDistance(last_coordinate, this_coordinate);
-            weight += segment.weight;
-        }
-        // speed in meters per second
-        auto speed = length / (weight / 10);
-        return {length, speed};
-    };
-
-    approach_segment = get_segment(from_node, in_edge);
-    exit_segment = get_segment(intersection_node, out_edge);
 }
 
 /// Actually it also generates OriginalEdgeData and serializes them...
