@@ -7,31 +7,31 @@ Feature: Car - speeds
 
     Scenario: Car - speed of various way types
         Then routability should be
-            | highway        | oneway | bothw        |
-            | motorway       | no     | 82 km/h +- 1 |
-            | motorway_link  | no     | 47 km/h +- 1 |
-            | trunk          | no     | 79 km/h +- 1 |
-            | trunk_link     | no     | 43 km/h +- 1 |
-            | primary        | no     | 63 km/h +- 1 |
-            | primary_link   | no     | 35 km/h +- 1 |
-            | secondary      | no     | 54 km/h +- 1 |
-            | secondary_link | no     | 31 km/h +- 1 |
-            | tertiary       | no     | 43 km/h +- 1 |
-            | tertiary_link  | no     | 27 km/h +- 1 |
-            | unclassified   | no     | 31 km/h +- 1 |
-            | residential    | no     | 31 km/h +- 1 |
-            | living_street  | no     | 18 km/h +- 1 |
-            | service        | no     | 23 km/h +- 1 |
+            | highway        | oneway | bothw   |
+            | motorway       | no     | 71 km/h |
+            | motorway_link  | no     | 36 km/h |
+            | trunk          | no     | 68 km/h |
+            | trunk_link     | no     | 31 km/h |
+            | primary        | no     | 52 km/h |
+            | primary_link   | no     | 23 km/h |
+            | secondary      | no     | 44 km/h |
+            | secondary_link | no     | 19 km/h |
+            | tertiary       | no     | 31 km/h |
+            | tertiary_link  | no     | 16 km/h |
+            | unclassified   | no     | 19 km/h |
+            | residential    | no     | 19 km/h |
+            | living_street  | no     | 8 km/h  |
+            | service        | no     | 11 km/h |
 
     # Alternating oneways have to take average waiting time into account.
     Scenario: Car - scaled speeds for oneway=alternating
         Then routability should be
             | highway        | oneway      | junction   | forw          | backw        | #              |
-            | tertiary       |             |            | 43 km/h       | 43 km/h      |                |
-            | tertiary       | alternating |            | 20 km/h +- 5  | 20 km/h +- 5 |                |
-            | motorway       |             |            | 82 km/h       |              | implied oneway |
-            | motorway       | alternating |            | 30 km/h +- 5  |              | implied oneway |
+            | tertiary       |             |            | 31 km/h       | 31 km/h      |                |
+            | tertiary       | alternating |            | 12 km/h +- 1  | 12 km/h +- 1 |                |
+            | motorway       |             |            | 71 km/h       |              | implied oneway |
+            | motorway       | alternating |            | 28 km/h +- 1  |              | implied oneway |
             | motorway       | reversible  |            |               |              | unroutable     |
-            | primary        |             | roundabout | 63 km/h       |              | implied oneway |
-            | primary        | alternating | roundabout | 25 km/h +- 5  |              | implied oneway |
+            | primary        |             | roundabout | 52 km/h       |              | implied oneway |
+            | primary        | alternating | roundabout | 20 km/h +- 1  |              | implied oneway |
             | primary        | reversible  | roundabout |               |              | unroutable     |
