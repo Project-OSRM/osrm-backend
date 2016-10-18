@@ -141,12 +141,13 @@ inline FloatCoordinate toWGS84(const FloatCoordinate &mercator_coordinate)
 
 // Converts a WMS tile coordinate (z,x,y) into a wgs bounding box
 inline void xyzToWGS84(
-    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
+    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy,
+    int mercator_buffer = 0)
 {
-    minx = x * TILE_SIZE;
-    miny = (y + 1.0) * TILE_SIZE;
-    maxx = (x + 1.0) * TILE_SIZE;
-    maxy = y * TILE_SIZE;
+    minx = x * TILE_SIZE - mercator_buffer;
+    miny = (y + 1.0) * TILE_SIZE - mercator_buffer;
+    maxx = (x + 1.0) * TILE_SIZE + mercator_buffer;
+    maxy = y * TILE_SIZE + mercator_buffer;
     // 2^z * TILE_SIZE
     const double shift = (1u << static_cast<unsigned>(z)) * TILE_SIZE;
     pixelToDegree(shift, minx, miny);

@@ -36,7 +36,7 @@ const constexpr std::uint32_t VARIANT_TYPE_BOOL = 7;
 
 // Vector tiles are 4096 virtual pixels on each side
 const constexpr double EXTENT = 4096.0;
-const constexpr double BUFFER = 128.0;
+const constexpr double BUFFER = 512.0;
 }
 }
 }

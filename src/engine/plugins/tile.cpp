@@ -278,8 +278,15 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     double min_lon, min_lat, max_lon, max_lat;
 
     // Convert the z,x,y mercator tile coordinates into WGS84 lon/lat values
-    util::web_mercator::xyzToWGS84(
-        parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
+    //
+    util::web_mercator::xyzToWGS84(parameters.x,
+                                   parameters.y,
+                                   parameters.z,
+                                   min_lon,
+                                   min_lat,
+                                   max_lon,
+                                   max_lat,
+                                   util::web_mercator::TILE_SIZE * 0.05);
 
     util::Coordinate southwest{util::FloatLongitude{min_lon}, util::FloatLatitude{min_lat}};
     util::Coordinate northeast{util::FloatLongitude{max_lon}, util::FloatLatitude{max_lat}};
@@ -382,6 +389,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         {
             unsigned source_intersection; // node-based-node ID
             unsigned target_intersection; // node-based-node ID
+            bool is_geometry_forward;     // Is the geometry forward or reverse?
             unsigned packed_geometry_id;
         };
         // Lookup table for edge-based-nodes
@@ -426,7 +434,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                 }
 
                 edge_based_node_info[edge.forward_segment_id.id] = {
-                    edge.u, edge.v, edge.packed_geometry_id};
+                    edge.u, edge.v, true, edge.packed_geometry_id};
             }
             // Same as previous block, but everything flipped
             if (edge.reverse_segment_id.enabled &&
@@ -455,7 +463,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                 // Save info about this edge-based-node, note reversal from forward
                 // block above.
                 edge_based_node_info[edge.reverse_segment_id.id] = {
-                    edge.v, edge.u, edge.packed_geometry_id};
+                    edge.v, edge.u, false, edge.packed_geometry_id};
             }
         }
 
@@ -463,12 +471,25 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         // and targets of turns).  EBN is short for edge-based-node
         std::vector<NodeID> first_geometry, second_geometry;
         std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
-        std::vector<EdgeWeight> forward_weight_vector;
+        std::vector<EdgeWeight> first_weight_vector;
         for (const auto &source_ebn : edge_based_node_info)
         {
+            if (outgoing_edges.count(source_ebn.second.target_intersection) == 0)
+            {
+                continue;
+            }
+
             // Grab a copy of the geometry leading up to the intersection.
-            first_geometry =
-                facade->GetUncompressedForwardGeometry(source_ebn.second.packed_geometry_id);
+            if (source_ebn.second.is_geometry_forward)
+            {
+                first_geometry =
+                    facade->GetUncompressedForwardGeometry(source_ebn.second.packed_geometry_id);
+            }
+            else
+            {
+                first_geometry =
+                    facade->GetUncompressedReverseGeometry(source_ebn.second.packed_geometry_id);
+            }
 
             // We earlier saved the source and target intersection nodes for every road section.
             // We can use the target node to find all road sections that lead away from
@@ -479,7 +500,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                 // Ignore u-turns for now
                 if (edge_based_node_info.at(target_ebn).target_intersection ==
                     source_ebn.second.source_intersection)
+                {
                     continue;
+                }
 
                 // Find the connection between our source road and the target node
                 EdgeID smaller_edge_id = facade->FindSmallestEdge(
@@ -530,15 +553,32 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                     BOOST_ASSERT_MSG(!data.shortcut, "Connecting edge must not be a shortcut");
 
                     // This is the geometry leading away from the intersection
-                    // (i.e. the geometry of the target edge-based-node)
-                    second_geometry = facade->GetUncompressedReverseGeometry(
-                        edge_based_node_info.at(target_ebn).packed_geometry_id);
+                    // (i.e. the forward geometry of the target edge-based-node)
+
+                    if (!edge_based_node_info.at(target_ebn).is_geometry_forward)
+                    {
+                        second_geometry = facade->GetUncompressedForwardGeometry(
+                            edge_based_node_info.at(target_ebn).packed_geometry_id);
+                    }
+                    else
+                    {
+                        second_geometry = facade->GetUncompressedReverseGeometry(
+                            edge_based_node_info.at(target_ebn).packed_geometry_id);
+                    }
 
                     // Now, calculate the sum of the weight of all the segments.
-                    forward_weight_vector =
-                        facade->GetUncompressedForwardWeights(source_ebn.second.packed_geometry_id);
+                    if (source_ebn.second.is_geometry_forward)
+                    {
+                        first_weight_vector = facade->GetUncompressedForwardWeights(
+                            source_ebn.second.packed_geometry_id);
+                    }
+                    else
+                    {
+                        first_weight_vector = facade->GetUncompressedReverseWeights(
+                            source_ebn.second.packed_geometry_id);
+                    }
                     const auto sum_node_weight = std::accumulate(
-                        forward_weight_vector.begin(), forward_weight_vector.end(), EdgeWeight{0});
+                        first_weight_vector.begin(), first_weight_vector.end(), EdgeWeight{0});
 
                     // The edge.weight is the whole edge weight, which includes the turn cost.
                     // The turn cost is the edge.weight minus the sum of the individual road
@@ -624,9 +664,15 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     }
 
     // Convert tile coordinates into mercator coordinates
-    util::web_mercator::xyzToMercator(
-        parameters.x, parameters.y, parameters.z, min_lon, min_lat, max_lon, max_lat);
-    const BBox tile_bbox{min_lon, min_lat, max_lon, max_lat};
+    double min_mercator_lon, min_mercator_lat, max_mercator_lon, max_mercator_lat;
+    util::web_mercator::xyzToMercator(parameters.x,
+                                      parameters.y,
+                                      parameters.z,
+                                      min_mercator_lon,
+                                      min_mercator_lat,
+                                      max_mercator_lon,
+                                      max_mercator_lat);
+    const BBox tile_bbox{min_mercator_lon, min_mercator_lat, max_mercator_lon, max_mercator_lat};
 
     // Protobuf serializes blocks when objects go out of scope, hence
     // the extra scoping below.
