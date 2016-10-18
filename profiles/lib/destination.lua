@@ -30,11 +30,11 @@ function Destination.get_destination(way, direction)
   end
 
   if destination and destination ~= "" then
-      if rv ~= "" then
-          rv = rv .. ": "
-      end
+    if rv ~= "" then
+        rv = rv .. ": "
+    end
 
-      rv = rv .. string.gsub(destination, ";", ", ")
+    rv = rv .. string.gsub(destination, ";", ", ")
   end
 
   return rv

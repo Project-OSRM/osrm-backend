@@ -19,14 +19,14 @@ Feature: Destination Signs
           """
 
         And the ways
-          | nodes | name | ref | destination    | destination:ref | destination:ref:forward | destination:ref:backward | destination:forward | destination:backward | oneway | #                                    |
-          | ab    | AB   |     | Berlin         | A1              | A1                      | A2                       |                     |                      | yes    |                                      |
-          | cd    | CD   |     |                | A1              | A1                      | A2                       | Berlin              |  Hamburg             | -1     |                                      |
-          | ef    | EF   |     |                |                 | A1                      | A2                       | Berlin              |  Hamburg             | yes    |                                      |
-          | gh    | GH   |     |                |                 | A1                      | A2                       | Berlin              |  Hamburg             | -1     |                                      |
-          | ij    | IJ   |     | Berlin         | A1              |                         | A2                       | Berlin              |  Hamburg             | yes    |                                      |
-          | kl    | KL   |     |                | A1              |                         | A2                       | Berlin              |  Hamburg             | -1     |                                      |
-          | mn    | MN   |     | Berlin         | A1              | A1                      |                          | Berlin              |  Hamburg             | no     | mis-tagged destination: not a oneway |
+          | nodes | name | destination    | destination:ref | destination:ref:forward | destination:ref:backward | destination:forward | destination:backward | oneway | #                                    |
+          | ab    | AB   | Berlin         | A1              | A1                      | A2                       |                     |                      | yes    |                                      |
+          | cd    | CD   |                | A1              | A1                      | A2                       | Berlin              |  Hamburg             | -1     |                                      |
+          | ef    | EF   |                |                 | A1                      | A2                       | Berlin              |  Hamburg             | yes    |                                      |
+          | gh    | GH   |                |                 | A1                      | A2                       | Berlin              |  Hamburg             | -1     |                                      |
+          | ij    | IJ   | Berlin         | A1              |                         | A2                       | Berlin              |  Hamburg             | yes    |                                      |
+          | kl    | KL   |                | A1              |                         | A2                       | Berlin              |  Hamburg             | -1     |                                      |
+          | mn    | MN   | Berlin         | A1              | A1                      |                          | Berlin              |  Hamburg             | no     | mis-tagged destination: not a oneway |
          
         When I route I should get
           | from | to | route                                                     | destinations                                    | ref   | #                         |

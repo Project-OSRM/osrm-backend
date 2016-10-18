@@ -496,7 +496,7 @@ function way_function (way, result)
   -- Set direction according to tags on way
   if obey_oneway then
     if oneway == "-1" then
-
+      local direction = "reverse"
       result.forward_mode = mode.inaccessible
       result.destinations = get_destination(way, direction)
     elseif oneway == "yes" or
