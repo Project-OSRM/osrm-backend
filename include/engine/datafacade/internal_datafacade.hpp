@@ -13,6 +13,7 @@
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
+#include "storage/io.hpp"
 #include "storage/storage_config.hpp"
 #include "storage/io.hpp"
 #include "engine/geospatial_query.hpp"
@@ -71,7 +72,6 @@ class InternalDataFacade final : public BaseDataFacade
     InternalDataFacade() {}
 
     unsigned m_check_sum;
-    unsigned m_number_of_nodes;
     std::unique_ptr<QueryGraph> m_query_graph;
     std::string m_timestamp;
 
@@ -141,12 +141,17 @@ class InternalDataFacade final : public BaseDataFacade
     void LoadTimestamp(const boost::filesystem::path &timestamp_path)
     {
         util::SimpleLogger().Write() << "Loading Timestamp";
+
         boost::filesystem::ifstream timestamp_stream(timestamp_path);
         if (!timestamp_stream)
         {
             throw util::exception("Could not open " + timestamp_path.string() + " for reading.");
         }
-        getline(timestamp_stream, m_timestamp);
+
+        auto timestamp_size = storage::io::readTimestampSize(timestamp_stream);
+        char *timestamp_ptr = new char[timestamp_size]();
+        storage::io::readTimestamp(timestamp_stream, timestamp_ptr, timestamp_size);
+        m_timestamp = std::string(timestamp_ptr);
     }
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)

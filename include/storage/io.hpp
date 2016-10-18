@@ -48,8 +48,7 @@ inline HSGRHeader readHSGRHeader(boost::filesystem::ifstream &input_stream)
     return header;
 }
 
-// Needs to be called after getHSGRSize() to get the correct offset in the stream
-// 
+// Needs to be called after HSGRHeader() to get the correct offset in the stream
 template <typename NodeT, typename EdgeT>
 void readHSGR(boost::filesystem::ifstream &input_stream,
               NodeT *node_buffer,
@@ -59,6 +58,21 @@ void readHSGR(boost::filesystem::ifstream &input_stream,
 {
     input_stream.read(reinterpret_cast<char *>(node_buffer), number_of_nodes * sizeof(NodeT));
     input_stream.read(reinterpret_cast<char *>(edge_buffer), number_of_edges * sizeof(EdgeT));
+}
+
+// Returns the size of the timestamp in a file
+inline std::uint32_t readTimestampSize(boost::filesystem::ifstream &timestamp_input_stream)
+{
+    timestamp_input_stream.seekg (0, timestamp_input_stream.end);
+    auto length = timestamp_input_stream.tellg();
+    timestamp_input_stream.seekg (0, timestamp_input_stream.beg);
+    return length;
+}
+
+// Reads the timestamp in a file
+inline void readTimestamp(boost::filesystem::ifstream &timestamp_input_stream, char *timestamp, std::size_t timestamp_length)
+{
+    timestamp_input_stream.read(timestamp, timestamp_length * sizeof(char));
 }
 
 }

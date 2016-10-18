@@ -272,11 +272,14 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // load profile properties
     shared_layout_ptr->SetBlockSize<extractor::ProfileProperties>(SharedDataLayout::PROPERTIES, 1);
 
-    // load timestamp size
+    // read timestampsize
     boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
-    std::string m_timestamp;
-    getline(timestamp_stream, m_timestamp);
-    shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TIMESTAMP, m_timestamp.length());
+    if (!timestamp_stream)
+    {
+        throw util::exception("Could not open " + config.timestamp_path.string() + " for reading.");
+    }
+    std::size_t timestamp_size = io::readTimestampSize(timestamp_stream);
+    shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TIMESTAMP, timestamp_size);
 
     // load core marker size
     boost::filesystem::ifstream core_marker_file(config.core_data_path, std::ios::binary);
@@ -659,7 +662,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // store timestamp
     char *timestamp_ptr =
         shared_layout_ptr->GetBlockPtr<char, true>(shared_memory_ptr, SharedDataLayout::TIMESTAMP);
-    std::copy(m_timestamp.c_str(), m_timestamp.c_str() + m_timestamp.length(), timestamp_ptr);
+    io::readTimestamp(timestamp_stream, timestamp_ptr, timestamp_size);
 
     // store search tree portion of rtree
     char *rtree_ptr = shared_layout_ptr->GetBlockPtr<char, true>(shared_memory_ptr,
@@ -771,7 +774,6 @@ Storage::ReturnCode Storage::Run(int max_wait)
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
     {
-
             boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>
             current_regions_exclusive_lock;
 
@@ -801,7 +803,6 @@ Storage::ReturnCode Storage::Run(int max_wait)
         }
 
         util::SimpleLogger().Write() << "Ok.";
-
         data_timestamp_ptr->layout = layout_region;
         data_timestamp_ptr->data = data_region;
         data_timestamp_ptr->timestamp += 1;
