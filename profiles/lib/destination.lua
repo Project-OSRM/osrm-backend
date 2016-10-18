@@ -13,34 +13,38 @@ function Destination.get_destination(way, is_forward)
   
   local rv = ""
 
-  if is_forward == true and destination_ref and destination_ref == "" then
-    if destination_ref_forward then
-      destination_ref = destination_ref_forward
+  if destination_ref then
+    if is_forward == true and destination_ref == "" then
+      if destination_ref_forward then
+        destination_ref = destination_ref_forward
+      end
+    elseif is_forward == false then
+      if destination_ref_backward then
+        destination_ref = destination_ref_backward
+      end
     end
-  elseif is_forward == false then
-    if destination_ref_backward then
-      destination_ref = destination_ref_backward
-    end
+
+    rv = rv .. string.gsub(destination_ref, ";", ", ")
   end
 
-  if is_forward == true and destination and destination == "" then
-    if destination_forward then
-      destination = destination_forward
-    end
-  elseif is_forward == false then
-    if destination_backward then
-      destination = destination_backward
-    end
-  end
-
-  rv = rv .. string.gsub(destination_ref, ";", ", ")
-  
-  if destination ~= "" then
-    if rv ~= "" then
-        rv = rv .. ": "
+  if destination then 
+    if is_forward == true and destination == "" then
+      if destination_forward then
+        destination = destination_forward
+      end
+    elseif is_forward == false then
+      if destination_backward then
+        destination = destination_backward
+      end
     end
 
-    rv = rv .. string.gsub(destination, ";", ", ")
+    if destination ~= "" then
+      if rv ~= "" then
+          rv = rv .. ": "
+      end
+
+      rv = rv .. string.gsub(destination, ";", ", ")
+    end
   end
 
   return rv
