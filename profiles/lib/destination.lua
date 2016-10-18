@@ -1,6 +1,6 @@
 local Destination = {}
 
-function Destination.get_destination(way, direction)
+function Destination.get_destination(way, is_forward)
   local destination = way:get_value_by_key("destination")
   local destination_ref = way:get_value_by_key("destination:ref")
   local destination_ref_forward = way:get_value_by_key("destination:ref:forward")
@@ -13,15 +13,15 @@ function Destination.get_destination(way, direction)
 
   local rv = ""
 
-  if direction == "forward" and destination_ref == "" then
+  if is_forward == true and destination_ref == "" then
     destination_ref = destination_ref_forward
-  elseif direction == "reverse" then
+  elseif is_forward == false then
     destination_ref = destination_ref_backward
   end
 
-  if direction == "forward" and destination == "" then
+  if is_forward == true and destination == "" then
     destination = destination_forward
-  elseif direction == "reverse" then
+  elseif is_forward == false then
     destination = destination_backward
   end
 
