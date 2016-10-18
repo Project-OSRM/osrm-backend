@@ -183,27 +183,27 @@ class InternalDataFacade final : public BaseDataFacade
         util::SimpleLogger().Write() << "Data checksum is " << m_check_sum;
     }
 
-    void LoadNodeAndEdgeInformation(const boost::filesystem::path &nodes_file,
-                                    const boost::filesystem::path &edges_file)
+    void LoadNodeAndEdgeInformation(const boost::filesystem::path &nodes_file_path,
+                                    const boost::filesystem::path &edges_file_path)
     {
-        boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
-
-        extractor::QueryNode current_node;
-        unsigned number_of_coordinates = 0;
-        nodes_input_stream.read((char *)&number_of_coordinates, sizeof(unsigned));
-        m_coordinate_list.resize(number_of_coordinates);
-        m_osmnodeid_list.reserve(number_of_coordinates);
-        for (unsigned i = 0; i < number_of_coordinates; ++i)
+        boost::filesystem::ifstream nodes_input_stream(nodes_file_path, std::ios::binary);
+        if (!nodes_input_stream)
         {
-            nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-            m_coordinate_list[i] = util::Coordinate(current_node.lon, current_node.lat);
-            m_osmnodeid_list.push_back(current_node.node_id);
-            BOOST_ASSERT(m_coordinate_list[i].IsValid());
+            throw util::exception("Could not open " + nodes_file_path.string() + " for reading.");
         }
 
-        boost::filesystem::ifstream edges_input_stream(edges_file, std::ios::binary);
-        unsigned number_of_edges = 0;
-        edges_input_stream.read((char *)&number_of_edges, sizeof(unsigned));
+        std::uint32_t number_of_coordinates = storage::io::readNodesSize(nodes_input_stream);
+        m_coordinate_list.resize(number_of_coordinates);
+        m_osmnodeid_list.reserve(number_of_coordinates);
+        storage::io::readNodesData(
+            nodes_input_stream, m_coordinate_list.data(), m_osmnodeid_list, number_of_coordinates);
+
+        boost::filesystem::ifstream edges_input_stream(edges_file_path, std::ios::binary);
+        if (!edges_input_stream)
+        {
+            throw util::exception("Could not open " + edges_file_path.string() + " for reading.");
+        }
+        auto number_of_edges = storage::io::readEdgesSize(edges_input_stream);
         m_via_geometry_list.resize(number_of_edges);
         m_name_ID_list.resize(number_of_edges);
         m_turn_instruction_list.resize(number_of_edges);
@@ -213,20 +213,16 @@ class InternalDataFacade final : public BaseDataFacade
         m_pre_turn_bearing.resize(number_of_edges);
         m_post_turn_bearing.resize(number_of_edges);
 
-        extractor::OriginalEdgeData current_edge_data;
-        for (unsigned i = 0; i < number_of_edges; ++i)
-        {
-            edges_input_stream.read((char *)&(current_edge_data),
-                                    sizeof(extractor::OriginalEdgeData));
-            m_via_geometry_list[i] = current_edge_data.via_geometry;
-            m_name_ID_list[i] = current_edge_data.name_id;
-            m_turn_instruction_list[i] = current_edge_data.turn_instruction;
-            m_lane_data_id[i] = current_edge_data.lane_data_id;
-            m_travel_mode_list[i] = current_edge_data.travel_mode;
-            m_entry_class_id_list[i] = current_edge_data.entry_classid;
-            m_pre_turn_bearing[i] = current_edge_data.pre_turn_bearing;
-            m_post_turn_bearing[i] = current_edge_data.post_turn_bearing;
-        }
+        storage::io::readEdgesData(edges_input_stream,
+                                   m_via_geometry_list.data(),
+                                   m_name_ID_list.data(),
+                                   m_turn_instruction_list.data(),
+                                   m_lane_data_id.data(),
+                                   m_travel_mode_list.data(),
+                                   m_entry_class_id_list.data(),
+                                   m_pre_turn_bearing.data(),
+                                   m_post_turn_bearing.data(),
+                                   number_of_edges);
     }
 
     void LoadCoreInformation(const boost::filesystem::path &core_data_file)
