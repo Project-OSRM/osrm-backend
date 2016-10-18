@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # Automates bisecting cucumber tests in a portable way; usage:
 #
 #     git bisect start GOODGITSHA BADGITSHA
@@ -8,9 +12,6 @@
 # XXX: store this file outside source control first, e.g. by copying it over
 #      to /tmp, otherwise jumping through commits will change this script, too.
 
-
-# e: exit on first error, x: print commands
-set -ex
 
 BUILD_DIR=build
 

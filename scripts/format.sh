@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # Runs the Clang Formatter in parallel on the code base.
 # Return codes:
 #  - 1 there are files to be formatted
 #  - 0 everything looks fine
-
-set -eu -o pipefail
 
 # Get CPU count
 OS=$(uname)
