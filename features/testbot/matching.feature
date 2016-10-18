@@ -95,7 +95,7 @@ Feature: Basic Map Matching
             | trace | matchings |
             | dcba  | hgfe      |
 
-    Scenario: Testbot - Matching with oneway streets
+	Scenario: Testbot - Matching with oneway streets
         Given a grid size of 10 meters
         Given the node map
             """
@@ -169,3 +169,43 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | matchings | geometry                                   |
             | abd   | abd       | 1,1,1.000089,1,1.000089,1,1.000089,0.99991 |
+
+    Scenario: Testbot - Speed greater than speed threshhold, should split -- returns trace as abcd but should be split into ab,cd
+        Given a grid size of 10 meters
+        Given the query options
+            | geometries | geojson  |
+
+        Given the node map
+            """
+            a b ---- x
+                     |
+                     |
+                     y --- c d
+            """
+
+        And the ways
+            | nodes   | oneway |
+            | abxycd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings |
+            | abcd  | 0 1 2 3    | ab,cd     |
+
+    Scenario: Testbot - Speed less than speed threshhold, should not split
+        Given a grid size of 10 meters
+        Given the query options
+            | geometries | geojson  |
+
+        Given the node map
+            """
+            a b c d
+                e
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings |
+            | abcd  | 0 1 2 3    | abcd      |

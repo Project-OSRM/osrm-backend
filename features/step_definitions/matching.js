@@ -2,6 +2,13 @@ var util = require('util');
 var d3 = require('d3-queue');
 var polyline = require('polyline');
 
+// 1) When you have a Trace  -- make sure that they get split into the correct number of parts
+// 2) Make sure that each part of the trace mmatches 
+// legs of each submatch and check that they're there
+// and that they're on the correct path
+
+// "geometries=geojson"
+
 module.exports = function () {
     this.When(/^I match I should get$/, (table, callback) => {
         var got;
@@ -17,6 +24,7 @@ module.exports = function () {
 
                     if (res.body.length) {
                         json = JSON.parse(res.body);
+                        console.log('json', JSON.stringify(json));
                     }
 
                     if (headers.has('status')) {
@@ -59,21 +67,25 @@ module.exports = function () {
                         if (headers.has('turns')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking turns only supported for matchings with one subtrace');
                             turns = this.turnList(json.matchings[0].instructions);
+                            console.log('turns', turns);
                         }
 
                         if (headers.has('route')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking route only supported for matchings with one subtrace');
                             route = this.wayList(json.matchings[0]);
+                            console.log('route', route);
                         }
 
                         if (headers.has('duration')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking duration only supported for matchings with one subtrace');
                             duration = json.matchings[0].duration;
+                            console.log('duration', duration);
                         }
 
                         if (headers.has('annotation')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking annotation only supported for matchings with one subtrace');
                             annotation = this.annotationList(json.matchings[0]);
+                            console.log('annotation', annotation);
                         }
 
                         if (headers.has('geometry')) {
@@ -82,8 +94,9 @@ module.exports = function () {
                         }
 
                         if (headers.has('OSM IDs')) {
-                            if (json.matchings.length != 1) throw new Error('*** CHecking annotation only supported for matchings with one subtrace');
+                            if (json.matchings.length != 1) throw new Error('*** Checking annotation only supported for matchings with one subtrace');
                             OSMIDs = this.OSMIDList(json.matchings[0]);
+                            console.log('OSMIDs', OSMIDs);
                         }
                     }
 
@@ -123,20 +136,25 @@ module.exports = function () {
                     var testSubMatching = (sub, si, scb) => {
                         if (si >= subMatchings.length) {
                             ok = false;
-                            q.abort();
+                            // q.abort();
                             scb();
                         } else {
                             var sq = d3.queue();
-
                             var testSubNode = (ni, ncb) => {
+                                console.log('subMatchings[si][ni]', subMatchings[si][ni]);
+                                console.log('sub[ni]', sub[ni]);
                                 var node = this.findNodeByName(sub[ni]),
                                     outNode = subMatchings[si][ni];
-
+                                
                                 if (this.FuzzyMatch.matchLocation(outNode, node)) {
-                                    encodedResult += sub[ni];
+				    encodedResult += sub[ni];
                                     extendedTarget += sub[ni];
                                 } else {
-                                    encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
+                                    if (outNode != null) {
+                                        encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
+                                    } else {
+                                        encodedResult += '?';
+                                    }
                                     extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
                                     ok = false;
                                 }
@@ -151,11 +169,18 @@ module.exports = function () {
                         }
                     };
 
+                    if (subMatchings.length != row.matchings.split(',').length) {
+                        ok = false;
+                        // throw new Error('*** table matchings and api response are not the same');
+                    }
+
                     row.matchings.split(',').forEach((sub, si) => {
                         q.defer(testSubMatching, sub, si);
                     });
 
-                    q.awaitAll(() => {
+                    q.awaitAll((error) => {
+                        if (error) return cb(error, null);
+
                         if (ok) {
                             if (headers.has('matchings')) {
                                 got.matchings = row.matchings;
@@ -168,12 +193,12 @@ module.exports = function () {
                             got.matchings = encodedResult;
                             row.matchings = extendedTarget;
                         }
-
                         cb(null, got);
                     });
                 };
 
                 if (row.request) {
+                    console.log('row.request', row.request);
                     got = {};
                     got.request = row.request;
                     this.requestUrl(row.request, afterRequest);

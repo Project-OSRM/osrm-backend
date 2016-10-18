@@ -7,6 +7,7 @@
 #include "engine/map_matching/matching_confidence.hpp"
 #include "engine/map_matching/sub_matching.hpp"
 
+#include "extractor/profile_properties.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/for_each_pair.hpp"
 
@@ -32,7 +33,6 @@ using HMM = map_matching::HiddenMarkovModel<CandidateLists>;
 using SubMatchingList = std::vector<map_matching::SubMatching>;
 
 constexpr static const unsigned MAX_BROKEN_STATES = 10;
-constexpr static const double MAX_SPEED = 180 / 3.6; // 180km -> m/s
 static const constexpr double MATCHING_BETA = 10;
 constexpr static const double MAX_DISTANCE_DELTA = 2000.;
 
@@ -46,6 +46,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
     map_matching::EmissionLogProbability default_emission_log_probability;
     map_matching::TransitionLogProbability transition_log_probability;
     map_matching::MatchingConfidence confidence;
+    extractor::ProfileProperties m_profile_properties;
 
     unsigned GetMedianSampleTime(const std::vector<unsigned> &timestamps) const
     {
@@ -98,10 +99,13 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         const auto max_distance_delta = [&] {
             if (use_timestamps)
             {
-                return median_sample_time * MAX_SPEED;
+                std::cout << "facade.GetMapMatchingMaxSpeed(): " << facade.GetMapMatchingMaxSpeed() << std::endl;
+                std::cout << "median_sample_time: " << median_sample_time << std::endl;
+                return median_sample_time * facade.GetMapMatchingMaxSpeed();
             }
             else
             {
+                 std::cout << "using MAX_DISTANCE_DELTA" << std::endl;
                 return MAX_DISTANCE_DELTA;
             }
         }();
@@ -234,20 +238,26 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
             // assumes minumum of 0.1 m/s
-            const int duration_uppder_bound =
+            const int duration_upper_bound =
                 ((haversine_distance + max_distance_delta) * 0.25) * 10;
+
+            std::cout << "t: " << t << std::endl;
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
             {
+                std::cout << "s: " << s << std::endl;
+
                 if (prev_pruned[s])
                 {
+                    std::cout << "prev_pruned[s] === true" << std::endl;
                     continue;
                 }
 
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
-                    
+                    std::cout << "s_prime: " << s_prime << std::endl;
+
                     const double emission_pr = emission_log_probabilities[t][s_prime];
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
@@ -257,6 +267,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                     forward_heap.Clear();
                     reverse_heap.Clear();
+
+                    std::cout << "prev: " << prev_unbroken_timestamps_list[s].phantom_node << std::endl;
+                    std::cout << "current: " << current_timestamps_list[s_prime].phantom_node << std::endl;
 
                     double network_distance;
                     if (facade.GetCoreSize() > 0)
@@ -271,7 +284,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                             reverse_core_heap,
                             prev_unbroken_timestamps_list[s].phantom_node,
                             current_timestamps_list[s_prime].phantom_node,
-                            duration_uppder_bound);
+                            duration_upper_bound);
                     }
                     else
                     {
@@ -289,7 +302,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     // very low probability transition -> prune
                     if (d_t >= max_distance_delta)
                     {
-                       continue;
+                        std::cout << "d_t: " << d_t << std::endl;
+                        std::cout << "max_distance_delta: " << max_distance_delta << std::endl;
+                        continue;
                     }
 
                     const double transition_pr = transition_log_probability(d_t);
@@ -297,6 +312,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                     if (new_value > current_viterbi[s_prime])
                     {
+                        std::cout << "candidate has been found" << std::endl;
                         current_viterbi[s_prime] = new_value;
                         current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
                         current_lengths[s_prime] = network_distance;
@@ -308,6 +324,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
             if (model.breakage[t])
             {
+                 std::cout << "model.breakage[t] is true" << std::endl;
                 // save start of breakage -> we need this as split point
                 if (t < breakage_begin)
                 {

@@ -113,15 +113,19 @@ module.exports = function () {
     };
 
     this.findNodeByName = (s) => {
+        // console.log(s);
         if (s.length !== 1) throw new Error(util.format('*** invalid node name "%s", must be single characters', s));
         if (!s.match(/[a-z0-9]/)) throw new Error(util.format('*** invalid node name "%s", must be alphanumeric', s));
 
         var fromNode;
         if (s.match(/[a-z]/)) {
+            // console.log('nameNodeHash');
             fromNode = this.nameNodeHash[s.toString()];
         } else {
+            // console.log('locationHash');
             fromNode = this.locationHash[s.toString()];
         }
+        // console.log(fromNode);
 
         return fromNode;
     };

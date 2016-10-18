@@ -206,6 +206,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     std::size_t GetCoreSize() const override { return 0; }
     std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }
+    double GetMapMatchingMaxSpeed() const override { return 180/3.6; }
     BearingClassID GetBearingClassID(const NodeID /*id*/) const override { return 0; }
     EntryClassID GetEntryClassID(const EdgeID /*id*/) const override { return 0; }
 
