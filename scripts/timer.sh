@@ -7,6 +7,6 @@ START=$(date "+%s.%N")
 /bin/bash -c "$CMD"
 END=$(date "+%s.%N")
 TIME="$(echo "$END - $START" | bc)s"
-NEW_ENTRY="$NAME\t$TIME\t$(date -Iseconds)"
+NEW_ENTRY="$NAME\t$TIME"
 
 echo -e "$NEW_ENTRY" >> $TIMINGS_FILE
