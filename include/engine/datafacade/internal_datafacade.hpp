@@ -270,14 +270,6 @@ class InternalDataFacade final : public BaseDataFacade
 
         geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
 
-        std::cout << "m_geometry_indices: " << std::endl;
-        std::for_each(m_geometry_indices.begin(),
-                      m_geometry_indices.end(),
-                      [](const auto &index) {
-                          std::cout << index << " ";
-                      });
-        std::cout << std::endl;
-        std::cout << "number_of_compressed_geometries: " << number_of_compressed_geometries << std::endl;
         BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
         m_geometry_node_list.resize(number_of_compressed_geometries);
         m_geometry_fwd_weight_list.resize(number_of_compressed_geometries);
