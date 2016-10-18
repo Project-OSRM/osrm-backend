@@ -496,15 +496,17 @@ function way_function (way, result)
   -- Set direction according to tags on way
   if obey_oneway then
     if oneway == "-1" then
+
       result.forward_mode = mode.inaccessible
-      result.destinations = get_destination(way, "reverse")
+      result.destinations = get_destination(way, direction)
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway" and oneway ~= "no") then
+      local direction = "forward"
       result.backward_mode = mode.inaccessible
-      result.destinations = get_destination(way, "forward")
+      result.destinations = get_destination(way, direction)
     end
     
   end
