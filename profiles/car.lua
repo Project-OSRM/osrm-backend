@@ -446,7 +446,7 @@ function way_function (way, result)
   end
 
   if has_ref then
-    result.ref = ref
+    result.ref = canonicalizeStringList(ref, ";")
   end
 
   if has_pronunciation then
@@ -498,19 +498,23 @@ function way_function (way, result)
   -- Set direction according to tags on way
   if obey_oneway then
     if oneway == "-1" then
-      local is_forward = false
       result.forward_mode = mode.inaccessible
-      result.destinations = get_destination(way, is_forward)
+
+      local is_forward = false
+      local destination = get_destination(way, is_forward)
+      result.destinations = canonicalizeStringList(destination, ",")
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway" and oneway ~= "no") then
-      local is_forward = true
+
       result.backward_mode = mode.inaccessible
-      result.destinations = get_destination(way, is_forward)
+
+      local is_forward = true
+      local destination = get_destination(way, is_forward)
+      result.destinations = canonicalizeStringList(destination, ",")
     end
-    
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given

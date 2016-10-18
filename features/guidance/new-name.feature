@@ -381,3 +381,33 @@ Feature: New-Name Instructions
         When I route I should get
             | waypoints | route | turns         |
             | a,c       | ,     | depart,arrive |
+
+    Scenario: Spaces in refs for containment check, #3086
+        Given the node map
+            """
+            a       b       c
+            """
+
+        And the ways
+            | nodes | name     | ref                        | highway  |
+            | ab    | Keystone | US 64;US 412;OK 151 Detour | motorway |
+            | bc    | Keystone | US 64; US 412              | motorway |
+
+        When I route I should get
+            | waypoints | route             | turns         |
+            | a,c       | Keystone,Keystone | depart,arrive |
+
+    Scenario: More spaces in refs for containment check, #3086
+        Given the node map
+            """
+            a       b       c
+            """
+
+        And the ways
+            | nodes | name      | ref                              | highway  |
+            | ab    | Keystone  | US 64; US 412  ;   OK 151 Detour | motorway |
+            | bc    |  Keystone |  US 64  ;  US 412                | motorway |
+
+        When I route I should get
+            | waypoints | route             | turns         |
+            | a,c       | Keystone,Keystone | depart,arrive |
