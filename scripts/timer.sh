@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
 
 TIMINGS_FILE=/tmp/osrm.timings
 NAME=$1

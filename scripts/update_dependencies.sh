@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # Note: once the subtree merge from this script has been committed and pushed to
 # a branch do not attempt to rebase the branch back onto master or the subdirectory
 # structure will be lost.
