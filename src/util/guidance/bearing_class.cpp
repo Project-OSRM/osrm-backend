@@ -1,5 +1,4 @@
 #include "util/guidance/bearing_class.hpp"
-#include "extractor/guidance/discrete_angle.hpp"
 #include "util/guidance/toolkit.hpp"
 
 #include <algorithm>

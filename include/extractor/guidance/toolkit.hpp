@@ -12,7 +12,6 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/query_node.hpp"
 
-#include "extractor/guidance/discrete_angle.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
