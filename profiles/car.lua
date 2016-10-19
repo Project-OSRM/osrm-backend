@@ -230,35 +230,6 @@ function node_function (node, result)
   if tag and "traffic_signals" == tag then
     result.traffic_lights = true
   end
-
-  -- Stop Signs and Give Way priority proeperties are tagged on nodes but
-  -- apply to a specific way direction; if the direction is unknown from
-  -- the data we have check the distance to the next intersection later.
-
-  local direction = node:get_value_by_key("direction")
-  local forward = direction and "forward" == direction
-  local backward = direction and "backward" == direction
-
-  if tag and "stop" == tag then
-    if forward then
-      result.stop_sign = stop_sign.forward
-    elseif backward then
-      result.stop_sign = stop_sign.backward
-    else
-      result.stop_sign = stop_sign.unknown_direction
-    end
-  end
-
-  if tag and "give_way" == tag then
-    if forward then
-      result.give_way_sign = give_way_sign.forward
-    elseif backward then
-      result.give_way_sign = give_way_sign.backward
-    else
-      result.give_way_sign = give_way_sign.unknown_direction
-    end
-  end
-
 end
 
 function way_function (way, result)

@@ -8,7 +8,6 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
-#include "extractor/road_signs.hpp"
 #include "util/exception.hpp"
 #include "util/lua_util.hpp"
 #include "util/simple_logger.hpp"
@@ -155,21 +154,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
          luabind::class_<ExtractionNode>("ResultNode")
              .def_readwrite("traffic_lights", &ExtractionNode::traffic_lights)
-             .def_readwrite("barrier", &ExtractionNode::barrier)
-             .def_readwrite("stop_sign", &ExtractionNode::stop_sign)
-             .def_readwrite("give_way_sign", &ExtractionNode::give_way_sign),
-
-         luabind::class_<StopSign::State>("stop_sign")
-             .enum_("enums")[luabind::value("no", StopSign::No),
-                             luabind::value("forward", StopSign::YesForward),
-                             luabind::value("backward", StopSign::YesBackward),
-                             luabind::value("unknown_direction", StopSign::YesUnknownDirection)],
-
-         luabind::class_<GiveWaySign::State>("give_way_sign")
-             .enum_("enums")[luabind::value("no", GiveWaySign::No),
-                             luabind::value("forward", GiveWaySign::YesForward),
-                             luabind::value("backward", GiveWaySign::YesBackward),
-                             luabind::value("unknown_direction", GiveWaySign::YesUnknownDirection)],
+             .def_readwrite("barrier", &ExtractionNode::barrier),
 
          // road classification to be set in profile
          luabind::class_<guidance::RoadClassification>("RoadClassification")
