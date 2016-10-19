@@ -70,7 +70,9 @@ inline std::uint32_t readTimestampSize(boost::filesystem::ifstream &timestamp_in
 }
 
 // Reads the timestamp in a file
-inline void readTimestamp(boost::filesystem::ifstream &timestamp_input_stream, char *timestamp, std::size_t timestamp_length)
+inline void readTimestamp(boost::filesystem::ifstream &timestamp_input_stream,
+                          char *timestamp,
+                          std::size_t timestamp_length)
 {
     timestamp_input_stream.read(timestamp, timestamp_length * sizeof(char));
 }
