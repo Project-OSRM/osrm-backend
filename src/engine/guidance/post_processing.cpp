@@ -1,6 +1,6 @@
+#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
-#include "engine/guidance/post_processing.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"

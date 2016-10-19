@@ -327,35 +327,35 @@ Feature: Basic Roundabout
         Given the node map
             """
                                     x
-            u                     r  
+            u                     r
 
-                t                    
-                              s      
-              v     i   h   g        
-                                q    
+                t
+                              s
+              v     i   h   g
+                                q
 
-                j               f    
-
-
-                a               e    
-                   
-
-                    b   c   d   p    
-
-              m               n      
-                  l                  
+                j               f
 
 
+                a               e
+
+
+                    b   c   d   p
+
+              m               n
+                  l
 
 
 
 
 
-              k                      
+
+
+              k
 
 
 
-            w                   o    
+            w                   o
             """
 
         And the ways
@@ -382,3 +382,30 @@ Feature: Basic Roundabout
             #| w,x       | ll,egg,egg,tr,tr | depart,roundabout-exit-1,roundabout-exit-2,arrive       |
             | w,x       | ll,egg,egg,tr,tr | depart,turn right,continue left,turn slight left,arrive |
 
+    Scenario: Use Lane in Roundabout
+        Given the node map
+            """
+                    . i  . . . .. .
+                  .'                '.
+            a - b.                    f - g
+                 .                    |
+                  '. 1               /
+                     '.             /
+                j - - - c .       . e
+                            ' d '
+                                 '  h
+            """
+
+        #using roundabout as name, we can ignore whether we see a roundabout or a rotary here. Cucumber output will be the same
+        And the ways
+            | nodes  | junction   | name          | oneway | turn:lanes:forward    |
+            | ba     |            | left-out      | yes    |                       |
+            | jc     |            | left-in       | yes    |                       |
+            | dh     |            | right-bot-out | yes    |                       |
+            | fg     |            | right-top-out | yes    |                       |
+            | bc     | roundabout | roundabout    | yes    | left;through\|through |
+            | cdefib | roundabout | roundabout    | yes    |                       |
+
+        When I route I should get
+            | waypoints | route                                  | turns                           |
+            | 1,h       | roundabout,right-bot-out,right-bot-out | depart,roundabout-exit-1,arrive |
