@@ -319,9 +319,29 @@
             "description": "Destination of road for navigation instructions, supplements name."
         },
         {
+            "key": "destination:forward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
+        },
+        {
+            "key": "destination:backward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
+        },
+        {
             "key": "destination:ref",
             "object_types": [ "way" ],
             "description": "Destination of road for navigation instructions, supplements name."
+        },
+        {
+            "key": "destination:ref:forward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
+        },
+        {
+            "key": "destination:ref:backward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
         },
         {
             "key": "junction",

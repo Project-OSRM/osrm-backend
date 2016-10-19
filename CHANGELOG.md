@@ -1,3 +1,9 @@
+# 5.5.1
+  - Changes from 5.5.0
+    - Profiles:
+      - Handle `destination:forward`, `destination:backward`, `destination:ref:forward`, `destination:ref:backward` tags
+      - Properly handle destinations on `oneway=-1` roads
+
 # 5.5.0
   - Changes from 5.4.0
     - API:

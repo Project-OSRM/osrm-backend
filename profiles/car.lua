@@ -498,20 +498,19 @@ function way_function (way, result)
   -- Set direction according to tags on way
   if obey_oneway then
     if oneway == "-1" then
+      local is_forward = false
       result.forward_mode = mode.inaccessible
+      result.destinations = get_destination(way, is_forward)
     elseif oneway == "yes" or
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
     (highway == "motorway" and oneway ~= "no") then
+      local is_forward = true
       result.backward_mode = mode.inaccessible
-
-      -- If we're on a oneway and there is no ref tag, re-use destination tag as ref.
-      local destination = get_destination(way)
-      local has_destination = destination and "" ~= destination
-
-      result.destinations = destination
+      result.destinations = get_destination(way, is_forward)
     end
+    
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
