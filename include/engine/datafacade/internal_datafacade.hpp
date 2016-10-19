@@ -149,9 +149,8 @@ class InternalDataFacade final : public BaseDataFacade
         }
 
         auto timestamp_size = storage::io::readTimestampSize(timestamp_stream);
-        char *timestamp_ptr = new char[timestamp_size]();
-        storage::io::readTimestamp(timestamp_stream, timestamp_ptr, timestamp_size);
-        m_timestamp = std::string(timestamp_ptr);
+        m_timestamp.resize(timestamp_size);
+        storage::io::readTimestamp(timestamp_stream, &m_timestamp.front(), timestamp_size);
     }
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
