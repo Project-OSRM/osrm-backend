@@ -8,8 +8,8 @@ Feature: Suppressed Turns
     Scenario: Do not announce passing a exit ramp
         Given the node map
             """
-            a b c d e
-                  f g
+            a-b-c-d-e
+              \---f-g
             """
 
         And the ways
@@ -24,7 +24,7 @@ Feature: Suppressed Turns
     Scenario: Do not announce reference changes
         Given the node map
             """
-            a b c d e f
+            a-b-c-d-e-f
             """
 
         And the ways
@@ -43,7 +43,7 @@ Feature: Suppressed Turns
     Scenario: Don't Announce Turn on following major road class -- service
         Given the node map
             """
-            a b d
+            a-b-d
                 c
             """
 
@@ -59,7 +59,7 @@ Feature: Suppressed Turns
     Scenario: Don't Announce Turn on following major road class -- residential
         Given the node map
             """
-            a b d
+            a-b-d
                 c
             """
 

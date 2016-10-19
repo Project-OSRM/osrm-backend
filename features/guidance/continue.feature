@@ -9,7 +9,7 @@ Feature: Continue Instructions
         Given the node map
             """
                 c
-            a   b d
+            a - b-d
             """
 
         And the ways
@@ -26,7 +26,7 @@ Feature: Continue Instructions
         Given the node map
             """
                 c
-            a   b d
+            a - b-d
             """
 
         And the ways
@@ -43,7 +43,7 @@ Feature: Continue Instructions
         Given the node map
             """
                 c
-            a   b d
+            a - b-d
                 e
             """
 
@@ -62,7 +62,7 @@ Feature: Continue Instructions
     Scenario: Road turning right
         Given the node map
             """
-            a   b d
+            a - b-d
                 c
             """
 
@@ -80,9 +80,9 @@ Feature: Continue Instructions
         Given the node map
             """
                     c
-
-            a   b
-                  d
+                  /
+            a - b
+                 `d
             """
 
         And the ways
@@ -98,9 +98,9 @@ Feature: Continue Instructions
     Scenario: Road turning slight right
         Given the node map
             """
-                  d
-            a   b
-
+                 ,d
+            a - b
+                  \
                     c
             """
 
@@ -117,11 +117,11 @@ Feature: Continue Instructions
     Scenario: Road Loop
        Given the node map
            """
-               f   e
-
-           a   b g
-
-               c   d
+               f - e
+               |   |
+           a - b-g |
+               |   |
+               c - d
            """
 
        And the ways

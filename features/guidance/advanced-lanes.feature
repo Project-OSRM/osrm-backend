@@ -124,10 +124,10 @@ Feature: Turn Lane Guidance
         Given the node map
             """
                   g   f
-
-            j     h   e
-
-            a     b   c
+                  |   |
+            j --- h - e
+                  |   |
+            a --- b - c
                   i   d
             """
 
@@ -154,21 +154,21 @@ Feature: Turn Lane Guidance
         Given the node map
             """
                           g j
-
-
-
-
-
-                              f
-                            e
-                          d
-            a           b c
-
-
-
-
-
-
+                          | |
+                          | |
+                          | |
+                          | |
+                          | |
+                          | |,f
+                          |,e
+                         ,d |
+            a --------- b c |
+                       /  | |
+                      /   | |
+                     /    | |
+                    |     | |
+                    |     | |
+                    |     | |
                     l     h i
             """
 
@@ -202,21 +202,21 @@ Feature: Turn Lane Guidance
         Given the node map
             """
                           g j
-
-
-
-
-
-                              f
-                            e
-                          d
-            a           b c
-
-
-
-
-
-
+                          | |
+                          | |
+                          | |
+                          | |
+                          | |
+                          | |,f
+                          |,e
+                         ,d |
+            a --------- b c |
+                       /  | |
+                      /   | |
+                     /    | |
+                    |     | |
+                    |     | |
+                    |     | |
                     l     h i
             """
 
