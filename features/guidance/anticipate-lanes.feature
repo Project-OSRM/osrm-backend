@@ -297,19 +297,19 @@ Feature: Turn Lane Guidance
                """
 
            And the ways
-               | nodes | turn:lanes:forward                     | name |
-               | ab    |                                        | main |
-               | bc    | left\|through\|through\|through\|right | main |
-               | cd    | left\|through\|right                   | main |
-               | de    |                                        | main |
-               | cf    |                                        | off  |
-               | ch    |                                        | off  |
-               | dg    |                                        | off  |
-               | di    |                                        | off  |
+               | nodes | turn:lanes:forward                     | name | destination | oneway |
+               | ab    |                                        | main | One         | yes    |
+               | bc    | left\|through\|through\|through\|right | main | Two         | yes    |
+               | cd    | left\|through\|right                   | main | Three       | yes    |
+               | de    |                                        | main | Four        | yes    |
+               | cf    |                                        | off  |             | yes    |
+               | ch    |                                        | off  |             | yes    |
+               | dg    |                                        | off  |             | yes    |
+               | di    |                                        | off  |             | yes    |
 
           When I route I should get
-               | waypoints | route          | turns                           | lanes                                                                |
-               | a,e       | main,main,main | depart,use lane straight,arrive | ,left:false straight:false straight:true straight:false right:false, |
+               | waypoints | route          | turns                           | destinations | lanes                                                                |
+               | a,e       | main,main,main | depart,use lane straight,arrive | One,Two,Four | ,left:false straight:false straight:true straight:false right:false, |
 
        @anticipate
        Scenario: Anticipate Lanes for through and collapse multiple use lanes
