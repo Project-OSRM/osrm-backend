@@ -27,6 +27,7 @@
   - Changes from 5.4.1
     - Bugfixes
       - #3032 Fixed a bug that could result in emitting `invalid` as an instruction type on sliproads with mode changes
+      - #3085 Fixed an outdated assertion that could throw without a cause for concern
 
 # 5.4.1
   - Changes from 5.4.0
