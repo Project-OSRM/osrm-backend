@@ -260,7 +260,8 @@ void closeOffRoundabout(const bool on_roundabout,
         BOOST_ASSERT(leavesRoundabout(steps[1].maneuver.instruction) ||
                      steps[1].maneuver.instruction.type == TurnType::StayOnRoundabout ||
                      steps[1].maneuver.instruction.type == TurnType::Suppressed ||
-                     steps[1].maneuver.instruction.type == TurnType::NoTurn);
+                     steps[1].maneuver.instruction.type == TurnType::NoTurn ||
+                     steps[1].maneuver.instruction.type == TurnType::UseLane);
         steps[0].geometry_end = 1;
         steps[1].geometry_begin = 0;
         steps[1] = forwardInto(steps[1], steps[0]);
@@ -840,7 +841,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 }
                 else
                 {
-                    //the sliproad turn is incompatible. So we handle it as a turn
+                    // the sliproad turn is incompatible. So we handle it as a turn
                     steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
                 }
             }
