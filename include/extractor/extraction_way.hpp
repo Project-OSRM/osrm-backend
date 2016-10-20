@@ -96,6 +96,7 @@ struct ExtractionWay
     bool roundabout;
     bool circular;
     bool is_startpoint;
+    bool ignore_in_grid;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
     guidance::RoadClassification road_classification;

@@ -239,7 +239,6 @@ function way_function (way, result)
     -- ferries (doesn't cover routes tagged using relations)
     result.forward_mode = mode.ferry
     result.backward_mode = mode.ferry
-    result.ignore_in_grid = true
     if duration and durationIsValid(duration) then
       result.duration = math.max( 1, parseDuration(duration) )
     else
