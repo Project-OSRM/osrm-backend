@@ -543,16 +543,13 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         if (number_of_compressed_geometries > 0)
         {
             geometry_stream.read((char *)&(m_geometry_node_list[0]),
-                                 number_of_compressed_geometries *
-                                     sizeof(NodeID));
+                                 number_of_compressed_geometries * sizeof(NodeID));
 
             geometry_stream.read((char *)&(m_geometry_fwd_weight_list[0]),
-                                 number_of_compressed_geometries *
-                                     sizeof(EdgeWeight));
+                                 number_of_compressed_geometries * sizeof(EdgeWeight));
 
             geometry_stream.read((char *)&(m_geometry_rev_weight_list[0]),
-                                 number_of_compressed_geometries *
-                                     sizeof(EdgeWeight));
+                                 number_of_compressed_geometries * sizeof(EdgeWeight));
         }
     };
 
@@ -611,10 +608,10 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                     m_geometry_fwd_weight_list[forward_begin + leaf_object.fwd_segment_position];
 
                 u = &(internal_to_external_node_map
-                          [m_geometry_node_list[forward_begin +
-                                           leaf_object.fwd_segment_position]]);
+                          [m_geometry_node_list[forward_begin + leaf_object.fwd_segment_position]]);
                 v = &(internal_to_external_node_map
-                          [m_geometry_node_list[forward_begin + leaf_object.fwd_segment_position + 1]]);
+                          [m_geometry_node_list[forward_begin + leaf_object.fwd_segment_position +
+                                                1]]);
 
                 const double segment_length = util::coordinate_calculation::greatCircleDistance(
                     util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
@@ -629,7 +626,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                                                                  current_fwd_weight,
                                                                  log_edge_updates_factor);
 
-                    m_geometry_fwd_weight_list[forward_begin + 1 + leaf_object.fwd_segment_position] =
+                    m_geometry_fwd_weight_list[forward_begin + 1 +
+                                               leaf_object.fwd_segment_position] =
                         new_segment_weight;
                     m_geometry_datasource[forward_begin + 1 + leaf_object.fwd_segment_position] =
                         forward_speed_iter->speed_source.source;
@@ -714,14 +712,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries),
                               sizeof(unsigned));
         geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_node_list[0])),
-                              number_of_compressed_geometries *
-                                  sizeof(NodeID));
+                              number_of_compressed_geometries * sizeof(NodeID));
         geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_fwd_weight_list[0])),
-                              number_of_compressed_geometries *
-                                  sizeof(EdgeWeight));
+                              number_of_compressed_geometries * sizeof(EdgeWeight));
         geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_rev_weight_list[0])),
-                              number_of_compressed_geometries *
-                                  sizeof(EdgeWeight));
+                              number_of_compressed_geometries * sizeof(EdgeWeight));
     };
 
     const auto save_datasource_indexes = [&] {
