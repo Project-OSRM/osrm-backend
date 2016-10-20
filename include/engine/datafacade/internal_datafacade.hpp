@@ -294,14 +294,12 @@ class InternalDataFacade final : public BaseDataFacade
         }
         BOOST_ASSERT(datasources_stream);
 
-        std::uint64_t number_of_datasources = 0;
-        datasources_stream.read(reinterpret_cast<char *>(&number_of_datasources),
-                                sizeof(number_of_datasources));
+        auto number_of_datasources = storage::io::readDatasourceIndexesSize(datasources_stream);
         if (number_of_datasources > 0)
         {
             m_datasource_list.resize(number_of_datasources);
-            datasources_stream.read(reinterpret_cast<char *>(&(m_datasource_list[0])),
-                                    number_of_datasources * sizeof(uint8_t));
+            storage::io::readDatasourceIndexes(
+                datasources_stream, &m_datasource_list.front(), number_of_datasources);
         }
 
         boost::filesystem::ifstream datasourcenames_stream(datasource_names_file, std::ios::binary);
@@ -311,10 +309,16 @@ class InternalDataFacade final : public BaseDataFacade
                                   " for reading!");
         }
         BOOST_ASSERT(datasourcenames_stream);
-        std::string name;
-        while (std::getline(datasourcenames_stream, name))
+
+        auto datasource_names_data = storage::io::readDatasourceNamesData(datasourcenames_stream);
+        m_datasource_names.resize(datasource_names_data.lengths.size());
+        for (std::uint32_t i = 0; i < datasource_names_data.lengths.size(); ++i)
         {
-            m_datasource_names.push_back(std::move(name));
+            auto name_begin =
+                datasource_names_data.names.begin() + datasource_names_data.offsets[i];
+            auto name_end = datasource_names_data.names.begin() + datasource_names_data.offsets[i] +
+                            datasource_names_data.lengths[i];
+            m_datasource_names[i] = std::move(std::string(name_begin, name_end));
         }
     }
 

@@ -1,3 +1,4 @@
+#include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -9,7 +10,6 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "storage/storage.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
@@ -344,15 +344,15 @@ Storage::ReturnCode Storage::Run(int max_wait)
     std::uint64_t number_of_compressed_datasources = 0;
     if (geometry_datasource_input_stream)
     {
-        geometry_datasource_input_stream.read(
-            reinterpret_cast<char *>(&number_of_compressed_datasources),
-            sizeof(number_of_compressed_datasources));
+        number_of_compressed_datasources =
+            io::readDatasourceIndexesSize(geometry_datasource_input_stream);
     }
     shared_layout_ptr->SetBlockSize<uint8_t>(SharedDataLayout::DATASOURCES_LIST,
                                              number_of_compressed_datasources);
 
     // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist
+
     boost::filesystem::ifstream datasource_names_input_stream(config.datasource_names_path,
                                                               std::ios::binary);
     if (!datasource_names_input_stream)
@@ -360,30 +360,22 @@ Storage::ReturnCode Storage::Run(int max_wait)
         throw util::exception("Could not open " + config.datasource_names_path.string() +
                               " for reading.");
     }
-    std::vector<char> m_datasource_name_data;
-    std::vector<std::size_t> m_datasource_name_offsets;
-    std::vector<std::size_t> m_datasource_name_lengths;
+    io::DatasourceNamesData datasource_names_data;
     if (datasource_names_input_stream)
     {
-        std::string name;
-        while (std::getline(datasource_names_input_stream, name))
-        {
-            m_datasource_name_offsets.push_back(m_datasource_name_data.size());
-            std::copy(name.c_str(),
-                      name.c_str() + name.size(),
-                      std::back_inserter(m_datasource_name_data));
-            m_datasource_name_lengths.push_back(name.size());
-        }
+        datasource_names_data = io::readDatasourceNamesData(datasource_names_input_stream);
     }
+
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::DATASOURCE_NAME_DATA,
-                                          m_datasource_name_data.size());
-    shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_OFFSETS,
-                                                 m_datasource_name_offsets.size());
-    shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
-                                                 m_datasource_name_lengths.size());
+                                          datasource_names_data.names.size());
+    shared_layout_ptr->SetBlockSize<std::uint32_t>(SharedDataLayout::DATASOURCE_NAME_OFFSETS,
+                                                   datasource_names_data.offsets.size());
+    shared_layout_ptr->SetBlockSize<std::uint32_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
+                                                   datasource_names_data.lengths.size());
 
     boost::filesystem::ifstream intersection_stream(config.intersection_class_path,
                                                     std::ios::binary);
+
     if (!static_cast<bool>(intersection_stream))
         throw util::exception("Could not open " + config.intersection_class_path.string() +
                               " for reading.");
@@ -641,35 +633,37 @@ Storage::ReturnCode Storage::Run(int max_wait)
         shared_memory_ptr, SharedDataLayout::DATASOURCES_LIST);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCES_LIST) > 0)
     {
-        geometry_datasource_input_stream.read(
-            reinterpret_cast<char *>(datasources_list_ptr),
-            shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCES_LIST));
+        io::readDatasourceIndexes(geometry_datasource_input_stream,
+                                  datasources_list_ptr,
+                                  number_of_compressed_datasources);
     }
 
     // load datasource name information (if it exists)
+
     char *datasource_name_data_ptr = shared_layout_ptr->GetBlockPtr<char, true>(
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_DATA);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_DATA) > 0)
     {
-        std::copy(
-            m_datasource_name_data.begin(), m_datasource_name_data.end(), datasource_name_data_ptr);
+        std::copy(datasource_names_data.names.begin(),
+                  datasource_names_data.names.end(),
+                  datasource_name_data_ptr);
     }
 
-    auto datasource_name_offsets_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
+    auto datasource_name_offsets_ptr = shared_layout_ptr->GetBlockPtr<std::uint32_t, true>(
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_OFFSETS);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_OFFSETS) > 0)
     {
-        std::copy(m_datasource_name_offsets.begin(),
-                  m_datasource_name_offsets.end(),
+        std::copy(datasource_names_data.offsets.begin(),
+                  datasource_names_data.offsets.end(),
                   datasource_name_offsets_ptr);
     }
 
-    auto datasource_name_lengths_ptr = shared_layout_ptr->GetBlockPtr<std::size_t, true>(
+    auto datasource_name_lengths_ptr = shared_layout_ptr->GetBlockPtr<std::uint32_t, true>(
         shared_memory_ptr, SharedDataLayout::DATASOURCE_NAME_LENGTHS);
     if (shared_layout_ptr->GetBlockSize(SharedDataLayout::DATASOURCE_NAME_LENGTHS) > 0)
     {
-        std::copy(m_datasource_name_lengths.begin(),
-                  m_datasource_name_lengths.end(),
+        std::copy(datasource_names_data.lengths.begin(),
+                  datasource_names_data.lengths.end(),
                   datasource_name_lengths_ptr);
     }
 
@@ -800,7 +794,6 @@ Storage::ReturnCode Storage::Run(int max_wait)
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
     {
-
         boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>
             current_regions_exclusive_lock;
 

@@ -89,6 +89,7 @@ inline std::uint32_t readEdgesSize(boost::filesystem::ifstream &edges_input_stre
 
 // Reads edge data from .edge files which includes its
 // geometry, name ID, turn instruction, lane data ID, travel mode, entry class ID
+// Needs to be called after readEdgesSize() to get the correct offset in the stream
 template <typename GeometryIDT,
           typename NameIDT,
           typename TurnInstructionT,
@@ -132,6 +133,7 @@ inline std::uint32_t readNodesSize(boost::filesystem::ifstream &nodes_input_stre
 }
 
 // Reads coordinates and OSM node IDs from .nodes files
+// Needs to be called after readNodesSize() to get the correct offset in the stream
 template <typename CoordinateT, typename OSMNodeIDVectorT>
 void readNodesData(boost::filesystem::ifstream &nodes_input_stream,
                    CoordinateT coordinate_list[],
@@ -146,6 +148,55 @@ void readNodesData(boost::filesystem::ifstream &nodes_input_stream,
         osmnodeid_list.push_back(current_node.node_id);
         BOOST_ASSERT(coordinate_list[i].IsValid());
     }
+}
+
+// Returns the number of indexes in a .datasource_indexes file
+// TODO: The original code used uint_64t to store the number of indexes. Can someone confirm that
+// this makes sense?
+inline std::uint64_t
+readDatasourceIndexesSize(boost::filesystem::ifstream &datasource_indexes_input_stream)
+{
+    std::uint64_t number_of_datasource_indexes;
+    datasource_indexes_input_stream.read(reinterpret_cast<char *>(&number_of_datasource_indexes),
+                                         sizeof(std::uint64_t));
+    return number_of_datasource_indexes;
+}
+
+// Reads datasource_indexes
+// Needs to be called after readDatasourceIndexesSize() to get the correct offset in the stream
+inline void readDatasourceIndexes(boost::filesystem::ifstream &datasource_indexes_input_stream,
+                                  uint8_t datasource_buffer[],
+                                  std::uint32_t number_of_datasource_indexes)
+{
+    datasource_indexes_input_stream.read(reinterpret_cast<char *>(datasource_buffer),
+                                         number_of_datasource_indexes * sizeof(std::uint8_t));
+}
+
+// Reads datasource names out of .datasource_names files and metadata such as
+// the length and offset of each name
+struct DatasourceNamesData
+{
+    std::vector<char> names;
+    std::vector<std::uint32_t> offsets;
+    std::vector<std::uint32_t> lengths;
+};
+inline DatasourceNamesData
+readDatasourceNamesData(boost::filesystem::ifstream &datasource_names_input_stream)
+{
+    DatasourceNamesData datasource_names_data;
+    if (datasource_names_input_stream)
+    {
+        std::string name;
+        while (std::getline(datasource_names_input_stream, name))
+        {
+            datasource_names_data.offsets.push_back(datasource_names_data.names.size());
+            datasource_names_data.lengths.push_back(name.size());
+            std::copy(name.c_str(),
+                      name.c_str() + name.size(),
+                      std::back_inserter(datasource_names_data.names));
+        }
+    }
+    return datasource_names_data;
 }
 }
 }
