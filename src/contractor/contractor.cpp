@@ -432,6 +432,29 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
 
     tbb::parallel_for(std::size_t{0}, turn_penalty_filenames.size(), parse_turn_penalty_file);
 
+    // With flattened map-ish view of all the files, sort and unique them on from,to,source
+    // The greater '>' is used here since we want to give files later on higher precedence
+    const auto sort_by = [](const TurnPenaltySource &lhs, const TurnPenaltySource &rhs) {
+        return std::tie(lhs.segment.from, lhs.segment.via, lhs.segment.to, lhs.penalty_source.source) >
+               std::tie(rhs.segment.from, rhs.segment.via, rhs.segment.to, rhs.penalty_source.source);
+    };
+
+    std::stable_sort(begin(map), end(map), sort_by);
+
+    // Unique only on from,to to take the source precedence into account and remove duplicates
+    const auto unique_by = [](const TurnPenaltySource &lhs, const TurnPenaltySource &rhs) {
+        return std::tie(lhs.segment.from, lhs.segment.via, lhs.segment.to) ==
+               std::tie(rhs.segment.from, rhs.segment.via, rhs.segment.to);
+    };
+
+    const auto it = std::unique(begin(map), end(map), unique_by);
+
+    map.erase(it, end(map));
+
+    util::SimpleLogger().Write() << "In total loaded " << turn_penalty_filenames.size()
+                                 << " turn penalty file(s) with a total of " << map.size()
+                                 << " unique values";
+
     return map;
 }
 } // anon ns
