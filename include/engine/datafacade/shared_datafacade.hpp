@@ -3,9 +3,9 @@
 
 // implements all data storage when shared memory _IS_ used
 
+#include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "storage/shared_barriers.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
@@ -27,19 +27,18 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/thread/tss.hpp>
 #include <boost/interprocess/sync/named_sharable_mutex.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>
+#include <boost/thread/tss.hpp>
 
-#include <cstddef>
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <limits>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
 
 namespace osrm
 {
@@ -329,25 +328,22 @@ class SharedDataFacade final : public BaseDataFacade
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
         m_geometry_indices = std::move(geometry_begin_indices);
 
-        auto geometries_node_list_ptr =
-            data_layout->GetBlockPtr<NodeID>(
-                shared_memory, storage::SharedDataLayout::GEOMETRIES_NODE_LIST);
+        auto geometries_node_list_ptr = data_layout->GetBlockPtr<NodeID>(
+            shared_memory, storage::SharedDataLayout::GEOMETRIES_NODE_LIST);
         util::ShM<NodeID, true>::vector geometry_node_list(
             geometries_node_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_NODE_LIST]);
         m_geometry_node_list = std::move(geometry_node_list);
 
-        auto geometries_fwd_weight_list_ptr =
-            data_layout->GetBlockPtr<EdgeWeight>(
-                shared_memory, storage::SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
+        auto geometries_fwd_weight_list_ptr = data_layout->GetBlockPtr<EdgeWeight>(
+            shared_memory, storage::SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_fwd_weight_list(
             geometries_fwd_weight_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
         m_geometry_fwd_weight_list = std::move(geometry_fwd_weight_list);
 
-        auto geometries_rev_weight_list_ptr =
-            data_layout->GetBlockPtr<EdgeWeight>(
-                shared_memory, storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST);
+        auto geometries_rev_weight_list_ptr = data_layout->GetBlockPtr<EdgeWeight>(
+            shared_memory, storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_rev_weight_list(
             geometries_rev_weight_list_ptr,
             data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
@@ -417,21 +413,21 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
   public:
-
-    // this function handle the deallocation of the shared memory it we can prove it will not be used anymore
+    // this function handle the deallocation of the shared memory it we can prove it will not be
+    // used anymore
     virtual ~SharedDataFacade()
     {
-        boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex>
-            exclusive_lock(data_region == storage::DATA_1 ? shared_barriers->regions_1_mutex
-                                                          : shared_barriers->regions_2_mutex,
-                                                          boost::interprocess::defer_lock);
+        boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> exclusive_lock(
+            data_region == storage::DATA_1 ? shared_barriers->regions_1_mutex
+                                           : shared_barriers->regions_2_mutex,
+            boost::interprocess::defer_lock);
 
         // if this returns false this is still in use
         if (exclusive_lock.try_lock())
         {
             // Now check if this is still the newest dataset
-            const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex> lock(
-                shared_barriers->current_regions_mutex);
+            const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
+                lock(shared_barriers->current_regions_mutex);
 
             auto shared_regions = storage::makeSharedMemory(storage::CURRENT_REGIONS);
             const auto current_timestamp =
@@ -439,7 +435,8 @@ class SharedDataFacade final : public BaseDataFacade
 
             if (current_timestamp->timestamp == shared_timestamp)
             {
-                util::SimpleLogger().Write(logDEBUG) << "Retaining data with shared timestamp " << shared_timestamp;
+                util::SimpleLogger().Write(logDEBUG) << "Retaining data with shared timestamp "
+                                                     << shared_timestamp;
             }
             else
             {
@@ -450,7 +447,7 @@ class SharedDataFacade final : public BaseDataFacade
     }
 
     SharedDataFacade(const std::shared_ptr<storage::SharedBarriers> &shared_barriers_,
-                         storage::SharedDataType layout_region_,
+                     storage::SharedDataType layout_region_,
                      storage::SharedDataType data_region_,
                      unsigned shared_timestamp_)
         : shared_barriers(shared_barriers_), layout_region(layout_region_),
@@ -577,8 +574,8 @@ class SharedDataFacade final : public BaseDataFacade
          * refences to where to find the beginning of the bi-
          * directional edge in the m_geometry_node_list vector.
          * */
-        const signed begin = m_geometry_indices.at(id);
-        const signed end = m_geometry_indices.at(id + 1);
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1);
 
         std::vector<NodeID> result_nodes;
 
@@ -626,8 +623,8 @@ class SharedDataFacade final : public BaseDataFacade
          * reverse weights of bi-directional edges, edges 1 to
          * n-1 of that edge need to be read in reverse.
          */
-        const signed begin = m_geometry_indices.at(id);
-        const signed end = m_geometry_indices.at(id + 1) - 1;
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1) - 1;
 
         std::vector<EdgeWeight> result_weights;
         result_weights.resize(end - begin);
@@ -635,10 +632,6 @@ class SharedDataFacade final : public BaseDataFacade
         std::copy(m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - end),
                   m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - begin),
                   result_weights.begin());
-
-        std::cout << "Should be: " << end - begin << std::endl;
-        std::cout << "Result weights length: " << result_weights.size() << std::endl;
-        std::cout << "Beginning weights length: " << m_geometry_rev_weight_list.size() << std::endl;
 
         return result_weights;
     }
@@ -870,10 +863,9 @@ class SharedDataFacade final : public BaseDataFacade
         }
         else
         {
-            std::copy(
-                m_datasource_list.begin() + begin,
-                m_datasource_list.begin() + end,
-                result_datasources.begin());
+            std::copy(m_datasource_list.begin() + begin,
+                      m_datasource_list.begin() + end,
+                      result_datasources.begin());
         }
 
         return result_datasources;
@@ -909,10 +901,9 @@ class SharedDataFacade final : public BaseDataFacade
         }
         else
         {
-            std::copy(
-                m_datasource_list.rbegin() + (m_datasource_list.size() - end),
-                m_datasource_list.rbegin() + (m_datasource_list.size() - begin),
-                result_datasources.begin());
+            std::copy(m_datasource_list.rbegin() + (m_datasource_list.size() - end),
+                      m_datasource_list.rbegin() + (m_datasource_list.size() - begin),
+                      result_datasources.begin());
         }
 
         return result_datasources;

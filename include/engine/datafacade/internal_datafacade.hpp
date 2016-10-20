@@ -15,7 +15,6 @@
 #include "extractor/query_node.hpp"
 #include "storage/io.hpp"
 #include "storage/storage_config.hpp"
-#include "storage/io.hpp"
 #include "engine/geospatial_query.hpp"
 #include "util/graph_loader.hpp"
 #include "util/guidance/turn_bearing.hpp"
@@ -278,16 +277,13 @@ class InternalDataFacade final : public BaseDataFacade
         if (number_of_compressed_geometries > 0)
         {
             geometry_stream.read((char *)&(m_geometry_node_list[0]),
-                                 number_of_compressed_geometries *
-                                     sizeof(NodeID));
+                                 number_of_compressed_geometries * sizeof(NodeID));
 
             geometry_stream.read((char *)&(m_geometry_fwd_weight_list[0]),
-                                 number_of_compressed_geometries *
-                                     sizeof(EdgeWeight));
+                                 number_of_compressed_geometries * sizeof(EdgeWeight));
 
             geometry_stream.read((char *)&(m_geometry_rev_weight_list[0]),
-                                 number_of_compressed_geometries *
-                                     sizeof(EdgeWeight));
+                                 number_of_compressed_geometries * sizeof(EdgeWeight));
         }
     }
 
@@ -753,8 +749,8 @@ class InternalDataFacade final : public BaseDataFacade
          * refences to where to find the beginning of the bi-
          * directional edge in the m_geometry_node_list vector.
          * */
-        const signed begin = m_geometry_indices.at(id);
-        const signed end = m_geometry_indices.at(id + 1);
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1);
 
         std::vector<NodeID> result_nodes;
 
@@ -802,8 +798,8 @@ class InternalDataFacade final : public BaseDataFacade
          * reverse weights of bi-directional edges, edges 1 to
          * n-1 of that edge need to be read in reverse.
          */
-        const signed begin = m_geometry_indices.at(id);
-        const signed end = m_geometry_indices.at(id + 1) - 1;
+        const unsigned begin = m_geometry_indices.at(id);
+        const unsigned end = m_geometry_indices.at(id + 1) - 1;
 
         std::vector<EdgeWeight> result_weights;
         result_weights.resize(end - begin);
@@ -845,10 +841,9 @@ class InternalDataFacade final : public BaseDataFacade
         }
         else
         {
-            std::copy(
-                m_datasource_list.begin() + begin,
-                m_datasource_list.begin() + end,
-                result_datasources.begin());
+            std::copy(m_datasource_list.begin() + begin,
+                      m_datasource_list.begin() + end,
+                      result_datasources.begin());
         }
 
         return result_datasources;
@@ -884,10 +879,9 @@ class InternalDataFacade final : public BaseDataFacade
         }
         else
         {
-            std::copy(
-                m_datasource_list.rbegin() + (m_datasource_list.size() - end),
-                m_datasource_list.rbegin() + (m_datasource_list.size() - begin),
-                result_datasources.begin());
+            std::copy(m_datasource_list.rbegin() + (m_datasource_list.size() - end),
+                      m_datasource_list.rbegin() + (m_datasource_list.size() - begin),
+                      result_datasources.begin());
         }
 
         return result_datasources;
