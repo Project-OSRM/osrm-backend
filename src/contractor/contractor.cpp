@@ -113,7 +113,11 @@ EdgeWeight getNewWeight(IterType speed_iter,
         }
     }
 
-    return new_segment_weight;
+    auto smoothing_factor = speed_iter->speed_source.smoothing_factor;
+    auto scaled_new_segment_weight =
+        (1 - smoothing_factor) * old_weight + smoothing_factor * new_segment_weight;
+
+    return scaled_new_segment_weight;
 }
 
 int Contractor::Run()
@@ -215,6 +219,7 @@ struct Segment final
 struct SpeedSource final
 {
     unsigned speed;
+    double smoothing_factor;
     std::uint8_t source;
 };
 
@@ -236,7 +241,7 @@ SegmentSpeedSourceFlatMap::iterator find(SegmentSpeedSourceFlatMap &map, const S
                std::tie(rhs.segment.from, rhs.segment.to);
     };
 
-    auto it = std::lower_bound(begin(map), last, SegmentSpeedSource{key, {0, 0}}, by_segment);
+    auto it = std::lower_bound(begin(map), last, SegmentSpeedSource{key, {0, 0, 0}}, by_segment);
 
     if (it != last && (std::tie(it->segment.from, it->segment.to) == std::tie(key.from, key.to)))
         return it;
@@ -278,6 +283,7 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         std::uint64_t from_node_id{};
         std::uint64_t to_node_id{};
         unsigned speed{};
+        double smoothing_factor{};
 
         for (std::string line; std::getline(segment_speed_file, line);)
         {
@@ -287,19 +293,27 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
             const auto last = end(line);
 
             // The ulong_long -> uint64_t will likely break on 32bit platforms
-            const auto ok =
-                parse(it,
-                      last,                                                                  //
-                      (ulong_long >> ',' >> ulong_long >> ',' >> uint_ >> *(',' >> *char_)), //
-                      from_node_id,
-                      to_node_id,
-                      speed); //
+            const auto ok = parse(it,
+                                  last,
+                                  // parser:
+                                  (ulong_long >> ',' >> ulong_long >> ',' >> uint_ >> ',' >>
+                                   double_ >> *(',' >> *char_)),
+                                  // into:
+                                  from_node_id,
+                                  to_node_id,
+                                  speed,
+                                  smoothing_factor);
 
+            // Check for NaN, Inf, etc. - easier than plugging in custom Spirit floating policies
             if (!ok || it != last)
                 throw util::exception{"Segment speed file " + filename + " malformed"};
 
+            if (!std::isfinite(smoothing_factor) || smoothing_factor < 0 || smoothing_factor > 1)
+                throw util::exception{"Segment speed file " + filename +
+                                      " smoothing factor value out of range"};
+
             SegmentSpeedSource val{{OSMNodeID{from_node_id}, OSMNodeID{to_node_id}},
-                                   {speed, static_cast<std::uint8_t>(file_id)}};
+                                   {speed, smoothing_factor, static_cast<std::uint8_t>(file_id)}};
 
             local.push_back(std::move(val));
         }
@@ -800,7 +814,15 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                     {
                         const auto new_segment_weight = distanceAndSpeedToWeight(
                             segmentblocks[i].segment_length, speed_iter->speed_source.speed);
-                        new_weight += new_segment_weight;
+
+                        auto old_segment_weight = segmentblocks[i].segment_weight;
+                        auto smoothing_factor = speed_iter->speed_source.smoothing_factor;
+
+                        auto scaled_new_segment_weight =
+                            (1 - smoothing_factor) * old_segment_weight +
+                            smoothing_factor * new_segment_weight;
+
+                        new_weight += scaled_new_segment_weight;
                     }
                     else
                     {

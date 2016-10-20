@@ -26,14 +26,15 @@ Feature: Traffic - speeds
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
+        # from,to,speed,smoothing factor
         Given the speed file
         """
-        1,2,0
-        2,1,0
-        2,3,27
-        3,2,27
-        1,4,27
-        4,1,27
+        1,2,0,1
+        2,1,0,1
+        2,3,27,1
+        3,2,27,1
+        1,4,27,1
+        4,1,27,1
         """
         And I route I should get
             | from | to | route          | speed   |
@@ -70,14 +71,15 @@ Feature: Traffic - speeds
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
+        # from,to,speed,smoothing factor
         Given the speed file
         """
-        1,2,0
-        2,1,0
-        2,3,27
-        3,2,27
-        1,4,0
-        4,1,0
+        1,2,0,1
+        2,1,0,1
+        2,3,27,1
+        3,2,27,1
+        1,4,0,1
+        4,1,0,1
         """
         And I route I should get
             | from | to | route          | speed   |
@@ -112,14 +114,15 @@ Feature: Traffic - speeds
             | fb    | primary |
         Given the profile "testbot"
         Given the extract extra arguments "--generate-edge-lookup"
+        # from,to,speed,smoothing factor
         Given the speed file
         """
-        1,2,-10
-        2,1,-20
-        2,3,27
-        3,2,27
-        1,4,-3
-        4,1,-5
+        1,2,-10,1
+        2,1,-20,1
+        2,3,27,1
+        3,2,27,1
+        1,4,-3,1
+        4,1,-5,1
         """
         And the data has been extracted
         When I try to run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
