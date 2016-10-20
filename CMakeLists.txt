@@ -31,7 +31,6 @@ if(ENABLE_MASON)
   set(MASON_STXXL_VERSION "1.4.1")
   set(MASON_EXPAT_VERSION "2.2.0")
   set(MASON_LUA_VERSION "5.2.4")
-  set(MASON_LUABIND_VERSION "e414c57bcb687bb3091b7c55bbff6947f052e46b")
   set(MASON_BZIP2_VERSION "1.0.6")
   set(MASON_TBB_VERSION "43_20150316")
 
@@ -94,6 +93,7 @@ endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/variant/include)
 
 add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
@@ -403,10 +403,6 @@ if(ENABLE_MASON)
   add_dependency_includes(${MASON_PACKAGE_lua_INCLUDE_DIRS})
   set(USED_LUA_LIBRARIES ${MASON_PACKAGE_lua_STATIC_LIBS})
 
-  mason_use(luabind_lua524 VERSION ${MASON_LUABIND_VERSION})
-  add_dependency_includes(${MASON_PACKAGE_luabind_lua524_INCLUDE_DIRS})
-  set(LUABIND_LIBRARY ${MASON_PACKAGE_luabind_lua524_STATIC_LIBS})
-
   mason_use(bzip2 VERSION ${MASON_BZIP2_VERSION})
   add_dependency_includes(${MASON_PACKAGE_bzip2_INCLUDE_DIRS})
   set(BZIP2_LIBRARIES ${MASON_PACKAGE_bzip2_STATIC_LIBS})
@@ -455,10 +451,6 @@ else()
   if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
   endif()
-  find_package(Luabind REQUIRED)
-  add_dependency_includes(${LUABIND_INCLUDE_DIR})
-  set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
-  add_dependency_includes(${LUA_INCLUDE_DIR})
 
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
@@ -537,6 +529,7 @@ ELSE()
 ENDIF()
 
 set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
+add_dependency_includes(${LUA_INCLUDE_DIR})
 
 if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_dependency_defines(-DBOOST_TEST_DYN_LINK)

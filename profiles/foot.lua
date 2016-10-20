@@ -7,7 +7,6 @@ barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true,
 access_tag_whitelist = { ["yes"] = true, ["foot"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "foot", "access" }
-ignore_in_grid = { ["ferry"] = true }
 restrictions = { "foot" }
 
 walking_speed = 5
