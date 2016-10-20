@@ -133,9 +133,10 @@ Feature: Basic Map Matching
             | abcdegh  | no     |
             | ci       | no     |
 
+        # from,to,speed,confidence
         And the speed file
         """
-        1,2,36
+        1,2,36,1
         """
 
         And the contract extra arguments "--segment-speed-file {speeds_file}"
