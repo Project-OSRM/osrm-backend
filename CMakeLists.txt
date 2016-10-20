@@ -415,6 +415,8 @@ endif()
 
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
+  add_executable(osrm-speeds-to-csv src/tools/speeds-to-csv.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:STORAGE>)
+  target_link_libraries(osrm-speeds-to-csv ${ENGINE_LIBRARIES})
   add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
   target_link_libraries(osrm-io-benchmark ${Boost_LIBRARIES})
   add_executable(osrm-unlock-all src/tools/unlock_all_mutexes.cpp $<TARGET_OBJECTS:UTIL>)
