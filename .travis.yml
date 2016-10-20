@@ -122,6 +122,7 @@ before_install:
       # implicit deps, but seem to be installed by default with recent images: libxml2 GDAL boost
       brew install libzip libstxxl lua51 luabind tbb md5sha1sum ccache
     fi
+  - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
 
 install:
   - |
