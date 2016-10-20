@@ -40,6 +40,11 @@ class CoordinateExtractor
                                                           const bool traversed_in_reverse,
                                                           const NodeID to_node) const;
 
+    // wrapper in case of normal forward edges (traversed_in_reverse = false, to_node =
+    // node_based_graph.GetTarget(turn_edge)
+    std::vector<util::Coordinate> GetForwardCoordinatesAlongRoad(const NodeID from,
+                                                                 const EdgeID turn_edge) const;
+
     /* When extracting the coordinates, we first extract all coordinates. We don't care about most
      * of them, though.
      *

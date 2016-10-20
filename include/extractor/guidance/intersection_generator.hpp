@@ -47,6 +47,9 @@ class IntersectionGenerator
                                            NodeID *resulting_from_node,
                                            EdgeID *resulting_via_edge) const;
 
+    // Allow access to the coordinate extractor for all owners
+    const CoordinateExtractor &GetCoordinateExtractor() const;
+
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
     const RestrictionMap &restriction_map;

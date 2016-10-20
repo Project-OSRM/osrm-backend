@@ -511,7 +511,7 @@ Feature: Turn Lane Guidance
                   g
 
                   c
-            a b   d e
+            a   b d e
 
                   f
             """
@@ -523,8 +523,8 @@ Feature: Turn Lane Guidance
             | bc    | road  | left\|left                          | yes    | primary   |
             | de    | road  |                                     | yes    | primary   |
             | fd    | cross |                                     |        | secondary |
-            |  dc   | cross |                                     |        | secondary |
-            |   cg  | cross |                                     |        | secondary |
+            | dc    | cross |                                     |        | secondary |
+            | cg    | cross |                                     |        | secondary |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -897,6 +897,29 @@ Feature: Turn Lane Guidance
             | x,d       | road,road | depart,arrive | ,     |
 
     @partition-lanes
+    Scenario: Partitioned turn, Slight Curve - maxspeed
+        Given the node map
+            """
+                f   e
+                |   |
+                |   |
+                |   c
+            a - b ' |
+                g   d
+            """
+
+        And the ways
+            | nodes | name  | highway | oneway | turn:lanes:forward | maxspeed |
+            | ab    | road  | primary | yes    | left\|right        | 1        |
+            | bc    | cross | primary | yes    |                    | 1        |
+            | fbg   | cross | primary | yes    |                    | 1        |
+            | dce   | cross | primary | yes    |                    | 1        |
+
+        When I route I should get
+            | waypoints | route            | turns                    | lanes                   |
+            | a,g       | road,cross,cross | depart,turn right,arrive | ,left:false right:true, |
+            | a,e       | road,cross,cross | depart,turn left,arrive  | ,left:true right:false, |
+
     Scenario: Partitioned turn, Slight Curve
         Given the node map
             """

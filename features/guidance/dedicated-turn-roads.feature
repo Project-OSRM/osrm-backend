@@ -34,6 +34,36 @@ Feature: Slipways and Dedicated Turn Lanes
             | a,g       | first,second,second | depart,turn right,arrive        |
             | a,1       | first,,             | depart,turn slight right,arrive |
 
+    Scenario: Turn Instead of Ramp - Max-Speed
+        Given the node map
+            """
+                    e
+            a-b-----c-d
+                 `h |
+                   ||
+                  1||
+                   `|
+                    f
+                    |
+                    g
+            """
+
+        And the ways
+            | nodes | highway    | name   | maxspeed |
+            | abcd  | trunk      | first  | 70       |
+            | bhf   | trunk_link |        | 2        |
+            | ecfg  | primary    | second | 50       |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | abcd     | ecfg   | c        | no_right_turn |
+
+       When I route I should get
+            | waypoints | route               | turns                           |
+            | a,g       | first,second,second | depart,turn right,arrive        |
+            | a,1       | first,,             | depart,turn slight right,arrive |
+
+
     Scenario: Turn Instead of Ramp
         Given the node map
             """

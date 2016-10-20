@@ -5,7 +5,9 @@
 
 #include <boost/optional.hpp>
 
+#include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace osrm
 {
@@ -29,6 +31,24 @@ std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rh
 double haversineDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
 
 double greatCircleDistance(const Coordinate first_coordinate, const Coordinate second_coordinate);
+
+// get the length of a full coordinate vector, using one of our basic functions to compute distances
+template <class BinaryOperation>
+double getLength(const std::vector<Coordinate> &coordinates, BinaryOperation op)
+{
+    if (coordinates.empty())
+        return 0.;
+
+    double result = 0;
+    const auto functor = [&result, op](const Coordinate lhs, const Coordinate rhs) {
+        result += op(lhs, rhs);
+        return false;
+    };
+    // side-effect find adding up distances
+    std::adjacent_find(coordinates.begin(), coordinates.end(), functor);
+
+    return result;
+}
 
 // Find the closest distance and location between coordinate and the line connecting source and
 // target:

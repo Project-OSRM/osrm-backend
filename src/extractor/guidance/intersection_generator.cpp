@@ -649,6 +649,12 @@ IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
     return result;
 }
 
+const CoordinateExtractor&
+IntersectionGenerator::GetCoordinateExtractor() const
+{
+    return coordinate_extractor;
+}
+
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm

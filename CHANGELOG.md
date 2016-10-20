@@ -19,6 +19,7 @@
     - Bugfixes
       - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
       - fixed compile errors in tile unit-test framework
+      - fixed a bug that could result in inconsistent behaviour when collapsing instructions
     - Debug Tiles
       - Added support for turn penalties
 

@@ -299,6 +299,12 @@ CoordinateExtractor::GetCoordinateAlongRoad(const NodeID intersection_node,
 }
 
 std::vector<util::Coordinate>
+CoordinateExtractor::GetForwardCoordinatesAlongRoad(const NodeID from, const EdgeID turn_edge) const
+{
+    return GetCoordinatesAlongRoad(from, turn_edge, false, node_based_graph.GetTarget(turn_edge));
+}
+
+std::vector<util::Coordinate>
 CoordinateExtractor::GetCoordinatesAlongRoad(const NodeID intersection_node,
                                              const EdgeID turn_edge,
                                              const bool traversed_in_reverse,

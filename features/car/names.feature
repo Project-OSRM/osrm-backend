@@ -3,6 +3,7 @@ Feature: Car - Street names in instructions
 
     Background:
         Given the profile "car"
+        Given a grid size of 5 meters
 
     Scenario: Car - A named street
         Given the node map
