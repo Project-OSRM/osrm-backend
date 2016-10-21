@@ -1,6 +1,7 @@
 #ifndef STATIC_RTREE_HPP
 #define STATIC_RTREE_HPP
 
+#include "storage/io.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/deallocating_vector.hpp"
@@ -356,14 +357,11 @@ class StaticRTree
         }
         boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
 
-        std::uint32_t tree_size = 0;
-        tree_node_file.read((char *)&tree_size, sizeof(std::uint32_t));
+
+        std::uint32_t tree_size = storage::io::readRamIndexSize(tree_node_file);
 
         m_search_tree.resize(tree_size);
-        if (tree_size > 0)
-        {
-            tree_node_file.read((char *)&m_search_tree[0], sizeof(TreeNode) * tree_size);
-        }
+        storage::io::readRamIndexData(tree_node_file, &m_search_tree[0], tree_size);
 
         MapLeafNodesFile(leaf_file);
     }
