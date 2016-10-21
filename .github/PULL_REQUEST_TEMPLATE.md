@@ -1,9 +1,10 @@
 # Issue
 
-What issue is this PR targeting? Is there no issue that covers the problem addressed here? Please open a corresponding issue and link it from here.
+What issue is this PR targeting? If there is no issue that addresses the problem, please open a corresponding issue and link it here.
 
 ## Tasklist
  - [ ] ADD OWN TASKS HERE
+ - [ ] update relevant [Wiki pages](https://github.com/Project-OSRM/osrm-backend/wiki)
  - [ ] add regression / cucumber cases (see docs/testing.md)
  - [ ] review
  - [ ] adjust for for comments
