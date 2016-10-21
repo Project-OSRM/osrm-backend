@@ -67,6 +67,7 @@ struct MatchParameters : public RouteParameters
     }
 
     std::vector<unsigned> timestamps;
+
     bool IsValid() const
     {
         return RouteParameters::IsValid() &&

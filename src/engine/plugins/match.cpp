@@ -3,6 +3,7 @@
 
 #include "engine/api/match_api.hpp"
 #include "engine/api/match_parameters.hpp"
+#include "engine/api/match_parameters_tidy.hpp"
 #include "engine/map_matching/bayes_classifier.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
@@ -132,7 +133,8 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
 
     if (!time_increases_monotonically)
     {
-        return Error("InvalidValue", "Timestamps need to be monotonically increasing.", json_result);
+        return Error(
+            "InvalidValue", "Timestamps need to be monotonically increasing.", json_result);
     }
 
     // assuming radius is the standard deviation of a normal distribution
@@ -163,9 +165,13 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
                        });
     }
 
-    auto candidates_lists = GetPhantomNodesInRange(*facade, parameters, search_radiuses);
+    // Transparently tidy match parameters, do map matching on tidied parameters.
+    // Then use the mapping to restore the original <-> tidied relationship.
+    auto tidied = api::tidy::tidy(parameters);
 
-    filterCandidates(parameters.coordinates, candidates_lists);
+    auto candidates_lists = GetPhantomNodesInRange(*facade, tidied.parameters, search_radiuses);
+
+    filterCandidates(tidied.parameters.coordinates, candidates_lists);
     if (std::all_of(candidates_lists.begin(),
                     candidates_lists.end(),
                     [](const std::vector<PhantomNodeWithDistance> &candidates) {
@@ -180,9 +186,9 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
     // call the actual map matching
     SubMatchingList sub_matchings = map_matching(*facade,
                                                  candidates_lists,
-                                                 parameters.coordinates,
-                                                 parameters.timestamps,
-                                                 parameters.radiuses);
+                                                 tidied.parameters.coordinates,
+                                                 tidied.parameters.timestamps,
+                                                 tidied.parameters.radiuses);
 
     if (sub_matchings.size() == 0)
     {
@@ -212,6 +218,8 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
             *facade, sub_routes[index].segment_end_coordinates, {false}, sub_routes[index]);
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
+
+    // TODO: restore original coordinates
 
     api::MatchAPI match_api{*facade, parameters};
     match_api.MakeResponse(sub_matchings, sub_routes, json_result);
