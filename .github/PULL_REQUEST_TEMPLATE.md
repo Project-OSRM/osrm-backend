@@ -7,7 +7,7 @@ What issue is this PR targeting? If there is no issue that addresses the problem
  - [ ] update relevant [Wiki pages](https://github.com/Project-OSRM/osrm-backend/wiki)
  - [ ] add regression / cucumber cases (see docs/testing.md)
  - [ ] review
- - [ ] adjust for for comments
+ - [ ] adjust for comments
 
 ## Requirements / Relations
  Link any requirements here. Other pull requests this PR is based on?
