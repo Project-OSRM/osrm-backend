@@ -3,6 +3,7 @@
 
 #include "engine/api/match_api.hpp"
 #include "engine/api/match_parameters.hpp"
+#include "engine/api/match_parameters_tidy.hpp"
 #include "engine/map_matching/bayes_classifier.hpp"
 #include "engine/map_matching/sub_matching.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -173,9 +174,13 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
                        });
     }
 
-    auto candidates_lists = GetPhantomNodesInRange(facade, parameters, search_radiuses);
+    // Transparently tidy match parameters, do map matching on tidied parameters.
+    // Then use the mapping to restore the original <-> tidied relationship.
+    auto tidied = api::tidy::tidy(parameters);
 
-    filterCandidates(parameters.coordinates, candidates_lists);
+    auto candidates_lists = GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses);
+
+    filterCandidates(tidied.parameters.coordinates, candidates_lists);
     if (std::all_of(candidates_lists.begin(),
                     candidates_lists.end(),
                     [](const std::vector<PhantomNodeWithDistance> &candidates) {
@@ -189,7 +194,11 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
 
     // call the actual map matching
     SubMatchingList sub_matchings = algorithms.MapMatching(
-        candidates_lists, parameters.coordinates, parameters.timestamps, parameters.radiuses, parameters.use_tidying);
+                                                 candidates_lists,
+                                                 tidied.parameters.coordinates,
+                                                 tidied.parameters.timestamps,
+                                                 tidied.parameters.radiuses,
+                                                 parameters.use_tidying);
 
     if (sub_matchings.size() == 0)
     {
@@ -219,6 +228,8 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
             algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false});
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
+
+    // TODO: restore original coordinates
 
     api::MatchAPI match_api{facade, parameters};
     match_api.MakeResponse(sub_matchings, sub_routes, json_result);
