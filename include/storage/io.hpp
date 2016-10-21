@@ -15,6 +15,16 @@ namespace storage
 namespace io
 {
 
+inline std::size_t readPropertiesSize() { return 1; }
+
+template <typename PropertiesT>
+inline void readProperties(boost::filesystem::ifstream &properties_stream,
+                           PropertiesT properties[],
+                           std::size_t PropertiesSize)
+{
+    properties_stream.read(properties, PropertiesSize);
+}
+
 #pragma pack(push, 1)
 struct HSGRHeader
 {
@@ -39,8 +49,10 @@ inline HSGRHeader readHSGRHeader(boost::filesystem::ifstream &input_stream)
 
     HSGRHeader header;
     input_stream.read(reinterpret_cast<char *>(&header.checksum), sizeof(header.checksum));
-    input_stream.read(reinterpret_cast<char *>(&header.number_of_nodes), sizeof(header.number_of_nodes));
-    input_stream.read(reinterpret_cast<char *>(&header.number_of_edges), sizeof(header.number_of_edges));
+    input_stream.read(reinterpret_cast<char *>(&header.number_of_nodes),
+                      sizeof(header.number_of_nodes));
+    input_stream.read(reinterpret_cast<char *>(&header.number_of_edges),
+                      sizeof(header.number_of_edges));
 
     BOOST_ASSERT_MSG(0 != header.number_of_nodes, "number of nodes is zero");
     // number of edges can be zero, this is the case in a few test fixtures
@@ -48,7 +60,7 @@ inline HSGRHeader readHSGRHeader(boost::filesystem::ifstream &input_stream)
     return header;
 }
 
-// Needs to be called after HSGRHeader() to get the correct offset in the stream
+// Needs to be called after readHSGRHeader() to get the correct offset in the stream
 template <typename NodeT, typename EdgeT>
 void readHSGR(boost::filesystem::ifstream &input_stream,
               NodeT *node_buffer,
@@ -59,7 +71,6 @@ void readHSGR(boost::filesystem::ifstream &input_stream,
     input_stream.read(reinterpret_cast<char *>(node_buffer), number_of_nodes * sizeof(NodeT));
     input_stream.read(reinterpret_cast<char *>(edge_buffer), number_of_edges * sizeof(EdgeT));
 }
-
 // Returns the size of the timestamp in a file
 inline std::uint32_t readTimestampSize(boost::filesystem::ifstream &timestamp_input_stream)
 {
