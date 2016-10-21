@@ -1,6 +1,8 @@
 #ifndef OSRM_STORAGE_IO_HPP_
 #define OSRM_STORAGE_IO_HPP_
 
+#include "extractor/original_edge_data.hpp"
+#include "extractor/query_node.hpp"
 #include "util/fingerprint.hpp"
 #include "util/simple_logger.hpp"
 
@@ -58,6 +60,8 @@ void readHSGR(boost::filesystem::ifstream &input_stream,
               EdgeT edge_buffer[],
               std::uint32_t number_of_edges)
 {
+    BOOST_ASSERT(node_buffer);
+    BOOST_ASSERT(edge_buffer);
     input_stream.read(reinterpret_cast<char *>(node_buffer), number_of_nodes * sizeof(NodeT));
     input_stream.read(reinterpret_cast<char *>(edge_buffer), number_of_edges * sizeof(EdgeT));
 }
@@ -76,6 +80,7 @@ inline void readTimestamp(boost::filesystem::ifstream &timestamp_input_stream,
                           char timestamp[],
                           std::size_t timestamp_length)
 {
+    BOOST_ASSERT(timestamp);
     timestamp_input_stream.read(timestamp, timestamp_length * sizeof(char));
 }
 
@@ -109,6 +114,12 @@ void readEdgesData(boost::filesystem::ifstream &edges_input_stream,
                    PostTurnBearingT post_turn_bearing_list[],
                    std::uint32_t number_of_edges)
 {
+    BOOST_ASSERT(geometry_list);
+    BOOST_ASSERT(name_id_list);
+    BOOST_ASSERT(turn_instruction_list);
+    BOOST_ASSERT(lane_data_id_list);
+    BOOST_ASSERT(travel_mode_list);
+    BOOST_ASSERT(entry_class_id_list);
     extractor::OriginalEdgeData current_edge_data;
     for (std::uint32_t i = 0; i < number_of_edges; ++i)
     {
@@ -140,6 +151,7 @@ void readNodesData(boost::filesystem::ifstream &nodes_input_stream,
                    OSMNodeIDVectorT &osmnodeid_list,
                    std::uint32_t number_of_coordinates)
 {
+    BOOST_ASSERT(coordinate_list);
     extractor::QueryNode current_node;
     for (std::uint32_t i = 0; i < number_of_coordinates; ++i)
     {
@@ -151,8 +163,6 @@ void readNodesData(boost::filesystem::ifstream &nodes_input_stream,
 }
 
 // Returns the number of indexes in a .datasource_indexes file
-// TODO: The original code used uint_64t to store the number of indexes. Can someone confirm that
-// this makes sense?
 inline std::uint64_t
 readDatasourceIndexesSize(boost::filesystem::ifstream &datasource_indexes_input_stream)
 {
@@ -168,6 +178,7 @@ inline void readDatasourceIndexes(boost::filesystem::ifstream &datasource_indexe
                                   uint8_t datasource_buffer[],
                                   std::uint32_t number_of_datasource_indexes)
 {
+    BOOST_ASSERT(datasource_buffer);
     datasource_indexes_input_stream.read(reinterpret_cast<char *>(datasource_buffer),
                                          number_of_datasource_indexes * sizeof(std::uint8_t));
 }
@@ -198,6 +209,24 @@ readDatasourceNamesData(boost::filesystem::ifstream &datasource_names_input_stre
     }
     return datasource_names_data;
 }
+
+// Returns the number of ram indexes
+inline std::uint32_t readRamIndexSize(boost::filesystem::ifstream &ram_index_input_stream)
+{
+    std::uint32_t tree_size = 0;
+    ram_index_input_stream.read((char *)&tree_size, sizeof(std::uint32_t));
+    return tree_size;
+}
+
+template <typename RTreeNodeT>
+void readRamIndexData(boost::filesystem::ifstream &ram_index_input_stream,
+                 RTreeNodeT rtree_buffer[],
+                 std::uint32_t tree_size)
+{
+    BOOST_ASSERT(rtree_buffer);
+    ram_index_input_stream.read(reinterpret_cast<char *>(rtree_buffer), sizeof(RTreeNodeT) * tree_size);
+}
+
 }
 }
 }

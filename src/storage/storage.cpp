@@ -266,8 +266,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // load rsearch tree size
     boost::filesystem::ifstream tree_node_file(config.ram_index_path, std::ios::binary);
 
-    uint32_t tree_size = 0;
-    tree_node_file.read((char *)&tree_size, sizeof(uint32_t));
+    std::uint32_t tree_size = io::readRamIndexSize(tree_node_file);
     shared_layout_ptr->SetBlockSize<RTreeNode>(SharedDataLayout::R_SEARCH_TREE, tree_size);
 
     // load profile properties
@@ -675,7 +674,6 @@ Storage::ReturnCode Storage::Run(int max_wait)
     util::PackedVector<OSMNodeID, true> osmnodeid_list;
     osmnodeid_list.reset(osmnodeid_ptr,
                          shared_layout_ptr->num_entries[SharedDataLayout::OSM_NODE_ID_LIST]);
-
     io::readNodesData(nodes_input_stream, coordinates_ptr, osmnodeid_list, coordinate_list_size);
     nodes_input_stream.close();
 
@@ -685,14 +683,9 @@ Storage::ReturnCode Storage::Run(int max_wait)
     io::readTimestamp(timestamp_stream, timestamp_ptr, timestamp_size);
 
     // store search tree portion of rtree
-    char *rtree_ptr = shared_layout_ptr->GetBlockPtr<char, true>(shared_memory_ptr,
+    RTreeNode *rtree_ptrtest = shared_layout_ptr->GetBlockPtr<RTreeNode, true>(shared_memory_ptr,
                                                                  SharedDataLayout::R_SEARCH_TREE);
-
-    if (tree_size > 0)
-    {
-        tree_node_file.read(rtree_ptr, sizeof(RTreeNode) * tree_size);
-    }
-    tree_node_file.close();
+    io::readRamIndexData(tree_node_file, rtree_ptrtest, tree_size);
 
     // load core markers
     std::vector<char> unpacked_core_markers(number_of_core_markers);
