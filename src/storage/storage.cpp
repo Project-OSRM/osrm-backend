@@ -1,10 +1,3 @@
-#include "storage/storage.hpp"
-
-#include "storage/io.hpp"
-#include "storage/shared_barriers.hpp"
-#include "storage/shared_datatype.hpp"
-#include "storage/shared_memory.hpp"
-
 #include "contractor/query_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
@@ -12,6 +5,11 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+#include "storage/io.hpp"
+#include "storage/shared_barriers.hpp"
+#include "storage/shared_datatype.hpp"
+#include "storage/shared_memory.hpp"
+#include "storage/storage.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
@@ -232,8 +230,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
         throw util::exception("Could not open " + config.edges_data_path.string() +
                               " for reading.");
     }
-    unsigned number_of_original_edges = 0;
-    edges_input_stream.read((char *)&number_of_original_edges, sizeof(unsigned));
+    auto number_of_original_edges = io::readEdgesSize(edges_input_stream);
 
     // note: settings this all to the same size is correct, we extract them from the same struct
     shared_layout_ptr->SetBlockSize<NodeID>(SharedDataLayout::VIA_NODE_LIST,
@@ -303,8 +300,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     {
         throw util::exception("Could not open " + config.core_data_path.string() + " for reading.");
     }
-    unsigned coordinate_list_size = 0;
-    nodes_input_stream.read((char *)&coordinate_list_size, sizeof(unsigned));
+    auto coordinate_list_size = io::readNodesSize(nodes_input_stream);
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
                                                       coordinate_list_size);
     // we'll read a list of OSM node IDs from the same data, so set the block size for the same
@@ -575,19 +571,16 @@ Storage::ReturnCode Storage::Run(int max_wait)
     EntryClassID *entry_class_id_ptr = shared_layout_ptr->GetBlockPtr<EntryClassID, true>(
         shared_memory_ptr, SharedDataLayout::ENTRY_CLASSID);
 
-    extractor::OriginalEdgeData current_edge_data;
-    for (unsigned i = 0; i < number_of_original_edges; ++i)
-    {
-        edges_input_stream.read((char *)&(current_edge_data), sizeof(extractor::OriginalEdgeData));
-        via_geometry_ptr[i] = current_edge_data.via_geometry;
-        name_id_ptr[i] = current_edge_data.name_id;
-        travel_mode_ptr[i] = current_edge_data.travel_mode;
-        lane_data_id_ptr[i] = current_edge_data.lane_data_id;
-        turn_instructions_ptr[i] = current_edge_data.turn_instruction;
-        entry_class_id_ptr[i] = current_edge_data.entry_classid;
-        pre_turn_bearing_ptr[i] = current_edge_data.pre_turn_bearing;
-        post_turn_bearing_ptr[i] = current_edge_data.post_turn_bearing;
-    }
+    io::readEdgesData(edges_input_stream,
+                      via_geometry_ptr,
+                      name_id_ptr,
+                      turn_instructions_ptr,
+                      lane_data_id_ptr,
+                      travel_mode_ptr,
+                      entry_class_id_ptr,
+                      pre_turn_bearing_ptr,
+                      post_turn_bearing_ptr,
+                      number_of_original_edges);
     edges_input_stream.close();
 
     // load compressed geometry
@@ -689,13 +682,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     osmnodeid_list.reset(osmnodeid_ptr,
                          shared_layout_ptr->num_entries[SharedDataLayout::OSM_NODE_ID_LIST]);
 
-    extractor::QueryNode current_node;
-    for (unsigned i = 0; i < coordinate_list_size; ++i)
-    {
-        nodes_input_stream.read((char *)&current_node, sizeof(extractor::QueryNode));
-        coordinates_ptr[i] = util::Coordinate(current_node.lon, current_node.lat);
-        osmnodeid_list.push_back(current_node.node_id);
-    }
+    io::readNodesData(nodes_input_stream, coordinates_ptr, osmnodeid_list, coordinate_list_size);
     nodes_input_stream.close();
 
     // store timestamp
