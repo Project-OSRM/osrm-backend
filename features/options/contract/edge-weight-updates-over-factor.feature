@@ -12,10 +12,11 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
             | ab    | residential |
             | ac    | primary     |
         Given the profile "testbot"
+        # from,to,speed,confidence
         Given the speed file
         """
-        1,2,100
-        1,3,100
+        1,2,100,1
+        1,3,100,1
         """
         And the data has been saved to disk
 
