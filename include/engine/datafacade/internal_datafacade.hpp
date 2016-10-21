@@ -125,7 +125,7 @@ class InternalDataFacade final : public BaseDataFacade
             throw util::exception("Could not open " + properties_path.string() + " for reading.");
         }
         auto PropertiesSize = storage::io::readPropertiesSize();
-        storage::io::readProperties(in_stream, reinterpret_cast<char *>(&m_profile_properties), PropertiesSize);
+        storage::io::readProperties(in_stream, &m_profile_properties, PropertiesSize);
     }
 
     void LoadLaneTupleIdPairs(const boost::filesystem::path &lane_data_path)
