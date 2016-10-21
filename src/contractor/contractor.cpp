@@ -263,7 +263,9 @@ struct TurnPenaltySource final
 using TurnPenaltySourceFlatMap = std::vector<TurnPenaltySource>;
 using SegmentSpeedSourceFlatMap = std::vector<SegmentSpeedSource>;
 
-// Binary Search over a flattened key,val Segment storage
+// Find is a binary Search over a flattened key,val Segment storage
+// It takes the flat map and a Segment/PenaltySource object that has an overloaded
+// `==` operator, to make the std::lower_bound call work generically
 template <typename FlatMap, typename SegmentKey>
 auto find(const FlatMap &map, const SegmentKey &key)
 {
