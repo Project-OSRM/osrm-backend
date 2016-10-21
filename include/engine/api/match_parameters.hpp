@@ -56,7 +56,7 @@ struct MatchParameters : public RouteParameters
                           false,
                           RouteParameters::GeometriesType::Polyline,
                           RouteParameters::OverviewType::Simplified,
-                          {})
+                          {}), use_tidying(true)
     {
     }
 
@@ -67,7 +67,8 @@ struct MatchParameters : public RouteParameters
     }
 
     std::vector<unsigned> timestamps;
-    bool use_tidying = true;
+    bool use_tidying;
+
     bool IsValid() const
     {
         return RouteParameters::IsValid() &&
