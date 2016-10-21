@@ -19,10 +19,10 @@ inline std::size_t readPropertiesSize() { return 1; }
 
 template <typename PropertiesT>
 inline void readProperties(boost::filesystem::ifstream &properties_stream,
-                           PropertiesT properties[],
-                           std::size_t PropertiesSize)
+                           PropertiesT *properties,
+                           std::size_t properties_size)
 {
-    properties_stream.read(properties, PropertiesSize);
+    properties_stream.read(reinterpret_cast<char *>(properties), properties_size);
 }
 
 #pragma pack(push, 1)
