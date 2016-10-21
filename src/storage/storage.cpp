@@ -273,8 +273,10 @@ Storage::ReturnCode Storage::Run(int max_wait)
     tree_node_file.read((char *)&tree_size, sizeof(uint32_t));
     shared_layout_ptr->SetBlockSize<RTreeNode>(SharedDataLayout::R_SEARCH_TREE, tree_size);
 
-    // load profile properties
-    shared_layout_ptr->SetBlockSize<extractor::ProfileProperties>(SharedDataLayout::PROPERTIES, 1);
+    // allocate space in shared memory for profile properties
+    std::size_t PropertiesSize = io::readPropertiesSize();
+    shared_layout_ptr->SetBlockSize<extractor::ProfileProperties>(SharedDataLayout::PROPERTIES,
+                                                                  PropertiesSize);
 
     // read timestampsize
     boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
@@ -760,7 +762,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     hsgr_input_stream.close();
 
     // load profile properties
-    auto profile_properties_ptr =
+    extractor::ProfileProperties *profile_properties_ptr =
         shared_layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(
             shared_memory_ptr, SharedDataLayout::PROPERTIES);
     boost::filesystem::ifstream profile_properties_stream(config.properties_path);
@@ -768,8 +770,9 @@ Storage::ReturnCode Storage::Run(int max_wait)
     {
         util::exception("Could not open " + config.properties_path.string() + " for reading!");
     }
-    profile_properties_stream.read(reinterpret_cast<char *>(profile_properties_ptr),
-                                   sizeof(extractor::ProfileProperties));
+    io::readProperties(profile_properties_stream,
+                       profile_properties_ptr,
+                       sizeof(extractor::ProfileProperties));
 
     // load intersection classes
     if (!bearing_class_id_table.empty())
