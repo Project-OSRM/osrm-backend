@@ -67,7 +67,7 @@ add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   COMMENT "Configuring revision fingerprint"
   VERBATIM)
 
-set(BOOST_COMPONENTS date_time filesystem iostreams program_options regex system thread unit_test_framework)
+set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options regex system thread unit_test_framework)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -226,7 +226,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -ipo -fPIC")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   # using Visual Studio C++
-  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} date_time chrono zlib)
+  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} zlib)
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
@@ -339,23 +339,22 @@ include_directories(SYSTEM ${OSRM_INCLUDE_PATHS})
 
 set(BOOST_BASE_LIBRARIES
    ${Boost_DATE_TIME_LIBRARY}
+   ${Boost_CHRONO_LIBRARY}
    ${Boost_FILESYSTEM_LIBRARY}
    ${Boost_IOSTREAMS_LIBRARY}
    ${Boost_THREAD_LIBRARY}
    ${Boost_SYSTEM_LIBRARY})
 
 set(BOOST_ENGINE_LIBRARIES
-   ${Boost_FILESYSTEM_LIBRARY}
-   ${Boost_IOSTREAMS_LIBRARY}
-   ${Boost_REGEX_LIBRARY}
-   ${Boost_THREAD_LIBRARY}
-   ${Boost_SYSTEM_LIBRARY})
+  ${Boost_ZLIB_LIBRARY}
+  ${Boost_REGEX_LIBRARY}
+  ${BOOST_BASE_LIBRARIES})
 
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY} ${BOOST_BASE_LIBRARIES})
 target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_REGEX_LIBRARY} ${BOOST_BASE_LIBRARIES})
 target_link_libraries(osrm-contract ${Boost_PROGRAM_OPTIONS_LIBRARY} ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES} osrm_contract)
-target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${BOOST_BASE_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
+target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${BOOST_ENGINE_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
