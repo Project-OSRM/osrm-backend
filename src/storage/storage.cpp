@@ -771,8 +771,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
         util::exception("Could not open " + config.properties_path.string() + " for reading!");
     }
     io::readProperties(profile_properties_stream,
-                       reinterpret_cast<char *>(profile_properties_ptr),
-                       PropertiesSize);
+                       profile_properties_ptr,
+                       sizeof(extractor::ProfileProperties));
 
     // load intersection classes
     if (!bearing_class_id_table.empty())
