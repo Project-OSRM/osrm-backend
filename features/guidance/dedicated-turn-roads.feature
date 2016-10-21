@@ -38,7 +38,7 @@ Feature: Slipways and Dedicated Turn Lanes
         Given the node map
             """
                     e
-            a-b-----c-d
+            a-b-----c-------------------------d
                  `h |
                    ||
                   1||
@@ -50,13 +50,15 @@ Feature: Slipways and Dedicated Turn Lanes
 
         And the ways
             | nodes | highway    | name   | maxspeed |
-            | abcd  | trunk      | first  | 70       |
+            | abc   | trunk      | first  | 70       |
+            | cd    | trunk      | first  | 2        |
             | bhf   | trunk_link |        | 2        |
-            | ecfg  | primary    | second | 50       |
+            | ec    | primary    | second | 50       |
+            | cfg   | primary    | second | 50       |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | abcd     | ecfg   | c        | no_right_turn |
+            | restriction | abc      | cfg    | c        | no_right_turn |
 
        When I route I should get
             | waypoints | route               | turns                           |
