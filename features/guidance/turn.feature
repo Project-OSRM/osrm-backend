@@ -907,8 +907,8 @@ Feature: Simple Turns
     Scenario: Turn Lane on Splitting up Road
         Given the node map
             """
-            g - - - f
-                     \
+            g - - - f -
+                         ' .
                     . h - - e - - c - - d
             a - - b _______/
                   i

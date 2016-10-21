@@ -281,18 +281,23 @@ Feature: Basic Roundabout
             | a,e       | crescent,crescent,crescent                            | depart,roundabout-exit-3,arrive | US 130,US 130,US 130    |
             | j,l       | ,,                                                    | depart,roundabout-exit-2,arrive | NJ 38,NJ 38,NJ 38       |
 
+    @todo
+    # this test previously only passed by accident. We need to handle throughabouts correctly, since staying on massachusetts is actually
+    # the desired setting. Rotary instructions here are not wanted but rather no instruction at all to go through the roundabout (or add
+    # a throughabout instruction)
+    # see https://github.com/Project-OSRM/osrm-backend/issues/3142
     Scenario: Double Roundabout with through-lane
     #http://map.project-osrm.org/?z=18&center=38.911752%2C-77.048667&loc=38.912003%2C-77.050831&loc=38.909277%2C-77.042516&hl=en&alt=0
         Given the node map
             """
                     o                       n
-                    e                       j
-
-                        q
-            a   b           s   f       g       i   k
-                        r                     p
-                                t
-                    c   d                   h
+                   .e.                     _j_.
+                  /   '.                  /    \
+                 /      q__             /       |
+            a---b       |  >s---f-------g       i---k
+                .       r''     |       .' . .p'|
+                 .      |       t        .     .'
+                   'c---d                  'h'
                     l                       m
             """
 
@@ -304,9 +309,13 @@ Feature: Basic Roundabout
             | nodes   | junction   | name            | oneway |
             | bcdrqeb | roundabout | sheridan circle | yes    |
             | ghi     | roundabout | dupont circle   | yes    |
-            | ijg     | roundabout | dupont circle   | yes    |
+            | ij      | roundabout | dupont circle   | yes    |
+            | jg      | roundabout | dupont circle   | yes    |
             | ab      |            | massachusetts   | no     |
-            | sfgpik  |            | massachusetts   | no     |
+            | gp      |            | massachusetts   | no     |
+            | pi      |            | massachusetts   | no     |
+            | sfg     |            | massachusetts   | no     |
+            | ik      |            | massachusetts   | no     |
             | cl      |            | 23rd street     | no     |
             | oe      |            | r street        | no     |
             | jn      |            | new hampshire   | no     |
@@ -316,11 +325,11 @@ Feature: Basic Roundabout
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | sfgpik   | ijg    | i        | no_left_turn  |
+            | restriction | pi       | ij     | i        | no_left_turn  |
 
         When I route I should get
-            | waypoints | route                                                   | turns                                                     |
-            | a,k       | massachusetts,massachusetts,massachusetts,massachusetts | depart,sheridan circle-exit-2,dupont circle-exit-1,arrive |
+            | waypoints | route                                                   | turns                                              |
+            | a,k       | massachusetts,massachusetts,massachusetts,massachusetts | depart,sheridan circle-exit-2,rotary-exit-1,arrive |
 
     #2856 - http://www.openstreetmap.org/#map=19/47.23318/-1.56563
     Scenario: Linked Roundabouts
