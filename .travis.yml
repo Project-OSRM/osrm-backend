@@ -48,7 +48,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CLANG_VERSION='3.8.1' CLANG_PACKAGE="clang" BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON
+      env: CLANG_VERSION='3.8.1' CLANG_PACKAGE="clang++" BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON
 
     - os: osx
       osx_image: xcode7.3
@@ -157,8 +157,8 @@ install:
     if [[ ${ENABLE_MASON:-OFF} == 'ON' ]]; then
       # for mason builds we need to point the example
       # at the clang++ installed by the CMakeLists.txt automatically
-      CXX=$(.mason/mason prefix clang++ 3.9.0)/bin/clang++
-      CC=$(.mason/mason prefix clang++ 3.9.0)/bin/clang
+      CXX=$(.mason/mason prefix clang++ 3.8.1)/bin/clang++
+      CC=$(.mason/mason prefix clang++ 3.8.1)/bin/clang
     fi
   - mkdir example/build && pushd example/build
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
