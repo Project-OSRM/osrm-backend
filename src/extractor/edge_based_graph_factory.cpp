@@ -331,7 +331,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     }
 
     // Writes a dummy value at the front that is updated later with the total length
-    const unsigned length_prefix_empty_space{0};
+    const std::uint64_t length_prefix_empty_space{0};
     edge_data_file.write(reinterpret_cast<const char *>(&length_prefix_empty_space),
                          sizeof(length_prefix_empty_space));
 
@@ -598,7 +598,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Finally jump back to the empty space at the beginning and write length prefix
     edge_data_file.seekp(std::ios::beg);
 
-    const auto length_prefix = boost::numeric_cast<unsigned>(original_edges_counter);
+    const auto length_prefix = boost::numeric_cast<std::uint64_t>(original_edges_counter);
     static_assert(sizeof(length_prefix_empty_space) == sizeof(length_prefix), "type mismatch");
 
     edge_data_file.write(reinterpret_cast<const char *>(&length_prefix), sizeof(length_prefix));

@@ -17,7 +17,7 @@ namespace extractor
 struct OriginalEdgeData
 {
     explicit OriginalEdgeData(GeometryID via_geometry,
-                              unsigned name_id,
+                              NameID name_id,
                               LaneDataID lane_data_id,
                               guidance::TurnInstruction turn_instruction,
                               EntryClassID entry_classid,

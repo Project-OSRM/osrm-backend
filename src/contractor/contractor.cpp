@@ -420,8 +420,8 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
             local.push_back(std::move(val));
         }
 
-        util::SimpleLogger().Write() << "Loaded penalty file " << filename << " with " << local.size()
-                                     << " turn penalties";
+        util::SimpleLogger().Write() << "Loaded penalty file " << filename << " with "
+                                     << local.size() << " turn penalties";
 
         {
             Mutex::scoped_lock _{flatten_mutex};
@@ -437,8 +437,10 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
     // With flattened map-ish view of all the files, sort and unique them on from,to,source
     // The greater '>' is used here since we want to give files later on higher precedence
     const auto sort_by = [](const TurnPenaltySource &lhs, const TurnPenaltySource &rhs) {
-        return std::tie(lhs.segment.from, lhs.segment.via, lhs.segment.to, lhs.penalty_source.source) >
-               std::tie(rhs.segment.from, rhs.segment.via, rhs.segment.to, rhs.penalty_source.source);
+        return std::tie(
+                   lhs.segment.from, lhs.segment.via, lhs.segment.to, lhs.penalty_source.source) >
+               std::tie(
+                   rhs.segment.from, rhs.segment.via, rhs.segment.to, rhs.penalty_source.source);
     };
 
     std::stable_sort(begin(map), end(map), sort_by);
@@ -569,8 +571,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
             throw util::exception("Failed to open " + nodes_filename);
         }
 
-        unsigned number_of_nodes = 0;
-        nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
+        std::uint64_t number_of_nodes = 0;
+        nodes_input_stream.read((char *)&number_of_nodes, sizeof(std::uint64_t));
         internal_to_external_node_map.resize(number_of_nodes);
 
         // Load all the query nodes into a vector
@@ -976,7 +978,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
-    const unsigned contracted_edge_count = contracted_edge_list.size();
+    const std::uint64_t contracted_edge_count = contracted_edge_list.size();
     util::SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
                                  << " edges";
 
@@ -1033,13 +1035,13 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     const unsigned edges_crc32 = crc32_calculator(contracted_edge_list);
     util::SimpleLogger().Write() << "Writing CRC32: " << edges_crc32;
 
-    const unsigned node_array_size = node_array.size();
+    const std::uint64_t node_array_size = node_array.size();
     // serialize crc32, aka checksum
     hsgr_output_stream.write((char *)&edges_crc32, sizeof(unsigned));
     // serialize number of nodes
-    hsgr_output_stream.write((char *)&node_array_size, sizeof(unsigned));
+    hsgr_output_stream.write((char *)&node_array_size, sizeof(std::uint64_t));
     // serialize number of edges
-    hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(unsigned));
+    hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(std::uint64_t));
     // serialize all nodes
     if (node_array_size > 0)
     {
