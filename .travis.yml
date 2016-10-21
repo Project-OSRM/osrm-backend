@@ -48,7 +48,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CLANG_VERSION='3.8.1' CLANG_PACKAGE="clang++" BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON
+      env: CLANG_VERSION='3.8.1' CLANG_PACKAGE="clang" BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON
 
     - os: osx
       osx_image: xcode7.3
@@ -56,6 +56,14 @@ matrix:
       env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
 
     # Release Builds
+    - os: linux
+      compiler: "mason-release"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-5-dev', 'ccache']
+      env: BUILD_TYPE='Release' ENABLE_MASON=ON
+
     - os: linux
       compiler: "gcc-6-release"
       addons: &gcc6
@@ -131,7 +139,7 @@ install:
     fi
   - mkdir build && pushd build
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
   - make osrm-extract --jobs=3
   - make --jobs=${JOBS}
@@ -145,6 +153,13 @@ install:
       sudo ldconfig
     fi
   - popd
+  - |
+    if [[ ${ENABLE_MASON:-OFF} == 'ON' ]]; then
+      # for mason builds we need to point the example
+      # at the clang++ installed by the CMakeLists.txt automatically
+      CXX=$(.mason/mason prefix clang++ 3.9.0)/bin/clang++
+      CC=$(.mason/mason prefix clang++ 3.9.0)/bin/clang
+    fi
   - mkdir example/build && pushd example/build
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make

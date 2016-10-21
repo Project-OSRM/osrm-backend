@@ -7,6 +7,23 @@ Please create a directory and run cmake from there, passing the path to this sou
 This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
 endif()
 
+if(ENABLE_MASON)
+  message(STATUS "Enabling mason")
+  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.mason/mason.cmake")
+    #COMMAND git submodule update --init .mason WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    execute_process(
+      COMMAND git clone -b master --depth 1 https://github.com/mapbox/mason.git ${CMAKE_CURRENT_SOURCE_DIR}/.mason
+   )
+  endif()
+  include(${CMAKE_CURRENT_SOURCE_DIR}/.mason/mason.cmake)
+
+  set(CLANG_VERSION "3.8.1")
+  mason_use(clang++ VERSION ${CLANG_VERSION})
+  message(STATUS "Setting compiler to clang++ ${CLANG_VERSION} (via mason) ${MASON_PACKAGE_clang++_PREFIX}/bin/clang++")
+  set(CMAKE_CXX_COMPILER "${MASON_PACKAGE_clang++_PREFIX}/bin/clang++")
+  set(CMAKE_C_COMPILER "${MASON_PACKAGE_clang++_PREFIX}/bin/clang")
+endif()
+
 project(OSRM C CXX)
 set(OSRM_VERSION_MAJOR 5)
 set(OSRM_VERSION_MINOR 4)
@@ -46,6 +63,7 @@ if(WIN32 AND MSVC_VERSION LESS 1900)
   message(FATAL_ERROR "Building with Microsoft compiler needs Latest Visual Studio 2015 (Community or better)")
 endif()
 
+option(ENABLE_MASON "Use mason for dependencies" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
 option(BUILD_COMPONENTS "Build osrm-components" OFF)
@@ -283,43 +301,174 @@ if(UNIX AND NOT APPLE)
   set(MAYBE_RT_LIBRARY -lrt)
 endif()
 
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
-set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
-find_package(Osmium REQUIRED COMPONENTS io)
-add_dependency_includes(${OSMIUM_INCLUDE_DIR})
-
 # Disallow deprecated protozero APIs
 add_definitions(-DPROTOZERO_STRICT_API)
 
-find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+find_package(Threads REQUIRED)
+
+# if mason is enabled no find_package calls are made
+# to ensure that we are only compiling and linking against
+# fully portable mason packages
+if(ENABLE_MASON)
+  message(STATUS "Installing dependencies via mason")
+
+  set(Boost_USE_STATIC_LIBS ON)
+  mason_use(boost VERSION 1.61.0 HEADER_ONLY)
+  add_dependency_includes(${MASON_PACKAGE_boost_INCLUDE_DIRS})
+  mason_use(boost_libfilesystem VERSION 1.61.0)
+  set(Boost_FILESYSTEM_LIBRARY ${MASON_PACKAGE_boost_libfilesystem_STATIC_LIBS})
+  mason_use(boost_libiostreams VERSION 1.61.0)
+  set(Boost_IOSTREAMS_LIBRARY ${MASON_PACKAGE_boost_libiostreams_STATIC_LIBS})
+  mason_use(boost_libprogram_options VERSION 1.61.0)
+  set(Boost_PROGRAM_OPTIONS_LIBRARY ${MASON_PACKAGE_boost_libprogram_options_STATIC_LIBS})
+  mason_use(boost_libregex VERSION 1.61.0)
+  set(Boost_REGEX_LIBRARY ${MASON_PACKAGE_boost_libregex_STATIC_LIBS})
+  mason_use(boost_libtest VERSION 1.61.0)
+  set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY ${MASON_PACKAGE_boost_libtest_STATIC_LIBS})
+  mason_use(boost_libdate_time VERSION 1.61.0)
+  set(Boost_DATE_TIME_LIBRARY ${MASON_PACKAGE_boost_libdate_time_STATIC_LIBS})
+  mason_use(boost_libthread VERSION 1.61.0)
+  set(Boost_THREAD_LIBRARY ${MASON_PACKAGE_boost_libthread_STATIC_LIBS})
+  mason_use(boost_libsystem VERSION 1.61.0)
+  set(Boost_SYSTEM_LIBRARY ${MASON_PACKAGE_boost_libsystem_STATIC_LIBS})
+
+  mason_use(stxxl VERSION 1.4.1)
+  add_dependency_includes(${MASON_PACKAGE_stxxl_INCLUDE_DIRS})
+  set(STXXL_LIBRARY ${MASON_PACKAGE_stxxl_STATIC_LIBS})
+
+  mason_use(expat VERSION 2.1.1)
+  add_dependency_includes(${MASON_PACKAGE_expat_INCLUDE_DIRS})
+  set(EXPAT_LIBRARIES ${MASON_PACKAGE_expat_STATIC_LIBS})
+
+  mason_use(lua VERSION 5.2.4)
+  add_dependency_includes(${MASON_PACKAGE_lua_INCLUDE_DIRS})
+  set(USED_LUA_LIBRARIES ${MASON_PACKAGE_lua_STATIC_LIBS})
+
+  mason_use(luabind_lua524 VERSION e414c57bcb687bb3091b7c55bbff6947f052e46b)
+  add_dependency_includes(${MASON_PACKAGE_luabind_lua524_INCLUDE_DIRS})
+  set(LUABIND_LIBRARY ${MASON_PACKAGE_luabind_lua524_STATIC_LIBS})
+
+  mason_use(bzip2 VERSION 1.0.6)
+  add_dependency_includes(${MASON_PACKAGE_bzip2_INCLUDE_DIRS})
+  set(BZIP2_LIBRARIES ${MASON_PACKAGE_bzip2_STATIC_LIBS})
+
+  # todo - system packages do not provide a remote tarball
+  # but the mason-cmake integration expects one
+  #mason_use(zlib VERSION system)
+  #add_dependency_includes(${MASON_PACKAGE_zlib_INCLUDE_DIRS})
+  #set(ZLIB_LIBRARY ${MASON_PACKAGE_zlib_LDFLAGS})
+  set(ZLIB_LIBRARY "-lz")
+
+  mason_use(tbb VERSION 43_20150316)
+  add_dependency_includes(${MASON_PACKAGE_tbb_INCLUDE_DIRS})
+  set(TBB_LIBRARIES ${MASON_PACKAGE_tbb_LDFLAGS})
+
+  if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
+    message(WARNING "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
+  endif()
+    foreach(libpath ${MASON_PACKAGE_tbb_LIBRARY_DIRS})
+      if(UNIX AND NOT APPLE)
+         set(LINKER_FLAGS "-Wl,-rpath,${libpath}")
+      elseif(APPLE)
+         set(LINKER_FLAGS "-Wl,-rpath, -Wl,${libpath}")
+      endif()
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
+      set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
+    endforeach()
+
+  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
+
+  if(BUILD_COMPONENTS)
+    message(FATAL_ERROR "BUILD_COMPONENTS is not supported with ENABLE_MASON")
+  endif()
+
+  # current mason packages target -D_GLIBCXX_USE_CXX11_ABI=0
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+
+  if(ENABLE_CCACHE)
+    set(CCACHE_VERSION "3.3.1")
+    mason_use(ccache VERSION ${CCACHE_VERSION})
+    message(STATUS "Setting ccache to clang++ ${CCACHE_VERSION} (via mason) ${MASON_PACKAGE_ccache_PREFIX}/bin/ccache")
+    message(STATUS "Using ccache to speed up incremental builds")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${MASON_PACKAGE_ccache_PREFIX}/bin/ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${MASON_PACKAGE_ccache_PREFIX}/bin/ccache)
+    set(ENV{CCACHE_CPP2} "true")
+  endif()
+
+
+else()
+
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
+  set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
+  find_package(Osmium REQUIRED COMPONENTS io)
+  include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
+
+  find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  add_dependency_includes(${Boost_INCLUDE_DIRS})
+
+  find_package(TBB REQUIRED)
+  add_dependency_includes(${TBB_INCLUDE_DIR})
+  if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
+  endif()
+  find_package(Luabind REQUIRED)
+  add_dependency_includes(${LUABIND_INCLUDE_DIR})
+  set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
+  add_dependency_includes(${LUA_INCLUDE_DIR})
+
+  find_package(EXPAT REQUIRED)
+  add_dependency_includes(${EXPAT_INCLUDE_DIRS})
+
+  find_package(STXXL REQUIRED)
+  add_dependency_includes(${STXXL_INCLUDE_DIR})
+
+  find_package(BZip2 REQUIRED)
+  add_dependency_includes(${BZIP2_INCLUDE_DIR})
+
+  find_package(ZLIB REQUIRED)
+  add_dependency_includes(${ZLIB_INCLUDE_DIRS})
+
+  if(BUILD_COMPONENTS)
+    find_package(GDAL)
+  endif()
+
+  # add a target to generate API documentation with Doxygen
+  find_package(Doxygen)
+  if(DOXYGEN_FOUND)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  add_custom_target(doc
+  ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Generating API documentation with Doxygen" VERBATIM
+  )
+  endif()
+
+  # prefix compilation with ccache by default if available and on clang or gcc
+  if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU"))
+    find_program(CCACHE_FOUND ccache)
+    if(CCACHE_FOUND)
+      message(STATUS "Using ccache to speed up incremental builds")
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+      set(ENV{CCACHE_CPP2} "true")
+    endif()
+  endif()
+
+endif()
 
 if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_dependency_defines(-DBOOST_TEST_DYN_LINK)
 endif()
+
+
+if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
+  add_dependency_defines(-DBOOST_TEST_DYN_LINK)
+endif()
+
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
 add_dependency_defines(-DBOOST_FILESYSTEM_NO_DEPRECATED)
-add_dependency_includes(${Boost_INCLUDE_DIRS})
-
-find_package(Threads REQUIRED)
-
-find_package(TBB REQUIRED)
-add_dependency_includes(${TBB_INCLUDE_DIR})
-if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
-  set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
-endif()
-
-find_package(Luabind REQUIRED)
-add_dependency_includes(${LUABIND_INCLUDE_DIR})
-set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
-add_dependency_includes(${LUA_INCLUDE_DIR})
-
-find_package(EXPAT REQUIRED)
-add_dependency_includes(${EXPAT_INCLUDE_DIRS})
-
-find_package(STXXL REQUIRED)
-add_dependency_includes(${STXXL_INCLUDE_DIR})
 
 set(OpenMP_FIND_QUIETLY ON)
 find_package(OpenMP)
@@ -327,12 +476,6 @@ if(OPENMP_FOUND)
   message(STATUS "OpenMP support found. Linking just in case for stxxl")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-find_package(BZip2 REQUIRED)
-add_dependency_includes(${BZIP2_INCLUDE_DIR})
-
-find_package(ZLIB REQUIRED)
-add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${OSRM_INCLUDE_PATHS})
@@ -405,7 +548,6 @@ target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 if(BUILD_COMPONENTS)
-  find_package(GDAL)
   if(GDAL_FOUND)
     add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
     target_link_libraries(osrm-components ${TBB_LIBRARIES})
@@ -492,28 +634,6 @@ JOIN("-I${OSRM_INCLUDE_PATHS}" " -I" OSRM_INCLUDE_PATHS_STRING)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
-
-# add a target to generate API documentation with Doxygen
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-add_custom_target(doc
-${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-COMMENT "Generating API documentation with Doxygen" VERBATIM
-)
-endif()
-
-# prefix compilation with ccache by default if available and on clang or gcc
-if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU"))
-  find_program(CCACHE_FOUND ccache)
-  if(CCACHE_FOUND)
-    message(STATUS "Using ccache to speed up incremental builds")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-    set(ENV{CCACHE_CPP2} "true")
-  endif()
-endif()
 
 # uninstall target
 configure_file(
