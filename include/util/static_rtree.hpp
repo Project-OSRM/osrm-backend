@@ -333,9 +333,9 @@ class StaticRTree
         // open tree file
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);
 
-        std::uint32_t size_of_tree = m_search_tree.size();
+        std::uint64_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
-        tree_node_file.write((char *)&size_of_tree, sizeof(std::uint32_t));
+        tree_node_file.write((char *)&size_of_tree, sizeof(size_of_tree));
         tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
 
         MapLeafNodesFile(leaf_node_filename);
@@ -357,11 +357,10 @@ class StaticRTree
         }
         boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
 
-
-        std::uint32_t tree_size = storage::io::readRamIndexSize(tree_node_file);
+        const auto tree_size = storage::io::readElementCount(tree_node_file);
 
         m_search_tree.resize(tree_size);
-        storage::io::readRamIndexData(tree_node_file, &m_search_tree[0], tree_size);
+        storage::io::readRamIndex(tree_node_file, &m_search_tree[0], tree_size);
 
         MapLeafNodesFile(leaf_file);
     }

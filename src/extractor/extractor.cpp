@@ -112,8 +112,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     TIMER_START(extracting);
 
     const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
-    const auto number_of_threads =
-        std::min(recommended_num_threads, config.requested_num_threads);
+    const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
     tbb::task_scheduler_init init(number_of_threads);
 
     {
@@ -527,8 +526,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map)
 {
     boost::filesystem::ofstream node_stream(config.node_output_path, std::ios::binary);
-    const unsigned size_of_mapping = internal_to_external_node_map.size();
-    node_stream.write((char *)&size_of_mapping, sizeof(unsigned));
+    const std::uint64_t size_of_mapping = internal_to_external_node_map.size();
+    node_stream.write((char *)&size_of_mapping, sizeof(std::uint64_t));
     if (size_of_mapping > 0)
     {
         node_stream.write((char *)internal_to_external_node_map.data(),

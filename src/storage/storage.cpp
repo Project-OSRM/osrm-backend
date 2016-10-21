@@ -230,7 +230,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
         throw util::exception("Could not open " + config.edges_data_path.string() +
                               " for reading.");
     }
-    auto number_of_original_edges = io::readEdgesSize(edges_input_stream);
+    const auto number_of_original_edges = io::readElementCount(edges_input_stream);
 
     // note: settings this all to the same size is correct, we extract them from the same struct
     shared_layout_ptr->SetBlockSize<NodeID>(SharedDataLayout::VIA_NODE_LIST,
@@ -256,7 +256,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
         throw util::exception("Could not open " + config.hsgr_data_path.string() + " for reading.");
     }
 
-    auto hsgr_header = io::readHSGRHeader(hsgr_input_stream);
+    const auto hsgr_header = io::readHSGRHeader(hsgr_input_stream);
     shared_layout_ptr->SetBlockSize<unsigned>(SharedDataLayout::HSGR_CHECKSUM, 1);
     shared_layout_ptr->SetBlockSize<QueryGraph::NodeArrayEntry>(SharedDataLayout::GRAPH_NODE_LIST,
                                                                 hsgr_header.number_of_nodes);
@@ -266,13 +266,13 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // load rsearch tree size
     boost::filesystem::ifstream tree_node_file(config.ram_index_path, std::ios::binary);
 
-    std::uint32_t tree_size = io::readRamIndexSize(tree_node_file);
+    const auto tree_size = io::readElementCount(tree_node_file);
     shared_layout_ptr->SetBlockSize<RTreeNode>(SharedDataLayout::R_SEARCH_TREE, tree_size);
 
     // allocate space in shared memory for profile properties
-    std::size_t PropertiesSize = io::readPropertiesSize();
+    const auto properties_size = io::readPropertiesCount();
     shared_layout_ptr->SetBlockSize<extractor::ProfileProperties>(SharedDataLayout::PROPERTIES,
-                                                                  PropertiesSize);
+                                                                  properties_size);
 
     // read timestampsize
     boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
@@ -280,7 +280,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     {
         throw util::exception("Could not open " + config.timestamp_path.string() + " for reading.");
     }
-    std::size_t timestamp_size = io::readTimestampSize(timestamp_stream);
+    const auto timestamp_size = io::readNumberOfBytes(timestamp_stream);
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TIMESTAMP, timestamp_size);
 
     // load core marker size
@@ -301,7 +301,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     {
         throw util::exception("Could not open " + config.core_data_path.string() + " for reading.");
     }
-    auto coordinate_list_size = io::readNodesSize(nodes_input_stream);
+    const auto coordinate_list_size = io::readElementCount(nodes_input_stream);
     shared_layout_ptr->SetBlockSize<util::Coordinate>(SharedDataLayout::COORDINATE_LIST,
                                                       coordinate_list_size);
     // we'll read a list of OSM node IDs from the same data, so set the block size for the same
@@ -342,12 +342,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
         throw util::exception("Could not open " + config.datasource_indexes_path.string() +
                               " for reading.");
     }
-    std::uint64_t number_of_compressed_datasources = 0;
-    if (geometry_datasource_input_stream)
-    {
-        number_of_compressed_datasources =
-            io::readDatasourceIndexesSize(geometry_datasource_input_stream);
-    }
+    const auto number_of_compressed_datasources =
+        io::readElementCount(geometry_datasource_input_stream);
     shared_layout_ptr->SetBlockSize<uint8_t>(SharedDataLayout::DATASOURCES_LIST,
                                              number_of_compressed_datasources);
 
@@ -361,19 +357,15 @@ Storage::ReturnCode Storage::Run(int max_wait)
         throw util::exception("Could not open " + config.datasource_names_path.string() +
                               " for reading.");
     }
-    io::DatasourceNamesData datasource_names_data;
-    if (datasource_names_input_stream)
-    {
-        datasource_names_data = io::readDatasourceNamesData(datasource_names_input_stream);
-    }
+    const io::DatasourceNamesData datasource_names_data =
+        io::readDatasourceNames(datasource_names_input_stream);
 
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::DATASOURCE_NAME_DATA,
                                           datasource_names_data.names.size());
-    shared_layout_ptr->SetBlockSize<std::uint32_t>(SharedDataLayout::DATASOURCE_NAME_OFFSETS,
-                                                   datasource_names_data.offsets.size());
-    shared_layout_ptr->SetBlockSize<std::uint32_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
-                                                   datasource_names_data.lengths.size());
-
+    shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_OFFSETS,
+                                                 datasource_names_data.offsets.size());
+    shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
+                                                 datasource_names_data.lengths.size());
     boost::filesystem::ifstream intersection_stream(config.intersection_class_path,
                                                     std::ios::binary);
 
@@ -564,16 +556,16 @@ Storage::ReturnCode Storage::Run(int max_wait)
     EntryClassID *entry_class_id_ptr = shared_layout_ptr->GetBlockPtr<EntryClassID, true>(
         shared_memory_ptr, SharedDataLayout::ENTRY_CLASSID);
 
-    io::readEdgesData(edges_input_stream,
-                      via_geometry_ptr,
-                      name_id_ptr,
-                      turn_instructions_ptr,
-                      lane_data_id_ptr,
-                      travel_mode_ptr,
-                      entry_class_id_ptr,
-                      pre_turn_bearing_ptr,
-                      post_turn_bearing_ptr,
-                      number_of_original_edges);
+    io::readEdges(edges_input_stream,
+                  via_geometry_ptr,
+                  name_id_ptr,
+                  turn_instructions_ptr,
+                  lane_data_id_ptr,
+                  travel_mode_ptr,
+                  entry_class_id_ptr,
+                  pre_turn_bearing_ptr,
+                  post_turn_bearing_ptr,
+                  number_of_original_edges);
     edges_input_stream.close();
 
     // load compressed geometry
@@ -676,7 +668,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     util::PackedVector<OSMNodeID, true> osmnodeid_list;
     osmnodeid_list.reset(osmnodeid_ptr,
                          shared_layout_ptr->num_entries[SharedDataLayout::OSM_NODE_ID_LIST]);
-    io::readNodesData(nodes_input_stream, coordinates_ptr, osmnodeid_list, coordinate_list_size);
+    io::readNodes(nodes_input_stream, coordinates_ptr, osmnodeid_list, coordinate_list_size);
     nodes_input_stream.close();
 
     // store timestamp
@@ -685,9 +677,9 @@ Storage::ReturnCode Storage::Run(int max_wait)
     io::readTimestamp(timestamp_stream, timestamp_ptr, timestamp_size);
 
     // store search tree portion of rtree
-    RTreeNode *rtree_ptrtest = shared_layout_ptr->GetBlockPtr<RTreeNode, true>(shared_memory_ptr,
-                                                                 SharedDataLayout::R_SEARCH_TREE);
-    io::readRamIndexData(tree_node_file, rtree_ptrtest, tree_size);
+    RTreeNode *rtree_ptrtest = shared_layout_ptr->GetBlockPtr<RTreeNode, true>(
+        shared_memory_ptr, SharedDataLayout::R_SEARCH_TREE);
+    io::readRamIndex(tree_node_file, rtree_ptrtest, tree_size);
 
     // load core markers
     std::vector<char> unpacked_core_markers(number_of_core_markers);
@@ -744,9 +736,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
     {
         util::exception("Could not open " + config.properties_path.string() + " for reading!");
     }
-    io::readProperties(profile_properties_stream,
-                       profile_properties_ptr,
-                       sizeof(extractor::ProfileProperties));
+    io::readProperties(
+        profile_properties_stream, profile_properties_ptr, sizeof(extractor::ProfileProperties));
 
     // load intersection classes
     if (!bearing_class_id_table.empty())
