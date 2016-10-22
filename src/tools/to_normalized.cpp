@@ -129,6 +129,7 @@ void writeNormalizedGraph(boost::filesystem::path output_path,
             auto oneway = fwd_edge_data.reversed || rev_edge_data.reversed;
 
             out << std::setprecision(12);
+
             out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
             out << "[" << util::toFloating(source.lon) << "," << util::toFloating(source.lat) << "], [" << util::toFloating(target.lon) << ","
                 << util::toFloating(target.lat) << "]";
@@ -136,6 +137,18 @@ void writeNormalizedGraph(boost::filesystem::path output_path,
             out << source.node_id << ", " << target.node_id;
             out << "], \"oneway\":" << oneway << ",\"highway\":\""
                 << classificationToString(fwd_edge_data.road_classification) << "\"}}\n";
+
+            constexpr bool DEBUG_INTERSECTIONS = false;
+            if (DEBUG_INTERSECTIONS)
+            {
+                out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[";
+                out << util::toFloating(source.lon) << "," << util::toFloating(source.lat);
+                out << "]},\"properties\":{\"id\":\"" << source.node_id << "\"}}\n";
+
+                out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[";
+                out << util::toFloating(target.lon) << "," << util::toFloating(target.lat);
+                out << "]},\"properties\":{\"id\":\"" << target.node_id << "\"}}\n";
+            }
         }
     }
 }
