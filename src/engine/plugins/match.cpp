@@ -12,6 +12,8 @@
 #include <cstdlib>
 
 #include <algorithm>
+#include <functional>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
@@ -121,6 +123,16 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
     if (!CheckAllCoordinates(parameters.coordinates))
     {
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
+    }
+
+    // Check for same or increasing timestamps. Impl. note: Incontrast to `sort(first,
+    // last, less_equal)` checking `greater` in reverse meets irreflexive requirements.
+    const auto time_increases_monotonically = std::is_sorted(
+        parameters.timestamps.rbegin(), parameters.timestamps.rend(), std::greater<>{});
+
+    if (!time_increases_monotonically)
+    {
+        return Error("InvalidValue", "Timestamps need to be monotonically increasing.", json_result);
     }
 
     // assuming radius is the standard deviation of a normal distribution

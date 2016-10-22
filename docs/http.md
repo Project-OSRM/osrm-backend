@@ -275,7 +275,7 @@ In addition to the [general options](#general-options) the following options are
 |geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)                        |
 |annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
-|timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamp of the input location.                                                          |
+|timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamp of the input location. Timestamps need to be monotonically increasing.          |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
 
 |Parameter   |Values                        |
