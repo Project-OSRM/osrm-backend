@@ -35,3 +35,18 @@ Feature: Features related to bugs
         When I route I should get
             | waypoints | route           | turns                        |
             | 1,2       | top,right,right | depart,new name right,arrive |
+
+    @3156
+    Scenario: Incorrect lanes tag
+        Given the node map
+            """
+            a b
+            """
+
+        And the ways
+            | nodes | lanes |
+            | ab    | 1; 2  |
+
+        And the data has been saved to disk
+        When I try to run "osrm-extract {osm_file} --profile {profile_file}"
+        Then it should exit successfully
