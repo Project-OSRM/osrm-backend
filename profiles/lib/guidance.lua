@@ -63,7 +63,7 @@ function Guidance.set_classification (highway, result, input_way)
     local lane_count = input_way:get_value_by_key("lanes")
     if lane_count and lane_count ~= "" then
         local lc = tonumber(lane_count)
-        if lane_count ~= nil then
+        if lc ~= nil then
             result.road_classification.num_lanes = lc
         end
     else
