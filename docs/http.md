@@ -108,6 +108,7 @@ Where `code` is on one of the strings below or service dependent:
 | `InvalidVersion`  | Version is not found.                                                            |
 | `InvalidOptions`  | Options are invalid.                                                             |
 | `InvalidQuery`    | The query string is synctactically malformed.                                    |
+| `InvalidValue`    | The successfully parsed query parameters are invalid.                            |
 | `NoSegment`       | One of the supplied input coordinates could not snap to street segment.          |
 | `TooBig`          | The request size violates one of the service specific request size restrictions. |
 
