@@ -47,10 +47,10 @@ namespace engine
 namespace datafacade
 {
 
-class SharedDataFacade final : public BaseDataFacade
+class SharedDataFacade : public BaseDataFacade
 {
 
-  private:
+  protected:
     using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<EdgeData, true>;
     using GraphNode = QueryGraph::NodeArrayEntry;
@@ -402,6 +402,8 @@ class SharedDataFacade final : public BaseDataFacade
         m_entry_class_table = std::move(entry_class_table);
     }
 
+    SharedDataFacade() {}
+
   public:
     // this function handle the deallocation of the shared memory it we can prove it will not be
     // used anymore
@@ -454,7 +456,11 @@ class SharedDataFacade final : public BaseDataFacade
         BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
         m_large_memory = storage::makeSharedMemory(data_region);
         shared_memory = (char *)(m_large_memory->Ptr());
+        LoadData();
+    }
 
+    void LoadData()
+    {
         LoadGraph();
         LoadChecksum();
         LoadNodeAndEdgeInformation();
