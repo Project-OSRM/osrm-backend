@@ -215,12 +215,13 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     const PhantomNodes &phantom_node_pair,
                     std::vector<PathData> &unpacked_path) const
     {
+        BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
+
         const bool start_traversed_in_reverse =
             (*packed_path_begin != phantom_node_pair.source_phantom.forward_segment_id.id);
         const bool target_traversed_in_reverse =
             (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_segment_id.id);
 
-        BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
         std::stack<std::pair<NodeID, NodeID>> recursion_stack;
 
         // We have to push the path in reverse order onto the stack because it's LIFO.

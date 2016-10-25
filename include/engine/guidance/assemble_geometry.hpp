@@ -35,7 +35,9 @@ namespace guidance
 inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                                     const std::vector<PathData> &leg_data,
                                     const PhantomNode &source_node,
-                                    const PhantomNode &target_node)
+                                    const PhantomNode &target_node,
+                                    const bool reversed_source,
+                                    const bool reversed_target)
 {
     LegGeometry geometry;
 
@@ -43,16 +45,30 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     geometry.segment_offsets.push_back(0);
     geometry.locations.push_back(source_node.location);
 
-    // Need to get the node ID preceding the source phantom node
-    // TODO: check if this was traversed in reverse?
-    std::vector<NodeID> reverse_geometry;
-    facade.GetUncompressedGeometry(source_node.reverse_packed_geometry_id, reverse_geometry);
-    geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(
-        reverse_geometry[reverse_geometry.size() - source_node.fwd_segment_position - 1]));
+    //                          u       *      v
+    //                          0 -- 1 -- 2 -- 3
+    // fwd_segment_position:  1
+    // source node fwd:       1      1 -> 2 -> 3
+    // source node rev:       2 0 <- 1 <- 2
+    const auto source_segment_start_coordinate =
+        source_node.fwd_segment_position + (reversed_source ? 1 : 0);
 
-    std::vector<uint8_t> forward_datasource_vector;
-    facade.GetUncompressedDatasources(source_node.forward_packed_geometry_id,
-                                      forward_datasource_vector);
+    // we don't save the first node id in the forward geometry, we need to get it as last coordinate from the reverse
+    // geometry
+    if (source_segment_start_coordinate == 0)
+    {
+        std::vector<NodeID> source_geometry;
+        facade.GetUncompressedGeometry(source_node.reverse_packed_geometry_id, source_geometry);
+        geometry.osm_node_ids.push_back(
+            facade.GetOSMNodeIDOfNode(source_geometry.back()));
+    }
+    else
+    {
+        std::vector<NodeID> source_geometry;
+        facade.GetUncompressedGeometry(source_node.forward_packed_geometry_id, source_geometry);
+        geometry.osm_node_ids.push_back(
+            facade.GetOSMNodeIDOfNode(source_geometry[source_segment_start_coordinate - 1]));
+    }
 
     auto cumulative_distance = 0.;
     auto current_distance = 0.;
@@ -94,12 +110,29 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     geometry.segment_offsets.push_back(geometry.locations.size());
     geometry.locations.push_back(target_node.location);
 
-    // Need to get the node ID following the destination phantom node
-    // TODO: check if this was traversed in reverse??
-    std::vector<NodeID> forward_geometry;
-    facade.GetUncompressedGeometry(target_node.forward_packed_geometry_id, forward_geometry);
-    geometry.osm_node_ids.push_back(
-        facade.GetOSMNodeIDOfNode(forward_geometry[target_node.fwd_segment_position]));
+    //                           u       *      v
+    //                           0 -- 1 -- 2 -- 3
+    // fwd_segment_position:  1
+    // target node fwd:       2  0 -> 1 -> 2
+    // target node rev:       1       1 <- 2 <- 3
+    const auto target_segment_end_coordinate =
+        target_node.fwd_segment_position + (reversed_target ? 0 : 1);
+    // we don't save the first node id in the forward geometry, we need to get it as last coordinate from the reverse
+    // geometry
+    if (target_segment_end_coordinate == 0)
+    {
+        std::vector<NodeID> target_geometry;
+        facade.GetUncompressedGeometry(target_node.reverse_packed_geometry_id, target_geometry);
+        geometry.osm_node_ids.push_back(
+            facade.GetOSMNodeIDOfNode(target_geometry.back()));
+    }
+    else
+    {
+        std::vector<NodeID> target_geometry;
+        facade.GetUncompressedGeometry(target_node.forward_packed_geometry_id, target_geometry);
+        geometry.osm_node_ids.push_back(
+            facade.GetOSMNodeIDOfNode(target_geometry[target_segment_end_coordinate - 1]));
+    }
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
     BOOST_ASSERT(geometry.locations.size() > geometry.segment_distances.size());
