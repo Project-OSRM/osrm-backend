@@ -113,7 +113,7 @@ module.exports = function () {
                             if (headers.has('speed')) {
                                 if (row.speed !== '' && instructions) {
                                     if (!row.speed.match(/\d+ km\/h/))
-                                        cb(new Error('*** Speed must be specied in km/h. (ex: 50 km/h)'));
+                                        cb(new Error('*** Speed must be specfied in km/h. (ex: 50 km/h)'));
                                     var speed = time > 0 ? Math.round(3.6*distance/time) : null;
                                     got.speed = util.format('%d km/h', speed);
                                 } else {

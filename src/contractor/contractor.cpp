@@ -113,11 +113,16 @@ EdgeWeight getNewWeight(IterType speed_iter,
         }
     }
 
-    auto smoothing_factor = speed_iter->speed_source.smoothing_factor;
-    auto scaled_new_segment_weight =
-        (1 - smoothing_factor) * old_weight + smoothing_factor * new_segment_weight;
+    if (new_segment_weight != INVALID_EDGE_WEIGHT)
+    {
+        auto smoothing_factor = speed_iter->speed_source.smoothing_factor;
+        auto scaled_new_segment_weight =
+            (1 - smoothing_factor) * old_weight + smoothing_factor * new_segment_weight;
 
-    return scaled_new_segment_weight;
+        return scaled_new_segment_weight;
+    }
+
+    return new_segment_weight;
 }
 
 int Contractor::Run()
@@ -632,7 +637,9 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
                 auto forward_speed_iter =
                     find(segment_speed_lookup, Segment{u->node_id, v->node_id});
-                if (forward_speed_iter != segment_speed_lookup.end())
+
+                if (forward_speed_iter != segment_speed_lookup.end() &&
+                    forward_speed_iter->speed_source.smoothing_factor != 0)
                 {
                     const auto new_segment_weight = getNewWeight(forward_speed_iter,
                                                                  segment_length,
@@ -660,7 +667,9 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
                 const auto reverse_speed_iter =
                     find(segment_speed_lookup, Segment{v->node_id, u->node_id});
-                if (reverse_speed_iter != segment_speed_lookup.end())
+
+                if (reverse_speed_iter != segment_speed_lookup.end() &&
+                    reverse_speed_iter->speed_source.smoothing_factor != 0)
                 {
                     const auto new_segment_weight = getNewWeight(reverse_speed_iter,
                                                                  segment_length,
@@ -808,7 +817,9 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 auto speed_iter =
                     find(segment_speed_lookup,
                          Segment{previous_osm_node_id, segmentblocks[i].this_osm_node_id});
-                if (speed_iter != segment_speed_lookup.end())
+
+                if (speed_iter != segment_speed_lookup.end() &&
+                    speed_iter->speed_source.smoothing_factor != 0)
                 {
                     if (speed_iter->speed_source.speed > 0)
                     {
