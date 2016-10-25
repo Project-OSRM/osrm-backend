@@ -60,6 +60,11 @@ namespace engine
 namespace datafacade
 {
 
+/**
+ * This datafacade uses a process-local memory block to load
+ * data into.  The logic is otherwise identical to the SharedMemoryFacade,
+ * so we can just extend from that class.
+ */
 class InternalDataFacade final : public SharedDataFacade
 {
 
@@ -74,10 +79,15 @@ class InternalDataFacade final : public SharedDataFacade
         internal_layout = std::make_unique<storage::DataLayout>();
         data_layout = internal_layout.get();
 
+        // Calculate the total memory size and offsets for each structure
         storage.LoadLayout(data_layout);
+        // Allocate the large memory block
         internal_memory = std::make_unique<char>(internal_layout->GetSizeOfLayout());
         shared_memory = internal_memory.get();
+        // Load all the datafiles into that block
         storage.LoadData(data_layout, shared_memory);
+
+        // Datafacade is now ready for use.
     }
 };
 }
