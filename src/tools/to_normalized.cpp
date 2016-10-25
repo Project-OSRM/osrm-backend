@@ -9,8 +9,8 @@
 #include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
 #include <memory>
 #include <string>
 #include <vector>
@@ -95,10 +95,12 @@ std::string classificationToString(extractor::guidance::RoadClassification class
 }
 
 void writeNormalizedGraph(boost::filesystem::path output_path,
-                          util::NodeBasedDynamicGraph &graph,
-                          std::vector<extractor::QueryNode> &internal_to_external_node_map)
+                          const util::NodeBasedDynamicGraph &graph,
+                          const extractor::CompressedEdgeContainer &compressed_edge_container,
+                          const std::vector<extractor::QueryNode> &internal_to_external_node_map)
 {
     boost::filesystem::ofstream out(output_path, std::ios::out);
+    out << std::setprecision(12);
 
     std::size_t way_id = 1;
 
@@ -123,31 +125,56 @@ void writeNormalizedGraph(boost::filesystem::path output_path,
             if (!fwd_edge_data.startpoint || !rev_edge_data.startpoint)
                 continue;
 
-            auto source = internal_to_external_node_map[source_node];
-            auto target = internal_to_external_node_map[target_node];
             // if this is a oneway, one edge is just an imcoming edge
             auto oneway = fwd_edge_data.reversed || rev_edge_data.reversed;
 
-            out << std::setprecision(12);
+            const auto &compressed_bucket =
+                [&fwd_edge_data, &rev_edge_data, &compressed_edge_container, fwd_edge, rev_edge]() {
+                    if (rev_edge_data.reversed)
+                    {
+                        BOOST_ASSERT(!fwd_edge_data.reversed);
+                        return compressed_edge_container.GetBucketReference(fwd_edge);
+                    }
+                    else
+                    {
+                        BOOST_ASSERT(!rev_edge_data.reversed);
+                        return compressed_edge_container.GetBucketReference(rev_edge);
+                    }
+                }();
 
-            out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
-            out << "[" << util::toFloating(source.lon) << "," << util::toFloating(source.lat) << "], [" << util::toFloating(target.lon) << ","
-                << util::toFloating(target.lat) << "]";
-            out << "]},\"properties\":{\"id\":\"" << (way_id++) << "\",\"refs\":[";
-            out << source.node_id << ", " << target.node_id;
-            out << "], \"oneway\":" << oneway << ",\"highway\":\""
-                << classificationToString(fwd_edge_data.road_classification) << "\"}}\n";
+            std::stringstream coordinates;
+            std::stringstream refs;
+            for (auto idx = 0; idx < compressed_bucket.size() - 1; ++idx)
+            {
+                const auto &query_node =
+                    internal_to_external_node_map[compressed_bucket[idx].node_id];
+                coordinates << "[" << util::toFloating(query_node.lon) << ","
+                            << util::toFloating(query_node.lat) << "],";
+                refs << query_node.node_id << ",";
+            }
+            const auto &last_query_node = internal_to_external_node_map[compressed_bucket.back().node_id];
+            coordinates << "[" << util::toFloating(last_query_node.lon) << ","
+                        << util::toFloating(last_query_node.lat) << "]";
+            refs << last_query_node.node_id << ",";
+
+            out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":["
+                << coordinates.str() << "]},\"properties\":{\"id\":\"" << (way_id++)
+                << "\",\"refs\":[" << refs.str() << "], \"oneway\":" << oneway
+                << ",\"highway\":\"" << classificationToString(fwd_edge_data.road_classification)
+                << "\"}}\n";
 
             constexpr bool DEBUG_INTERSECTIONS = false;
             if (DEBUG_INTERSECTIONS)
             {
-                out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[";
-                out << util::toFloating(source.lon) << "," << util::toFloating(source.lat);
-                out << "]},\"properties\":{\"id\":\"" << source.node_id << "\"}}\n";
-
-                out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[";
-                out << util::toFloating(target.lon) << "," << util::toFloating(target.lat);
-                out << "]},\"properties\":{\"id\":\"" << target.node_id << "\"}}\n";
+                for (const auto &entry : compressed_bucket)
+                {
+                    const auto &query_node = internal_to_external_node_map[entry.node_id];
+                    out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":"
+                           "[";
+                    out << util::toFloating(query_node.lon) << ","
+                        << util::toFloating(query_node.lat);
+                    out << "]},\"properties\":{\"id\":\"" << query_node.node_id << "\"}}\n";
+                }
             }
         }
     }
@@ -183,11 +210,15 @@ int main(int argc, char *argv[])
     barrier_list.clear();
     barrier_list.shrink_to_fit();
 
-    graph_compressor.Compress(
-        barrier_nodes_map, std::unordered_set<NodeID>{}, restriction_map, *graph, compressed_edge_container);
+    graph_compressor.Compress(barrier_nodes_map,
+                              std::unordered_set<NodeID>{},
+                              restriction_map,
+                              *graph,
+                              compressed_edge_container);
 
     tools::writeNormalizedGraph(boost::filesystem::path(argv[2]),
                                 *graph,
+                                compressed_edge_container,
                                 internal_to_external_id_map);
 
     return EXIT_SUCCESS;
