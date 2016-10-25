@@ -2,7 +2,7 @@ FROM ubuntu:14.04
 
 RUN apt-get update -y && apt-get install -y  software-properties-common
 RUN add-apt-repository ppa:ubuntu-toolchain-r/test
-RUN apt-get update -y && apt-get install -y g++-5 libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev lua5.1 liblua5.1-0-dev libtbb-dev libgdal-dev libluabind-dev libboost-all-dev ccache
+RUN apt-get update -y && apt-get install -y g++-5 libbz2-dev libstxxl-dev libstxxl1 libxml2-dev libzip-dev lua5.1 liblua5.1-0-dev libtbb-dev libgdal-dev libboost-all-dev ccache
 RUN apt-get -y install curl cmake cmake-curses-gui git
 
 WORKDIR /opt

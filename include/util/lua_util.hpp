@@ -18,25 +18,6 @@ namespace osrm
 namespace util
 {
 
-struct LuaState
-{
-    LuaState() : handle{::luaL_newstate(), &::lua_close} { luaL_openlibs(*this); }
-
-    operator lua_State *() { return handle.get(); }
-    operator lua_State const *() const { return handle.get(); }
-
-    using handle_type = std::unique_ptr<lua_State, decltype(&::lua_close)>;
-    handle_type handle;
-};
-
-// Check if the lua function <name> is defined
-inline bool luaFunctionExists(lua_State *lua_state, const char *name)
-{
-    luabind::object globals_table = luabind::globals(lua_state);
-    luabind::object lua_function = globals_table[name];
-    return lua_function && (luabind::type(lua_function) == LUA_TFUNCTION);
-}
-
 // Add the folder contain the script to the lua load path, so script can easily require() other lua
 // scripts inside that folder, or subfolders.
 // See http://lua-users.org/wiki/PackagePath for details on the package.path syntax.

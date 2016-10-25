@@ -17,7 +17,7 @@ sudo apt-get update -qq --yes || true
 
 
 sudo apt-get install -qq --yes --force-yes g++-4.8-arm-linux-gnueabihf g++-4.8-multilib-arm-linux-gnueabihf gcc-4.8-arm-linux-gnueabihf gcc-4.8-multilib-arm-linux-gnueabihf
-sudo apt-get install -qq --yes --force-yes libexpat1-dev:armhf zlib1g-dev:armhf libbz2-dev:armhf libboost-date-time-dev:armhf libboost-filesystem-dev:armhf libboost-iostreams-dev:armhf libboost-program-options-dev:armhf libboost-regex-dev:armhf libboost-system-dev:armhf libboost-thread-dev:armhf libtbb-dev:armhf libboost-test-dev:armhf libluabind-dev:armhf
+sudo apt-get install -qq --yes --force-yes libexpat1-dev:armhf zlib1g-dev:armhf libbz2-dev:armhf libboost-date-time-dev:armhf libboost-filesystem-dev:armhf libboost-iostreams-dev:armhf libboost-program-options-dev:armhf libboost-regex-dev:armhf libboost-system-dev:armhf libboost-thread-dev:armhf libtbb-dev:armhf libboost-test-dev:armhf
 
 ## build libstxxl1v5:armhf from sources, no package in trusty
 if [ $UBUNTU_RELEASE == trusty ] ; then
