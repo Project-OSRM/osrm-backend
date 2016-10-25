@@ -199,7 +199,7 @@ if (ENABLE_COVERAGE)
     message(ERROR "ENABLE_COVERAGE=ON only make sense with a Debug build")
   endif()
   message(INFO "Enabling coverage")
-  set(MAYBE_COVERAGE_LIBRARIES "gcov")
+  set(MAYBE_COVERAGE_LIBRARIES "-lgcov")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs")
 endif()
 if (ENABLE_SANITIZER)
@@ -278,7 +278,7 @@ if(APPLE)
 endif()
 
 if(UNIX AND NOT APPLE)
-  set(MAYBE_RT_LIBRARY rt)
+  set(MAYBE_RT_LIBRARY -lrt)
 endif()
 
 
