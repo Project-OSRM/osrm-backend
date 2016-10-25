@@ -36,9 +36,9 @@ Feature: Car - Street names in instructions
             | cd    | Your Way | yourewaye          |     |
 
         When I route I should get
-            | from | to | route              | pronunciations       | ref   |
-            | a    | d  | My Way,My Way      | ,meyeway             | ,A1   |
-            | 1    | c  | Your Way,Your Way  | yourewaye,yourewaye  | ,     |
+            | from | to | route                | pronunciations      | ref    |
+            | a    | d  | My Way,My Way,My Way | ,meyeway,meyeway    | ,A1,A1 |
+            | 1    | c  | Your Way,Your Way    | yourewaye,yourewaye | ,      |
 
     # See #2860
     Scenario: Car - same street name but different pronunciation

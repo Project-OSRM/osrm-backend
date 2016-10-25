@@ -121,12 +121,8 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         {
             const auto &out_data = node_based_graph.GetEdgeData(road.eid);
 
-            const auto same_name =
-                !util::guidance::requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
-                                                       name_table.GetRefForID(in_data.name_id),
-                                                       name_table.GetNameForID(out_data.name_id),
-                                                       name_table.GetRefForID(out_data.name_id),
-                                                       street_name_suffix_table);
+            const auto same_name = !util::guidance::requiresNameAnnounced(
+                in_data.name_id, out_data.name_id, name_table, street_name_suffix_table);
 
             if (road.angle != 0 && in_data.name_id != EMPTY_NAMEID &&
                 out_data.name_id != EMPTY_NAMEID && same_name &&
@@ -361,16 +357,13 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
     }
     else if (intersection.size() == 3)
     {
-        const auto &second_intersection_data =
-            node_based_graph.GetEdgeData(intersection[2].eid);
-        const auto &first_intersection_data =
-            node_based_graph.GetEdgeData(intersection[1].eid);
-        const auto first_second_same_name = !util::guidance::requiresNameAnnounced(
-            name_table.GetNameForID(second_intersection_data.name_id),
-            name_table.GetRefForID(second_intersection_data.name_id),
-            name_table.GetNameForID(first_intersection_data.name_id),
-            name_table.GetRefForID(first_intersection_data.name_id),
-            street_name_suffix_table);
+        const auto &second_intersection_data = node_based_graph.GetEdgeData(intersection[2].eid);
+        const auto &first_intersection_data = node_based_graph.GetEdgeData(intersection[1].eid);
+        const auto first_second_same_name =
+            !util::guidance::requiresNameAnnounced(second_intersection_data.name_id,
+                                                   first_intersection_data.name_id,
+                                                   name_table,
+                                                   street_name_suffix_table);
 
         // merging onto a passing highway / or two ramps merging onto the same highway
         if (num_valid_turns == 1)

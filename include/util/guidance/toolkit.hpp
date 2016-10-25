@@ -4,11 +4,13 @@
 /* A set of tools required for guidance in both pre and post-processing */
 
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/suffix_table.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/attributes.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/name_table.hpp"
 #include "util/simple_logger.hpp"
 
 #include <algorithm>
@@ -163,8 +165,10 @@ inline std::pair<std::string, std::string> getPrefixAndSuffix(const std::string 
 template <typename SuffixTable>
 inline bool requiresNameAnnounced(const std::string &from_name,
                                   const std::string &from_ref,
+                                  const std::string &from_pronunciation,
                                   const std::string &to_name,
                                   const std::string &to_ref,
+                                  const std::string &to_pronunciation,
                                   const SuffixTable &suffix_table)
 {
     // first is empty and the second is not
@@ -244,13 +248,17 @@ inline bool requiresNameAnnounced(const std::string &from_name,
         // " (Ref)" -> "Name "
         (from_name.empty() && !from_ref.empty() && !to_name.empty() && to_ref.empty());
 
-    return !obvious_change || needs_announce;
+    const auto pronunciation_changes = from_pronunciation != to_pronunciation;
+
+    return !obvious_change || needs_announce || pronunciation_changes;
 }
 
 // Overload without suffix checking
 inline bool requiresNameAnnounced(const std::string &from_name,
                                   const std::string &from_ref,
+                                  const std::string &from_pronunciation,
                                   const std::string &to_name,
+                                  const std::string &to_pronunciation,
                                   const std::string &to_ref)
 {
     // Dummy since we need to provide a SuffixTable but do not have the data for it.
@@ -261,7 +269,34 @@ inline bool requiresNameAnnounced(const std::string &from_name,
         bool isSuffix(const std::string &) const { return false; }
     } static const table;
 
-    return requiresNameAnnounced(from_name, from_ref, to_name, to_ref, table);
+    return requiresNameAnnounced(
+        from_name, from_ref, from_pronunciation, to_name, to_ref, to_pronunciation, table);
+}
+
+inline bool requiresNameAnnounced(const NameID from_name_id,
+                                  const NameID to_name_id,
+                                  const util::NameTable &name_table,
+                                  const extractor::SuffixTable &suffix_table)
+{
+    return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
+                                 name_table.GetRefForID(from_name_id),
+                                 name_table.GetPronunciationForID(from_name_id),
+                                 name_table.GetNameForID(to_name_id),
+                                 name_table.GetRefForID(to_name_id),
+                                 name_table.GetPronunciationForID(to_name_id),
+                                 suffix_table);
+}
+
+inline bool requiresNameAnnounced(const NameID from_name_id,
+                                  const NameID to_name_id,
+                                  const util::NameTable &name_table)
+{
+    return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
+                                 name_table.GetRefForID(from_name_id),
+                                 name_table.GetPronunciationForID(from_name_id),
+                                 name_table.GetNameForID(to_name_id),
+                                 name_table.GetRefForID(to_name_id),
+                                 name_table.GetPronunciationForID(to_name_id));
 }
 
 } // namespace guidance

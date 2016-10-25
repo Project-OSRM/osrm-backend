@@ -112,12 +112,8 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
 
     const auto &road_data = node_based_graph.GetEdgeData(road.eid);
 
-    const auto same_name =
-        !util::guidance::requiresNameAnnounced(name_table.GetNameForID(in_data.name_id),
-                                               name_table.GetRefForID(in_data.name_id),
-                                               name_table.GetNameForID(road_data.name_id),
-                                               name_table.GetRefForID(road_data.name_id),
-                                               street_name_suffix_table);
+    const auto same_name = !util::guidance::requiresNameAnnounced(
+        in_data.name_id, road_data.name_id, name_table, street_name_suffix_table);
 
     if (turn_is_perfectly_straight && in_data.name_id != EMPTY_NAMEID &&
         road_data.name_id != EMPTY_NAMEID && same_name)
