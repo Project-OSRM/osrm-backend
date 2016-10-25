@@ -170,6 +170,8 @@ Feature: Car - Restricted access
             | primary |                        | designated             |                        | -1     |      | x     |
             | primary |                        |                        | designated             | yes    |      |       |
             | primary |                        |                        | designated             | -1     |      |       |
+            | primary |                        |                        | designated\|           | yes    | x    |       |
+            | primary |                        |                        | designated\|           | -1     |      | x     |
             | primary |                        |                        | designated\|designated | yes    |      |       |
             | primary |                        |                        | designated\|designated | -1     |      |       |
             | primary |                        |                        | designated\|yes        | yes    | x    |       |

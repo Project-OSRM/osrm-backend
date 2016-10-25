@@ -261,7 +261,9 @@ function way_function (way, result)
     -- also respect user-preference for HOV-only ways when all lanes are HOV-designated
     local function has_all_designated_hov_lanes(lanes)
       local all = true
-      for lane in lanes:gmatch("(%w+)") do
+      -- This gmatch call effectively splits the string on | chars.
+      -- we append an extra | to the end so that we can match the final part
+      for lane in (lanes .. '|'):gmatch("([^|]*)|") do
         if lane and lane ~= "designated" then
           all = false
           break
