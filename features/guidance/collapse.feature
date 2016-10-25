@@ -947,16 +947,17 @@ Feature: Collapse
 
     #http://www.openstreetmap.org/#map=19/52.48778/13.30024
     Scenario: Hohenzollerdammbrücke
+        Given a grid size of 10 meters
         Given the node map
             """
                   q          s
                   p          o
-                  ..       . .
-                .     .  .      .
+                  ..        ..
+                 .    .   .    .
             j - i - - - h - - - g - f
                   > k <   > l <
             a - b - - - c - - - d - e
-                .     .  .      .
+                 .    .  .     .
                   ..        ..
                   m          n
                   t          r
@@ -1013,13 +1014,13 @@ Feature: Collapse
             | restriction | ph       | hi     | h        | no_right_turn |
 
         When I route I should get
-            | waypoints | route          | turns                       |
-            | a,e       | hohe,hohe      | depart,arrive               |
-            | a,s       | hohe,a100,a100 | depart,on ramp left,arrive  |
-            | a,t       | hohe,a100,a100 | depart,on ramp right,arrive |
-            | a,j       |                |                             |
-            | f,j       | hohe,hohe      | depart,arrive               |
-            | a,t       | hohe,a100,a100 | depart,on ramp right,arrive |
-            | f,e       |                |                             |
-            | q,j       | a100,hohe,hohe | depart,turn right,arrive    |
-            | q,e       | a100,a100,hohe | depart,continue left,arrive |
+            | waypoints | route                 | turns                       | locations |
+            | a,e       | hohe,hohe             | depart,arrive               | a,e       |
+            | a,s       | hohe,a100,a100        | depart,on ramp left,arrive  | a,b,s     |
+            | a,t       | hohe,a100,a100        | depart,on ramp right,arrive | a,b,t     |
+            | a,j       |                       |                             |           |
+            | f,j       | hohe,hohe             | depart,arrive               | f,j       |
+            | a,t       | hohe,a100,a100        | depart,on ramp right,arrive | a,b,t     |
+            | f,e       |                       |                             |           |
+            | q,j       | a100,hohe,hohe        | depart,turn right,arrive    | q,p,j     |
+            | q,e       | a100,hohebruecke,hohe | depart,turn left,arrive     | q,p,e     |
