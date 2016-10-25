@@ -1,7 +1,7 @@
 #ifndef OSRM_ENGINE_DATA_WATCHDOG_HPP
 #define OSRM_ENGINE_DATA_WATCHDOG_HPP
 
-#include "engine/datafacade/shared_datafacade.hpp"
+#include "engine/datafacade/shared_memory_datafacade.hpp"
 
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
