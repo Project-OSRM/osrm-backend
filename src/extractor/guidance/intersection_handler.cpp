@@ -42,6 +42,15 @@ IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node
 {
 }
 
+std::size_t IntersectionHandler::countValid(const Intersection &intersection) const
+{
+    return std::count_if(intersection.begin(), intersection.end(), [](const ConnectedRoad &road) {
+        return road.entry_allowed;
+    });
+}
+
+// Checks whether a turn from `via_edge` onto `road` is a turn, on a ramp, a continue, or a normal
+// turn
 TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
                                                       const ConnectedRoad &road) const
 {

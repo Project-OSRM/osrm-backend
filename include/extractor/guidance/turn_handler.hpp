@@ -48,6 +48,21 @@ class TurnHandler : public IntersectionHandler
     bool isObviousOfTwo(const EdgeID via_edge,
                         const ConnectedRoad &road,
                         const ConnectedRoad &other) const;
+
+    bool hasObvious(const EdgeID &via_edge,
+                    const Intersection &intersection,
+                    const std::size_t right,
+                    const std::size_t left) const;
+
+    std::tuple<std::size_t, double> findClosestToStraight(const Intersection &intersection) const;
+
+    std::pair<std::size_t, std::size_t>
+    findLeftAndRightmostForkCandidates(const Intersection &intersection) const;
+
+    bool isCompatibleByRoadClass(const Intersection &intersection,
+                                 const std::size_t right,
+                                 const std::size_t left) const;
+
     // Dead end.
     OSRM_ATTR_WARN_UNUSED
     Intersection handleOneWayTurn(Intersection intersection) const;

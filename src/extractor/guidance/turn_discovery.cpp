@@ -56,7 +56,8 @@ bool findPreviousIntersection(const NodeID node_v,
     if (via_edge_length > COMBINE_DISTANCE_CUTOFF)
         return false;
 
-    // Node -> Via_Edge -> Intersection[0 == UTURN] -> reverse_of(via_edge) -> Intersection at node
+    // Node -> Via_Edge -> Intersection[0 == UTURN] -> reverse_of(via_edge) -> Intersection at
+    // node
     // (looking at the reverse direction).
     const auto node_w = node_based_graph.GetTarget(via_edge);
     const auto u_turn_at_node_w = intersection[0].eid;

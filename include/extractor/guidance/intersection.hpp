@@ -26,6 +26,14 @@ namespace guidance
 {
 
 // the shape of an intersection only knows about edge IDs and bearings
+// It a way of switching onto a segment, indicated by an EdgeID. The
+// associated turn is described by an angle and an instruction that is used to announce it.
+// The Turn Operation indicates what is exposed to the outside of the turn analysis.
+//
+// `angle`      is given counter-clockwise:
+//              0 = uturn, 90 = right, 180 = straight, 270 = left
+// `bearing`    is the direction in clockwise angle from true north after taking the turn:
+//              0 = heading north, 90 = east, 180 = south, 270 = west
 struct IntersectionShapeData
 {
     EdgeID eid;
@@ -271,11 +279,31 @@ struct IntersectionView final : std::vector<IntersectionViewData>,      //
     using Base = std::vector<IntersectionViewData>;
 };
 
+// `Intersection` is a relative view of an intersection by an incoming edge.
+// `Intersection` are streets at an intersection ordered from from sharp right counter-clockwise to
+// sharp left where `intersection[0]` is _always_ a u-turn
 struct Intersection final : std::vector<ConnectedRoad>,         //
                             EnableShapeOps<Intersection>,       //
                             EnableIntersectionOps<Intersection> //
 {
     using Base = std::vector<ConnectedRoad>;
+
+    /*
+     * Check validity of the intersection object. We assume a few basic properties every set of
+     * connected roads should follow throughout guidance pre-processing. This utility function
+     * allows checking intersections for validity
+     */
+    bool valid() const;
+
+    // given all possible turns, which is the highest connected number of lanes per turn. This value
+    // is used, for example, during generation of intersections.
+    std::uint8_t getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &) const;
+
+    // check if all roads between first and last allow entry
+    bool hasValidEntries(std::size_t first, std::size_t last) const;
+
+    Base::iterator findClosestTurn(double angle);
+    Base::const_iterator findClosestTurn(double angle) const;
 };
 
 } // namespace guidance
