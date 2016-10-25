@@ -209,12 +209,12 @@ template <class DataFacadeT, class Derived> class BasicRoutingInterface
                     const PhantomNodes &phantom_node_pair,
                     std::vector<PathData> &unpacked_path) const
     {
+        BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
+
         const bool start_traversed_in_reverse =
             (*packed_path_begin != phantom_node_pair.source_phantom.forward_segment_id.id);
         const bool target_traversed_in_reverse =
             (*std::prev(packed_path_end) != phantom_node_pair.target_phantom.forward_segment_id.id);
-
-        BOOST_ASSERT(std::distance(packed_path_begin, packed_path_end) > 0);
 
         BOOST_ASSERT(*packed_path_begin == phantom_node_pair.source_phantom.forward_segment_id.id ||
                      *packed_path_begin == phantom_node_pair.source_phantom.reverse_segment_id.id);
