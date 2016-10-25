@@ -273,9 +273,10 @@ CoordinateExtractor::GetCoordinateAlongRoad(const NodeID intersection_node,
     {
         // skip over the first coordinates, in specific the assumed lane count. We add a small
         // safety factor, to not overshoot on the regression
-        const auto trimmed_coordinates = TrimCoordinatesByLengthFront(
-            coordinates, 0.8 * (considered_lanes * ASSUMED_LANE_WIDTH));
-        if (trimmed_coordinates.size() >= 2)
+        const auto trimming_length = 0.8 * (considered_lanes * ASSUMED_LANE_WIDTH);
+        const auto trimmed_coordinates =
+            TrimCoordinatesByLengthFront(coordinates, 0.8 * trimming_length);
+        if (trimmed_coordinates.size() >= 2 && (total_distance >= trimming_length + 2))
         {
             // get the regression line
             const auto regression_line_trimmed = RegressionLine(trimmed_coordinates);
@@ -802,6 +803,10 @@ CoordinateExtractor::RegressionLine(const std::vector<util::Coordinate> &coordin
     // create a sample of all coordinates to improve the quality of our regression vector
     // (less dependent on modelling of the data in OSM)
     const auto sampled_coordinates = SampleCoordinates(coordinates, FAR_LOOKAHEAD_DISTANCE, 1);
+
+    BOOST_ASSERT(!coordinates.empty());
+    if (sampled_coordinates.size() < 2) // less than 1 meter in length
+        return {coordinates.front(), coordinates.back()};
 
     // compute the regression vector based on the sum of least squares
     const auto regression_line = leastSquareRegression(sampled_coordinates);

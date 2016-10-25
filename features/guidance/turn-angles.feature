@@ -1149,3 +1149,22 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route          | turns                        |
             | a,m       | gato,hain,hain | depart,turn left,arrive      |
+
+    Scenario: Segfaulting Regression
+        Given the node map
+            """
+            a - - - - - - - - - - - - - - b c
+                                            |
+                                            |
+                                            |
+                                            d--------------e
+            """
+
+        And the ways
+            | nodes | lanes:forward |
+            | ab    |               |
+            | bcde  | 6             |
+
+        When I route I should get
+            | waypoints | route        |
+            | a,e       | ab,bcde,bcde |
