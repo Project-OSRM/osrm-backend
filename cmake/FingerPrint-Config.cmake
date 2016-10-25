@@ -4,7 +4,7 @@ set(INFILE ${SOURCE_DIR}/include/util/fingerprint_impl.hpp.in)
 file(MD5 ${SOURCE_DIR}/src/tools/contract.cpp MD5PREPARE)
 file(MD5 ${SOURCE_DIR}/include/util/static_rtree.hpp MD5RTREE)
 file(MD5 ${SOURCE_DIR}/include/util/graph_loader.hpp MD5GRAPH)
-file(MD5 ${SOURCE_DIR}/include/engine/datafacade/internal_datafacade.hpp MD5OBJECTS)
+file(MD5 ${SOURCE_DIR}/src/storage/storage.cpp MD5OBJECTS)
 
 CONFIGURE_FILE(${INFILE} ${NEWFILE})
 

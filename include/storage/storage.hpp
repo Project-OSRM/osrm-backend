@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STORAGE_HPP
 
 #include "storage/storage_config.hpp"
+#include "storage/shared_datatype.hpp"
 
 #include <boost/filesystem/path.hpp>
 
@@ -51,6 +52,9 @@ class Storage
     };
 
     ReturnCode Run(int max_wait);
+
+    void LoadLayout(DataLayout *layout);
+    void LoadData(DataLayout *layout_ptr, char *memory_ptr);
 
   private:
     StorageConfig config;

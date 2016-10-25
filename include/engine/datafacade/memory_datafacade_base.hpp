@@ -3,9 +3,6 @@
 
 // implements all data storage when shared memory _IS_ used
 
-#include "storage/shared_barriers.hpp"
-#include "storage/shared_datatype.hpp"
-#include "storage/shared_memory.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
@@ -47,10 +44,10 @@ namespace engine
 namespace datafacade
 {
 
-class SharedDataFacade final : public BaseDataFacade
+class MemoryDataFacadeBase : public BaseDataFacade
 {
 
-  private:
+  protected:
     using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<EdgeData, true>;
     using GraphNode = QueryGraph::NodeArrayEntry;
@@ -63,13 +60,8 @@ class SharedDataFacade final : public BaseDataFacade
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
-    storage::SharedDataLayout *data_layout;
-    char *shared_memory;
-
-    std::shared_ptr<storage::SharedBarriers> shared_barriers;
-    storage::SharedDataType layout_region;
-    storage::SharedDataType data_region;
-    unsigned shared_timestamp;
+    storage::DataLayout *data_layout;
+    char *memory_block;
 
     unsigned m_check_sum;
     std::unique_ptr<QueryGraph> m_query_graph;
@@ -121,35 +113,35 @@ class SharedDataFacade final : public BaseDataFacade
     std::shared_ptr<util::RangeTable<16, true>> m_bearing_ranges_table;
     util::ShM<DiscreteBearing, true>::vector m_bearing_values_table;
 
-    void LoadChecksum()
+    void InitChecksum()
     {
-        m_check_sum = *data_layout->GetBlockPtr<unsigned>(shared_memory,
-                                                          storage::SharedDataLayout::HSGR_CHECKSUM);
+        m_check_sum =
+            *data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::HSGR_CHECKSUM);
         util::SimpleLogger().Write() << "set checksum: " << m_check_sum;
     }
 
-    void LoadProfileProperties()
+    void InitProfileProperties()
     {
         m_profile_properties = data_layout->GetBlockPtr<extractor::ProfileProperties>(
-            shared_memory, storage::SharedDataLayout::PROPERTIES);
+            memory_block, storage::DataLayout::PROPERTIES);
     }
 
-    void LoadTimestamp()
+    void InitTimestamp()
     {
         auto timestamp_ptr =
-            data_layout->GetBlockPtr<char>(shared_memory, storage::SharedDataLayout::TIMESTAMP);
-        m_timestamp.resize(data_layout->GetBlockSize(storage::SharedDataLayout::TIMESTAMP));
+            data_layout->GetBlockPtr<char>(memory_block, storage::DataLayout::TIMESTAMP);
+        m_timestamp.resize(data_layout->GetBlockSize(storage::DataLayout::TIMESTAMP));
         std::copy(timestamp_ptr,
-                  timestamp_ptr + data_layout->GetBlockSize(storage::SharedDataLayout::TIMESTAMP),
+                  timestamp_ptr + data_layout->GetBlockSize(storage::DataLayout::TIMESTAMP),
                   m_timestamp.begin());
     }
 
-    void LoadRTree()
+    void InitRTree()
     {
         BOOST_ASSERT_MSG(!m_coordinate_list.empty(), "coordinates must be loaded before r-tree");
 
-        const auto file_index_ptr = data_layout->GetBlockPtr<char>(
-            shared_memory, storage::SharedDataLayout::FILE_INDEX_PATH);
+        const auto file_index_ptr =
+            data_layout->GetBlockPtr<char>(memory_block, storage::DataLayout::FILE_INDEX_PATH);
         file_index_path = boost::filesystem::path(file_index_ptr);
         if (!boost::filesystem::exists(file_index_path))
         {
@@ -158,39 +150,38 @@ class SharedDataFacade final : public BaseDataFacade
                                   "Is any data loaded into shared memory?");
         }
 
-        auto tree_ptr = data_layout->GetBlockPtr<RTreeNode>(
-            shared_memory, storage::SharedDataLayout::R_SEARCH_TREE);
+        auto tree_ptr =
+            data_layout->GetBlockPtr<RTreeNode>(memory_block, storage::DataLayout::R_SEARCH_TREE);
         m_static_rtree.reset(
             new SharedRTree(tree_ptr,
-                            data_layout->num_entries[storage::SharedDataLayout::R_SEARCH_TREE],
+                            data_layout->num_entries[storage::DataLayout::R_SEARCH_TREE],
                             file_index_path,
                             m_coordinate_list));
         m_geospatial_query.reset(
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
-    void LoadGraph()
+    void InitGraph()
     {
-        auto graph_nodes_ptr = data_layout->GetBlockPtr<GraphNode>(
-            shared_memory, storage::SharedDataLayout::GRAPH_NODE_LIST);
+        auto graph_nodes_ptr =
+            data_layout->GetBlockPtr<GraphNode>(memory_block, storage::DataLayout::GRAPH_NODE_LIST);
 
-        auto graph_edges_ptr = data_layout->GetBlockPtr<GraphEdge>(
-            shared_memory, storage::SharedDataLayout::GRAPH_EDGE_LIST);
+        auto graph_edges_ptr =
+            data_layout->GetBlockPtr<GraphEdge>(memory_block, storage::DataLayout::GRAPH_EDGE_LIST);
 
         util::ShM<GraphNode, true>::vector node_list(
-            graph_nodes_ptr, data_layout->num_entries[storage::SharedDataLayout::GRAPH_NODE_LIST]);
+            graph_nodes_ptr, data_layout->num_entries[storage::DataLayout::GRAPH_NODE_LIST]);
         util::ShM<GraphEdge, true>::vector edge_list(
-            graph_edges_ptr, data_layout->num_entries[storage::SharedDataLayout::GRAPH_EDGE_LIST]);
+            graph_edges_ptr, data_layout->num_entries[storage::DataLayout::GRAPH_EDGE_LIST]);
         m_query_graph.reset(new QueryGraph(node_list, edge_list));
     }
 
-    void LoadNodeAndEdgeInformation()
+    void InitNodeAndEdgeInformation()
     {
         const auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
-            shared_memory, storage::SharedDataLayout::COORDINATE_LIST);
-        m_coordinate_list.reset(
-            coordinate_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
+            memory_block, storage::DataLayout::COORDINATE_LIST);
+        m_coordinate_list.reset(coordinate_list_ptr,
+                                data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
 
         for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
         {
@@ -198,285 +189,226 @@ class SharedDataFacade final : public BaseDataFacade
         }
 
         const auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
-            shared_memory, storage::SharedDataLayout::OSM_NODE_ID_LIST);
-        m_osmnodeid_list.reset(
-            osmnodeid_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::OSM_NODE_ID_LIST]);
+            memory_block, storage::DataLayout::OSM_NODE_ID_LIST);
+        m_osmnodeid_list.reset(osmnodeid_list_ptr,
+                               data_layout->num_entries[storage::DataLayout::OSM_NODE_ID_LIST]);
         // We (ab)use the number of coordinates here because we know we have the same amount of ids
         m_osmnodeid_list.set_number_of_entries(
-            data_layout->num_entries[storage::SharedDataLayout::COORDINATE_LIST]);
+            data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
 
         const auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
-            shared_memory, storage::SharedDataLayout::TRAVEL_MODE);
+            memory_block, storage::DataLayout::TRAVEL_MODE);
         util::ShM<extractor::TravelMode, true>::vector travel_mode_list(
-            travel_mode_list_ptr, data_layout->num_entries[storage::SharedDataLayout::TRAVEL_MODE]);
+            travel_mode_list_ptr, data_layout->num_entries[storage::DataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
-        const auto lane_data_id_ptr = data_layout->GetBlockPtr<LaneDataID>(
-            shared_memory, storage::SharedDataLayout::LANE_DATA_ID);
+        const auto lane_data_id_ptr =
+            data_layout->GetBlockPtr<LaneDataID>(memory_block, storage::DataLayout::LANE_DATA_ID);
         util::ShM<LaneDataID, true>::vector lane_data_id(
-            lane_data_id_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DATA_ID]);
+            lane_data_id_ptr, data_layout->num_entries[storage::DataLayout::LANE_DATA_ID]);
         m_lane_data_id = std::move(lane_data_id);
 
         const auto lane_tupel_id_pair_ptr =
             data_layout->GetBlockPtr<util::guidance::LaneTupleIdPair>(
-                shared_memory, storage::SharedDataLayout::TURN_LANE_DATA);
+                memory_block, storage::DataLayout::TURN_LANE_DATA);
         util::ShM<util::guidance::LaneTupleIdPair, true>::vector lane_tupel_id_pair(
-            lane_tupel_id_pair_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::TURN_LANE_DATA]);
+            lane_tupel_id_pair_ptr, data_layout->num_entries[storage::DataLayout::TURN_LANE_DATA]);
         m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
 
         const auto turn_instruction_list_ptr =
             data_layout->GetBlockPtr<extractor::guidance::TurnInstruction>(
-                shared_memory, storage::SharedDataLayout::TURN_INSTRUCTION);
+                memory_block, storage::DataLayout::TURN_INSTRUCTION);
         util::ShM<extractor::guidance::TurnInstruction, true>::vector turn_instruction_list(
             turn_instruction_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::TURN_INSTRUCTION]);
+            data_layout->num_entries[storage::DataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list = std::move(turn_instruction_list);
 
-        const auto name_id_list_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, storage::SharedDataLayout::NAME_ID_LIST);
+        const auto name_id_list_ptr =
+            data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::NAME_ID_LIST);
         util::ShM<unsigned, true>::vector name_id_list(
-            name_id_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_ID_LIST]);
+            name_id_list_ptr, data_layout->num_entries[storage::DataLayout::NAME_ID_LIST]);
         m_name_ID_list = std::move(name_id_list);
 
         const auto entry_class_id_list_ptr = data_layout->GetBlockPtr<EntryClassID>(
-            shared_memory, storage::SharedDataLayout::ENTRY_CLASSID);
+            memory_block, storage::DataLayout::ENTRY_CLASSID);
         typename util::ShM<EntryClassID, true>::vector entry_class_id_list(
-            entry_class_id_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::ENTRY_CLASSID]);
+            entry_class_id_list_ptr, data_layout->num_entries[storage::DataLayout::ENTRY_CLASSID]);
         m_entry_class_id_list = std::move(entry_class_id_list);
 
         const auto pre_turn_bearing_ptr = data_layout->GetBlockPtr<util::guidance::TurnBearing>(
-            shared_memory, storage::SharedDataLayout::PRE_TURN_BEARING);
+            memory_block, storage::DataLayout::PRE_TURN_BEARING);
         typename util::ShM<util::guidance::TurnBearing, true>::vector pre_turn_bearing(
-            pre_turn_bearing_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::PRE_TURN_BEARING]);
+            pre_turn_bearing_ptr, data_layout->num_entries[storage::DataLayout::PRE_TURN_BEARING]);
         m_pre_turn_bearing = std::move(pre_turn_bearing);
 
         const auto post_turn_bearing_ptr = data_layout->GetBlockPtr<util::guidance::TurnBearing>(
-            shared_memory, storage::SharedDataLayout::POST_TURN_BEARING);
+            memory_block, storage::DataLayout::POST_TURN_BEARING);
         typename util::ShM<util::guidance::TurnBearing, true>::vector post_turn_bearing(
             post_turn_bearing_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::POST_TURN_BEARING]);
+            data_layout->num_entries[storage::DataLayout::POST_TURN_BEARING]);
         m_post_turn_bearing = std::move(post_turn_bearing);
     }
 
-    void LoadViaNodeList()
+    void InitViaNodeList()
     {
-        auto via_geometry_list_ptr = data_layout->GetBlockPtr<GeometryID>(
-            shared_memory, storage::SharedDataLayout::VIA_NODE_LIST);
+        auto via_geometry_list_ptr =
+            data_layout->GetBlockPtr<GeometryID>(memory_block, storage::DataLayout::VIA_NODE_LIST);
         util::ShM<GeometryID, true>::vector via_geometry_list(
-            via_geometry_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::VIA_NODE_LIST]);
+            via_geometry_list_ptr, data_layout->num_entries[storage::DataLayout::VIA_NODE_LIST]);
         m_via_geometry_list = std::move(via_geometry_list);
     }
 
-    void LoadNames()
+    void InitNames()
     {
-        auto offsets_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, storage::SharedDataLayout::NAME_OFFSETS);
-        auto blocks_ptr = data_layout->GetBlockPtr<IndexBlock>(
-            shared_memory, storage::SharedDataLayout::NAME_BLOCKS);
+        auto offsets_ptr =
+            data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::NAME_OFFSETS);
+        auto blocks_ptr =
+            data_layout->GetBlockPtr<IndexBlock>(memory_block, storage::DataLayout::NAME_BLOCKS);
         util::ShM<unsigned, true>::vector name_offsets(
-            offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_OFFSETS]);
+            offsets_ptr, data_layout->num_entries[storage::DataLayout::NAME_OFFSETS]);
         util::ShM<IndexBlock, true>::vector name_blocks(
-            blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_BLOCKS]);
+            blocks_ptr, data_layout->num_entries[storage::DataLayout::NAME_BLOCKS]);
 
-        auto names_list_ptr = data_layout->GetBlockPtr<char>(
-            shared_memory, storage::SharedDataLayout::NAME_CHAR_LIST);
+        auto names_list_ptr =
+            data_layout->GetBlockPtr<char>(memory_block, storage::DataLayout::NAME_CHAR_LIST);
         util::ShM<char, true>::vector names_char_list(
-            names_list_ptr, data_layout->num_entries[storage::SharedDataLayout::NAME_CHAR_LIST]);
+            names_list_ptr, data_layout->num_entries[storage::DataLayout::NAME_CHAR_LIST]);
         m_name_table = std::make_unique<util::RangeTable<16, true>>(
             name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
 
         m_names_char_list = std::move(names_char_list);
     }
 
-    void LoadTurnLaneDescriptions()
+    void InitTurnLaneDescriptions()
     {
         auto offsets_ptr = data_layout->GetBlockPtr<std::uint32_t>(
-            shared_memory, storage::SharedDataLayout::LANE_DESCRIPTION_OFFSETS);
+            memory_block, storage::DataLayout::LANE_DESCRIPTION_OFFSETS);
         util::ShM<std::uint32_t, true>::vector offsets(
-            offsets_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::LANE_DESCRIPTION_OFFSETS]);
+            offsets_ptr, data_layout->num_entries[storage::DataLayout::LANE_DESCRIPTION_OFFSETS]);
         m_lane_description_offsets = std::move(offsets);
 
         auto masks_ptr = data_layout->GetBlockPtr<extractor::guidance::TurnLaneType::Mask>(
-            shared_memory, storage::SharedDataLayout::LANE_DESCRIPTION_MASKS);
+            memory_block, storage::DataLayout::LANE_DESCRIPTION_MASKS);
 
         util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector masks(
-            masks_ptr, data_layout->num_entries[storage::SharedDataLayout::LANE_DESCRIPTION_MASKS]);
+            masks_ptr, data_layout->num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
         m_lane_description_masks = std::move(masks);
     }
 
-    void LoadCoreInformation()
+    void InitCoreInformation()
     {
-        auto core_marker_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, storage::SharedDataLayout::CORE_MARKER);
+        auto core_marker_ptr =
+            data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CORE_MARKER);
         util::ShM<bool, true>::vector is_core_node(
-            core_marker_ptr, data_layout->num_entries[storage::SharedDataLayout::CORE_MARKER]);
+            core_marker_ptr, data_layout->num_entries[storage::DataLayout::CORE_MARKER]);
         m_is_core_node = std::move(is_core_node);
     }
 
-    void LoadGeometries()
+    void InitGeometries()
     {
-        auto geometries_index_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, storage::SharedDataLayout::GEOMETRIES_INDEX);
+        auto geometries_index_ptr =
+            data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::GEOMETRIES_INDEX);
         util::ShM<unsigned, true>::vector geometry_begin_indices(
-            geometries_index_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_INDEX]);
+            geometries_index_ptr, data_layout->num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
         m_geometry_indices = std::move(geometry_begin_indices);
 
         auto geometries_node_list_ptr = data_layout->GetBlockPtr<NodeID>(
-            shared_memory, storage::SharedDataLayout::GEOMETRIES_NODE_LIST);
+            memory_block, storage::DataLayout::GEOMETRIES_NODE_LIST);
         util::ShM<NodeID, true>::vector geometry_node_list(
             geometries_node_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_NODE_LIST]);
+            data_layout->num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
         m_geometry_node_list = std::move(geometry_node_list);
 
         auto geometries_fwd_weight_list_ptr = data_layout->GetBlockPtr<EdgeWeight>(
-            shared_memory, storage::SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
+            memory_block, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_fwd_weight_list(
             geometries_fwd_weight_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
+            data_layout->num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
         m_geometry_fwd_weight_list = std::move(geometry_fwd_weight_list);
 
         auto geometries_rev_weight_list_ptr = data_layout->GetBlockPtr<EdgeWeight>(
-            shared_memory, storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST);
+            memory_block, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_rev_weight_list(
             geometries_rev_weight_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
+            data_layout->num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
         m_geometry_rev_weight_list = std::move(geometry_rev_weight_list);
 
-        auto datasources_list_ptr = data_layout->GetBlockPtr<uint8_t>(
-            shared_memory, storage::SharedDataLayout::DATASOURCES_LIST);
+        auto datasources_list_ptr =
+            data_layout->GetBlockPtr<uint8_t>(memory_block, storage::DataLayout::DATASOURCES_LIST);
         util::ShM<uint8_t, true>::vector datasources_list(
-            datasources_list_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::DATASOURCES_LIST]);
+            datasources_list_ptr, data_layout->num_entries[storage::DataLayout::DATASOURCES_LIST]);
         m_datasource_list = std::move(datasources_list);
 
-        auto datasource_name_data_ptr = data_layout->GetBlockPtr<char>(
-            shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_DATA);
+        auto datasource_name_data_ptr =
+            data_layout->GetBlockPtr<char>(memory_block, storage::DataLayout::DATASOURCE_NAME_DATA);
         util::ShM<char, true>::vector datasource_name_data(
             datasource_name_data_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_DATA]);
+            data_layout->num_entries[storage::DataLayout::DATASOURCE_NAME_DATA]);
         m_datasource_name_data = std::move(datasource_name_data);
 
         auto datasource_name_offsets_ptr = data_layout->GetBlockPtr<std::size_t>(
-            shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS);
+            memory_block, storage::DataLayout::DATASOURCE_NAME_OFFSETS);
         util::ShM<std::size_t, true>::vector datasource_name_offsets(
             datasource_name_offsets_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_OFFSETS]);
+            data_layout->num_entries[storage::DataLayout::DATASOURCE_NAME_OFFSETS]);
         m_datasource_name_offsets = std::move(datasource_name_offsets);
 
         auto datasource_name_lengths_ptr = data_layout->GetBlockPtr<std::size_t>(
-            shared_memory, storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS);
+            memory_block, storage::DataLayout::DATASOURCE_NAME_LENGTHS);
         util::ShM<std::size_t, true>::vector datasource_name_lengths(
             datasource_name_lengths_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::DATASOURCE_NAME_LENGTHS]);
+            data_layout->num_entries[storage::DataLayout::DATASOURCE_NAME_LENGTHS]);
         m_datasource_name_lengths = std::move(datasource_name_lengths);
     }
 
-    void LoadIntersectionClasses()
+    void InitIntersectionClasses()
     {
         auto bearing_class_id_ptr = data_layout->GetBlockPtr<BearingClassID>(
-            shared_memory, storage::SharedDataLayout::BEARING_CLASSID);
+            memory_block, storage::DataLayout::BEARING_CLASSID);
         typename util::ShM<BearingClassID, true>::vector bearing_class_id_table(
-            bearing_class_id_ptr,
-            data_layout->num_entries[storage::SharedDataLayout::BEARING_CLASSID]);
+            bearing_class_id_ptr, data_layout->num_entries[storage::DataLayout::BEARING_CLASSID]);
         m_bearing_class_id_table = std::move(bearing_class_id_table);
 
         auto bearing_class_ptr = data_layout->GetBlockPtr<DiscreteBearing>(
-            shared_memory, storage::SharedDataLayout::BEARING_VALUES);
+            memory_block, storage::DataLayout::BEARING_VALUES);
         typename util::ShM<DiscreteBearing, true>::vector bearing_class_table(
-            bearing_class_ptr, data_layout->num_entries[storage::SharedDataLayout::BEARING_VALUES]);
+            bearing_class_ptr, data_layout->num_entries[storage::DataLayout::BEARING_VALUES]);
         m_bearing_values_table = std::move(bearing_class_table);
 
-        auto offsets_ptr = data_layout->GetBlockPtr<unsigned>(
-            shared_memory, storage::SharedDataLayout::BEARING_OFFSETS);
-        auto blocks_ptr = data_layout->GetBlockPtr<IndexBlock>(
-            shared_memory, storage::SharedDataLayout::BEARING_BLOCKS);
+        auto offsets_ptr =
+            data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::BEARING_OFFSETS);
+        auto blocks_ptr =
+            data_layout->GetBlockPtr<IndexBlock>(memory_block, storage::DataLayout::BEARING_BLOCKS);
         util::ShM<unsigned, true>::vector bearing_offsets(
-            offsets_ptr, data_layout->num_entries[storage::SharedDataLayout::BEARING_OFFSETS]);
+            offsets_ptr, data_layout->num_entries[storage::DataLayout::BEARING_OFFSETS]);
         util::ShM<IndexBlock, true>::vector bearing_blocks(
-            blocks_ptr, data_layout->num_entries[storage::SharedDataLayout::BEARING_BLOCKS]);
+            blocks_ptr, data_layout->num_entries[storage::DataLayout::BEARING_BLOCKS]);
 
         m_bearing_ranges_table = std::make_unique<util::RangeTable<16, true>>(
             bearing_offsets, bearing_blocks, static_cast<unsigned>(m_bearing_values_table.size()));
 
         auto entry_class_ptr = data_layout->GetBlockPtr<util::guidance::EntryClass>(
-            shared_memory, storage::SharedDataLayout::ENTRY_CLASS);
+            memory_block, storage::DataLayout::ENTRY_CLASS);
         typename util::ShM<util::guidance::EntryClass, true>::vector entry_class_table(
-            entry_class_ptr, data_layout->num_entries[storage::SharedDataLayout::ENTRY_CLASS]);
+            entry_class_ptr, data_layout->num_entries[storage::DataLayout::ENTRY_CLASS]);
         m_entry_class_table = std::move(entry_class_table);
     }
 
   public:
-    // this function handle the deallocation of the shared memory it we can prove it will not be
-    // used anymore
-    virtual ~SharedDataFacade()
+    void Init()
     {
-        boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> exclusive_lock(
-            data_region == storage::DATA_1 ? shared_barriers->regions_1_mutex
-                                           : shared_barriers->regions_2_mutex,
-            boost::interprocess::defer_lock);
-
-        // if this returns false this is still in use
-        if (exclusive_lock.try_lock())
-        {
-            // Now check if this is still the newest dataset
-            const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
-                lock(shared_barriers->current_regions_mutex);
-
-            auto shared_regions = storage::makeSharedMemory(storage::CURRENT_REGIONS);
-            const auto current_timestamp =
-                static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
-
-            if (current_timestamp->timestamp == shared_timestamp)
-            {
-                util::SimpleLogger().Write(logDEBUG) << "Retaining data with shared timestamp "
-                                                     << shared_timestamp;
-            }
-            else
-            {
-                storage::SharedMemory::Remove(data_region);
-                storage::SharedMemory::Remove(layout_region);
-            }
-        }
-    }
-
-    SharedDataFacade(const std::shared_ptr<storage::SharedBarriers> &shared_barriers_,
-                     storage::SharedDataType layout_region_,
-                     storage::SharedDataType data_region_,
-                     unsigned shared_timestamp_)
-        : shared_barriers(shared_barriers_), layout_region(layout_region_),
-          data_region(data_region_), shared_timestamp(shared_timestamp_)
-    {
-        util::SimpleLogger().Write(logDEBUG) << "Loading new data with shared timestamp "
-                                             << shared_timestamp;
-
-        BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
-        m_layout_memory = storage::makeSharedMemory(layout_region);
-
-        data_layout = static_cast<storage::SharedDataLayout *>(m_layout_memory->Ptr());
-
-        BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
-        m_large_memory = storage::makeSharedMemory(data_region);
-        shared_memory = (char *)(m_large_memory->Ptr());
-
-        LoadGraph();
-        LoadChecksum();
-        LoadNodeAndEdgeInformation();
-        LoadGeometries();
-        LoadTimestamp();
-        LoadViaNodeList();
-        LoadNames();
-        LoadTurnLaneDescriptions();
-        LoadCoreInformation();
-        LoadProfileProperties();
-        LoadRTree();
-        LoadIntersectionClasses();
+        InitGraph();
+        InitChecksum();
+        InitNodeAndEdgeInformation();
+        InitGeometries();
+        InitTimestamp();
+        InitViaNodeList();
+        InitNames();
+        InitTurnLaneDescriptions();
+        InitCoreInformation();
+        InitProfileProperties();
+        InitRTree();
+        InitIntersectionClasses();
     }
 
     // search graph access
