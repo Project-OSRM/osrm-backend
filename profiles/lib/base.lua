@@ -449,7 +449,7 @@ function Base:handle_movable_bridge()
   end
 end
 
--- Traverse our access tag hierachy and return the first key/value pair found
+-- Traverse our access tag hierarchy and return the first key/value pair found
 
 function Base:find_access_tag()
   for i,key in ipairs(self.settings.access.tags) do
@@ -461,7 +461,7 @@ function Base:find_access_tag()
   return 'access', self:tag('access')
 end
 
--- Traverse our access tag hierachy and return the first key/value pair found,
+-- Traverse our access tag hierarchy and return the first key/value pair found,
 -- also looking for directional tags
 
 function Base:find_directional_access_tag(d)
@@ -504,14 +504,14 @@ function Base:find_directional_tag(d,key)
   end
 end
 
--- For a specific base tag, traverse our access tag hierachy and return 
+-- For a specific base tag, traverse our access tag hierarchy and return 
 -- the first key/value pair found. Look for both mode:tag and tag:mode
 -- e.g. for a car look for oneway:motorcar, oneway:motor_vehicle, oneway:vehicle and then oneway.
--- Setting abort_at will stop the search when this point is reached in in the access hierachy,
+-- Setting abort_at will stop the search when this point is reached in in the access hierarchy,
 -- effectively looking only at tags that are at least as specific as that. 
 
-function Base:determine_tag(base_tag, hierachy, abort_at)
-  for i,modifier in ipairs(hierachy) do
+function Base:determine_tag(base_tag, hierarchy, abort_at)
+  for i,modifier in ipairs(hierarchy) do
     local key = base_tag .. ':' .. modifier
     local tag = self:tag(key)
     if tag and tag ~= '' then
@@ -598,7 +598,7 @@ function Base:handle_name()
   end
 end
 
--- Handle pronuncation
+-- Handle pronunciation
 
 function Base:handle_pronunciation()
   local pronunciation = self:tag('name:pronunciation')
@@ -710,6 +710,7 @@ function Base:handle_speed_calibration(d)
 end
 
 -- Adjust speed on roads with alternating direction
+
 function Base:handle_alternating_oneway_reduction(d)
   if d.speed and self:tag('oneway') == 'alternating' then
     d.speed = d.speed * self.settings.alternating_oneway_speed_scaling
@@ -725,13 +726,13 @@ function Base:handle_side_roads_reduction(d)
   end
 end
 
--- Is this a bidirectional way
+-- Is this a bidirectional way?
+
 function Base:is_bidirectional()
   return self.tmp.main.forward.mode ~= 'inaccessible' and self.tmp.main.backward.mode ~= 'inaccessible'
 end
 
 -- Adjust speed on narrow roads
--- TODO probably not relevant for foot
 
 function Base:handle_narrow_ways()
   if self.settings.maxspeed_narrow and self:is_bidirectional() then

@@ -118,21 +118,21 @@ end
 
 function Bicycle:handle_cycleway(d)
   -- FIXME this assumes right-side driving
-  local key,tag,hierachy,opposite,side
+  local key,tag,hierarchy,opposite,side
   local cycleway = self:tag('cycleway')
   local cycleway_left = self:tag('cycleway:left')
   local cycleway_right = self:tag('cycleway:right')
   local oneway = self:tag('oneway')
   
   if d.direction == 'forward' then
-    hierachy = Sequence { 'right' }
+    hierarchy = Sequence { 'right' }
     side = cycleway_right
   else
-    hierachy = Sequence { 'left' }
+    hierarchy = Sequence { 'left' }
     side = cycleway_left
   end
   
-  key,tag = Base.determine_tag( self, 'cycleway', hierachy )
+  key,tag = Base.determine_tag( self, 'cycleway', hierarchy )
   
   if Base.is_tag_in_table(side, self.settings.cycleway_whitelist ) or
      Base.is_tag_in_table(side, self.settings.cycleway_opposite ) then
