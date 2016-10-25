@@ -12,7 +12,7 @@ namespace tools
 // FIXME remove after folding back into datastore
 using namespace storage;
 
-void deleteRegion(const SharedDataType region)
+void deleteRegion(const DataType region)
 {
     if (SharedMemory::RegionExists(region) && !SharedMemory::Remove(region))
     {
