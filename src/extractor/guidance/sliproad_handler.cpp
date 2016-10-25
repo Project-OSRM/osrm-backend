@@ -154,11 +154,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
         // Test to see if the source edge and the one we're looking at are the same road
 
         const auto same_name = !util::guidance::requiresNameAnnounced(
-            name_table.GetNameForID(road_edge_data.name_id),
-            name_table.GetRefForID(road_edge_data.name_id),
-            name_table.GetNameForID(source_edge_data.name_id),
-            name_table.GetRefForID(source_edge_data.name_id),
-            street_name_suffix_table);
+            road_edge_data.name_id, source_edge_data.name_id, name_table, street_name_suffix_table);
 
         return road_edge_data.road_classification == source_edge_data.road_classification &&
                road_edge_data.name_id != EMPTY_NAMEID && source_edge_data.name_id != EMPTY_NAMEID &&
@@ -229,10 +225,9 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                                      const auto same_name =
                                          road_edge_data.name_id != EMPTY_NAMEID &&
                                          !util::guidance::requiresNameAnnounced(
-                                             name_table.GetNameForID(road_edge_data.name_id),
-                                             name_table.GetRefForID(road_edge_data.name_id),
-                                             name_table.GetNameForID(link_data.name_id),
-                                             name_table.GetRefForID(link_data.name_id),
+                                             road_edge_data.name_id,
+                                             link_data.name_id,
+                                             name_table,
                                              street_name_suffix_table);
 
                                      return same_name;
@@ -274,14 +269,10 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     {
         const auto &next_data = node_based_graph.GetEdgeData(next_road.eid);
 
-        const auto same_name = next_data.name_id != EMPTY_NAMEID &&
-                               source_edge_data.name_id != EMPTY_NAMEID &&
-                               !util::guidance::requiresNameAnnounced(
-                                   name_table.GetNameForID(next_data.name_id),
-                                   name_table.GetRefForID(next_data.name_id),
-                                   name_table.GetNameForID(source_edge_data.name_id),
-                                   name_table.GetRefForID(source_edge_data.name_id),
-                                   street_name_suffix_table);
+        const auto same_name =
+            next_data.name_id != EMPTY_NAMEID && source_edge_data.name_id != EMPTY_NAMEID &&
+            !util::guidance::requiresNameAnnounced(
+                next_data.name_id, source_edge_data.name_id, name_table, street_name_suffix_table);
 
         if (same_name)
         {

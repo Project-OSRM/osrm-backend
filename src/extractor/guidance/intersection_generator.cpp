@@ -229,11 +229,8 @@ bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
 
     // need to be same name
     if (second_data.name_id != EMPTY_NAMEID &&
-        util::guidance::requiresNameAnnounced(name_table.GetNameForID(first_data.name_id),
-                                              name_table.GetRefForID(first_data.name_id),
-                                              name_table.GetNameForID(second_data.name_id),
-                                              name_table.GetRefForID(second_data.name_id),
-                                              street_name_suffix_table))
+        util::guidance::requiresNameAnnounced(
+            first_data.name_id, second_data.name_id, name_table, street_name_suffix_table))
         return false;
 
     // compatibility is required
@@ -341,11 +338,8 @@ bool IntersectionGenerator::CanMerge(const NodeID node_at_intersection,
     const auto &third_data = node_based_graph.GetEdgeData(intersection[third_index].eid);
 
     if (third_data.name_id != EMPTY_NAMEID &&
-        util::guidance::requiresNameAnnounced(name_table.GetNameForID(third_data.name_id),
-                                              name_table.GetRefForID(third_data.name_id),
-                                              name_table.GetNameForID(first_data.name_id),
-                                              name_table.GetRefForID(first_data.name_id),
-                                              street_name_suffix_table))
+        util::guidance::requiresNameAnnounced(
+            third_data.name_id, first_data.name_id, name_table, street_name_suffix_table))
         return false;
 
     // we only allow collapsing of a Y like fork. So the angle to the third index has to be

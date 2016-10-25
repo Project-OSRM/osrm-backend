@@ -127,9 +127,9 @@ double turn_angle(const double entry_bearing, const double exit_bearing)
 // Treats e.g. "Name (Ref)" -> "Name" changes still as same name.
 bool isNoticeableNameChange(const RouteStep &lhs, const RouteStep &rhs)
 {
-    // TODO: at some point we might want to think about pronunciation here.
-    // Also rotary_name is not handled at the moment.
-    return util::guidance::requiresNameAnnounced(lhs.name, lhs.ref, rhs.name, rhs.ref);
+    // TODO: rotary_name is not handled at the moment.
+    return util::guidance::requiresNameAnnounced(
+        lhs.name, lhs.ref, lhs.pronunciation, rhs.name, rhs.ref, rhs.pronunciation);
 }
 
 double nameSegmentLength(std::size_t at, const std::vector<RouteStep> &steps)
@@ -372,10 +372,10 @@ bool isLinkroad(const RouteStep &step)
 
 bool isUTurn(const RouteStep &in_step, const RouteStep &out_step, const RouteStep &pre_in_step)
 {
-    const bool is_possible_candidate = in_step.distance <= MAX_COLLAPSE_DISTANCE ||
-                                       choiceless(out_step, in_step) ||
-                                       (isLinkroad(in_step) && out_step.name_id != EMPTY_NAMEID &&
-                                        pre_in_step.name_id == out_step.name_id);
+    const bool is_possible_candidate =
+        in_step.distance <= MAX_COLLAPSE_DISTANCE || choiceless(out_step, in_step) ||
+        (isLinkroad(in_step) && out_step.name_id != EMPTY_NAMEID &&
+         pre_in_step.name_id != EMPTY_NAMEID && !isNoticeableNameChange(pre_in_step, out_step));
     const bool takes_u_turn = bearingsAreReversed(
         util::bearing::reverseBearing(
             in_step.intersections.front().bearings[in_step.intersections.front().in]),

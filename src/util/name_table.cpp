@@ -85,5 +85,22 @@ std::string NameTable::GetRefForID(const unsigned name_id) const
     return GetNameForID(name_id + OFFSET_REF);
 }
 
+std::string NameTable::GetPronunciationForID(const unsigned name_id) const
+{
+    // Way string data is stored in blocks based on `name_id` as follows:
+    //
+    // | name | destination | pronunciation | ref |
+    //                      ^               ^
+    //                      [range)
+    //                       ^ name_id + 2
+    //
+    // `name_id + offset` gives us the range of chars.
+    //
+    // Offset 0 is name, 1 is destination, 2 is pronunciation, 3 is ref.
+    // See datafacades and extractor callbacks for details.
+    const constexpr auto OFFSET_PRONUNCIATION = 2u;
+    return GetNameForID(name_id + OFFSET_PRONUNCIATION);
+}
+
 } // namespace util
 } // namespace osrm

@@ -30,6 +30,7 @@ class NameTable
     // (at time of writing this: get{Name,Ref,Pronunciation,Destinations}ForID(name_id);)
     std::string GetNameForID(const unsigned name_id) const;
     std::string GetRefForID(const unsigned name_id) const;
+    std::string GetPronunciationForID(const unsigned name_id) const;
 };
 } // namespace util
 } // namespace osrm

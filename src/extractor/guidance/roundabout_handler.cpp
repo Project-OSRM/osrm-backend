@@ -242,11 +242,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
 
                     const auto announce = [&](unsigned id) {
                         return util::guidance::requiresNameAnnounced(
-                            name_table.GetNameForID(id),
-                            name_table.GetRefForID(id),
-                            name_table.GetNameForID(edge_data.name_id),
-                            name_table.GetRefForID(edge_data.name_id),
-                            street_name_suffix_table);
+                            id, edge_data.name_id, name_table, street_name_suffix_table);
                     };
 
                     if (std::all_of(begin(roundabout_name_ids), end(roundabout_name_ids), announce))
