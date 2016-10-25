@@ -125,56 +125,77 @@ void writeNormalizedGraph(boost::filesystem::path output_path,
             if (!fwd_edge_data.startpoint || !rev_edge_data.startpoint)
                 continue;
 
-            // if this is a oneway, one edge is just an imcoming edge
-            auto oneway = fwd_edge_data.reversed || rev_edge_data.reversed;
+            // if this is a oneway in fordward direction if the reverse edge is just an imcoming
+            // edge
+            auto oneway = rev_edge_data.reversed;
+            // if this is a oneway in reverse direction if the forward edge is just an imcoming edge
+            auto inv_oneway = fwd_edge_data.reversed;
+            BOOST_ASSERT(!oneway || !inv_oneway);
 
-            const auto &compressed_bucket =
-                [&fwd_edge_data, &rev_edge_data, &compressed_edge_container, fwd_edge, rev_edge]() {
-                    if (rev_edge_data.reversed)
-                    {
-                        BOOST_ASSERT(!fwd_edge_data.reversed);
-                        return compressed_edge_container.GetBucketReference(fwd_edge);
-                    }
-                    else
-                    {
-                        BOOST_ASSERT(!rev_edge_data.reversed);
-                        return compressed_edge_container.GetBucketReference(rev_edge);
-                    }
-                }();
+            const auto &fwd_bucket = compressed_edge_container.GetBucketReference(fwd_edge);
+            const auto &rev_bucket = compressed_edge_container.GetBucketReference(rev_edge);
 
             std::stringstream coordinates;
             std::stringstream refs;
-            for (auto idx = 0; idx < compressed_bucket.size() - 1; ++idx)
+            coordinates << std::setprecision(12);
+            refs << std::setprecision(12);
+
+            const auto encode_coordinates_refs =
+                [&coordinates, &refs, &internal_to_external_node_map](
+                    const extractor::CompressedEdgeContainer::OnewayEdgeBucket &fwd_bucket,
+                    const extractor::CompressedEdgeContainer::OnewayEdgeBucket &rev_bucket) {
+                    const auto &first_query_node =
+                        internal_to_external_node_map[rev_bucket.back().node_id];
+                    coordinates << "[" << util::toFloating(first_query_node.lon) << ","
+                                << util::toFloating(first_query_node.lat) << "],";
+                    refs << first_query_node.node_id << ",";
+
+                    for (auto idx = 0UL; idx < fwd_bucket.size() - 1; ++idx)
+                    {
+                        const auto &query_node =
+                            internal_to_external_node_map[fwd_bucket[idx].node_id];
+                        coordinates << "[" << util::toFloating(query_node.lon) << ","
+                                    << util::toFloating(query_node.lat) << "],";
+                        refs << query_node.node_id << ",";
+                    }
+
+                    const auto &last_query_node =
+                        internal_to_external_node_map[fwd_bucket.back().node_id];
+                    coordinates << "[" << util::toFloating(last_query_node.lon) << ","
+                                << util::toFloating(last_query_node.lat) << "]";
+                    refs << last_query_node.node_id;
+                };
+
+            if (inv_oneway)
             {
-                const auto &query_node =
-                    internal_to_external_node_map[compressed_bucket[idx].node_id];
-                coordinates << "[" << util::toFloating(query_node.lon) << ","
-                            << util::toFloating(query_node.lat) << "],";
-                refs << query_node.node_id << ",";
+                encode_coordinates_refs(rev_bucket, fwd_bucket);
             }
-            const auto &last_query_node = internal_to_external_node_map[compressed_bucket.back().node_id];
-            coordinates << "[" << util::toFloating(last_query_node.lon) << ","
-                        << util::toFloating(last_query_node.lat) << "]";
-            refs << last_query_node.node_id << ",";
+            else
+            {
+                encode_coordinates_refs(fwd_bucket, rev_bucket);
+            }
 
             out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"LineString\",\"coordinates\":["
                 << coordinates.str() << "]},\"properties\":{\"id\":\"" << (way_id++)
-                << "\",\"refs\":[" << refs.str() << "], \"oneway\":" << oneway
+                << "\",\"refs\":[" << refs.str() << "], \"oneway\":" << (oneway | inv_oneway)
                 << ",\"highway\":\"" << classificationToString(fwd_edge_data.road_classification)
                 << "\"}}\n";
 
             constexpr bool DEBUG_INTERSECTIONS = false;
             if (DEBUG_INTERSECTIONS)
             {
-                for (const auto &entry : compressed_bucket)
-                {
-                    const auto &query_node = internal_to_external_node_map[entry.node_id];
-                    out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":"
-                           "[";
-                    out << util::toFloating(query_node.lon) << ","
-                        << util::toFloating(query_node.lat);
-                    out << "]},\"properties\":{\"id\":\"" << query_node.node_id << "\"}}\n";
-                }
+                const auto &first = fwd_bucket.back();
+                const auto &last = rev_bucket.back();
+                const auto &first_query_node = internal_to_external_node_map[first.node_id];
+                const auto &last_query_node = internal_to_external_node_map[last.node_id];
+                out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":["
+                    << util::toFloating(first_query_node.lon) << ","
+                    << util::toFloating(first_query_node.lat) << "]},\"properties\":{\"id\":\""
+                    << first_query_node.node_id << "\"}}\n";
+                out << "{\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":["
+                    << util::toFloating(last_query_node.lon) << ","
+                    << util::toFloating(last_query_node.lat) << "]},\"properties\":{\"id\":\""
+                    << last_query_node.node_id << "\"}}\n";
             }
         }
     }
