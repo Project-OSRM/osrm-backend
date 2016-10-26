@@ -357,7 +357,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                        turn_lane_offsets,
                                                        turn_lane_masks,
                                                        lane_description_map,
-                                                       m_node_info_list,
                                                        turn_analysis,
                                                        lane_data_map);
 

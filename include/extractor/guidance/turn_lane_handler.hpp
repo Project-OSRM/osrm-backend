@@ -73,7 +73,6 @@ class TurnLaneHandler
                     std::vector<std::uint32_t> &turn_lane_offsets,
                     std::vector<TurnLaneType::Mask> &turn_lane_masks,
                     LaneDescriptionMap &lane_description_map,
-                    const std::vector<QueryNode> &node_info_list,
                     const TurnAnalysis &turn_analysis,
                     LaneDataIdMap &id_map);
 
@@ -91,7 +90,6 @@ class TurnLaneHandler
     std::vector<std::uint32_t> &turn_lane_offsets;
     std::vector<TurnLaneType::Mask> &turn_lane_masks;
     LaneDescriptionMap &lane_description_map;
-    const std::vector<QueryNode> &node_info_list;
     const TurnAnalysis &turn_analysis;
     LaneDataIdMap &id_map;
 

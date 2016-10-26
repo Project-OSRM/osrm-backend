@@ -35,12 +35,11 @@ TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  std::vector<std::uint32_t> &turn_lane_offsets,
                                  std::vector<TurnLaneType::Mask> &turn_lane_masks,
                                  LaneDescriptionMap &lane_description_map,
-                                 const std::vector<QueryNode> &node_info_list,
                                  const TurnAnalysis &turn_analysis,
                                  LaneDataIdMap &id_map)
     : node_based_graph(node_based_graph), turn_lane_offsets(turn_lane_offsets),
       turn_lane_masks(turn_lane_masks), lane_description_map(lane_description_map),
-      node_info_list(node_info_list), turn_analysis(turn_analysis), id_map(id_map)
+      turn_analysis(turn_analysis), id_map(id_map)
 {
     count_handled = count_called = 0;
 }
