@@ -1,13 +1,7 @@
 #include "extractor/guidance/intersection.hpp"
 
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/range/algorithm/find_if.hpp>
-
-#include <boost/assert.hpp>
-
-#include <algorithm>
-#include <functional>
 #include <limits>
+#include <string>
 
 using osrm::util::angularDeviation;
 
@@ -69,34 +63,6 @@ std::string toString(const ConnectedRoad &road)
               std::to_string(static_cast<std::int32_t>(road.instruction.direction_modifier)) + " " +
               std::to_string(static_cast<std::int32_t>(road.lane_data_id));
     return result;
-}
-
-bool Intersection::valid() const
-{
-    return !empty() &&
-           std::is_sorted(begin(), end(), std::mem_fn(&ConnectedRoad::compareByAngle)) &&
-           operator[](0).angle < std::numeric_limits<double>::epsilon();
-}
-
-std::uint8_t
-Intersection::getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &graph) const
-{
-    BOOST_ASSERT(valid()); // non empty()
-
-    const std::function<std::uint8_t(const ConnectedRoad &)> to_lane_count =
-        [&](const ConnectedRoad &road) {
-            return graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
-        };
-
-    std::uint8_t max_lanes = 0;
-    const auto extract_maximal_value = [&max_lanes](std::uint8_t value) {
-        max_lanes = std::max(max_lanes, value);
-        return false;
-    };
-
-    const auto view = *this | boost::adaptors::transformed(to_lane_count);
-    boost::range::find_if(view, extract_maximal_value);
-    return max_lanes;
 }
 
 } // namespace guidance

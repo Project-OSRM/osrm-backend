@@ -1,6 +1,9 @@
 #ifndef OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HPP_
 #define OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HPP_
 
+#include <algorithm>
+#include <functional>
+#include <limits>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -9,6 +12,11 @@
 #include "util/bearing.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp" // EdgeID
+
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+
+#include <boost/assert.hpp>
 
 namespace osrm
 {
@@ -60,7 +68,7 @@ struct IntersectionViewData : IntersectionShapeData
 // A Connected Road is the internal representation of a potential turn. Internally, we require
 // full list of all connected roads to determine the outcome.
 // The reasoning behind is that even invalid turns can influence the perceived angles, or even
-// instructions themselves. An pososible example can be described like this:
+// instructions themselves. An possible example can be described like this:
 //
 // aaa(2)aa
 //          a - bbbbb
@@ -68,8 +76,7 @@ struct IntersectionViewData : IntersectionShapeData
 //
 // will not be perceived as a turn from (1) -> b, and as a U-turn from (1) -> (2).
 // In addition, they can influence whether a turn is obvious or not. b->(2) would also be no
-// turn-operation,
-// but rather a name change.
+// turn-operation, but rather a name change.
 //
 // If this were a normal intersection with
 //
@@ -103,6 +110,8 @@ struct ConnectedRoad final : IntersectionViewData
 // small helper function to print the content of a connected road
 std::string toString(const ConnectedRoad &road);
 
+// Intersections are sorted roads: [0] being the UTurn road, then from sharp right to sharp left.
+
 using IntersectionShape = std::vector<IntersectionShapeData>;
 
 // Common operations shared among IntersectionView and Intersections.
@@ -117,6 +126,84 @@ template <typename Self> struct EnableIntersectionOps
         return std::min_element(self()->begin(), self()->end(), comp);
     }
 
+    // Check validity of the intersection object. We assume a few basic properties every set of
+    // connected roads should follow throughout guidance pre-processing. This utility function
+    // allows checking intersections for validity
+    auto valid() const
+    {
+        if (self()->empty())
+            return false;
+
+        auto comp = [](const auto &lhs, const auto &rhs) { return lhs.CompareByAngle(rhs); };
+
+        const auto ordered = std::is_sorted(self()->begin(), self()->end(), comp);
+
+        if (!ordered)
+            return false;
+
+        const auto uturn = self()->operator[](0).angle < std::numeric_limits<double>::epsilon();
+
+        if (!uturn)
+            return false;
+
+        return true;
+    }
+
+    // Given all possible turns which is the highest connected number of lanes per turn.
+    // This value is used for example during generation of intersections.
+    auto getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &graph) const
+    {
+        const std::function<std::uint8_t(const ConnectedRoad &)> to_lane_count =
+            [&](const ConnectedRoad &road) {
+                return graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
+            };
+
+        std::uint8_t max_lanes = 0;
+        const auto extract_maximal_value = [&max_lanes](std::uint8_t value) {
+            max_lanes = std::max(max_lanes, value);
+            return false;
+        };
+
+        const auto view = *self() | boost::adaptors::transformed(to_lane_count);
+        boost::range::find_if(view, extract_maximal_value);
+        return max_lanes;
+    }
+
+    // Returns the UTurn road we took to arrive at this intersection.
+    const auto &getUTurnRoad() const { return self()->operator[](0); }
+
+    // Returns the right-most road at this intersection.
+    const auto &getRightmostRoad() const
+    {
+        return self()->size() > 1 ? self()->operator[](1) : self()->getUTurnRoad();
+    }
+
+    // Returns the left-most road at this intersection.
+    const auto &getLeftmostRoad() const
+    {
+        return self()->size() > 1 ? self()->back() : self()->getUTurnRoad();
+    }
+
+    // Can this be skipped over?
+    auto isTrafficSignalOrBarrier() const { return self()->size() == 2; }
+
+    // Checks if there is at least one road available (except UTurn road) on which to continue.
+    auto isDeadEnd() const
+    {
+        auto pred = [](const auto &road) { return road.entry_allowed; };
+        return !std::any_of(self()->begin() + 1, self()->end(), pred);
+    }
+
+    // Returns the number of roads we can enter at this intersection, respectively.
+    auto countEnterable() const
+    {
+        auto pred = [](const auto &road) { return road.entry_allowed; };
+        return std::count_if(self()->begin(), self()->end(), pred);
+    }
+
+    // Returns the number of roads we can not enter at this intersection, respectively.
+    auto countNonEnterable() const { return self()->size() - self()->countEnterable(); }
+
   private:
     auto self() { return static_cast<Self *>(this); }
     auto self() const { return static_cast<const Self *>(this); }
@@ -126,28 +213,12 @@ struct IntersectionView final : std::vector<IntersectionViewData>,      //
                                 EnableIntersectionOps<IntersectionView> //
 {
     using Base = std::vector<IntersectionViewData>;
-
-    bool valid() const
-    {
-        return std::is_sorted(begin(), end(), std::mem_fn(&IntersectionViewData::CompareByAngle));
-    };
 };
 
 struct Intersection final : std::vector<ConnectedRoad>,         //
                             EnableIntersectionOps<Intersection> //
 {
     using Base = std::vector<ConnectedRoad>;
-
-    /*
-     * Check validity of the intersection object. We assume a few basic properties every set of
-     * connected roads should follow throughout guidance pre-processing. This utility function
-     * allows checking intersections for validity
-     */
-    bool valid() const;
-
-    // given all possible turns, which is the highest connected number of lanes per turn. This value
-    // is used, for example, during generation of intersections.
-    std::uint8_t getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &) const;
 };
 
 } // namespace guidance

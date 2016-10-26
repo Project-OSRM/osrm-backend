@@ -35,6 +35,12 @@ class IntersectionGenerator
                           const std::vector<QueryNode> &node_info_list,
                           const CompressedEdgeContainer &compressed_edge_container);
 
+    // For a source node `a` and a via edge `ab` creates an intersection at target `b`.
+    //
+    // a . . . b . .
+    //         .
+    //         .
+    //
     IntersectionView operator()(const NodeID nid, const EdgeID via_eid) const;
 
     /*

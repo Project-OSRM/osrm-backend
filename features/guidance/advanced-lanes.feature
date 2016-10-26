@@ -5,13 +5,17 @@ Feature: Turn Lane Guidance
         Given the profile "car"
         Given a grid size of 3 meters
 
+
     @sliproads
     Scenario: Separate Turn Lanes
         Given the node map
             """
                           e
-            a     b       c g
-                          d
+                          .
+            a ... b ..... c . g
+                    `     .
+                     `... d
+                          .
                           f
             """
 
@@ -41,8 +45,10 @@ Feature: Turn Lane Guidance
         Given the node map
             """
                           e
-            a     b       c g
-                          d
+            a . . b . . . c g
+                    `     .
+                       `  .
+                        ` d
                           f
             """
 
@@ -66,22 +72,23 @@ Feature: Turn Lane Guidance
             | a,e       | in,cross,cross       | depart,turn left,arrive         | ,left:true straight:false right:false, |
             | a,g       | in,straight,straight | depart,new name straight,arrive | ,left:false straight:true right:false, |
             | a,f       | in,cross,cross       | depart,turn right,arrive        | ,left:false straight:false right:true, |
+
 
     @sliproads
     Scenario: Separate Turn Lanes Next to other turns
         Given the node map
             """
-                          e
-            a - - b.-.- - c-g
-                  |    ' 'd
-                  |       f
-                  |
-                  |
-                  |
-                  |
-                  |
-                  |
-            i - - h - - - j
+                        . e
+            a . . b . . . c g
+                  .   `   .
+                  .     ` .
+                  .       d
+                  .       f
+                  .
+                  .
+                  .
+                  .
+            i . . h . . . j
             """
 
         And the ways
@@ -108,6 +115,7 @@ Feature: Turn Lane Guidance
             | a,f       | in,cross,cross       | depart,turn right,arrive            | ,left:false straight:false right:true, |
             | a,j       | in,turn,other,other  | depart,turn right,turn left,arrive  | ,,left:true right:false,               |
             | a,i       | in,turn,other,other  | depart,turn right,turn right,arrive | ,,left:false right:true,               |
+
 
     @todo @2654 @none
     #https://github.com/Project-OSRM/osrm-backend/issues/2645
@@ -230,6 +238,7 @@ Feature: Turn Lane Guidance
             | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true,  |
             | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, |
             | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false,  |
+
 
     Scenario: Check sliproad handler loop's exit condition, Issue #2896
       # http://www.openstreetmap.org/way/198481519

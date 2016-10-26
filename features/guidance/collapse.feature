@@ -701,12 +701,15 @@ Feature: Collapse
         Given the node map
             """
                       g
-
+                      .
                       c
-            a     b
-                        d
+            a . . b .'
+                      ` d.
                         f e
             """
+            # as it is right now we don't classify this as a sliproad,
+            # check collapse-detail.feature for a similar test case
+            # which removes the fork here due to it being a Sliproad.
 
         And the ways
             | nodes | name  | oneway | highway   |
@@ -725,10 +728,9 @@ Feature: Collapse
 
         When I route I should get
             | waypoints | route                 | turns                                      |
-            | a,g       | road,cross,cross      | depart,turn left,arrive                    |
-            | a,e       | road,road,road        | depart,continue straight,arrive            |
-            # We should discuss whether the next item should be collapsed to depart,turn right,arrive.
-            | a,f       | road,road,cross,cross | depart,continue straight,turn right,arrive |
+            | a,g       | road,cross,cross      | depart,fork left,arrive                    |
+            | a,e       | road,road,road        | depart,fork slight right,arrive            |
+            | a,f       | road,road,cross,cross | depart,fork slight right,turn right,arrive |
 
     Scenario: On-Off on Highway
         Given the node map

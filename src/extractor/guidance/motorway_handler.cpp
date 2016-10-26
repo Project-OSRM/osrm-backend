@@ -193,7 +193,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             assignFork(via_eid, intersection[3], intersection[2], intersection[1]);
         }
 
-        else if (countValid(intersection) > 0) // check whether turns exist at all
+        else if (intersection.countEnterable() > 0) // check whether turns exist at all
         {
             // FALLBACK, this should hopefully never be reached
             return fallback(std::move(intersection));
@@ -338,7 +338,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
 
 Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection intersection) const
 {
-    auto num_valid_turns = countValid(intersection);
+    auto num_valid_turns = intersection.countEnterable();
     // ramp straight into a motorway/ramp
     if (intersection.size() == 2 && num_valid_turns == 1)
     {

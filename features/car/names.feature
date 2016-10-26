@@ -78,24 +78,24 @@ Feature: Car - Street names in instructions
     Scenario: Inner city expressway with on road
         Given the node map
             """
-            a b       c g
-                    f
-
-
-
+            a b . . . c g
+                   `f .
+                     `
+                      .
+                      .
                       d
-
-
-
+                      .
+                      .
+                      .
                       e
             """
 
         And the ways
-            | nodes | highway      | name  | name:pronunciation |
-            | abc   | primary      | road  | roooaad            |
-            | cg    | primary      | road  | roooaad            |
-            | bfd   | trunk_link   |       |                    |
-            | cde   | trunk        | trunk | truank             |
+            | nodes | highway      | name     | name:pronunciation | oneway |
+            | abc   | primary      | road     | roooaad            |        |
+            | cg    | primary      | road     | roooaad            |        |
+            | bfd   | trunk_link   | sliproad |                    | yes    |
+            | cde   | trunk        | trunk    | truank             | yes    |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
