@@ -162,3 +162,31 @@ Feature: Simple Turns
             | a,f       | depart,continue left,continue right,arrive        | place,place,place,place    |
             | d,f       | depart,turn right,continue right,arrive           | bottom,place,place,place   |
             | d,h       | depart,turn right,continue left,turn right,arrive | bottom,place,place,top,top |
+
+    @bug @not-sorted @3179
+    Scenario: Adjusting road angles to not be sorted
+        Given the node map
+            """
+                                 g
+                                |
+                               |
+                              |
+                             _e - - - - - - - - - f
+                           /
+            a - - - - -b <
+                     i     \ _
+                h             c - - - - - - - - - d
+
+            """
+
+        And the ways
+            | nodes | name  | oneway |
+            | ab    | road  | no     |
+            | febcd | road  | yes    |
+            | ge    | in    | yes    |
+            | eh    | right | yes    |
+            | ei    | left  | yes    |
+
+        When I route I should get
+            | waypoints | route        |
+            | g,a       | in,road,road |
