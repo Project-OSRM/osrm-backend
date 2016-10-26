@@ -19,6 +19,7 @@
       - Improved turn angle calculation, detecting offsets due to lanes / minor variations due to inaccuracies
       - Corrected the bearings returned for intermediate steps - requires reprocessing
       - Improved turn locations for collapsed turns
+      - Sliproad classification refinements: the situations we detect as Sliproads now resemble more closely the reality
     - Trip Plugin
       - changed internal behaviour to prefer the smallest lexicographic result over the largest one
     - Bugfixes

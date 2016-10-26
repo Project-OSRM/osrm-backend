@@ -1,5 +1,4 @@
 #include "extractor/guidance/node_based_graph_walker.hpp"
-#include "util/coordinate_calculation.hpp"
 #include <utility>
 
 using osrm::util::angularDeviation;

@@ -9,23 +9,23 @@ Feature: Slipways and Dedicated Turn Lanes
         Given the node map
             """
                     e
-            a b     c d
-                  h
-
-                  1
-
+            a b . . c d
+                 `h .
+                   `
+                  1 `
+                    .
                     f
-
+                    .
                     g
             """
 
         And the ways
-            | nodes | highway    | name   |
-            | abc   | trunk      | first  |
-            | cd    | trunk      | first  |
-            | bhf   | trunk_link |        |
-            | cfg   | primary    | second |
-            | ec    | primary    | second |
+            | nodes | highway    | name   | oneway |
+            | abc   | trunk      | first  |        |
+            | cd    | trunk      | first  |        |
+            | bhf   | trunk_link |        | yes    |
+            | cfg   | primary    | second | yes    |
+            | ec    | primary    | second |        |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -51,12 +51,12 @@ Feature: Slipways and Dedicated Turn Lanes
             """
 
         And the ways
-            | nodes | highway    | name   | maxspeed |
-            | abc   | trunk      | first  | 70       |
-            | cd    | trunk      | first  | 2        |
-            | bhf   | trunk_link |        | 2        |
-            | cfg   | primary    | second | 50       |
-            | ec    | primary    | second | 50       |
+            | nodes | highway    | name   | maxspeed | oneway |
+            | abc   | trunk      | first  | 70       |        |
+            | cd    | trunk      | first  | 2        |        |
+            | bhf   | trunk_link |        | 2        | yes    |
+            | cfg   | primary    | second | 50       | yes    |
+            | ec    | primary    | second | 50       |        |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -125,24 +125,24 @@ Feature: Slipways and Dedicated Turn Lanes
     Scenario: Inner city expressway with on road
         Given the node map
             """
-            a b       c g
-                    f
-
-
-
+            a b . . . c g
+                   `f .
+                     `
+                      .
+                      .
                       d
-
-
-
+                      .
+                      .
+                      .
                       e
             """
 
         And the ways
-            | nodes | highway      | name  |
-            | abc   | primary      | road  |
-            | cg    | primary      | road  |
-            | bfd   | trunk_link   |       |
-            | cde   | trunk        | trunk |
+            | nodes | highway      | name  | oneway |
+            | abc   | primary      | road  |        |
+            | cg    | primary      | road  |        |
+            | bfd   | trunk_link   |       | yes    |
+            | cde   | trunk        | trunk | yes    |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
@@ -240,8 +240,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | qe    | secondary_link | Ettlinger Allee    |      | yes    |
 
         When I route I should get
-            | waypoints | route                                                    | turns                    | ref        |
-            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee       | depart,turn right,arrive | L561,L561, |
+            | waypoints | route                                              | turns                    | ref        |
+            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive | L561,L561, |
 
     Scenario: Traffic Lights everywhere
         #http://map.project-osrm.org/?z=18&center=48.995336%2C8.383813&loc=48.995467%2C8.384548&loc=48.995115%2C8.382761&hl=en&alt=0
@@ -431,3 +431,354 @@ Feature: Slipways and Dedicated Turn Lanes
         When I route I should get
             | waypoints | route          | turns                          |
             | a,i       | road,road,road | depart,fork slight left,arrive |
+
+
+    # The following tests are current false positives / false negatives #3199
+
+    @sliproads
+    # http://www.openstreetmap.org/#map=19/52.59847/13.14815
+    Scenario: Sliproad Detection
+        Given the node map
+            """
+            a                            . . .
+              .                         .
+                b  . . . . . .  c . . . d
+                  `             .       .
+                    e           .       .
+                       `        .       .
+                          f     .       .
+                             `  .       .
+                                g       i
+                                   ` h .
+            """
+
+        And the ways
+            | nodes  | highway     | name              |
+            | abefgh | residential | Nachtigallensteig |
+            | bcd    | residential | Kiebitzsteig      |
+            | cg     | residential | Haenflingsteig    |
+            | hid    | residential | Waldkauzsteig     |
+
+       When I route I should get
+            | waypoints | route                                        | turns                   |
+            | a,d       | Nachtigallensteig,Kiebitzsteig,Kiebitzsteig  | depart,turn left,arrive |
+            | a,h       | Nachtigallensteig,Nachtigallensteig          | depart,arrive           |
+
+
+    @sliproads
+    Scenario: Not a obvious Sliproad
+        Given the node map
+            """
+                    d
+                    .
+          s . a . . b . . c
+                `   .
+                  ` e
+                    .`
+                    .  `
+                    f    g
+            """
+
+        And the ways
+            | nodes | highway | name  | oneway |
+            | sabc  | primary | sabc  |        |
+            | dbef  | primary | dbef  | yes    |
+            | aeg   | primary | aeg   | yes    |
+
+       When I route I should get
+            | waypoints | route              | turns                               |
+            | s,f       | sabc,aeg,dbef,dbef | depart,turn right,turn right,arrive |
+
+    @sliproads
+    Scenario: Through Street, not a Sliproad although obvious
+        Given the node map
+            """
+                    d
+                    .
+          s . a . . b . . c
+                `   .
+                  ` e
+                  .  `
+                 .     `
+                f        g
+            """
+
+        And the ways
+            | nodes | highway | name  | oneway |
+            | sabc  | primary | sabc  |        |
+            | dbef  | primary | dbef  | yes    |
+            | aeg   | primary | aeg   | yes    |
+
+       When I route I should get
+            | waypoints | route              | turns                               |
+            | s,f       | sabc,aeg,dbef,dbef | depart,turn right,turn right,arrive |
+
+    @sliproads
+    Scenario: Sliproad target turn is restricted
+        Given the node map
+            """
+                        d
+                        .
+          s . a . . . . b . . c
+                `       .
+                   `    .
+                     `  .
+                      ` .
+                       `.
+                        e
+                        .`
+                        f `
+                        .  ` g
+            """
+
+        And the ways
+            | nodes | highway | name | oneway |
+            | sa    | primary | sabc |        |
+            | abc   | primary | sabc |        |
+            | dbe   | primary | dbef | yes    |
+            | ef    | primary | dbef |        |
+            | ae    | primary | aeg  | yes    |
+            | eg    | primary | aeg  |        |
+            # the reason we have to split ways at e is that otherwise we can't handle restrictions via e
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | ae       | ef     | e        | no_right_turn |
+
+       When I route I should get
+            | waypoints | route          | turns                    |
+            | s,f       | sabc,dbef,dbef | depart,turn right,arrive |
+            | s,g       | sabc,aeg,aeg   | depart,turn right,arrive |
+
+    @sliproads
+    Scenario: Not a Sliproad, road not continuing straight
+        Given the node map
+            """
+                    d
+                    .
+          s . a . . b . . c
+                `   .
+                  ` e . . g
+            """
+
+        And the ways
+            | nodes | highway | name  | oneway |
+            | sabc  | primary | sabc  |        |
+            | dbe   | primary | dbe   | yes    |
+            | aeg   | primary | aeg   | yes    |
+
+       When I route I should get
+            | waypoints | route        | turns                    |
+            | s,c       | sabc,sabc    | depart,arrive            |
+            | s,g       | sabc,aeg,aeg | depart,turn right,arrive |
+
+    @sliproads
+    Scenario: Intersection too far away with Traffic Light shortly after initial split
+        Given the node map
+            """
+                                                                                                                                                                      d
+                                                                                                                                                                      .
+          s . a . . . . . . . . . . . . . t . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . b . . c
+               ` . . . . . . . . . .                                                                                                                                  .                   .
+                                      `  . . . . . . . . . .                                                                                                          .                                .
+                                                              `  . . . . . . . . . .                                                                                  .                                        .
+                                                                                      `  . . . . . . . . . .                                                          .                                                     .
+                                                                                                              `  . . . . . . . . . .                                  .                                                                 .
+                                                                                                                                      `  . . . . . . . . . .          .                                                                              .
+                                                                                                                                                              `  .    .                     .
+                                                                                                                                                                   `  e
+                                                                                                                                                                      .
+                                                                                                                                                                      f
+                                                                                                                                                                      .
+            """
+
+        And the nodes
+            | node | highway         |
+            | t    | traffic_signals |
+
+        And the ways
+            | nodes | highway | name | oneway |
+            | satbc | primary | sabc |        |
+            | dbef  | primary | dbef | yes    |
+            | ae    | primary | ae   | yes    |
+
+       When I route I should get
+            | waypoints | route             | turns                                      |
+            | s,f       | sabc,ae,dbef,dbef | depart,turn slight right,turn right,arrive |
+
+    @sliproads
+    Scenario: Traffic Signal on Sliproad
+        Given the node map
+            """
+                          d
+                          .
+          s . a . . . . . b . . c
+               `          .
+                  `       .
+                     `    .
+                       t  .
+                        ` .
+                          e
+                          .
+                          .
+                          f
+            """
+
+        And the nodes
+            | node | highway         |
+            | t    | traffic_signals |
+
+        And the ways
+            | nodes | highway | name  | oneway |
+            | sabc  | primary | sabc  |        |
+            | dbe   | primary | dbe   | yes    |
+            | ef    | primary | ef    |        |
+            | ate   | primary | ate   | yes    |
+
+       When I route I should get
+            | waypoints | route      | turns                    |
+            | s,f       | sabc,ef,ef | depart,turn right,arrive |
+
+    @sliproads
+    Scenario: Sliproad tagged as link
+        Given the node map
+            """
+                          d
+                          .
+          s . a . . . . . b . . c
+               `          .
+                  `       .
+                     `    .
+                       `  .
+                        ` .
+                          e
+                          .
+                          .
+                          f
+            """
+
+        And the ways
+            | nodes | highway       | name  | oneway |
+            | sabc  | motorway      | sabc  |        |
+            | dbef  | motorway      | dbef  | yes    |
+            | ae    | motorway_link | ae    | yes    |
+
+       When I route I should get
+            | waypoints | route          | turns                    |
+            | s,f       | sabc,dbef,dbef | depart,turn right,arrive |
+
+    @sliproads
+    Scenario: Sliproad with same-ish names
+        Given the node map
+            """
+                    d
+                    .
+          s . a . . b . . c
+               `    .
+                 .  e
+                   ..
+                    .
+                    f
+                    .
+                    t
+            """
+
+        And the ways
+            | nodes | highway | name     | ref   | oneway |
+            | sabc  | primary | main     |       |        |
+            | dbe   | primary | crossing | r0    | yes    |
+            | eft   | primary | crossing | r0;r1 | yes    |
+            | af    | primary | sliproad |       | yes    |
+
+       When I route I should get
+            | waypoints | route                  | turns                    |
+            | s,t       | main,crossing,crossing | depart,turn right,arrive |
+
+    @sliproads
+    Scenario: Not a Sliproad, name mismatch
+        Given the node map
+            """
+                    d
+                    .
+          s . a . . b . . c
+               `    .
+                 .  e
+                  . .
+                   ..
+                    .
+                    f
+                    .
+                    t
+            """
+
+        And the ways
+            | nodes | highway | name     | oneway |
+            | sabc  | primary | main     |        |
+            | dbe   | primary | top      | yes    |
+            | ef    | primary | bottom   | yes    |
+            | ft    | primary | away     | yes    |
+            | af    | primary | sliproad | yes    |
+
+       When I route I should get
+            | waypoints | route          | turns                    |
+            | s,t       | main,away,away | depart,turn right,arrive |
+
+    @sliproads
+    Scenario: Not a Sliproad, low road priority
+        Given the node map
+            """
+                    d
+                    .
+          s . a . . b . . c
+               `    .
+                 .  e
+                  . .
+                   ..
+                    .
+                    f
+                    .
+                    t
+            """
+
+        And the ways
+        # maxspeed otherwise service road will never be routed over and we won't see instructions
+            | nodes | highway | name     | maxspeed | oneway |
+            | sabc  | primary | main     | 30 km/h  |        |
+            | dbe   | primary | crossing | 30 km/h  | yes    |
+            | eft   | primary | crossing | 30 km/h  | yes    |
+            | ft    | primary | away     | 30 km/h  | yes    |
+            | af    | service | sliproad | 30 km/h  | yes    |
+
+       When I route I should get
+            | waypoints | route          | turns                    |
+            | s,t       | main,away,away | depart,turn right,arrive |
+
+    @sliproads
+    Scenario: Not a Sliproad, more than three roads at target intersection
+        Given the node map
+            """
+                    d
+                    .
+          s . a . . b . . c
+               `    .
+                 .  e
+                  . .
+                   ..
+                    .   h
+                    f .
+                    .   g
+                    t
+            """
+
+        And the ways
+            | nodes | highway | name     | oneway |
+            | sabc  | primary | main     |        |
+            | dbe   | primary | top      | yes    |
+            | eft   | primary | bottom   | yes    |
+            | fh    | primary | another  |        |
+            | fg    | primary | another  |        |
+            | af    | primary | sliproad | yes    |
+
+       When I route I should get
+            | waypoints | route                         | turns                              |
+            | s,g       | main,sliproad,another,another | depart,turn right,turn left,arrive |
