@@ -376,7 +376,7 @@ CoordinateExtractor::GetMaxDeviation(std::vector<util::Coordinate>::const_iterat
         range_begin, range_end, 0.0, [&](const double current, const util::Coordinate coordinate) {
             return std::max(current, get_single_deviation(coordinate));
         });
-};
+}
 
 bool CoordinateExtractor::IsCurve(const std::vector<util::Coordinate> &coordinates,
                                   const std::vector<double> &segment_distances,
@@ -681,7 +681,7 @@ CoordinateExtractor::GetCorrectedCoordinate(const util::Coordinate fixpoint,
 
         return util::Coordinate(corrected_lon, corrected_lat);
     }
-};
+}
 
 std::vector<util::Coordinate>
 CoordinateExtractor::SampleCoordinates(const std::vector<util::Coordinate> &coordinates,
