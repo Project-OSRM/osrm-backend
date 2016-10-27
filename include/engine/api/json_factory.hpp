@@ -75,7 +75,7 @@ util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver);
 
 util::json::Object makeRouteStep(guidance::RouteStep step,
-                                 boost::optional<util::json::Value> geometry);
+                                 util::json::Value geometry);
 
 util::json::Object makeRoute(const guidance::Route &route,
                              util::json::Array legs,
