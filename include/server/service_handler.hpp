@@ -23,13 +23,21 @@ namespace api
 struct ParsedURL;
 }
 
-class ServiceHandler
+
+class ServiceHandlerInterface
+{
+public:
+    virtual ~ServiceHandlerInterface() {}
+    virtual engine::Status RunQuery(api::ParsedURL parsed_url, service::BaseService::ResultT & result) = 0;
+};
+
+class ServiceHandler final : public ServiceHandlerInterface
 {
   public:
     ServiceHandler(osrm::EngineConfig &config);
     using ResultT = service::BaseService::ResultT;
 
-    engine::Status RunQuery(api::ParsedURL parsed_url, ResultT &result);
+    virtual engine::Status RunQuery(api::ParsedURL parsed_url, ResultT &result) override;
 
   private:
     std::unordered_map<std::string, std::unique_ptr<service::BaseService>> service_map;

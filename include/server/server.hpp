@@ -86,7 +86,7 @@ class Server
 
     void Stop() { io_service.stop(); }
 
-    void RegisterServiceHandler(std::unique_ptr<ServiceHandler> service_handler_)
+    void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
     {
         request_handler.RegisterServiceHandler(std::move(service_handler_));
     }
