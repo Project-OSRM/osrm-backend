@@ -264,6 +264,8 @@ endif()
 
 # Configuring other platform dependencies
 if(APPLE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.10")
+  execute_process(COMMAND xcrun --sdk macosx --show-sdk-path OUTPUT_VARIABLE CMAKE_OSX_SYSROOT OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(CMAKE_OSX_ARCHITECTURES "x86_64")
   message(STATUS "Set Architecture to x64 on OS X")
   exec_program(uname ARGS -v  OUTPUT_VARIABLE DARWIN_VERSION)
