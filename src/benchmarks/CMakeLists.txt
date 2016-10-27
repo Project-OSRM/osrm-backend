@@ -11,7 +11,7 @@ target_include_directories(rtree-bench
 	${PROJECT_SOURCE_DIR}/unit_tests)
 
 target_link_libraries(rtree-bench
-	${Boost_LIBRARIES}
+	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES})
 
@@ -22,7 +22,7 @@ add_executable(match-bench
 
 target_link_libraries(match-bench
 	osrm
-	${Boost_LIBRARIES}
+	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES})
 
