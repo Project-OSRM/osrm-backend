@@ -1,0 +1,277 @@
+diff --git a/GDALmake.opt.in b/GDALmake.opt.in
+index 82525d9..413b8bc 100644
+--- a/GDALmake.opt.in
++++ b/GDALmake.opt.in
+@@ -474,14 +474,7 @@ FREEXL_INCLUDE = @FREEXL_INCLUDE@
+ #	and their uppercase form should be the format portion of the
+ #	format registration entry point.  eg. gdb -> GDALRegister_GDB().
+ #
+-GDAL_FORMATS = 	gxf gtiff hfa aigrid aaigrid ceos ceos2 iso8211 xpm \
+-		sdts raw dted mem jdem envisat elas fit vrt usgsdem l1b \
+-		nitf bmp pcidsk airsar rs2 ilwis rmf leveller sgi srtmhgt \
+-		idrisi gsg ingr ers jaxapalsar dimap gff cosar pds adrg \
+-		coasp tsx terragen blx msgn til r northwood saga xyz hf2 \
+-		kmlsuperoverlay ctg e00grid zmap ngsgeoid iris map\
+-		@OPT_GDAL_FORMATS@
+-
++GDAL_FORMATS = 	vrt gtiff hfa mem raw @OPT_GDAL_FORMATS@
+ 
+ ifneq ($(LIBZ_SETTING),no)
+ GDAL_FORMATS := $(GDAL_FORMATS) rik ozi pdf
+diff --git a/ogr/ogrsf_frmts/GNUmakefile b/ogr/ogrsf_frmts/GNUmakefile
+index f3f8585..c3f9fde 100644
+--- a/ogr/ogrsf_frmts/GNUmakefile
++++ b/ogr/ogrsf_frmts/GNUmakefile
+@@ -2,44 +2,8 @@
+ include ../../GDALmake.opt
+ 
+ SUBDIRS-yes	:= \
+-	generic avc bna csv dgn geojson gml gmt mem kml \
+-	mitab ntf gpx rec s57 sdts shape tiger vrt \
+-	geoconcept xplane georss gtm dxf pgdump gpsbabel \
+-	sua openair pds htf aeronavfaa edigeo svg idrisi \
+-	arcgen segukooa segy sxf openfilegdb wasp
+-
+-SUBDIRS-$(HAVE_DODS)	+= dods
+-SUBDIRS-$(HAVE_DWGDIRECT) += dxfdwg
+-SUBDIRS-$(HAVE_FME)	+= fme
+-SUBDIRS-$(HAVE_GRASS)	+= grass
+-SUBDIRS-$(HAVE_IDB)	+= idb
+-SUBDIRS-$(HAVE_XERCES)	+= ili
+-SUBDIRS-$(HAVE_NAS)	+= nas
+-SUBDIRS-$(HAVE_MYSQL)	+= mysql
+-SUBDIRS-$(ODBC_SETTING)	+= odbc pgeo mssqlspatial geomedia walk
+-SUBDIRS-$(HAVE_OGDI)	+= ogdi
+-SUBDIRS-$(HAVE_OCI)	+= oci
+-SUBDIRS-$(HAVE_OGR_PG)	+= pg
+-SUBDIRS-$(HAVE_SQLITE)	+= sqlite
+-SUBDIRS-$(HAVE_SDE)     += sde
+-SUBDIRS-$(HAVE_FGDB)    += filegdb
+-SUBDIRS-$(HAVE_ARCOBJECTS)  += arcobjects
+-SUBDIRS-$(HAVE_INGRES)  += ingres
+-SUBDIRS-$(HAVE_SQLITE)  += vfk
+-SUBDIRS-$(HAVE_LIBKML)  += libkml
+-SUBDIRS-$(CURL_SETTING) += wfs
+-SUBDIRS-$(MDB_ENABLED)  += mdb
+-SUBDIRS-$(CURL_SETTING) += gft
+-SUBDIRS-$(CURL_SETTING) += gme
+-SUBDIRS-$(CURL_SETTING) += couchdb
+-SUBDIRS-$(HAVE_FREEXL)  += xls
+-SUBDIRS-$(HAVE_EXPAT)   += ods
+-SUBDIRS-$(HAVE_EXPAT)   += xlsx
+-SUBDIRS-$(CURL_SETTING) += elastic
+-SUBDIRS-$(HAVE_SQLITE)	+= gpkg
+-SUBDIRS-$(HAVE_SQLITE)	+= osm
+-SUBDIRS-$(HAVE_SOSI)	+= sosi
+-SUBDIRS-$(CURL_SETTING) += cartodb
++	generic csv geojson mem kml \
++	gpx shape vrt openfilegdb mitab
+ 
+ ifeq ($(PCIDSK_SETTING),internal)
+ SUBDIRS-yes  += pcidsk
+diff --git a/ogr/ogrsf_frmts/generic/GNUmakefile b/ogr/ogrsf_frmts/generic/GNUmakefile
+index 7c6d5fd..c63b8d3 100644
+--- a/ogr/ogrsf_frmts/generic/GNUmakefile
++++ b/ogr/ogrsf_frmts/generic/GNUmakefile
+@@ -9,200 +9,18 @@ OBJ	=	ogrsfdriverregistrar.o ogrlayer.o ogrdatasource.o \
+ 		ogrmutexedlayer.o ogrmutexeddatasource.o
+ 
+ BASEFORMATS = \
+-	-DAVCBIN_ENABLED \
+-	-DBNA_ENABLED \
+ 	-DCSV_ENABLED \
+-	-DDGN_ENABLED \
+-	-DGML_ENABLED \
+-	-DGMT_ENABLED \
+ 	-DGPX_ENABLED \
+ 	-DMEM_ENABLED \
+-	-DNTF_ENABLED \
+-	-DREC_ENABLED \
+-	-DS57_ENABLED \
+-	-DSDTS_ENABLED \
+ 	-DSHAPE_ENABLED \
+ 	-DTAB_ENABLED \
+-	-DTIGER_ENABLED \
+ 	-DVRT_ENABLED \
+ 	-DKML_ENABLED \
+ 	-DGEOJSON_ENABLED \
+-	-DGEOCONCEPT_ENABLED \
+-	-DXPLANE_ENABLED \
+-	-DGEORSS_ENABLED \
+-	-DGTM_ENABLED \
+-	-DDXF_ENABLED \
+-	-DPGDUMP_ENABLED \
+-	-DGPSBABEL_ENABLED \
+-	-DSUA_ENABLED \
+-	-DOPENAIR_ENABLED \
+-	-DPDS_ENABLED \
+-	-DHTF_ENABLED \
+-	-DAERONAVFAA_ENABLED \
+-	-DEDIGEO_ENABLED \
+-	-DSVG_ENABLED \
+-	-DIDRISI_ENABLED \
+-	-DARCGEN_ENABLED \
+-	-DSEGUKOOA_ENABLED \
+-	-DSEGY_ENABLED \
+-	-DSXF_ENABLED \
+-	-DOPENFILEGDB_ENABLED \
+-	-DWASP_ENABLED
++	-DOPENFILEGDB_ENABLED
+ 
+ CXXFLAGS :=     $(CXXFLAGS) -DINST_DATA=\"$(INST_DATA)\" $(BASEFORMATS)
+ 
+-ifeq ($(HAVE_OGDI),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DOGDI_ENABLED
+-endif
+-
+-ifeq ($(HAVE_OCI),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DOCI_ENABLED
+-endif
+-
+-ifeq ($(HAVE_SDE),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DSDE_ENABLED
+-endif
+-
+-ifeq ($(HAVE_FGDB),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DFGDB_ENABLED
+-endif
+-
+-ifeq ($(HAVE_OGR_PG),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DPG_ENABLED
+-endif
+-
+-ifeq ($(HAVE_MYSQL),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DMYSQL_ENABLED
+-endif
+-
+-ifeq ($(HAVE_INGRES),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DINGRES_ENABLED
+-endif
+-
+-ifeq ($(PCIDSK_SETTING),internal)
+-CXXFLAGS :=	$(CXXFLAGS) -DPCIDSK_ENABLED
+-endif
+-
+-ifeq ($(PCIDSK_SETTING),external)
+-CXXFLAGS :=	$(CXXFLAGS) -DPCIDSK_ENABLED
+-endif
+-
+-ifeq ($(HAVE_FME),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DFME_ENABLED
+-endif
+-
+-ifeq ($(ODBC_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DODBC_ENABLED
+-endif
+-
+-ifeq ($(PGEO_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DPGEO_ENABLED
+-endif
+-
+-ifeq ($(MSSQLSPATIAL_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DMSSQLSPATIAL_ENABLED
+-endif
+-
+-ifeq ($(HAVE_DODS),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DDODS_ENABLED
+-endif
+-
+-ifeq ($(HAVE_SQLITE),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DSQLITE_ENABLED
+-endif
+-
+-ifeq ($(HAVE_GRASS),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DGRASS_ENABLED
+-endif
+-
+-ifeq ($(HAVE_XERCES),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DILI_ENABLED
+-endif
+-
+-ifeq ($(HAVE_NAS),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DNAS_ENABLED
+-endif
+-
+-ifeq ($(HAVE_LIBKML),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DLIBKML_ENABLED
+-endif
+-
+-ifeq ($(HAVE_DWGDIRECT),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DDWGDIRECT_ENABLED
+-endif
+-
+-ifeq ($(HAVE_IDB),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DIDB_ENABLED
+-endif
+-
+-ifeq ($(HAVE_PANORAMA),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DPANORAMA_ENABLED
+-endif
+-
+-ifeq ($(HAVE_SOSI),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DSOSI_ENABLED
+-endif
+-
+-ifeq ($(HAVE_SQLITE),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DVFK_ENABLED
+-endif
+-
+-ifeq ($(CURL_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DWFS_ENABLED
+-endif
+-
+-ifeq ($(GEOMEDIA_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DGEOMEDIA_ENABLED
+-endif
+-
+-ifeq ($(MDB_ENABLED),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DMDB_ENABLED
+-endif
+-
+-ifeq ($(CURL_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DGFT_ENABLED
+-endif
+-
+-ifeq ($(CURL_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DGME_ENABLED
+-endif
+-
+-ifeq ($(CURL_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DCOUCHDB_ENABLED
+-endif
+-
+-ifeq ($(HAVE_FREEXL),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DFREEXL_ENABLED
+-endif
+-
+-ifeq ($(HAVE_EXPAT),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DODS_ENABLED
+-endif
+-
+-ifeq ($(HAVE_EXPAT),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DXLSX_ENABLED
+-endif
+-
+-ifeq ($(CURL_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DELASTIC_ENABLED
+-endif
+-
+-ifeq ($(HAVE_SQLITE),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DOSM_ENABLED
+-endif
+-
+-ifneq ($(LIBZ_SETTING),no)
+-CXXFLAGS :=	$(CXXFLAGS) -DPDF_ENABLED
+-endif
+-
+-ifeq ($(ODBC_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DWALK_ENABLED
+-endif
+-
+-ifeq ($(CURL_SETTING),yes)
+-CXXFLAGS :=	$(CXXFLAGS) -DCARTODB_ENABLED
+-endif
+-
+ CPPFLAGS	:=	-I.. -I../.. $(GDAL_INCLUDE) $(CPPFLAGS)
+ 
+ default:	$(O_OBJ:.o=.$(OBJ_EXT))

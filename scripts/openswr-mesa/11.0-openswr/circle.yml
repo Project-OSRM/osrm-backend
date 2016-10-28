@@ -1,0 +1,25 @@
+machine:
+  environment:
+    CXX: g++-4.9
+    CC: gcc-4.9
+
+dependencies:
+  pre:
+        - "if [[ `lsb_release -r` =~ '14.04' ]]; then sudo apt-get install -y software-properties-common; fi"
+    - sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+    - sudo add-apt-repository --yes ppa:xorg-edgers/ppa
+    - sudo apt-get update -y
+    - sudo apt-get install -y gcc-4.9 g++-4.9 automake pkg-config libtool
+    - sudo apt-get install -y python-pip flex bison libdrm-dev x11proto-gl-dev x11proto-dri2-dev x11proto-dri3-dev x11proto-present-dev libx11-xcb-dev libxext-dev libxdamage-dev libxfixes-dev libxcb-glx0-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxcb-sync-dev libxshmfence-dev libudev-dev libexpat1-dev libdrm-intel1 libva-dev gettext libnuma-dev llvm-3.6 mesa-utils
+    - sudo pip install mako
+
+test:
+  override:
+    - ldd --version
+    - ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+deployment:
+  publish:
+    branch: /.*/
+    commands:
+      - ./mason publish ${MASON_NAME} ${MASON_VERSION}

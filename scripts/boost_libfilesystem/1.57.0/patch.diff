@@ -1,0 +1,10 @@
+--- libs/filesystem/src/operations.cpp	2015-05-01 18:49:26.000000000 -0700
++++ libs/filesystem/src/operations.cpp	2015-05-01 18:49:22.000000000 -0700
+@@ -1416,6 +1416,7 @@
+     //  - See the fchmodat() Linux man page:
+     //   "http://man7.org/linux/man-pages/man2/fchmodat.2.html"
+ #   if defined(AT_FDCWD) && defined(AT_SYMLINK_NOFOLLOW) \
++      && !(defined(__APPLE__)) \
+       && !(defined(__SUNPRO_CC) || defined(__sun) || defined(sun)) \
+       && !(defined(linux) || defined(__linux) || defined(__linux__))
+       if (::fchmodat(AT_FDCWD, p.c_str(), mode_cast(prms),

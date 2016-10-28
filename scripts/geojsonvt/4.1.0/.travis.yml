@@ -1,0 +1,63 @@
+language: c
+
+sudo: false
+
+matrix:
+  exclude:
+    - os: linux
+    - os: osx
+  include:
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=ios
+      compiler: clang
+    - os: osx
+      osx_image: xcode7.2
+      env: MASON_PLATFORM=ios
+      compiler: clang
+    - os: osx
+      osx_image: xcode7.3
+      env: MASON_PLATFORM=ios
+      compiler: clang
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=osx
+      compiler: clang
+    - os: linux
+      env: MASON_PLATFORM=linux CXX=clang++-3.5
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5' ]
+          packages: [ 'clang-3.5', 'libstdc++-4.9-dev', 'libstdc++6' ]
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v5
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v7
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v8
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86-64
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips-64
+
+addons:
+  apt:
+    sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5' ]
+    packages: [ 'clang-3.5', 'libstdc++-4.9-dev', 'libstdc++6' ]
+
+env:
+  global:
+   - secure: "clCFM3prHnDocZ8lXlimPxAogvFirD1Zx8cMcFJ/XpkTA/0pCgnhpArM4y/NzLHR57pNZTSCr3p6XZI1c1iTG4Zm8x0sK2A4aTFRahypXNy/e+LzAbtd1y1+dEEDwlJvNNGxizQX4frhOgSNQFDFnWLtmF3stlft5YWyc2kI+FI="
+   - secure: "jKJErCng8Sk8YJ0IN2FX3lhv7G1LeudMfFBAXViZaXn8w/gWPs+SlfXQmIJ5SruU7U2GQKnAhzbjwXjVAgAh8OAblzny0DDm5Lh5WmwkgAP8JH1LpsBwCYx2S/v8qyR4DX1RVhHS8mQu298180ZDVgGccw+hd8xrE/S5TEQcNfQ="
+
+before_install:
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}
