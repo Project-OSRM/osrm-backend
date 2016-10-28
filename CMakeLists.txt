@@ -32,6 +32,7 @@ if(ENABLE_MASON)
   set(MASON_CCACHE_VERSION "3.3.1")
 
   message(STATUS "Enabling mason")
+  set(MASON_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason)
   include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason.cmake)
   if(NOT CMAKE_CXX_COMPILER)
     mason_use(clang++ VERSION ${MASON_CLANG_VERSION})
