@@ -47,7 +47,7 @@ module.exports = function () {
                             var sub = [json.tracepoints[0].location];
                             for(var i = 1; i < json.tracepoints.length; i++){
                                 if(json.tracepoints[i-1].matchings_index === json.tracepoints[i].matchings_index) {
-                                    sub.push(json.tracepoints[i].location)
+                                    sub.push(json.tracepoints[i].location);
                                 } else {
                                     subMatchings.push(sub);
                                     sub = [json.tracepoints[i].location];
