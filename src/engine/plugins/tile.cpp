@@ -606,7 +606,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     for (const auto &edge : edges)
     {
 
-        const auto forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+        const auto forward_datasource_vector =
+            facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
         const auto reverse_datasource_vector =
             facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
 
@@ -614,8 +615,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         const auto forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
         BOOST_ASSERT(edge.fwd_segment_position < reverse_datasource_vector.size());
         const auto reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() -
-                                                       edge.fwd_segment_position - 1];
-
+                                                                  edge.fwd_segment_position - 1];
 
         // Keep track of the highest datasource seen so that we don't write unnecessary
         // data to the layer attribute values
@@ -655,16 +655,26 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                     const auto a = facade->GetCoordinateOfNode(edge.u);
                     const auto b = facade->GetCoordinateOfNode(edge.v);
                     // Calculate the length in meters
-                    const double length = osrm::util::coordinate_calculation::haversineDistance(a, b);
+                    const double length =
+                        osrm::util::coordinate_calculation::haversineDistance(a, b);
 
-                    const auto forward_weight_vector = facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
-                    const auto reverse_weight_vector = facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
-                    const auto forward_datasource_vector = facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
-                    const auto reverse_datasource_vector = facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
+                    const auto forward_weight_vector =
+                        facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+                    const auto reverse_weight_vector =
+                        facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    const auto forward_datasource_vector =
+                        facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+                    const auto reverse_datasource_vector =
+                        facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
                     const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
-                    const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() - edge.fwd_segment_position - 1];
-                    const auto forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
-                    const auto reverse_datasource = reverse_datasource_vector[reverse_datasource_vector.size() - edge.fwd_segment_position - 1];
+                    const auto reverse_weight =
+                        reverse_weight_vector[reverse_weight_vector.size() -
+                                              edge.fwd_segment_position - 1];
+                    const auto forward_datasource =
+                        forward_datasource_vector[edge.fwd_segment_position];
+                    const auto reverse_datasource =
+                        reverse_datasource_vector[reverse_datasource_vector.size() -
+                                                  edge.fwd_segment_position - 1];
 
                     use_line_value(reverse_weight);
                     use_line_value(forward_weight);

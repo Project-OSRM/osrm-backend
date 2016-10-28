@@ -31,7 +31,8 @@ class ViaRoutePlugin final : public BasePlugin
     mutable SearchEngineData heaps;
     mutable routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
     mutable routing_algorithms::AlternativeRouting<datafacade::BaseDataFacade> alternative_path;
-    mutable routing_algorithms::DirectShortestPathRouting<datafacade::BaseDataFacade> direct_shortest_path;
+    mutable routing_algorithms::DirectShortestPathRouting<datafacade::BaseDataFacade>
+        direct_shortest_path;
     const int max_locations_viaroute;
 
   public:

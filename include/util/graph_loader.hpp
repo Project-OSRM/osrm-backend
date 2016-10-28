@@ -147,7 +147,6 @@ NodeID loadEdgesFromFile(std::istream &input_stream,
 
     return m;
 }
-
 }
 }
 

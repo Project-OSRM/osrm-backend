@@ -843,8 +843,7 @@ class AlternativeRouting final
                 const NodeID via_path_middle_node_id = current_edge_data.id;
                 const EdgeID second_segment_edge_id =
                     facade.FindEdgeInEitherDirection(via_path_middle_node_id, via_path_edge.second);
-                const int second_segment_length =
-                    facade.GetEdgeData(second_segment_edge_id).weight;
+                const int second_segment_length = facade.GetEdgeData(second_segment_edge_id).weight;
                 // attention: !unpacking in reverse!
                 // Check if second segment is the one to go over treshold? if yes add second segment
                 // to stack, else push first segment to stack and add weight of second one.

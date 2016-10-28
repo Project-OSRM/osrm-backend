@@ -22,9 +22,10 @@ bool generateDataStoreOptions(const int argc,
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()("max-wait",
-                                 boost::program_options::value<int>(&max_wait)->default_value(-1),
-                                 "Maximum number of seconds to wait on requests that use the old dataset.");
+    config_options.add_options()(
+        "max-wait",
+        boost::program_options::value<int>(&max_wait)->default_value(-1),
+        "Maximum number of seconds to wait on requests that use the old dataset.");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -110,11 +111,12 @@ int main(const int argc, const char *argv[]) try
     const constexpr unsigned MAX_RETRIES = 3;
     unsigned retry_counter = 0;
     storage::Storage::ReturnCode code = storage::Storage::ReturnCode::Retry;
-    while(code == storage::Storage::ReturnCode::Retry && retry_counter < MAX_RETRIES)
+    while (code == storage::Storage::ReturnCode::Retry && retry_counter < MAX_RETRIES)
     {
         if (retry_counter > 0)
         {
-            util::SimpleLogger().Write(logWARNING) << "Try number " << (retry_counter+1)  << " to load the dataset.";
+            util::SimpleLogger().Write(logWARNING) << "Try number " << (retry_counter + 1)
+                                                   << " to load the dataset.";
         }
         code = storage.Run(max_wait);
         retry_counter++;

@@ -98,7 +98,7 @@ struct CmpEdgeByInternalSourceTargetAndName
     value_type max_value() { return value_type::max_internal_value(); }
     value_type min_value() { return value_type::min_internal_value(); }
 
-    std::mutex& mutex;
+    std::mutex &mutex;
     const oe::ExtractionContainers::STXXLNameCharData &name_data;
     const oe::ExtractionContainers::STXXLNameOffsets &name_offsets;
 };

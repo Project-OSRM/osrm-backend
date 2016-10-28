@@ -81,10 +81,10 @@ inline HSGRHeader readHSGRHeader(boost::filesystem::ifstream &input_stream)
 using NodeT = typename util::StaticGraph<contractor::QueryEdge::EdgeData>::NodeArrayEntry;
 using EdgeT = typename util::StaticGraph<contractor::QueryEdge::EdgeData>::EdgeArrayEntry;
 inline void readHSGR(boost::filesystem::ifstream &input_stream,
-              NodeT *node_buffer,
-              const std::uint64_t number_of_nodes,
-              EdgeT *edge_buffer,
-              const std::uint64_t number_of_edges)
+                     NodeT *node_buffer,
+                     const std::uint64_t number_of_nodes,
+                     EdgeT *edge_buffer,
+                     const std::uint64_t number_of_edges)
 {
     BOOST_ASSERT(node_buffer);
     BOOST_ASSERT(edge_buffer);
@@ -177,7 +177,6 @@ void readNodes(boost::filesystem::ifstream &nodes_input_stream,
     }
 }
 
-
 // Reads datasource names out of .datasource_names files and metadata such as
 // the length and offset of each name
 struct DatasourceNamesData
@@ -186,7 +185,8 @@ struct DatasourceNamesData
     std::vector<std::size_t> offsets;
     std::vector<std::size_t> lengths;
 };
-inline DatasourceNamesData readDatasourceNames(boost::filesystem::ifstream &datasource_names_input_stream)
+inline DatasourceNamesData
+readDatasourceNames(boost::filesystem::ifstream &datasource_names_input_stream)
 {
     DatasourceNamesData datasource_names_data;
     std::string name;
@@ -215,7 +215,6 @@ void readRamIndex(boost::filesystem::ifstream &ram_index_input_stream,
     ram_index_input_stream.read(reinterpret_cast<char *>(rtree_buffer),
                                 sizeof(RTreeNodeT) * tree_size);
 }
-
 }
 }
 }

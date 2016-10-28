@@ -17,8 +17,8 @@
 #include "util/guidance/turn_lanes.hpp"
 
 #include "engine/geospatial_query.hpp"
-#include "util/packed_vector.hpp"
 #include "util/guidance/turn_bearing.hpp"
+#include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
 #include "util/simple_logger.hpp"
