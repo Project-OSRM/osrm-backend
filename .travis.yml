@@ -157,8 +157,8 @@ install:
     if [[ ${ENABLE_MASON:-OFF} == 'ON' ]]; then
       # for mason builds we need to point the example
       # at the clang++ installed by the CMakeLists.txt automatically
-      CXX=$(.mason/mason prefix clang++ 3.8.1)/bin/clang++
-      CC=$(.mason/mason prefix clang++ 3.8.1)/bin/clang
+      export CXX=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang++
+      export CC=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang
     fi
   - mkdir example/build && pushd example/build
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
