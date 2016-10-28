@@ -1,0 +1,26 @@
+diff --git a/configure b/configure
+index eee34f8..808c020 100755
+--- a/configure
++++ b/configure
+@@ -16149,7 +16149,7 @@ fi
+ $as_echo "$dummy_cv_ansi" >&6; }
+ 
+ if test x"$dummy_cv_ansi" = xyes; then
+-    WARNFLAGS="$WARNFLAGS -ansi"
++    WARNFLAGS="$WARNFLAGS"
+ else
+     :
+ fi
+diff --git a/include/geos/platform.h.in b/include/geos/platform.h.in
+index ab63929..1bb2fae 100644
+--- a/include/geos/platform.h.in
++++ b/include/geos/platform.h.in
+@@ -84,7 +84,7 @@ extern "C"
+ #endif
+ 
+ #if defined(HAVE_ISNAN)
+-# define ISNAN(x) (isnan(x))
++# define ISNAN(x) (std::isnan(x))
+ #else
+ # if defined(_MSC_VER)
+ #  define ISNAN(x) _isnan(x)
