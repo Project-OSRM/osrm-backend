@@ -7,6 +7,17 @@ Please create a directory and run cmake from there, passing the path to this sou
 This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
 endif()
 
+option(ENABLE_MASON "Use mason for dependencies" OFF)
+option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
+option(BUILD_TOOLS "Build OSRM tools" OFF)
+option(BUILD_COMPONENTS "Build osrm-components" OFF)
+option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
+option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
+option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
+option(ENABLE_LTO "Use LTO if available" ON)
+option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
+option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
+
 if(ENABLE_MASON)
 
   # versions in use
@@ -21,15 +32,7 @@ if(ENABLE_MASON)
   set(MASON_CCACHE_VERSION "3.3.1")
 
   message(STATUS "Enabling mason")
-  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.mason/mason.cmake")
-    execute_process(
-      COMMAND git clone -b v0.1.0 --depth 1 https://github.com/mapbox/mason.git ${CMAKE_CURRENT_SOURCE_DIR}/.mason ERROR_QUIET
-   )
-  endif()
-  execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/.mason/mason --version ERROR_QUIET OUTPUT_VARIABLE MASON_RELEASE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-  message(STATUS "Using mason ${MASON_RELEASE_VERSION}")
-
-  include(${CMAKE_CURRENT_SOURCE_DIR}/.mason/mason.cmake)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason.cmake)
   if(NOT CMAKE_CXX_COMPILER)
     mason_use(clang++ VERSION ${MASON_CLANG_VERSION})
     message(STATUS "Setting compiler to clang++ ${MASON_CLANG_VERSION} (via mason) ${MASON_PACKAGE_clang++_PREFIX}/bin/clang++")
@@ -76,17 +79,6 @@ endif()
 if(WIN32 AND MSVC_VERSION LESS 1900)
   message(FATAL_ERROR "Building with Microsoft compiler needs Latest Visual Studio 2015 (Community or better)")
 endif()
-
-option(ENABLE_MASON "Use mason for dependencies" OFF)
-option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
-option(BUILD_TOOLS "Build OSRM tools" OFF)
-option(BUILD_COMPONENTS "Build osrm-components" OFF)
-option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
-option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
-option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
-option(ENABLE_LTO "Use LTO if available" ON)
-option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
-option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -223,6 +215,11 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
     endif()
   endif()
+endif()
+
+if (ENABLE_MASON AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
+  message(WARNING "ENABLE_MASON and ENABLE_LTO/ENABLE_GOLD_LINKER may not work on all linux systems currently")
+  message(WARNING "For more details see: https://github.com/Project-OSRM/osrm-backend/issues/3202")
 endif()
 
 set(MAYBE_COVERAGE_LIBRARIES "")
@@ -366,13 +363,6 @@ if(ENABLE_MASON)
   add_dependency_includes(${MASON_PACKAGE_bzip2_INCLUDE_DIRS})
   set(BZIP2_LIBRARIES ${MASON_PACKAGE_bzip2_STATIC_LIBS})
 
-  # todo - system packages do not provide a remote tarball
-  # but the mason-cmake integration expects one
-  #mason_use(zlib VERSION system)
-  #add_dependency_includes(${MASON_PACKAGE_zlib_INCLUDE_DIRS})
-  #set(ZLIB_LIBRARY ${MASON_PACKAGE_zlib_LDFLAGS})
-  set(ZLIB_LIBRARY "-lz")
-
   mason_use(tbb VERSION ${MASON_TBB_VERSION})
   add_dependency_includes(${MASON_PACKAGE_tbb_INCLUDE_DIRS})
   set(TBB_LIBRARIES ${MASON_PACKAGE_tbb_LDFLAGS})
@@ -393,8 +383,6 @@ if(ENABLE_MASON)
     install(FILES ${TBBGlob} DESTINATION lib)
   endforeach()
 
-  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
-
   if(BUILD_COMPONENTS)
     message(FATAL_ERROR "BUILD_COMPONENTS is not supported with ENABLE_MASON")
   endif()
@@ -411,13 +399,7 @@ if(ENABLE_MASON)
     set(ENV{CCACHE_CPP2} "true")
   endif()
 
-
 else()
-
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
-  set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
-  find_package(Osmium REQUIRED COMPONENTS io)
-  include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 
   find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   add_dependency_includes(${Boost_INCLUDE_DIRS})
@@ -440,9 +422,6 @@ else()
 
   find_package(BZip2 REQUIRED)
   add_dependency_includes(${BZIP2_INCLUDE_DIR})
-
-  find_package(ZLIB REQUIRED)
-  add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 
   if(BUILD_COMPONENTS)
     find_package(GDAL)
@@ -471,6 +450,13 @@ else()
   endif()
 
 endif()
+
+# even with mason builds we want to link to system zlib
+# to ensure that osrm binaries play well with other binaries like nodejs
+find_package(ZLIB REQUIRED)
+add_dependency_includes(${ZLIB_INCLUDE_DIRS})
+
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
 
 if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_dependency_defines(-DBOOST_TEST_DYN_LINK)
