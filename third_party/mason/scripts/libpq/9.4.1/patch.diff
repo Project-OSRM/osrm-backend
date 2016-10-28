@@ -1,0 +1,11 @@
+--- src/include/pg_config_manual.h	2013-10-07 20:17:38.000000000 -0700
++++ src/include/pg_config_manual.h	2014-03-08 21:29:48.000000000 -0800
+@@ -144,7 +144,7 @@
+  * here's where to twiddle it.  You can also override this at runtime
+  * with the postmaster's -k switch.
+  */
+-#define DEFAULT_PGSOCKET_DIR  "/tmp"
++#define DEFAULT_PGSOCKET_DIR  "/var/run/postgresql"
+ 
+ /*
+  * The random() function is expected to yield values between 0 and

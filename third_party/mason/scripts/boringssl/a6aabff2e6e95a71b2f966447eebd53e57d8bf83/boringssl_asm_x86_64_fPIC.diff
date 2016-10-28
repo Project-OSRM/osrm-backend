@@ -1,0 +1,11 @@
+--- update_gypi_and_asm.py_	2015-01-22 11:13:43.000000000 -0800
++++ update_gypi_and_asm.py	2015-01-22 11:13:59.000000000 -0800
+@@ -15,7 +15,7 @@
+ OS_ARCH_COMBOS = [
+     ('linux', 'arm', 'elf', [''], 'S'),
+     ('linux', 'x86', 'elf', ['-fPIC'], 'S'),
+-    ('linux', 'x86_64', 'elf', [''], 'S'),
++    ('linux', 'x86_64', 'elf', ['-fPIC'], 'S'),
+     ('mac', 'x86', 'macosx', ['-fPIC'], 'S'),
+     ('mac', 'x86_64', 'macosx', [''], 'S'),
+     ('win', 'x86_64', 'masm', [''], 'asm'),

@@ -1,0 +1,50 @@
+language: cpp
+
+sudo: false
+
+matrix:
+  exclude:
+    - os: linux
+  include:
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=ios
+      compiler: clang
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=osx
+      compiler: clang
+    - os: linux
+      env: MASON_PLATFORM=linux
+      compiler: clang
+
+addons:
+  apt:
+    sources:
+     - ubuntu-toolchain-r-test
+     - llvm-toolchain-precise-3.7
+     - george-edison55-precise-backports
+    packages:
+     - clang-3.7
+     - cmake
+     - cmake-data
+
+env:
+  global:
+   - secure: "clCFM3prHnDocZ8lXlimPxAogvFirD1Zx8cMcFJ/XpkTA/0pCgnhpArM4y/NzLHR57pNZTSCr3p6XZI1c1iTG4Zm8x0sK2A4aTFRahypXNy/e+LzAbtd1y1+dEEDwlJvNNGxizQX4frhOgSNQFDFnWLtmF3stlft5YWyc2kI+FI="
+   - secure: "jKJErCng8Sk8YJ0IN2FX3lhv7G1LeudMfFBAXViZaXn8w/gWPs+SlfXQmIJ5SruU7U2GQKnAhzbjwXjVAgAh8OAblzny0DDm5Lh5WmwkgAP8JH1LpsBwCYx2S/v8qyR4DX1RVhHS8mQu298180ZDVgGccw+hd8xrE/S5TEQcNfQ="
+
+cache: apt
+
+
+before_install:
+- if [[ ${MASON_PLATFORM} == "osx" || ${MASON_PLATFORM} == "ios" ]]; then brew install cmake ; fi
+
+before_script:
+ - if [[ ${MASON_PLATFORM} == "linux" && ${CXX} == "clang++" ]]; then export CXX="clang++-3.7" CC="clang-3.7" ; fi
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

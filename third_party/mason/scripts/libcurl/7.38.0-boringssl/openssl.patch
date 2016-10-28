@@ -1,0 +1,187 @@
+--- openssl.orig.c	2014-09-04 01:22:36.000000000 +1200
++++ openssl.c	2015-01-04 11:26:39.827435900 +1300
+@@ -92,15 +92,6 @@
+ #undef HAVE_USERDATA_IN_PWD_CALLBACK
+ #endif
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x00907001L
+-/* ENGINE_load_private_key() takes four arguments */
+-#define HAVE_ENGINE_LOAD_FOUR_ARGS
+-#include <openssl/ui.h>
+-#else
+-/* ENGINE_load_private_key() takes three arguments */
+-#undef HAVE_ENGINE_LOAD_FOUR_ARGS
+-#endif
+-
+ #if (OPENSSL_VERSION_NUMBER >= 0x00903001L) && defined(HAVE_OPENSSL_PKCS12_H)
+ /* OpenSSL has PKCS 12 support */
+ #define HAVE_PKCS12_SUPPORT
+@@ -135,6 +126,9 @@
+ #define OPENSSL_NO_SSL2
+ #endif
+ 
++#undef HAVE_OPENSSL_ENGINE_H
++#define SSLEAY_VERSION_NUMBER OPENSSL_VERSION_NUMBER 
++
+ /*
+  * Number of bytes to read from the random number seed file. This must be
+  * a finite value (because some entropy "files" like /dev/urandom have
+@@ -168,108 +162,8 @@
+   return 0;
+ }
+ 
+-/*
+- * rand_enough() is a function that returns TRUE if we have seeded the random
+- * engine properly. We use some preprocessor magic to provide a seed_enough()
+- * macro to use, just to prevent a compiler warning on this function if we
+- * pass in an argument that is never used.
+- */
+-
+-#ifdef HAVE_RAND_STATUS
+-#define seed_enough(x) rand_enough()
+-static bool rand_enough(void)
+-{
+-  return (0 != RAND_status()) ? TRUE : FALSE;
+-}
+-#else
+-#define seed_enough(x) rand_enough(x)
+-static bool rand_enough(int nread)
+-{
+-  /* this is a very silly decision to make */
+-  return (nread > 500) ? TRUE : FALSE;
+-}
+-#endif
+-
+-static int ossl_seed(struct SessionHandle *data)
+-{
+-  char *buf = data->state.buffer; /* point to the big buffer */
+-  int nread=0;
+-
+-  /* Q: should we add support for a random file name as a libcurl option?
+-     A: Yes, it is here */
+-
+-#ifndef RANDOM_FILE
+-  /* if RANDOM_FILE isn't defined, we only perform this if an option tells
+-     us to! */
+-  if(data->set.ssl.random_file)
+-#define RANDOM_FILE "" /* doesn't matter won't be used */
+-#endif
+-  {
+-    /* let the option override the define */
+-    nread += RAND_load_file((data->set.str[STRING_SSL_RANDOM_FILE]?
+-                             data->set.str[STRING_SSL_RANDOM_FILE]:
+-                             RANDOM_FILE),
+-                            RAND_LOAD_LENGTH);
+-    if(seed_enough(nread))
+-      return nread;
+-  }
+-
+-#if defined(HAVE_RAND_EGD)
+-  /* only available in OpenSSL 0.9.5 and later */
+-  /* EGD_SOCKET is set at configure time or not at all */
+-#ifndef EGD_SOCKET
+-  /* If we don't have the define set, we only do this if the egd-option
+-     is set */
+-  if(data->set.str[STRING_SSL_EGDSOCKET])
+-#define EGD_SOCKET "" /* doesn't matter won't be used */
+-#endif
+-  {
+-    /* If there's an option and a define, the option overrides the
+-       define */
+-    int ret = RAND_egd(data->set.str[STRING_SSL_EGDSOCKET]?
+-                       data->set.str[STRING_SSL_EGDSOCKET]:EGD_SOCKET);
+-    if(-1 != ret) {
+-      nread += ret;
+-      if(seed_enough(nread))
+-        return nread;
+-    }
+-  }
+-#endif
+-
+-  /* If we get here, it means we need to seed the PRNG using a "silly"
+-     approach! */
+-  do {
+-    unsigned char randb[64];
+-    int len = sizeof(randb);
+-    RAND_bytes(randb, len);
+-    RAND_add(randb, len, (len >> 1));
+-  } while(!RAND_status());
+-
+-  /* generates a default path for the random seed file */
+-  buf[0]=0; /* blank it first */
+-  RAND_file_name(buf, BUFSIZE);
+-  if(buf[0]) {
+-    /* we got a file name to try */
+-    nread += RAND_load_file(buf, RAND_LOAD_LENGTH);
+-    if(seed_enough(nread))
+-      return nread;
+-  }
+-
+-  infof(data, "libcurl is now using a weak random seed!\n");
+-  return nread;
+-}
+-
+ static int Curl_ossl_seed(struct SessionHandle *data)
+ {
+-  /* we have the "SSL is seeded" boolean static to prevent multiple
+-     time-consuming seedings in vain */
+-  static bool ssl_seeded = FALSE;
+-
+-  if(!ssl_seeded || data->set.str[STRING_SSL_RANDOM_FILE] ||
+-     data->set.str[STRING_SSL_EGDSOCKET]) {
+-    ossl_seed(data);
+-    ssl_seeded = TRUE;
+-  }
+   return 0;
+ }
+ 
+@@ -742,17 +636,6 @@
+ 
+   OpenSSL_add_all_algorithms();
+ 
+-
+-  /* OPENSSL_config(NULL); is "strongly recommended" to use but unfortunately
+-     that function makes an exit() call on wrongly formatted config files
+-     which makes it hard to use in some situations. OPENSSL_config() itself
+-     calls CONF_modules_load_file() and we use that instead and we ignore
+-     its return code! */
+-
+-  (void)CONF_modules_load_file(NULL, NULL,
+-                               CONF_MFLAGS_DEFAULT_SECTION|
+-                               CONF_MFLAGS_IGNORE_MISSING_FILE);
+-
+   return 1;
+ }
+ 
+@@ -2825,29 +2708,10 @@
+ #if(SSLEAY_VERSION_NUMBER >= 0x905000)
+   {
+     char sub[3];
+-    unsigned long ssleay_value;
++    unsigned long ssleay_value = 0;
+     sub[2]='\0';
+     sub[1]='\0';
+-    ssleay_value=SSLeay();
+-    if(ssleay_value < 0x906000) {
+-      ssleay_value=SSLEAY_VERSION_NUMBER;
+-      sub[0]='\0';
+-    }
+-    else {
+-      if(ssleay_value&0xff0) {
+-        int minor_ver = (ssleay_value >> 4) & 0xff;
+-        if(minor_ver > 26) {
+-          /* handle extended version introduced for 0.9.8za */
+-          sub[1] = (char) ((minor_ver - 1) % 26 + 'a' + 1);
+-          sub[0] = 'z';
+-        }
+-        else {
+-          sub[0]=(char)(((ssleay_value>>4)&0xff) + 'a' -1);
+-        }
+-      }
+-      else
+-        sub[0]='\0';
+-    }
++    sub[0]='\0';
+ 
+     return snprintf(buffer, size, "%s/%lx.%lx.%lx%s",
+ #ifdef OPENSSL_IS_BORINGSSL
