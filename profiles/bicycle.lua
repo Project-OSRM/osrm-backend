@@ -93,6 +93,10 @@ surface_speeds = {
 
 -- these need to be global because they are accesed externaly
 properties.traffic_signal_penalty        = 2
+<<<<<<< HEAD
+=======
+properties.u_turn_penalty                = 20
+>>>>>>> d43ebe2... fixed map matching test coverage
 properties.use_turn_restrictions         = false
 properties.u_turn_penalty                = 20
 properties.continue_straight_at_waypoint = false

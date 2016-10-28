@@ -168,5 +168,5 @@ Feature: Basic Map Matching
             | bd    | no     |
 
         When I match I should get
-            | trace | matchings | geometry                                |
-            | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |
+            | trace | matchings | geometry                                   |
+            | abd   | abd       | 1,1,1.000089,1,1.000089,1,1.000089,0.99991 |

@@ -43,7 +43,17 @@ module.exports = function () {
 
                     if (res.statusCode === 200) {
                         if (headers.has('matchings')) {
-                            subMatchings = json.matchings.filter(m => !!m).map(sub => sub.matched_points);
+                            subMatchings = [];
+                            var sub = [json.tracepoints[0].location];
+                            for(var i = 1; i < json.tracepoints.length; i++){
+                                if(json.tracepoints[i-1].matchings_index === json.tracepoints[i].matchings_index) {
+                                    sub.push(json.tracepoints[i].location)
+                                } else {
+                                    subMatchings.push(sub);
+                                    sub = [json.tracepoints[i].location];
+                                }
+                            }
+                            subMatchings.push(sub);
                         }
 
                         if (headers.has('turns')) {
@@ -68,7 +78,7 @@ module.exports = function () {
 
                         if (headers.has('geometry')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking geometry only supported for matchings with one subtrace');
-                            geometry = json.matchings[0].geometry;
+                            geometry = json.matchings[0].geometry.coordinates;
                         }
 
                         if (headers.has('OSM IDs')) {
