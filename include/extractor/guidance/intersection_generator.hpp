@@ -50,13 +50,6 @@ class IntersectionGenerator
     // Allow access to the coordinate extractor for all owners
     const CoordinateExtractor &GetCoordinateExtractor() const;
 
-  private:
-    const util::NodeBasedDynamicGraph &node_based_graph;
-    const RestrictionMap &restriction_map;
-    const std::unordered_set<NodeID> &barrier_nodes;
-    const std::vector<QueryNode> &node_info_list;
-    const CoordinateExtractor coordinate_extractor;
-
     // Check for restrictions/barriers and generate a list of valid and invalid turns present at
     // the
     // node reached
@@ -64,6 +57,13 @@ class IntersectionGenerator
     // The resulting candidates have to be analysed for their actual instructions later on.
     OSRM_ATTR_WARN_UNUSED
     Intersection GetConnectedRoads(const NodeID from_node, const EdgeID via_eid) const;
+
+  private:
+    const util::NodeBasedDynamicGraph &node_based_graph;
+    const RestrictionMap &restriction_map;
+    const std::unordered_set<NodeID> &barrier_nodes;
+    const std::vector<QueryNode> &node_info_list;
+    const CoordinateExtractor coordinate_extractor;
 
     // check if two indices in an intersection can be seen as a single road in the perceived
     // intersection representation. See below for an example. Utility function for
