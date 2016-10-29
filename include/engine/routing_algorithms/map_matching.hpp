@@ -247,6 +247,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                 for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
                 {
+                    
                     const double emission_pr = emission_log_probabilities[t][s_prime];
                     double new_value = prev_viterbi[s] + emission_pr;
                     if (current_viterbi[s_prime] > new_value)
@@ -288,7 +289,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     // very low probability transition -> prune
                     if (d_t >= max_distance_delta)
                     {
-                        continue;
+                       continue;
                     }
 
                     const double transition_pr = transition_log_probability(d_t);

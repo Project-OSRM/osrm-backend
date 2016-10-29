@@ -12,7 +12,7 @@ struct ProfileProperties
 {
     ProfileProperties()
         : traffic_signal_penalty(0), u_turn_penalty(0), continue_straight_at_waypoint(true),
-          use_turn_restrictions(false), left_hand_driving(false)
+        use_turn_restrictions(false), left_hand_driving(false)
     {
     }
 
