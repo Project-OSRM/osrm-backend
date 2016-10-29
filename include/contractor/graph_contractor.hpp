@@ -459,7 +459,7 @@ class GraphContractor
                         const tbb::blocked_range<std::size_t> &range) {
                         if (flushed_contractor)
                         {
-                            for (int position = range.begin(), end = range.end(); position != end;
+                            for (std::size_t position = range.begin(), end = range.end(); position != end;
                                  ++position)
                             {
                                 const NodeID x = remaining_nodes[position].id;
@@ -468,7 +468,7 @@ class GraphContractor
                         }
                         else
                         {
-                            for (int position = range.begin(), end = range.end(); position != end;
+                            for (std::size_t position = range.begin(), end = range.end(); position != end;
                                  ++position)
                             {
                                 const NodeID x = remaining_nodes[position].id;
@@ -485,7 +485,7 @@ class GraphContractor
                 [this, &remaining_nodes, &thread_data_list](
                     const tbb::blocked_range<std::size_t> &range) {
                     ContractorThreadData *data = thread_data_list.GetThreadData();
-                    for (int position = range.begin(), end = range.end(); position != end;
+                    for (std::size_t position = range.begin(), end = range.end(); position != end;
                          ++position)
                     {
                         const NodeID x = remaining_nodes[position].id;
@@ -498,7 +498,7 @@ class GraphContractor
                     begin_independent_nodes_idx, end_independent_nodes_idx, DeleteGrainSize),
                 [this, &remaining_nodes, &thread_data_list](const tbb::blocked_range<int> &range) {
                     ContractorThreadData *data = thread_data_list.GetThreadData();
-                    for (int position = range.begin(), end = range.end(); position != end;
+                    for (std::size_t position = range.begin(), end = range.end(); position != end;
                          ++position)
                     {
                         const NodeID x = remaining_nodes[position].id;
@@ -549,7 +549,7 @@ class GraphContractor
                     [this, &node_priorities, &remaining_nodes, &node_depth, &thread_data_list](
                         const tbb::blocked_range<int> &range) {
                         ContractorThreadData *data = thread_data_list.GetThreadData();
-                        for (int position = range.begin(), end = range.end(); position != end;
+                        for (std::size_t position = range.begin(), end = range.end(); position != end;
                              ++position)
                         {
                             NodeID x = remaining_nodes[position].id;
@@ -572,7 +572,7 @@ class GraphContractor
             {
                 tbb::parallel_for(tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
                                   [this, &remaining_nodes](const tbb::blocked_range<int> &range) {
-                                      for (int x = range.begin(), end = range.end(); x != end; ++x)
+                                      for (std::size_t x = range.begin(), end = range.end(); x != end; ++x)
                                       {
                                           const auto orig_id = remaining_nodes[x].id;
                                           is_core_node[orig_node_id_from_new_node_id_map[orig_id]] =
@@ -584,7 +584,7 @@ class GraphContractor
             {
                 tbb::parallel_for(tbb::blocked_range<int>(0, remaining_nodes.size(), InitGrainSize),
                                   [this, &remaining_nodes](const tbb::blocked_range<int> &range) {
-                                      for (int x = range.begin(), end = range.end(); x != end; ++x)
+                                      for (std::size_t x = range.begin(), end = range.end(); x != end; ++x)
                                       {
                                           const auto orig_id = remaining_nodes[x].id;
                                           is_core_node[orig_id] = true;

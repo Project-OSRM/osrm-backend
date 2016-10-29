@@ -4,6 +4,7 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include <limits>
 #include <string>
@@ -76,8 +77,8 @@ unsigned CompressedEdgeContainer::GetZippedPositionForReverseID(const EdgeID edg
 void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) const
 {
     boost::filesystem::fstream geometry_out_stream(path, std::ios::binary | std::ios::out);
-    const unsigned compressed_geometry_indices = m_compressed_geometry_index.size() + 1;
-    const unsigned compressed_geometries = m_compressed_geometry_nodes.size();
+    const std::size_t compressed_geometry_indices = m_compressed_geometry_index.size() + 1;
+    const std::size_t compressed_geometries = m_compressed_geometry_nodes.size();
     BOOST_ASSERT(std::numeric_limits<unsigned>::max() != compressed_geometry_indices);
     geometry_out_stream.write((char *)&compressed_geometry_indices, sizeof(unsigned));
 
@@ -253,7 +254,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
 
     BOOST_ASSERT(forward_bucket.size() == reverse_bucket.size());
 
-    const unsigned zipped_geometry_id = m_compressed_geometry_index.size();
+    const EdgeID zipped_geometry_id = boost::numeric_cast<EdgeID>(m_compressed_geometry_index.size());
     m_forward_edge_id_to_zipped_index_map[f_edge_id] = zipped_geometry_id;
     m_reverse_edge_id_to_zipped_index_map[r_edge_id] = zipped_geometry_id;
 

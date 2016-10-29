@@ -99,7 +99,7 @@ bool serializeVectorIntoAdjacencyArray(const std::string &filename,
     std::vector<std::uint32_t> offsets;
     offsets.reserve(data.size() + 1);
     std::uint64_t current_offset = 0;
-    offsets.push_back(current_offset);
+    offsets.push_back(static_cast<std::uint32_t>(current_offset));
     for (auto const &vec : data)
     {
         current_offset += vec.size();
@@ -175,7 +175,7 @@ inline bool serializeFlags(const boost::filesystem::path &path, const std::vecto
 
     writeFingerprint(flag_stream);
 
-    std::uint32_t number_of_bits = flags.size();
+    std::uint32_t number_of_bits = boost::numeric_cast<std::uint32_t>(flags.size());
     flag_stream.write(reinterpret_cast<const char *>(&number_of_bits), sizeof(number_of_bits));
     // putting bits in ints
     std::uint32_t chunk = 0;
@@ -187,7 +187,7 @@ inline bool serializeFlags(const boost::filesystem::path &path, const std::vecto
              ++chunk_bit, ++bit_nr)
             chunk_bitset[chunk_bit] = flags[bit_nr];
 
-        chunk = chunk_bitset.to_ulong();
+        chunk = boost::numeric_cast<std::uint32_t>(chunk_bitset.to_ulong());
         ++chunk_count;
         flag_stream.write(reinterpret_cast<const char *>(&chunk), sizeof(chunk));
     }
