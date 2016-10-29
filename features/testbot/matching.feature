@@ -5,9 +5,11 @@ Feature: Basic Map Matching
         Given the profile "testbot"
         Given a grid size of 10 meters
         Given the extract extra arguments "--generate-edge-lookup"
+        Given the query options
+            | geometries | geojson |
 
     Scenario: Testbot - Map matching with outlier that has no candidate
-        Given a grid size of 100 meters
+        Given a grid size of 10 meters
         Given the node map
             | a | b | c | d |
             |   |   |   |   |
@@ -102,13 +104,13 @@ Feature: Basic Map Matching
             | fe    | yes    |
 
         When I match I should get
-            | trace | matchings |
-            | dcba  | hg,gf,fe  |
-            | efgh  | ab,bc,cd  |
+            | trace | matchings   |
+            | dcba  | hgfe        |
+            | efgh  | abcd        |
 
     Scenario: Testbot - Duration details
         Given the query options
-            | annotations | true |
+            | annotations | true    |
 
         Given the node map
             | a | b | c | d | e |   | g | h |
@@ -128,14 +130,14 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace | matchings | annotation                                                                                     |
-            | abeh  | abcedgh   | 1:9.897633:1,0:0:0,1:10.008842:0,1:10.008842:0,1:10.008842:0,0:0:0,2:20.017685:0,1:10.008842:0 |
-            | abci  | abc,ci    | 1:9.897633:1,0:0:0,1:10.008842:0,0:0.111209:0,1:10.010367:0                                    |
+            | abeh  | abeh      | 1:9.897633:1,0:0:0,1:10.008842:0,1:10.008842:0,1:10.008842:0,0:0:0,2:20.017685:0,1:10.008842:0 |
+            | abci  | abci      | 1:9.897633:1,0:0:0,1:10.008842:0,0:0.111209:0,1:10.010367:0                                    |
 
         # The following is the same as the above, but separated for readability (line length)
         When I match I should get
             | trace | matchings | OSM IDs               |
-            | abeh  | abcedgh   | 1,2,3,2,3,4,5,4,5,6,7 |
-            | abci  | abc,ci    | 1,2,3,2,3,8,3,8       |
+            | abeh  | abeh      | 1,2,3,2,3,4,5,4,5,6,7 |
+            | abci  | abci      | 1,2,3,2,3,8,3,8       |
 
     Scenario: Testbot - Regression test for #3037
         Given the query options
@@ -143,13 +145,11 @@ Feature: Basic Map Matching
             | geometries | geojson  |
 
         Given the node map
-            """
-            a--->---b--->---c
-            |       |       |
-            |       ^       |
-            |       |       |
-            e--->---f--->---g
-            """
+            | a |   | b |   | c |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            |   |   |   |   |   |
+            | e |   | f |   | g |
 
         And the ways
             | nodes | oneway |
@@ -166,7 +166,7 @@ Feature: Basic Map Matching
     Scenario: Testbot - Geometry details
         Given the query options
             | overview   | full     |
-            | geometries | polyline |
+            | geometries | geojson  |
 
         Given the node map
             | a | b | c |
@@ -178,5 +178,5 @@ Feature: Basic Map Matching
             | bd    | no     |
 
         When I match I should get
-            | trace | matchings | geometry                                |
-            | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |
+            | trace | matchings | geometry                                   |
+            | abd   | abd       | 1,1,1.000089,1,1.000089,1,1.000089,0.99991 |
