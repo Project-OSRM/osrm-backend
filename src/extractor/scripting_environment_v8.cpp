@@ -45,6 +45,7 @@ struct V8ScriptingContext final
 
     std::vector<std::string> GetExceptions();
     std::vector<std::string> GetNameSuffixList();
+    std::vector<std::string> GetRestrictions();
     void ProcessElements(
         const tbb::blocked_range<std::size_t> &range,
         const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
@@ -648,6 +649,33 @@ std::vector<std::string> V8ScriptingContext::GetNameSuffixList()
     return suffixes_vector;
 }
 
+std::vector<std::string> V8ScriptingContext::GetRestrictions()
+{
+    v8::HandleScope scope(isolate.get());
+    std::vector<std::string> restrictions;
+
+    v8::Local<v8::Function> callback = get_name_suffix_list.Get(isolate.get());
+    if (!callback.IsEmpty())
+    {
+        auto retval = callback->Call(context->Global(), 0, {});
+
+        if (retval->IsArray())
+        {
+            auto array = retval.As<v8::Array>();
+            for (uint32_t i = 0; i < array->Length(); i++)
+            {
+                restrictions.emplace_back(env.get_string(array, i));
+            }
+        }
+        else
+        {
+            util::SimpleLogger().Write()
+                << "GetRestrictions() should return an array of exceptions";
+        }
+    }
+    return restrictions;
+}
+
 void V8ScriptingContext::ProcessElements(
     const tbb::blocked_range<std::size_t> &range,
     const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
@@ -799,6 +827,11 @@ void V8ScriptingEnvironment::ProcessElements(
 std::vector<std::string> V8ScriptingEnvironment::GetNameSuffixList()
 {
     return GetV8Context().GetNameSuffixList();
+}
+
+std::vector<std::string> V8ScriptingEnvironment::GetRestrictions()
+{
+    return GetV8Context().GetRestrictions();
 }
 
 std::vector<std::string> V8ScriptingEnvironment::GetExceptions()
