@@ -9,7 +9,6 @@
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "util/exception.hpp"
-#include "util/make_unique.hpp"
 #include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 #include "util/v8_util.hpp"

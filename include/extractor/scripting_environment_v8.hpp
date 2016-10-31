@@ -39,7 +39,8 @@ class V8ScriptingEnvironment final : public ScriptingEnvironment
     V8ScriptingContext &GetV8Context();
 
     std::vector<std::string> GetNameSuffixList() override;
-    std::vector<std::string> GetExceptions() override;
+    std::vector<std::string> GetRestrictions() override;
+    std::vector<std::string> GetExceptions();
     void SetupSources() override;
     int32_t GetTurnPenalty(double angle) override;
     void ProcessSegment(const osrm::util::Coordinate &source,
