@@ -709,33 +709,29 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
             layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_REV_WEIGHT_LIST));
     }
 
-    /* TODO: replace with io.hpp call */
-    boost::filesystem::ifstream geometry_datasource_input_stream(config.datasource_indexes_path,
-                                                                 std::ios::binary);
-    if (!geometry_datasource_input_stream)
     {
-        throw util::exception("Could not open " + config.datasource_indexes_path.string() +
-                              " for reading.");
-    }
-    std::uint64_t number_of_compressed_datasources = 0;
-    if (geometry_datasource_input_stream)
-    {
-        geometry_datasource_input_stream.read(
-            reinterpret_cast<char *>(&number_of_compressed_datasources),
-            sizeof(number_of_compressed_datasources));
-    }
-    /* END TODO */
+        boost::filesystem::ifstream geometry_datasource_input_stream(config.datasource_indexes_path,
+                                                                     std::ios::binary);
+        if (!geometry_datasource_input_stream)
+        {
+            throw util::exception("Could not open " + config.datasource_indexes_path.string() +
+                                  " for reading.");
+        }
+        auto number_of_compressed_datasources =
+            io::readElementCount(geometry_datasource_input_stream);
 
-    // load datasource information (if it exists)
-    uint8_t *datasources_list_ptr =
-        layout_ptr->GetBlockPtr<uint8_t, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
-    if (layout_ptr->GetBlockSize(DataLayout::DATASOURCES_LIST) > 0)
-    {
-        io::readDatasourceIndexes(geometry_datasource_input_stream,
-                                  datasources_list_ptr,
-                                  number_of_compressed_datasources);
+        // load datasource information (if it exists)
+        auto datasources_list_ptr =
+            layout_ptr->GetBlockPtr<uint8_t, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
+        if (number_of_compressed_datasources > 0)
+        {
+            io::readDatasourceIndexes(geometry_datasource_input_stream,
+                                      datasources_list_ptr,
+                                      number_of_compressed_datasources);
+        }
     }
 
+    /* Load names */
     boost::filesystem::ifstream datasource_names_input_stream(config.datasource_names_path,
                                                               std::ios::binary);
     if (!datasource_names_input_stream)
@@ -746,13 +742,6 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     const io::DatasourceNamesData datasource_names_data =
         io::readDatasourceNames(datasource_names_input_stream);
-
-    layout_ptr->SetBlockSize<char>(DataLayout::DATASOURCE_NAME_DATA,
-                                   datasource_names_data.names.size());
-    layout_ptr->SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_OFFSETS,
-                                          datasource_names_data.offsets.size());
-    layout_ptr->SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_LENGTHS,
-                                          datasource_names_data.lengths.size());
 
     /* END TODO */
 
@@ -811,6 +800,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // store search tree portion of rtree
     boost::filesystem::ifstream tree_node_file(config.ram_index_path, std::ios::binary);
+    const auto tree_size = io::readElementCount(tree_node_file);
     auto rtree_ptr =
         layout_ptr->GetBlockPtr<RTreeNode, true>(memory_ptr, DataLayout::R_SEARCH_TREE);
     io::readRamIndex(tree_node_file, rtree_ptr, layout_ptr->num_entries[DataLayout::R_SEARCH_TREE]);
