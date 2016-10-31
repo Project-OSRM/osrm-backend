@@ -463,6 +463,9 @@ else()
   find_package(V8 REQUIRED)
   add_dependency_includes(${V8_INCLUDE_DIR})
 
+  find_package(V8 REQUIRED)
+  add_dependency_includes(${V8_INCLUDE_DIR})
+
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
 
