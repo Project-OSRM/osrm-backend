@@ -177,7 +177,7 @@ Feature: Basic Map Matching
             | trace | matchings | geometry                                         |
             | efbc  | efbc      | 1,0.99964,1.000359,0.99964,1.000359,1,1.000718,1 |
 
-    Scenario: Testbot - Geometry details
+    Scenario: Testbot - Geometry details using geojson
         Given the query options
             | overview   | full     |
             | geometries | geojson  |
@@ -197,7 +197,47 @@ Feature: Basic Map Matching
             | trace | matchings | geometry                                   |
             | abd   | abd       | 1,1,1.000089,1,1.000089,1,1.000089,0.99991 |
 
-    Scenario: Testbot - Speed greater than speed threshhold, should split -- returns trace as abcd but should be split into ab,cd
+    Scenario: Testbot - Geometry details using polyline
+        Given the query options
+            | overview   | full      |
+            | geometries | polyline  |
+
+        Given the node map
+            """
+            a b c
+              d
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+            | bd    | no     |
+
+        When I match I should get
+            | trace | matchings | geometry                                |
+            | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |
+
+    Scenario: Testbot - Geometry details using polyline6
+        Given the query options
+            | overview   | full       |
+            | geometries | polyline6  |
+
+        Given the node map
+            """
+            a b c
+              d
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+            | bd    | no     |
+
+        When I match I should get
+            | trace | matchings | geometry                                   |
+            | abd   | abd       | 1,1,1,1.000089,1,1.000089,0.99991,1.000089 |
+
+    Scenario: Testbot - Speed greater than speed threshhold
         Given a grid size of 10 meters
         Given the query options
             | geometries | geojson  |
@@ -218,7 +258,7 @@ Feature: Basic Map Matching
             | trace | timestamps | matchings |
             | abcd  | 0 1 2 3    | ab,cd     |
 
-    Scenario: Testbot - Speed less than speed threshhold, should not split
+    Scenario: Testbot - Speed less than speed threshhold
         Given a grid size of 10 meters
         Given the query options
             | geometries | geojson  |

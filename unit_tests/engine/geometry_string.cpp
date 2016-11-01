@@ -44,4 +44,47 @@ BOOST_AUTO_TEST_CASE(decode)
     }
 }
 
+BOOST_AUTO_TEST_CASE(encode)
+{
+    // Coordinates; these would be the coordinates we give the loc parameter,
+    // e.g. loc=10.00,10.0&loc=10.01,10.1...
+    util::Coordinate coord1(util::FloatLongitude{10.0}, util::FloatLatitude{10.00});
+    util::Coordinate coord2(util::FloatLongitude{10.1}, util::FloatLatitude{10.01});
+    util::Coordinate coord3(util::FloatLongitude{10.2}, util::FloatLatitude{10.02});
+    util::Coordinate coord4(util::FloatLongitude{10.3}, util::FloatLatitude{10.03});
+    util::Coordinate coord5(util::FloatLongitude{10.4}, util::FloatLatitude{10.04});
+
+    // Test polyline string for the 5 coordinates
+    const std::string polyline = "_c`|@_c`|@o}@_pRo}@_pRo}@_pRo}@_pR";
+
+    // Put the test coordinates into the vector for comparison
+    std::vector<util::Coordinate> cmp_coords = {coord1, coord2, coord3, coord4, coord5};
+
+    const auto encodedPolyline = encodePolyline<100000>(cmp_coords.begin(), cmp_coords.end());
+
+    BOOST_CHECK_EQUAL(encodedPolyline, polyline);
+}
+
+
+BOOST_AUTO_TEST_CASE(encode6)
+{
+    // Coordinates; these would be the coordinates we give the loc parameter,
+    // e.g. loc=10.00,10.0&loc=10.01,10.1...
+    util::Coordinate coord1(util::FloatLongitude{10.0}, util::FloatLatitude{10.00});
+    util::Coordinate coord2(util::FloatLongitude{10.1}, util::FloatLatitude{10.01});
+    util::Coordinate coord3(util::FloatLongitude{10.2}, util::FloatLatitude{10.02});
+    util::Coordinate coord4(util::FloatLongitude{10.3}, util::FloatLatitude{10.03});
+    util::Coordinate coord5(util::FloatLongitude{10.4}, util::FloatLatitude{10.04});
+
+    // Test polyline string for the 6 coordinates
+    const std::string polyline = "_gjaR_gjaR_pR_ibE_pR_ibE_pR_ibE_pR_ibE";
+
+    // Put the test coordinates into the vector for comparison
+    std::vector<util::Coordinate> cmp_coords = {coord1, coord2, coord3, coord4, coord5};
+
+    const auto encodedPolyline = encodePolyline<1000000>(cmp_coords.begin(), cmp_coords.end());
+
+    BOOST_CHECK_EQUAL(encodedPolyline, polyline);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

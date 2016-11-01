@@ -45,7 +45,7 @@ namespace api
  * Holds member attributes:
  *  - steps: return route step for each route leg
  *  - alternatives: tries to find alternative routes
- *  - geometries: route geometry encoded in Polyline or GeoJSON
+ *  - geometries: route geometry encoded in Polyline, Polyline6 or GeoJSON
  *  - overview: adds overview geometry either Full, Simplified (according to highest zoom level) or
  *              False (not at all)
  *  - continue_straight: enable or disable continue_straight (disabled by default)
@@ -58,6 +58,7 @@ struct RouteParameters : public BaseParameters
     enum class GeometriesType
     {
         Polyline,
+        Polyline6,
         GeoJSON
     };
     enum class OverviewType

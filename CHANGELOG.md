@@ -3,6 +3,7 @@
     - API:
       - `osrm-datastore` now accepts the parameter `--max-wait` that specifies how long it waits before aquiring a shared memory lock by force
       - Shared memory now allows for multiple clients (multiple instances of libosrm on the same segment)
+      - Polyline geometries can now be requested with precision 5 as well as with precision 6
     - Profiles
       - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
       - replaced lhs/rhs profiles by using test defined profiles
