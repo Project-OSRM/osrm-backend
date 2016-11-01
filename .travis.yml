@@ -70,7 +70,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_COMPONENTS=ON
+      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_COMPONENTS=ON ENABLE_SANITIZER=ON TARGET_ARCH='x86_64-asan'
 
     - os: linux
       compiler: "gcc-6-release-i686"
@@ -98,7 +98,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON BUILD_COMPONENTS=ON
+      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON BUILD_COMPONENTS=ON ENABLE_SANITIZER=ON TARGET_ARCH='x86_64-asan'
 
       # Disabled because CI slowness
       #- os: linux
@@ -160,17 +160,17 @@ install:
       export CXX=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang++
       export CC=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang
     fi
-  - mkdir example/build && pushd example/build
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-  - make
-  - popd
+    #  - mkdir example/build && pushd example/build
+    #  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+    #  - make
+    #  - popd
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
   - echo "travis_fold:start:BENCHMARK"
   - make -C test/data benchmark
   - echo "travis_fold:end:BENCHMARK"
-  - ./example/build/osrm-example test/data/monaco.osrm
+    #  - ./example/build/osrm-example test/data/monaco.osrm
   # All tests assume to be run from the build directory
   - pushd build
   - ./unit_tests/library-tests ../test/data/monaco.osrm

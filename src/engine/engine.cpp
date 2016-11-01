@@ -3,8 +3,8 @@
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
-#include "engine/datafacade/internal_datafacade.hpp"
-#include "engine/datafacade/shared_datafacade.hpp"
+#include "engine/datafacade/internal_memory_datafacade.hpp"
+#include "engine/datafacade/shared_memory_datafacade.hpp"
 
 #include "storage/shared_barriers.hpp"
 #include "util/simple_logger.hpp"
