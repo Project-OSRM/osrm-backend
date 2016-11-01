@@ -134,42 +134,37 @@ module.exports = function () {
                     var q = d3.queue();
 
                     var testSubMatching = (sub, si, scb) => {
-                        if (si >= subMatchings.length) {
-                            ok = false;
-                            // q.abort();
-                            scb();
-                        } else {
-                            var sq = d3.queue();
-                            var testSubNode = (ni, ncb) => {
-                                var node = this.findNodeByName(sub[ni]),
-                                    outNode = subMatchings[si][ni];
-                                
-                                if (this.FuzzyMatch.matchLocation(outNode, node)) {
-				    encodedResult += sub[ni];
-                                    extendedTarget += sub[ni];
+                        var sq = d3.queue();
+                        var testSubNode = (ni, ncb) => {
+                        var node = this.findNodeByName(sub[ni]),
+                            outNode = subMatchings[si][ni];
+
+                        if (this.FuzzyMatch.matchLocation(outNode, node)) {
+                                encodedResult += sub[ni];
+                                extendedTarget += sub[ni];
+                            } else {
+                                if (outNode != null) {
+                                    encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
                                 } else {
-                                    if (outNode != null) {
-                                        encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
-                                    } else {
-                                        encodedResult += '?';
-                                    }
-                                    extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
-                                    ok = false;
+                                    encodedResult += '?';
                                 }
-                                ncb();
-                            };
-
-                            for (var i=0; i<sub.length; i++) {
-                                sq.defer(testSubNode, i);
+                                extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
+                                ok = false;
                             }
+                            ncb();
+                        };
 
-                            sq.awaitAll(scb);
+                        for (var i=0; i<sub.length; i++) {
+                            sq.defer(testSubNode, i);
                         }
+
+                        sq.awaitAll(scb);
+                        
                     };
 
                     if (subMatchings.length != row.matchings.split(',').length) {
                         ok = false;
-                        // throw new Error('*** table matchings and api response are not the same');
+                        throw new Error('*** table matchings and api response are not the same');
                     }
 
                     row.matchings.split(',').forEach((sub, si) => {
