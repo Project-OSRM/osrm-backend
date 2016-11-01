@@ -200,7 +200,6 @@ Feature: Basic Map Matching
         Given the node map
             """
             a b c d
-                e
             """
 
         And the ways

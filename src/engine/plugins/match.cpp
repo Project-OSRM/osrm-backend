@@ -112,7 +112,6 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
                                   const api::MatchParameters &parameters,
                                   util::json::Object &json_result) const
 {
-    std::cout << "the handle request inside match.cpp is getting called" << std::endl;
     BOOST_ASSERT(parameters.IsValid());
 
     // enforce maximum number of locations for performance reasons
@@ -186,30 +185,6 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
                                                  parameters.coordinates,
                                                  parameters.timestamps,
                                                  parameters.radiuses);
-
-    std::cout << "have proceeded beyond new list" << std::endl;
-    std::cout << sub_matchings.size() << std::endl;
-    std::for_each(sub_matchings.begin(),
-                  sub_matchings.end(),
-                  [](const auto &matching) {
-                    // inspect matching.nodes
-                    std::cout << "Nodes:" << std::endl;
-                    std::for_each(matching.nodes.begin(),
-                                  matching.nodes.end(),
-                                  [](const auto &node) {
-                                    std::cout << node << std::endl;
-                                  });
-                    // inspect matching.confidence
-                    // inspect matching.indices
-                    std::cout << "Indices:" << std::endl;
-                    std::for_each(matching.indices.begin(),
-                                  matching.indices.end(),
-                                  [](const auto &index) {
-                                    std::cout << index << std::endl;
-                                  });
-                    std::cout << "confidence: " << matching.confidence << std::endl;
-                    std::cout << ' ';
-                  });
 
     if (sub_matchings.size() == 0)
     {

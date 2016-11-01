@@ -107,7 +107,6 @@ module.exports = {
         }
 
         matchLocation (got, want) {
-	    console.log("inside matchLocation", got, want);
 		if (got == null || want == null) return false;
 
             return this.match(got[0], util.format('%d ~0.0025%', want.lon)) &&
