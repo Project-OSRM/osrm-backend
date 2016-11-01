@@ -1,3 +1,5 @@
+'use strict';
+
 var util = require('util');
 var d3 = require('d3-queue');
 var polyline = require('polyline');
@@ -52,14 +54,25 @@ module.exports = function () {
                     if (res.statusCode === 200) {
                         if (headers.has('matchings')) {
                             subMatchings = [];
-                            var sub = [json.tracepoints[0].location];
-                            for(var i = 1; i < json.tracepoints.length; i++){
-                                if(json.tracepoints[i-1].matchings_index === json.tracepoints[i].matchings_index) {
-                                    sub.push(json.tracepoints[i].location);
-                                } else {
-                                    subMatchings.push(sub);
-                                    sub = [json.tracepoints[i].location];
+
+                            // find the first matched
+                            let start_index = 0;
+                            while (start_index < json.tracepoints.length && json.tracepoints[start_index] === null) start_index++;
+
+                            var sub = [];
+                            let prev_index = null;
+                            for(var i = start_index; i < json.tracepoints.length; i++){
+                                if (json.tracepoints[i] === null) continue;
+
+                                let current_index = json.tracepoints[i].matchings_index;
+
+                                if(prev_index !== current_index) {
+                                    if (sub.length > 0) subMatchings.push(sub);
+                                    sub = [];
+                                    prev_index = current_index;
                                 }
+
+                                sub.push(json.tracepoints[i].location);
                             }
                             subMatchings.push(sub);
                         }
