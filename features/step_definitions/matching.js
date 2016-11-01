@@ -131,11 +131,8 @@ module.exports = function () {
                     var encodedResult = '',
                         extendedTarget = '';
 
-                    var q = d3.queue();
-
-                    var testSubMatching = (sub, si, scb) => {
-                        var sq = d3.queue();
-                        var testSubNode = (ni, ncb) => {
+                    var testSubMatching = (sub, si) => {
+                        var testSubNode = (ni) => {
                         var node = this.findNodeByName(sub[ni]),
                             outNode = subMatchings[si][ni];
 
@@ -151,43 +148,36 @@ module.exports = function () {
                                 extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
                                 ok = false;
                             }
-                            ncb();
                         };
 
                         for (var i=0; i<sub.length; i++) {
-                            sq.defer(testSubNode, i);
+                            testSubNode(i);
                         }
-
-                        sq.awaitAll(scb);
-                        
                     };
 
                     if (subMatchings.length != row.matchings.split(',').length) {
                         ok = false;
-                        throw new Error('*** table matchings and api response are not the same');
+                        cb(new Error('*** table matchings and api response are not the same'));
                     }
 
                     row.matchings.split(',').forEach((sub, si) => {
-                        q.defer(testSubMatching, sub, si);
+                        testSubMatching(sub, si);
                     });
 
-                    q.awaitAll((error) => {
-                        if (error) return cb(error, null);
-
-                        if (ok) {
-                            if (headers.has('matchings')) {
-                                got.matchings = row.matchings;
-                            }
-
-                            if (headers.has('timestamps')) {
-                                got.timestamps = row.timestamps;
-                            }
-                        } else {
-                            got.matchings = encodedResult;
-                            row.matchings = extendedTarget;
+                    if (ok) {
+                        if (headers.has('matchings')) {
+                            got.matchings = row.matchings;
                         }
-                        cb(null, got);
-                    });
+
+                        if (headers.has('timestamps')) {
+                            got.timestamps = row.timestamps;
+                        }
+                    } else {
+                        got.matchings = encodedResult;
+                        row.matchings = extendedTarget;
+                    }
+
+                    cb(null, got);
                 };
 
                 if (row.request) {
