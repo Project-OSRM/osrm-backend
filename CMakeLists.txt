@@ -34,6 +34,7 @@ if(ENABLE_MASON)
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_BZIP2_VERSION "1.0.6")
   set(MASON_TBB_VERSION "43_20150316")
+  set(MASON_V8_VERSION "v8-5.1.281.47")
 
   message(STATUS "Enabling mason")
 
@@ -415,6 +416,10 @@ if(ENABLE_MASON)
   mason_use(tbb VERSION ${MASON_TBB_VERSION})
   add_dependency_includes(${MASON_PACKAGE_tbb_INCLUDE_DIRS})
   set(TBB_LIBRARIES ${MASON_PACKAGE_tbb_LDFLAGS})
+
+  mason_use(v8 VERSION ${MASON_V8_VERSION})
+  add_dependency_includes(${MASON_PACKAGE_v8_INCLUDE_DIRS})
+  set(V8_LIBRARIES ${MASON_PACKAGE_v8_LDFLAGS})
 
   if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
     message(FATAL_ERROR "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
