@@ -150,6 +150,32 @@ Feature: Basic Map Matching
             | abeh  | abeh      | 1,2,3,2,3,4,5,4,5,6,7 |
             | abci  | abci      | 1,2,3,2,3,8,3,8       |
 
+    Scenario: Testbot - Regression test for #3037
+        Given the query options
+            | overview   | simplified |
+            | geometries | geojson  |
+
+        Given the node map
+            """
+            a--->---b--->---c
+            |       |       |
+            |       ^       |
+            |       |       |
+            e--->---f--->---g
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abc   | yes    |
+            | efg   | yes    |
+            | ae    | yes    |
+            | cg    | yes    |
+            | fb    | yes    |
+
+        When I match I should get
+            | trace | matchings | geometry                                         |
+            | efbc  | efbc      | 1,0.99964,1.000359,0.99964,1.000359,1,1.000718,1 |
+
     Scenario: Testbot - Geometry details
         Given the query options
             | overview   | full     |
