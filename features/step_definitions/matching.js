@@ -132,10 +132,10 @@ module.exports = function () {
 
                     var testSubMatching = (sub, si) => {
                         var testSubNode = (ni) => {
-                        var node = this.findNodeByName(sub[ni]),
-                            outNode = subMatchings[si][ni];
+                            var node = this.findNodeByName(sub[ni]),
+                                outNode = subMatchings[si][ni];
 
-                        if (this.FuzzyMatch.matchLocation(outNode, node)) {
+                            if (this.FuzzyMatch.matchLocation(outNode, node)) {
                                 encodedResult += sub[ni];
                                 extendedTarget += sub[ni];
                             } else {
