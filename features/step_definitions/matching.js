@@ -1,7 +1,6 @@
 'use strict';
 
 var util = require('util');
-var d3 = require('d3-queue');
 var polyline = require('polyline');
 
 module.exports = function () {

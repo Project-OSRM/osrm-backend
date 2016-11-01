@@ -178,11 +178,12 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 // use temporal information if available to determine a split
                 if (use_timestamps)
                 {
-                     return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] > max_broken_time;
+                    return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
+                           max_broken_time;
                 }
                 else
                 {
-                     return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
+                    return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
                 }
             }();
 
@@ -193,7 +194,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
 
                 const auto &prev_viterbi = model.viterbi[prev_unbroken_timestamp];
                 const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
-                const auto &prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
+                const auto &prev_unbroken_timestamps_list =
+                    candidates_list[prev_unbroken_timestamp];
                 const auto &prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
 
                 auto &current_viterbi = model.viterbi[t];
@@ -217,7 +219,8 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                         continue;
                     }
 
-                    for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
+                    for (const auto s_prime :
+                         util::irange<std::size_t>(0UL, current_viterbi.size()))
                     {
                         const double emission_pr = emission_log_probabilities[t][s_prime];
                         double new_value = prev_viterbi[s] + emission_pr;
@@ -288,7 +291,6 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                     BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
                     // remove both ends of the breakage
                     prev_unbroken_timestamps.pop_back();
-
                 }
                 else
                 {
