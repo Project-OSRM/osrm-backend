@@ -235,3 +235,66 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | timestamps | matchings |
             | abcd  | 0 1 2 3    | abcd      |
+
+    # Regression test 1 for issue 3176
+    Scenario: Testbot - multiuple segments: properly expose OSM IDs
+        Given the query options
+            | annotations | true    |
+
+        Given the node map
+            """
+            a-1-b--c--d--e--f-2-g
+            """
+
+        And the nodes
+            | node | id |
+            | a    | 1  |
+            | b    | 2  |
+            | c    | 3  |
+            | d    | 4  |
+            | e    | 5  |
+            | f    | 6  |
+            | g    | 7  |
+
+        And the ways
+            | nodes | oneway |
+            | ab    | no     |
+            | bc    | no     |
+            | cd    | no     |
+            | de    | no     |
+            | ef    | no     |
+            | fg    | no     |
+
+        When I match I should get
+            | trace | OSM IDs       |
+            | 12    | 1,2,3,4,5,6,7 |
+            | 21    | 7,6,5,4,3,2,1 |
+
+    # Regression test 2 for issue 3176
+    Scenario: Testbot - same edge: properly expose OSM IDs
+        Given the query options
+            | annotations | true    |
+
+        Given the node map
+            """
+            a-1-b--c--d--e-2-f
+            """
+
+        And the nodes
+            | node | id |
+            | a    | 1  |
+            | b    | 2  |
+            | c    | 3  |
+            | d    | 4  |
+            | e    | 5  |
+            | f    | 6  |
+
+        And the ways
+            | nodes   | oneway |
+            | abcdef  | no     |
+
+        When I match I should get
+            | trace | OSM IDs     |
+            | 12    | 1,2,3,4,5,6 |
+            | 21    | 6,5,4,3,2,1 |
+
