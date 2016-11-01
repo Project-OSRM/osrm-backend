@@ -173,6 +173,8 @@ class BaseDataFacade
 
     virtual bool GetContinueStraightDefault() const = 0;
 
+    virtual double GetMapMatchingMaxSpeed() const = 0;
+
     virtual BearingClassID GetBearingClassID(const NodeID id) const = 0;
 
     virtual util::guidance::TurnBearing PreTurnBearing(const EdgeID eid) const = 0;

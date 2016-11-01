@@ -147,6 +147,7 @@ maxspeed_table = {
 -- set profile properties
 properties.u_turn_penalty                  = 20
 properties.traffic_signal_penalty          = 2
+properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false

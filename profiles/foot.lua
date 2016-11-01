@@ -66,6 +66,7 @@ leisure_speeds = {
 
 properties.traffic_signal_penalty        = 2
 properties.u_turn_penalty                = 2
+properties.max_speed_for_map_matching    = 40/3.6 -- kmph -> m/s
 properties.use_turn_restrictions         = false
 properties.continue_straight_at_waypoint = false
 

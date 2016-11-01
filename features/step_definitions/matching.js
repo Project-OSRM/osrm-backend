@@ -1,5 +1,6 @@
+'use strict';
+
 var util = require('util');
-var d3 = require('d3-queue');
 var polyline = require('polyline');
 
 module.exports = function () {
@@ -44,14 +45,25 @@ module.exports = function () {
                     if (res.statusCode === 200) {
                         if (headers.has('matchings')) {
                             subMatchings = [];
-                            var sub = [json.tracepoints[0].location];
-                            for(var i = 1; i < json.tracepoints.length; i++){
-                                if(json.tracepoints[i-1].matchings_index === json.tracepoints[i].matchings_index) {
-                                    sub.push(json.tracepoints[i].location);
-                                } else {
-                                    subMatchings.push(sub);
-                                    sub = [json.tracepoints[i].location];
+
+                            // find the first matched
+                            let start_index = 0;
+                            while (start_index < json.tracepoints.length && json.tracepoints[start_index] === null) start_index++;
+
+                            var sub = [];
+                            let prev_index = null;
+                            for(var i = start_index; i < json.tracepoints.length; i++){
+                                if (json.tracepoints[i] === null) continue;
+
+                                let current_index = json.tracepoints[i].matchings_index;
+
+                                if(prev_index !== current_index) {
+                                    if (sub.length > 0) subMatchings.push(sub);
+                                    sub = [];
+                                    prev_index = current_index;
                                 }
+
+                                sub.push(json.tracepoints[i].location);
                             }
                             subMatchings.push(sub);
                         }
@@ -82,7 +94,7 @@ module.exports = function () {
                         }
 
                         if (headers.has('OSM IDs')) {
-                            if (json.matchings.length != 1) throw new Error('*** CHecking annotation only supported for matchings with one subtrace');
+                            if (json.matchings.length != 1) throw new Error('*** Checking annotation only supported for matchings with one subtrace');
                             OSMIDs = this.OSMIDList(json.matchings[0]);
                         }
                     }
@@ -118,59 +130,53 @@ module.exports = function () {
                     var encodedResult = '',
                         extendedTarget = '';
 
-                    var q = d3.queue();
+                    var testSubMatching = (sub, si) => {
+                        var testSubNode = (ni) => {
+                            var node = this.findNodeByName(sub[ni]),
+                                outNode = subMatchings[si][ni];
 
-                    var testSubMatching = (sub, si, scb) => {
-                        if (si >= subMatchings.length) {
-                            ok = false;
-                            q.abort();
-                            scb();
-                        } else {
-                            var sq = d3.queue();
-
-                            var testSubNode = (ni, ncb) => {
-                                var node = this.findNodeByName(sub[ni]),
-                                    outNode = subMatchings[si][ni];
-
-                                if (this.FuzzyMatch.matchLocation(outNode, node)) {
-                                    encodedResult += sub[ni];
-                                    extendedTarget += sub[ni];
-                                } else {
+                            if (this.FuzzyMatch.matchLocation(outNode, node)) {
+                                encodedResult += sub[ni];
+                                extendedTarget += sub[ni];
+                            } else {
+                                if (outNode != null) {
                                     encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
-                                    extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
-                                    ok = false;
+                                } else {
+                                    encodedResult += '?';
                                 }
-                                ncb();
-                            };
-
-                            for (var i=0; i<sub.length; i++) {
-                                sq.defer(testSubNode, i);
+                                extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
+                                ok = false;
                             }
+                        };
 
-                            sq.awaitAll(scb);
+                        for (var i=0; i<sub.length; i++) {
+                            testSubNode(i);
                         }
                     };
 
+                    if (subMatchings.length != row.matchings.split(',').length) {
+                        ok = false;
+                        cb(new Error('*** table matchings and api response are not the same'));
+                    }
+
                     row.matchings.split(',').forEach((sub, si) => {
-                        q.defer(testSubMatching, sub, si);
+                        testSubMatching(sub, si);
                     });
 
-                    q.awaitAll(() => {
-                        if (ok) {
-                            if (headers.has('matchings')) {
-                                got.matchings = row.matchings;
-                            }
-
-                            if (headers.has('timestamps')) {
-                                got.timestamps = row.timestamps;
-                            }
-                        } else {
-                            got.matchings = encodedResult;
-                            row.matchings = extendedTarget;
+                    if (ok) {
+                        if (headers.has('matchings')) {
+                            got.matchings = row.matchings;
                         }
 
-                        cb(null, got);
-                    });
+                        if (headers.has('timestamps')) {
+                            got.timestamps = row.timestamps;
+                        }
+                    } else {
+                        got.matchings = encodedResult;
+                        row.matchings = extendedTarget;
+                    }
+
+                    cb(null, got);
                 };
 
                 if (row.request) {

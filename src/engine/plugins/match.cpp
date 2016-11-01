@@ -4,6 +4,7 @@
 #include "engine/api/match_api.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/map_matching/bayes_classifier.hpp"
+#include "engine/map_matching/sub_matching.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_util.hpp"

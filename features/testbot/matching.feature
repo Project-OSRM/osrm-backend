@@ -9,10 +9,11 @@ Feature: Basic Map Matching
             | geometries | geojson |
 
     Scenario: Testbot - Map matching with outlier that has no candidate
-        Given a grid size of 10 meters
+        Given a grid size of 100 meters
         Given the node map
             """
             a b c d
+
                 1
             """
 
@@ -22,7 +23,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace | timestamps | matchings |
-            | ab1d  | 0 1 2 3    | abcd      |
+            | ab1d  | 0 1 2 3    | ad        |
 
     Scenario: Testbot - Map matching with trace splitting
         Given the node map
@@ -169,3 +170,42 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | matchings | geometry                                   |
             | abd   | abd       | 1,1,1.000089,1,1.000089,1,1.000089,0.99991 |
+
+    Scenario: Testbot - Speed greater than speed threshhold, should split -- returns trace as abcd but should be split into ab,cd
+        Given a grid size of 10 meters
+        Given the query options
+            | geometries | geojson  |
+
+        Given the node map
+            """
+            a b ---- x
+                     |
+                     |
+                     y --- c d
+            """
+
+        And the ways
+            | nodes   | oneway |
+            | abxycd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings |
+            | abcd  | 0 1 2 3    | ab,cd     |
+
+    Scenario: Testbot - Speed less than speed threshhold, should not split
+        Given a grid size of 10 meters
+        Given the query options
+            | geometries | geojson  |
+
+        Given the node map
+            """
+            a b c d
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings |
+            | abcd  | 0 1 2 3    | abcd      |
