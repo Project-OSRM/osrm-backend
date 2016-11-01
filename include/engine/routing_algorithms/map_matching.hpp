@@ -99,13 +99,10 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         const auto max_distance_delta = [&] {
             if (use_timestamps)
             {
-                std::cout << "facade.GetMapMatchingMaxSpeed(): " << facade.GetMapMatchingMaxSpeed() << std::endl;
-                std::cout << "median_sample_time: " << median_sample_time << std::endl;
                 return median_sample_time * facade.GetMapMatchingMaxSpeed();
             }
             else
             {
-                 std::cout << "using MAX_DISTANCE_DELTA" << std::endl;
                 return MAX_DISTANCE_DELTA;
             }
         }();
@@ -176,24 +173,133 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
         prev_unbroken_timestamps.push_back(initial_timestamp);
         for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
         {
+
+            const bool gap_in_trace = [&, use_timestamps]() {
+                // use temporal information if available to determine a split
+                if (use_timestamps)
+                {
+                     return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] > max_broken_time;
+                }
+                else
+                {
+                     return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
+                }
+            }();
+
+            if (!gap_in_trace)
+            {
+                BOOST_ASSERT(!prev_unbroken_timestamps.empty());
+                const std::size_t prev_unbroken_timestamp = prev_unbroken_timestamps.back();
+
+                const auto &prev_viterbi = model.viterbi[prev_unbroken_timestamp];
+                const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
+                const auto &prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
+                const auto &prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
+
+                auto &current_viterbi = model.viterbi[t];
+                auto &current_pruned = model.pruned[t];
+                auto &current_parents = model.parents[t];
+                auto &current_lengths = model.path_distances[t];
+                const auto &current_timestamps_list = candidates_list[t];
+                const auto &current_coordinate = trace_coordinates[t];
+
+                const auto haversine_distance = util::coordinate_calculation::haversineDistance(
+                    prev_coordinate, current_coordinate);
+                // assumes minumum of 0.1 m/s
+                const int duration_upper_bound =
+                    ((haversine_distance + max_distance_delta) * 0.25) * 10;
+
+                // compute d_t for this timestamp and the next one
+                for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
+                {
+                    if (prev_pruned[s])
+                    {
+                        continue;
+                    }
+
+                    for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
+                    {
+                        const double emission_pr = emission_log_probabilities[t][s_prime];
+                        double new_value = prev_viterbi[s] + emission_pr;
+                        if (current_viterbi[s_prime] > new_value)
+                        {
+                            continue;
+                        }
+
+                        forward_heap.Clear();
+                        reverse_heap.Clear();
+
+                        double network_distance;
+                        if (facade.GetCoreSize() > 0)
+                        {
+                            forward_core_heap.Clear();
+                            reverse_core_heap.Clear();
+                            network_distance = super::GetNetworkDistanceWithCore(
+                                facade,
+                                forward_heap,
+                                reverse_heap,
+                                forward_core_heap,
+                                reverse_core_heap,
+                                prev_unbroken_timestamps_list[s].phantom_node,
+                                current_timestamps_list[s_prime].phantom_node,
+                                duration_upper_bound);
+                        }
+                        else
+                        {
+                            network_distance = super::GetNetworkDistance(
+                                facade,
+                                forward_heap,
+                                reverse_heap,
+                                prev_unbroken_timestamps_list[s].phantom_node,
+                                current_timestamps_list[s_prime].phantom_node);
+                        }
+
+                        // get distance diff between loc1/2 and locs/s_prime
+                        const auto d_t = std::abs(network_distance - haversine_distance);
+
+                        // very low probability transition -> prune
+                        if (d_t >= max_distance_delta)
+                        {
+                            continue;
+                        }
+
+                        const double transition_pr = transition_log_probability(d_t);
+                        new_value += transition_pr;
+
+                        if (new_value > current_viterbi[s_prime])
+                        {
+                            current_viterbi[s_prime] = new_value;
+                            current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
+                            current_lengths[s_prime] = network_distance;
+                            current_pruned[s_prime] = false;
+                            model.breakage[t] = false;
+                        }
+                    }
+                }
+
+                if (model.breakage[t])
+                {
+                    // save start of breakage -> we need this as split point
+                    if (t < breakage_begin)
+                    {
+                        breakage_begin = t;
+                    }
+
+                    BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
+                    // remove both ends of the breakage
+                    prev_unbroken_timestamps.pop_back();
+
+                }
+                else
+                {
+                    prev_unbroken_timestamps.push_back(t);
+                }
+            }
+
             // breakage recover has removed all previous good points
-            bool trace_split = prev_unbroken_timestamps.empty();
+            const bool trace_split = prev_unbroken_timestamps.empty();
 
-            // use temporal information if available to determine a split
-            if (use_timestamps)
-            {
-                trace_split =
-                    trace_split ||
-                    (trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                     max_broken_time);
-            }
-            else
-            {
-                trace_split =
-                    trace_split || (t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES);
-            }
-
-            if (trace_split)
+            if (trace_split || gap_in_trace)
             {
                 std::size_t split_index = t;
                 if (breakage_begin != map_matching::INVALID_STATE)
@@ -217,127 +323,9 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
                 // Important: We potentially go back here!
                 // However since t > new_start >= breakge_begin
                 // we can only reset trace_coordindates.size() times.
-                t = new_start + 1;
-            }
-
-            BOOST_ASSERT(!prev_unbroken_timestamps.empty());
-            const std::size_t prev_unbroken_timestamp = prev_unbroken_timestamps.back();
-
-            const auto &prev_viterbi = model.viterbi[prev_unbroken_timestamp];
-            const auto &prev_pruned = model.pruned[prev_unbroken_timestamp];
-            const auto &prev_unbroken_timestamps_list = candidates_list[prev_unbroken_timestamp];
-            const auto &prev_coordinate = trace_coordinates[prev_unbroken_timestamp];
-
-            auto &current_viterbi = model.viterbi[t];
-            auto &current_pruned = model.pruned[t];
-            auto &current_parents = model.parents[t];
-            auto &current_lengths = model.path_distances[t];
-            const auto &current_timestamps_list = candidates_list[t];
-            const auto &current_coordinate = trace_coordinates[t];
-
-            const auto haversine_distance = util::coordinate_calculation::haversineDistance(
-                prev_coordinate, current_coordinate);
-            // assumes minumum of 0.1 m/s
-            const int duration_upper_bound =
-                ((haversine_distance + max_distance_delta) * 0.25) * 10;
-
-            std::cout << "t: " << t << std::endl;
-
-            // compute d_t for this timestamp and the next one
-            for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))
-            {
-                std::cout << "s: " << s << std::endl;
-
-                if (prev_pruned[s])
-                {
-                    std::cout << "prev_pruned[s] === true" << std::endl;
-                    continue;
-                }
-
-                for (const auto s_prime : util::irange<std::size_t>(0UL, current_viterbi.size()))
-                {
-                    std::cout << "s_prime: " << s_prime << std::endl;
-
-                    const double emission_pr = emission_log_probabilities[t][s_prime];
-                    double new_value = prev_viterbi[s] + emission_pr;
-                    if (current_viterbi[s_prime] > new_value)
-                    {
-                        continue;
-                    }
-
-                    forward_heap.Clear();
-                    reverse_heap.Clear();
-
-                    std::cout << "prev: " << prev_unbroken_timestamps_list[s].phantom_node << std::endl;
-                    std::cout << "current: " << current_timestamps_list[s_prime].phantom_node << std::endl;
-
-                    double network_distance;
-                    if (facade.GetCoreSize() > 0)
-                    {
-                        forward_core_heap.Clear();
-                        reverse_core_heap.Clear();
-                        network_distance = super::GetNetworkDistanceWithCore(
-                            facade,
-                            forward_heap,
-                            reverse_heap,
-                            forward_core_heap,
-                            reverse_core_heap,
-                            prev_unbroken_timestamps_list[s].phantom_node,
-                            current_timestamps_list[s_prime].phantom_node,
-                            duration_upper_bound);
-                    }
-                    else
-                    {
-                        network_distance = super::GetNetworkDistance(
-                            facade,
-                            forward_heap,
-                            reverse_heap,
-                            prev_unbroken_timestamps_list[s].phantom_node,
-                            current_timestamps_list[s_prime].phantom_node);
-                    }
-
-                    // get distance diff between loc1/2 and locs/s_prime
-                    const auto d_t = std::abs(network_distance - haversine_distance);
-
-                    // very low probability transition -> prune
-                    if (d_t >= max_distance_delta)
-                    {
-                        std::cout << "d_t: " << d_t << std::endl;
-                        std::cout << "max_distance_delta: " << max_distance_delta << std::endl;
-                        continue;
-                    }
-
-                    const double transition_pr = transition_log_probability(d_t);
-                    new_value += transition_pr;
-
-                    if (new_value > current_viterbi[s_prime])
-                    {
-                        std::cout << "candidate has been found" << std::endl;
-                        current_viterbi[s_prime] = new_value;
-                        current_parents[s_prime] = std::make_pair(prev_unbroken_timestamp, s);
-                        current_lengths[s_prime] = network_distance;
-                        current_pruned[s_prime] = false;
-                        model.breakage[t] = false;
-                    }
-                }
-            }
-
-            if (model.breakage[t])
-            {
-                 std::cout << "model.breakage[t] is true" << std::endl;
-                // save start of breakage -> we need this as split point
-                if (t < breakage_begin)
-                {
-                    breakage_begin = t;
-                }
-
-                BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
-                // remove both ends of the breakage
-                prev_unbroken_timestamps.pop_back();
-            }
-            else
-            {
-                prev_unbroken_timestamps.push_back(t);
+                t = new_start;
+                // note: the head of the loop will call ++t, hence the next
+                // iteration will actually be on new_start+1
             }
         }
 
