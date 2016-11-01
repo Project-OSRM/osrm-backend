@@ -1,3 +1,4 @@
+/*
 #include "engine/plugins/table.hpp"
 
 #include "engine/api/table_api.hpp"
@@ -76,3 +77,4 @@ Status TablePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
 }
 }
 }
+*/

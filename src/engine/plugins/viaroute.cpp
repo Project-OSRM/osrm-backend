@@ -1,11 +1,11 @@
 #include "engine/plugins/viaroute.hpp"
 #include "engine/api/route_api.hpp"
+#include "engine/guidance/result.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/status.hpp"
 
 #include "util/for_each_pair.hpp"
 #include "util/integer_range.hpp"
-#include "util/json_container.hpp"
 
 #include <cstdlib>
 
@@ -29,32 +29,25 @@ ViaRoutePlugin::ViaRoutePlugin(int max_locations_viaroute)
 
 Status ViaRoutePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                                      const api::RouteParameters &route_parameters,
-                                     util::json::Object &json_result) const
+                                     engine::guidance::Result &result) const
 {
     BOOST_ASSERT(route_parameters.IsValid());
 
     if (max_locations_viaroute > 0 &&
         (static_cast<int>(route_parameters.coordinates.size()) > max_locations_viaroute))
     {
-        return Error("TooBig",
-                     "Number of entries " + std::to_string(route_parameters.coordinates.size()) +
-                         " is higher than current maximum (" +
-                         std::to_string(max_locations_viaroute) + ")",
-                     json_result);
+        return Status::ErrorTooBig;
     }
 
     if (!CheckAllCoordinates(route_parameters.coordinates))
     {
-        return Error("InvalidValue", "Invalid coordinate value.", json_result);
+        return Status::ErrorInvalidValue;
     }
 
     auto phantom_node_pairs = GetPhantomNodes(*facade, route_parameters);
     if (phantom_node_pairs.size() != route_parameters.coordinates.size())
     {
-        return Error("NoSegment",
-                     std::string("Could not find a matching segment for coordinate ") +
-                         std::to_string(phantom_node_pairs.size()),
-                     json_result);
+        return Status::ErrorNoSegment;
     }
     BOOST_ASSERT(phantom_node_pairs.size() == route_parameters.coordinates.size());
 
@@ -108,25 +101,11 @@ Status ViaRoutePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataF
     if (raw_route.is_valid())
     {
         api::RouteAPI route_api{*facade, route_parameters};
-        route_api.MakeResponse(raw_route, json_result);
+        route_api.MakeResponse(raw_route, result);
     }
     else
     {
-        auto first_component_id = snapped_phantoms.front().component.id;
-        auto not_in_same_component = std::any_of(snapped_phantoms.begin(),
-                                                 snapped_phantoms.end(),
-                                                 [first_component_id](const PhantomNode &node) {
-                                                     return node.component.id != first_component_id;
-                                                 });
-
-        if (not_in_same_component)
-        {
-            return Error("NoRoute", "Impossible route between points", json_result);
-        }
-        else
-        {
-            return Error("NoRoute", "No route found between points", json_result);
-        }
+        return Status::ErrorNoRoute;
     }
 
     return Status::Ok;

@@ -1,3 +1,4 @@
+/*
 #ifndef ENGINE_RESPONSE_OBJECTS_HPP_
 #define ENGINE_RESPONSE_OBJECTS_HPP_
 
@@ -94,3 +95,4 @@ util::json::Array makeRouteLegs(std::vector<guidance::RouteLeg> legs,
 } // namespace osrm
 
 #endif // ENGINE_GUIDANCE_API_RESPONSE_GENERATOR_HPP_
+*/

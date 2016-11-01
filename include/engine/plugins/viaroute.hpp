@@ -4,6 +4,7 @@
 #include "engine/api/route_api.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/guidance/result.hpp"
 
 #include "engine/routing_algorithms/alternative_path.hpp"
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
@@ -40,7 +41,7 @@ class ViaRoutePlugin final : public BasePlugin
 
     Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
                          const api::RouteParameters &route_parameters,
-                         util::json::Object &json_result) const;
+                         guidance::Result &result) const;
 };
 }
 }

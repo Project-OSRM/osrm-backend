@@ -9,7 +9,6 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
-#include "util/json_container.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -32,15 +31,6 @@ class BasePlugin
             std::begin(coordinates), std::end(coordinates), [](const util::Coordinate coordinate) {
                 return !coordinate.IsValid();
             });
-    }
-
-    Status Error(const std::string &code,
-                 const std::string &message,
-                 util::json::Object &json_result) const
-    {
-        json_result.values["code"] = code;
-        json_result.values["message"] = message;
-        return Status::Error;
     }
 
     // Decides whether to use the phantom node from a big or small component if both are found.

@@ -39,8 +39,11 @@ namespace engine
  */
 enum class Status
 {
-    Ok,
-    Error
+    Ok = 0,
+    ErrorTooBig,
+    ErrorNoSegment,
+    ErrorNoRoute,
+    ErrorInvalidValue,
 };
 }
 }
