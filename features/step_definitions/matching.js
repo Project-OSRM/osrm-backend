@@ -151,9 +151,16 @@ module.exports = function () {
                         }
                     };
 
-                    row.matchings.split(',').forEach((sub, si) => {
-                        q.defer(testSubMatching, sub, si);
-                    });
+                    if (headers.has('matchings')) {
+                        if (subMatchings.length != row.matchings.split(',').length) {
+                            ok = false;
+                            cb(new Error('*** table matchings and api response are not the same'));
+                        }
+
+                        row.matchings.split(',').forEach((sub, si) => {
+                            testSubMatching(sub, si);
+                        });
+                    }
 
                     q.awaitAll(() => {
                         if (ok) {
