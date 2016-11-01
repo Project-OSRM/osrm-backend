@@ -3,7 +3,7 @@
 
 // implements all data storage when shared memory is _NOT_ used
 
-#include "engine/datafacade/datafacade_base.hpp"
+#include "engine/datafacade/memory_datafacade_base.hpp"
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "util/guidance/bearing_class.hpp"
@@ -66,7 +66,7 @@ namespace datafacade
  * so we can just extend from that class.  This class holds a unique_ptr
  * to the memory blocks, so they are auto-freed upon destruction.
  */
-class InternalDataFacade final : public SharedDataFacade
+class InternalDataFacade final : public MemoryDataFacadeBase
 {
 
   private:
@@ -88,7 +88,7 @@ class InternalDataFacade final : public SharedDataFacade
 
         // Set up the SharedDataFacade pointers
         data_layout = internal_layout.get();
-        shared_memory = internal_memory.get();
+        memory_block = internal_memory.get();
 
         // Adjust all the private m_* members to point to the right places
         LoadData();
