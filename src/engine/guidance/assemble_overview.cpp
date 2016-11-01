@@ -43,37 +43,11 @@ unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometri
     return util::viewport::getFittedZoom(south_west, north_east);
 }
 
-std::vector<util::Coordinate> simplifyGeometry(const std::vector<LegGeometry> &leg_geometries,
-                                               const unsigned zoom_level)
-{
-    std::vector<util::Coordinate> overview_geometry;
-    auto leg_index = 0UL;
-    for (const auto &geometry : leg_geometries)
-    {
-        auto simplified_geometry =
-            douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
-        // not the last leg
-        if (leg_index < leg_geometries.size() - 1)
-        {
-            simplified_geometry.pop_back();
-        }
-        overview_geometry.insert(
-            overview_geometry.end(), simplified_geometry.begin(), simplified_geometry.end());
-    }
-    return overview_geometry;
-}
 }
 
 std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &leg_geometries,
                                                const bool use_simplification)
 {
-    if (use_simplification)
-    {
-        const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(leg_geometries));
-        return simplifyGeometry(leg_geometries, zoom_level);
-    }
-    BOOST_ASSERT(!use_simplification);
-
     auto overview_size =
         std::accumulate(leg_geometries.begin(),
                         leg_geometries.end(),
@@ -85,16 +59,37 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
     std::vector<util::Coordinate> overview_geometry;
     overview_geometry.reserve(overview_size);
 
+    using GeometryIter = decltype(overview_geometry)::const_iterator;
+
     auto leg_reverse_index = leg_geometries.size();
-    for (const auto &geometry : leg_geometries)
-    {
-        auto begin = geometry.locations.begin();
-        auto end = geometry.locations.end();
+    const auto insert_without_overlap = [&leg_reverse_index, &overview_geometry](GeometryIter begin, GeometryIter end) {
+        // not the last leg
         if (--leg_reverse_index > 0)
         {
             end = std::prev(end);
         }
         overview_geometry.insert(overview_geometry.end(), begin, end);
+    };
+
+    if (use_simplification)
+    {
+        const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(leg_geometries));
+        for (const auto &geometry : leg_geometries)
+        {
+            auto simplified = douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
+            auto begin = simplified.cbegin();
+            auto end = simplified.cend();
+            insert_without_overlap(begin, end);
+        }
+    }
+    else
+    {
+        for (const auto &geometry : leg_geometries)
+        {
+            auto begin = geometry.locations.begin();
+            auto end = geometry.locations.end();
+            insert_without_overlap(begin, end);
+        }
     }
 
     return overview_geometry;
