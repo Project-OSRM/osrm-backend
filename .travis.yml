@@ -160,17 +160,17 @@ install:
       export CXX=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang++
       export CC=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang
     fi
-  - mkdir example/build && pushd example/build
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-  - make
-  - popd
+    #  - mkdir example/build && pushd example/build
+    #  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+    #  - make
+    #  - popd
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
   - echo "travis_fold:start:BENCHMARK"
   - make -C test/data benchmark
   - echo "travis_fold:end:BENCHMARK"
-  - ./example/build/osrm-example test/data/monaco.osrm
+    #  - ./example/build/osrm-example test/data/monaco.osrm
   # All tests assume to be run from the build directory
   - pushd build
   - ./unit_tests/library-tests ../test/data/monaco.osrm
