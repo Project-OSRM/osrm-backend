@@ -462,7 +462,7 @@ void collapseUTurn(std::vector<RouteStep> &steps,
     // additionall collapse a name-change as welll
     const auto next_step_index = step_index + 1;
     const bool continues_with_name_change =
-        (next_step_index < steps.size()) &&
+        (next_step_index < steps.size()) && compatible(steps[step_index], steps[next_step_index]) &&
         ((steps[next_step_index].maneuver.instruction.type == TurnType::UseLane &&
           steps[next_step_index].maneuver.instruction.direction_modifier ==
               DirectionModifier::Straight) ||
@@ -777,7 +777,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         invalidateStep(steps[step_index]);
     }
     else if (TurnType::Suppressed == current_step.maneuver.instruction.type &&
-             !isNoticeableNameChange(one_back_step, current_step))
+             !isNoticeableNameChange(one_back_step, current_step) &&
+             compatible(one_back_step, current_step))
     {
         steps[one_back_index] = elongate(std::move(steps[one_back_index]), current_step);
         const auto angle = findTotalTurnAngle(one_back_step, current_step);
@@ -787,7 +788,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         invalidateStep(steps[step_index]);
     }
     else if (TurnType::Turn == one_back_step.maneuver.instruction.type &&
-             TurnType::OnRamp == current_step.maneuver.instruction.type)
+             TurnType::OnRamp == current_step.maneuver.instruction.type &&
+             compatible(one_back_step, current_step))
     {
         // turning onto a ramp makes the first turn into a ramp
         steps[one_back_index] = elongate(std::move(steps[one_back_index]), current_step);
