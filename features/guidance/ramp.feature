@@ -255,3 +255,24 @@ Feature: Ramp Guidance
             | waypoints | route    | turns         |
             | a,d       | ,        | depart,arrive |
             | b,d       | ,        | depart,arrive |
+
+    Scenario: Ferry Onto A Ramp
+        Given the node map
+            """
+                                d - e - g
+                                |
+            a - b ~ ~ ~ ~ ~ ~ ~ c 
+                                  ` f
+            """
+
+        And the ways
+            | nodes | highway       | route | name                       | ref |
+            | ab    | primary       |       | boarding                   |     |
+            | bc    |               | ferry | boaty mc boatface          | m2  |
+            | cf    |               | ferry | boaty mc boatface          |     |
+            | cd    |               | ferry | boaty mc boatface's cousin |     |
+            | de    | motorway_link |       |                   |     |
+
+        When I route I should get
+            | waypoints | route                                                   |
+            | a,e       | boarding,boaty mc boatface,boaty mc boatface's cousin,, |
