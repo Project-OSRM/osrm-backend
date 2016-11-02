@@ -251,3 +251,61 @@ If you are testing for a duration metric, allow for a tiny offset to ensure a pa
 #### Don't Rely on Alternatives
 
 Alternative route discovery is a random feature in itself. The discovery of routes depends on the contraction order of roads and cannot be assumed successful, ever.
+
+### Understanding Turn Restrictions
+
+Adding turn restrictions requires the restriction to follow a very specific format.
+
+We specify them in a table with the header `| type | way:from | way:to | node:via | restriction |`.
+It is important that turn restrictions require micro segmentation.
+
+Consider the following scenario:
+```
+Given the node map:
+    """
+          e
+          |
+    a - - b - - c
+          |
+          d
+    """
+
+And the ways
+    | nodes | oneway |
+    | abc   | yes    |
+    | ebd   | yes    |
+
+And the relations
+    | type        | way:from | way:to | node:via | restriction   |
+    | restriction | abc      | ebd    | b        | no_right_turn |
+```
+
+The setting looks perfectly fine at first glance. However, it is not well defined.
+The forbidden right turn could be either a superfluous addition, forbidding the turn `cb` to `be`, or actually refer to the turn `ab` to `bd` to say that a turn is forbidden here.
+
+To model turn-restrictions correctly and unique, we need to split segments that contribute to the restriction into the smallest possible parts.
+E.g. the above scenario could correctly be expressed as:
+
+```
+Given the node map:
+    """
+          e
+          |
+    a - - b - - c
+          |
+          d
+    """
+
+And the ways
+    | nodes | oneway | name |
+    | ab    | yes    | abc  |
+    | bc    | yes    | abc  |
+    | eb    | yes    | ebd  |
+    | bd    | yes    | ebd  |
+
+And the relations
+    | type        | way:from | way:to | node:via | restriction   |
+    | restriction | ab       | bd     | b        | no_right_turn |
+```
+
+Unless this format is used, OSRM will omit the (then ambiguous) turn restrictions and ignore them.
