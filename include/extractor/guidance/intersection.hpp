@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "extractor/guidance/turn_instruction.hpp"
+#include "util/guidance/toolkit.hpp"
 #include "util/typedefs.hpp" // EdgeID
 
 namespace osrm
@@ -59,7 +60,30 @@ struct ConnectedRoad final
 // small helper function to print the content of a connected road
 std::string toString(const ConnectedRoad &road);
 
-typedef std::vector<ConnectedRoad> Intersection;
+struct Intersection final : public std::vector<ConnectedRoad>
+{
+    using Base = std::vector<ConnectedRoad>;
+
+    inline Base::iterator findClosestTurn(double angle)
+    {
+        return std::min_element(this->begin(),
+                                this->end(),
+                                [angle](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
+                                    return util::guidance::angularDeviation(lhs.turn.angle, angle) <
+                                           util::guidance::angularDeviation(rhs.turn.angle, angle);
+                                });
+    }
+
+    inline Base::const_iterator findClosestTurn(double angle) const
+    {
+        return std::min_element(this->begin(),
+                                this->end(),
+                                [angle](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
+                                    return util::guidance::angularDeviation(lhs.turn.angle, angle) <
+                                           util::guidance::angularDeviation(rhs.turn.angle, angle);
+                                });
+    }
+};
 
 Intersection::const_iterator findClosestTurn(const Intersection &intersection, const double angle);
 Intersection::iterator findClosestTurn(Intersection &intersection, const double angle);

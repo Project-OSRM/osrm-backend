@@ -154,14 +154,16 @@ module.exports = function () {
                         }
                     };
 
-                    if (subMatchings.length != row.matchings.split(',').length) {
-                        ok = false;
-                        cb(new Error('*** table matchings and api response are not the same'));
-                    }
+                    if (headers.has('matchings')) {
+                        if (subMatchings.length != row.matchings.split(',').length) {
+                            ok = false;
+                            cb(new Error('*** table matchings and api response are not the same'));
+                        }
 
-                    row.matchings.split(',').forEach((sub, si) => {
-                        testSubMatching(sub, si);
-                    });
+                        row.matchings.split(',').forEach((sub, si) => {
+                            testSubMatching(sub, si);
+                        });
+                    }
 
                     if (ok) {
                         if (headers.has('matchings')) {

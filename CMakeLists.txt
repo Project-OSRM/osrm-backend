@@ -457,7 +457,10 @@ endif()
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
+set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
+find_package(Osmium REQUIRED COMPONENTS io)
+include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 
 if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_dependency_defines(-DBOOST_TEST_DYN_LINK)

@@ -103,7 +103,7 @@ module.exports = function () {
             let name = row.node,
                 node = this.findNodeByName(name);
             delete row.node;
-            if (!node) throw new Error(util.format('*** unknown node %s'), name);
+            if (!node) throw new Error(util.format('*** unknown node %s', name));
             for (let key in row) {
                 if (key=='id') {
                     node.setID( row[key] );
