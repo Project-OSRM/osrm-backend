@@ -16,18 +16,18 @@ module.exports = function () {
         if (symmetric) {
             columnHeaders.forEach((nodeName) => {
                 var node = this.findNodeByName(nodeName);
-                if (!node) throw new Error(util.format('*** unknown node "%s"'), nodeName);
+                if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
                 waypoints.push({ coord: node, type: 'loc' });
             });
         } else {
             columnHeaders.forEach((nodeName) => {
                 var node = this.findNodeByName(nodeName);
-                if (!node) throw new Error(util.format('*** unknown node "%s"'), nodeName);
+                if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
                 waypoints.push({ coord: node, type: 'dst' });
             });
             rowHeaders.forEach((nodeName) => {
                 var node = this.findNodeByName(nodeName);
-                if (!node) throw new Error(util.format('*** unknown node "%s"'), nodeName);
+                if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
                 waypoints.push({ coord: node, type: 'src' });
             });
         }
