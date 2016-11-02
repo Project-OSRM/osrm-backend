@@ -64,8 +64,9 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
     auto leg_reverse_index = leg_geometries.size();
     const auto insert_without_overlap = [&leg_reverse_index, &overview_geometry](GeometryIter begin, GeometryIter end) {
         // not the last leg
-        if (--leg_reverse_index > 0)
+        if (leg_reverse_index > 1)
         {
+            --leg_reverse_index;
             end = std::prev(end);
         }
         overview_geometry.insert(overview_geometry.end(), begin, end);
@@ -76,19 +77,15 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
         const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(leg_geometries));
         for (const auto &geometry : leg_geometries)
         {
-            auto simplified = douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
-            auto begin = simplified.cbegin();
-            auto end = simplified.cend();
-            insert_without_overlap(begin, end);
+            const auto simplified = douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
+            insert_without_overlap(simplified.begin(), simplified.end());
         }
     }
     else
     {
         for (const auto &geometry : leg_geometries)
         {
-            auto begin = geometry.locations.begin();
-            auto end = geometry.locations.end();
-            insert_without_overlap(begin, end);
+            insert_without_overlap(geometry.locations.begin(), geometry.locations.end());
         }
     }
 
