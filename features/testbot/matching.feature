@@ -161,7 +161,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace | matchings | geometry                                         |
-            | efbc  | efbc      | 1,0.99964,1.000359,0.99964,1.000359,1,1.000718,1 |
+            | efbc  | efbc      | 1,0.99964,1.000178,0.99964,1.000178,1,1.000359,1 |
 
     Scenario: Testbot - Geometry details
         Given the query options
@@ -179,7 +179,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace | matchings | geometry                                   |
-            | abd   | abd       | 1,1,1.000089,1,1.000089,1,1.000089,0.99991 |
+            | abd   | abd       | 1,1,1.000179,1,1.000178,1,1.000178,0.99991 |
 
     # Regression test 1 for issue 3176
     Scenario: Testbot - multiuple segments: properly expose OSM IDs
