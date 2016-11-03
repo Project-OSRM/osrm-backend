@@ -4,6 +4,8 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 
+#include <boost/assert.hpp>
+
 #include <algorithm>
 #include <functional>
 #include <limits>
@@ -91,13 +93,13 @@ bool Intersection::valid() const
            operator[](0).angle < std::numeric_limits<double>::epsilon();
 }
 
-std::uint8_t Intersection::getHighestConnectedLaneCount(
-    const util::NodeBasedDynamicGraph &node_based_graph) const
+std::uint8_t
+Intersection::getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &graph) const
 {
     BOOST_ASSERT(valid()); // non empty()
-    std::vector<ConnectedRoad> test;
+
     const auto to_lane_count = [&](const ConnectedRoad &road) {
-        return node_based_graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
+        return graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
     };
 
     // boost::range::transformed sadly does not work with lamdas since they are not copy
@@ -108,7 +110,7 @@ std::uint8_t Intersection::getHighestConnectedLaneCount(
         return false;
     };
 
-    const auto view = test | boost::adaptors::transformed(to_lane_count);
+    const auto view = *this | boost::adaptors::transformed(to_lane_count);
     boost::range::find_if(view, extract_maximal_value);
     return max_lanes;
 }
