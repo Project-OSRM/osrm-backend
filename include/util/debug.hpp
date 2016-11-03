@@ -73,8 +73,7 @@ inline void print(const NodeBasedDynamicGraph &node_based_graph,
     for (const auto &road : intersection)
     {
         std::cout << "\t" << toString(road) << "\n";
-        std::cout << "\t\t"
-                  << node_based_graph.GetEdgeData(road.turn.eid).road_classification.ToString()
+        std::cout << "\t\t" << node_based_graph.GetEdgeData(road.eid).road_classification.ToString()
                   << "\n";
     }
     std::cout << std::flush;

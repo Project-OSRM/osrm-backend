@@ -35,7 +35,7 @@ classifyIntersection(Intersection intersection)
     std::sort(intersection.begin(),
               intersection.end(),
               [](const ConnectedRoad &left, const ConnectedRoad &right) {
-                  return left.turn.bearing < right.turn.bearing;
+                  return left.bearing < right.bearing;
               });
 
     util::guidance::EntryClass entry_class;
@@ -46,11 +46,11 @@ classifyIntersection(Intersection intersection)
             return true;
 
         DiscreteBearing last_discrete_bearing = util::guidance::BearingClass::getDiscreteBearing(
-            std::round(intersection.back().turn.bearing));
+            std::round(intersection.back().bearing));
         for (const auto road : intersection)
         {
             const DiscreteBearing discrete_bearing =
-                util::guidance::BearingClass::getDiscreteBearing(std::round(road.turn.bearing));
+                util::guidance::BearingClass::getDiscreteBearing(std::round(road.bearing));
             if (discrete_bearing == last_discrete_bearing)
                 return false;
             last_discrete_bearing = discrete_bearing;
@@ -62,8 +62,8 @@ classifyIntersection(Intersection intersection)
     std::size_t number = 0;
     if (canBeDiscretized)
     {
-        if (util::guidance::BearingClass::getDiscreteBearing(intersection.back().turn.bearing) <
-            util::guidance::BearingClass::getDiscreteBearing(intersection.front().turn.bearing))
+        if (util::guidance::BearingClass::getDiscreteBearing(intersection.back().bearing) <
+            util::guidance::BearingClass::getDiscreteBearing(intersection.front().bearing))
         {
             intersection.insert(intersection.begin(), intersection.back());
             intersection.pop_back();
@@ -73,7 +73,7 @@ classifyIntersection(Intersection intersection)
             if (road.entry_allowed)
                 entry_class.activate(number);
             auto discrete_bearing_class =
-                util::guidance::BearingClass::getDiscreteBearing(std::round(road.turn.bearing));
+                util::guidance::BearingClass::getDiscreteBearing(std::round(road.bearing));
             bearing_class.add(std::round(discrete_bearing_class *
                                          util::guidance::BearingClass::discrete_step_size));
             ++number;
@@ -85,7 +85,7 @@ classifyIntersection(Intersection intersection)
         {
             if (road.entry_allowed)
                 entry_class.activate(number);
-            bearing_class.add(std::round(road.turn.bearing));
+            bearing_class.add(std::round(road.bearing));
             ++number;
         }
     }

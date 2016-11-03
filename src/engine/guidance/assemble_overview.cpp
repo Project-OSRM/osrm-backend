@@ -42,7 +42,6 @@ unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometri
 
     return util::viewport::getFittedZoom(south_west, north_east);
 }
-
 }
 
 std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &leg_geometries,
@@ -62,7 +61,8 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
     using GeometryIter = decltype(overview_geometry)::const_iterator;
 
     auto leg_reverse_index = leg_geometries.size();
-    const auto insert_without_overlap = [&leg_reverse_index, &overview_geometry](GeometryIter begin, GeometryIter end) {
+    const auto insert_without_overlap = [&leg_reverse_index, &overview_geometry](GeometryIter begin,
+                                                                                 GeometryIter end) {
         // not the last leg
         if (leg_reverse_index > 1)
         {
@@ -77,7 +77,8 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
         const auto zoom_level = std::min(18u, calculateOverviewZoomLevel(leg_geometries));
         for (const auto &geometry : leg_geometries)
         {
-            const auto simplified = douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
+            const auto simplified =
+                douglasPeucker(geometry.locations.begin(), geometry.locations.end(), zoom_level);
             insert_without_overlap(simplified.begin(), simplified.end());
         }
     }

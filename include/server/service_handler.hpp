@@ -23,12 +23,12 @@ namespace api
 struct ParsedURL;
 }
 
-
 class ServiceHandlerInterface
 {
-public:
+  public:
     virtual ~ServiceHandlerInterface() {}
-    virtual engine::Status RunQuery(api::ParsedURL parsed_url, service::BaseService::ResultT & result) = 0;
+    virtual engine::Status RunQuery(api::ParsedURL parsed_url,
+                                    service::BaseService::ResultT &result) = 0;
 };
 
 class ServiceHandler final : public ServiceHandlerInterface

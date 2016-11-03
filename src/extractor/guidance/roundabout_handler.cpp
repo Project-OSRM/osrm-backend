@@ -77,7 +77,7 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
          ++cnt, idx += step)
     {
         const auto &road = intersection[idx];
-        const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
+        const auto &edge_data = node_based_graph.GetEdgeData(road.eid);
         // only check actual outgoing edges
         if (edge_data.reversed || !road.entry_allowed)
             continue;
@@ -93,7 +93,7 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
         // the roundabout.
         // The sorting of the angles represents a problem for left-sided driving, though.
         // FIXME requires consideration of crossing the roundabout
-        else if (node_based_graph.GetTarget(road.turn.eid) != from_nid && !can_enter_roundabout)
+        else if (node_based_graph.GetTarget(road.eid) != from_nid && !can_enter_roundabout)
         {
             can_exit_roundabout_separately = true;
         }
@@ -116,7 +116,7 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
          ++cnt, idx += step)
     {
         auto &road = intersection[idx];
-        const auto &edge_data = node_based_graph.GetEdgeData(road.turn.eid);
+        const auto &edge_data = node_based_graph.GetEdgeData(road.eid);
         // only check actual outgoing edges
         if (edge_data.reversed)
         {
@@ -131,7 +131,7 @@ void RoundaboutHandler::invalidateExitAgainstDirection(const NodeID from_nid,
         // This workaround handles cases in which an exit precedes and entry. The resulting
         // u-turn against the roundabout direction is invalidated.
         // The sorting of the angles represents a problem for left-sided driving, though.
-        if (!edge_data.roundabout && node_based_graph.GetTarget(road.turn.eid) != from_nid &&
+        if (!edge_data.roundabout && node_based_graph.GetTarget(road.eid) != from_nid &&
             past_roundabout_angle)
         {
             road.entry_allowed = false;
@@ -379,8 +379,8 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
              ++cnt, idx += step)
         {
             auto &road = intersection[idx];
-            auto &turn = road.turn;
-            const auto &out_data = node_based_graph.GetEdgeData(road.turn.eid);
+            auto &turn = road;
+            const auto &out_data = node_based_graph.GetEdgeData(road.eid);
             if (out_data.roundabout)
             {
                 // TODO can forks happen in roundabouts? E.g. required lane changes
@@ -419,7 +419,7 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
             auto &road = intersection[idx];
             if (!road.entry_allowed)
                 continue;
-            auto &turn = road.turn;
+            auto &turn = road;
             const auto &out_data = node_based_graph.GetEdgeData(turn.eid);
             if (out_data.roundabout)
             {

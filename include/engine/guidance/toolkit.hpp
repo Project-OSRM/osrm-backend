@@ -75,6 +75,32 @@ template <typename Iter, typename Fn> inline Fn forEachRoundabout(Iter first, It
     return fn;
 }
 
+LaneID inline numLanesToTheRight(const engine::guidance::RouteStep &step)
+{
+    return step.intersections.front().lanes.first_lane_from_the_right;
+}
+
+LaneID inline numLanesToTheLeft(const engine::guidance::RouteStep &step)
+{
+    LaneID const total = step.intersections.front().lane_description.size();
+    return total - (step.intersections.front().lanes.lanes_in_turn +
+                    step.intersections.front().lanes.first_lane_from_the_right);
+}
+
+auto inline lanesToTheLeft(const engine::guidance::RouteStep &step)
+{
+    const auto &description = step.intersections.front().lane_description;
+    LaneID num_lanes_left = numLanesToTheLeft(step);
+    return boost::make_iterator_range(description.begin(), description.begin() + num_lanes_left);
+}
+
+auto inline lanesToTheRight(const engine::guidance::RouteStep &step)
+{
+    const auto &description = step.intersections.front().lane_description;
+    LaneID num_lanes_right = numLanesToTheRight(step);
+    return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
+}
+
 } // namespace guidance
 } // namespace engine
 } // namespace osrm

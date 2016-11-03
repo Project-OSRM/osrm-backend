@@ -30,7 +30,8 @@ namespace osrm
 namespace server
 {
 
-void RequestHandler::RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
+void RequestHandler::RegisterServiceHandler(
+    std::unique_ptr<ServiceHandlerInterface> service_handler_)
 {
     service_handler = std::move(service_handler_);
 }

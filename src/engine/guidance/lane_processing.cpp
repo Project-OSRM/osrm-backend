@@ -2,7 +2,7 @@
 #include "util/group_by.hpp"
 #include "util/guidance/toolkit.hpp"
 
-#include "extractor/guidance/toolkit.hpp"
+#include "engine/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
 
@@ -16,8 +16,6 @@ namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
 
 using osrm::util::guidance::isLeftTurn;
 using osrm::util::guidance::isRightTurn;
-using osrm::extractor::guidance::numLanesToTheRight;
-using osrm::extractor::guidance::numLanesToTheLeft;
 
 namespace osrm
 {

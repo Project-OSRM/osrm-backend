@@ -18,12 +18,9 @@
 #include "extractor/guidance/road_classification.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 
-#include "engine/guidance/route_step.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <map>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -51,26 +48,6 @@ using util::guidance::leavesRoundabout;
 // To simplify handling of Left/Right hand turns, we can mirror turns and write an intersection
 // handler only for one side. The mirror function turns a left-hand turn in a equivalent right-hand
 // turn and vice versa.
-OSRM_ATTR_WARN_UNUSED
-inline ConnectedRoad mirror(ConnectedRoad road)
-{
-    const constexpr DirectionModifier::Enum mirrored_modifiers[] = {DirectionModifier::UTurn,
-                                                                    DirectionModifier::SharpLeft,
-                                                                    DirectionModifier::Left,
-                                                                    DirectionModifier::SlightLeft,
-                                                                    DirectionModifier::Straight,
-                                                                    DirectionModifier::SlightRight,
-                                                                    DirectionModifier::Right,
-                                                                    DirectionModifier::SharpRight};
-
-    if (angularDeviation(road.turn.angle, 0) > std::numeric_limits<double>::epsilon())
-    {
-        road.turn.angle = 360 - road.turn.angle;
-        road.turn.instruction.direction_modifier =
-            mirrored_modifiers[road.turn.instruction.direction_modifier];
-    }
-    return road;
-}
 
 inline bool hasRoundaboutType(const TurnInstruction instruction)
 {
@@ -184,42 +161,6 @@ inline std::string applyAccessTokens(std::string lane_string, const std::string 
     return result_string;
 }
 
-LaneID inline numLanesToTheRight(const engine::guidance::RouteStep &step)
-{
-    return step.intersections.front().lanes.first_lane_from_the_right;
-}
-
-LaneID inline numLanesToTheLeft(const engine::guidance::RouteStep &step)
-{
-    LaneID const total = step.intersections.front().lane_description.size();
-    return total - (step.intersections.front().lanes.lanes_in_turn +
-                    step.intersections.front().lanes.first_lane_from_the_right);
-}
-
-auto inline lanesToTheLeft(const engine::guidance::RouteStep &step)
-{
-    const auto &description = step.intersections.front().lane_description;
-    LaneID num_lanes_left = numLanesToTheLeft(step);
-    return boost::make_iterator_range(description.begin(), description.begin() + num_lanes_left);
-}
-
-auto inline lanesToTheRight(const engine::guidance::RouteStep &step)
-{
-    const auto &description = step.intersections.front().lane_description;
-    LaneID num_lanes_right = numLanesToTheRight(step);
-    return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
-}
-
-inline std::uint8_t getLaneCountAtIntersection(const NodeID intersection_node,
-                                               const util::NodeBasedDynamicGraph &node_based_graph)
-{
-    std::uint8_t lanes = 0;
-    for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(intersection_node))
-        lanes = std::max(
-            lanes, node_based_graph.GetEdgeData(onto_edge).road_classification.GetNumberOfLanes());
-    return lanes;
-}
-
 inline bool obviousByRoadClass(const RoadClassification in_classification,
                                const RoadClassification obvious_candidate,
                                const RoadClassification compare_candidate)
@@ -280,6 +221,16 @@ leastSquareRegression(const std::vector<util::Coordinate> &coordinates)
         toFixed(util::FloatLatitude(GetLatAtLon(util::FloatLongitude{max_lon + 1})))};
 
     return {regression_first, regression_end};
+}
+
+inline std::uint8_t getLaneCountAtIntersection(const NodeID intersection_node,
+                                               const util::NodeBasedDynamicGraph &node_based_graph)
+{
+    std::uint8_t lanes = 0;
+    for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(intersection_node))
+        lanes = std::max(
+            lanes, node_based_graph.GetEdgeData(onto_edge).road_classification.GetNumberOfLanes());
+    return lanes;
 }
 
 } // namespace guidance

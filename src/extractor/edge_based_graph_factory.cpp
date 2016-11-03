@@ -376,6 +376,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
             ++node_based_edge_counter;
             auto intersection = turn_analysis.getIntersection(node_u, edge_from_u);
+            BOOST_ASSERT(intersection.valid());
             intersection =
                 turn_analysis.assignTurnTypes(node_u, edge_from_u, std::move(intersection));
             intersection =
@@ -462,7 +463,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         turn_instruction,
                         entry_class_id,
                         edge_data1.travel_mode,
-                        util::guidance::TurnBearing(intersection[0].turn.bearing),
+                        util::guidance::TurnBearing(intersection[0].bearing),
                         util::guidance::TurnBearing(turn.bearing));
                 }
                 else if (is_encoded_backwards)
@@ -476,7 +477,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         turn_instruction,
                         entry_class_id,
                         edge_data1.travel_mode,
-                        util::guidance::TurnBearing(intersection[0].turn.bearing),
+                        util::guidance::TurnBearing(intersection[0].bearing),
                         util::guidance::TurnBearing(turn.bearing));
                 }
 

@@ -29,13 +29,11 @@ bool LengthLimitedCoordinateAccumulator::terminate() { return accumulated_length
 // update the accumulator
 void LengthLimitedCoordinateAccumulator::update(const NodeID from_node,
                                                 const EdgeID via_edge,
-                                                const NodeID to_node)
+                                                const NodeID /*to_node*/)
 
 {
-    const util::NodeBasedEdgeData &edge_data = node_based_graph.GetEdgeData(via_edge);
-
-    const auto current_coordinates = coordinate_extractor.GetForwardCoordinatesAlongRoad(
-        from_node, via_edge);
+    const auto current_coordinates =
+        coordinate_extractor.GetForwardCoordinatesAlongRoad(from_node, via_edge);
 
     const auto length = util::coordinate_calculation::getLength(
         coordinates, util::coordinate_calculation::haversineDistance);
@@ -77,10 +75,10 @@ operator()(const NodeID /*nid*/,
                 result_score += 360.;
 
             // 180 for undesired name-ids
-            if (desired_name_id != node_based_graph.GetEdgeData(road.turn.eid).name_id)
+            if (desired_name_id != node_based_graph.GetEdgeData(road.eid).name_id)
                 result_score += 180;
 
-            return result_score + angularDeviation(road.turn.angle, STRAIGHT_ANGLE);
+            return result_score + angularDeviation(road.angle, STRAIGHT_ANGLE);
         };
 
         return score(lhs) < score(rhs);
@@ -92,7 +90,7 @@ operator()(const NodeID /*nid*/,
     if (min_element == intersection.end() || (requires_entry && !min_element->entry_allowed))
         return {};
     else
-        return min_element->turn.eid;
+        return (*min_element).eid;
 }
 
 } // namespace guidance

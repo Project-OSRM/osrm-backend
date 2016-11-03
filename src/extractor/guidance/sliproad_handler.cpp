@@ -53,8 +53,8 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
 
     const auto findNextIntersectionForRoad =
         [&](const NodeID at_node, const ConnectedRoad &road, NodeID &output_node) {
-            auto intersection = intersection_generator(at_node, road.turn.eid);
-            auto in_edge = road.turn.eid;
+            auto intersection = intersection_generator(at_node, road.eid);
+            auto in_edge = road.eid;
             // skip over traffic lights
             // to prevent ending up in an endless loop, we remember all visited nodes. This is
             // necessary, since merging of roads can actually create enterable loops of degree two
@@ -71,7 +71,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                     intersection.clear();
                     return intersection;
                 }
-                in_edge = intersection[1].turn.eid;
+                in_edge = intersection[1].eid;
                 output_node = node_based_graph.GetTarget(in_edge);
                 intersection = intersection_generator(node, in_edge);
             }
@@ -87,8 +87,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
         const auto index = findObviousTurn(source_edge_id, intersection);
         if (index != 0)
             return index;
-        else if (intersection.size() == 3 &&
-                 intersection[1].turn.instruction.type == TurnType::Fork)
+        else if (intersection.size() == 3 && intersection[1].instruction.type == TurnType::Fork)
         {
             // Forks themselves do not contain a `obvious` turn index. If we look at a fork that has
             // a one-sided sliproad, however, the non-sliproad can be considered `obvious`. Here we
@@ -136,10 +135,10 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     const auto &next_road = intersection[obvious_turn_index];
 
     const auto linkTest = [this, next_road](const ConnectedRoad &road) {
-        return !node_based_graph.GetEdgeData(road.turn.eid).roundabout && road.entry_allowed &&
-               angularDeviation(road.turn.angle, STRAIGHT_ANGLE) <= 2 * NARROW_TURN_ANGLE &&
-               !hasRoundaboutType(road.turn.instruction) &&
-               angularDeviation(next_road.turn.angle, road.turn.angle) >
+        return !node_based_graph.GetEdgeData(road.eid).roundabout && road.entry_allowed &&
+               angularDeviation(road.angle, STRAIGHT_ANGLE) <= 2 * NARROW_TURN_ANGLE &&
+               !hasRoundaboutType(road.instruction) &&
+               angularDeviation(next_road.angle, road.angle) >
                    std::numeric_limits<double>::epsilon();
     };
 
@@ -151,7 +150,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     const auto source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
     // check whether the continue road is valid
     const auto check_valid = [this, source_edge_data](const ConnectedRoad &road) {
-        const auto road_edge_data = node_based_graph.GetEdgeData(road.turn.eid);
+        const auto road_edge_data = node_based_graph.GetEdgeData(road.eid);
         // Test to see if the source edge and the one we're looking at are the same road
         return road_edge_data.road_classification == source_edge_data.road_classification &&
                road_edge_data.name_id != EMPTY_NAMEID &&
@@ -165,13 +164,13 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     const auto coordinate_extractor = intersection_generator.GetCoordinateExtractor();
     const auto next_road_length = util::coordinate_calculation::getLength(
         coordinate_extractor.GetForwardCoordinatesAlongRoad(
-            node_based_graph.GetTarget(source_edge_id), next_road.turn.eid),
+            node_based_graph.GetTarget(source_edge_id), next_road.eid),
         &util::coordinate_calculation::haversineDistance);
     if (next_road_length > MAX_SLIPROAD_THRESHOLD)
     {
         return intersection;
     }
-    auto next_intersection_node = node_based_graph.GetTarget(next_road.turn.eid);
+    auto next_intersection_node = node_based_graph.GetTarget(next_road.eid);
 
     const auto next_road_next_intersection =
         findNextIntersectionForRoad(intersection_node_id, next_road, next_intersection_node);
@@ -187,7 +186,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
 
     for (const auto &road : next_road_next_intersection)
     {
-        const auto &target_data = node_based_graph.GetEdgeData(road.turn.eid);
+        const auto &target_data = node_based_graph.GetEdgeData(road.eid);
         target_road_names.insert(target_data.name_id);
     }
 
@@ -195,20 +194,20 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
     {
         if (linkTest(road))
         {
-            EdgeID candidate_in = road.turn.eid;
+            EdgeID candidate_in = road.eid;
             const auto target_intersection = [&](NodeID node) {
                 auto intersection = intersection_generator(node, candidate_in);
                 // skip over traffic lights
                 if (intersection.size() == 2)
                 {
                     node = node_based_graph.GetTarget(candidate_in);
-                    candidate_in = intersection[1].turn.eid;
+                    candidate_in = intersection[1].eid;
                     intersection = intersection_generator(node, candidate_in);
                 }
                 return intersection;
             }(intersection_node_id);
 
-            const auto link_data = node_based_graph.GetEdgeData(road.turn.eid);
+            const auto link_data = node_based_graph.GetEdgeData(road.eid);
             // Check if the road continues here
             const bool is_through_street =
                 !target_intersection.empty() &&
@@ -216,7 +215,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                     std::find_if(target_intersection.begin() + 1,
                                  target_intersection.end(),
                                  [this, &link_data](const ConnectedRoad &road) {
-                                     return node_based_graph.GetEdgeData(road.turn.eid).name_id ==
+                                     return node_based_graph.GetEdgeData(road.eid).name_id ==
                                             link_data.name_id;
                                  });
 
@@ -226,26 +225,24 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
 
             for (const auto &candidate_road : target_intersection)
             {
-                const auto &candidate_data = node_based_graph.GetEdgeData(candidate_road.turn.eid);
+                const auto &candidate_data = node_based_graph.GetEdgeData(candidate_road.eid);
                 if (target_road_names.count(candidate_data.name_id) > 0)
                 {
-                    if (node_based_graph.GetTarget(candidate_road.turn.eid) ==
-                        next_intersection_node)
+                    if (node_based_graph.GetTarget(candidate_road.eid) == next_intersection_node)
                     {
-                        road.turn.instruction.type = TurnType::Sliproad;
+                        road.instruction.type = TurnType::Sliproad;
                         break;
                     }
                     else
                     {
                         const auto skip_traffic_light_intersection = intersection_generator(
-                            node_based_graph.GetTarget(candidate_in), candidate_road.turn.eid);
+                            node_based_graph.GetTarget(candidate_in), candidate_road.eid);
                         if (skip_traffic_light_intersection.size() == 2 &&
-                            node_based_graph.GetTarget(
-                                skip_traffic_light_intersection[1].turn.eid) ==
+                            node_based_graph.GetTarget(skip_traffic_light_intersection[1].eid) ==
                                 next_intersection_node)
                         {
 
-                            road.turn.instruction.type = TurnType::Sliproad;
+                            road.instruction.type = TurnType::Sliproad;
                             break;
                         }
                     }
@@ -254,27 +251,27 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
         }
     }
 
-    if (next_road.turn.instruction.type == TurnType::Fork)
+    if (next_road.instruction.type == TurnType::Fork)
     {
-        const auto &next_data = node_based_graph.GetEdgeData(next_road.turn.eid);
+        const auto &next_data = node_based_graph.GetEdgeData(next_road.eid);
         if (next_data.name_id == source_edge_data.name_id)
         {
-            if (angularDeviation(next_road.turn.angle, STRAIGHT_ANGLE) < 5)
-                intersection[obvious_turn_index].turn.instruction.type = TurnType::Suppressed;
+            if (angularDeviation(next_road.angle, STRAIGHT_ANGLE) < 5)
+                intersection[obvious_turn_index].instruction.type = TurnType::Suppressed;
             else
-                intersection[obvious_turn_index].turn.instruction.type = TurnType::Continue;
-            intersection[obvious_turn_index].turn.instruction.direction_modifier =
-                getTurnDirection(intersection[obvious_turn_index].turn.angle);
+                intersection[obvious_turn_index].instruction.type = TurnType::Continue;
+            intersection[obvious_turn_index].instruction.direction_modifier =
+                getTurnDirection(intersection[obvious_turn_index].angle);
         }
         else if (next_data.name_id != EMPTY_NAMEID)
         {
-            intersection[obvious_turn_index].turn.instruction.type = TurnType::NewName;
-            intersection[obvious_turn_index].turn.instruction.direction_modifier =
-                getTurnDirection(intersection[obvious_turn_index].turn.angle);
+            intersection[obvious_turn_index].instruction.type = TurnType::NewName;
+            intersection[obvious_turn_index].instruction.direction_modifier =
+                getTurnDirection(intersection[obvious_turn_index].angle);
         }
         else
         {
-            intersection[obvious_turn_index].turn.instruction.type = TurnType::Suppressed;
+            intersection[obvious_turn_index].instruction.type = TurnType::Suppressed;
         }
     }
 

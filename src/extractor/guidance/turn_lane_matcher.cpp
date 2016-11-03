@@ -109,7 +109,7 @@ double getMatchingQuality(const TurnLaneType::Mask tag, const ConnectedRoad &roa
     BOOST_ASSERT(static_cast<std::size_t>(modifier) <
                  sizeof(idealized_turn_angles) / sizeof(*idealized_turn_angles));
     const auto idealized_angle = idealized_turn_angles[modifier];
-    return angularDeviation(idealized_angle, road.turn.angle);
+    return angularDeviation(idealized_angle, road.angle);
 }
 
 // Every tag is somewhat idealized in form of the expected angle. A through lane should go straight
@@ -123,9 +123,9 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag
                             intersection.end(),
                             [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
                                 // prefer valid matches
-                                if (isValidMatch(tag, lhs.turn.instruction) !=
-                                    isValidMatch(tag, rhs.turn.instruction))
-                                    return isValidMatch(tag, lhs.turn.instruction);
+                                if (isValidMatch(tag, lhs.instruction) !=
+                                    isValidMatch(tag, rhs.instruction))
+                                    return isValidMatch(tag, lhs.instruction);
 
                                 // if the entry allowed flags don't match, we select the one with
                                 // entry allowed set to true
@@ -154,8 +154,8 @@ typename Intersection::const_iterator findBestMatchForReverse(const TurnLaneType
         intersection.end(),
         [tag](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
             // prefer valid matches
-            if (isValidMatch(tag, lhs.turn.instruction) != isValidMatch(tag, rhs.turn.instruction))
-                return isValidMatch(tag, lhs.turn.instruction);
+            if (isValidMatch(tag, lhs.instruction) != isValidMatch(tag, rhs.instruction))
+                return isValidMatch(tag, lhs.instruction);
 
             // if the entry allowed flags don't match, we select the one with
             // entry allowed set to true
@@ -182,7 +182,7 @@ bool canMatchTrivially(const Intersection &intersection, const LaneDataVector &l
         if (intersection[road_index].entry_allowed)
         {
             BOOST_ASSERT(lane_data[lane].from != INVALID_LANEID);
-            if (!isValidMatch(lane_data[lane].tag, intersection[road_index].turn.instruction))
+            if (!isValidMatch(lane_data[lane].tag, intersection[road_index].instruction))
                 return false;
 
             if (findBestMatch(lane_data[lane].tag, intersection) !=
@@ -216,7 +216,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             lane_data_id = it->second;
 
         // set lane id instead after the switch:
-        road.turn.lane_data_id = lane_data_id;
+        road.lane_data_id = lane_data_id;
     };
 
     if (!lane_data.empty() && lane_data.front().tag == TurnLaneType::uturn)
@@ -225,11 +225,10 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
         if (intersection[0].entry_allowed)
         {
             std::size_t u_turn = 0;
-            if (node_based_graph.GetEdgeData(intersection[0].turn.eid).reversed)
+            if (node_based_graph.GetEdgeData(intersection[0].eid).reversed)
             {
                 if (intersection.size() <= 1 || !intersection[1].entry_allowed ||
-                    intersection[1].turn.instruction.direction_modifier !=
-                        DirectionModifier::SharpRight)
+                    intersection[1].instruction.direction_modifier != DirectionModifier::SharpRight)
                 {
                     // cannot match u-turn in a valid way
                     return intersection;
@@ -238,8 +237,8 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
                 road_index = 2;
             }
             intersection[u_turn].entry_allowed = true;
-            intersection[u_turn].turn.instruction.type = TurnType::Turn;
-            intersection[u_turn].turn.instruction.direction_modifier = DirectionModifier::UTurn;
+            intersection[u_turn].instruction.type = TurnType::Turn;
+            intersection[u_turn].instruction.direction_modifier = DirectionModifier::UTurn;
 
             matchRoad(intersection[u_turn], lane_data.back());
             // continue with the first lane
@@ -254,14 +253,13 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
         if (intersection[road_index].entry_allowed)
         {
             BOOST_ASSERT(lane_data[lane].from != INVALID_LANEID);
-            BOOST_ASSERT(
-                isValidMatch(lane_data[lane].tag, intersection[road_index].turn.instruction));
+            BOOST_ASSERT(isValidMatch(lane_data[lane].tag, intersection[road_index].instruction));
             BOOST_ASSERT(findBestMatch(lane_data[lane].tag, intersection) ==
                          intersection.begin() + road_index);
 
-            if (TurnType::Suppressed == intersection[road_index].turn.instruction.type &&
+            if (TurnType::Suppressed == intersection[road_index].instruction.type &&
                 !lane_data[lane].suppress_assignment)
-                intersection[road_index].turn.instruction.type = TurnType::UseLane;
+                intersection[road_index].instruction.type = TurnType::UseLane;
 
             matchRoad(intersection[road_index], lane_data[lane]);
             ++lane;
@@ -272,11 +270,10 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
     if (lane + 1 == lane_data.size() && lane_data.back().tag == TurnLaneType::uturn)
     {
         std::size_t u_turn = 0;
-        if (node_based_graph.GetEdgeData(intersection[0].turn.eid).reversed)
+        if (node_based_graph.GetEdgeData(intersection[0].eid).reversed)
         {
             if (!intersection.back().entry_allowed ||
-                intersection.back().turn.instruction.direction_modifier !=
-                    DirectionModifier::SharpLeft)
+                intersection.back().instruction.direction_modifier != DirectionModifier::SharpLeft)
             {
                 // cannot match u-turn in a valid way
                 return intersection;
@@ -284,8 +281,8 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
             u_turn = intersection.size() - 1;
         }
         intersection[u_turn].entry_allowed = true;
-        intersection[u_turn].turn.instruction.type = TurnType::Turn;
-        intersection[u_turn].turn.instruction.direction_modifier = DirectionModifier::UTurn;
+        intersection[u_turn].instruction.type = TurnType::Turn;
+        intersection[u_turn].instruction.direction_modifier = DirectionModifier::UTurn;
 
         matchRoad(intersection[u_turn], lane_data.back());
     }

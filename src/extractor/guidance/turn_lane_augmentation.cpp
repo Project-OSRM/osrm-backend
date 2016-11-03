@@ -113,11 +113,11 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
         if (intersection[intersection_index].entry_allowed)
         {
             // FIXME this probably can be only a subset of these turns here?
-            lane_data.push_back({tag_by_modifier[intersection[intersection_index]
-                                                     .turn.instruction.direction_modifier],
-                                 lane_data[none_index].from,
-                                 lane_data[none_index].to,
-                                 false});
+            lane_data.push_back(
+                {tag_by_modifier[intersection[intersection_index].instruction.direction_modifier],
+                 lane_data[none_index].from,
+                 lane_data[none_index].to,
+                 false});
         }
     }
     lane_data.erase(lane_data.begin() + none_index);
@@ -162,7 +162,7 @@ LaneDataVector handleRenamingSituations(const std::size_t none_index,
         if (!road.entry_allowed)
             continue;
 
-        const auto modifier = road.turn.instruction.direction_modifier;
+        const auto modifier = road.instruction.direction_modifier;
         has_right |= modifier == DirectionModifier::Right;
         has_right |= modifier == DirectionModifier::SlightRight;
         has_right |= modifier == DirectionModifier::SharpRight;

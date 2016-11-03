@@ -6,6 +6,7 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "util/guidance/toolkit.hpp"
+#include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp" // EdgeID
 
 namespace osrm
@@ -18,7 +19,7 @@ namespace guidance
 // Every Turn Operation describes a way of switching onto a segment, indicated by an EdgeID. The
 // associated turn is described by an angle and an instruction that is used to announce it.
 // The Turn Operation indicates what is exposed to the outside of the turn analysis.
-struct TurnOperation final
+struct TurnOperation
 {
     EdgeID eid;
     double angle;
@@ -48,13 +49,23 @@ struct TurnOperation final
 // aaaaaaaa
 //
 // We would perceive a->c as a sharp turn, a->b as a slight turn, and b->c as a slight turn.
-struct ConnectedRoad final
+struct ConnectedRoad final : public TurnOperation
 {
+    using Base = TurnOperation;
+
     ConnectedRoad(const TurnOperation turn, const bool entry_allowed = false);
 
     // a turn may be relevant to good instructions, even if we cannot enter the road
     bool entry_allowed;
-    TurnOperation turn;
+
+    // used to sort the set of connected roads (we require sorting throughout turn handling)
+    bool compareByAngle(const ConnectedRoad &other) const;
+
+    // make a left turn into an equivalent right turn and vice versa
+    void mirror();
+
+    OSRM_ATTR_WARN_UNUSED
+    ConnectedRoad getMirroredCopy() const;
 };
 
 // small helper function to print the content of a connected road
@@ -64,25 +75,24 @@ struct Intersection final : public std::vector<ConnectedRoad>
 {
     using Base = std::vector<ConnectedRoad>;
 
-    inline Base::iterator findClosestTurn(double angle)
-    {
-        return std::min_element(this->begin(),
-                                this->end(),
-                                [angle](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
-                                    return util::guidance::angularDeviation(lhs.turn.angle, angle) <
-                                           util::guidance::angularDeviation(rhs.turn.angle, angle);
-                                });
-    }
+    /*
+     * find the turn whose angle offers the least angularDeviation to the specified angle
+     * E.g. for turn angles [0,90,260] and a query of 180 we return the 260 degree turn (difference
+     * 80 over the difference of 90 to the 90 degree turn)
+     */
+    Base::iterator findClosestTurn(double angle);
+    Base::const_iterator findClosestTurn(double angle) const;
 
-    inline Base::const_iterator findClosestTurn(double angle) const
-    {
-        return std::min_element(this->begin(),
-                                this->end(),
-                                [angle](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
-                                    return util::guidance::angularDeviation(lhs.turn.angle, angle) <
-                                           util::guidance::angularDeviation(rhs.turn.angle, angle);
-                                });
-    }
+    /*
+     * Check validity of the intersection object. We assume a few basic properties every set of
+     * connected roads should follow throughout guidance pre-processing. This utility function
+     * allows checking intersections for validity
+     */
+    bool valid() const;
+
+    // given all possible turns, which is the highest connected number of lanes per turn. This value
+    // is used, for example, during generation of intersections.
+    std::uint8_t getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &) const;
 };
 
 Intersection::const_iterator findClosestTurn(const Intersection &intersection, const double angle);

@@ -48,28 +48,28 @@ bool findPreviousIntersection(const NodeID node_v,
     // Node -> Via_Edge -> Intersection[0 == UTURN] -> reverse_of(via_edge) -> Intersection at node
     // (looking at the reverse direction).
     const auto node_w = node_based_graph.GetTarget(via_edge);
-    const auto u_turn_at_node_w = intersection[0].turn.eid;
+    const auto u_turn_at_node_w = intersection[0].eid;
     const auto node_v_reverse_intersection =
         turn_analysis.getIntersection(node_w, u_turn_at_node_w);
 
     // Continue along the straightmost turn. If there is no straight turn, we cannot find a valid
     // previous intersection.
     const auto straightmost_at_v_in_reverse =
-        findClosestTurn(node_v_reverse_intersection, STRAIGHT_ANGLE);
+        node_v_reverse_intersection.findClosestTurn(STRAIGHT_ANGLE);
 
     // TODO evaluate if narrow turn is the right criterion here... Might be that other angles are
     // valid
-    if (angularDeviation(straightmost_at_v_in_reverse->turn.angle, STRAIGHT_ANGLE) > GROUP_ANGLE)
+    if (angularDeviation(straightmost_at_v_in_reverse->angle, STRAIGHT_ANGLE) > GROUP_ANGLE)
         return false;
 
-    const auto node_u = node_based_graph.GetTarget(straightmost_at_v_in_reverse->turn.eid);
+    const auto node_u = node_based_graph.GetTarget(straightmost_at_v_in_reverse->eid);
     const auto node_u_reverse_intersection =
-        turn_analysis.getIntersection(node_v, straightmost_at_v_in_reverse->turn.eid);
+        turn_analysis.getIntersection(node_v, straightmost_at_v_in_reverse->eid);
 
     // now check that the u-turn at the given intersection connects to via-edge
     // The u-turn at the now found intersection should, hopefully, represent the previous edge.
     result_node = node_u;
-    result_via_edge = node_u_reverse_intersection[0].turn.eid;
+    result_via_edge = node_u_reverse_intersection[0].eid;
 
     // if the edge is not traversable, we obviously don't have a previous intersection or couldn't
     // find it.
@@ -85,7 +85,7 @@ bool findPreviousIntersection(const NodeID node_v,
         result_intersection.end() !=
         std::find_if(result_intersection.begin(),
                      result_intersection.end(),
-                     [via_edge](const ConnectedRoad &road) { return road.turn.eid == via_edge; });
+                     [via_edge](const ConnectedRoad &road) { return road.eid == via_edge; });
 
     if (!check_via_edge)
     {

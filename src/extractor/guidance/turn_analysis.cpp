@@ -101,8 +101,8 @@ Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
     if (node_based_graph.GetEdgeData(via_eid).road_classification.IsMotorwayClass())
     {
         std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
-            if (road.turn.instruction.type == TurnType::OnRamp)
-                road.turn.instruction.type = TurnType::OffRamp;
+            if (road.instruction.type == TurnType::OnRamp)
+                road.instruction.type = TurnType::OffRamp;
         });
     }
     return intersection;
@@ -114,7 +114,7 @@ TurnAnalysis::transformIntersectionIntoTurns(const Intersection &intersection) c
     std::vector<TurnOperation> turns;
     for (auto road : intersection)
         if (road.entry_allowed)
-            turns.emplace_back(road.turn);
+            turns.emplace_back(road);
 
     return turns;
 }
@@ -133,12 +133,12 @@ TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection int
         if (!road.entry_allowed)
             continue;
 
-        const EdgeID onto_edge = road.turn.eid;
+        const EdgeID onto_edge = road.eid;
         const NodeID to_nid = node_based_graph.GetTarget(onto_edge);
 
-        road.turn.instruction = {TurnType::Turn,
-                                 (from_nid == to_nid) ? DirectionModifier::UTurn
-                                                      : getTurnDirection(road.turn.angle)};
+        road.instruction = {TurnType::Turn,
+                            (from_nid == to_nid) ? DirectionModifier::UTurn
+                                                 : getTurnDirection(road.angle)};
     }
     return intersection;
 }

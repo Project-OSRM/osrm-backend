@@ -1,7 +1,7 @@
 #include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/toolkit.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
@@ -1599,13 +1599,13 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         // the lane description is given left to right, lanes are counted from the right.
         // Therefore we access the lane description using the reverse iterator
 
-        auto right_most_lanes = extractor::guidance::lanesToTheRight(step);
+        auto right_most_lanes = lanesToTheRight(step);
         if (!right_most_lanes.empty() && containsTag(right_most_lanes.front(),
                                                      (extractor::guidance::TurnLaneType::straight |
                                                       extractor::guidance::TurnLaneType::none)))
             return false;
 
-        auto left_most_lanes = extractor::guidance::lanesToTheLeft(step);
+        auto left_most_lanes = lanesToTheLeft(step);
         if (!left_most_lanes.empty() && containsTag(left_most_lanes.back(),
                                                     (extractor::guidance::TurnLaneType::straight |
                                                      extractor::guidance::TurnLaneType::none)))
