@@ -249,7 +249,7 @@ Feature: Simple Turns
 
        When I route I should get
             | waypoints | route               | turns                                         | intersections                                                            |
-            | a,p       | road,road,road      | depart,roundabout turn straight exit-1,arrive | true:90;true:135 false:270 false:345,true:90 false:180 true:345;true:270 |
+            | a,p       | road,road,road      | depart,roundabout turn straight exit-1,arrive | true:90;true:165 false:270 false:345,true:90 false:180 true:345;true:270 |
 
     Scenario: Splitting Road with many lanes
         Given the node map
@@ -444,7 +444,7 @@ Feature: Simple Turns
 
        When I route I should get
             | waypoints | route          | turns                        |
-            | g,f       | turn,road,road | depart,turn left,arrive      |
+            | g,f       | turn,road      | depart,arrive                |
             | c,f       | road,road,road | depart,continue right,arrive |
 
     #http://www.openstreetmap.org/search?query=52.479264%2013.295617#map=19/52.47926/13.29562
