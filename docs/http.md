@@ -285,7 +285,7 @@ In addition to the [general options](#general-options) the following options are
 
 ### Response
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
-- `tracepoints`: Array of `Ẁaypoint` objects representing all points of the trace in order.
+- `tracepoints`: Array of `Waypoint` objects representing all points of the trace in order.
   If the trace point was ommited by map matching because it is an outlier, the entry will be `null`.
   Each `Waypoint` object has the following additional properties:
   - `matchings_index`: Index to the `Route` object in `matchings` the sub-trace was matched to.
