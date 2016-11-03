@@ -98,12 +98,11 @@ Intersection::getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &gr
 {
     BOOST_ASSERT(valid()); // non empty()
 
-    const auto to_lane_count = [&](const ConnectedRoad &road) {
-        return graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
-    };
+    const std::function<std::uint8_t(const ConnectedRoad &)> to_lane_count =
+        [&](const ConnectedRoad &road) {
+            return graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
+        };
 
-    // boost::range::transformed sadly does not work with lamdas since they are not copy
-    // constructable. We need to work around this :(
     std::uint8_t max_lanes = 0;
     const auto extract_maximal_value = [&max_lanes](std::uint8_t value) {
         max_lanes = std::max(max_lanes, value);
