@@ -153,7 +153,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                           std::back_inserter(intersection.bearings));
                 intersection.entry.clear();
                 std::uint32_t bearing_size = boost::numeric_cast<std::uint32_t>(intersection.bearings.size());
-                for (std::uint32_t idx : util::irange<std::uint32_t>(0, bearing_size))
+                for (auto idx : util::irange<std::uint32_t>(0, bearing_size))
                 {
                     intersection.entry.push_back(entry_class.allowsEntry(idx));
                 }
