@@ -172,6 +172,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
     };
 
     auto number_of_turn_keys = 0u;
+    auto number_of_turns_found = 0u;
 
     while (layer_message.next())
     {
@@ -188,6 +189,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
             break;
         case util::vector_tile::FEATURE_TAG:
             check_turn_feature(layer_message.get_message());
+            number_of_turns_found++;
             break;
         case util::vector_tile::KEY_TAG:
             layer_message.get_string();
@@ -203,6 +205,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
     }
 
     BOOST_CHECK_EQUAL(number_of_turn_keys, 3);
+    BOOST_CHECK_EQUAL(number_of_turns_found, 137);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
