@@ -15,6 +15,11 @@
 #include <string>
 #include <vector>
 
+#include <osmium/index/map/sparse_file_array.hpp>
+#include <osmium/index/map/dense_file_array.hpp>
+#include <osmium/handler/node_locations_for_ways.hpp>
+#include <osmium/dynamic_handler.hpp>
+
 namespace osmium
 {
 class Node;
@@ -35,6 +40,13 @@ namespace extractor
 class RestrictionParser;
 struct ExtractionNode;
 struct ExtractionWay;
+
+using index_sparse_type = osmium::index::map::SparseFileArray<osmium::unsigned_object_id_type, osmium::Location>;
+using index_dense_type = osmium::index::map::DenseFileArray<osmium::unsigned_object_id_type, osmium::Location>;
+
+// The location handler always depends on the index type
+using location_handler_sparse_type = osmium::handler::NodeLocationsForWays<index_sparse_type>;
+using location_handler_dense_type = osmium::handler::NodeLocationsForWays<index_dense_type>;
 
 /**
  * Abstract class that handles processing osmium ways, nodes and relation objects by applying
@@ -65,8 +77,14 @@ class ScriptingEnvironment
                     tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
                     tbb::concurrent_vector<boost::optional<InputRestrictionContainer>>
                         &resulting_restrictions) = 0;
+
+    static location_handler_sparse_type *location_sparse_handler;
+    static location_handler_dense_type *location_dense_handler;
+    static void setSparseCache(location_handler_sparse_type &cache) {
+        location_sparse_handler = &cache;};
+    static void setDenseCache(location_handler_dense_type &cache) {
+        location_dense_handler = &cache;};
 };
 }
 }
-
 #endif /* SCRIPTING_ENVIRONMENT_HPP */

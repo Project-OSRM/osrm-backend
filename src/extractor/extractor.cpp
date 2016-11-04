@@ -14,7 +14,7 @@
 #include "util/name_table.hpp"
 #include "util/range_table.hpp"
 #include "util/simple_logger.hpp"
-#include "util/timing_util.hpp"
+
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/restriction_map.hpp"
@@ -59,6 +59,7 @@ namespace extractor
 
 namespace
 {
+
 std::tuple<std::vector<std::uint32_t>, std::vector<guidance::TurnLaneType::Mask>>
 transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map)
 {
@@ -114,8 +115,43 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
     const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
     tbb::task_scheduler_init init(number_of_threads);
-
     {
+        // Node Location Cache initialize
+        std::unique_ptr<index_sparse_type> index_sparse;
+        std::unique_ptr<index_dense_type> index_dense;
+        std::unique_ptr<location_handler_sparse_type> location_handler_sparse;
+        std::unique_ptr<location_handler_dense_type> location_handler_dense;
+
+        std::string cacheName(config.cache_file_path);
+        cacheName += "nodes.cache";
+        int fd = open(cacheName.c_str(), O_RDWR | O_CREAT, 0666);
+        if (fd == -1)
+        {
+            throw std::runtime_error(strerror(errno));
+        }
+
+        if("NONE" != config.cache_file_type)
+        {
+
+
+            if("SPARSE" == config.cache_file_type)
+            {
+                std::cout << "SPARSE" << std::endl;
+                index_sparse.reset(new index_sparse_type{fd});
+                location_handler_sparse.reset(new location_handler_sparse_type(*index_sparse.get()));
+                location_handler_sparse->ignore_errors();
+                scripting_environment.setSparseCache(*location_handler_sparse);
+            }
+            else
+            {
+                std::cout << "DENSE" << std::endl;
+                index_dense.reset(new index_dense_type{fd});
+                location_handler_dense.reset(new location_handler_dense_type(*index_dense.get()));
+                location_handler_dense->ignore_errors();
+                scripting_environment.setDenseCache(*location_handler_dense);
+            }
+        }
+
         util::SimpleLogger().Write() << "Input file: " << config.input_path.filename().string();
         if (!config.profile_path.empty())
         {
@@ -173,6 +209,17 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             for (auto iter = std::begin(buffer), end = std::end(buffer); iter != end; ++iter)
             {
                 osm_elements.push_back(iter);
+
+                // Node Location Cache
+                if("NONE" != config.cache_file_type)
+                {
+                    // Feed the cache, we assume the nodes are stored first, into data source.
+                    if(iter->type() == osmium::item_type::node)
+                    if("SPARSE" == config.cache_file_type)
+                        location_handler_sparse->node(static_cast<const osmium::Node &>(*iter));
+                    else
+                        location_handler_dense->node(static_cast<const osmium::Node &>(*iter));
+                }
             }
 
             // clear resulting vectors
@@ -236,6 +283,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         TIMER_STOP(extracting);
         util::SimpleLogger().Write() << "extraction finished after " << TIMER_SEC(extracting)
                                      << "s";
+                                     
+        if("NONE" != config.cache_file_type)
+            remove(cacheName.c_str());
+        
     }
 
     {

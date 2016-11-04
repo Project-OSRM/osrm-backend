@@ -3,6 +3,7 @@
 #include "extractor/scripting_environment_lua.hpp"
 #include "util/simple_logger.hpp"
 #include "util/version.hpp"
+#include <../test/t/geom/test_tile_data.hpp>
 
 #include <tbb/task_scheduler_init.h>
 
@@ -48,7 +49,17 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
             ->default_value(1000),
         "Number of nodes required before a strongly-connected-componennt is considered big "
-        "(affects nearest neighbor snapping)");
+        "(affects nearest neighbor snapping)")(
+        "cache,c",
+	boost::program_options::value<std::string>(&extractor_config.cache_file_type)
+            ->implicit_value("SPARSE")
+            ->default_value("NONE"),
+        "Use cache to stocking location, NONE (default), SPARSE or DENSE, DENSE cache for generate world.")(
+        "cache-path",
+        boost::program_options::value<std::string>(&extractor_config.cache_file_path)
+            ->implicit_value("d")
+            ->default_value("d"),
+        "Path where generate node cache");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
@@ -147,6 +158,15 @@ int main(int argc, char *argv[]) try
     {
         util::SimpleLogger().Write(logWARNING)
             << "Profile " << extractor_config.profile_path.string() << " not found!";
+        return EXIT_FAILURE;
+    }
+
+    if(!(extractor_config.cache_file_type == "NONE" ||
+        extractor_config.cache_file_type == "SPARSE" ||
+        extractor_config.cache_file_type == "DENSE"))
+    {
+        util::SimpleLogger().Write(logWARNING)
+            << "The type of cache " << extractor_config.cache_file_type << "is invalid, it can be only SPARSE, NONE or DENSE!";
         return EXIT_FAILURE;
     }
 
