@@ -1,3 +1,4 @@
+/*
 #include "engine/plugins/nearest.hpp"
 #include "engine/api/nearest_api.hpp"
 #include "engine/api/nearest_parameters.hpp"
@@ -58,3 +59,4 @@ Status NearestPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFa
 }
 }
 }
+*/

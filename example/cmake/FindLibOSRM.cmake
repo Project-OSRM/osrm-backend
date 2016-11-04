@@ -23,6 +23,7 @@ set(LibOSRM_LIBRARY_DIRS ${PC_LibOSRM_LIBRARY_DIRS})
 find_path(LibOSRM_INCLUDE_DIR osrm/osrm.hpp
   PATH_SUFFIXES osrm include/osrm include
   HINTS ${PC_LibOSRM_INCLUDEDIR} ${PC_LibOSRM_INCLUDE_DIRS}
+  "${CMAKE_CURRENT_SOURCE_DIR}/../include"
   ~/Library/Frameworks
   /Library/Frameworks
   /usr/local
@@ -30,27 +31,34 @@ find_path(LibOSRM_INCLUDE_DIR osrm/osrm.hpp
   /opt/local
   /opt)
 
-find_library(TEST_LibOSRM_STATIC_LIBRARY Names osrm.lib libosrm.a
+find_library(LibOSRM_STATIC_LIBRARY Names osrm.lib libosrm.a
   PATH_SUFFIXES osrm lib/osrm lib
   HINTS ${PC_LibOSRM_LIBDIR} ${PC_LibOSRM_LIBRARY_DIRS}
+  "${CMAKE_CURRENT_SOURCE_DIR}/../build"
   ~/Library/Frameworks
   /Library/Frameworks
   /usr/local
   /usr
   /opt/local
   /opt)
-find_library(TEST_LibOSRM_DYNAMIC_LIBRARY Names libosrm.dylib libosrm.so
+find_library(LibOSRM_DYNAMIC_LIBRARY Names libosrm.dylib libosrm.so
   PATH_SUFFIXES osrm lib/osrm lib
   HINTS ${PC_LibOSRM_LIBDIR} ${PC_LibOSRM_LIBRARY_DIRS}
+  "${CMAKE_CURRENT_SOURCE_DIR}/../build"
   ~/Library/Frameworks
   /Library/Frameworks
   /usr/local
   /usr
   /opt/local
   /opt)
+
+if (LibOSRM_STATIC_LIBRARY)
+  set(LibOSRM_LIBRARIES ${LibOSRM_STATIC_LIBRARIES})
+else()
+  set(LibOSRM_LIBRARIES ${LibOSRM_DYNAMIC_LIBRARIES})
+endif()
 
 set(LibOSRM_DEPENDENT_LIBRARIES ${PC_LibOSRM_STATIC_LDFLAGS})
-set(LibOSRM_LIBRARIES ${PC_LibOSRM_LDFLAGS})
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LIBOSRM_FOUND to TRUE

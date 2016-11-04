@@ -44,6 +44,9 @@ struct Object;
 
 namespace engine
 {
+namespace guidance{
+struct Result;
+}
 namespace api
 {
 struct RouteParameters;

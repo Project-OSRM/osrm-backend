@@ -15,6 +15,9 @@ namespace engine
 namespace guidance
 {
 
+struct RouteStep;
+struct Annotation;
+
 struct RouteLeg
 {
     double duration;

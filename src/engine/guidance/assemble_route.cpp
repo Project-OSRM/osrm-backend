@@ -9,18 +9,21 @@ namespace engine
 namespace guidance
 {
 
-Route assembleRoute(const std::vector<RouteLeg> &route_legs)
+Route assembleRoute(std::vector<RouteLeg> route_legs)
 {
-    auto distance = std::accumulate(
-        route_legs.begin(), route_legs.end(), 0., [](const double sum, const RouteLeg &leg) {
+    Route route;
+
+    route.legs = std::move(route_legs);
+    route.distance = std::accumulate(
+        route.legs.begin(), route.legs.end(), 0., [](const double sum, const RouteLeg &leg) {
             return sum + leg.distance;
         });
-    auto duration = std::accumulate(
-        route_legs.begin(), route_legs.end(), 0., [](const double sum, const RouteLeg &leg) {
+    route.duration = std::accumulate(
+        route.legs.begin(), route.legs.end(), 0., [](const double sum, const RouteLeg &leg) {
             return sum + leg.duration;
         });
 
-    return Route{duration, distance};
+    return route;
 }
 
 } // namespace guidance

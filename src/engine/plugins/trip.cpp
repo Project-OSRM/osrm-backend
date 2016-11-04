@@ -1,3 +1,4 @@
+/*
 #include "engine/plugins/trip.hpp"
 
 #include "extractor/tarjan_scc.hpp"
@@ -244,3 +245,4 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 }
 }
 }
+*/

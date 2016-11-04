@@ -10,10 +10,6 @@ file(GLOB LibraryTestsSources
     library_tests.cpp
     library/*.cpp)
 
-file(GLOB ServerTestsSources
-    server_tests.cpp
-    server/*.cpp)
-
 file(GLOB UtilTestsSources
     util_tests.cpp
     util/*.cpp)
@@ -33,11 +29,6 @@ add_executable(library-tests
 	EXCLUDE_FROM_ALL
 	${LibraryTestsSources})
 
-add_executable(server-tests
-	EXCLUDE_FROM_ALL
-	${ServerTestsSources}
-	$<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
-
 add_executable(util-tests
 	EXCLUDE_FROM_ALL
 	${UtilTestsSources}
@@ -56,10 +47,9 @@ target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 
 add_custom_target(tests
 	DEPENDS
-	engine-tests extractor-tests library-tests server-tests util-tests)
+	engine-tests extractor-tests library-tests util-tests)

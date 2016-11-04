@@ -13,7 +13,7 @@ namespace engine
 namespace guidance
 {
 
-Route assembleRoute(const std::vector<RouteLeg> &route_legs);
+Route assembleRoute(std::vector<RouteLeg> route_legs);
 
 } // namespace guidance
 } // namespace engine

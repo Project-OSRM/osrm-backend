@@ -55,12 +55,12 @@ namespace engine
 Engine::Engine(const EngineConfig &config)
     : lock(config.use_shared_memory ? std::make_unique<storage::SharedBarriers>()
                                     : std::unique_ptr<storage::SharedBarriers>()),
-      route_plugin(config.max_locations_viaroute),       //
+      route_plugin(config.max_locations_viaroute)/*,       //
       table_plugin(config.max_locations_distance_table), //
       nearest_plugin(config.max_results_nearest),        //
       trip_plugin(config.max_locations_trip),            //
       match_plugin(config.max_locations_map_matching),   //
-      tile_plugin()                                      //
+      tile_plugin()                                      */
 
 {
     if (config.use_shared_memory)
@@ -85,11 +85,12 @@ Engine::Engine(const EngineConfig &config)
     }
 }
 
-Status Engine::Route(const api::RouteParameters &params, util::json::Object &result) const
+Status Engine::Route(const api::RouteParameters &params, engine::guidance::Result &result) const
 {
     return RunQuery(watchdog, immutable_data_facade, params, route_plugin, result);
 }
 
+/*
 Status Engine::Table(const api::TableParameters &params, util::json::Object &result) const
 {
     return RunQuery(watchdog, immutable_data_facade, params, table_plugin, result);
@@ -114,6 +115,7 @@ Status Engine::Tile(const api::TileParameters &params, std::string &result) cons
 {
     return RunQuery(watchdog, immutable_data_facade, params, tile_plugin, result);
 }
+*/
 
 } // engine ns
 } // osrm ns

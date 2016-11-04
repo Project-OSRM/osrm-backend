@@ -1,3 +1,4 @@
+/*
 #include "engine/plugins/tile.hpp"
 #include "engine/edge_unpacker.hpp"
 #include "engine/plugins/plugin_base.hpp"
@@ -161,7 +162,6 @@ inline void encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &ge
     geometry.add_element(protozero::encode_zigzag32(dy));
 }
 
-/**
  * Returnx the x1,y1,x2,y2 pixel coordinates of a line in a given
  * tile.
  *
@@ -169,7 +169,6 @@ inline void encodePoint(const FixedPoint &pt, protozero::packed_field_uint32 &ge
  * @param target the last coordinate of the line
  * @param tile_bbox the boundaries of the tile, in mercator coordinates
  * @return a FixedLine with coordinates relative to the tile_bbox.
- */
 FixedLine coordinatesToTileLine(const util::Coordinate start,
                                 const util::Coordinate target,
                                 const BBox &tile_bbox)
@@ -220,13 +219,11 @@ FixedLine coordinatesToTileLine(const util::Coordinate start,
     return tile_line;
 }
 
-/**
  * Converts lon/lat into coordinates inside a Mercator projection tile (x/y pixel values)
  *
  * @param point the lon/lat you want the tile coords for
  * @param tile_bbox the mercator boundaries of the tile
  * @return a point (x,y) on the tile defined by tile_bbox
- */
 FixedPoint coordinatesToTilePoint(const util::Coordinate point, const BBox &tile_bbox)
 {
     const FloatPoint geo_point{static_cast<double>(util::toFloating(point.lon)),
@@ -246,13 +243,11 @@ FixedPoint coordinatesToTilePoint(const util::Coordinate point, const BBox &tile
     return FixedPoint{px, py};
 }
 
-/**
  * Unpacks a single CH edge (NodeID->NodeID) down to the original edges, and returns a list of the
  * edge data
  * @param from the node the CH edge starts at
  * @param to the node the CH edge finishes at
  * @param unpacked_path the sequence of EdgeData objects along the unpacked path
- */
 void UnpackEdgeToEdges(const datafacade::BaseDataFacade &facade,
                        const NodeID from,
                        const NodeID to,
@@ -262,7 +257,7 @@ void UnpackEdgeToEdges(const datafacade::BaseDataFacade &facade,
     UnpackCHPath(facade,
                  path.begin(),
                  path.end(),
-                 [&unpacked_path](const std::pair<NodeID, NodeID> & /* edge */,
+                 [&unpacked_path](const std::pair<NodeID, NodeID> &,
                                   const datafacade::BaseDataFacade::EdgeData &data) {
                      unpacked_path.emplace_back(data);
                  });
@@ -950,3 +945,4 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 }
 }
 }
+*/

@@ -3,6 +3,10 @@
 #include "osrm/route_parameters.hpp"
 #include "osrm/table_parameters.hpp"
 #include "osrm/trip_parameters.hpp"
+#include "engine/guidance/result.hpp"
+#include "engine/guidance/route.hpp"
+#include "engine/guidance/waypoint.hpp"
+#include "engine/guidance/route_leg.hpp"
 
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
@@ -42,21 +46,19 @@ int main(int argc, const char *argv[])
     // Route in monaco
     params.coordinates.push_back({util::FloatLongitude{7.419758}, util::FloatLatitude{43.731142}});
     params.coordinates.push_back({util::FloatLongitude{7.419505}, util::FloatLatitude{43.736825}});
+    params.steps = true;
 
     // Response is in JSON format
-    json::Object result;
+    engine::guidance::Result result;
 
     // Execute routing request, this does the heavy lifting
     const auto status = osrm.Route(params, result);
 
     if (status == Status::Ok)
     {
-        auto &routes = result.values["routes"].get<json::Array>();
-
         // Let's just use the first route
-        auto &route = routes.values.at(0).get<json::Object>();
-        const auto distance = route.values["distance"].get<json::Number>().value;
-        const auto duration = route.values["duration"].get<json::Number>().value;
+        const auto distance = result.routes[0].distance;
+        const auto duration = result.routes[0].duration;
 
         // Warn users if extract does not contain the default Berlin coordinates from above
         if (distance == 0 or duration == 0)
@@ -69,13 +71,8 @@ int main(int argc, const char *argv[])
         std::cout << "Duration: " << duration << " seconds\n";
         return EXIT_SUCCESS;
     }
-    else if (status == Status::Error)
+    else if (status != Status::Ok)
     {
-        const auto code = result.values["code"].get<json::String>().value;
-        const auto message = result.values["message"].get<json::String>().value;
-
-        std::cout << "Code: " << code << "\n";
-        std::cout << "Message: " << code << "\n";
         return EXIT_FAILURE;
     }
 }
