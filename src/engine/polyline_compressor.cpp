@@ -37,7 +37,7 @@ std::string encode(std::vector<int> &numbers)
 
         if (isNegative)
         {
-            const unsigned binary = std::llabs(number);
+            const unsigned binary = std::abs(number);
             const unsigned twos = (~binary) + 1u;
             number = twos;
         }
@@ -89,8 +89,9 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
 std::vector<util::Coordinate> decodePolyline(const std::string &geometry_string)
 {
     std::vector<util::Coordinate> new_coordinates;
-    int index = 0, len = geometry_string.size();
     int lat = 0, lng = 0;
+    std::size_t index = 0;
+    std::size_t len = geometry_string.size();
 
     while (index < len)
     {
