@@ -160,7 +160,7 @@ class ManyToManyRouting final
 
     void ForwardRoutingStep(const DataFacadeT &facade,
                             const unsigned row_idx,
-                            const unsigned number_of_targets,
+                            const std::size_t number_of_targets,
                             QueryHeap &query_heap,
                             const SearchSpaceWithBuckets &search_space_with_buckets,
                             std::vector<EdgeWeight> &result_table) const
