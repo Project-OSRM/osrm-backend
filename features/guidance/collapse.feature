@@ -484,6 +484,23 @@ Feature: Collapse
             | waypoints | route     | turns         |
             | a,d       | road,road | depart,arrive |
 
+    Scenario: No Name During Turns - Ferry
+        Given the node map
+            """
+            a b
+              c d
+            """
+
+        And the ways
+            | nodes | highway  | name | route |
+            | ab    | tertiary | road |       |
+            | bc    | tertiary |      | ferry |
+            | cd    | tertiary | road |       |
+
+        When I route I should get
+            | waypoints | route           | turns                                              |
+            | a,d       | road,,road,road | depart,notification right,notification left,arrive |
+
     Scenario: No Name During Turns, Random Oneway
         Given the node map
             """

@@ -477,6 +477,8 @@ void collapseUTurn(std::vector<RouteStep> &steps,
         invalidateStep(steps[step_index]);
         if (u_turn_with_name_change)
         {
+            BOOST_ASSERT_MSG(compatible(steps[one_back_index], steps[next_step_index]),
+                             "Compatibility should be transitive");
             steps[one_back_index] =
                 elongate(std::move(steps[one_back_index]), steps[next_step_index]);
             invalidateStep(steps[next_step_index]); // will be skipped due to the
@@ -719,7 +721,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         invalidateStep(steps[one_back_index]);
     }
     // very short segment after turn, turn location remains at one_back_step
-    else if (isDelayedTurn(one_back_step, current_step))
+    else if (isDelayedTurn(one_back_step, current_step)) // checks for compatibility
     {
         steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
         // TODO check for lanes (https://github.com/Project-OSRM/osrm-backend/issues/2553)
@@ -1046,6 +1048,9 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
     // a series of turns is only possible to collapse if its only name changes and suppressed turns.
     const auto canCollapseAll = [&steps](std::size_t index, const std::size_t end_index) {
         BOOST_ASSERT(end_index <= steps.size());
+        if (!compatible(steps[index], steps[index + 1]))
+            return false;
+        ++index;
         for (; index < end_index; ++index)
         {
             if (steps[index].maneuver.instruction.type != TurnType::Suppressed &&
@@ -1145,7 +1150,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                  current_step.maneuver.instruction.type != TurnType::Suppressed &&
                  !isNoticeableNameChange(steps[getPreviousNameIndex(step_index)], current_step) &&
                  // canCollapseAll is also checking for compatible(step,step+1) for all indices
-                 canCollapseAll(getPreviousNameIndex(step_index) + 1, next_step_index))
+                 canCollapseAll(getPreviousNameIndex(step_index), next_step_index))
         {
             BOOST_ASSERT(step_index > 0);
             const std::size_t last_available_name_index = getPreviousNameIndex(step_index);
@@ -1189,7 +1194,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     steps[two_back_index] =
                         elongate(std::move(steps[two_back_index]), steps[one_back_index]);
                     invalidateStep(steps[one_back_index]);
-                    if (nameSegmentLength(step_index, steps) < name_segment_cutoff_length)
+                    if (nameSegmentLength(step_index, steps) < name_segment_cutoff_length &&
+                        compatible(steps[two_back_index], steps[step_index]))
                     {
                         steps[two_back_index] =
                             elongate(std::move(steps[two_back_index]), steps[step_index]);
@@ -1562,6 +1568,7 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
         const auto instruction = step.maneuver.instruction;
         if (instruction.type == TurnType::Suppressed)
         {
+            BOOST_ASSERT(compatible(steps[last_valid_instruction], step));
             // count intersections. We cannot use exit, since intersections can follow directly
             // after a roundabout
             steps[last_valid_instruction] =
@@ -1629,8 +1636,11 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         if (step.maneuver.instruction.type == TurnType::UseLane && canCollapseUseLane(step))
         {
             const auto previous = getPreviousIndex(step_index, steps);
-            steps[previous] = elongate(std::move(steps[previous]), steps[step_index]);
-            invalidateStep(steps[step_index]);
+            if (compatible(steps[previous], step))
+            {
+                steps[previous] = elongate(std::move(steps[previous]), steps[step_index]);
+                invalidateStep(steps[step_index]);
+            }
         }
     }
     return removeNoTurnInstructions(std::move(steps));

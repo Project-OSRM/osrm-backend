@@ -44,6 +44,27 @@ Feature: Turn Lane Guidance
             | a,c       | in,straight,straight | depart,new name straight,arrive | ,straight:true right:false, |
             | a,d       | in,right,right       | depart,turn right,arrive        | ,straight:false right:true, |
 
+    # Turn Lane onto a ferry could end up breaking in intersection generation
+    Scenario: Basic Turn Lane 3-way Turn with designated lane
+        Given the node map
+            """
+            a - b ~ ~ c - e
+                |     |
+                d     f
+            """
+
+        And the ways
+            | nodes  | turn:lanes:forward      | name        | route |
+            | ab     | through\|through\|right | ferry-route |       |
+            | bc     | through\|through\|right | ferry-route | ferry |
+            | ce     |                         | ferry-route |       |
+            | bd     |                         | right       |       |
+            | cf     |                         | right       |       |
+
+       When I route I should get
+            | waypoints | route                                           | turns                                                     |
+            | a,e       | ferry-route,ferry-route,ferry-route,ferry-route | depart,notification straight,notification straight,arrive |
+
     @simple
     Scenario: Basic Turn Lane 4-Way Turn
         Given the node map

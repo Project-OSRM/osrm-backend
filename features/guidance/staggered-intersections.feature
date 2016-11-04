@@ -25,7 +25,7 @@ Feature: Staggered Intersections
             | jcdehi | residential | Cedar Dr |
 
         When I route I should get
-            | waypoints | route         | turns |
+            | waypoints | route         | turns         |
             | a,g       | Oak St,Oak St | depart,arrive |
             | g,a       | Oak St,Oak St | depart,arrive |
 
