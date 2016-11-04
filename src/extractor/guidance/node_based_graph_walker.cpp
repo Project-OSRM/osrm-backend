@@ -93,6 +93,37 @@ operator()(const NodeID /*nid*/,
         return (*min_element).eid;
 }
 
+// ---------------------------------------------------------------------------------
+IntersectionFinderAccumulator::IntersectionFinderAccumulator(
+    const std::uint8_t hop_limit, const IntersectionGenerator &intersection_generator)
+    : hops(0), hop_limit(hop_limit), intersection_generator(intersection_generator)
+{
+}
+
+bool IntersectionFinderAccumulator::terminate()
+{
+    if (intersection.size() > 2 || hops == hop_limit)
+    {
+        hops = 0;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void IntersectionFinderAccumulator::update(const NodeID from_node,
+                                           const EdgeID via_edge,
+                                           const NodeID /*to_node*/)
+{
+    ++hops;
+    nid = from_node;
+    via_edge_id = via_edge;
+
+    intersection = intersection_generator.GetConnectedRoads(from_node, via_edge);
+}
+
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm

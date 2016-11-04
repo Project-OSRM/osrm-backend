@@ -11,6 +11,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
+#include <cstdint>
 #include <utility>
 
 namespace osrm
@@ -89,7 +90,7 @@ struct LengthLimitedCoordinateAccumulator
 };
 
 /*
- * The FollowRoadNameSelector tries to follow a given name along a route. We offer methods to skip
+ * The SelectRoadByNameOnlyChoiceAndStraightness tries to follow a given name along a route. We offer methods to skip
  * over bridges/similar situations if desired, following narrow turns
  * This struct offers an example implementation of a possible road selector for traversing the
  * node-based graph using the NodeBasedGraphWalker
@@ -113,6 +114,32 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
     const NameID desired_name_id;
     const bool requires_entry;
 };
+
+// find the next intersection given a hop limit
+struct IntersectionFinderAccumulator
+{
+    IntersectionFinderAccumulator(const std::uint8_t hop_limit, const IntersectionGenerator &intersection_generator);
+    // true if the path has traversed enough distance
+    bool terminate();
+
+    // update the accumulator
+    void update(const NodeID from_node,
+                const EdgeID via_edge,
+                const NodeID to_node);
+
+    std::uint8_t hops;
+    const std::uint8_t hop_limit;
+
+    // we need to be able to look-up the intersection
+    const IntersectionGenerator &intersection_generator;
+
+    // the result we are looking for
+    NodeID nid;
+    EdgeID via_edge_id;
+    Intersection intersection;
+};
+
+
 
 template <class accumulator_type, class selector_type>
 boost::optional<std::pair<NodeID, EdgeID>>
