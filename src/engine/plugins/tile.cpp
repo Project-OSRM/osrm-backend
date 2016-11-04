@@ -286,7 +286,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                                    min_lat,
                                    max_lon,
                                    max_lat,
-                                   util::web_mercator::TILE_SIZE * 0.05);
+                                   util::web_mercator::TILE_SIZE * 0.10);
 
     util::Coordinate southwest{util::FloatLongitude{min_lon}, util::FloatLatitude{min_lat}};
     util::Coordinate northeast{util::FloatLongitude{max_lon}, util::FloatLatitude{max_lat}};
