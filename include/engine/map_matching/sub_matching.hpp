@@ -15,7 +15,7 @@ namespace map_matching
 struct SubMatching
 {
     std::vector<PhantomNode> nodes;
-    std::vector<unsigned> indices;
+    std::vector<std::size_t> indices;
     double confidence;
 };
 }
