@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
     }
 
     BOOST_CHECK_EQUAL(number_of_turn_keys, 3);
-    BOOST_CHECK_EQUAL(number_of_turns_found, 137);
+    BOOST_CHECK_EQUAL(number_of_turns_found, 732);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

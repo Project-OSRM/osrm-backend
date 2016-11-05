@@ -387,259 +387,218 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         // are all pointed in the same direction.
         struct EdgeBasedNodeInfo
         {
-            unsigned source_intersection; // node-based-node ID
-            unsigned target_intersection; // node-based-node ID
-            bool is_geometry_forward;     // Is the geometry forward or reverse?
+            bool is_geometry_forward; // Is the geometry forward or reverse?
             unsigned packed_geometry_id;
         };
         // Lookup table for edge-based-nodes
         std::unordered_map<NodeID, EdgeBasedNodeInfo> edge_based_node_info;
-        std::unordered_map<NodeID, std::vector<EdgeID>> outgoing_edges;
-        std::unordered_map<NodeID, std::vector<EdgeID>> incoming_edges;
 
-        // Now, loop over all the road segments we saw, and build up a mini
-        // graph for just the network that's visible.
+        struct SegmentData
+        {
+            NodeID target_node;
+            EdgeID edge_based_node_id;
+        };
+
+        std::unordered_map<NodeID, std::vector<SegmentData>> directed_graph;
+
+        // Build an adjacency list for all the road segments visible in
+        // the tile
         for (const auto &edge : edges)
         {
-            // Note: edge.u is the node-based node ID of the source intersection
-            //       edge.v is the node-based node ID of the target intersection
-            //       both these values can be directly looked up for coordinates
-
-            // If forward travel is enabled on this road section, and we haven't seen this
-            // edge-based-node
-            // before
-            if (edge.forward_segment_id.enabled &&
-                edge_based_node_info.count(edge.forward_segment_id.id) == 0)
+            if (edge.forward_segment_id.enabled)
             {
-                // Add this edge-based-nodeid as an outgoing from the source intersection
-                const auto outgoing_itr_u = outgoing_edges.find(edge.u);
-                if (outgoing_itr_u != outgoing_edges.end())
+                if (directed_graph.count(edge.u) == 0)
                 {
-                    outgoing_itr_u->second.push_back(edge.forward_segment_id.id);
+                    directed_graph[edge.u] = {{edge.v, edge.forward_segment_id.id}};
                 }
                 else
                 {
-                    outgoing_edges[edge.u] = {edge.forward_segment_id.id};
+                    directed_graph[edge.u].push_back({edge.v, edge.forward_segment_id.id});
                 }
-
-                // Add this edge-based-nodeid as an incoming to the target intersection
-                const auto incoming_itr_v = incoming_edges.find(edge.v);
-                if (incoming_itr_v != incoming_edges.end())
-                {
-                    incoming_itr_v->second.push_back(edge.forward_segment_id.id);
-                }
-                else
-                {
-                    incoming_edges[edge.v] = {edge.forward_segment_id.id};
-                }
-
-                edge_based_node_info[edge.forward_segment_id.id] = {
-                    edge.u, edge.v, true, edge.packed_geometry_id};
+                edge_based_node_info[edge.forward_segment_id.id] = {true, edge.packed_geometry_id};
             }
-            // Same as previous block, but everything flipped
-            if (edge.reverse_segment_id.enabled &&
-                edge_based_node_info.count(edge.reverse_segment_id.id) == 0)
+            if (edge.reverse_segment_id.enabled)
             {
-                auto f = outgoing_edges.find(edge.v);
-                if (f != outgoing_edges.end())
+                if (directed_graph.count(edge.v) == 0)
                 {
-                    f->second.push_back(edge.reverse_segment_id.id);
+                    directed_graph[edge.v] = {{edge.u, edge.reverse_segment_id.id}};
                 }
                 else
                 {
-                    outgoing_edges[edge.v] = {edge.reverse_segment_id.id};
+                    directed_graph[edge.v].push_back({edge.u, edge.reverse_segment_id.id});
                 }
-
-                f = incoming_edges.find(edge.u);
-                if (f != incoming_edges.end())
-                {
-                    f->second.push_back(edge.reverse_segment_id.id);
-                }
-                else
-                {
-                    incoming_edges[edge.u] = {edge.reverse_segment_id.id};
-                }
-
-                // Save info about this edge-based-node, note reversal from forward
-                // block above.
-                edge_based_node_info[edge.reverse_segment_id.id] = {
-                    edge.v, edge.u, false, edge.packed_geometry_id};
+                edge_based_node_info[edge.reverse_segment_id.id] = {false, edge.packed_geometry_id};
             }
         }
 
-        // Now, for every edge-based-node that we discovered (edge-based-nodes are sources
-        // and targets of turns).  EBN is short for edge-based-node
-        std::vector<NodeID> first_geometry, second_geometry;
+        // Now, scan over our adjacency list
+        // For every edge A:
+        //   Look at the outgoing edges from A
+        //   If the outgoing edge has a different edge_based_node_id
+        //     This is a turn.  Find it in the CH
+        //     Get the edge data
+        //     Subtract the road weights from the edge weight
+        //     Calculate angles, add to tile.
         std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
         std::vector<EdgeWeight> first_weight_vector;
-        for (const auto &source_ebn : edge_based_node_info)
+        for (const auto &firstnode : directed_graph)
         {
-            if (outgoing_edges.count(source_ebn.second.target_intersection) == 0)
+            for (const auto &firstedge : firstnode.second)
             {
-                continue;
-            }
-
-            // Grab a copy of the geometry leading up to the intersection.
-            if (source_ebn.second.is_geometry_forward)
-            {
-                first_geometry =
-                    facade->GetUncompressedForwardGeometry(source_ebn.second.packed_geometry_id);
-            }
-            else
-            {
-                first_geometry =
-                    facade->GetUncompressedReverseGeometry(source_ebn.second.packed_geometry_id);
-            }
-
-            // We earlier saved the source and target intersection nodes for every road section.
-            // We can use the target node to find all road sections that lead away from
-            // the intersection, and thus
-            // in the graph after our main
-            for (const auto &target_ebn : outgoing_edges[source_ebn.second.target_intersection])
-            {
-                // Ignore u-turns for now
-                if (edge_based_node_info.at(target_ebn).target_intersection ==
-                    source_ebn.second.source_intersection)
+                // If this edge points to something else (i.e. degree > 1)
+                if (directed_graph.count(firstedge.target_node) > 0)
                 {
-                    continue;
-                }
+                    // For each of the outgoing edges from our target coordinate
+                    for (const auto &secondedge : directed_graph[firstedge.target_node])
+                    {
+                        // If the next edge has the same edge_based_node_id, then it's
+                        // not a turn, so skip it
+                        if (firstedge.edge_based_node_id == secondedge.edge_based_node_id)
+                            continue;
 
-                // Find the connection between our source road and the target node
-                EdgeID smaller_edge_id = facade->FindSmallestEdge(
-                    source_ebn.first, target_ebn, [](const contractor::QueryEdge::EdgeData &data) {
-                        return data.forward;
-                    });
+                        // Skip u-turns
+                        if (firstnode.first == secondedge.target_node)
+                            continue;
 
-                // Depending on how the graph is constructed, we might have to look for
-                // a backwards edge instead.  They're equivalent, just one is available for
-                // a forward routing search, and one is used for the backwards dijkstra
-                // steps.  Their weight should be the same, we can use either one.
-                // If we didn't find a forward edge, try for a backward one
-                if (SPECIAL_EDGEID == smaller_edge_id)
-                {
-                    smaller_edge_id = facade->FindSmallestEdge(
-                        target_ebn,
-                        source_ebn.first,
-                        [](const contractor::QueryEdge::EdgeData &data) { return data.backward; });
-                }
+                        // Find the connection between our source road and the target node
+                        EdgeID smaller_edge_id = facade->FindSmallestEdge(
+                            firstedge.edge_based_node_id,
+                            secondedge.edge_based_node_id,
+                            [](const contractor::QueryEdge::EdgeData &data) {
+                                return data.forward;
+                            });
 
-                // If no edge was found, it means that there's no connection between these nodes,
-                // due to oneways or turn restrictions. Given the edge-based-nodes that
-                // we're examining here, we *should* only find directly-connected edges, not
-                // shortcuts
-                if (smaller_edge_id != SPECIAL_EDGEID)
-                {
-                    // Check to see if it was a shortcut edge we found.  This can happen
-                    // when exactly?  Anyway, unpack it and get the first "real" edgedata
-                    // out of it, which should represent the first hop, which is the one
-                    // we want to find the turn.
-                    const auto &data = [this,
-                                        &facade,
-                                        smaller_edge_id,
-                                        source_ebn,
-                                        target_ebn,
-                                        &unpacked_shortcut]() {
-                        const auto inner_data = facade->GetEdgeData(smaller_edge_id);
-                        if (inner_data.shortcut)
+                        // Depending on how the graph is constructed, we might have to look for
+                        // a backwards edge instead.  They're equivalent, just one is available for
+                        // a forward routing search, and one is used for the backwards dijkstra
+                        // steps.  Their weight should be the same, we can use either one.
+                        // If we didn't find a forward edge, try for a backward one
+                        if (SPECIAL_EDGEID == smaller_edge_id)
                         {
-                            unpacked_shortcut.clear();
-                            UnpackEdgeToEdges(
-                                *facade, source_ebn.first, target_ebn, unpacked_shortcut);
-                            return unpacked_shortcut.front();
+                            smaller_edge_id = facade->FindSmallestEdge(
+                                secondedge.edge_based_node_id,
+                                firstedge.edge_based_node_id,
+                                [](const contractor::QueryEdge::EdgeData &data) {
+                                    return data.backward;
+                                });
                         }
-                        else
-                            return inner_data;
-                    }();
-                    BOOST_ASSERT_MSG(!data.shortcut, "Connecting edge must not be a shortcut");
 
-                    // This is the geometry leading away from the intersection
-                    // (i.e. the forward geometry of the target edge-based-node)
+                        // If no edge was found, it means that there's no connection between these
+                        // nodes, due to oneways or turn restrictions. Given the edge-based-nodes
+                        // that we're examining here, we *should* only find directly-connected
+                        // edges, not shortcuts
+                        if (smaller_edge_id != SPECIAL_EDGEID)
+                        {
+                            // Check to see if it was a shortcut edge we found.  This can happen
+                            // when exactly?  Anyway, unpack it and get the first "real" edgedata
+                            // out of it, which should represent the first hop, which is the one
+                            // we want to find the turn.
+                            const auto &data = [this,
+                                                &facade,
+                                                smaller_edge_id,
+                                                firstedge,
+                                                secondedge,
+                                                &unpacked_shortcut]() {
+                                const auto inner_data = facade->GetEdgeData(smaller_edge_id);
+                                if (inner_data.shortcut)
+                                {
+                                    unpacked_shortcut.clear();
+                                    UnpackEdgeToEdges(*facade,
+                                                      firstedge.edge_based_node_id,
+                                                      secondedge.edge_based_node_id,
+                                                      unpacked_shortcut);
+                                    return unpacked_shortcut.front();
+                                }
+                                else
+                                    return inner_data;
+                            }();
+                            BOOST_ASSERT_MSG(!data.shortcut,
+                                             "Connecting edge must not be a shortcut");
 
-                    if (!edge_based_node_info.at(target_ebn).is_geometry_forward)
-                    {
-                        second_geometry = facade->GetUncompressedForwardGeometry(
-                            edge_based_node_info.at(target_ebn).packed_geometry_id);
+                            // Now, calculate the sum of the weight of all the segments.
+                            if (edge_based_node_info[firstedge.edge_based_node_id]
+                                    .is_geometry_forward)
+                            {
+                                first_weight_vector = facade->GetUncompressedForwardWeights(
+                                    edge_based_node_info[firstedge.edge_based_node_id]
+                                        .packed_geometry_id);
+                            }
+                            else
+                            {
+                                first_weight_vector = facade->GetUncompressedReverseWeights(
+                                    edge_based_node_info[firstedge.edge_based_node_id]
+                                        .packed_geometry_id);
+                            }
+                            const auto sum_node_weight =
+                                std::accumulate(first_weight_vector.begin(),
+                                                first_weight_vector.end(),
+                                                EdgeWeight{0});
+
+                            // The edge.weight is the whole edge weight, which includes the turn
+                            // cost.
+                            // The turn cost is the edge.weight minus the sum of the individual road
+                            // segment weights.  This might not be 100% accurate, because some
+                            // intersections include stop signs, traffic signals and other
+                            // penalties, but at this stage, we can't divide those out, so we just
+                            // treat the whole lot as the "turn cost" that we'll stick on the map.
+                            const auto turn_cost = data.weight - sum_node_weight;
+
+                            // Find the three nodes that make up the turn movement)
+                            const auto node_from = firstnode.first;
+                            const auto node_via = firstedge.target_node;
+                            const auto node_to = secondedge.target_node;
+
+                            const auto coord_from = facade->GetCoordinateOfNode(node_from);
+                            const auto coord_via = facade->GetCoordinateOfNode(node_via);
+                            const auto coord_to = facade->GetCoordinateOfNode(node_to);
+
+                            // Calculate the bearing that we approach the intersection at
+                            const auto angle_in = static_cast<int>(
+                                util::coordinate_calculation::bearing(coord_from, coord_via));
+
+                            // Add the angle to the values table for the vector tile, and get the
+                            // index
+                            // of that value in the table
+                            const auto angle_in_index = use_point_int_value(angle_in);
+
+                            // Calculate the bearing leading away from the intersection
+                            const auto exit_bearing = static_cast<int>(
+                                util::coordinate_calculation::bearing(coord_via, coord_to));
+
+                            // Figure out the angle of the turn
+                            auto turn_angle = exit_bearing - angle_in;
+                            while (turn_angle > 180)
+                            {
+                                turn_angle -= 360;
+                            }
+                            while (turn_angle < -180)
+                            {
+                                turn_angle += 360;
+                            }
+
+                            // Add the turn angle value to the value lookup table for the vector
+                            // tile.
+                            const auto turn_angle_index = use_point_int_value(turn_angle);
+                            // And, same for the actual turn cost value - it goes in the lookup
+                            // table,
+                            // not directly on the feature itself.
+                            const auto turn_cost_index = use_point_float_value(
+                                turn_cost / 10.0); // Note conversion to float here
+
+                            // Save everything we need to later add all the points to the tile.
+                            // We need the coordinate of the intersection, the angle in, the turn
+                            // angle and the turn cost.
+                            all_turn_data.emplace_back(TurnData{
+                                coord_via, angle_in_index, turn_angle_index, turn_cost_index});
+                        }
                     }
-                    else
-                    {
-                        second_geometry = facade->GetUncompressedReverseGeometry(
-                            edge_based_node_info.at(target_ebn).packed_geometry_id);
-                    }
-
-                    // Now, calculate the sum of the weight of all the segments.
-                    if (source_ebn.second.is_geometry_forward)
-                    {
-                        first_weight_vector = facade->GetUncompressedForwardWeights(
-                            source_ebn.second.packed_geometry_id);
-                    }
-                    else
-                    {
-                        first_weight_vector = facade->GetUncompressedReverseWeights(
-                            source_ebn.second.packed_geometry_id);
-                    }
-                    const auto sum_node_weight = std::accumulate(
-                        first_weight_vector.begin(), first_weight_vector.end(), EdgeWeight{0});
-
-                    // The edge.weight is the whole edge weight, which includes the turn cost.
-                    // The turn cost is the edge.weight minus the sum of the individual road
-                    // segment weights.  This might not be 100% accurate, because some
-                    // intersections include stop signs, traffic signals and other penalties,
-                    // but at this stage, we can't divide those out, so we just treat the whole
-                    // lot as the "turn cost" that we'll stick on the map.
-                    const auto turn_cost = data.weight - sum_node_weight;
-
-                    // Find the three nodes that make up the turn movement)
-                    const auto node_from = first_geometry.size() > 1
-                                               ? *(first_geometry.end() - 2)
-                                               : source_ebn.second.source_intersection;
-                    const auto node_via = source_ebn.second.target_intersection;
-                    const auto node_to = second_geometry.front();
-
-                    const auto coord_from = facade->GetCoordinateOfNode(node_from);
-                    const auto coord_via = facade->GetCoordinateOfNode(node_via);
-                    const auto coord_to = facade->GetCoordinateOfNode(node_to);
-
-                    // Calculate the bearing that we approach the intersection at
-                    const auto angle_in = static_cast<int>(
-                        util::coordinate_calculation::bearing(coord_from, coord_via));
-
-                    // Add the angle to the values table for the vector tile, and get the index
-                    // of that value in the table
-                    const auto angle_in_index = use_point_int_value(angle_in);
-
-                    // Calculate the bearing leading away from the intersection
-                    const auto exit_bearing = static_cast<int>(
-                        util::coordinate_calculation::bearing(coord_via, coord_to));
-
-                    // Figure out the angle of the turn
-                    auto turn_angle = exit_bearing - angle_in;
-                    while (turn_angle > 180)
-                    {
-                        turn_angle -= 360;
-                    }
-                    while (turn_angle < -180)
-                    {
-                        turn_angle += 360;
-                    }
-
-                    // Add the turn angle value to the value lookup table for the vector tile.
-                    const auto turn_angle_index = use_point_int_value(turn_angle);
-                    // And, same for the actual turn cost value - it goes in the lookup table,
-                    // not directly on the feature itself.
-                    const auto turn_cost_index =
-                        use_point_float_value(turn_cost / 10.0); // Note conversion to float here
-
-                    // Save everything we need to later add all the points to the tile.
-                    // We need the coordinate of the intersection, the angle in, the turn
-                    // angle and the turn cost.
-                    all_turn_data.emplace_back(
-                        TurnData{coord_via, angle_in_index, turn_angle_index, turn_cost_index});
                 }
             }
         }
     }
 
-    // Vector tiles encode feature properties as indexes into a lookup table.  So, we need to
+    // Vector tiles encode feature properties as indexes into a lookup table.  So, we need
+    // to
     // "pre-loop" over all the edges to create the lookup tables.  Once we have those, we
     // can then encode the features, and we'll know the indexes that feature properties
     // need to refer to.
@@ -679,7 +638,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     protozero::pbf_writer tile_writer{pbf_buffer};
     {
         {
-            // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec (2.1)
+            // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec
+            // (2.1)
             protozero::pbf_writer line_layer_writer(tile_writer, util::vector_tile::LAYER_TAG);
             // TODO: don't write a layer if there are no features
 
@@ -749,8 +709,10 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                                                                     const std::size_t name_idx,
                                                                     std::int32_t &start_x,
                                                                     std::int32_t &start_y) {
-                        // Here, we save the two attributes for our feature: the speed and the
-                        // is_small boolean.  We only serve up speeds from 0-139, so all we do is
+                        // Here, we save the two attributes for our feature: the speed and
+                        // the
+                        // is_small boolean.  We only serve up speeds from 0-139, so all we
+                        // do is
                         // save the first
                         protozero::pbf_writer feature_writer(line_layer_writer,
                                                              util::vector_tile::FEATURE_TAG);
@@ -846,7 +808,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
             }
 
             // Field id 3 is the "keys" attribute
-            // We need two "key" fields, these are referred to with 0 and 1 (their array indexes)
+            // We need two "key" fields, these are referred to with 0 and 1 (their array
+            // indexes)
             // earlier
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "speed");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "is_small");
@@ -912,7 +875,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         if (!all_turn_data.empty())
         {
             // Now write the points layer for turn penalty data:
-            // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec (2.1)
+            // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec
+            // (2.1)
             protozero::pbf_writer point_layer_writer(tile_writer, util::vector_tile::LAYER_TAG);
             point_layer_writer.add_uint32(util::vector_tile::VERSION_TAG, 2);    // version
             point_layer_writer.add_string(util::vector_tile::NAME_TAG, "turns"); // name
