@@ -102,6 +102,18 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     BOOST_CHECK_EQUAL(reference_6.profile, result_6->profile);
     CHECK_EQUAL_RANGE(reference_6.query, result_6->query);
     BOOST_CHECK_EQUAL(reference_6.prefix_length, result_6->prefix_length);
+
+    // polyline with %HEX
+    api::ParsedURL reference_7{
+        "match", 1, "car", "polyline(}jmwFz~ubMyCa@`@yDJqE)?你好&\n \"%~", 14UL};
+    auto result_7 = api::parseURL(
+        "/match/v1/car/polyline(%7DjmwFz~ubMyCa@%60@yDJqE)?%e4%bd%a0%e5%a5%bd&%0A%20%22%25%7e");
+    BOOST_CHECK(result_7);
+    BOOST_CHECK_EQUAL(reference_7.service, result_7->service);
+    BOOST_CHECK_EQUAL(reference_7.version, result_7->version);
+    BOOST_CHECK_EQUAL(reference_7.profile, result_7->profile);
+    CHECK_EQUAL_RANGE(reference_7.query, result_7->query);
+    BOOST_CHECK_EQUAL(reference_7.prefix_length, result_7->prefix_length);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
