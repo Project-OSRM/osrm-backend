@@ -153,19 +153,19 @@ http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?number=3&b
 ### Request
 
 ```
-http://{server}/route/v1/{profile}/{coordinates}?alternatives={true|false}&steps={true|false}&geometries={polyline|geojson}&overview={full|simplified|false}&annotations={true|false}
+http://{server}/route/v1/{profile}/{coordinates}?alternatives={true|false}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={full|simplified|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
 
-|Option      |Values                                    |Description                                                                    |
-|------------|------------------------------------------|-------------------------------------------------------------------------------|
-|alternatives|`true`, `false` (default)                 |Search for alternative routes and return as well.\*                            |
-|steps       |`true`, `false` (default)                 |Return route steps for each route leg                                          |
-|annotations |`true`, `false` (default)                 |Returns additional metadata for each coordinate along the route geometry.      |
-|geometries  |`polyline` (default), `geojson`           |Returned route geometry format (influences overview and per step)             |
-|overview    |`simplified` (default), `full`, `false`   |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
-|continue_straight |`default` (default), `true`, `false`|Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile. |
+|Option      |Values                                       |Description                                                                    |
+|------------|---------------------------------------------|-------------------------------------------------------------------------------|
+|alternatives|`true`, `false` (default)                    |Search for alternative routes and return as well.\*                            |
+|steps       |`true`, `false` (default)                    |Return route steps for each route leg                                          |
+|annotations |`true`, `false` (default)                    |Returns additional metadata for each coordinate along the route geometry.      |
+|geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
+|overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
+|continue_straight |`default` (default), `true`, `false`   |Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile. |
 
 \* Please note that even if an alternative route is requested, a result cannot be guaranteed.
 
@@ -179,7 +179,7 @@ In case of error the following `code`s are supported in addition to the general 
 
 | Type              | Description     |
 |-------------------|-----------------|
-| `NoRoute`        | No route found. |
+| `NoRoute`         | No route found. |
 
 All other fields might be undefined.
 
@@ -263,7 +263,7 @@ The algorithm might not be able to match all points. Outliers are removed if the
 ### Request
 
 ```
-http://{server}/match/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|geojson}&overview={simplified|full|false}&annotations={true|false}
+http://{server}/match/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
@@ -272,8 +272,8 @@ In addition to the [general options](#general-options) the following options are
 |Option      |Values                                          |Description                                                                               |
 |------------|------------------------------------------------|------------------------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Return route steps for each route                                                         |
-|geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)                        |
-|annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                |
+|geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)                         |
+|annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.                 |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamp of the input location. Timestamps need to be monotonically increasing.          |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
@@ -311,7 +311,7 @@ multiple trips for each connected component are returned.
 ### Request
 
 ```
-http://{server}/trip/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|geojson}&overview={simplified|full|false}&annotations={true|false}
+http://{server}/trip/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
@@ -319,8 +319,8 @@ In addition to the [general options](#general-options) the following options are
 |Option      |Values                                          |Description                                                                |
 |------------|------------------------------------------------|---------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Return route instructions for each trip                                    |
-|annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.      |
-|geometries  |`polyline` (default), `geojson`                 |Returned route geometry format (influences overview and per step)         |
+|annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.  |
+|geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 
 ### Response
@@ -335,7 +335,7 @@ In case of error the following `code`s are supported in addition to the general 
 
 | Type              | Description         |
 |-------------------|---------------------|
-| `NoTrips`        | No trips found.     |
+| `NoTrips`         | No trips found.     |
 
 All other fields might be undefined.
 
@@ -468,6 +468,7 @@ step.
   | geometries |                                                                    |
   |------------|--------------------------------------------------------------------|
   | polyline   | [polyline](https://www.npmjs.com/package/polyline) with precision 5 in [latitude,longitude] encoding |
+  | polyline6  | [polyline](https://www.npmjs.com/package/polyline) with precision 6 in [latitude,longitude] encoding |
   | geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) or [GeoJSON `Point`](http://geojson.org/geojson-spec.html#point) if it is only one coordinate (not wrapped by a GeoJSON feature)|
   
 - `name`: The name of the way along which travel proceeds.

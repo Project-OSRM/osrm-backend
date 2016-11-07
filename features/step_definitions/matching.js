@@ -90,7 +90,7 @@ module.exports = function () {
 
                         if (headers.has('geometry')) {
                             if (json.matchings.length != 1) throw new Error('*** Checking geometry only supported for matchings with one subtrace');
-                            geometry = json.matchings[0].geometry.coordinates;
+                            geometry = json.matchings[0].geometry;
                         }
 
                         if (headers.has('OSM IDs')) {
@@ -116,10 +116,13 @@ module.exports = function () {
                     }
 
                     if (headers.has('geometry')) {
-                        if (this.queryParams['geometries'] === 'polyline')
+                        if (this.queryParams['geometries'] === 'polyline') {
                             got.geometry = polyline.decode(geometry).toString();
-                        else
-                            got.geometry = geometry;
+                        } else if (this.queryParams['geometries'] === 'polyline6') {
+                            got.geometry = polyline.decode(geometry,6).toString();
+                        } else {
+                            got.geometry = geometry.coordinates;
+                        }
                     }
 
                     if (headers.has('OSM IDs')) {

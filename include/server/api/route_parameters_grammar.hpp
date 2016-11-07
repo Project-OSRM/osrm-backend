@@ -43,7 +43,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
     RouteParametersGrammar(qi::rule<Iterator, Signature> &root_rule_) : BaseGrammar(root_rule_)
     {
         geometries_type.add("geojson", engine::api::RouteParameters::GeometriesType::GeoJSON)(
-            "polyline", engine::api::RouteParameters::GeometriesType::Polyline);
+            "polyline", engine::api::RouteParameters::GeometriesType::Polyline)(
+            "polyline6", engine::api::RouteParameters::GeometriesType::Polyline6);
 
         overview_type.add("simplified", engine::api::RouteParameters::OverviewType::Simplified)(
             "full", engine::api::RouteParameters::OverviewType::Full)(
