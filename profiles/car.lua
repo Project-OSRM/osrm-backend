@@ -4,6 +4,8 @@ local get_destination = require("lib/destination").get_destination
 local set_classification = require("lib/guidance").set_classification
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
 
+require("lib/tag_cache")
+
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
@@ -233,28 +235,38 @@ function node_function (node, result)
   end
 end
 
-function way_function (way, result)
-  local highway = way:get_value_by_key("highway")
-  local route = way:get_value_by_key("route")
-  local bridge = way:get_value_by_key("bridge")
+function should_abort_early(data)
+  return TagCache.get(data,'highway') == nil and
+         TagCache.get(data,'route') == nil and
+         TagCache.get(data,'bridge') == nil
+end
 
-  if not ((highway and highway ~= "") or (route and route ~= "") or (bridge and bridge ~= "")) then
+function way_function(way, result)
+  local data = {
+    way = way,
+    cache = {},
+  }
+  
+  local route = TagCache.get(data,"route")
+  local bridge = TagCache.get(data,"bridge")
+
+  if should_abort_early(data) then
     return
   end
-
+  
   -- default to driving mode, may get overwritten below
   result.forward_mode = mode.driving
   result.backward_mode = mode.driving
 
   -- we dont route over areas
-  local area = way:get_value_by_key("area")
+  local area = TagCache.get(data,"area")
   if ignore_areas and area and "yes" == area then
     return
   end
 
   -- respect user-preference for HOV-only ways
   if ignore_hov_ways then
-    local hov = way:get_value_by_key("hov")
+    local hov = TagCache.get(data,"hov")
     if hov and "designated" == hov then
       return
     end
@@ -273,9 +285,9 @@ function way_function (way, result)
       return all
     end
 
-    local hov_lanes = way:get_value_by_key("hov:lanes")
-    local hov_lanes_forward = way:get_value_by_key("hov:lanes:forward")
-    local hov_lanes_backward = way:get_value_by_key("hov:lanes:backward")
+    local hov_lanes = TagCache.get(data,"hov:lanes")
+    local hov_lanes_forward = TagCache.get(data,"hov:lanes:forward")
+    local hov_lanes_backward = TagCache.get(data,"hov:lanes:backward")
 
     local hov_all_designated = hov_lanes and hov_lanes ~= ""
                                and has_all_designated_hov_lanes(hov_lanes)
@@ -287,7 +299,7 @@ function way_function (way, result)
                                         and has_all_designated_hov_lanes(hov_lanes_backward)
 
     -- forward/backward lane depend on a way's direction
-    local oneway = way:get_value_by_key("oneway")
+    local oneway = TagCache.get(data,"oneway")
     local reverse = oneway and oneway == "-1"
 
     if hov_all_designated or hov_all_designated_forward then
@@ -309,7 +321,7 @@ function way_function (way, result)
   end -- hov handling
 
   -- respect user-preference for toll=yes ways
-  local toll = way:get_value_by_key("toll")
+  local toll = TagCache.get(data,"toll")
   if ignore_toll_ways and toll and "yes" == toll then
     return
   end
@@ -317,17 +329,17 @@ function way_function (way, result)
   -- Reversible oneways change direction with low frequency (think twice a day):
   -- do not route over these at all at the moment because of time dependence.
   -- Note: alternating (high frequency) oneways are handled below with penalty.
-  local oneway = way:get_value_by_key("oneway")
+  local oneway = TagCache.get(data,"oneway")
   if oneway and "reversible" == oneway then
     return
   end
 
-  local impassable = way:get_value_by_key("impassable")
+  local impassable = TagCache.get(data,"impassable")
   if impassable and "yes" == impassable then
     return
   end
 
-  local status = way:get_value_by_key("status")
+  local status = TagCache.get(data,"status")
   if status and "impassable" == status then
     return
   end
@@ -341,8 +353,8 @@ function way_function (way, result)
   -- handling ferries and piers
   local route_speed = speed_profile[route]
   if (route_speed and route_speed > 0) then
-    highway = route
-    local duration  = way:get_value_by_key("duration")
+    TagCache.set(data,"highway",route)
+    local duration  = TagCache.get(data,"duration")
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
     end
@@ -354,10 +366,10 @@ function way_function (way, result)
 
   -- handling movable bridges
   local bridge_speed = speed_profile[bridge]
-  local capacity_car = way:get_value_by_key("capacity:car")
+  local capacity_car = TagCache.get(data,"capacity:car")
   if (bridge_speed and bridge_speed > 0) and (capacity_car ~= 0) then
-    highway = bridge
-    local duration  = way:get_value_by_key("duration")
+    TagCache.set(data,"highway",bridge)
+    local duration  = TagCache.get(data,"duration")
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
     end
@@ -366,13 +378,13 @@ function way_function (way, result)
   end
 
   -- leave early if this way is not accessible
-  if "" == highway then
+  if "" == TagCache.get(data,"highway") then
     return
   end
 
   if result.forward_speed == -1 then
-    local highway_speed = speed_profile[highway]
-    local max_speed = parse_maxspeed( way:get_value_by_key("maxspeed") )
+    local highway_speed = speed_profile[TagCache.get(data,"highway")]
+    local max_speed = parse_maxspeed( TagCache.get(data,"maxspeed") )
     -- Set the avg speed on the way if it is accessible by road class
     if highway_speed then
       if max_speed and max_speed > highway_speed then
@@ -402,7 +414,7 @@ function way_function (way, result)
   end
 
   -- reduce speed on special side roads
-  local sideway = way:get_value_by_key("side_road")
+  local sideway = TagCache.get(data,"side_road")
   if "yes" == sideway or
   "rotary" == sideway then
     result.forward_speed = result.forward_speed * side_road_speed_multiplier
@@ -410,9 +422,9 @@ function way_function (way, result)
   end
 
   -- reduce speed on bad surfaces
-  local surface = way:get_value_by_key("surface")
-  local tracktype = way:get_value_by_key("tracktype")
-  local smoothness = way:get_value_by_key("smoothness")
+  local surface = TagCache.get(data,"surface")
+  local tracktype = TagCache.get(data,"tracktype")
+  local smoothness = TagCache.get(data,"smoothness")
 
   if surface and surface_speeds[surface] then
     result.forward_speed = math.min(surface_speeds[surface], result.forward_speed)
@@ -428,16 +440,16 @@ function way_function (way, result)
   end
 
   -- set the road classification based on guidance globals configuration
-  set_classification(highway,result,way)
+  set_classification(TagCache.get(data,"highway"),result,way)
 
   -- parse the remaining tags
-  local name = way:get_value_by_key("name")
-  local pronunciation = way:get_value_by_key("name:pronunciation")
-  local ref = way:get_value_by_key("ref")
-  local junction = way:get_value_by_key("junction")
-  -- local barrier = way:get_value_by_key("barrier", "")
-  -- local cycleway = way:get_value_by_key("cycleway", "")
-  local service = way:get_value_by_key("service")
+  local name = TagCache.get(data,"name")
+  local pronunciation = TagCache.get(data,"name:pronunciation")
+  local ref = TagCache.get(data,"ref")
+  local junction = TagCache.get(data,"junction")
+  -- local barrier = TagCache.get(data,"barrier", "")
+  -- local cycleway = TagCache.get(data,"cycleway", "")
+  local service = TagCache.get(data,"service")
 
   -- Set the name that will be used for instructions
   local has_ref = ref and "" ~= ref
@@ -510,7 +522,7 @@ function way_function (way, result)
     oneway == "1" or
     oneway == "true" or
     junction == "roundabout" or
-    (highway == "motorway" and oneway ~= "no") then
+    (TagCache.get(data,"highway") == "motorway" and oneway ~= "no") then
 
       result.backward_mode = mode.inaccessible
 
@@ -521,8 +533,8 @@ function way_function (way, result)
   end
 
   -- Override speed settings if explicit forward/backward maxspeeds are given
-  local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward"))
+  local maxspeed_forward = parse_maxspeed(TagCache.get(data,"maxspeed:forward"))
+  local maxspeed_backward = parse_maxspeed(TagCache.get(data,"maxspeed:backward"))
   if maxspeed_forward and maxspeed_forward > 0 then
     if mode.inaccessible ~= result.forward_mode and mode.inaccessible ~= result.backward_mode then
       result.backward_speed = result.forward_speed
@@ -534,9 +546,9 @@ function way_function (way, result)
   end
 
   -- Override speed settings if advisory forward/backward maxspeeds are given
-  local advisory_speed = parse_maxspeed(way:get_value_by_key("maxspeed:advisory"))
-  local advisory_forward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:forward"))
-  local advisory_backward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:backward"))
+  local advisory_speed = parse_maxspeed(TagCache.get(data,"maxspeed:advisory"))
+  local advisory_forward = parse_maxspeed(TagCache.get(data,"maxspeed:advisory:forward"))
+  local advisory_backward = parse_maxspeed(TagCache.get(data,"maxspeed:advisory:backward"))
   -- apply bi-directional advisory speed first
   if advisory_speed and advisory_speed > 0 then
     if mode.inaccessible ~= result.forward_mode then
@@ -559,12 +571,12 @@ function way_function (way, result)
   local width = math.huge
   local lanes = math.huge
   if result.forward_speed > 0 or result.backward_speed > 0 then
-    local width_string = way:get_value_by_key("width")
+    local width_string = TagCache.get(data,"width")
     if width_string and tonumber(width_string:match("%d*")) then
       width = tonumber(width_string:match("%d*"))
     end
 
-    local lanes_string = way:get_value_by_key("lanes")
+    local lanes_string = TagCache.get(data,"lanes")
     if lanes_string and tonumber(lanes_string:match("%d*")) then
       lanes = tonumber(lanes_string:match("%d*"))
     end
