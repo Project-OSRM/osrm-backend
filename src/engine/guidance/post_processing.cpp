@@ -498,6 +498,10 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     BOOST_ASSERT(one_back_index < steps.size());
     const auto &current_step = steps[step_index];
     const auto &one_back_step = steps[one_back_index];
+    // Don't collapse roundabouts
+    if (entersRoundabout(current_step.maneuver.instruction) ||
+        entersRoundabout(one_back_step.maneuver.instruction))
+        return;
 
     // This function assumes driving on the right hand side of the streat
     BOOST_ASSERT(!one_back_step.intersections.empty() && !current_step.intersections.empty());
@@ -812,6 +816,11 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 //
 bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current)
 {
+    //don't touch roundabouts
+    if (entersRoundabout(previous.maneuver.instruction) ||
+        entersRoundabout(current.maneuver.instruction))
+        return false;
+
     // Base decision on distance since the zig-zag is a visual clue.
     // If adjusted, make sure to check validity of the is_right/is_left classification below
     const constexpr auto MAX_STAGGERED_DISTANCE = 3; // debatable, but keep short to be on safe side

@@ -418,3 +418,53 @@ Feature: Basic Roundabout
         When I route I should get
             | waypoints | route                                  | turns                           |
             | 1,h       | roundabout,right-bot-out,right-bot-out | depart,roundabout-exit-1,arrive |
+
+    @3254
+    Scenario: Driving up to and through a roundabout
+        Given the node map
+            """
+              g            a
+              |          /   \
+            e-f- - - - b      d - - - h
+              |          \   /
+              i            c
+                           |
+                           k
+            """
+
+        And the ways
+            | nodes | junction   | name       | highway     |
+            | abcda | roundabout | roundabout | residential |
+            | gfi   |            | side       | residential |
+            | efb   |            | left       | residential |
+            | dh    |            | right      | residential |
+            | ck    |            | bottom     | residential |
+
+        When I route I should get
+            | waypoints | route            | turns                           |
+            | e,h       | left,right,right | depart,roundabout-exit-2,arrive |
+
+    @3254
+    Scenario: Driving up to and through a roundabout
+        Given the node map
+            """
+              g       a
+              |     /   \
+            e-f - b      d - - - h
+              |     \   /
+              i       c
+                      |
+                      k
+            """
+
+        And the ways
+            | nodes | junction   | name       | highway     |
+            | abcda | roundabout | roundabout | residential |
+            | gfi   |            | side       | residential |
+            | efb   |            | left       | residential |
+            | dh    |            | right      | residential |
+            | ck    |            | bottom     | residential |
+
+        When I route I should get
+            | waypoints | route            | turns                           |
+            | e,h       | left,right,right | depart,roundabout-exit-2,arrive |
