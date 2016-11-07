@@ -1,3 +1,8 @@
+# 5.4.3
+  - Changes from 5.4.1
+    - Bugfixes
+      - #3254 Fixed a bug that could end up hiding roundabout instructions
+
 # 5.4.2
   - Changes from 5.4.1
     - Bugfixes
