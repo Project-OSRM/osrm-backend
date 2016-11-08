@@ -84,13 +84,13 @@ speed_profile = {
   default = 10
 }
 
--- service speeds
-service_speeds = {
-  alley = 5,
-  parking = 5,
-  parking_aisle = 5,
-  driveway = 5,
-  ["drive-through"] = 5
+-- service penalties
+service_penalties = {
+  alley = 0.5,
+  parking = 0.5,
+  parking_aisle = 0.5,
+  driveway = 0.5,
+  ["drive-through"] = 0.5
 }
 
 -- surface/trackype/smoothness
@@ -189,16 +189,23 @@ maxspeed_table = {
   ["none"] = 140
 }
 
+penalty_table = {
+  ["service"] = 0.5,
+}
+
 -- set profile properties
 properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false
--- this will use the duration and {forward/backward}_speed values as weight
-properties.weight_name                     = 'duration'
+-- For routing based on duration, but weighted for prefering certain roads
+properties.weight_name                     = 'routability'
+-- For shortest duration without penalties for accessibility
+--properties.weight_name                     = 'duration'
+-- For shortest distance without penalties for accessibility
 --properties.weight_name                     = 'distance'
 
-local side_road_speed_multiplier = 0.8
+local side_road_multiplier       = 0.8
 local turn_penalty               = 7.5
 local traffic_light_penalty      = 2
 local u_turn_penalty             = 20
@@ -309,7 +316,7 @@ end
 function handle_hov(way,result,data)
   -- respect user-preference for HOV
   if not ignore_hov_ways then
-    return
+    return true
   end
 
   -- check if way is hov only
@@ -449,20 +456,9 @@ function handle_speed(way,result,data)
     return false
   end
 
-  if handle_side_roads(way,result) == false then return false end
   if handle_surface(way,result) == false then return false end
   if handle_maxspeed(way,data,result) == false then return false end
-  if handle_speed_scaling(way,result) == false then return false end
   if handle_alternating_speed(way,result) == false then return false end
-end
-
--- reduce speed on special side roads
-function handle_side_roads(way,result)
-  local sideway = way:get_value_by_key("side_road")
-  if "yes" == sideway or "rotary" == sideway then
-    result.forward_speed = result.forward_speed * side_road_speed_multiplier
-    result.backward_speed = result.backward_speed * side_road_speed_multiplier
-  end
 end
 
 -- reduce speed on bad surfaces
@@ -549,45 +545,54 @@ function handle_service(way,result)
 end
 
 -- scale speeds to get better average driving times
-function handle_speed_scaling(way,result)
+function handle_penalties(way,result)
+  local service_penalty = 1.0
+  local service = way:get_value_by_key("service")
+  if service and service_penatlies[service] then
+    service_penalty = service_penatlies[service]
+  end
+
+  local width_penalty = 1.0
   local width = math.huge
   local lanes = math.huge
-  if result.forward_speed > 0 or result.backward_speed > 0 then
-    local width_string = way:get_value_by_key("width")
-    if width_string and tonumber(width_string:match("%d*")) then
-      width = tonumber(width_string:match("%d*"))
-    end
-
-    local lanes_string = way:get_value_by_key("lanes")
-    if lanes_string and tonumber(lanes_string:match("%d*")) then
-      lanes = tonumber(lanes_string:match("%d*"))
-    end
+  local width_string = way:get_value_by_key("width")
+  if width_string and tonumber(width_string:match("%d*")) then
+    width = tonumber(width_string:match("%d*"))
   end
-
+  local lanes_string = way:get_value_by_key("lanes")
+  if lanes_string and tonumber(lanes_string:match("%d*")) then
+    lanes = tonumber(lanes_string:match("%d*"))
+  end
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
-
-  local service = way:get_value_by_key("service")
-  if result.forward_speed > 0 then
-    local scaled_speed = result.forward_speed * speed_reduction
-    local penalized_speed = math.huge
-    if service and service_speeds[service] then
-      penalized_speed = service_speeds[service]
-    elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.forward_speed / 2
-    end
-    result.forward_speed = math.min(penalized_speed, scaled_speed)
+  if width <= 3 or (lanes <= 1 and is_bidirectional) then
+    width_penalty = 0.5
   end
 
-  if result.backward_speed > 0 then
-    local scaled_speed = result.backward_speed * speed_reduction
-    local penalized_speed = math.huge
-    if service and service_speeds[service]then
-      penalized_speed = service_speeds[service]
-    elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.backward_speed / 2
+  local alternating_penalty = 1.0
+  if "alternating" == way:get_value_by_key('oneway') then
+    alternating_penalty = 0.4
+  end
+
+
+  local sideroad_penalty = 1.0
+  local sideroad = way:get_value_by_key("side_road")
+  if "yes" == sideroad or "rotary" == sideroad then
+    sideroad_penalty = sideroad_multiplier
+  end
+
+  local penalty = service_penalty * width_penalty * alternating_penalty * sideroad_penalty
+
+  if properties.weight_name == 'routability' then
+    if result.forward_speed > 0 then
+      result.forward_rate = result.forward_speed * penalty
     end
-    result.backward_speed = math.min(penalized_speed, scaled_speed)
+    if result.backward_speed > 0 then
+      result.backward_rate = result.backward_speed * penalty
+    end
+    if result.duration > 0 then
+      result.weight = result.duration / penalty
+    end
   end
 end
 
@@ -628,6 +633,7 @@ function handle_destinations(way,result,data)
 end
 
 -- maxspeed and advisory maxspeed
+-- converts max speed to an average speed estimation
 function handle_maxspeed(way,data,result)
   local keys = Sequence { 'maxspeed:advisory', 'maxspeed' }
   local forward, backward = Directional.get_values_by_set(way,data,keys)
@@ -635,26 +641,17 @@ function handle_maxspeed(way,data,result)
   backward = parse_maxspeed(backward)
 
   if forward and forward > 0 then
-    result.forward_speed = forward
+    result.forward_speed = forward * speed_scaling
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward
+    result.backward_speed = backward * speed_scaling
   end
 end
 
 -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
 -- Scaling speed to take average waiting time into account plus some more for start / stop.
 function handle_alternating_speed(way,result)
-  if "alternating" == way:get_value_by_key('oneway') then
-    local scaling_factor = 0.4
-    if result.forward_speed ~= math.huge then
-      result.forward_speed = result.forward_speed * scaling_factor
-    end
-    if result.backward_speed ~= math.huge then
-      result.backward_speed = result.backward_speed * scaling_factor
-    end
-  end
 end
 
 
@@ -717,6 +714,8 @@ function way_function(way, result)
 
   -- compute speed taking into account way type, maxspeed tags, etc.
   if handle_speed(way,result,data) == false then return end
+  -- compute pentalties for the routing weight based on routability
+  if handle_penalties(way,result,data) == false then return end
 
   -- handle turn lanes and road classification, used for guidance
   if handle_turn_lanes(way,result,data) == false then return end
