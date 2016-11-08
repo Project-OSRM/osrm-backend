@@ -373,7 +373,9 @@ class StaticRTree
         {
             m_leaves_region.open(leaf_file);
             std::size_t num_leaves = m_leaves_region.size() / sizeof(LeafNode);
-            m_leaves.reset(reinterpret_cast<const LeafNode *>(m_leaves_region.data()), num_leaves);
+            auto data_ptr = m_leaves_region.data();
+            BOOST_ASSERT(reinterpret_cast<uintptr_t>(data_ptr) % alignof(LeafNode) == 0);
+            m_leaves.reset(reinterpret_cast<const LeafNode *>(data_ptr), num_leaves);
         }
         catch (const std::exception &exc)
         {
