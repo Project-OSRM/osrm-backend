@@ -7,10 +7,8 @@ Feature: Turn Location Feature
 
     Scenario: Simple feature to test turn locations
         Given the node map
-            """
-              c
-            a b d
-            """
+            |   | c |   |
+            | a | b | d |
 
         And the ways
             | nodes  | highway |
