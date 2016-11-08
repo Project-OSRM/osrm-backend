@@ -34,6 +34,10 @@ VERSION=3.9.0
 ./mason publish clang-tidy ${VERSION}
 ./mason build clang-format ${VERSION}
 ./mason publish clang-format ${VERSION}
+./mason build lldb ${VERSION}
+./mason publish lldb ${VERSION}
+./mason build llvm-cov ${VERSION}
+./mason publish llvm-cov ${VERSION}
 ```
 
 #### OSX details
@@ -66,9 +70,9 @@ To accomplish this (c++11 build of clang++ and linking to libc++ instead of an u
 
 ```sh
 ./mason install clang++ 3.9.0
-CLANG_39_PREFIX=$(./mason prefix clang 3.8.0)
-export CXX=${CLANG_38_PREFIX}/bin/clang++-3.9
-export CC=${CLANG_38_PREFIX}/bin/clang-3.9
+CLANG_39_PREFIX=$(./mason prefix clang++ 3.9.0)
+export CXX=${CLANG_39_PREFIX}/bin/clang++-3.9
+export CC=${CLANG_39_PREFIX}/bin/clang-3.9
 ./mason build llvm 3.9.0
 ```
 

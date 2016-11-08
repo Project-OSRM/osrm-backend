@@ -18,6 +18,7 @@ function setup_release() {
     get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/libunwind-${MASON_VERSION}.src.tar.xz"         ${MASON_BUILD_PATH}/projects/libunwind      90c0184ca72e1999fec304f76bfa10340f038ee5
     get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/lld-${MASON_VERSION}.src.tar.xz"               ${MASON_BUILD_PATH}/tools/lld               416c36ded12ead42dc4739d52eabf22267300883
     get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/clang-tools-extra-${MASON_VERSION}.src.tar.xz" ${MASON_BUILD_PATH}/tools/clang/tools/extra ea40e36d54dc8c9bb21cbebcc872a3221a2ed685
+    get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/lldb-${MASON_VERSION}.src.tar.xz"              ${MASON_BUILD_PATH}/tools/lldb              c8c38fa9ab92f9021067678f1a1c8f07ea75ac93
 }
 
 mason_run "$@"
