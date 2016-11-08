@@ -258,8 +258,8 @@ inline bool requiresNameAnnounced(const std::string &from_name,
                                   const std::string &from_ref,
                                   const std::string &from_pronunciation,
                                   const std::string &to_name,
-                                  const std::string &to_pronunciation,
-                                  const std::string &to_ref)
+                                  const std::string &to_ref,
+                                  const std::string &to_pronunciation)
 {
     // Dummy since we need to provide a SuffixTable but do not have the data for it.
     // (Guidance Post-Processing does not keep the suffix table around at the moment)
