@@ -43,7 +43,7 @@ inline void print(const engine::guidance::RouteStep &step)
             std::cout << " " << (entry ? "true" : "false");
         std::cout << ")";
     }
-    std::cout << "] name[" << step.name_id << "]: " << step.name;
+    std::cout << "] name[" << step.name_id << "]: " << step.name << " Ref: " << step.ref << " Pronunciation: " << step.pronunciation;
 }
 
 inline void print(const std::vector<engine::guidance::RouteStep> &steps)
