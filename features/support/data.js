@@ -126,6 +126,20 @@ module.exports = function () {
         return fromNode;
     };
 
+    // find a node based on an array containing lon/lat
+    this.findNodeByLocation = (node_location) => {
+        var searched_coordinate = new classes.Location(node_location[0],node_location[1]);
+        for (var node in this.nameNodeHash)
+        {
+            var node_coordinate = new classes.Location(this.nameNodeHash[node].lon,this.nameNodeHash[node].lat);
+            if (this.FuzzyMatch.matchCoordinate(searched_coordinate, node_coordinate, this.zoom))
+            {
+                return node;
+            }
+        }
+        return '_';
+    };
+
     this.findWayByName = (s) => {
         return this.nameWayHash[s.toString()] || this.nameWayHash[s.toString().split('').reverse().join('')];
     };

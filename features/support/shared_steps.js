@@ -35,7 +35,7 @@ module.exports = function () {
                     if (err) return cb(err);
                     if (body && body.length) {
                         let destinations, pronunciations, instructions, refs, bearings, turns, modes, times,
-                            distances, summary, intersections, lanes;
+                            distances, summary, intersections, lanes, locations;
 
                         let json = JSON.parse(body);
 
@@ -54,6 +54,7 @@ module.exports = function () {
                             distances = this.distanceList(json.routes[0]);
                             lanes = this.lanesList(json.routes[0]);
                             summary = this.summary(json.routes[0]);
+                            locations = this.locations(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
@@ -123,6 +124,10 @@ module.exports = function () {
 
                             if (headers.has('intersections')) {
                                 got.intersections = (intersections || '').trim();
+                            }
+
+                            if (headers.has('locations')){
+                                got.locations = (locations || '').trim();
                             }
 
                             var putValue = (key, value) => {

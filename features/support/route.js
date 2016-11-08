@@ -218,6 +218,14 @@ module.exports = function () {
             .join(',');
     };
 
+    this.locations = (instructions) => {
+        return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
+            .map(v => {
+                return this.findNodeByLocation(v.maneuver.location);
+            })
+            .join(',');
+    };
+
     this.intersectionList = (instructions) => {
         return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
             .map( v => {
