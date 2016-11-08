@@ -70,8 +70,6 @@ properties.max_speed_for_map_matching    = 40/3.6 -- kmph -> m/s
 properties.use_turn_restrictions         = false
 properties.continue_straight_at_waypoint = false
 
-local fallback_names     = true
-
 function get_restrictions(vector)
   for i,v in ipairs(restrictions) do
     vector:Add(v)
@@ -153,9 +151,6 @@ function way_function (way, result)
    -- name
   if name and "" ~= name then
     result.name = name
-  elseif highway and fallback_names then
-    result.name = "{highway:"..highway.."}"  -- if no name exists, use way type
-                                            -- this encoding scheme is excepted to be a temporary solution
   end
   if ref and "" ~= ref then
     result.ref = ref

@@ -106,7 +106,6 @@ local turn_bias                 = 1.4
 -- local safety_penalty            = 0.7
 local safety_penalty            = 1.0
 local use_public_transport      = true
-local fallback_names            = true
 
 local function parse_maxspeed(source)
     if not source then
@@ -214,11 +213,6 @@ function way_function (way, result)
   -- name
   if name and "" ~= name then
     result.name = name
-  -- TODO find a better solution for encoding way type
-  elseif fallback_names and highway then
-    -- if no name exists, use way type
-    -- this encoding scheme is expected to be a temporary solution
-    result.name = "{highway:"..highway.."}"
   end
 
   -- ref

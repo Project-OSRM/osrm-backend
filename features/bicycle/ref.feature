@@ -29,8 +29,8 @@ Feature: Bike - Way ref
             | ab    |      | E7  |
 
         When I route I should get
-            | from | to | route                               | ref   |
-            | a    | b  | {highway:primary},{highway:primary} | E7,E7 |
+            | from | to | route | ref   |
+            | a    | b  | ,     | E7,E7 |
 
     Scenario: Bike - Way with only name
         Given the node map
