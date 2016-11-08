@@ -1,8 +1,8 @@
 @routing @bicycle @mode
 Feature: Bike - Mode flag
 
-	Background:
-		Given the profile "bicycle"
+    Background:
+        Given the profile "bicycle"
         Given a grid size of 5 meters
 
     Scenario: Bike Sliproad
@@ -29,5 +29,5 @@ Feature: Bike - Mode flag
             | geh   | secondary | street |                |
 
         When I route I should get
-            | waypoints | route                           | turns                               |
-            | a,f       | street,{highway:path},road,road | depart,turn right,turn right,arrive |
+            | waypoints | route             | turns                               |
+            | a,f       | street,,road,road | depart,turn right,turn right,arrive |
