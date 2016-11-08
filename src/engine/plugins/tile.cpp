@@ -621,6 +621,22 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
             line_layer_writer.add_uint32(util::vector_tile::EXTENT_TAG,
                                          util::vector_tile::EXTENT); // extent
 
+            // Because we need to know the indexes into the vector tile lookup table,
+            // we need to do an initial pass over the data and create the complete
+            // index of used values.
+            for (const auto &edge : edges)
+            {
+                const auto forward_weight_vector =
+                    facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+                const auto reverse_weight_vector =
+                    facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
+                const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
+                                                                  edge.fwd_segment_position - 1];
+                use_line_value(reverse_weight);
+                use_line_value(forward_weight);
+            }
+
             // Begin the layer features block
             {
                 // Each feature gets a unique id, starting at 1
@@ -652,21 +668,18 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                         reverse_datasource_vector[reverse_datasource_vector.size() -
                                                   edge.fwd_segment_position - 1];
 
-                    use_line_value(reverse_weight);
-                    use_line_value(forward_weight);
-
                     std::string name = facade->GetNameForID(edge.name_id);
                     const auto name_offset = [&name, &names, &name_offsets]() {
                         auto iter = name_offsets.find(name);
                         if (iter == name_offsets.end())
                         {
-                            auto offset = names.size() - 1;
+                            auto offset = names.size();
                             name_offsets[name] = offset;
+                            names.push_back(std::move(name));
                             return offset;
                         }
                         return iter->second;
                     }();
-                    names.push_back(std::move(name));
 
                     const auto encode_tile_line = [&line_layer_writer,
                                                    &edge,
