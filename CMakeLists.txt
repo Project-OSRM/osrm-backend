@@ -24,7 +24,7 @@ if(ENABLE_MASON)
   set(MASON_CLANG_VERSION "3.8.1")
   set(MASON_BOOST_VERSION "1.61.0")
   set(MASON_STXXL_VERSION "1.4.1")
-  set(MASON_EXPAT_VERSION "2.1.1")
+  set(MASON_EXPAT_VERSION "2.2.0")
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_LUABIND_VERSION "e414c57bcb687bb3091b7c55bbff6947f052e46b")
   set(MASON_BZIP2_VERSION "1.0.6")
@@ -32,6 +32,12 @@ if(ENABLE_MASON)
   set(MASON_CCACHE_VERSION "3.3.1")
 
   message(STATUS "Enabling mason")
+
+  find_program(CURL_FOUND curl)
+  if(NOT CURL_FOUND)
+    message(FATAL_ERROR "curl command required with -DENABLE_MASON")
+  endif()
+
   set(MASON_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason)
   include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason.cmake)
   if(NOT CMAKE_CXX_COMPILER)
@@ -400,6 +406,10 @@ if(ENABLE_MASON)
     set(ENV{CCACHE_CPP2} "true")
   endif()
 
+  # note: we avoid calling find_package(Osmium ...) here to ensure that the
+  # expat and bzip2 are used from mason rather than the system
+  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
+
 else()
 
   find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
@@ -450,17 +460,18 @@ else()
     endif()
   endif()
 
+  # note libosmium depends on expat and bzip2
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
+  set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
+  find_package(Osmium REQUIRED COMPONENTS io)
+  include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
+
 endif()
 
 # even with mason builds we want to link to system zlib
 # to ensure that osrm binaries play well with other binaries like nodejs
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
-set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
-find_package(Osmium REQUIRED COMPONENTS io)
-include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 
 if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_dependency_defines(-DBOOST_TEST_DYN_LINK)

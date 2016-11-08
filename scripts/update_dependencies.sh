@@ -16,7 +16,7 @@ VARIANT_REPO=https://github.com/mapbox/variant.git
 VARIANT_TAG=v1.1.0
 
 MASON_REPO=https://github.com/mapbox/mason.git
-MASON_TAG=v0.1.0
+MASON_TAG=v0.1.1
 
 VARIANT_LATEST=$(curl https://api.github.com/repos/mapbox/variant/releases/latest | jq ".tag_name")
 OSMIUM_LATEST=$(curl https://api.github.com/repos/osmcode/libosmium/releases/latest | jq ".tag_name")
