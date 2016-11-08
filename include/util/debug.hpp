@@ -23,6 +23,7 @@ inline void print(const engine::guidance::RouteStep &step)
     std::cout << static_cast<int>(step.maneuver.instruction.type) << " "
               << static_cast<int>(step.maneuver.instruction.direction_modifier) << "  "
               << static_cast<int>(step.maneuver.waypoint_type) << " "
+              << step.maneuver.location << " "
               << " Duration: " << step.duration << " Distance: " << step.distance
               << " Geometry: " << step.geometry_begin << " " << step.geometry_end
               << "\n\tIntersections: " << step.intersections.size() << " [";

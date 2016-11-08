@@ -111,5 +111,12 @@ module.exports = {
             return this.match(got[0], util.format('%d ~0.0025%', want.lon)) &&
                 this.match(got[1], util.format('%d ~0.0025%', want.lat));
         }
+
+        matchCoordinate (got, want, zoom) {
+            if (got == null || want == null) return false;
+            return this.match(got.lon, util.format('%d +- %d', want.lon, 0.25*zoom)) &&
+                this.match(got.lat, util.format('%d +- %d', want.lat, 0.25*zoom));
+        }
+
     }
 };

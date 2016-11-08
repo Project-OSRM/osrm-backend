@@ -2,6 +2,7 @@
   - Changes from 5.4.1
     - Bugfixes
       - #3254 Fixed a bug that could end up hiding roundabout instructions
+      - #3260 fixed a bug that provided the wrong location in the arrival instruction
 
 # 5.4.2
   - Changes from 5.4.1
