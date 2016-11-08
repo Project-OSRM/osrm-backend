@@ -69,6 +69,15 @@ template <> struct hash<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>>
 };
 }
 
+namespace
+{
+template <typename T> inline bool is_aligned(const void *pointer)
+{
+    static_assert(sizeof(T) % alignof(T) == 0, "pointer can not be used as an array pointer");
+    return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
+}
+}
+
 namespace osrm
 {
 namespace contractor
@@ -571,6 +580,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     };
 #pragma pack(pop, r1)
 
+    BOOST_ASSERT(is_aligned<EdgeBasedGraphHeader>(edge_based_graph_region.get_address()));
     const EdgeBasedGraphHeader graph_header =
         *(reinterpret_cast<const EdgeBasedGraphHeader *>(edge_based_graph_region.get_address()));
 
@@ -669,6 +679,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
         auto region = mmap_file(rtree_leaf_filename.c_str());
         region.advise(mapped_region::advice_willneed);
+        BOOST_ASSERT(is_aligned<LeafNode>(region.get_address()));
 
         const auto bytes = region.get_size();
         const auto first = static_cast<const LeafNode *>(region.get_address());
@@ -850,15 +861,19 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
     auto penaltyblock = reinterpret_cast<const extractor::lookup::PenaltyBlock *>(
         edge_penalty_region.get_address());
-    auto edge_segment_byte_ptr = reinterpret_cast<const char *>(edge_segment_region.get_address());
+    BOOST_ASSERT(is_aligned<extractor::lookup::PenaltyBlock>(penaltyblock));
+
     auto edge_based_edge_ptr = reinterpret_cast<extractor::EdgeBasedEdge *>(
         reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
         sizeof(EdgeBasedGraphHeader));
+    BOOST_ASSERT(is_aligned<extractor::EdgeBasedEdge>(edge_based_edge_ptr));
 
     const auto edge_based_edge_last = reinterpret_cast<extractor::EdgeBasedEdge *>(
         reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
         sizeof(EdgeBasedGraphHeader) +
         sizeof(extractor::EdgeBasedEdge) * graph_header.number_of_edges);
+
+    auto edge_segment_byte_ptr = reinterpret_cast<const char *>(edge_segment_region.get_address());
 
     while (edge_based_edge_ptr != edge_based_edge_last)
     {
@@ -869,8 +884,10 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         if (update_edge_weights || update_turn_penalties)
         {
             bool skip_this_edge = false;
+
             auto header = reinterpret_cast<const extractor::lookup::SegmentHeaderBlock *>(
                 edge_segment_byte_ptr);
+            BOOST_ASSERT(is_aligned<extractor::lookup::SegmentHeaderBlock>(header));
             edge_segment_byte_ptr += sizeof(extractor::lookup::SegmentHeaderBlock);
 
             auto previous_osm_node_id = header->previous_osm_node_id;
@@ -879,6 +896,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
             auto segmentblocks =
                 reinterpret_cast<const extractor::lookup::SegmentBlock *>(edge_segment_byte_ptr);
+            BOOST_ASSERT(is_aligned<extractor::lookup::SegmentBlock>(segmentblocks));
             edge_segment_byte_ptr +=
                 sizeof(extractor::lookup::SegmentBlock) * (header->num_osm_nodes - 1);
 

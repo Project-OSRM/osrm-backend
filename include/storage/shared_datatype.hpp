@@ -106,6 +106,7 @@ struct DataLayout
 
     template <typename T> inline void SetBlockSize(BlockID bid, uint64_t entries)
     {
+        static_assert(sizeof(T) % alignof(T) == 0, "aligned T* can't be used as an array pointer");
         num_entries[bid] = entries;
         entry_size[bid] = sizeof(T);
         entry_align[bid] = alignof(T);
