@@ -1,9 +1,6 @@
--- Enable calling our lua profile code directly, which makes it easier to debug.
--- We simulate the normal C++ environment by defining some globals and functions.
--- FIXME:
--- There are a few C++ tag helper methods that LUA code can call.
--- Debugging LUA code thay uses these will not work unless we reimplement the 
--- methods in LUA.
+-- Enable calling our lua profile code directly from the lua command line,
+-- which makes it easier to debug.
+-- We simulate the normal C++ environment by defining the required globals and functions.
 
 -- Usage:
 -- > cd profiles
@@ -12,7 +9,6 @@
 
 -- for more convenient printing of tables
 local pprint = require('lib/pprint')
-
 
 -- globals that are normally set from C++
 
@@ -47,13 +43,43 @@ mode = {
 
 -- input tags, normally extracted from OSM data
 local way = {
-  highway = 'primary'
+  highway = 'primary',
+  name = 'Main Street',
+  --width = '3',
+  --maxspeed = '30',
+  --['maxspeed:advisory'] = '25',
+  --oneway = '-1',
+  --service = 'alley',
+  --['oneway:bicycle'] = 'yes',
+  --junction = 'roundabout',
+  --['name:pronunciation'] = 'fuerloong',
+  --route = 'ferry',
+  --duration = '00:01:00',
+  --hov = 'designated',
+  --access = 'no'
 }
--- function normally provided via C++
+-- tag function normally provided via C++
 function way:get_value_by_key(k)
   return self[k]
 end
 
+-- Mock C++ helper functions which are called from LUA.
+-- FIXME
+-- Debugging LUA code that uses these will not work correctly
+-- unless we reimplement themethods in LUA.
+
+function durationIsValid(str)
+  return true
+end
+
+function parseDuration(str)
+  return 1
+end
+
+function canonicalizeStringList(str)
+  return str
+end
+ 
 -- start state of result table, normally set form C++
 local result = {
   road_classification = {},
