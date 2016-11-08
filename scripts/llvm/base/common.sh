@@ -15,25 +15,25 @@ function get_llvm_project() {
     fi
     local EXPECTED_HASH=${3:-false}
     local file_basename=$(basename ${URL})
-    local local_checkout=$(pwd)/${file_basename}
+    local local_file_or_checkout=$(pwd)/${file_basename}
     if [[ ${URL} =~ '.git' ]]; then
-        if [ ! -d ${local_checkout} ] ; then
-            mason_step "cloning ${URL} to ${local_checkout}"
-            git clone --depth 1 ${URL} ${local_checkout}
+        if [ ! -d ${local_file_or_checkout} ] ; then
+            mason_step "cloning ${URL} to ${local_file_or_checkout}"
+            git clone --depth 1 ${URL} ${local_file_or_checkout}
         else
             mason_substep "already cloned ${URL}, pulling to update"
-            (cd ${local_checkout} && git pull)
+            (cd ${local_file_or_checkout} && git pull)
         fi
-        mason_step "moving ${local_checkout} into place at ${TO_DIR}"
-        cp -r ${local_checkout} ${TO_DIR}
+        mason_step "moving ${local_file_or_checkout} into place at ${TO_DIR}"
+        cp -r ${local_file_or_checkout} ${TO_DIR}
     else
-        if [ ! -f ${local_file} ] ; then
-            mason_step "Downloading ${URL} to ${local_file}"
+        if [ ! -f ${local_file_or_checkout} ] ; then
+            mason_step "Downloading ${URL} to ${local_file_or_checkout}"
             curl --retry 3 -f -L -O "${URL}"
         else
-            mason_substep "already downloaded $1 to ${local_file}"
+            mason_substep "already downloaded $1 to ${local_file_or_checkout}"
         fi
-        OBJECT_HASH=$(git hash-object ${local_file})
+        export OBJECT_HASH=$(git hash-object ${local_file_or_checkout})
         if [[ ${EXPECTED_HASH:-false} == false ]]; then
             mason_error "Warning: no expected hash provided by script.sh, actual was ${OBJECT_HASH}"
         else
@@ -44,8 +44,8 @@ function get_llvm_project() {
                 mason_success "Success: hash matched: ${EXPECTED_HASH} (expected) == ${OBJECT_HASH} (actual)"
             fi
         fi
-        mason_step "uncompressing ${local_file}"
-        tar xf ${local_file}
+        mason_step "uncompressing ${local_file_or_checkout}"
+        tar xf ${local_file_or_checkout}
         local uncompressed_dir=${file_basename/.tar.xz}
         mason_step "moving ${uncompressed_dir} into place at ${TO_DIR}"
         mv ${uncompressed_dir} ${TO_DIR}
@@ -88,6 +88,12 @@ function mason_prepare_compile {
     MASON_CMAKE=$(${MASON_DIR}/mason prefix cmake ${CMAKE_VERSION})
     ${MASON_DIR}/mason install ninja ${NINJA_VERSION}
     MASON_NINJA=$(${MASON_DIR}/mason prefix ninja ${NINJA_VERSION})
+
+    if [[ $(uname -s) == 'Linux' ]]; then
+        BINUTILS_VERSION=2.27
+        ${MASON_DIR}/mason install binutils ${BINUTILS_VERSION}
+        LLVM_BINUTILS_INCDIR=$(${MASON_DIR}/mason prefix binutils ${BINUTILS_VERSION})/include
+    fi
 }
 
 function mason_compile {
@@ -95,6 +101,7 @@ function mason_compile {
     export CC="${CC:-clang}"
     # knock out lldb doc building, to remove doxygen dependency
     perl -i -p -e "s/add_subdirectory\(docs\)//g;" tools/lldb/CMakeLists.txt
+
     mkdir -p ./build
     cd ./build
     CMAKE_EXTRA_ARGS=""
@@ -112,31 +119,43 @@ function mason_compile {
         CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCLANG_DEFAULT_CXX_STDLIB=libc++"
         CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DDEFAULT_SYSROOT=/"
         CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11"
-        CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DLLVM_CREATE_XCODE_TOOLCHAIN=ON"
+        CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DLLVM_CREATE_XCODE_TOOLCHAIN=ON -DLLVM_EXTERNALIZE_DEBUGINFO=ON"
     fi
+    MAJOR_MINOR=$(echo $MASON_VERSION | cut -d '.' -f1-2)
+
+    if [[ $(uname -s) == 'Linux' ]]; then
+        CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DLLVM_BINUTILS_INCDIR=${LLVM_BINUTILS_INCDIR}"
+        if [[ ${MAJOR_MINOR} == "3.8" ]]; then
+            # note: LIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON is only needed with llvm < 3.9.0 to avoid libcxx(abi) build breaking when only a static libc++ exists
+            CMAKE_EXTRA_ARGS="${CMAKE_EXTRA_ARGS} -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON"
+        fi
+    fi
+
     # we link to libc++ even on linux to avoid runtime dependency on libstdc++:
     # https://github.com/mapbox/mason/issues/252
     export CXXFLAGS="-stdlib=libc++ ${CXXFLAGS//-mmacosx-version-min=10.8}"
     export LDFLAGS="-stdlib=libc++ ${LDFLAGS//-mmacosx-version-min=10.8}"
     if [[ $(uname -s) == 'Linux' ]]; then
         export LDFLAGS="${LDFLAGS} -Wl,--start-group -L$(pwd)/lib -lc++ -lc++abi -pthread -lc -lgcc_s"
+
     fi
     # llvm may request c++14 instead so let's not force c++11
-    # TODO: -fvisibility=hidden breaks just lldb
     export CXXFLAGS="${CXXFLAGS//-std=c++11}"
 
     # TODO: test this
     #-DLLVM_ENABLE_LTO=ON \
 
+
     ${MASON_CMAKE}/bin/cmake ../ -G Ninja -DCMAKE_INSTALL_PREFIX=${MASON_PREFIX} \
      -DCMAKE_BUILD_TYPE=Release \
+     -DLLVM_TARGETS_TO_BUILD="ARM;X86;AArch64" \
      -DCMAKE_CXX_COMPILER_LAUNCHER="${MASON_CCACHE}/bin/ccache" \
      -DCMAKE_CXX_COMPILER="$CXX" \
      -DCMAKE_C_COMPILER="$CC" \
      -DLIBCXX_ENABLE_ASSERTIONS=OFF \
+     -DLIBCXX_ENABLE_SHARED=OFF \
      -DLIBCXXABI_ENABLE_SHARED=OFF \
      -DLIBUNWIND_ENABLE_SHARED=OFF \
-     -DLIBCXX_ENABLE_SHARED=OFF \
      -DLIBCXXABI_USE_LLVM_UNWINDER=ON \
      -DLLVM_ENABLE_ASSERTIONS=OFF \
      -DCLANG_VENDOR="mapbox/mason" \
@@ -148,13 +167,15 @@ function mason_compile {
      -DCMAKE_MAKE_PROGRAM=${MASON_NINJA}/bin/ninja \
      ${CMAKE_EXTRA_ARGS}
 
+    ${MASON_NINJA}/bin/ninja unwind -j${MASON_CONCURRENCY}
+
     # make libc++ and libc++abi first
     # this ensures that the LD_LIBRARY_PATH above will be valid
     # and that clang++ on linux will be able to link itself to
     # this same instance of libc++
-    ${MASON_NINJA}/bin/ninja unwind -v -j${MASON_CONCURRENCY}
-    ${MASON_NINJA}/bin/ninja cxxabi -v -j${MASON_CONCURRENCY}
-    ${MASON_NINJA}/bin/ninja cxx -v -j${MASON_CONCURRENCY}
+    ${MASON_NINJA}/bin/ninja cxx -j${MASON_CONCURRENCY}
+
+    ${MASON_NINJA}/bin/ninja lldb -j${MASON_CONCURRENCY}
     # no move the host compilers libc++ and libc++abi shared libs out of the way
     if [[ ${CXX_BOOTSTRAP:-false} != false ]]; then
         mkdir -p /tmp/backup_shlibs
@@ -166,8 +187,6 @@ function mason_compile {
     ${MASON_NINJA}/bin/ninja install
     # set up symlinks for clang++ to match what llvm.org binaries provide
     cd ${MASON_PREFIX}/bin/
-    MAJOR_MINOR=$(echo $MASON_VERSION | cut -d '.' -f1-2)
-    rm -f "clang++-${MAJOR_MINOR}"
     ln -s "clang++" "clang++-${MAJOR_MINOR}"
     # restore host compilers sharedlibs
     if [[ ${CXX_BOOTSTRAP:-false} != false ]]; then
