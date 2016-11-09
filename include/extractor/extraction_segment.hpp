@@ -8,16 +8,16 @@ namespace extractor
 
 struct ExtractionSegment
 {
-  ExtractionSegment(const osrm::util::Coordinate source_, const osrm::util::Coordinate target_, double distance_, double duration_, double weight_)
-    : source(source_), target(target_), distance(distance_), duration(duration_), weight(weight_)
+  ExtractionSegment(const osrm::util::Coordinate source_, const osrm::util::Coordinate target_, double distance_, double weight_, double duration_)
+    : source(source_), target(target_), distance(distance_), weight(weight_), duration(duration_)
   {
   }
 
   const osrm::util::Coordinate source;
   const osrm::util::Coordinate target;
   const double distance;
-  double duration;
   double weight;
+  double duration;
 };
 }
 }
