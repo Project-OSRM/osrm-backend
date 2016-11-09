@@ -19,6 +19,13 @@
 #include <string>
 #include <vector>
 
+static double search_radius_for_gps_radius(double gps_radius) {
+    // For a given GPS radius, determine the radius we need to search for candidate street segments
+    // to have a 99.9% chance of finding the correct segment.
+    // For more detail, see the analysis at https://github.com/Project-OSRM/osrm-backend/pull/3184
+    return std::min(gps_radius * 3.5  + 45, 200);
+}
+
 namespace osrm
 {
 namespace engine
@@ -153,11 +160,8 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFaca
                        parameters.radiuses.end(),
                        search_radiuses.begin(),
                        [&](const boost::optional<double> &maybe_radius) {
-                           double in_radius = maybe_radius ? *maybe_radius : DEFAULT_GPS_PRECISION;
-
-                           return std::min(
-                               in_radius * parameters.search_radius_multiplier + parameters.search_radius_base,
-                               parameters.search_radius_max);
+                           double gps_radius = maybe_radius ? *maybe_radius : DEFAULT_GPS_PRECISION;
+                           return search_radius_for_gps_radius(gps_radius);
                        });
     }
 
