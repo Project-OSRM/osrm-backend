@@ -15,6 +15,7 @@ namespace util
 
 NameTable::NameTable(const std::string &filename)
 {
+	// TODO normalize I/O
     boost::filesystem::ifstream name_stream(filename, std::ios::binary);
 
     if (!name_stream)

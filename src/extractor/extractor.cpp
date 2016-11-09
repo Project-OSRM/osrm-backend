@@ -155,6 +155,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         }
         util::SimpleLogger().Write() << "timestamp: " << timestamp;
 
+		// TODO normalize I/O
         boost::filesystem::ofstream timestamp_out(config.timestamp_file_name);
         timestamp_out.write(timestamp.c_str(), timestamp.length());
 
@@ -303,6 +304,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 void Extractor::WriteProfileProperties(const std::string &output_path,
                                        const ProfileProperties &properties) const
 {
+	// TODO normalize I/O
     boost::filesystem::ofstream out_stream(output_path);
     if (!out_stream)
     {
@@ -396,6 +398,7 @@ void Extractor::FindComponents(unsigned max_edge_id,
   */
 std::shared_ptr<RestrictionMap> Extractor::LoadRestrictionMap()
 {
+	// TODO normalize I/O
     boost::filesystem::ifstream input_stream(config.restriction_file_name,
                                              std::ios::in | std::ios::binary);
 
@@ -417,6 +420,7 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
 {
     std::vector<NodeBasedEdge> edge_list;
 
+	// TODO normalize I/O
     boost::filesystem::ifstream input_stream(config.output_file_name,
                                              std::ios::in | std::ios::binary);
 
@@ -527,6 +531,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
  */
 void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map)
 {
+	// TODO normalize I/O
     boost::filesystem::ofstream node_stream(config.node_output_path, std::ios::binary);
     const std::uint64_t size_of_mapping = internal_to_external_node_map.size();
     node_stream.write((char *)&size_of_mapping, sizeof(std::uint64_t));
@@ -589,7 +594,7 @@ void Extractor::WriteEdgeBasedGraph(
     EdgeID const max_edge_id,
     util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
 {
-
+	// TODO normalize I/O
     std::ofstream file_out_stream;
     file_out_stream.open(output_file_filename.c_str(), std::ios::binary);
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
@@ -620,6 +625,7 @@ void Extractor::WriteIntersectionClassificationData(
     const std::vector<util::guidance::BearingClass> &bearing_classes,
     const std::vector<util::guidance::EntryClass> &entry_classes) const
 {
+	// TODO normalize I/O
     std::ofstream file_out_stream(output_file_name.c_str(), std::ios::binary);
     if (!file_out_stream)
     {
@@ -682,6 +688,7 @@ void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
     util::SimpleLogger().Write() << "Writing turn lane masks...";
     TIMER_START(turn_lane_timer);
 
+	// TODO normalize I/O
     std::ofstream ofs(turn_lane_file, std::ios::binary);
     if (!ofs)
         throw osrm::util::exception("Failed to open " + turn_lane_file + " for writing.");

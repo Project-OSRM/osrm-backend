@@ -194,6 +194,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // collect number of elements to store in shared memory object
     util::SimpleLogger().Write() << "load names from: " << config.names_data_path;
     // number of entries in name index
+	// TODO normalize I/O
     boost::filesystem::ifstream name_stream(config.names_data_path, std::ios::binary);
     if (!name_stream)
     {
@@ -226,6 +227,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
         SharedDataLayout::LANE_DESCRIPTION_MASKS, lane_description_masks.size());
 
     // Loading information for original edges
+	// TODO normalize I/O
     boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
     if (!edges_input_stream)
     {
@@ -252,6 +254,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     shared_layout_ptr->SetBlockSize<EntryClassID>(SharedDataLayout::ENTRY_CLASSID,
                                                   number_of_original_edges);
 
+	// TODO normalize I/O
     boost::filesystem::ifstream hsgr_input_stream(config.hsgr_data_path, std::ios::binary);
     if (!hsgr_input_stream)
     {
@@ -266,6 +269,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
                                                                 hsgr_header.number_of_edges);
 
     // load rsearch tree size
+	// TODO normalize I/O
     boost::filesystem::ifstream tree_node_file(config.ram_index_path, std::ios::binary);
 
     const auto tree_size = io::readElementCount(tree_node_file);
@@ -277,6 +281,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
                                                                   properties_size);
 
     // read timestampsize
+	// TODO normalize I/O
     boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
     if (!timestamp_stream)
     {
@@ -286,6 +291,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     shared_layout_ptr->SetBlockSize<char>(SharedDataLayout::TIMESTAMP, timestamp_size);
 
     // load core marker size
+	// TODO normalize I/O
     boost::filesystem::ifstream core_marker_file(config.core_data_path, std::ios::binary);
     if (!core_marker_file)
     {
@@ -298,6 +304,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
                                               number_of_core_markers);
 
     // load coordinate size
+	// TODO normalize I/O
     boost::filesystem::ifstream nodes_input_stream(config.nodes_data_path, std::ios::binary);
     if (!nodes_input_stream)
     {
@@ -313,6 +320,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
         util::PackedVector<OSMNodeID>::elements_to_blocks(coordinate_list_size));
 
     // load geometries sizes
+	// TODO normalize I/O
     boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
     if (!geometry_input_stream)
     {
@@ -337,6 +345,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
 
     // load datasource sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist.
+	// TODO normalize I/O
     boost::filesystem::ifstream geometry_datasource_input_stream(config.datasource_indexes_path,
                                                                  std::ios::binary);
     if (!geometry_datasource_input_stream)
@@ -352,6 +361,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist
 
+	// TODO normalize I/O
     boost::filesystem::ifstream datasource_names_input_stream(config.datasource_names_path,
                                                               std::ios::binary);
     if (!datasource_names_input_stream)
@@ -368,6 +378,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
                                                  datasource_names_data.offsets.size());
     shared_layout_ptr->SetBlockSize<std::size_t>(SharedDataLayout::DATASOURCE_NAME_LENGTHS,
                                                  datasource_names_data.lengths.size());
+
+	// TODO normalize I/O
     boost::filesystem::ifstream intersection_stream(config.intersection_class_path,
                                                     std::ios::binary);
 
@@ -423,6 +435,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
                                                      num_bearings);
 
     // Loading turn lane data
+	// TODO normalize I/O
     boost::filesystem::ifstream lane_data_stream(config.turn_lane_data_path, std::ios::binary);
     std::uint64_t lane_tupel_count = 0;
     lane_data_stream.read(reinterpret_cast<char *>(&lane_tupel_count), sizeof(lane_tupel_count));
@@ -738,6 +751,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
     extractor::ProfileProperties *profile_properties_ptr =
         shared_layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(
             shared_memory_ptr, SharedDataLayout::PROPERTIES);
+
+	// TODO normalize I/O
     boost::filesystem::ifstream profile_properties_stream(config.properties_path);
     if (!profile_properties_stream)
     {

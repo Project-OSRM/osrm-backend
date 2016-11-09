@@ -43,6 +43,7 @@ class RasterGrid
         ydim = _ydim;
         _data.reserve(ydim * xdim);
 
+		// TODO normalize I/O
         boost::filesystem::ifstream stream(filepath, std::ios::binary);
         if (!stream)
         {

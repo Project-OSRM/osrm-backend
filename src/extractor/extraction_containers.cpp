@@ -140,6 +140,7 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name)
 {
+	// TODO normalize I/O
     std::ofstream file_out_stream;
     file_out_stream.open(output_file_name.c_str(), std::ios::binary);
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
@@ -159,6 +160,7 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
 {
     std::cout << "[extractor] writing street name index ... " << std::flush;
     TIMER_START(write_index);
+	// TODO normalize I/O
     boost::filesystem::ofstream file_stream(file_name, std::ios::binary);
 
     // transforms in-place name offsets to name lengths
@@ -624,6 +626,7 @@ void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
 void ExtractionContainers::WriteRestrictions(const std::string &path) const
 {
     // serialize restrictions
+	// TODO normalize I/O
     std::ofstream restrictions_out_stream;
     unsigned written_restriction_count = 0;
     restrictions_out_stream.open(path.c_str(), std::ios::binary);

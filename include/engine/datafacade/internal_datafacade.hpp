@@ -118,6 +118,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadProfileProperties(const boost::filesystem::path &properties_path)
     {
+		// TODO normalize I/O
         boost::filesystem::ifstream in_stream(properties_path);
         if (!in_stream)
         {
@@ -129,6 +130,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadLaneTupleIdPairs(const boost::filesystem::path &lane_data_path)
     {
+		// TODO normalize I/O
         boost::filesystem::ifstream in_stream(lane_data_path);
         if (!in_stream)
         {
@@ -145,6 +147,7 @@ class InternalDataFacade final : public BaseDataFacade
     {
         util::SimpleLogger().Write() << "Loading Timestamp";
 
+		// TODO normalize I/O
         boost::filesystem::ifstream timestamp_stream(timestamp_path);
         if (!timestamp_stream)
         {
@@ -158,6 +161,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadGraph(const boost::filesystem::path &hsgr_path)
     {
+		// TODO normalize I/O
         boost::filesystem::ifstream hsgr_input_stream(hsgr_path);
         if (!hsgr_input_stream)
         {
@@ -184,6 +188,7 @@ class InternalDataFacade final : public BaseDataFacade
     void LoadNodeAndEdgeInformation(const boost::filesystem::path &nodes_file_path,
                                     const boost::filesystem::path &edges_file_path)
     {
+		// TODO normalize I/O
         boost::filesystem::ifstream nodes_input_stream(nodes_file_path, std::ios::binary);
         if (!nodes_input_stream)
         {
@@ -196,6 +201,7 @@ class InternalDataFacade final : public BaseDataFacade
         storage::io::readNodes(
             nodes_input_stream, m_coordinate_list.data(), m_osmnodeid_list, number_of_coordinates);
 
+		// TODO normalize I/O
         boost::filesystem::ifstream edges_input_stream(edges_file_path, std::ios::binary);
         if (!edges_input_stream)
         {
@@ -225,6 +231,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadCoreInformation(const boost::filesystem::path &core_data_file)
     {
+		// TODO normalize I/O
         std::ifstream core_stream(core_data_file.string().c_str(), std::ios::binary);
         unsigned number_of_markers;
         core_stream.read((char *)&number_of_markers, sizeof(unsigned));
@@ -248,6 +255,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadGeometries(const boost::filesystem::path &geometry_file)
     {
+		// TODO normalize I/O
         std::ifstream geometry_stream(geometry_file.string().c_str(), std::ios::binary);
         unsigned number_of_indices = 0;
         unsigned number_of_compressed_geometries = 0;
@@ -284,6 +292,7 @@ class InternalDataFacade final : public BaseDataFacade
     void LoadDatasourceInfo(const boost::filesystem::path &datasource_names_file,
                             const boost::filesystem::path &datasource_indexes_file)
     {
+		// TODO normalize I/O
         boost::filesystem::ifstream datasources_stream(datasource_indexes_file, std::ios::binary);
         if (!datasources_stream)
         {
@@ -300,6 +309,7 @@ class InternalDataFacade final : public BaseDataFacade
                 datasources_stream, &m_datasource_list.front(), number_of_datasources);
         }
 
+		// TODO normalize I/O
         boost::filesystem::ifstream datasourcenames_stream(datasource_names_file, std::ios::binary);
         if (!datasourcenames_stream)
         {
@@ -341,6 +351,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadStreetNames(const boost::filesystem::path &names_file)
     {
+		// TODO normalize I/O
         boost::filesystem::ifstream name_stream(names_file, std::ios::binary);
 
         name_stream >> m_name_table;
@@ -358,6 +369,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadIntersectionClasses(const boost::filesystem::path &intersection_class_file)
     {
+		// TODO normalize I/O
         std::ifstream intersection_stream(intersection_class_file.string(), std::ios::binary);
         if (!intersection_stream)
             throw util::exception("Could not open " + intersection_class_file.string() +
