@@ -28,13 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_API_MATCH_PARAMETERS_HPP
 #define ENGINE_API_MATCH_PARAMETERS_HPP
 
-#define SEARCH_RADIUS_BASE_DEFAULT 45
-#define SEARCH_RADIUS_BASE_LIMIT 100
-#define SEARCH_RADIUS_MULTIPLIER_DEFAULT 3.5
-#define SEARCH_RADIUS_MULTIPLIER_LIMIT 10
-#define SEARCH_RADIUS_MAX_DEFAULT 200
-#define SEARCH_RADIUS_MAX_LIMIT 500
-
 #include "engine/api/route_parameters.hpp"
 
 #include <vector>
@@ -74,20 +67,10 @@ struct MatchParameters : public RouteParameters
     }
 
     std::vector<unsigned> timestamps;
-
-    double search_radius_base = SEARCH_RADIUS_BASE_DEFAULT;
-    double search_radius_multiplier = SEARCH_RADIUS_MULTIPLIER_DEFAULT;
-    double search_radius_max = SEARCH_RADIUS_MAX_DEFAULT;
-
     bool IsValid() const
     {
         return RouteParameters::IsValid() &&
-               (timestamps.empty() || timestamps.size() == coordinates.size()) &&
-               search_radius_base >= 0 && search_radius_multiplier >= 0 && search_radius_max > 0 &&
-               // limit the search_radius parameters to sane values to prevent overloading the server
-               search_radius_base <= SEARCH_RADIUS_BASE_LIMIT &&
-               search_radius_multiplier <= SEARCH_RADIUS_MULTIPLIER_LIMIT &&
-               search_radius_max <= SEARCH_RADIUS_MAX_LIMIT;
+               (timestamps.empty() || timestamps.size() == coordinates.size());
     }
 };
 }
