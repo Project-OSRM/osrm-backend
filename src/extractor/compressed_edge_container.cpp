@@ -75,6 +75,7 @@ unsigned CompressedEdgeContainer::GetZippedPositionForReverseID(const EdgeID edg
 
 void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) const
 {
+	// TODO normalize I/O
     boost::filesystem::fstream geometry_out_stream(path, std::ios::binary | std::ios::out);
     const unsigned compressed_geometry_indices = m_compressed_geometry_index.size() + 1;
     const unsigned compressed_geometries = m_compressed_geometry_nodes.size();
