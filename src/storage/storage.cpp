@@ -213,6 +213,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
 
     std::vector<std::uint32_t> lane_description_offsets;
     std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
+
+	// TODO normalize I/O
     if (!util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
                                          lane_description_offsets,
                                          lane_description_masks))
@@ -373,11 +375,14 @@ Storage::ReturnCode Storage::Run(int max_wait)
         throw util::exception("Could not open " + config.intersection_class_path.string() +
                               " for reading.");
 
+	// TODO normalize I/O
     if (!util::readAndCheckFingerprint(intersection_stream))
         throw util::exception("Fingerprint of " + config.intersection_class_path.string() +
                               " does not match or could not read from file");
 
     std::vector<BearingClassID> bearing_class_id_table;
+
+	// TODO normalize I/O
     if (!util::deserializeVector(intersection_stream, bearing_class_id_table))
         throw util::exception("Failed to bearing class ids read from " +
                               config.names_data_path.string());
@@ -429,6 +434,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
                               config.intersection_class_path.string());
 
     std::vector<util::guidance::EntryClass> entry_class_table;
+
+	// TODO normalize I/O
     if (!util::deserializeVector(intersection_stream, entry_class_table))
         throw util::exception("Failed to read entry classes from " +
                               config.intersection_class_path.string());

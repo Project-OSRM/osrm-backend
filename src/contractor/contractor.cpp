@@ -164,6 +164,8 @@ int Contractor::Run()
     util::SimpleLogger().Write() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
     std::string node_file_name = config.osrm_input_path.string() + ".enw";
+
+	// TODO normalize I/O
     if (util::deserializeVector(node_file_name, node_weights))
     {
         util::SimpleLogger().Write() << "Done reading node weights.";

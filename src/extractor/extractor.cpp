@@ -267,6 +267,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
         util::SimpleLogger().Write() << "Saving edge-based node weights to file.";
         TIMER_START(timer_write_node_weights);
+
+		// TODO normalize I/O
         util::serializeVector(config.edge_based_node_weights_output_path, edge_based_node_weights);
         TIMER_STOP(timer_write_node_weights);
         util::SimpleLogger().Write() << "Done writing. (" << TIMER_SEC(timer_write_node_weights)
@@ -628,6 +630,8 @@ void Extractor::WriteIntersectionClassificationData(
 
     util::SimpleLogger().Write() << "Writing Intersection Classification Data";
     TIMER_START(write_edges);
+
+	// TODO normalize I/O
     util::writeFingerprint(file_out_stream);
     util::serializeVector(file_out_stream, node_based_intersection_classes);
 
@@ -658,6 +662,7 @@ void Extractor::WriteIntersectionClassificationData(
         throw util::exception("Failed to write to " + output_file_name + ".");
     }
 
+	// TODO normalize I/O
     util::serializeVector(file_out_stream, entry_classes);
     TIMER_STOP(write_edges);
     util::SimpleLogger().Write() << "ok, after " << TIMER_SEC(write_edges) << "s for "
@@ -681,12 +686,14 @@ void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
     if (!ofs)
         throw osrm::util::exception("Failed to open " + turn_lane_file + " for writing.");
 
+	// TODO normalize I/O
     if (!util::serializeVector(ofs, turn_lane_offsets))
     {
         util::SimpleLogger().Write(logWARNING) << "Error while writing.";
         return;
     }
 
+	// TODO normalize I/O
     if (!util::serializeVector(ofs, turn_lane_masks))
     {
         util::SimpleLogger().Write(logWARNING) << "Error while writing.";

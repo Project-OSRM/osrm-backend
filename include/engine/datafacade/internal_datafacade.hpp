@@ -331,6 +331,7 @@ class InternalDataFacade final : public BaseDataFacade
 
     void LoadLaneDescriptions(const boost::filesystem::path &lane_description_file)
     {
+		// TODO normalize I/O
         if (!util::deserializeAdjacencyArray(lane_description_file.string(),
                                              m_lane_description_offsets,
                                              m_lane_description_masks))
@@ -362,6 +363,7 @@ class InternalDataFacade final : public BaseDataFacade
             throw util::exception("Could not open " + intersection_class_file.string() +
                                   " for reading.");
 
+		// TODO normalize I/O
         if (!util::readAndCheckFingerprint(intersection_stream))
             throw util::exception("Fingeprint does not match in " +
                                   intersection_class_file.string());
@@ -369,6 +371,8 @@ class InternalDataFacade final : public BaseDataFacade
         {
             util::SimpleLogger().Write(logINFO) << "Loading Bearing Class IDs";
             std::vector<BearingClassID> bearing_class_id;
+
+			// TODO normalize I/O
             if (!util::deserializeVector(intersection_stream, bearing_class_id))
                 throw util::exception("Reading from " + intersection_class_file.string() +
                                       " failed.");
@@ -395,6 +399,8 @@ class InternalDataFacade final : public BaseDataFacade
         {
             util::SimpleLogger().Write(logINFO) << "Loading Entry Classes";
             std::vector<util::guidance::EntryClass> entry_classes;
+
+			// TODO normalize I/O
             if (!util::deserializeVector(intersection_stream, entry_classes))
                 throw util::exception("Reading from " + intersection_class_file.string() +
                                       " failed.");

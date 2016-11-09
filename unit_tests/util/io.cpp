@@ -32,6 +32,7 @@ BOOST_AUTO_TEST_CASE(io_data)
     for (std::size_t i = 0; i < data_in.size(); ++i)
         data_in[i] = i;
 
+	// TODO normalize I/O
     osrm::util::serializeVector(IO_TMP_FILE, data_in);
     osrm::util::deserializeVector(IO_TMP_FILE, data_out);
 
