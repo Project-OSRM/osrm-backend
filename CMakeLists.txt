@@ -499,10 +499,10 @@ set(BOOST_ENGINE_LIBRARIES
   ${BOOST_BASE_LIBRARIES})
 
 # Binaries
-target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY} ${BOOST_BASE_LIBRARIES})
-target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_REGEX_LIBRARY} ${BOOST_BASE_LIBRARIES})
-target_link_libraries(osrm-contract ${Boost_PROGRAM_OPTIONS_LIBRARY} ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES} osrm_contract)
-target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${BOOST_ENGINE_LIBRARIES} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
+target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
