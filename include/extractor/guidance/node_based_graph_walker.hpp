@@ -21,9 +21,6 @@ namespace extractor
 namespace guidance
 {
 
-// forward declaration to allow interaction between the intersection generator and the graph hopper
-class IntersectionGenerator;
-
 /*
  * The graph hopper is a utility that lets you find certain intersections with a node based graph,
  * accumulating information along the way

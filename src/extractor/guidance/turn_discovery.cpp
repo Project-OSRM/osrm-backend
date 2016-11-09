@@ -1,6 +1,7 @@
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/guidance/toolkit.hpp"
 
 namespace osrm
 {
@@ -14,7 +15,7 @@ namespace lanes
 bool findPreviousIntersection(const NodeID node_v,
                               const EdgeID via_edge,
                               const Intersection intersection,
-                              const TurnAnalysis &turn_analysis,
+                              const IntersectionGenerator &intersection_generator,
                               const util::NodeBasedDynamicGraph &node_based_graph,
                               // output parameters
                               NodeID &result_node,
@@ -35,7 +36,7 @@ bool findPreviousIntersection(const NodeID node_v,
      */
     const constexpr double COMBINE_DISTANCE_CUTOFF = 30;
 
-    const auto coordinate_extractor = turn_analysis.getGenerator().GetCoordinateExtractor();
+    const auto coordinate_extractor = intersection_generator.GetCoordinateExtractor();
     const auto via_edge_length = util::coordinate_calculation::getLength(
         coordinate_extractor.GetForwardCoordinatesAlongRoad(node_v, via_edge),
         &util::coordinate_calculation::haversineDistance);
@@ -49,8 +50,7 @@ bool findPreviousIntersection(const NodeID node_v,
     // (looking at the reverse direction).
     const auto node_w = node_based_graph.GetTarget(via_edge);
     const auto u_turn_at_node_w = intersection[0].eid;
-    const auto node_v_reverse_intersection =
-        turn_analysis.getIntersection(node_w, u_turn_at_node_w);
+    const auto node_v_reverse_intersection = intersection_generator(node_w, u_turn_at_node_w);
 
     // Continue along the straightmost turn. If there is no straight turn, we cannot find a valid
     // previous intersection.
@@ -59,12 +59,13 @@ bool findPreviousIntersection(const NodeID node_v,
 
     // TODO evaluate if narrow turn is the right criterion here... Might be that other angles are
     // valid
-    if (angularDeviation(straightmost_at_v_in_reverse->angle, STRAIGHT_ANGLE) > GROUP_ANGLE)
+    if (util::guidance::angularDeviation(straightmost_at_v_in_reverse->angle, STRAIGHT_ANGLE) >
+        GROUP_ANGLE)
         return false;
 
     const auto node_u = node_based_graph.GetTarget(straightmost_at_v_in_reverse->eid);
     const auto node_u_reverse_intersection =
-        turn_analysis.getIntersection(node_v, straightmost_at_v_in_reverse->eid);
+        intersection_generator(node_v, straightmost_at_v_in_reverse->eid);
 
     // now check that the u-turn at the given intersection connects to via-edge
     // The u-turn at the now found intersection should, hopefully, represent the previous edge.
@@ -80,7 +81,7 @@ bool findPreviousIntersection(const NodeID node_v,
         return false;
     }
 
-    result_intersection = turn_analysis.getIntersection(node_u, result_via_edge);
+    result_intersection = intersection_generator(node_u, result_via_edge);
     const auto check_via_edge =
         result_intersection.end() !=
         std::find_if(result_intersection.begin(),
@@ -93,9 +94,6 @@ bool findPreviousIntersection(const NodeID node_v,
         result_node = SPECIAL_NODEID;
         return false;
     }
-
-    result_intersection =
-        turn_analysis.assignTurnTypes(node_u, result_via_edge, std::move(result_intersection));
 
     return true;
 }

@@ -375,10 +375,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
             ++node_based_edge_counter;
-            auto intersection = turn_analysis.getIntersection(node_u, edge_from_u);
+            auto intersection = turn_analysis(node_u, edge_from_u);
             BOOST_ASSERT(intersection.valid());
-            intersection =
-                turn_analysis.assignTurnTypes(node_u, edge_from_u, std::move(intersection));
+
             intersection =
                 turn_lane_handler.assignTurnLanes(node_u, edge_from_u, std::move(intersection));
 

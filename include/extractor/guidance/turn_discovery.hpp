@@ -2,7 +2,7 @@
 #define OSRM_EXTRACTOR_GUIDANCE_TURN_DISCOVERY_HPP_
 
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "util/typedefs.hpp"
 
 #include <string>
@@ -23,7 +23,7 @@ bool findPreviousIntersection(
     const NodeID node,
     const EdgeID via_edge,
     const Intersection intersection,
-    const TurnAnalysis &turn_analysis,                   // to generate other intersections
+    const IntersectionGenerator &intersection_generator,
     const util::NodeBasedDynamicGraph &node_based_graph, // query edge data
     // output parameters, will be in an arbitrary state on failure
     NodeID &result_node,

@@ -43,9 +43,12 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                                                                  restriction_map,
                                                                  barrier_nodes,
                                                                  node_info_list,
-                                                                 compressed_edge_container,
-                                                                 name_table,
-                                                                 street_name_suffix_table),
+                                                                 compressed_edge_container),
+      intersection_normalizer(node_based_graph,
+                              node_info_list,
+                              name_table,
+                              street_name_suffix_table,
+                              intersection_generator),
       roundabout_handler(node_based_graph,
                          node_info_list,
                          compressed_edge_container,
@@ -121,9 +124,18 @@ TurnAnalysis::transformIntersectionIntoTurns(const Intersection &intersection) c
     return turns;
 }
 
-Intersection TurnAnalysis::getIntersection(const NodeID from_nid, const EdgeID via_eid) const
+Intersection TurnAnalysis::operator()(const NodeID from_nid, const EdgeID via_eid) const
 {
-    return intersection_generator(from_nid, via_eid);
+    return PostProcess(from_nid, via_eid, intersection_generator(from_nid, via_eid));
+}
+
+Intersection TurnAnalysis::PostProcess(const NodeID from_node,
+                                       const EdgeID via_eid,
+                                       Intersection intersection) const
+{
+    const auto node_at_intersection = node_based_graph.GetTarget(via_eid);
+    return assignTurnTypes(
+        from_node, via_eid, intersection_normalizer(node_at_intersection, std::move(intersection)));
 }
 
 // Sets basic turn types as fallback for otherwise unhandled turns
@@ -145,7 +157,10 @@ TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection int
     return intersection;
 }
 
-const IntersectionGenerator &TurnAnalysis::getGenerator() const { return intersection_generator; }
+const IntersectionGenerator &TurnAnalysis::GetIntersectionGenerator() const
+{
+    return intersection_generator;
+}
 
 } // namespace guidance
 } // namespace extractor

@@ -189,13 +189,15 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
     if (findPreviousIntersection(at,
                                  via_edge,
                                  intersection,
-                                 turn_analysis,
+                                 turn_analysis.GetIntersectionGenerator(),
                                  node_based_graph,
                                  previous_node,
                                  previous_via_edge,
                                  previous_intersection))
     {
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
+        previous_intersection = turn_analysis.PostProcess(
+            previous_node, previous_via_edge, std::move(previous_intersection));
         for (std::size_t road_index = 0; road_index < previous_intersection.size(); ++road_index)
         {
             const auto &road = previous_intersection[road_index];
@@ -540,9 +542,7 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
 
     // find out about the next intersection. To check for valid matches, we also need the turn
     // types
-    auto next_intersection = turn_analysis.getIntersection(at, straightmost->eid);
-    next_intersection =
-        turn_analysis.assignTurnTypes(at, straightmost->eid, std::move(next_intersection));
+    const auto next_intersection = turn_analysis(at, straightmost->eid);
 
     // check where we can match turn lanes
     std::size_t straightmost_tag_index = turn_lane_data.size();

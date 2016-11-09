@@ -4,6 +4,7 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/intersection.hpp"
 #include "extractor/guidance/intersection_generator.hpp"
+#include "extractor/guidance/intersection_normalizer.hpp"
 #include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/sliproad_handler.hpp"
@@ -14,6 +15,7 @@
 #include "extractor/restriction_map.hpp"
 #include "extractor/suffix_table.hpp"
 
+#include "util/attributes.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 
@@ -45,23 +47,40 @@ class TurnAnalysis
                  const SuffixTable &street_name_suffix_table,
                  const ProfileProperties &profile_properties);
 
-    // the entry into the turn analysis
-    Intersection getIntersection(const NodeID from_node, const EdgeID via_eid) const;
+    /*
+     * Returns a normalized intersection without any assigned turn types.
+     * This intersection can be used as input for intersection classification, turn lane assignment
+     * and similar.
+     */
+    OSRM_ATTR_WARN_UNUSED
+    Intersection operator()(const NodeID from_node, const EdgeID via_eid) const;
+
+    /*
+     * Post-Processing a generated intersection is useful for any intersection that was simply
+     * generated using an intersection generator. In the normal use case, you don't have to call
+     * this function.
+     * This function is part of the normal process of the operator().
+     */
+    OSRM_ATTR_WARN_UNUSED
     Intersection
-    assignTurnTypes(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
+    PostProcess(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
 
     std::vector<TurnOperation>
     transformIntersectionIntoTurns(const Intersection &intersection) const;
 
-    const IntersectionGenerator &getGenerator() const;
+    const IntersectionGenerator &GetIntersectionGenerator() const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
     const IntersectionGenerator intersection_generator;
+    const IntersectionNormalizer intersection_normalizer;
     const RoundaboutHandler roundabout_handler;
     const MotorwayHandler motorway_handler;
     const TurnHandler turn_handler;
     const SliproadHandler sliproad_handler;
+
+    Intersection
+    assignTurnTypes(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
 
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     Intersection
