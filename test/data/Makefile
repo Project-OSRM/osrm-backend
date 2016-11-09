@@ -1,12 +1,12 @@
 DATA_NAME:=monaco
 DATA_URL:=https://s3.amazonaws.com/mapbox/osrm/testing/$(DATA_NAME).osm.pbf
 DATA_POLY_URL:=https://s3.amazonaws.com/mapbox/osrm/testing/$(DATA_NAME).poly
-TOOL_ROOT:=../../build
+OSRM_BUILD_DIR?=../../build
 PROFILE_ROOT:=../../profiles
 SCRIPT_ROOT:=../../scripts
-OSRM_EXTRACT:=$(TOOL_ROOT)/osrm-extract
-OSRM_CONTRACT:=$(TOOL_ROOT)/osrm-contract
-OSRM_ROUTED:=$(TOOL_ROOT)/osrm-routed
+OSRM_EXTRACT:=$(OSRM_BUILD_DIR)/osrm-extract
+OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract
+OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed
 POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
 TIMER:=$(SCRIPT_ROOT)/timer.sh
 PROFILE:=$(PROFILE_ROOT)/car.lua

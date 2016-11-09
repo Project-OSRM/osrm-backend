@@ -137,7 +137,8 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
-  - mkdir build && pushd build
+  - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
+  - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
@@ -172,7 +173,7 @@ script:
   - echo "travis_fold:end:BENCHMARK"
   - ./example/build/osrm-example test/data/monaco.osrm
   # All tests assume to be run from the build directory
-  - pushd build
+  - pushd ${OSRM_BUILD_DIR}
   - ./unit_tests/library-tests ../test/data/monaco.osrm
   - ./unit_tests/extractor-tests
   - ./unit_tests/engine-tests
