@@ -62,7 +62,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev', 'ccache']
+          packages: ['libstdc++-4.9-dev', 'ccache']
       env: BUILD_TYPE='Release' ENABLE_MASON=ON
 
     - os: linux
