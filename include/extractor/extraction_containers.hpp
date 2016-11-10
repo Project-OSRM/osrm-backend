@@ -32,6 +32,7 @@ class ExtractionContainers
 #else
     const static unsigned stxxl_memory = ((sizeof(std::size_t) == 4) ? INT_MAX : UINT_MAX);
 #endif
+    void FlushVectors();
     void PrepareNodes();
     void PrepareRestrictions();
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
