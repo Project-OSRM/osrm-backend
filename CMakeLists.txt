@@ -565,6 +565,8 @@ endif()
 
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
+  add_executable(osrm-to-normalized src/tools/to_normalized.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
+  target_link_libraries(osrm-to-normalized ${EXTRACTOR_LIBRARIES})
   add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
   target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES})
   add_executable(osrm-unlock-all src/tools/unlock_all_mutexes.cpp $<TARGET_OBJECTS:UTIL>)
