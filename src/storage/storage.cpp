@@ -585,12 +585,12 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // Turn lane data
     {
-        /* TODO: remove this block, replace with io.hpp ref */
+        /* NOTE: file io - refactor this in the future */
         boost::filesystem::ifstream lane_data_stream(config.turn_lane_data_path, std::ios::binary);
         std::uint64_t lane_tupel_count = 0;
         lane_data_stream.read(reinterpret_cast<char *>(&lane_tupel_count),
                               sizeof(lane_tupel_count));
-        /* END TODO */
+        /* END NOTE */
 
         // make sure do write canary...
         auto *turn_lane_data_ptr = layout_ptr->GetBlockPtr<util::guidance::LaneTupleIdPair, true>(
@@ -605,7 +605,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // Turn lane descriptions
     {
-        /* TODO: replace with io.hpp version */
+        /* NOTE: file io - refactor this in the future */
         std::vector<std::uint32_t> lane_description_offsets;
         std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
         if (!util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
@@ -613,7 +613,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
                                              lane_description_masks))
             throw util::exception("Failed to read lane descriptions from: " +
                                   config.turn_lane_description_path.string());
-        /* END TODO */
+        /* END NOTE */
         auto *turn_lane_offset_ptr = layout_ptr->GetBlockPtr<std::uint32_t, true>(
             memory_ptr, DataLayout::LANE_DESCRIPTION_OFFSETS);
         if (!lane_description_offsets.empty())
@@ -643,7 +643,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // Load original edge data
     {
-        /* TODO: replace with io.hpp */
+        /* NOTE: file io - refactor this in the future */
         boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
         if (!edges_input_stream)
         {
@@ -652,7 +652,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         }
 
         const auto number_of_original_edges = io::readElementCount(edges_input_stream);
-        /* END TODO */
+        /* END NOTE */
 
         GeometryID *via_geometry_ptr =
             layout_ptr->GetBlockPtr<GeometryID, true>(memory_ptr, DataLayout::VIA_NODE_LIST);
@@ -694,9 +694,9 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // load compressed geometry
     {
-        /* TODO: replace with io.hpp call */
+        /* NOTE: file io - refactor this in the future */
         boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
-        /* END TODO */
+        /* END NOTE */
 
         unsigned temporary_value;
         unsigned *geometries_index_ptr =
@@ -782,8 +782,6 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         const io::DatasourceNamesData datasource_names_data =
             io::readDatasourceNames(datasource_names_input_stream);
 
-        /* END TODO */
-
         // load datasource name information (if it exists)
         auto datasource_name_data_ptr =
             layout_ptr->GetBlockPtr<char, true>(memory_ptr, DataLayout::DATASOURCE_NAME_DATA);
@@ -833,10 +831,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // store timestamp
     {
-        /* TODO: replace this */
+        /* NOTE: file io - refactor this in the future */
         boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
         const auto timestamp_size = io::readNumberOfBytes(timestamp_stream);
-        /* END TODO */
+        /* END NOTE */
 
         char *timestamp_ptr =
             layout_ptr->GetBlockPtr<char, true>(memory_ptr, DataLayout::TIMESTAMP);
@@ -854,7 +852,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
     }
 
     {
-        /* TODO: replace with io.hpp call */
+        /* NOTE: file io - refactor this in the future */
         boost::filesystem::ifstream core_marker_file(config.core_data_path, std::ios::binary);
         if (!core_marker_file)
         {
@@ -864,7 +862,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
         std::uint32_t number_of_core_markers = 0;
         core_marker_file.read((char *)&number_of_core_markers, sizeof(uint32_t));
-        /* END TODO */
+        /* END NOTE */
 
         // load core markers
         std::vector<char> unpacked_core_markers(number_of_core_markers);
@@ -960,8 +958,6 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         if (!util::deserializeVector(intersection_stream, entry_class_table))
             throw util::exception("Failed to read entry classes from " +
                                   config.intersection_class_path.string());
-
-        /* END TODO */
 
         // load intersection classes
         if (!bearing_class_id_table.empty())
