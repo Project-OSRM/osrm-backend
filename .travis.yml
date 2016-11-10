@@ -51,9 +51,9 @@ matrix:
       env: CLANG_VERSION='3.8.1' CLANG_PACKAGE="clang++" BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
 
     - os: osx
-      osx_image: xcode7.3
+      osx_image: xcode8
       compiler: clang
-      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++'
 
     # Release Builds
     - os: linux
@@ -84,12 +84,6 @@ matrix:
       #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
       #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release'
-
-      # Disabled because of CI slowness
-      #- os: osx
-      #- osx_image: xcode7.3
-      #- compiler: clang
-      #- env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
 
     # Shared Library
     - os: linux
@@ -124,11 +118,6 @@ before_install:
       export CXXCOMPILER='clang++'
       CLANG_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/${CLANG_PACKAGE}/${CLANG_VERSION}.tar.gz"
       travis_retry wget --quiet -O - ${CLANG_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR} || exit 1
-    fi
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      # implicit deps, but seem to be installed by default with recent images: libxml2 GDAL boost
-      brew install libzip libstxxl lua51 luabind tbb md5sha1sum ccache
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
 
