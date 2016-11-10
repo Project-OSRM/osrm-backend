@@ -236,10 +236,10 @@ function node_function (node, result)
 end
 
 -- abort early if this way is obviouslt not routable
-function should_abort_early(data)
-  return TagCache.get(data,'highway') == nil and
-         TagCache.get(data,'route') == nil and
-         TagCache.get(data,'bridge') == nil
+function handle_initial_check(data)
+  return TagCache.get(data,'highway') ~= nil or
+         TagCache.get(data,'route') ~= nil or
+         TagCache.get(data,'bridge') ~= nil 
 end
 
 -- handle high occupancy vehicle tags
@@ -432,13 +432,11 @@ function handle_speed(data)
     return false
   end
   
-  if handle_side_roads(data) == false then
-    return false
-  end
-
-  if handle_surface(data) == false then
-    return false
-  end
+  if handle_side_roads(data) == false then return false end
+  if handle_surface(data) == false then return false end
+  if handle_maxspeed(data) == false then return false end
+  if handle_speed_scaling(data) == false then return false end
+  if handle_alternating_speed(data) == false then return false end
 end
 
 -- reduce speed on special side roads
@@ -655,7 +653,7 @@ end
 
 -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
 -- Scaling speed to take average waiting time into account plus some more for start / stop.
-function handle_alternating(data)
+function handle_alternating_speed(data)
   if "alternating" == TagCache.get(data,'oneway') then
     local scaling_factor = 0.4
     if data.result.forward_speed ~= math.huge then
@@ -672,6 +670,16 @@ function handle_startpoint(data)
   -- only allow this road as start point if it not a ferry
   data.result.is_startpoint = data.result.forward_mode == mode.driving or 
                               data.result.backward_mode == mode.driving
+end
+
+-- leave early if this way is not accessible
+function handle_way_type(data)
+  if "" == TagCache.get(data,"highway") then return false end
+end
+
+-- set the road classification based on guidance globals configuration
+function handle_classification(data)
+  set_classification(TagCache.get(data,"highway"),data.result,data.way)
 end
 
 -- main entry point for processsing a way
@@ -692,35 +700,23 @@ function way_function(way, result)
   
   -- perform each procesing step sequentially.
   -- most steps can abort processing, meaning the way
-  -- is not routable
+  -- is not routable  
   
-  if should_abort_early(data) then return end
-  handle_default_mode(data)
+  if handle_initial_check(data) == false then return end
+  if handle_default_mode(data) == false then return end--
   if handle_blocking(data) == false then return end
   if handle_access(data) == false then return end
-  if handle_ferries(data) == false then return end
-  if handle_movables(data) == false then return end
-
-  -- leave early if this way is not accessible
-  if "" == TagCache.get(data,"highway") then return end
-
-  if handle_speed(data) == false then return end
-  
-  -- set the road classification based on guidance globals configuration
-  set_classification(TagCache.get(data,"highway"),result,way)
-  
-  handle_names(data)  
-  handle_turn_lanes(data)
-  handle_junctions(data)
-  handle_restricted(data)
-  
+  if handle_ferries(data) == false then return end--
+  if handle_movables(data) == false then return end--
   if handle_service(data) == false then return end
-  if handle_oneway(data) == false then return end
-  if handle_maxspeed(data) == false then return end
-
-  handle_speed_scaling(data)
-  handle_alternating(data)
-  handle_startpoint(data)
+  if handle_oneway(data) == false then return end--
+  if handle_speed(data) == false then return end
+  if handle_turn_lanes(data) == false then return end--
+  if handle_junctions(data) == false then return end--
+  if handle_startpoint(data) == false then return end--
+  if handle_restricted(data) == false then return end--
+  if handle_classification(data) == false then return end--
+  if handle_names(data) == false then return end--
 end
 
 function turn_function (angle)
