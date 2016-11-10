@@ -7,9 +7,11 @@ Feature: Car - weights
     Scenario: Only routes down service road when that's the destination
         Given the node map
             """
-            a  b  c
+            a--b--c
+               |
                d
-            e  f  g
+               |
+            e--f--g
             """
         And the ways
             | nodes | highway     |
@@ -19,18 +21,20 @@ Feature: Car - weights
             | bdf   | service     |
         When I route I should get
             | from | to | route          | speed   |
-            | a    | e  | abc,cg,efg,efg | 21 km/h |
-            | a    | d  | abc,bdf,bdf    | 15 km/h |
+            | a    | e  | abc,cg,efg,efg | 23 km/h |
+            | a    | d  | abc,bdf,bdf    | 14 km/h |
 
     Scenario: Does not jump off the highway to go down service road
         Given the node map
             """
             a
-
+            |
             b
-              e
+            |\
+            | e
+            |/
             c
-
+            |
             d
             """
         And the ways
@@ -48,5 +52,5 @@ Feature: Car - weights
             """
         When I route I should get
             | from | to | route       | speed   |
-            | a    | d  | ab,bc,cd,cd | 18 km/h |
-            | a    | e  | ab,be,be    | 21 km/h |
+            | a    | d  | ab,bc,cd,cd | 14 km/h |
+            | a    | e  | ab,be,be    | 19 km/h |
