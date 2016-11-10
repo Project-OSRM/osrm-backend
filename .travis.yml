@@ -1,10 +1,9 @@
-language: cpp
+language: generic
 
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
-sudo: required
+sudo: false
 dist: trusty
 
 notifications:
@@ -26,6 +25,8 @@ env:
    - CCACHE_COMPRESS=1
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
    - JOBS=4
+   - INSTALL_PREFIX=/tmp/osrm-backend
+   - PKG_CONFIG_PATH=/tmp/osrm-backend/lib/pkgconfig
 
 matrix:
   fast_finish: true
@@ -40,7 +41,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON BUILD_COMPONENTS=ON
+      env: CC='gcc-6' CXX='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON BUILD_COMPONENTS=ON
 
     - os: linux
       compiler: "clang-3.8-debug"
@@ -53,7 +54,7 @@ matrix:
     - os: osx
       osx_image: xcode7.3
       compiler: clang
-      env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
+      env: CC='clang' CXX='clang++' BUILD_TYPE='Debug' JOBS=1 CUCUMBER_TIMEOUT=60000
 
     # Release Builds
     - os: linux
@@ -70,11 +71,11 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_COMPONENTS=ON
+      env: CC='gcc-6' CXX='g++-6' BUILD_TYPE='Release' BUILD_COMPONENTS=ON
 
     - os: linux
       compiler: "gcc-6-release-i686"
-      env: TARGET_ARCH='i686' CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
+      env: TARGET_ARCH='i686' CC='gcc-6' CXX='g++-6' BUILD_TYPE='Release'
 
       # Disabled because of CI slowness
       #- os: linux
@@ -83,13 +84,13 @@ matrix:
       #-   apt:
       #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
       #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release'
+      #- env: CC='clang-3.8' CXX='clang++-3.8' BUILD_TYPE='Release'
 
       # Disabled because of CI slowness
       #- os: osx
       #- osx_image: xcode7.3
       #- compiler: clang
-      #- env: CCOMPILER='clang' CXXCOMPILER='clang++' BUILD_TYPE='Release'
+      #- env: CC='clang' CXX='clang++' BUILD_TYPE='Release'
 
     # Shared Library
     - os: linux
@@ -98,7 +99,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON BUILD_COMPONENTS=ON
+      env: CC='gcc-6' CXX='g++-6' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON BUILD_COMPONENTS=ON
 
       # Disabled because CI slowness
       #- os: linux
@@ -107,7 +108,7 @@ matrix:
       #-   apt:
       #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
       #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+      #- env: CC='clang-3.8' CXX='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
@@ -120,8 +121,8 @@ before_install:
   - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR} || exit 1
   - |
     if [[ ${CLANG_VERSION:-false} != false ]]; then
-      export CCOMPILER='clang'
-      export CXXCOMPILER='clang++'
+      export CC='clang'
+      export CXX='clang++'
       CLANG_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/${CLANG_PACKAGE}/${CLANG_VERSION}.tar.gz"
       travis_retry wget --quiet -O - ${CLANG_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR} || exit 1
     fi
@@ -138,8 +139,7 @@ install:
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
   - mkdir build && pushd build
-  - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
+  - cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
   - make osrm-extract --jobs=3
   - make --jobs=${JOBS}
@@ -147,11 +147,7 @@ install:
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
   - ccache -s
-  - sudo make install
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      sudo ldconfig
-    fi
+  - make install
   - popd
   - |
     if [[ ${ENABLE_MASON:-OFF} == 'ON' ]]; then
