@@ -125,6 +125,17 @@ ExtractionContainers::ExtractionContainers()
     name_offsets.push_back(0);
 }
 
+void ExtractionContainers::FlushVectors()
+{
+    used_node_id_list.flush();
+    all_nodes_list.flush();
+    all_edges_list.flush();
+    name_char_data.flush();
+    name_offsets.flush();
+    restrictions_list.flush();
+    way_start_end_id_list.flush();
+}
+
 /**
  * Processes the collected data and serializes it.
  * At this point nodes are still referenced by their OSM id.
@@ -144,6 +155,8 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     file_out_stream.open(output_file_name.c_str(), std::ios::binary);
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+
+    FlushVectors();
 
     PrepareNodes();
     WriteNodes(file_out_stream);
