@@ -606,6 +606,16 @@ function way_function (way, result)
     end
   end
 
+  -- add driveability penalty to service roads
+  if properties.weight_name == 'duration' and highway == "service" then
+    if result.duration > 0 or result.forward_speed > 0 then
+      result.forward_weight_per_meter = result.forward_speed / 100;
+    end
+    if result.duration > 0 or result.backward_speed > 0 then
+      result.backward_weight_per_meter = result.backward_speed / 100;
+    end
+  end
+
   -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
   -- Scaling speed to take average waiting time into account plus some more for start / stop.
   if oneway and "alternating" == oneway then
