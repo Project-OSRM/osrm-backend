@@ -315,6 +315,55 @@ CoordinateExtractor::GetCoordinateAlongRoad(const NodeID intersection_node,
         .back();
 }
 
+util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from_node,
+                                                               const EdgeID turn_edge,
+                                                               const bool traversed_in_reverse,
+                                                               const NodeID to_node) const
+{
+    const auto end_node = traversed_in_reverse ? from_node : to_node;
+    const auto start_node = traversed_in_reverse ? to_node : from_node;
+    if (!compressed_geometries.HasEntryForID(turn_edge))
+        return node_coordinates[end_node];
+    else
+    {
+        const auto &geometry = compressed_geometries.GetBucketReference(turn_edge);
+
+        // the compressed edges contain node ids, we transfer them to coordinates accessing the
+        // node_coordinates array
+        const auto compressedGeometryToCoordinate =
+            [this](const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge) {
+                return node_coordinates[compressed_edge.node_id];
+            };
+
+        // return the first coordinate that is reasonably far away from the start node
+        const util::Coordinate start_coordinate = node_coordinates[start_node];
+
+        // OSM data has a tendency to include repeated nodes with identical coordinates. To skip
+        // over these, we search for the first coordinate along the path that is at least a meter
+        // away from the first entry
+        const auto far_enough_away = [start_coordinate, compressedGeometryToCoordinate](
+            const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge) {
+            return util::coordinate_calculation::haversineDistance(
+                       compressedGeometryToCoordinate(compressed_edge), start_coordinate) > 1;
+        };
+
+        // find the first coordinate, that is at least unequal to the begin of the edge
+        if (traversed_in_reverse)
+        {
+            const auto far_enough =
+                std::find_if(geometry.rbegin(), geometry.rend(), far_enough_away);
+            return (far_enough != geometry.rend()) ? compressedGeometryToCoordinate(*far_enough)
+                                                   : node_coordinates[end_node];
+        }
+        else
+        {
+            const auto far_enough = std::find_if(geometry.begin(), geometry.end(), far_enough_away);
+            return (far_enough != geometry.end()) ? compressedGeometryToCoordinate(*far_enough)
+                                                  : node_coordinates[end_node];
+        }
+    }
+}
+
 std::vector<util::Coordinate>
 CoordinateExtractor::GetForwardCoordinatesAlongRoad(const NodeID from, const EdgeID turn_edge) const
 {

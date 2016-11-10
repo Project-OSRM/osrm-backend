@@ -20,6 +20,12 @@ namespace extractor
 {
 namespace guidance
 {
+namespace
+{
+const constexpr bool USE_LOW_PRECISION_MODE = true;
+// the inverse of use low precision mode
+const constexpr bool USE_HIGH_PRECISION_MODE = !USE_LOW_PRECISION_MODE;
+}
 
 IntersectionGenerator::IntersectionGenerator(
     const util::NodeBasedDynamicGraph &node_based_graph,
@@ -35,14 +41,14 @@ IntersectionGenerator::IntersectionGenerator(
 
 Intersection IntersectionGenerator::operator()(const NodeID from_node, const EdgeID via_eid) const
 {
-    return GetConnectedRoads(from_node, via_eid);
+    return GetConnectedRoads(from_node, via_eid, USE_HIGH_PRECISION_MODE);
 }
 
 //                                               a
 //                                               |
 //                                               |
 //                                               v
-// For an intersection from_node --via_edi--> turn_node ----> c
+// For an intersection from_node --via_eid--> turn_node ----> c
 //                                               ^
 //                                               |
 //                                               |
@@ -52,7 +58,8 @@ Intersection IntersectionGenerator::operator()(const NodeID from_node, const Edg
 // but also (from_node, turn_node, a), (from_node, turn_node, b). These turns are
 // marked as invalid and only needed for intersection classification.
 Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
-                                                      const EdgeID via_eid) const
+                                                      const EdgeID via_eid,
+                                                      const bool use_low_precision_angles) const
 {
     Intersection intersection;
     const NodeID turn_node = node_based_graph.GetTarget(via_eid);
@@ -81,6 +88,17 @@ Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
 
     const auto intersection_lanes = getLaneCountAtIntersection(turn_node, node_based_graph);
 
+    const auto extract_coordinate = [&](const NodeID from_node,
+                                        const EdgeID via_eid,
+                                        const bool traversed_in_reverse,
+                                        const NodeID to_node) {
+        return use_low_precision_angles
+                   ? coordinate_extractor.GetCoordinateCloseToTurn(
+                         from_node, via_eid, traversed_in_reverse, to_node)
+                   : coordinate_extractor.GetCoordinateAlongRoad(
+                         from_node, via_eid, traversed_in_reverse, to_node, intersection_lanes);
+    };
+
     for (const EdgeID onto_edge : node_based_graph.GetAdjacentEdgeRange(turn_node))
     {
         BOOST_ASSERT(onto_edge != SPECIAL_EDGEID);
@@ -105,8 +123,7 @@ Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
         // The first coordinate (the origin) can depend on the number of lanes turning onto,
         // just as the target coordinate can. Here we compute the corrected coordinate for the
         // incoming edge.
-        const auto first_coordinate = coordinate_extractor.GetCoordinateAlongRoad(
-            from_node, via_eid, INVERT, turn_node, intersection_lanes);
+        const auto first_coordinate = extract_coordinate(from_node, via_eid, INVERT, turn_node);
 
         if (from_node == to_node)
         {
@@ -139,8 +156,8 @@ Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
         {
             // the default distance we lookahead on a road. This distance prevents small mapping
             // errors to impact the turn angles.
-            const auto third_coordinate = coordinate_extractor.GetCoordinateAlongRoad(
-                turn_node, onto_edge, !INVERT, to_node, intersection_lanes);
+            const auto third_coordinate =
+                extract_coordinate(turn_node, onto_edge, !INVERT, to_node);
 
             angle = util::coordinate_calculation::computeAngle(
                 first_coordinate, turn_coordinate, third_coordinate);
@@ -164,12 +181,7 @@ Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
     // will never happen we add an artificial invalid uturn in this case.
     if (!has_uturn_edge)
     {
-        const auto first_coordinate = coordinate_extractor.GetCoordinateAlongRoad(
-            from_node,
-            via_eid,
-            INVERT,
-            turn_node,
-            node_based_graph.GetEdgeData(via_eid).road_classification.GetNumberOfLanes());
+        const auto first_coordinate = extract_coordinate(from_node, via_eid, INVERT, turn_node);
         const double bearing =
             util::coordinate_calculation::bearing(turn_coordinate, first_coordinate);
 

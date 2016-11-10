@@ -51,8 +51,14 @@ class IntersectionGenerator
     // Check for restrictions/barriers and generate a list of valid and invalid turns present at
     // the node reached from `from_node` via `via_eid`. The resulting candidates have to be analysed
     // for their actual instructions later on.
+    // The switch for `use_low_precision_angles` enables a faster mode that will procude less
+    // accurate coordinates. It should be good enough to check order of turns, find striaghtmost
+    // turns. Even good enough to do some simple angle verifications. It is mostly available to
+    // allow for faster graph traversal in the extraction phase.
     OSRM_ATTR_WARN_UNUSED
-    Intersection GetConnectedRoads(const NodeID from_node, const EdgeID via_eid) const;
+    Intersection GetConnectedRoads(const NodeID from_node,
+                                   const EdgeID via_eid,
+                                   const bool use_low_precision_angles = false) const;
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;

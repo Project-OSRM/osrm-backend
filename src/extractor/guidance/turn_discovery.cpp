@@ -12,6 +12,11 @@ namespace guidance
 namespace lanes
 {
 
+namespace
+{
+const constexpr bool USE_LOW_PRECISION_MODE = true;
+}
+
 bool findPreviousIntersection(const NodeID node_v,
                               const EdgeID via_edge,
                               const Intersection intersection,
@@ -50,7 +55,8 @@ bool findPreviousIntersection(const NodeID node_v,
     // (looking at the reverse direction).
     const auto node_w = node_based_graph.GetTarget(via_edge);
     const auto u_turn_at_node_w = intersection[0].eid;
-    const auto node_v_reverse_intersection = intersection_generator(node_w, u_turn_at_node_w);
+    const auto node_v_reverse_intersection =
+        intersection_generator.GetConnectedRoads(node_w, u_turn_at_node_w, USE_LOW_PRECISION_MODE);
 
     // Continue along the straightmost turn. If there is no straight turn, we cannot find a valid
     // previous intersection.
@@ -64,8 +70,8 @@ bool findPreviousIntersection(const NodeID node_v,
         return false;
 
     const auto node_u = node_based_graph.GetTarget(straightmost_at_v_in_reverse->eid);
-    const auto node_u_reverse_intersection =
-        intersection_generator(node_v, straightmost_at_v_in_reverse->eid);
+    const auto node_u_reverse_intersection = intersection_generator.GetConnectedRoads(
+        node_v, straightmost_at_v_in_reverse->eid, USE_LOW_PRECISION_MODE);
 
     // now check that the u-turn at the given intersection connects to via-edge
     // The u-turn at the now found intersection should, hopefully, represent the previous edge.

@@ -49,6 +49,17 @@ class CoordinateExtractor
     std::vector<util::Coordinate> GetForwardCoordinatesAlongRoad(const NodeID from,
                                                                  const EdgeID turn_edge) const;
 
+    // a less precise way to compute coordinates along a route. Due to the heavy interaction of
+    // graph traversal and turn instructions, we often don't care for high precision. We only want
+    // to check for available connections in order, or find (with room for error) the straightmost
+    // turn. This function will offer a bit more error potential but allow for much higher
+    // performance
+    OSRM_ATTR_WARN_UNUSED
+    util::Coordinate GetCoordinateCloseToTurn(const NodeID from_node,
+                                              const EdgeID turn_edge,
+                                              const bool traversed_in_reverse,
+                                              const NodeID to_node) const;
+
     /* When extracting the coordinates, we first extract all coordinates. We don't care about most
      * of them, though.
      *
