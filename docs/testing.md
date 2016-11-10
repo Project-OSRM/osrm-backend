@@ -309,3 +309,81 @@ And the relations
 ```
 
 Unless this format is used, OSRM will omit the (then ambiguous) turn restrictions and ignore them.
+
+## My Guidance Tests are Failing - Understanding what you can change
+
+If you change some stuff in guidance, you will easily see tests change their result. E.g. if you change the angles for which we report `right`, then obviously some tests might not report a `direction modifier` named `right` anymore.
+
+This small section will try to guide you in making the correct decisions for changing the behaviour of tests.
+
+The difficulty in guidance tests is that not all items can be translated 1:1 from the ascii art into turn-angles.
+
+The turn-angle calculation tries to find turn angles that would represent perceived turn angles, not the exact angle at the connection.
+
+This is necessary, since connections in OSM are always bound by the paradigm that the way is supposed to be in the middle of the actual road.
+For broad streets, you will see stronger angles than the actual turns.
+
+### Don't change the test, change the expected behaviour
+
+If we have a test that looks like this:
+
+```
+Given a grid size of 5 m
+Given the node map
+"""
+a - b - - - - - - c
+     \  
+      d - - - - - e
+"""
+
+When I route I should get
+ | waypoints | route       | turns                          |
+ | a,e       | abc,bde,bde | depart,turn slight right,arrive|
+```
+
+And the test reports `turn right` for the route `a->e`, where before it said `slight right`.
+
+If you changed the turn angles, obviously you can expect changes in the distinction between `slight right` and `right`.
+In such a case it is, of course, reasonable to change the expected route to report `right` instead of `slight right`. You should consider inspecting the actual turn angles at `b` to see if you feel that change is justified.
+
+However, you should never adjust the test itself.
+If you look at a failure, the other way around
+
+```
+Given a grid size of 5 m
+Given the node map
+"""
+a - b - - - - - - c
+     \  
+      d - - - - - e
+"""
+
+When I route I should get
+ | waypoints | route       | turns                   |
+ | a,e       | abc,bde,bde | depart,turn right,arrive|
+```
+
+where we see a `slight right`, over the expected `right`.
+We could be tempted to adjust the grid size (e.g. from `10 m` to `20` meters). 
+
+Such a change would fundamentally alter the tests, though.
+Since the part `b-d` is a short offset, when we are looking at a grid of size `5 m`, the angle calculation will try and compensate for this offset.
+
+In this case we would see a very slight turn angle. If your change now reports different turn angles, you can of course change the expected result. But you should not adjust the grid size. The test would be testing turn angles of `180` and `100` degrees, instead of `180` and `160`. 
+
+### Consider Post-Processing Impacts
+
+Some changes you might see could look completely unrelated. To understand the impact of your changes, you can make use of the debugging utilities you can finde in `util/debug.hpp` (and potentially other related headers).
+
+If your test is inspecting a series of turns (remember, a turn not necessarily equals an instruction), you could see interaction with post-processing.
+To see the unprocessed turns, you should print the steps at the end of step assembly (`assembleSteps` in `engine/guidance/assemble_steps.hpp`).
+
+If you see unexpected changes, you can consider adding the `locations` field to your test to study what location a turn is reported at.
+
+To study a test without post-processing impacts, you can create a copy of the case on a very large grid (like 2000 meters). In such a grid, `turn collapsing` would be essentially disable.
+
+Sadly, there is no general guideline.
+
+### Use Caution
+
+If in doubt, ask another person. Inspect as much of the data as possible (e.g. print un-collapsed steps, turn angles and so on) and use your best judgement, if the new result seems justified.
