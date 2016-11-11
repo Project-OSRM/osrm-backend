@@ -127,7 +127,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         auto extractor_callbacks = std::make_unique<ExtractorCallbacks>(extraction_containers);
 
         const osmium::io::File input_file(config.input_path.string());
-        osmium::io::Reader reader(input_file);
+        osmium::io::Reader reader(input_file, osmium::io::read_meta::no);
         const osmium::io::Header header = reader.header();
 
         unsigned number_of_nodes = 0;
