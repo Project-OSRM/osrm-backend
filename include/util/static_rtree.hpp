@@ -357,7 +357,7 @@ class StaticRTree
         }
         boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
 
-        const auto tree_size = storage::io::readElementCount(tree_node_file);
+        const auto tree_size = storage::io::readElementCount64(tree_node_file);
 
         m_search_tree.resize(tree_size);
         storage::io::readRamIndex(tree_node_file, &m_search_tree[0], tree_size);

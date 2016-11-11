@@ -21,10 +21,17 @@ namespace io
 {
 
 // Reads the count of elements that is written in the file header and returns the number
-inline std::uint64_t readElementCount(boost::filesystem::ifstream &input_stream)
+inline std::uint64_t readElementCount64(boost::filesystem::ifstream &input_stream)
 {
     std::uint64_t number_of_elements = 0;
-    input_stream.read((char *)&number_of_elements, sizeof(std::uint64_t));
+    input_stream.read(reinterpret_cast<char *>(&number_of_elements), sizeof(number_of_elements));
+    return number_of_elements;
+}
+
+inline std::uint64_t readElementCount32(boost::filesystem::ifstream &input_stream)
+{
+    std::uint32_t number_of_elements = 0;
+    input_stream.read(reinterpret_cast<char *>(&number_of_elements), sizeof(number_of_elements));
     return number_of_elements;
 }
 
