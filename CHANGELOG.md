@@ -22,6 +22,7 @@
       - fixed compile errors in tile unit-test framework
       - fixed a bug that could result in inconsistent behaviour when collapsing instructions
       - fixed a bug that could result in crashes when leaving a ferry directly onto a motorway ramp
+      - fixed a bug in the tile plugin that resulted in discovering invalid edges for connections
     - Debug Tiles
       - Added support for turn penalties
 

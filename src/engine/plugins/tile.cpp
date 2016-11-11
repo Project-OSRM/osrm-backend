@@ -459,10 +459,22 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                         continue;
 
                     // Find the connection between our source road and the target node
-                    EdgeID smaller_edge_id = facade->FindSmallestEdge(
-                        approachedge.edge_based_node_id,
-                        exit_edge.edge_based_node_id,
-                        [](const contractor::QueryEdge::EdgeData &data) { return data.forward; });
+                    // Since we only want to find direct edges, we cannot check shortcut edges here.
+                    // Otherwise we might find a forward edge even though a shorter backward edge
+                    // exists (due to oneways).
+                    //
+                    // a > - > - > - b
+                    // |             |
+                    // |------ c ----|
+                    //
+                    // would offer a backward edge at `b` to `a` (due to the oneway from a to b)
+                    // but could also offer a shortcut (b-c-a) from `b` to `a` which is longer.
+                    EdgeID smaller_edge_id =
+                        facade->FindSmallestEdge(approachedge.edge_based_node_id,
+                                                 exit_edge.edge_based_node_id,
+                                                 [](const contractor::QueryEdge::EdgeData &data) {
+                                                     return data.forward && !data.shortcut;
+                                                 });
 
                     // Depending on how the graph is constructed, we might have to look for
                     // a backwards edge instead.  They're equivalent, just one is available for
@@ -475,7 +487,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                             exit_edge.edge_based_node_id,
                             approachedge.edge_based_node_id,
                             [](const contractor::QueryEdge::EdgeData &data) {
-                                return data.backward;
+                                return data.backward && !data.shortcut;
                             });
                     }
 
