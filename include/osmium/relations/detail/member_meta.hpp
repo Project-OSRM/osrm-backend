@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstddef>
 #include <iosfwd>
+#include <limits>
 
 #include <osmium/osm/types.hpp>
 
@@ -71,22 +72,42 @@ namespace osmium {
 
             /**
              * Offset in the buffer where the object is stored.
+             *
+             * The default value is one that will never be valid, so it is
+             * easier to catch problems.
              */
-            size_t m_buffer_offset { 0 };
+            size_t m_buffer_offset = std::numeric_limits<size_t>::max();
 
+            /**
+             * Has this member been found in the input data.
+             */
+            bool m_available = false;
+
+            /**
+             * Marks this member as removed. It can not be used any more.
+             */
             bool m_removed = false;
 
         public:
 
             /**
-             * Create new MemberMeta. The variant with zeros for relation_pos and
-             * member_pos is used to create dummy MemberMeta that can be compared
-             * to the MemberMeta in the vectors using the equal_range algorithm.
+             * Create new MemberMeta.
              */
-            explicit MemberMeta(osmium::object_id_type member_id, size_t relation_pos=0, size_t member_pos=0) noexcept :
+            explicit MemberMeta(osmium::object_id_type member_id, size_t relation_pos, size_t member_pos) noexcept :
                 m_member_id(member_id),
                 m_relation_pos(relation_pos),
                 m_member_pos(member_pos) {
+            }
+
+            /**
+             * Create new MemberMeta. This constructor is used to create
+             * dummy MemberMeta objects that can be compared to the
+             * MemberMetas in a vector using the equal_range algorithm.
+             */
+            explicit MemberMeta(osmium::object_id_type member_id) noexcept :
+                m_member_id(member_id),
+                m_relation_pos(0),
+                m_member_pos(0) {
             }
 
             osmium::object_id_type member_id() const noexcept {
@@ -107,6 +128,11 @@ namespace osmium {
 
             void set_buffer_offset(size_t offset) noexcept {
                 m_buffer_offset = offset;
+                m_available = true;
+            }
+
+            bool is_available() const noexcept {
+                return m_available;
             }
 
             bool removed() const noexcept {
@@ -124,8 +150,8 @@ namespace osmium {
          * Used to sort a vector of MemberMeta objects and to later find
          * them using binary search.
          */
-        inline bool operator<(const MemberMeta& a, const MemberMeta& b) noexcept {
-            return a.member_id() < b.member_id();
+        inline bool operator<(const MemberMeta& lhs, const MemberMeta& rhs) noexcept {
+            return lhs.member_id() < rhs.member_id();
         }
 
         template <typename TChar, typename TTraits>

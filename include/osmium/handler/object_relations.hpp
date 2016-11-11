@@ -46,6 +46,8 @@ namespace osmium {
     namespace handler {
 
         /**
+         * This handler updates the indexes given to the constructor with
+         * the relations between objects.
          *
          * Note: This handler will only work if either all object IDs are
          *       positive or all object IDs are negative.

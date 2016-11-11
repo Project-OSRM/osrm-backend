@@ -118,23 +118,23 @@ namespace osmium {
         }; // struct Tile
 
         /// Tiles are equal if all their attributes are equal.
-        inline bool operator==(const Tile& a, const Tile& b) {
-            return a.z == b.z && a.x == b.x && a.y == b.y;
+        inline bool operator==(const Tile& lhs, const Tile& rhs) {
+            return lhs.z == rhs.z && lhs.x == rhs.x && lhs.y == rhs.y;
         }
 
-        inline bool operator!=(const Tile& a, const Tile& b) {
-            return ! (a == b);
+        inline bool operator!=(const Tile& lhs, const Tile& rhs) {
+            return ! (lhs == rhs);
         }
 
         /**
          * This defines an arbitrary order on tiles for use in std::map etc.
          */
-        inline bool operator<(const Tile& a, const Tile& b) {
-            if (a.z < b.z) return true;
-            if (a.z > b.z) return false;
-            if (a.x < b.x) return true;
-            if (a.x > b.x) return false;
-            return a.y < b.y;
+        inline bool operator<(const Tile& lhs, const Tile& rhs) {
+            if (lhs.z < rhs.z) return true;
+            if (lhs.z > rhs.z) return false;
+            if (lhs.x < rhs.x) return true;
+            if (lhs.x > rhs.x) return false;
+            return lhs.y < rhs.y;
         }
 
     } // namespace geom

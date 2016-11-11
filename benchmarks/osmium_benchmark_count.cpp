@@ -19,15 +19,15 @@ struct CountHandler : public osmium::handler::Handler {
     uint64_t ways = 0;
     uint64_t relations = 0;
 
-    void node(osmium::Node&) {
+    void node(const osmium::Node&) {
         ++nodes;
     }
 
-    void way(osmium::Way&) {
+    void way(const osmium::Way&) {
         ++ways;
     }
 
-    void relation(osmium::Relation&) {
+    void relation(const osmium::Relation&) {
         ++relations;
     }
 

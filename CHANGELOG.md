@@ -13,6 +13,53 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 
+## [2.10.0] - 2016-11-11
+
+### Added
+
+- The `Reader` can take an additional optional `read_meta` flag. If this is
+  set to false the PBF input will ignore metadata on OSM objects (like version,
+  timestamp, uid, ...) which speeds up file reading by 10 to 20%.
+- New `IdSet` virtual class with two implementations: `IdSetDense` and
+  `IdSetSmall`. Used to efficiently store a set of Ids. This is often needed
+  to track, for instance, which nodes are needed for ways, etc.
+- Added more examples and better documented existing examples.
+- Add a benchmark "mercator" converting all node locations in a file to
+  WebMercator and creating geometries in WKB format.
+
+### Changed
+
+- Better queue handling makes I/O faster in some circumstances.
+- The `FindOsmium.cmake` CMake script can now check a current enough libosmium
+  version is found.
+- Builders can now be constructed with a reference to parent builder.
+- Made builders more robust by adding asserts that will catch common usage
+  problems.
+- Calling `OSMObjectBuilder::add_user()` is now optional, and the method was
+  renamed to `set_user()`. (`add_user()` is marked as deprecated.)
+- Benchmarks now show compiler and compiler options used.
+- `Builder::add_item()` now takes a reference instead of pointer (old version
+  of the function marked as deprecated).
+- GEOS support is deprecated. It does not work any more for GEOS 3.6 or newer.
+  Reason is the changed interface in GEOS 3.6. If there is interest for the
+  GEOS support, we can add support back in later (but probably using the
+  GEOS C API which is more stable than the C++ API). Some tests using GEOS
+  were rewritten to work without it.
+- The `BoolVector` has been deprecated in favour of the new `IdSet` classes.
+- Lots of code cleanups and improved API documentation in many places.
+- The relations collector can now tell you whether a relation member was in
+  the input data. See the new `is_available()` and
+  `get_availability_and_offset()` methods.
+- Updated embedded Catch unit test header to version 1.5.8.
+
+### Fixed
+
+- Parsing of coordinates starting with decimal dot and coordinates in
+  scientific notation.
+- `~` operator for `entity_bits` doesn't set unused bits any more.
+- Progress bar can now be (temporarily) removed, to allow other output.
+
+
 ## [2.9.0] - 2016-09-15
 
 ### Added
@@ -110,7 +157,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - New functions for iterating over specific item types in buffers
   (`osmium::memory::Buffer::select()`), over specific subitems
   (`osmium::OSMObject::subitems()`), and for iterating over all rings of
-  an area (`osmium::Areas::outer_rings(`), `inner_rings()`).
+  an area (`osmium::Areas::outer_rings()`, `inner_rings()`).
 - Debug output optionally prints CRC32 when `add_crc32` file option is set.
 
 ### Changed
@@ -267,9 +314,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   one in Writer. Calling flush() on the OutputIterator isn't needed any
   more.
 - Reader now throws when trying to read after eof or an error.
-- I/O functions that used to throw std::runtime_error now throw
-  osmium::io_error or derived.
-- Optional parameters on osmium::io::Writer now work in any order.
+- I/O functions that used to throw `std::runtime_error` now throw
+  `osmium::io_error` or derived.
+- Optional parameters on `osmium::io::Writer` now work in any order.
 
 ### Fixed
 
@@ -410,7 +457,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.9.0...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.10.0...HEAD
+[2.10.0]: https://github.com/osmcode/libosmium/compare/v2.9.0...v2.10.0
 [2.9.0]: https://github.com/osmcode/libosmium/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/osmcode/libosmium/compare/v2.7.2...v2.8.0
 [2.7.2]: https://github.com/osmcode/libosmium/compare/v2.7.1...v2.7.2

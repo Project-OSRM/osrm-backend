@@ -49,6 +49,11 @@ namespace osmium {
             debug   = 6
         };
 
+        enum class read_meta {
+            no  = 0,
+            yes = 1
+        };
+
 // avoid g++ false positive
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wreturn-type"

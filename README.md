@@ -4,8 +4,8 @@ http://osmcode.org/libosmium
 
 A fast and flexible C++ library for working with OpenStreetMap data.
 
-[![Build Status](https://secure.travis-ci.org/osmcode/libosmium.png)](https://travis-ci.org/osmcode/libosmium)
-[![Build status](https://ci.appveyor.com/api/projects/status/mkbg6e6stdgq7c1b?svg=true)](https://ci.appveyor.com/project/Mapbox/libosmium)
+[![Build Status](https://secure.travis-ci.org/osmcode/libosmium.svg)](https://travis-ci.org/osmcode/libosmium)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/osmcode/libosmium?svg=true)](https://ci.appveyor.com/project/Mapbox/libosmium)
 
 Libosmium is developed on Linux, but also works on OSX and Windows (with some
 limitations).

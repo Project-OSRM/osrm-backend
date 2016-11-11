@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 
     // Read options from command line.
     while (true) {
-        int c = getopt_long(argc, argv, "hwo", long_options, 0);
+        const int c = getopt_long(argc, argv, "hwo", long_options, 0);
         if (c == -1) {
             break;
         }
@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    int remaining_args = argc - optind;
+    const int remaining_args = argc - optind;
     if (remaining_args != 1) {
         std::cerr << "Usage: " << argv[0] << " [OPTIONS] OSMFILE\n";
         std::exit(1);

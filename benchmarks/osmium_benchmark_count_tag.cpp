@@ -18,7 +18,7 @@ struct CountHandler : public osmium::handler::Handler {
     uint64_t counter = 0;
     uint64_t all = 0;
 
-    void node(osmium::Node& node) {
+    void node(const osmium::Node& node) {
         ++all;
         const char* amenity = node.tags().get_value_by_key("amenity");
         if (amenity && !strcmp(amenity, "post_box")) {
@@ -26,11 +26,11 @@ struct CountHandler : public osmium::handler::Handler {
         }
     }
 
-    void way(osmium::Way&) {
+    void way(const osmium::Way&) {
         ++all;
     }
 
-    void relation(osmium::Relation&) {
+    void relation(const osmium::Relation&) {
         ++all;
     }
 

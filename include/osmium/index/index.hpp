@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstddef>
 #include <limits>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -57,19 +56,16 @@ namespace osmium {
             std::runtime_error(what) {
         }
 
+        explicit not_found(uint64_t id) :
+            std::runtime_error(std::string{"id "} + std::to_string(id) + " not found") {
+        }
+
     }; // struct not_found
 
     /**
      * @brief Indexing of OSM data, Locations, etc.
      */
     namespace index {
-
-        template <typename TKey>
-        OSMIUM_NORETURN void not_found_error(TKey key) {
-            std::stringstream s;
-            s << "id " << key << " not found";
-            throw not_found(s.str());
-        }
 
         /**
          * Some of the index classes need an "empty" value that can

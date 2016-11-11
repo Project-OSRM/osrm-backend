@@ -82,8 +82,8 @@ namespace osmium {
                 OPLParser(future_string_queue_type& input_queue,
                           future_buffer_queue_type& output_queue,
                           std::promise<osmium::io::Header>& header_promise,
-                          osmium::osm_entity_bits::type read_types) :
-                    Parser(input_queue, output_queue, header_promise, read_types) {
+                          osmium::io::detail::reader_options options) :
+                    Parser(input_queue, output_queue, header_promise, options) {
                     set_header_value(osmium::io::Header{});
                 }
 
@@ -137,8 +137,8 @@ namespace osmium {
                 [](future_string_queue_type& input_queue,
                     future_buffer_queue_type& output_queue,
                     std::promise<osmium::io::Header>& header_promise,
-                    osmium::osm_entity_bits::type read_which_entities) {
-                    return std::unique_ptr<Parser>(new OPLParser(input_queue, output_queue, header_promise, read_which_entities));
+                    osmium::io::detail::reader_options options) {
+                    return std::unique_ptr<Parser>(new OPLParser(input_queue, output_queue, header_promise, options));
             });
 
             // dummy function to silence the unused variable warning from above

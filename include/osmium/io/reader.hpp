@@ -91,7 +91,6 @@ namespace osmium {
         class Reader {
 
             osmium::io::File m_file;
-            osmium::osm_entity_bits::type m_read_which_entities;
 
             enum class status {
                 okay   = 0, // normal reading
@@ -118,15 +117,25 @@ namespace osmium {
 
             size_t m_file_size;
 
+            osmium::io::detail::reader_options m_options;
+
+            void set_option(osmium::osm_entity_bits::type value) noexcept {
+                m_options.read_which_entities = value;
+            }
+
+            void set_option(osmium::io::read_meta value) noexcept {
+                m_options.read_metadata = value;
+            }
+
             // This function will run in a separate thread.
             static void parser_thread(const osmium::io::File& file,
                                       detail::future_string_queue_type& input_queue,
                                       detail::future_buffer_queue_type& osmdata_queue,
                                       std::promise<osmium::io::Header>&& header_promise,
-                                      osmium::osm_entity_bits::type read_which_entities) {
+                                      osmium::io::detail::reader_options options) {
                 std::promise<osmium::io::Header> promise = std::move(header_promise);
                 const auto creator = detail::ParserFactory::instance().get_creator_function(file);
-                const auto parser = creator(input_queue, osmdata_queue, promise, read_which_entities);
+                const auto parser = creator(input_queue, osmdata_queue, promise, options);
                 parser->parse();
             }
 
@@ -205,15 +214,28 @@ namespace osmium {
             /**
              * Create new Reader object.
              *
-             * @param file The file we want to open.
-             * @param read_which_entities Which OSM entities (nodes, ways, relations, and/or changesets)
-             *                            should be read from the input file. It can speed the read up
-             *                            significantly if objects that are not needed anyway are not
-             *                            parsed.
+             * @param file The file (contains name and format info) to open.
+             * @param args All further arguments are optional and can appear
+             *             in any order:
+             *
+             * * osmium::osm_entities::bits: Which OSM entities (nodes, ways,
+             *      relations, and/or changesets) should be read from the
+             *      input file. It can speed the read up significantly if
+             *      objects that are not needed anyway are not parsed.
+             *
+             * * osmium::io::read_meta: Read meta data or not. The default is
+             *      osmium::io::read_meta::yes which means that meta data
+             *      is read normally. If you set this to
+             *      osmium::io::read_meta::no, meta data (like version, uid,
+             *      etc.) is not read possibly speeding up the read. Not all
+             *      file formats use this setting.
+             *
+             * @throws osmium::io_error If there was an error.
+             * @throws std::system_error If the file could not be opened.
              */
-            explicit Reader(const osmium::io::File& file, osmium::osm_entity_bits::type read_which_entities = osmium::osm_entity_bits::all) :
+            template <typename... TArgs>
+            explicit Reader(const osmium::io::File& file, TArgs&&... args) :
                 m_file(file.check()),
-                m_read_which_entities(read_which_entities),
                 m_status(status::okay),
                 m_childpid(0),
                 m_input_queue(detail::get_input_queue_size(), "raw_input"),
@@ -227,17 +249,24 @@ namespace osmium {
                 m_header(),
                 m_thread(),
                 m_file_size(m_decompressor->file_size()) {
+
+                (void)std::initializer_list<int>{
+                    (set_option(args), 0)...
+                };
+
                 std::promise<osmium::io::Header> header_promise;
                 m_header_future = header_promise.get_future();
-                m_thread = osmium::thread::thread_handler{parser_thread, std::ref(m_file), std::ref(m_input_queue), std::ref(m_osmdata_queue), std::move(header_promise), read_which_entities};
+                m_thread = osmium::thread::thread_handler{parser_thread, std::ref(m_file), std::ref(m_input_queue), std::ref(m_osmdata_queue), std::move(header_promise), m_options};
             }
 
-            explicit Reader(const std::string& filename, osmium::osm_entity_bits::type read_types = osmium::osm_entity_bits::all) :
-                Reader(osmium::io::File(filename), read_types) {
+            template <typename... TArgs>
+            explicit Reader(const std::string& filename, TArgs&&... args) :
+                Reader(osmium::io::File(filename), std::forward<TArgs>(args)...) {
             }
 
-            explicit Reader(const char* filename, osmium::osm_entity_bits::type read_types = osmium::osm_entity_bits::all) :
-                Reader(osmium::io::File(filename), read_types) {
+            template <typename... TArgs>
+            explicit Reader(const char* filename, TArgs&&... args) :
+                Reader(osmium::io::File(filename), std::forward<TArgs>(args)...) {
             }
 
             Reader(const Reader&) = delete;
@@ -304,7 +333,7 @@ namespace osmium {
                 try {
                     if (m_header_future.valid()) {
                         m_header = m_header_future.get();
-                        if (m_read_which_entities == osmium::osm_entity_bits::nothing) {
+                        if (m_options.read_which_entities == osmium::osm_entity_bits::nothing) {
                             m_status = status::eof;
                         }
                     }
@@ -330,7 +359,7 @@ namespace osmium {
                 osmium::memory::Buffer buffer;
 
                 if (m_status != status::okay ||
-                    m_read_which_entities == osmium::osm_entity_bits::nothing) {
+                    m_options.read_which_entities == osmium::osm_entity_bits::nothing) {
                     throw io_error("Can not read from reader when in status 'closed', 'eof', or 'error'");
                 }
 
