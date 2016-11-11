@@ -6,7 +6,7 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "engine/datafacade/memory_datafacade_base.hpp"
+#include "engine/datafacade/bigramblock_datafacade_base.hpp"
 
 namespace osrm
 {
@@ -15,10 +15,17 @@ namespace engine
 namespace datafacade
 {
 
-class SharedDataFacade : public MemoryDataFacadeBase
+/**
+ * This datafacade uses an IPC shared memory block as the data location.
+ * Many SharedDataFacade objects can be created that point to the same shared
+ * memory block.
+ */
+class SharedDataFacade : public BigRAMBlockDataFacadeBase
 {
 
   protected:
+    std::unique_ptr<storage::SharedMemory> m_layout_memory;
+    std::unique_ptr<storage::SharedMemory> m_large_memory;
     std::shared_ptr<storage::SharedBarriers> shared_barriers;
     storage::SharedDataType layout_region;
     storage::SharedDataType data_region;
