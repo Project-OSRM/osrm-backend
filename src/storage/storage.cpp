@@ -514,7 +514,8 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         name_file.readInto(reinterpret_cast<char *>(name_blocks_ptr),
                            layout_ptr->GetBlockSize(DataLayout::NAME_BLOCKS));
 
-        // For some reason, this value (the same as )
+        // The file format contains the element count a second time.  Don't know why,
+        // but we need to read it here to progress the file pointer to the correct spot
         const auto temp_count = name_file.readElementCount32();
 
         const auto name_char_ptr =

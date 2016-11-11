@@ -37,12 +37,23 @@
 #include <utility>
 #include <vector>
 
+#include <boost/multi_array.hpp>
+#include <boost/range/iterator_range.hpp>
+
 namespace osrm
 {
 namespace engine
 {
 namespace datafacade
 {
+namespace
+{
+template <typename T, typename = std::enable_if<std::is_const<T>::value>>
+using ConstArrayRef = boost::iterator_range<T>;
+
+using CoordinateArrayRef = ConstArrayRef<const util::Coordinate *>;
+using OSMNodeArrayRef = ConstArrayRef<const OSMNodeID *>;
+}
 
 /**
  * This base class implements the Datafacade interface for accessing
@@ -58,8 +69,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
     using IndexBlock = util::RangeTable<16, true>::BlockT;
     using InputEdge = QueryGraph::InputEdge;
     using RTreeLeaf = super::RTreeLeaf;
-    using SharedRTree =
-        util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>;
+    using SharedRTree = util::StaticRTree<RTreeLeaf, CoordinateArrayRef, true>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
@@ -68,8 +78,8 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
     std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
 
-    util::ShM<util::Coordinate, true>::vector m_coordinate_list;
-    util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
+    CoordinateArrayRef m_coordinate_list;
+    OSMNodeArrayRef m_osmnodeid_list;
     util::ShM<GeometryID, true>::vector m_via_geometry_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<LaneDataID, true>::vector m_lane_data_id;
@@ -178,21 +188,21 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
     {
         const auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
             memory_block, storage::DataLayout::COORDINATE_LIST);
-        m_coordinate_list.reset(coordinate_list_ptr,
-                                data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
+
+        m_coordinate_list = CoordinateArrayRef(
+            coordinate_list_ptr,
+            coordinate_list_ptr + data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
 
         for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
         {
             BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
         }
 
-        const auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
+        const auto osmnodeid_list_ptr = data_layout->GetBlockPtr<OSMNodeID>(
             memory_block, storage::DataLayout::OSM_NODE_ID_LIST);
-        m_osmnodeid_list.reset(osmnodeid_list_ptr,
-                               data_layout->num_entries[storage::DataLayout::OSM_NODE_ID_LIST]);
-        // We (ab)use the number of coordinates here because we know we have the same amount of ids
-        m_osmnodeid_list.set_number_of_entries(
-            data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
+        m_osmnodeid_list = OSMNodeArrayRef(
+            osmnodeid_list_ptr,
+            osmnodeid_list_ptr + data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
 
         const auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             memory_block, storage::DataLayout::TRAVEL_MODE);
@@ -467,7 +477,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
 
     OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
     {
-        return m_osmnodeid_list.at(id);
+        return m_osmnodeid_list[id];
     }
 
     virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
