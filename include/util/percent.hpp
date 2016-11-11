@@ -4,6 +4,8 @@
 #include <atomic>
 #include <iostream>
 
+#include "util/isatty.hpp"
+
 namespace osrm
 {
 namespace util
@@ -71,6 +73,12 @@ class Percent
             {
                 std::cout << ".";
             }
+
+            // When not on a TTY, print newlines after each progress indicator so
+            // so that progress is visible to line-buffered logging systems
+            if (!IsStdoutATTY())
+                std::cout << std::endl;
+
             std::cout.flush();
         }
     }

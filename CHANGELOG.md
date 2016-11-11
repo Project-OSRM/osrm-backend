@@ -27,6 +27,8 @@
       - Added support for turn penalties
     - Internals
       - Internal/Shared memory datafacades now share common memory layout and data loading code
+    - Misc
+      - Progress indicators now print newlines when stdout is not a TTY
 
 # 5.4.3
   - Changes from 5.4.2
