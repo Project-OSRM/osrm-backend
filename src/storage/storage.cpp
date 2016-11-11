@@ -28,13 +28,11 @@
 #endif
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/interprocess/exceptions.hpp>
 #include <boost/interprocess/sync/named_sharable_mutex.hpp>
 #include <boost/interprocess/sync/named_upgradable_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/upgradable_lock.hpp>
-#include <boost/iostreams/seek.hpp>
 
 #include <cstdint>
 
@@ -263,19 +261,15 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
         // collect number of elements to store in shared memory object
         util::SimpleLogger().Write() << "load names from: " << config.names_data_path;
         // number of entries in name index
-        boost::filesystem::ifstream name_stream(config.names_data_path, std::ios::binary);
-        if (!name_stream)
-        {
-            throw util::exception("Could not open " + config.names_data_path.string() +
-                                  " for reading.");
-        }
-        const auto name_blocks = io::readElementCount32(name_stream);
+        io::File name_file(config.names_data_path);
+
+        const auto name_blocks = name_file.readElementCount32();
         layout_ptr->SetBlockSize<unsigned>(DataLayout::NAME_OFFSETS, name_blocks);
         layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
             DataLayout::NAME_BLOCKS, name_blocks);
         BOOST_ASSERT_MSG(0 != name_blocks, "name file broken");
 
-        const auto number_of_chars = io::readElementCount32(name_stream);
+        const auto number_of_chars = name_file.readElementCount32();
         layout_ptr->SetBlockSize<char>(DataLayout::NAME_CHAR_LIST, number_of_chars);
     }
 
@@ -295,13 +289,8 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
 
     // Loading information for original edges
     {
-        boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
-        if (!edges_input_stream)
-        {
-            throw util::exception("Could not open " + config.edges_data_path.string() +
-                                  " for reading.");
-        }
-        const auto number_of_original_edges = io::readElementCount64(edges_input_stream);
+        io::File edges_file(config.edges_data_path);
+        const auto number_of_original_edges = edges_file.readElementCount64();
 
         // note: settings this all to the same size is correct, we extract them from the same struct
         layout_ptr->SetBlockSize<NodeID>(DataLayout::VIA_NODE_LIST, number_of_original_edges);
@@ -319,14 +308,9 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
     }
 
     {
-        boost::filesystem::ifstream hsgr_input_stream(config.hsgr_data_path, std::ios::binary);
-        if (!hsgr_input_stream)
-        {
-            throw util::exception("Could not open " + config.hsgr_data_path.string() +
-                                  " for reading.");
-        }
+        io::File hsgr_file(config.hsgr_data_path);
 
-        const auto hsgr_header = io::readHSGRHeader(hsgr_input_stream);
+        const auto hsgr_header = io::readHSGRHeader(hsgr_file);
         layout_ptr->SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
         layout_ptr->SetBlockSize<QueryGraph::NodeArrayEntry>(DataLayout::GRAPH_NODE_LIST,
                                                              hsgr_header.number_of_nodes);
@@ -336,11 +320,13 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
 
     // load rsearch tree size
     {
-        boost::filesystem::ifstream tree_node_file(config.ram_index_path, std::ios::binary);
+        io::File tree_node_file(config.ram_index_path);
 
-        const auto tree_size = io::readElementCount64(tree_node_file);
+        const auto tree_size = tree_node_file.readElementCount64();
         layout_ptr->SetBlockSize<RTreeNode>(DataLayout::R_SEARCH_TREE, tree_size);
+    }
 
+    {
         // allocate space in shared memory for profile properties
         const auto properties_size = io::readPropertiesCount();
         layout_ptr->SetBlockSize<extractor::ProfileProperties>(DataLayout::PROPERTIES,
@@ -349,38 +335,22 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
 
     // read timestampsize
     {
-        boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
-        if (!timestamp_stream)
-        {
-            throw util::exception("Could not open " + config.timestamp_path.string() +
-                                  " for reading.");
-        }
-        const auto timestamp_size = io::readNumberOfBytes(timestamp_stream);
+        io::File timestamp_file(config.timestamp_path);
+        const auto timestamp_size = timestamp_file.size();
         layout_ptr->SetBlockSize<char>(DataLayout::TIMESTAMP, timestamp_size);
     }
 
     // load core marker size
     {
-        boost::filesystem::ifstream core_marker_file(config.core_data_path, std::ios::binary);
-        if (!core_marker_file)
-        {
-            throw util::exception("Could not open " + config.core_data_path.string() +
-                                  " for reading.");
-        }
-
-        const auto number_of_core_markers = io::readElementCount32(core_marker_file);
+        io::File core_marker_file(config.core_data_path);
+        const auto number_of_core_markers = core_marker_file.readElementCount32();
         layout_ptr->SetBlockSize<unsigned>(DataLayout::CORE_MARKER, number_of_core_markers);
     }
 
     // load coordinate size
     {
-        boost::filesystem::ifstream nodes_input_stream(config.nodes_data_path, std::ios::binary);
-        if (!nodes_input_stream)
-        {
-            throw util::exception("Could not open " + config.core_data_path.string() +
-                                  " for reading.");
-        }
-        const auto coordinate_list_size = io::readElementCount64(nodes_input_stream);
+        io::File node_file(config.nodes_data_path);
+        const auto coordinate_list_size = node_file.readElementCount64();
         layout_ptr->SetBlockSize<util::Coordinate>(DataLayout::COORDINATE_LIST,
                                                    coordinate_list_size);
         // we'll read a list of OSM node IDs from the same data, so set the block size for the same
@@ -392,20 +362,15 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
 
     // load geometries sizes
     {
-        boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
-        if (!geometry_input_stream)
-        {
-            throw util::exception("Could not open " + config.geometries_path.string() +
-                                  " for reading.");
-        }
+        io::File geometry_file(config.geometries_path);
 
-        const auto number_of_geometries_indices = io::readElementCount32(geometry_input_stream);
+        const auto number_of_geometries_indices = geometry_file.readElementCount32();
         layout_ptr->SetBlockSize<unsigned>(DataLayout::GEOMETRIES_INDEX,
                                            number_of_geometries_indices);
-        boost::iostreams::seek(
-            geometry_input_stream, number_of_geometries_indices * sizeof(unsigned), BOOST_IOS::cur);
 
-        const auto number_of_compressed_geometries = io::readElementCount32(geometry_input_stream);
+        geometry_file.skip<unsigned>(number_of_geometries_indices);
+
+        const auto number_of_compressed_geometries = geometry_file.readElementCount32();
         layout_ptr->SetBlockSize<NodeID>(DataLayout::GEOMETRIES_NODE_LIST,
                                          number_of_compressed_geometries);
         layout_ptr->SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST,
@@ -417,15 +382,8 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
     // load datasource sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist.
     {
-        boost::filesystem::ifstream geometry_datasource_input_stream(config.datasource_indexes_path,
-                                                                     std::ios::binary);
-        if (!geometry_datasource_input_stream)
-        {
-            throw util::exception("Could not open " + config.datasource_indexes_path.string() +
-                                  " for reading.");
-        }
-        const auto number_of_compressed_datasources =
-            io::readElementCount64(geometry_datasource_input_stream);
+        io::File geometry_datasource_file(config.datasource_indexes_path);
+        const auto number_of_compressed_datasources = geometry_datasource_file.readElementCount64();
         layout_ptr->SetBlockSize<uint8_t>(DataLayout::DATASOURCES_LIST,
                                           number_of_compressed_datasources);
     }
@@ -433,16 +391,10 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
     // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist
     {
-        boost::filesystem::ifstream datasource_names_input_stream(config.datasource_names_path,
-                                                                  std::ios::binary);
-        if (!datasource_names_input_stream)
-        {
-            throw util::exception("Could not open " + config.datasource_names_path.string() +
-                                  " for reading.");
-        }
+        io::File datasource_names_file(config.datasource_names_path);
 
         const io::DatasourceNamesData datasource_names_data =
-            io::readDatasourceNames(datasource_names_input_stream);
+            io::readDatasourceNames(datasource_names_file);
 
         layout_ptr->SetBlockSize<char>(DataLayout::DATASOURCE_NAME_DATA,
                                        datasource_names_data.names.size());
@@ -453,54 +405,34 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
     }
 
     {
-        boost::filesystem::ifstream intersection_stream(config.intersection_class_path,
-                                                        std::ios::binary);
-
-        if (!static_cast<bool>(intersection_stream))
-            throw util::exception("Could not open " + config.intersection_class_path.string() +
-                                  " for reading.");
-
-        if (!util::readAndCheckFingerprint(intersection_stream))
-            throw util::exception("Fingerprint of " + config.intersection_class_path.string() +
-                                  " does not match or could not read from file");
+        io::File intersection_file(config.intersection_class_path, true);
 
         std::vector<BearingClassID> bearing_class_id_table;
-        if (!util::deserializeVector(intersection_stream, bearing_class_id_table))
-            throw util::exception("Failed to bearing class ids read from " +
-                                  config.names_data_path.string());
+        intersection_file.deserializeVector(bearing_class_id_table);
 
         layout_ptr->SetBlockSize<BearingClassID>(DataLayout::BEARING_CLASSID,
                                                  bearing_class_id_table.size());
 
-        const auto bearing_blocks = io::readElementCount32(intersection_stream);
-        const auto sum_lengths = io::readElementCount32(intersection_stream);
+        const auto bearing_blocks = intersection_file.readElementCount32();
+        intersection_file.skip<std::uint32_t>(1); // sum_lengths
 
         layout_ptr->SetBlockSize<unsigned>(DataLayout::BEARING_OFFSETS, bearing_blocks);
         layout_ptr->SetBlockSize<typename util::RangeTable<16, true>::BlockT>(
             DataLayout::BEARING_BLOCKS, bearing_blocks);
 
-        // Skip the actual data
-        boost::iostreams::seek(intersection_stream,
-                               bearing_blocks * sizeof(unsigned) +
-                                   bearing_blocks *
-                                       sizeof(typename util::RangeTable<16, true>::BlockT),
-                               BOOST_IOS::cur);
+        // No need to read the data
+        intersection_file.skip<unsigned>(bearing_blocks);
+        intersection_file.skip<typename util::RangeTable<16, true>::BlockT>(bearing_blocks);
 
-        const auto num_bearings = io::readElementCount64(intersection_stream);
+        const auto num_bearings = intersection_file.readElementCount64();
 
         // Skip over the actual data
-        boost::iostreams::seek(
-            intersection_stream, num_bearings * sizeof(DiscreteBearing), BOOST_IOS::cur);
+        intersection_file.skip<DiscreteBearing>(num_bearings);
+
         layout_ptr->SetBlockSize<DiscreteBearing>(DataLayout::BEARING_VALUES, num_bearings);
 
-        if (!static_cast<bool>(intersection_stream))
-            throw util::exception("Failed to read bearing values from " +
-                                  config.intersection_class_path.string());
-
         std::vector<util::guidance::EntryClass> entry_class_table;
-        if (!util::deserializeVector(intersection_stream, entry_class_table))
-            throw util::exception("Failed to read entry classes from " +
-                                  config.intersection_class_path.string());
+        intersection_file.deserializeVector(entry_class_table);
 
         layout_ptr->SetBlockSize<util::guidance::EntryClass>(DataLayout::ENTRY_CLASS,
                                                              entry_class_table.size());
@@ -508,10 +440,10 @@ void Storage::LoadLayout(DataLayout *layout_ptr)
 
     {
         // Loading turn lane data
-        boost::filesystem::ifstream lane_data_stream(config.turn_lane_data_path, std::ios::binary);
-        const auto lane_tupel_count = io::readElementCount64(lane_data_stream);
+        io::File lane_data_file(config.turn_lane_data_path);
+        const auto lane_tuple_count = lane_data_file.readElementCount64();
         layout_ptr->SetBlockSize<util::guidance::LaneTupleIdPair>(DataLayout::TURN_LANE_DATA,
-                                                                  lane_tupel_count);
+                                                                  lane_tuple_count);
     }
 }
 
@@ -522,8 +454,8 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // Load the HSGR file
     {
-        boost::filesystem::ifstream hsgr_input_stream(config.hsgr_data_path, std::ios::binary);
-        auto hsgr_header = io::readHSGRHeader(hsgr_input_stream);
+        io::File hsgr_file(config.hsgr_data_path);
+        auto hsgr_header = io::readHSGRHeader(hsgr_file);
         unsigned *checksum_ptr =
             layout_ptr->GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
         *checksum_ptr = hsgr_header.checksum;
@@ -538,12 +470,11 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
             layout_ptr->GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(memory_ptr,
                                                                       DataLayout::GRAPH_EDGE_LIST);
 
-        io::readHSGR(hsgr_input_stream,
+        io::readHSGR(hsgr_file,
                      graph_node_list_ptr,
                      hsgr_header.number_of_nodes,
                      graph_edge_list_ptr,
                      hsgr_header.number_of_edges);
-        hsgr_input_stream.close();
     }
 
     // store the filename of the on-disk portion of the RTree
@@ -562,61 +493,54 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // Name data
     {
-        /* To be replaced by io loading code */
-        boost::filesystem::ifstream name_stream(config.names_data_path, std::ios::binary);
-        const auto name_blocks = io::readElementCount32(name_stream);
-        const auto number_of_chars = io::readElementCount32(name_stream);
-        /* END to be replaced */
+        io::File name_file(config.names_data_path);
+        const auto name_blocks_count = name_file.readElementCount32();
+        const auto name_char_list_count = name_file.readElementCount32();
+
+        using NameRangeTable = util::RangeTable<16, true>;
+
+        BOOST_ASSERT(name_blocks_count * sizeof(unsigned) ==
+                     layout_ptr->GetBlockSize(DataLayout::NAME_OFFSETS));
+        BOOST_ASSERT(name_blocks_count * sizeof(typename NameRangeTable::BlockT) ==
+                     layout_ptr->GetBlockSize(DataLayout::NAME_BLOCKS));
 
         // Loading street names
         const auto name_offsets_ptr =
             layout_ptr->GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::NAME_OFFSETS);
-        if (layout_ptr->GetBlockSize(DataLayout::NAME_OFFSETS) > 0)
-        {
-            name_stream.read(reinterpret_cast<char *>(name_offsets_ptr),
-                             layout_ptr->GetBlockSize(DataLayout::NAME_OFFSETS));
-        }
+        name_file.readInto(name_offsets_ptr, name_blocks_count);
 
         const auto name_blocks_ptr =
             layout_ptr->GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::NAME_BLOCKS);
-        if (layout_ptr->GetBlockSize(DataLayout::NAME_BLOCKS) > 0)
-        {
-            name_stream.read(reinterpret_cast<char *>(name_blocks_ptr),
-                             layout_ptr->GetBlockSize(DataLayout::NAME_BLOCKS));
-        }
+        name_file.readInto(reinterpret_cast<char *>(name_blocks_ptr),
+                           layout_ptr->GetBlockSize(DataLayout::NAME_BLOCKS));
+
+        // For some reason, this value (the same as )
+        const auto temp_count = name_file.readElementCount32();
 
         const auto name_char_ptr =
             layout_ptr->GetBlockPtr<char, true>(memory_ptr, DataLayout::NAME_CHAR_LIST);
 
-        const auto name_char_list_count = io::readElementCount32(name_stream);
-
-        BOOST_ASSERT_MSG(layout_ptr->AlignBlockSize(name_char_list_count) ==
+        BOOST_ASSERT_MSG(layout_ptr->AlignBlockSize(temp_count) ==
                              layout_ptr->GetBlockSize(DataLayout::NAME_CHAR_LIST),
                          "Name file corrupted!");
 
-        if (layout_ptr->GetBlockSize(DataLayout::NAME_CHAR_LIST) > 0)
-        {
-            name_stream.read(name_char_ptr, layout_ptr->GetBlockSize(DataLayout::NAME_CHAR_LIST));
-        }
+        name_file.readInto(name_char_ptr, temp_count);
     }
 
     // Turn lane data
     {
-        /* NOTE: file io - refactor this in the future */
-        boost::filesystem::ifstream lane_data_stream(config.turn_lane_data_path, std::ios::binary);
-        const auto lane_tupel_count = io::readElementCount64(lane_data_stream);
-        /* END NOTE */
+        io::File lane_data_file(config.turn_lane_data_path);
+
+        const auto lane_tuple_count = lane_data_file.readElementCount64();
 
         // Need to call GetBlockPtr -> it write the memory canary, even if no data needs to be
         // loaded.
         const auto turn_lane_data_ptr =
             layout_ptr->GetBlockPtr<util::guidance::LaneTupleIdPair, true>(
                 memory_ptr, DataLayout::TURN_LANE_DATA);
-        if (layout_ptr->GetBlockSize(DataLayout::TURN_LANE_DATA) > 0)
-        {
-            lane_data_stream.read(reinterpret_cast<char *>(turn_lane_data_ptr),
-                                  layout_ptr->GetBlockSize(DataLayout::TURN_LANE_DATA));
-        }
+        BOOST_ASSERT(lane_tuple_count * sizeof(util::guidance::LaneTupleIdPair) ==
+                     layout_ptr->GetBlockSize(DataLayout::TURN_LANE_DATA));
+        lane_data_file.readInto(turn_lane_data_ptr, lane_tuple_count);
     }
 
     // Turn lane descriptions
@@ -655,16 +579,9 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // Load original edge data
     {
-        /* NOTE: file io - refactor this in the future */
-        boost::filesystem::ifstream edges_input_stream(config.edges_data_path, std::ios::binary);
-        if (!edges_input_stream)
-        {
-            throw util::exception("Could not open " + config.edges_data_path.string() +
-                                  " for reading.");
-        }
+        io::File edges_input_file(config.edges_data_path);
 
-        const auto number_of_original_edges = io::readElementCount64(edges_input_stream);
-        /* END NOTE */
+        const auto number_of_original_edges = edges_input_file.readElementCount64();
 
         const auto via_geometry_ptr =
             layout_ptr->GetBlockPtr<GeometryID, true>(memory_ptr, DataLayout::VIA_NODE_LIST);
@@ -691,7 +608,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         const auto entry_class_id_ptr =
             layout_ptr->GetBlockPtr<EntryClassID, true>(memory_ptr, DataLayout::ENTRY_CLASSID);
 
-        io::readEdges(edges_input_stream,
+        io::readEdges(edges_input_file,
                       via_geometry_ptr,
                       name_id_ptr,
                       turn_instructions_ptr,
@@ -705,91 +622,53 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // load compressed geometry
     {
-        /* NOTE: file io - refactor this in the future */
-        boost::filesystem::ifstream geometry_input_stream(config.geometries_path, std::ios::binary);
-        /* END NOTE */
+        io::File geometry_input_file(config.geometries_path);
 
-        const auto geometry_index_count = io::readElementCount32(geometry_input_stream);
+        const auto geometry_index_count = geometry_input_file.readElementCount32();
         const auto geometries_index_ptr =
             layout_ptr->GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::GEOMETRIES_INDEX);
         BOOST_ASSERT(geometry_index_count == layout_ptr->num_entries[DataLayout::GEOMETRIES_INDEX]);
+        geometry_input_file.readInto(geometries_index_ptr, geometry_index_count);
 
-        if (layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_INDEX) > 0)
-        {
-            geometry_input_stream.read(reinterpret_cast<char *>(geometries_index_ptr),
-                                       layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_INDEX));
-        }
         const auto geometries_node_id_list_ptr =
             layout_ptr->GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::GEOMETRIES_NODE_LIST);
-
-        const auto geometry_node_lists_count = io::readElementCount32(geometry_input_stream);
+        const auto geometry_node_lists_count = geometry_input_file.readElementCount32();
         BOOST_ASSERT(geometry_node_lists_count ==
                      layout_ptr->num_entries[DataLayout::GEOMETRIES_NODE_LIST]);
+        geometry_input_file.readInto(geometries_node_id_list_ptr, geometry_node_lists_count);
 
-        if (layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_NODE_LIST) > 0)
-        {
-            geometry_input_stream.read(reinterpret_cast<char *>(geometries_node_id_list_ptr),
-                                       layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_NODE_LIST));
-        }
         const auto geometries_fwd_weight_list_ptr = layout_ptr->GetBlockPtr<EdgeWeight, true>(
             memory_ptr, DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
-
         BOOST_ASSERT(geometry_node_lists_count ==
                      layout_ptr->num_entries[DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
+        geometry_input_file.readInto(geometries_fwd_weight_list_ptr, geometry_node_lists_count);
 
-        if (layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST) > 0)
-        {
-            geometry_input_stream.read(
-                reinterpret_cast<char *>(geometries_fwd_weight_list_ptr),
-                layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_FWD_WEIGHT_LIST));
-        }
         const auto geometries_rev_weight_list_ptr = layout_ptr->GetBlockPtr<EdgeWeight, true>(
             memory_ptr, DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
-
         BOOST_ASSERT(geometry_node_lists_count ==
                      layout_ptr->num_entries[DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
-
-        if (layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_REV_WEIGHT_LIST) > 0)
-        {
-            geometry_input_stream.read(
-                reinterpret_cast<char *>(geometries_rev_weight_list_ptr),
-                layout_ptr->GetBlockSize(DataLayout::GEOMETRIES_REV_WEIGHT_LIST));
-        }
+        geometry_input_file.readInto(geometries_rev_weight_list_ptr, geometry_node_lists_count);
     }
 
     {
-        boost::filesystem::ifstream geometry_datasource_input_stream(config.datasource_indexes_path,
-                                                                     std::ios::binary);
-        if (!geometry_datasource_input_stream)
-        {
-            throw util::exception("Could not open " + config.datasource_indexes_path.string() +
-                                  " for reading.");
-        }
-        const auto number_of_compressed_datasources =
-            io::readElementCount64(geometry_datasource_input_stream);
+        io::File geometry_datasource_file(config.datasource_indexes_path);
+        const auto number_of_compressed_datasources = geometry_datasource_file.readElementCount64();
 
         // load datasource information (if it exists)
         const auto datasources_list_ptr =
             layout_ptr->GetBlockPtr<uint8_t, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
         if (number_of_compressed_datasources > 0)
         {
-            io::readDatasourceIndexes(geometry_datasource_input_stream,
-                                      datasources_list_ptr,
-                                      number_of_compressed_datasources);
+            io::readDatasourceIndexes(
+                geometry_datasource_file, datasources_list_ptr, number_of_compressed_datasources);
         }
     }
 
     {
         /* Load names */
-        boost::filesystem::ifstream datasource_names_input_stream(config.datasource_names_path,
-                                                                  std::ios::binary);
-        if (!datasource_names_input_stream)
-        {
-            throw util::exception("Could not open " + config.datasource_names_path.string() +
-                                  " for reading.");
-        }
+        io::File datasource_names_file(config.datasource_names_path);
 
-        const auto datasource_names_data = io::readDatasourceNames(datasource_names_input_stream);
+        const auto datasource_names_data = io::readDatasourceNames(datasource_names_file);
 
         // load datasource name information (if it exists)
         const auto datasource_name_data_ptr =
@@ -822,8 +701,8 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // Loading list of coordinates
     {
-        boost::filesystem::ifstream nodes_input_stream(config.nodes_data_path, std::ios::binary);
-        io::readElementCount64(nodes_input_stream);
+        io::File nodes_file(config.nodes_data_path);
+        nodes_file.skip<std::uint64_t>(1); // node_count
         const auto coordinates_ptr = layout_ptr->GetBlockPtr<util::Coordinate, true>(
             memory_ptr, DataLayout::COORDINATE_LIST);
         const auto osmnodeid_ptr =
@@ -832,7 +711,7 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
         osmnodeid_list.reset(osmnodeid_ptr, layout_ptr->num_entries[DataLayout::OSM_NODE_ID_LIST]);
 
-        io::readNodes(nodes_input_stream,
+        io::readNodes(nodes_file,
                       coordinates_ptr,
                       osmnodeid_list,
                       layout_ptr->num_entries[DataLayout::COORDINATE_LIST]);
@@ -840,22 +719,21 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // store timestamp
     {
-        /* NOTE: file io - refactor this in the future */
-        boost::filesystem::ifstream timestamp_stream(config.timestamp_path);
-        const auto timestamp_size = io::readNumberOfBytes(timestamp_stream);
-        /* END NOTE */
+        io::File timestamp_file(config.timestamp_path);
+        const auto timestamp_size = timestamp_file.size();
 
         const auto timestamp_ptr =
             layout_ptr->GetBlockPtr<char, true>(memory_ptr, DataLayout::TIMESTAMP);
-        io::readTimestamp(timestamp_stream, timestamp_ptr, timestamp_size);
+        BOOST_ASSERT(timestamp_size == layout_ptr->num_entries[DataLayout::TIMESTAMP]);
+        timestamp_file.readInto(timestamp_ptr, timestamp_size);
     }
 
     // store search tree portion of rtree
     {
-        boost::filesystem::ifstream tree_node_file(config.ram_index_path, std::ios::binary);
+        io::File tree_node_file(config.ram_index_path);
         // perform this read so that we're at the right stream position for the next
         // read.
-        io::readElementCount64(tree_node_file);
+        tree_node_file.skip<std::uint64_t>(1);
         const auto rtree_ptr =
             layout_ptr->GetBlockPtr<RTreeNode, true>(memory_ptr, DataLayout::R_SEARCH_TREE);
         io::readRamIndex(
@@ -863,21 +741,12 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
     }
 
     {
-        /* NOTE: file io - refactor this in the future */
-        boost::filesystem::ifstream core_marker_file(config.core_data_path, std::ios::binary);
-        if (!core_marker_file)
-        {
-            throw util::exception("Could not open " + config.core_data_path.string() +
-                                  " for reading.");
-        }
-
-        const auto number_of_core_markers = io::readElementCount32(core_marker_file);
-        /* END NOTE */
+        io::File core_marker_file(config.core_data_path);
+        const auto number_of_core_markers = core_marker_file.readElementCount32();
 
         // load core markers
         std::vector<char> unpacked_core_markers(number_of_core_markers);
-        core_marker_file.read(reinterpret_cast<char *>(unpacked_core_markers.data()),
-                              sizeof(char) * number_of_core_markers);
+        core_marker_file.readInto(unpacked_core_markers.data(), number_of_core_markers);
 
         const auto core_marker_ptr =
             layout_ptr->GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::CORE_MARKER);
@@ -906,68 +775,38 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
 
     // load profile properties
     {
-        boost::filesystem::ifstream profile_properties_stream(config.properties_path);
-        if (!profile_properties_stream)
-        {
-            util::exception("Could not open " + config.properties_path.string() + " for reading!");
-        }
-        io::readPropertiesCount();
+        io::File profile_properties_file(config.properties_path);
         const auto profile_properties_ptr =
             layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(memory_ptr,
                                                                         DataLayout::PROPERTIES);
-        io::readProperties(profile_properties_stream,
-                           profile_properties_ptr,
-                           sizeof(extractor::ProfileProperties));
+        const auto properties_size = io::readPropertiesCount();
+        io::readProperties(profile_properties_file, profile_properties_ptr, properties_size);
     }
 
     // Load intersection data
     {
-        boost::filesystem::ifstream intersection_stream(config.intersection_class_path,
-                                                        std::ios::binary);
-        if (!static_cast<bool>(intersection_stream))
-            throw util::exception("Could not open " + config.intersection_class_path.string() +
-                                  " for reading.");
-
-        if (!util::readAndCheckFingerprint(intersection_stream))
-            throw util::exception("Fingerprint of " + config.intersection_class_path.string() +
-                                  " does not match or could not read from file");
+        io::File intersection_file(config.intersection_class_path, true);
 
         std::vector<BearingClassID> bearing_class_id_table;
-        if (!util::deserializeVector(intersection_stream, bearing_class_id_table))
-            throw util::exception("Failed to bearing class ids read from " +
-                                  config.names_data_path.string());
+        intersection_file.deserializeVector(bearing_class_id_table);
 
-        const auto bearing_blocks = io::readElementCount32(intersection_stream);
-        const auto sum_lengths = io::readElementCount32(intersection_stream);
+        const auto bearing_blocks = intersection_file.readElementCount32();
+        intersection_file.skip<std::uint32_t>(1); // sum_lengths
 
         std::vector<unsigned> bearing_offsets_data(bearing_blocks);
         std::vector<typename util::RangeTable<16, true>::BlockT> bearing_blocks_data(
             bearing_blocks);
 
-        if (bearing_blocks)
-        {
-            intersection_stream.read(reinterpret_cast<char *>(bearing_offsets_data.data()),
-                                     bearing_blocks *
-                                         sizeof(decltype(bearing_offsets_data)::value_type));
-        }
+        intersection_file.readInto(bearing_offsets_data.data(), bearing_blocks);
+        intersection_file.readInto(bearing_blocks_data.data(), bearing_blocks);
 
-        if (bearing_blocks)
-        {
-            intersection_stream.read(reinterpret_cast<char *>(bearing_blocks_data.data()),
-                                     bearing_blocks *
-                                         sizeof(decltype(bearing_blocks_data)::value_type));
-        }
-
-        const auto num_bearings = io::readElementCount64(intersection_stream);
+        const auto num_bearings = intersection_file.readElementCount64();
 
         std::vector<DiscreteBearing> bearing_class_table(num_bearings);
-        intersection_stream.read(reinterpret_cast<char *>(bearing_class_table.data()),
-                                 sizeof(decltype(bearing_class_table)::value_type) * num_bearings);
+        intersection_file.readInto(bearing_class_table.data(), num_bearings);
 
         std::vector<util::guidance::EntryClass> entry_class_table;
-        if (!util::deserializeVector(intersection_stream, entry_class_table))
-            throw util::exception("Failed to read entry classes from " +
-                                  config.intersection_class_path.string());
+        intersection_file.deserializeVector(entry_class_table);
 
         // load intersection classes
         if (!bearing_class_id_table.empty())
