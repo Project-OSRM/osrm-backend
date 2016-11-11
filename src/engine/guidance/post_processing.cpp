@@ -818,7 +818,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 //
 bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current)
 {
-    //don't touch roundabouts
+    // don't touch roundabouts
     if (entersRoundabout(previous.maneuver.instruction) ||
         entersRoundabout(current.maneuver.instruction))
         return false;

@@ -619,6 +619,8 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
     };
 
     LaneDataVector first, second;
+    first.reserve(turn_lane_data.size());
+    second.reserve(turn_lane_data.size());
     for (std::size_t lane = 0; lane < turn_lane_data.size(); ++lane)
     {
         if (matched_at_second[lane])

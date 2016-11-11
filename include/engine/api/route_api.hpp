@@ -196,16 +196,16 @@ class RouteAPI : public BaseAPI
                 [this, &leg_geometry](const guidance::RouteStep &step) {
                     if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
                     {
-                        return static_cast<util::json::Value>(
-                            json::makePolyline<100000>(leg_geometry.locations.begin() + step.geometry_begin,
-                                               leg_geometry.locations.begin() + step.geometry_end));
+                        return static_cast<util::json::Value>(json::makePolyline<100000>(
+                            leg_geometry.locations.begin() + step.geometry_begin,
+                            leg_geometry.locations.begin() + step.geometry_end));
                     }
 
                     if (parameters.geometries == RouteParameters::GeometriesType::Polyline6)
                     {
-                        return static_cast<util::json::Value>(
-                            json::makePolyline<1000000>(leg_geometry.locations.begin() + step.geometry_begin,
-                                               leg_geometry.locations.begin() + step.geometry_end));
+                        return static_cast<util::json::Value>(json::makePolyline<1000000>(
+                            leg_geometry.locations.begin() + step.geometry_begin,
+                            leg_geometry.locations.begin() + step.geometry_end));
                     }
 
                     BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);

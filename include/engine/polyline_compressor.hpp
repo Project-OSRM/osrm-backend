@@ -3,8 +3,8 @@
 
 #include "util/coordinate.hpp"
 
-#include <boost/assert.hpp>
 #include <algorithm>
+#include <boost/assert.hpp>
 #include <string>
 #include <vector>
 
@@ -13,17 +13,17 @@ namespace osrm
 namespace engine
 {
 namespace detail
- {
- constexpr double POLYLINE_DECODING_PRECISION = 1e5;
- constexpr double POLYLINE_TO_COORDINATE = COORDINATE_PRECISION / POLYLINE_DECODING_PRECISION;
+{
+constexpr double POLYLINE_DECODING_PRECISION = 1e5;
+constexpr double POLYLINE_TO_COORDINATE = COORDINATE_PRECISION / POLYLINE_DECODING_PRECISION;
 
- std::string encode(std::vector<int> &numbers);
- }
+std::string encode(std::vector<int> &numbers);
+}
 using CoordVectorForwardIter = std::vector<util::Coordinate>::const_iterator;
 // Encodes geometry into polyline format.
 // See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 
-template<unsigned POLYLINE_PRECISION=100000>
+template <unsigned POLYLINE_PRECISION = 100000>
 std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter end)
 {
     double coordinate_to_polyline = POLYLINE_PRECISION / COORDINATE_PRECISION;
@@ -39,7 +39,10 @@ std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter 
     int current_lat = 0;
     int current_lon = 0;
     std::for_each(
-        begin, end, [&delta_numbers, &current_lat, &current_lon, coordinate_to_polyline](const util::Coordinate loc) {
+        begin,
+        end,
+        [&delta_numbers, &current_lat, &current_lon, coordinate_to_polyline](
+            const util::Coordinate loc) {
             const int lat_diff =
                 std::round(static_cast<int>(loc.lat) * coordinate_to_polyline) - current_lat;
             const int lon_diff =

@@ -65,7 +65,6 @@ BOOST_AUTO_TEST_CASE(encode)
     BOOST_CHECK_EQUAL(encodedPolyline, polyline);
 }
 
-
 BOOST_AUTO_TEST_CASE(encode6)
 {
     // Coordinates; these would be the coordinates we give the loc parameter,

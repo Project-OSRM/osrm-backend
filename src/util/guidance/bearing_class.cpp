@@ -11,6 +11,8 @@ namespace util
 namespace guidance
 {
 
+BearingClass::BearingClass() { available_bearings.reserve(10); }
+
 bool BearingClass::operator==(const BearingClass &other) const
 {
     BOOST_ASSERT(std::is_sorted(available_bearings.begin(), available_bearings.end()));

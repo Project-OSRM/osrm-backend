@@ -87,7 +87,8 @@ struct LengthLimitedCoordinateAccumulator
 };
 
 /*
- * The SelectRoadByNameOnlyChoiceAndStraightness tries to follow a given name along a route. We offer methods to skip
+ * The SelectRoadByNameOnlyChoiceAndStraightness tries to follow a given name along a route. We
+ * offer methods to skip
  * over bridges/similar situations if desired, following narrow turns
  * This struct offers an example implementation of a possible road selector for traversing the
  * node-based graph using the NodeBasedGraphWalker
@@ -115,14 +116,13 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
 // find the next intersection given a hop limit
 struct IntersectionFinderAccumulator
 {
-    IntersectionFinderAccumulator(const std::uint8_t hop_limit, const IntersectionGenerator &intersection_generator);
+    IntersectionFinderAccumulator(const std::uint8_t hop_limit,
+                                  const IntersectionGenerator &intersection_generator);
     // true if the path has traversed enough distance
     bool terminate();
 
     // update the accumulator
-    void update(const NodeID from_node,
-                const EdgeID via_edge,
-                const NodeID to_node);
+    void update(const NodeID from_node, const EdgeID via_edge, const NodeID to_node);
 
     std::uint8_t hops;
     const std::uint8_t hop_limit;
@@ -135,8 +135,6 @@ struct IntersectionFinderAccumulator
     EdgeID via_edge_id;
     Intersection intersection;
 };
-
-
 
 template <class accumulator_type, class selector_type>
 boost::optional<std::pair<NodeID, EdgeID>>

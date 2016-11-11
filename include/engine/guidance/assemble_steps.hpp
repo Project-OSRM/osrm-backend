@@ -233,7 +233,6 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 WaypointType::Arrive,
                 0};
 
-
     BOOST_ASSERT(!leg_geometry.locations.empty());
     steps.push_back(RouteStep{target_node.name_id,
                               facade.GetNameForID(target_node.name_id),

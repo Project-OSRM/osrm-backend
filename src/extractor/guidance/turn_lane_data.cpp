@@ -106,6 +106,7 @@ LaneDataVector laneDataFromDescription(TurnLaneDescription turn_lane_description
 
     // transform the map into the lane data vector
     LaneDataVector lane_data;
+    lane_data.reserve(lane_map.size());
     for (const auto tag : lane_map)
         lane_data.push_back({tag.first, tag.second.first, tag.second.second, false});
 

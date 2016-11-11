@@ -215,22 +215,21 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
             const bool is_through_street =
                 !target_intersection.empty() && link_data.name_id != EMPTY_NAMEID &&
                 target_intersection.end() !=
-                    std::find_if(target_intersection.begin() + 1,
-                                 target_intersection.end(),
-                                 [this, &link_data](const ConnectedRoad &road) {
-                                     const auto &road_edge_data =
-                                         node_based_graph.GetEdgeData(road.eid);
+                    std::find_if(
+                        target_intersection.begin() + 1,
+                        target_intersection.end(),
+                        [this, &link_data](const ConnectedRoad &road) {
+                            const auto &road_edge_data = node_based_graph.GetEdgeData(road.eid);
 
-                                     const auto same_name =
-                                         road_edge_data.name_id != EMPTY_NAMEID &&
-                                         !util::guidance::requiresNameAnnounced(
-                                             road_edge_data.name_id,
-                                             link_data.name_id,
-                                             name_table,
-                                             street_name_suffix_table);
+                            const auto same_name =
+                                road_edge_data.name_id != EMPTY_NAMEID &&
+                                !util::guidance::requiresNameAnnounced(road_edge_data.name_id,
+                                                                       link_data.name_id,
+                                                                       name_table,
+                                                                       street_name_suffix_table);
 
-                                     return same_name;
-                                 });
+                            return same_name;
+                        });
 
             // if the sliproad candidate is a through street, we cannot handle it as a sliproad
             if (is_through_street)

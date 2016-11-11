@@ -56,6 +56,8 @@ Intersection IntersectionGenerator::GetConnectedRoads(const NodeID from_node,
 {
     Intersection intersection;
     const NodeID turn_node = node_based_graph.GetTarget(via_eid);
+    // reserve enough items (+ the possibly missing u-turn edge)
+    intersection.reserve(node_based_graph.GetOutDegree(turn_node) + 1);
     const NodeID only_restriction_to_node = [&]() {
         // If only restrictions refer to invalid ways somewhere far away, we rather ignore the
         // restriction than to not route over the intersection at all.
