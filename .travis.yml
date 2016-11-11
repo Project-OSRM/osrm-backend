@@ -26,6 +26,8 @@ env:
    - CCACHE_COMPRESS=1
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
    - JOBS=4
+   - CCACHE_VERSION=3.3.1
+   - CMAKE_VERSION=3.6.2
 
 matrix:
   fast_finish: true
@@ -39,7 +41,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
+          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON BUILD_COMPONENTS=ON
 
     - os: linux
@@ -47,11 +49,12 @@ matrix:
       addons: &clang38
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
-      env: CLANG_VERSION='3.8.1' CLANG_PACKAGE="clang++" BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
+          packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
 
     - os: osx
-      osx_image: xcode8
+      # TODO: xcode8 triggers undefined symbol 'clock_gettime' in boost::interprocess
+      osx_image: xcode7.3
       compiler: clang
       env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++'
 
@@ -61,7 +64,7 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-5-dev', 'ccache']
+          packages: ['libstdc++-5-dev']
       env: BUILD_TYPE='Release' ENABLE_MASON=ON
 
     - os: linux
@@ -69,7 +72,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
+          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_COMPONENTS=ON
 
     - os: linux
@@ -91,7 +94,7 @@ matrix:
       addons: &gcc6
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
+          packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON BUILD_COMPONENTS=ON
 
       # Disabled because CI slowness
@@ -108,16 +111,16 @@ before_install:
   - if [[ $(uname -s) == 'Darwin' ]]; then sudo mdutil -i off /; fi;
   - source ./scripts/install_node.sh 4
   - npm install
-  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
-  - export PATH=${DEPS_DIR}/bin:${PATH} && mkdir -p ${DEPS_DIR}
-  - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/3.5.2.tar.gz"
-  - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR} || exit 1
+  - ./third_party/mason/mason install ccache ${CCACHE_VERSION}
+  - export PATH=$(./third_party/mason/mason prefix ccache ${CCACHE_VERSION})/bin:${PATH}
+  - ./third_party/mason/mason install cmake ${CMAKE_VERSION}
+  - export PATH=$(./third_party/mason/mason prefix cmake ${CMAKE_VERSION})/bin:${PATH}
   - |
     if [[ ${CLANG_VERSION:-false} != false ]]; then
       export CCOMPILER='clang'
       export CXXCOMPILER='clang++'
-      CLANG_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/${CLANG_PACKAGE}/${CLANG_VERSION}.tar.gz"
-      travis_retry wget --quiet -O - ${CLANG_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR} || exit 1
+      ./third_party/mason/mason install clang++ ${CLANG_VERSION}
+      export PATH=$(./third_party/mason/mason prefix clang++ ${CLANG_VERSION})/bin:${PATH}
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
 
