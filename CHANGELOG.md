@@ -25,6 +25,8 @@
       - fixed a bug in the tile plugin that resulted in discovering invalid edges for connections
     - Debug Tiles
       - Added support for turn penalties
+    - Internals
+      - Internal/Shared memory datafacades now share common memory layout and data loading code
 
 # 5.4.3
   - Changes from 5.4.2
