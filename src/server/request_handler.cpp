@@ -48,6 +48,8 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
     // parse command
     try
     {
+        std::chrono::time_point<std::chrono::system_clock> start, end;
+        start = std::chrono::system_clock::now();
         std::string request_string;
         util::URIDecode(current_request.uri, request_string);
         util::SimpleLogger().Write(logDEBUG) << "req: " << request_string;
@@ -134,7 +136,10 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
             time_t ltime;
             struct tm *time_stamp;
 
-            ltime = time(nullptr);
+            end = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end - start;
+
+            ltime = std::chrono::system_clock::to_time_t(end);
             time_stamp = localtime(&ltime);
             // log timestamp
             util::SimpleLogger().Write()
@@ -143,7 +148,8 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
                 << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
                 << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
                 << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
-                << time_stamp->tm_sec << " " << current_request.endpoint.to_string() << " "
+                << time_stamp->tm_sec << " "
+                << elapsed_seconds.count() * 1000.0 << "ms " << current_request.endpoint.to_string() << " "
                 << current_request.referrer << (0 == current_request.referrer.length() ? "- " : " ")
                 << current_request.agent << (0 == current_request.agent.length() ? "- " : " ")
                 << current_reply.status << " " //
