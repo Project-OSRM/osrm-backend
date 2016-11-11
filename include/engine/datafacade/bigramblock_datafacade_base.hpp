@@ -1,5 +1,5 @@
-#ifndef SHARED_DATAFACADE_HPP
-#define SHARED_DATAFACADE_HPP
+#ifndef MEMORYBLOCK_DATAFACADE_HPP
+#define MEMORYBLOCK_DATAFACADE_HPP
 
 // implements all data storage when shared memory _IS_ used
 
@@ -44,10 +44,17 @@ namespace engine
 namespace datafacade
 {
 
-class MemoryDataFacadeBase : public BaseDataFacade
+/**
+ * This base class implements the Datafacade interface for accessing
+ * data that's stored in a single large block of memory.
+ */
+class BigRAMBlockDataFacadeBase : public BaseDataFacade
 {
-
   protected:
+    storage::DataLayout *data_layout;
+    char *memory_block;
+
+  private:
     using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<EdgeData, true>;
     using GraphNode = QueryGraph::NodeArrayEntry;
@@ -60,13 +67,8 @@ class MemoryDataFacadeBase : public BaseDataFacade
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
-    storage::DataLayout *data_layout;
-    char *memory_block;
-
     unsigned m_check_sum;
     std::unique_ptr<QueryGraph> m_query_graph;
-    std::unique_ptr<storage::SharedMemory> m_layout_memory;
-    std::unique_ptr<storage::SharedMemory> m_large_memory;
     std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
 
@@ -932,4 +934,4 @@ class MemoryDataFacadeBase : public BaseDataFacade
 }
 }
 
-#endif // SHARED_DATAFACADE_HPP
+#endif // MEMORYBLOCK_DATAFACADE_HPP

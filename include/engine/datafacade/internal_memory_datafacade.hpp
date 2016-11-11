@@ -3,7 +3,7 @@
 
 // implements all data storage when shared memory is _NOT_ used
 
-#include "engine/datafacade/memory_datafacade_base.hpp"
+#include "engine/datafacade/bigramblock_datafacade_base.hpp"
 #include "storage/storage.hpp"
 
 namespace osrm
@@ -21,7 +21,7 @@ namespace datafacade
  * This class holds a unique_ptr to the memory block, so it
  * is auto-freed upon destruction.
  */
-class InternalDataFacade final : public MemoryDataFacadeBase
+class InternalDataFacade final : public BigRAMBlockDataFacadeBase
 {
 
   private:
