@@ -17,6 +17,7 @@ namespace util
 namespace guidance
 {
 class LaneTuple;
+class LaneTupleIdPair;
 } // namespace guidance
 } // namespace util
 } // namespace osrm
@@ -26,6 +27,11 @@ namespace std
 template <> struct hash<::osrm::util::guidance::LaneTuple>
 {
     inline std::size_t operator()(const ::osrm::util::guidance::LaneTuple &bearing_class) const;
+};
+template <> struct hash<::osrm::util::guidance::LaneTupleIdPair>
+{
+    inline std::size_t
+    operator()(const ::osrm::util::guidance::LaneTupleIdPair &bearing_class) const;
 };
 } // namespace std
 
@@ -73,7 +79,23 @@ class LaneTuple
     }
 };
 
-using LaneTupleIdPair = std::pair<util::guidance::LaneTuple, LaneDescriptionID>;
+class LaneTupleIdPair
+{
+  public:
+    util::guidance::LaneTuple first;
+    LaneDescriptionID second;
+
+    bool operator==(const LaneTupleIdPair &other) const;
+
+    friend std::size_t hash_value(const LaneTupleIdPair &pair)
+    {
+        std::size_t seed{0};
+        boost::hash_combine(seed, pair.first);
+        boost::hash_combine(seed, pair.second);
+        return seed;
+    }
+};
+
 } // namespace guidance
 } // namespace util
 } // namespace osrm

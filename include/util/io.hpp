@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "util/fingerprint.hpp"
+#include "storage/io.hpp"
 
 namespace osrm
 {
@@ -26,17 +27,6 @@ inline bool writeFingerprint(std::ostream &stream)
     const auto fingerprint = FingerPrint::GetValid();
     stream.write(reinterpret_cast<const char *>(&fingerprint), sizeof(fingerprint));
     return static_cast<bool>(stream);
-}
-
-inline bool readAndCheckFingerprint(std::istream &stream)
-{
-    FingerPrint fingerprint;
-    const auto valid = FingerPrint::GetValid();
-    stream.read(reinterpret_cast<char *>(&fingerprint), sizeof(fingerprint));
-    // compare the compilation state stored in the fingerprint
-    return static_cast<bool>(stream) && valid.IsMagicNumberOK(fingerprint) &&
-           valid.TestContractor(fingerprint) && valid.TestGraphUtil(fingerprint) &&
-           valid.TestRTree(fingerprint) && valid.TestQueryObjects(fingerprint);
 }
 
 template <typename simple_type>
@@ -66,17 +56,14 @@ bool serializeVector(std::ostream &stream, const std::vector<simple_type> &data)
 template <typename simple_type>
 bool deserializeVector(const std::string &filename, std::vector<simple_type> &data)
 {
-    std::ifstream stream(filename, std::ios::binary);
 
-    if (!readAndCheckFingerprint(stream))
-        return false;
+    storage::io::File file(filename, true);
 
-    std::uint64_t count = 0;
-    stream.read(reinterpret_cast<char *>(&count), sizeof(count));
+    const auto count = file.readElementCount64();
     data.resize(count);
     if (count)
-        stream.read(reinterpret_cast<char *>(&data[0]), sizeof(simple_type) * count);
-    return static_cast<bool>(stream);
+        file.readInto(data.data(), count);
+    return true;
 }
 
 template <typename simple_type>
@@ -199,13 +186,9 @@ inline bool serializeFlags(const boost::filesystem::path &path, const std::vecto
 inline bool deserializeFlags(const boost::filesystem::path &path, std::vector<bool> &flags)
 {
     SimpleLogger().Write() << "Reading flags from " << path;
-    std::ifstream flag_stream(path.string(), std::ios::binary);
+    storage::io::File flag_file(path, true);
 
-    if (!readAndCheckFingerprint(flag_stream))
-        return false;
-
-    std::uint32_t number_of_bits;
-    flag_stream.read(reinterpret_cast<char *>(&number_of_bits), sizeof(number_of_bits));
+    const auto number_of_bits = flag_file.readOne<std::uint32_t>();
     flags.resize(number_of_bits);
     // putting bits in ints
     std::uint32_t chunks = (number_of_bits + 31) / 32;
@@ -213,14 +196,14 @@ inline bool deserializeFlags(const boost::filesystem::path &path, std::vector<bo
     std::uint32_t chunk;
     for (std::size_t chunk_id = 0; chunk_id < chunks; ++chunk_id)
     {
-        flag_stream.read(reinterpret_cast<char *>(&chunk), sizeof(chunk));
+        flag_file.readInto(chunk);
         std::bitset<32> chunk_bits(chunk);
         for (std::size_t bit = 0; bit < 32 && bit_position < number_of_bits; ++bit, ++bit_position)
             flags[bit_position] = chunk_bits[bit];
     }
     SimpleLogger().Write() << "Read " << number_of_bits << " bits in " << chunks
                            << " Chunks from disk.";
-    return static_cast<bool>(flag_stream);
+    return true;
 }
 } // namespace util
 } // namespace osrm

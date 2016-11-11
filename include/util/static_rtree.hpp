@@ -346,18 +346,9 @@ class StaticRTree
                          const CoordinateListT &coordinate_list)
         : m_coordinate_list(coordinate_list)
     {
-        // open tree node file and load into RAM.
-        if (!boost::filesystem::exists(node_file))
-        {
-            throw exception("ram index file does not exist");
-        }
-        if (boost::filesystem::file_size(node_file) == 0)
-        {
-            throw exception("ram index file is empty");
-        }
-        boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
+        storage::io::File tree_node_file(node_file);
 
-        const auto tree_size = storage::io::readElementCount64(tree_node_file);
+        const auto tree_size = tree_node_file.readElementCount64();
 
         m_search_tree.resize(tree_size);
         storage::io::readRamIndex(tree_node_file, &m_search_tree[0], tree_size);
