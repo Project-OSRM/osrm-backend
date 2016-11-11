@@ -52,10 +52,18 @@ DEALINGS IN THE SOFTWARE.
 
 namespace osmium {
 
+    namespace builder {
+        template <typename TDerived, typename T>
+        class OSMObjectBuilder;
+    } // namespace builder
+
     /**
      * OSMObject (Node, Way, Relation, or Area).
      */
     class OSMObject : public osmium::OSMEntity {
+
+        template <typename TDerived, typename T>
+        friend class osmium::builder::OSMObjectBuilder;
 
         object_id_type      m_id;
         bool                m_deleted : 1;

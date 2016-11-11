@@ -73,18 +73,18 @@ namespace osmium {
             }; // struct vec
 
             // addition
-            constexpr inline vec operator+(const vec& a, const vec& b) noexcept {
-                return vec{a.x + b.x, a.y + b.y};
+            constexpr inline vec operator+(const vec& lhs, const vec& rhs) noexcept {
+                return vec{lhs.x + rhs.x, lhs.y + rhs.y};
             }
 
             // subtraction
-            constexpr inline vec operator-(const vec& a, const vec& b) noexcept {
-                return vec{a.x - b.x, a.y - b.y};
+            constexpr inline vec operator-(const vec& lhs, const vec& rhs) noexcept {
+                return vec{lhs.x - rhs.x, lhs.y - rhs.y};
             }
 
             // cross product
-            constexpr inline int64_t operator*(const vec& a, const vec& b) noexcept {
-                return a.x * b.y - a.y * b.x;
+            constexpr inline int64_t operator*(const vec& lhs, const vec& rhs) noexcept {
+                return lhs.x * rhs.y - lhs.y * rhs.x;
             }
 
             // scale vector
@@ -98,13 +98,13 @@ namespace osmium {
             }
 
             // equality
-            constexpr inline bool operator==(const vec& a, const vec& b) noexcept {
-                return a.x == b.x && a.y == b.y;
+            constexpr inline bool operator==(const vec& lhs, const vec& rhs) noexcept {
+                return lhs.x == rhs.x && lhs.y == rhs.y;
             }
 
             // inequality
-            constexpr inline bool operator!=(const vec& a, const vec& b) noexcept {
-                return !(a == b);
+            constexpr inline bool operator!=(const vec& lhs, const vec& rhs) noexcept {
+                return !(lhs == rhs);
             }
 
             template <typename TChar, typename TTraits>

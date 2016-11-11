@@ -3,7 +3,7 @@
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/osm/node.hpp>
 
-void check_node_1(osmium::Node& node) {
+void check_node_1(const osmium::Node& node) {
     REQUIRE(1 == node.id());
     REQUIRE(3 == node.version());
     REQUIRE(true == node.visible());
@@ -11,9 +11,9 @@ void check_node_1(osmium::Node& node) {
     REQUIRE(21 == node.uid());
     REQUIRE(123 == uint32_t(node.timestamp()));
     REQUIRE(osmium::Location(3.5, 4.7) == node.location());
-    REQUIRE(std::string("testuser") == node.user());
+    REQUIRE(std::string{"testuser"} == node.user());
 
-    for (osmium::memory::Item& item : node) {
+    for (const osmium::memory::Item& item : node) {
         REQUIRE(osmium::item_type::tag_list == item.type());
     }
 
@@ -22,7 +22,7 @@ void check_node_1(osmium::Node& node) {
     REQUIRE(0 == std::distance(node.tags().begin(), node.tags().end()));
 }
 
-void check_node_2(osmium::Node& node) {
+void check_node_2(const osmium::Node& node) {
     REQUIRE(2 == node.id());
     REQUIRE(3 == node.version());
     REQUIRE(true == node.visible());
@@ -30,9 +30,9 @@ void check_node_2(osmium::Node& node) {
     REQUIRE(21 == node.uid());
     REQUIRE(123 == uint32_t(node.timestamp()));
     REQUIRE(osmium::Location(3.5, 4.7) == node.location());
-    REQUIRE(std::string("testuser") == node.user());
+    REQUIRE(std::string{"testuser"} == node.user());
 
-    for (osmium::memory::Item& item : node) {
+    for (const osmium::memory::Item& item : node) {
         REQUIRE(osmium::item_type::tag_list == item.type());
     }
 
@@ -61,60 +61,52 @@ TEST_CASE("Node in Buffer") {
     constexpr size_t buffer_size = 10000;
     unsigned char data[buffer_size];
 
-    osmium::memory::Buffer buffer(data, buffer_size, 0);
+    osmium::memory::Buffer buffer{data, buffer_size, 0};
 
     SECTION("Add node to buffer") {
 
         {
             // add node 1
-            osmium::builder::NodeBuilder node_builder(buffer);
-            osmium::Node& node = node_builder.object();
-            REQUIRE(osmium::item_type::node == node.type());
+            osmium::builder::NodeBuilder node_builder{buffer};
 
-            node.set_id(1);
-            node.set_version(3);
-            node.set_visible(true);
-            node.set_changeset(333);
-            node.set_uid(21);
-            node.set_timestamp(123);
-            node.set_location(osmium::Location(3.5, 4.7));
-
-            node_builder.add_user("testuser");
-
-            buffer.commit();
+            node_builder.set_id(1)
+                .set_version(3)
+                .set_visible(true)
+                .set_changeset(333)
+                .set_uid(21)
+                .set_timestamp(123)
+                .set_location(osmium::Location{3.5, 4.7})
+                .set_user("testuser");
         }
+
+        buffer.commit();
 
         {
             // add node 2
-            osmium::builder::NodeBuilder node_builder(buffer);
-            osmium::Node& node = node_builder.object();
-            REQUIRE(osmium::item_type::node == node.type());
+            osmium::builder::NodeBuilder node_builder{buffer};
 
-            node.set_id(2);
-            node.set_version(3);
-            node.set_visible(true);
-            node.set_changeset(333);
-            node.set_uid(21);
-            node.set_timestamp(123);
-            node.set_location(osmium::Location(3.5, 4.7));
+            node_builder.set_id(2)
+                .set_version(3)
+                .set_visible(true)
+                .set_changeset(333)
+                .set_uid(21)
+                .set_timestamp(123)
+                .set_location(osmium::Location{3.5, 4.7})
+                .set_user("testuser");
 
-            node_builder.add_user("testuser");
-
-            {
-                osmium::builder::TagListBuilder tag_builder(buffer, &node_builder);
-                tag_builder.add_tag("amenity", "bank");
-                tag_builder.add_tag("name", "OSM Savings");
-            }
-
-            buffer.commit();
+            osmium::builder::TagListBuilder tag_builder{node_builder};
+            tag_builder.add_tag("amenity", "bank");
+            tag_builder.add_tag("name", "OSM Savings");
         }
+
+        buffer.commit();
 
         REQUIRE(2 == std::distance(buffer.begin(), buffer.end()));
         int item_no = 0;
-        for (osmium::memory::Item& item : buffer) {
+        for (const osmium::memory::Item& item : buffer) {
             REQUIRE(osmium::item_type::node == item.type());
 
-            osmium::Node& node = static_cast<osmium::Node&>(item);
+            const osmium::Node& node = static_cast<const osmium::Node&>(item);
 
             switch (item_no) {
                 case 0:
@@ -137,24 +129,21 @@ TEST_CASE("Node in Buffer") {
 
         {
             // add node 1
-            osmium::builder::NodeBuilder node_builder(buffer);
-            osmium::Node& node = node_builder.object();
-            REQUIRE(osmium::item_type::node == node.type());
+            osmium::builder::NodeBuilder node_builder{buffer};
 
-            node.set_id(1);
-            node.set_version(3);
-            node.set_visible(true);
-            node.set_changeset(333);
-            node.set_uid(21);
-            node.set_timestamp(123);
-            node.set_location(osmium::Location(3.5, 4.7));
-
-            node_builder.add_user("testuser");
-
-            buffer.commit();
+            node_builder.set_id(1)
+                .set_version(3)
+                .set_visible(true)
+                .set_changeset(333)
+                .set_uid(21)
+                .set_timestamp(123)
+                .set_location(osmium::Location{3.5, 4.7})
+                .set_user("testuser");
         }
 
-        osmium::memory::Buffer buffer2(buffer_size, osmium::memory::Buffer::auto_grow::yes);
+        buffer.commit();
+
+        osmium::memory::Buffer buffer2{buffer_size, osmium::memory::Buffer::auto_grow::yes};
 
         buffer2.add_buffer(buffer);
         buffer2.commit();
@@ -169,24 +158,21 @@ TEST_CASE("Node in Buffer") {
 
         {
             // add node 1
-            osmium::builder::NodeBuilder node_builder(buffer);
-            osmium::Node& node = node_builder.object();
-            REQUIRE(osmium::item_type::node == node.type());
+            osmium::builder::NodeBuilder node_builder{buffer};
 
-            node.set_id(1);
-            node.set_version(3);
-            node.set_visible(true);
-            node.set_changeset(333);
-            node.set_uid(21);
-            node.set_timestamp(123);
-            node.set_location(osmium::Location(3.5, 4.7));
-
-            node_builder.add_user("testuser");
-
-            buffer.commit();
+            node_builder.set_id(1)
+                .set_version(3)
+                .set_visible(true)
+                .set_changeset(333)
+                .set_uid(21)
+                .set_timestamp(123)
+                .set_location(osmium::Location{3.5, 4.7})
+                .set_user("testuser");
         }
 
-        osmium::memory::Buffer buffer2(buffer_size, osmium::memory::Buffer::auto_grow::yes);
+        buffer.commit();
+
+        osmium::memory::Buffer buffer2{buffer_size, osmium::memory::Buffer::auto_grow::yes};
 
         std::copy(buffer.begin(), buffer.end(), std::back_inserter(buffer2));
 

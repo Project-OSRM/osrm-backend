@@ -193,12 +193,12 @@ namespace osmium {
 
             }; // struct location_to_ring_map
 
-            inline bool operator==(const location_to_ring_map& a, const location_to_ring_map& b) noexcept {
-                return a.location == b.location;
+            inline bool operator==(const location_to_ring_map& lhs, const location_to_ring_map& rhs) noexcept {
+                return lhs.location == rhs.location;
             }
 
-            inline bool operator<(const location_to_ring_map& a, const location_to_ring_map& b) noexcept {
-                return a.location < b.location;
+            inline bool operator<(const location_to_ring_map& lhs, const location_to_ring_map& rhs) noexcept {
+                return lhs.location < rhs.location;
             }
 
         } // namespace detail
@@ -288,7 +288,7 @@ namespace osmium {
             }
 
             void add_tags_to_area(osmium::builder::AreaBuilder& builder, const osmium::Way& way) const {
-                builder.add_item(&way.tags());
+                builder.add_item(way.tags());
             }
 
             void add_common_tags(osmium::builder::TagListBuilder& tl_builder, std::set<const osmium::Way*>& ways) const {
@@ -333,7 +333,7 @@ namespace osmium {
             }
 
             static void copy_tags_without_type(osmium::builder::AreaBuilder& builder, const osmium::TagList& tags) {
-                osmium::builder::TagListBuilder tl_builder(builder.buffer(), &builder);
+                osmium::builder::TagListBuilder tl_builder{builder};
                 for (const osmium::Tag& tag : tags) {
                     if (std::strcmp(tag.key(), "type")) {
                         tl_builder.add_tag(tag.key(), tag.value());
@@ -354,7 +354,7 @@ namespace osmium {
                     }
 
                     if (m_config.keep_type_tag) {
-                        builder.add_item(&relation.tags());
+                        builder.add_item(relation.tags());
                     } else {
                         copy_tags_without_type(builder, relation.tags());
                     }
@@ -373,12 +373,12 @@ namespace osmium {
                         if (debug()) {
                             std::cerr << "      only one outer way\n";
                         }
-                        builder.add_item(&(*ways.cbegin())->tags());
+                        builder.add_item((*ways.cbegin())->tags());
                     } else {
                         if (debug()) {
                             std::cerr << "      multiple outer ways, get common tags\n";
                         }
-                        osmium::builder::TagListBuilder tl_builder(builder.buffer(), &builder);
+                        osmium::builder::TagListBuilder tl_builder{builder};
                         add_common_tags(tl_builder, ways);
                     }
                 }
@@ -386,7 +386,7 @@ namespace osmium {
 
             template <typename TBuilder>
             static void build_ring_from_proto_ring(osmium::builder::AreaBuilder& builder, const detail::ProtoRing& ring) {
-                TBuilder ring_builder(builder.buffer(), &builder);
+                TBuilder ring_builder{builder};
                 ring_builder.add_node_ref(ring.get_node_ref_start());
                 for (const auto& segment : ring.segments()) {
                     ring_builder.add_node_ref(segment->stop());
@@ -458,8 +458,8 @@ namespace osmium {
             }
 
             detail::NodeRefSegment* get_next_segment(const osmium::Location& location) {
-                auto it = std::lower_bound(m_locations.begin(), m_locations.end(), slocation{}, [this, &location](const slocation& a, const slocation& b) {
-                    return a.location(m_segment_list, location) < b.location(m_segment_list, location);
+                auto it = std::lower_bound(m_locations.begin(), m_locations.end(), slocation{}, [this, &location](const slocation& lhs, const slocation& rhs) {
+                    return lhs.location(m_segment_list, location) < rhs.location(m_segment_list, location);
                 });
 
                 assert(it != m_locations.end());
@@ -744,8 +744,8 @@ namespace osmium {
                     m_locations.emplace_back(n, true);
                 }
 
-                std::stable_sort(m_locations.begin(), m_locations.end(), [this](const slocation& a, const slocation& b) {
-                    return a.location(m_segment_list) < b.location(m_segment_list);
+                std::stable_sort(m_locations.begin(), m_locations.end(), [this](const slocation& lhs, const slocation& rhs) {
+                    return lhs.location(m_segment_list) < rhs.location(m_segment_list);
                 });
             }
 
@@ -1015,8 +1015,8 @@ namespace osmium {
 
                 std::vector<location_to_ring_map> xrings = create_location_to_ring_map(open_ring_its);
 
-                const auto ring_min = std::min_element(xrings.begin(), xrings.end(), [](const location_to_ring_map& a, const location_to_ring_map& b) {
-                    return a.ring().min_segment() < b.ring().min_segment();
+                const auto ring_min = std::min_element(xrings.begin(), xrings.end(), [](const location_to_ring_map& lhs, const location_to_ring_map& rhs) {
+                    return lhs.ring().min_segment() < rhs.ring().min_segment();
                 });
 
                 find_inner_outer_complex();
@@ -1068,11 +1068,11 @@ namespace osmium {
 
                 // Find the candidate with the smallest/largest area
                 const auto chosen_cand = ring_min_is_outer ?
-                     std::min_element(candidates.cbegin(), candidates.cend(), [](const candidate& a, const candidate& b) {
-                        return std::abs(a.sum) < std::abs(b.sum);
+                     std::min_element(candidates.cbegin(), candidates.cend(), [](const candidate& lhs, const candidate& rhs) {
+                        return std::abs(lhs.sum) < std::abs(rhs.sum);
                      }) :
-                     std::max_element(candidates.cbegin(), candidates.cend(), [](const candidate& a, const candidate& b) {
-                        return std::abs(a.sum) < std::abs(b.sum);
+                     std::max_element(candidates.cbegin(), candidates.cend(), [](const candidate& lhs, const candidate& rhs) {
+                        return std::abs(lhs.sum) < std::abs(rhs.sum);
                      });
 
                 if (debug()) {
@@ -1103,8 +1103,8 @@ namespace osmium {
                     const auto locs = make_range(std::equal_range(m_locations.begin(),
                                                                   m_locations.end(),
                                                                   slocation{},
-                                                                  [this, &location](const slocation& a, const slocation& b) {
-                        return a.location(m_segment_list, location) < b.location(m_segment_list, location);
+                                                                  [this, &location](const slocation& lhs, const slocation& rhs) {
+                        return lhs.location(m_segment_list, location) < rhs.location(m_segment_list, location);
                     }));
                     for (auto& loc : locs) {
                         if (!m_segment_list[loc.item].is_done()) {
@@ -1267,8 +1267,8 @@ namespace osmium {
                     }
                     for (const auto& location : m_split_locations) {
                         if (m_config.problem_reporter) {
-                            auto it = std::lower_bound(m_locations.cbegin(), m_locations.cend(), slocation{}, [this, &location](const slocation& a, const slocation& b) {
-                                return a.location(m_segment_list, location) < b.location(m_segment_list, location);
+                            auto it = std::lower_bound(m_locations.cbegin(), m_locations.cend(), slocation{}, [this, &location](const slocation& lhs, const slocation& rhs) {
+                                return lhs.location(m_segment_list, location) < rhs.location(m_segment_list, location);
                             });
                             assert(it != m_locations.cend());
                             const osmium::object_id_type id = it->node_ref(m_segment_list).ref();
@@ -1362,7 +1362,7 @@ namespace osmium {
 #endif
 
             bool create_area(osmium::memory::Buffer& out_buffer, const osmium::Way& way) {
-                osmium::builder::AreaBuilder builder(out_buffer);
+                osmium::builder::AreaBuilder builder{out_buffer};
                 builder.initialize_from_object(way);
 
                 const bool area_okay = create_rings();
@@ -1382,7 +1382,7 @@ namespace osmium {
 
             bool create_area(osmium::memory::Buffer& out_buffer, const osmium::Relation& relation, const std::vector<const osmium::Way*>& members) {
                 m_num_members = members.size();
-                osmium::builder::AreaBuilder builder(out_buffer);
+                osmium::builder::AreaBuilder builder{out_buffer};
                 builder.initialize_from_object(relation);
 
                 const bool area_okay = create_rings();

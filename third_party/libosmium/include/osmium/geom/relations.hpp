@@ -43,11 +43,11 @@ namespace osmium {
         /**
          * Check whether one geometry contains another.
          */
-        inline bool contains(const osmium::Box& a, const osmium::Box& b) {
-            return ((a.bottom_left().x() >= b.bottom_left().x()) &&
-                    (a.top_right().x()   <= b.top_right().x())   &&
-                    (a.bottom_left().y() >= b.bottom_left().y()) &&
-                    (a.top_right().y()   <= b.top_right().y()));
+        inline bool contains(const osmium::Box& lhs, const osmium::Box& rhs) {
+            return ((lhs.bottom_left().x() >= rhs.bottom_left().x()) &&
+                    (lhs.top_right().x()   <= rhs.top_right().x())   &&
+                    (lhs.bottom_left().y() >= rhs.bottom_left().y()) &&
+                    (lhs.top_right().y()   <= rhs.top_right().y()));
         }
 
     } // namespace geom

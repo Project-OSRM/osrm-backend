@@ -79,7 +79,7 @@ namespace osmium {
                 const TValue get(const TId id) const final {
                     auto it = m_elements.find(id);
                     if (it == m_elements.end()) {
-                        not_found_error(id);
+                        throw osmium::not_found{id};
                     }
                     return it->second;
                 }

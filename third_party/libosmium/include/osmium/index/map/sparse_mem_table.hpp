@@ -99,10 +99,10 @@ namespace osmium {
 
                 const TValue get(const TId id) const final {
                     if (id >= m_elements.size()) {
-                        not_found_error(id);
+                        throw osmium::not_found{id};
                     }
                     if (m_elements[id] == osmium::index::empty_value<TValue>()) {
-                        not_found_error(id);
+                        throw osmium::not_found{id};
                     }
                     return m_elements[id];
                 }

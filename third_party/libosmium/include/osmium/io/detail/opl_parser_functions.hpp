@@ -365,9 +365,8 @@ namespace osmium {
 
             inline void opl_parse_node(const char** data, osmium::memory::Buffer& buffer) {
                 osmium::builder::NodeBuilder builder{buffer};
-                osmium::Node& node = builder.object();
 
-                node.set_id(opl_parse_id(data));
+                builder.set_id(opl_parse_id(data));
 
                 const char* tags_begin = nullptr;
 
@@ -382,19 +381,19 @@ namespace osmium {
                     ++(*data);
                     switch (c) {
                         case 'v':
-                            node.set_version(opl_parse_version(data));
+                            builder.set_version(opl_parse_version(data));
                             break;
                         case 'd':
-                            node.set_visible(opl_parse_visible(data));
+                            builder.set_visible(opl_parse_visible(data));
                             break;
                         case 'c':
-                            node.set_changeset(opl_parse_changeset_id(data));
+                            builder.set_changeset(opl_parse_changeset_id(data));
                             break;
                         case 't':
-                            node.set_timestamp(opl_parse_timestamp(data));
+                            builder.set_timestamp(opl_parse_timestamp(data));
                             break;
                         case 'i':
-                            node.set_uid(opl_parse_uid(data));
+                            builder.set_uid(opl_parse_uid(data));
                             break;
                         case 'u':
                             opl_parse_string(data, user);
@@ -422,23 +421,20 @@ namespace osmium {
                 }
 
                 if (location.valid()) {
-                    node.set_location(location);
+                    builder.set_location(location);
                 }
 
-                builder.add_user(user);
+                builder.set_user(user);
 
                 if (tags_begin) {
                     opl_parse_tags(tags_begin, buffer, &builder);
                 }
-
-                buffer.commit();
             }
 
             inline void opl_parse_way(const char** data, osmium::memory::Buffer& buffer) {
                 osmium::builder::WayBuilder builder{buffer};
-                osmium::Way& way = builder.object();
 
-                way.set_id(opl_parse_id(data));
+                builder.set_id(opl_parse_id(data));
 
                 const char* tags_begin = nullptr;
 
@@ -455,19 +451,19 @@ namespace osmium {
                     ++(*data);
                     switch (c) {
                         case 'v':
-                            way.set_version(opl_parse_version(data));
+                            builder.set_version(opl_parse_version(data));
                             break;
                         case 'd':
-                            way.set_visible(opl_parse_visible(data));
+                            builder.set_visible(opl_parse_visible(data));
                             break;
                         case 'c':
-                            way.set_changeset(opl_parse_changeset_id(data));
+                            builder.set_changeset(opl_parse_changeset_id(data));
                             break;
                         case 't':
-                            way.set_timestamp(opl_parse_timestamp(data));
+                            builder.set_timestamp(opl_parse_timestamp(data));
                             break;
                         case 'i':
-                            way.set_uid(opl_parse_uid(data));
+                            builder.set_uid(opl_parse_uid(data));
                             break;
                         case 'u':
                             opl_parse_string(data, user);
@@ -488,15 +484,13 @@ namespace osmium {
                     }
                 }
 
-                builder.add_user(user);
+                builder.set_user(user);
 
                 if (tags_begin) {
                     opl_parse_tags(tags_begin, buffer, &builder);
                 }
 
                 opl_parse_way_nodes(nodes_begin, nodes_end, buffer, &builder);
-
-                buffer.commit();
             }
 
             inline void opl_parse_relation_members(const char* s, const char* e, osmium::memory::Buffer& buffer, osmium::builder::RelationBuilder* parent_builder = nullptr) {
@@ -536,9 +530,8 @@ namespace osmium {
 
             inline void opl_parse_relation(const char** data, osmium::memory::Buffer& buffer) {
                 osmium::builder::RelationBuilder builder{buffer};
-                osmium::Relation& relation = builder.object();
 
-                relation.set_id(opl_parse_id(data));
+                builder.set_id(opl_parse_id(data));
 
                 const char* tags_begin = nullptr;
 
@@ -555,19 +548,19 @@ namespace osmium {
                     ++(*data);
                     switch (c) {
                         case 'v':
-                            relation.set_version(opl_parse_version(data));
+                            builder.set_version(opl_parse_version(data));
                             break;
                         case 'd':
-                            relation.set_visible(opl_parse_visible(data));
+                            builder.set_visible(opl_parse_visible(data));
                             break;
                         case 'c':
-                            relation.set_changeset(opl_parse_changeset_id(data));
+                            builder.set_changeset(opl_parse_changeset_id(data));
                             break;
                         case 't':
-                            relation.set_timestamp(opl_parse_timestamp(data));
+                            builder.set_timestamp(opl_parse_timestamp(data));
                             break;
                         case 'i':
-                            relation.set_uid(opl_parse_uid(data));
+                            builder.set_uid(opl_parse_uid(data));
                             break;
                         case 'u':
                             opl_parse_string(data, user);
@@ -588,7 +581,7 @@ namespace osmium {
                     }
                 }
 
-                builder.add_user(user);
+                builder.set_user(user);
 
                 if (tags_begin) {
                     opl_parse_tags(tags_begin, buffer, &builder);
@@ -597,15 +590,12 @@ namespace osmium {
                 if (members_begin != members_end) {
                     opl_parse_relation_members(members_begin, members_end, buffer, &builder);
                 }
-
-                buffer.commit();
             }
 
             inline void opl_parse_changeset(const char** data, osmium::memory::Buffer& buffer) {
                 osmium::builder::ChangesetBuilder builder{buffer};
-                osmium::Changeset& changeset = builder.object();
 
-                changeset.set_id(opl_parse_changeset_id(data));
+                builder.set_id(opl_parse_changeset_id(data));
 
                 const char* tags_begin = nullptr;
 
@@ -621,19 +611,19 @@ namespace osmium {
                     ++(*data);
                     switch (c) {
                         case 'k':
-                            changeset.set_num_changes(opl_parse_int<osmium::num_changes_type>(data));
+                            builder.set_num_changes(opl_parse_int<osmium::num_changes_type>(data));
                             break;
                         case 's':
-                            changeset.set_created_at(opl_parse_timestamp(data));
+                            builder.set_created_at(opl_parse_timestamp(data));
                             break;
                         case 'e':
-                            changeset.set_closed_at(opl_parse_timestamp(data));
+                            builder.set_closed_at(opl_parse_timestamp(data));
                             break;
                         case 'd':
-                            changeset.set_num_comments(opl_parse_int<osmium::num_comments_type>(data));
+                            builder.set_num_comments(opl_parse_int<osmium::num_comments_type>(data));
                             break;
                         case 'i':
-                            changeset.set_uid(opl_parse_uid(data));
+                            builder.set_uid(opl_parse_uid(data));
                             break;
                         case 'u':
                             opl_parse_string(data, user);
@@ -672,17 +662,17 @@ namespace osmium {
                 }
 
                 if (location1.valid() && location2.valid()) {
-                    changeset.bounds().extend(location1);
-                    changeset.bounds().extend(location2);
+                    osmium::Box box;
+                    box.extend(location1);
+                    box.extend(location2);
+                    builder.set_bounds(box);
                 }
 
-                builder.add_user(user);
+                builder.set_user(user);
 
                 if (tags_begin) {
                     opl_parse_tags(tags_begin, buffer, &builder);
                 }
-
-                buffer.commit();
             }
 
             inline bool opl_parse_line(uint64_t line_count,
@@ -702,6 +692,7 @@ namespace osmium {
                             if (read_types & osmium::osm_entity_bits::node) {
                                 ++data;
                                 opl_parse_node(&data, buffer);
+                                buffer.commit();
                                 return true;
                             }
                             break;
@@ -709,6 +700,7 @@ namespace osmium {
                             if (read_types & osmium::osm_entity_bits::way) {
                                 ++data;
                                 opl_parse_way(&data, buffer);
+                                buffer.commit();
                                 return true;
                             }
                             break;
@@ -716,6 +708,7 @@ namespace osmium {
                             if (read_types & osmium::osm_entity_bits::relation) {
                                 ++data;
                                 opl_parse_relation(&data, buffer);
+                                buffer.commit();
                                 return true;
                             }
                             break;
@@ -723,6 +716,7 @@ namespace osmium {
                             if (read_types & osmium::osm_entity_bits::changeset) {
                                 ++data;
                                 opl_parse_changeset(&data, buffer);
+                                buffer.commit();
                                 return true;
                             }
                             break;

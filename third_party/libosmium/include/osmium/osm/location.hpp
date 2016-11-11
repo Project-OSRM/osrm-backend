@@ -86,23 +86,31 @@ namespace osmium {
                 ++str;
             }
 
-            // there has to be at least one digit
-            if (*str >= '0' && *str <= '9') {
-                result = *str - '0';
-                ++str;
+            if (*str != '.') {
+                // there has to be at least one digit
+                if (*str >= '0' && *str <= '9') {
+                    result = *str - '0';
+                    ++str;
+                } else {
+                    goto error;
+                }
+
+                // optional additional digits before decimal point
+                while (*str >= '0' && *str <= '9' && max_digits > 0) {
+                    result = result * 10 + (*str - '0');
+                    ++str;
+                    --max_digits;
+                }
+
+                if (max_digits == 0) {
+                    goto error;
+                }
             } else {
-                goto error;
-            }
-
-            // optional additional digits before decimal point
-            while (*str >= '0' && *str <= '9' && max_digits > 0) {
-                result = result * 10 + (*str - '0');
-                ++str;
-                --max_digits;
-            }
-
-            if (max_digits == 0) {
-                goto error;
+                // need at least one digit after decimal dot if there was no
+                // digit before decimal dot
+                if (*(str + 1) < '0' || *(str + 1) > '9') {
+                    goto error;
+                }
             }
 
             // optional decimal point
@@ -163,18 +171,20 @@ namespace osmium {
             }
 
             if (scale < 0) {
-                result = 0;
+                for (; scale < 0 && result > 0; ++scale) {
+                    result /= 10;
+                }
             } else {
                 for (; scale > 0; --scale) {
                     result *= 10;
                 }
+            }
 
-                result = (result + 5) / 10 * sign;
+            result = (result + 5) / 10 * sign;
 
-                if (result > std::numeric_limits<int32_t>::max() ||
-                    result < std::numeric_limits<int32_t>::min()) {
-                    goto error;
-                }
+            if (result > std::numeric_limits<int32_t>::max() ||
+                result < std::numeric_limits<int32_t>::min()) {
+                goto error;
             }
 
             *data = str;

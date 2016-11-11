@@ -95,7 +95,7 @@ namespace osmium {
             return m_message.c_str();
         }
 
-    }; // struct geometry_error
+    }; // class geometry_error
 
     /**
      * @brief Everything related to geometry handling.

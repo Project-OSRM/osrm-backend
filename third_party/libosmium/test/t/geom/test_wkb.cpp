@@ -10,28 +10,28 @@ TEST_CASE("WKB geometry factory (byte-order-dependant), points") {
     const osmium::Location loc{3.2, 4.2};
 
     SECTION("point") {
-        osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
         const std::string wkb{factory.create_point(loc)};
         REQUIRE(wkb == "01010000009A99999999990940CDCCCCCCCCCC1040");
     }
 
     SECTION("point in web mercator") {
-        osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
         const std::string wkb{factory.create_point(loc)};
         REQUIRE(wkb == "010100000028706E7BF9BD1541B03E0D93E48F1C41");
     }
 
     SECTION("point in ewkb") {
-        osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
         const std::string wkb{factory.create_point(loc)};
         REQUIRE(wkb == "0101000020E61000009A99999999990940CDCCCCCCCCCC1040");
     }
 
     SECTION("point in ewkb in web mercator") {
-        osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory(osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
         const std::string wkb{factory.create_point(loc)};
         REQUIRE(wkb == "0101000020110F000028706E7BF9BD1541B03E0D93E48F1C41");
@@ -44,7 +44,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependant)") {
     osmium::memory::Buffer buffer{10000};
 
     SECTION("linestring") {
-        osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
         const auto& wnl = create_test_wnl_okay(buffer);
 
         {
@@ -69,7 +69,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependant)") {
     }
 
     SECTION("linestring as ewkb") {
-        osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
         const auto& wnl = create_test_wnl_okay(buffer);
 
@@ -78,7 +78,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependant)") {
     }
 
     SECTION("linestring with two same locations") {
-        osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
         const auto& wnl = create_test_wnl_same_location(buffer);
 
@@ -102,7 +102,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependant)") {
     }
 
     SECTION("linestring with undefined location") {
-        osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
+        osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
         const auto& wnl = create_test_wnl_undefined_location(buffer);
 
@@ -115,7 +115,7 @@ TEST_CASE("WKB geometry factory (byte-order-dependant)") {
 
 TEST_CASE("WKB geometry (byte-order-independent)") {
 
-    osmium::geom::WKBFactory<> factory(osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex);
+    osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
 
     SECTION("empty point") {
         REQUIRE_THROWS_AS(factory.create_point(osmium::Location{}), osmium::invalid_location);

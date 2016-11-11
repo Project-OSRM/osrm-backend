@@ -85,11 +85,11 @@ namespace osmium {
                     try {
                         const TValue& value = m_vector.at(id);
                         if (value == osmium::index::empty_value<TValue>()) {
-                            not_found_error(id);
+                            throw osmium::not_found{id};
                         }
                         return value;
                     } catch (const std::out_of_range&) {
-                        not_found_error(id);
+                        throw osmium::not_found{id};
                     }
                 }
 
@@ -180,7 +180,7 @@ namespace osmium {
                         return a.first < b.first;
                     });
                     if (result == m_vector.end() || result->first != id) {
-                        not_found_error(id);
+                        throw osmium::not_found{id};
                     } else {
                         return result->second;
                     }

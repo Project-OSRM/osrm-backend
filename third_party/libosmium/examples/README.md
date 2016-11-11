@@ -18,12 +18,24 @@ them.
 
 ## Still reasonably simple examples
 
+* `osmium_read_with_progress`
 * `osmium_filter_discussions`
 * `osmium_convert`
+* `osmium_pub_names`
+* `osmium_road_length`
 
 ## More advanced examples
 
 * `osmium_area_test`
+* `osmium_create_pois`
+
+## Even more advanced examples
+
+* `osmium_change_tags`
+* `osmium_location_cache_create`
+* `osmium_location_cache_use`
+* `osmium_dump_internal`
+* `osmium_index_lookup`
 
 ## License
 

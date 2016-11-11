@@ -63,7 +63,7 @@ namespace osmium {
                 }
 
                 const TValue get(const TId id) const final {
-                    not_found_error(id);
+                    throw osmium::not_found{id};
                 }
 
                 size_t size() const final {

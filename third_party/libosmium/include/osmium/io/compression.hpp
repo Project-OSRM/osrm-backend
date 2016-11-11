@@ -145,10 +145,11 @@ namespace osmium {
 
         private:
 
-            using compression_map_type = std::map<const osmium::io::file_compression,
-                                                  std::tuple<create_compressor_type,
-                                                             create_decompressor_type_fd,
-                                                             create_decompressor_type_buffer>>;
+            using callbacks_type = std::tuple<create_compressor_type,
+                                              create_decompressor_type_fd,
+                                              create_decompressor_type_buffer>;
+
+            using compression_map_type = std::map<const osmium::io::file_compression, callbacks_type>;
 
             compression_map_type m_callbacks;
 
@@ -160,11 +161,17 @@ namespace osmium {
             CompressionFactory(CompressionFactory&&) = delete;
             CompressionFactory& operator=(CompressionFactory&&) = delete;
 
-            OSMIUM_NORETURN void error(osmium::io::file_compression compression) {
-                std::string error_message {"Support for compression '"};
+            const callbacks_type& find_callbacks(osmium::io::file_compression compression) const {
+                const auto it = m_callbacks.find(compression);
+
+                if (it != m_callbacks.end()) {
+                    return it->second;
+                }
+
+                std::string error_message{"Support for compression '"};
                 error_message += as_string(compression);
-                error_message += "' not compiled into this binary.";
-                throw unsupported_file_format_error(error_message);
+                error_message += "' not compiled into this binary";
+                throw unsupported_file_format_error{error_message};
             }
 
         public:
@@ -189,36 +196,21 @@ namespace osmium {
             }
 
             template <typename... TArgs>
-            std::unique_ptr<osmium::io::Compressor> create_compressor(osmium::io::file_compression compression, TArgs&&... args) {
-                auto it = m_callbacks.find(compression);
-
-                if (it != m_callbacks.end()) {
-                    return std::unique_ptr<osmium::io::Compressor>(std::get<0>(it->second)(std::forward<TArgs>(args)...));
-                }
-
-                error(compression);
+            std::unique_ptr<osmium::io::Compressor> create_compressor(osmium::io::file_compression compression, TArgs&&... args) const {
+                const auto callbacks = find_callbacks(compression);
+                return std::unique_ptr<osmium::io::Compressor>(std::get<0>(callbacks)(std::forward<TArgs>(args)...));
             }
 
-            std::unique_ptr<osmium::io::Decompressor> create_decompressor(osmium::io::file_compression compression, int fd) {
-                auto it = m_callbacks.find(compression);
-
-                if (it != m_callbacks.end()) {
-                    auto p = std::unique_ptr<osmium::io::Decompressor>(std::get<1>(it->second)(fd));
-                    p->set_file_size(osmium::util::file_size(fd));
-                    return p;
-                }
-
-                error(compression);
+            std::unique_ptr<osmium::io::Decompressor> create_decompressor(osmium::io::file_compression compression, int fd) const {
+                const auto callbacks = find_callbacks(compression);
+                auto p = std::unique_ptr<osmium::io::Decompressor>(std::get<1>(callbacks)(fd));
+                p->set_file_size(osmium::util::file_size(fd));
+                return p;
             }
 
-            std::unique_ptr<osmium::io::Decompressor> create_decompressor(osmium::io::file_compression compression, const char* buffer, size_t size) {
-                auto it = m_callbacks.find(compression);
-
-                if (it != m_callbacks.end()) {
-                    return std::unique_ptr<osmium::io::Decompressor>(std::get<2>(it->second)(buffer, size));
-                }
-
-                error(compression);
+            std::unique_ptr<osmium::io::Decompressor> create_decompressor(osmium::io::file_compression compression, const char* buffer, size_t size) const {
+                const auto callbacks = find_callbacks(compression);
+                return std::unique_ptr<osmium::io::Decompressor>(std::get<2>(callbacks)(buffer, size));
             }
 
         }; // class CompressionFactory

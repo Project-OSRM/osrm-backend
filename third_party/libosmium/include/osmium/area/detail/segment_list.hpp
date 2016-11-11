@@ -101,7 +101,7 @@ namespace osmium {
                  * Calculate the number of segments in all the ways together.
                  */
                 static size_t get_num_segments(const std::vector<const osmium::Way*>& members) noexcept {
-                    return std::accumulate(members.cbegin(), members.cend(), 0, [](size_t sum, const osmium::Way* way) {
+                    return std::accumulate(members.cbegin(), members.cend(), static_cast<size_t>(0), [](size_t sum, const osmium::Way* way) {
                         if (way->nodes().empty()) {
                             return sum;
                         } else {

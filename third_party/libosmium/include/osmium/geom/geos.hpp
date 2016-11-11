@@ -33,11 +33,21 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <geos/version.h>
+#if defined(GEOS_VERSION_MAJOR) && defined(GEOS_VERSION_MINOR) && (GEOS_VERSION_MAJOR < 3 || (GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR <= 5))
+
+#define OSMIUM_WITH_GEOS
+
 /**
  * @file
  *
- * This file contains code for conversion of OSM geometries into GDAL
+ * This file contains code for conversion of OSM geometries into GEOS
  * geometries.
+ *
+ * Note that everything in this file is deprecated and only works up to
+ * GEOS 3.5. It uses the GEOS C++ API which the GEOS project does not consider
+ * to be a stable, external API. We probably should have used the GEOS C API
+ * instead.
  *
  * @attention If you include this file, you'll need to link with `libgeos`.
  */
@@ -88,6 +98,7 @@ namespace osmium {
 
         namespace detail {
 
+            /// @deprecated
             class GEOSFactoryImpl {
 
                 std::unique_ptr<const geos::geom::PrecisionModel> m_precision_model;
@@ -245,6 +256,7 @@ namespace osmium {
 
         } // namespace detail
 
+        /// @deprecated
         template <typename TProjection = IdentityProjection>
         using GEOSFactory = GeometryFactory<osmium::geom::detail::GEOSFactoryImpl, TProjection>;
 
@@ -253,5 +265,7 @@ namespace osmium {
 } // namespace osmium
 
 #undef THROW
+
+#endif
 
 #endif // OSMIUM_GEOM_GEOS_HPP

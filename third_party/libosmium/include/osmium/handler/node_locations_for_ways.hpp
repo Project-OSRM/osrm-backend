@@ -165,7 +165,7 @@ namespace osmium {
                     }
                 }
                 if (error && !m_ignore_errors) {
-                    throw osmium::not_found("location for one or more nodes not found in node location index");
+                    throw osmium::not_found{"location for one or more nodes not found in node location index"};
                 }
             }
 

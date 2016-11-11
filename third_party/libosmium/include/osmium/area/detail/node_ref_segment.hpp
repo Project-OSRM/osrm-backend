@@ -379,8 +379,8 @@ namespace osmium {
                     sl[2] = {1, s2.first().location() };
                     sl[3] = {1, s2.second().location()};
 
-                    std::sort(sl, sl+4, [](const seg_loc& a, const seg_loc& b) {
-                        return a.location < b.location;
+                    std::sort(sl, sl+4, [](const seg_loc& lhs, const seg_loc& rhs) {
+                        return lhs.location < rhs.location;
                     });
 
                     if (sl[1].location == sl[2].location) {

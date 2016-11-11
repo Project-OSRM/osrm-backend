@@ -24,7 +24,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel;Dev;Cover
 project(libosmium)
 
 set(LIBOSMIUM_VERSION_MAJOR 2)
-set(LIBOSMIUM_VERSION_MINOR 9)
+set(LIBOSMIUM_VERSION_MINOR 10)
 set(LIBOSMIUM_VERSION_PATCH 0)
 
 set(LIBOSMIUM_VERSION
@@ -283,6 +283,10 @@ endif()
 
 if(BUILD_DATA_TESTS)
     add_subdirectory(test/data-tests)
+endif()
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(test/examples)
 endif()
 
 

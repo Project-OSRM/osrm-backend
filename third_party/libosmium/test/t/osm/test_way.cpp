@@ -68,7 +68,7 @@ TEST_CASE("build way with helpers") {
 
     {
         osmium::builder::WayBuilder builder(buffer);
-        builder.add_user("username");
+        builder.set_user("username");
         builder.add_tags({
             {"amenity", "restaurant"},
             {"name", "Zum goldenen Schwanen"}

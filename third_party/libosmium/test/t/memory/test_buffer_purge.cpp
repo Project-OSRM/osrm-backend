@@ -17,9 +17,9 @@ struct CallbackClass {
 TEST_CASE("Purge data from buffer") {
 
     constexpr size_t buffer_size = 10000;
+    osmium::memory::Buffer buffer{buffer_size};
 
     SECTION("purge empty buffer") {
-        osmium::memory::Buffer buffer(buffer_size);
         REQUIRE(std::distance(buffer.begin(), buffer.end()) == 0);
 
         CallbackClass callback;
@@ -30,15 +30,13 @@ TEST_CASE("Purge data from buffer") {
     }
 
     SECTION("purge buffer with one object but nothing to delete") {
-        osmium::memory::Buffer buffer(buffer_size);
-
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser");
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser");
         }
         buffer.commit();
         REQUIRE(std::distance(buffer.begin(), buffer.end()) == 1);
-        size_t committed = buffer.committed();
+        const size_t committed = buffer.committed();
 
         CallbackClass callback;
         buffer.purge_removed(&callback);
@@ -49,12 +47,10 @@ TEST_CASE("Purge data from buffer") {
     }
 
     SECTION("purge buffer with one object which gets deleted") {
-        osmium::memory::Buffer buffer(buffer_size);
-
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser");
-            node_builder.object().set_removed(true);
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser");
+            node_builder.set_removed(true);
         }
         buffer.commit();
         REQUIRE(std::distance(buffer.begin(), buffer.end()) == 1);
@@ -68,21 +64,19 @@ TEST_CASE("Purge data from buffer") {
     }
 
     SECTION("purge buffer with two objects, first gets deleted") {
-        osmium::memory::Buffer buffer(buffer_size);
-
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser");
-            node_builder.object().set_removed(true);
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser");
+            node_builder.set_removed(true);
         }
         buffer.commit();
-        size_t size1 = buffer.committed();
+        const size_t size1 = buffer.committed();
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser");
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser");
         }
         buffer.commit();
-        size_t size2 = buffer.committed() - size1;
+        const size_t size2 = buffer.committed() - size1;
         REQUIRE(std::distance(buffer.begin(), buffer.end()) == 2);
 
         CallbackClass callback;
@@ -94,18 +88,16 @@ TEST_CASE("Purge data from buffer") {
     }
 
     SECTION("purge buffer with two objects, second gets deleted") {
-        osmium::memory::Buffer buffer(buffer_size);
-
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser_longer_name");
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser_longer_name");
         }
         buffer.commit();
         size_t size1 = buffer.committed();
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser");
-            node_builder.object().set_removed(true);
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser");
+            node_builder.set_removed(true);
         }
         buffer.commit();
 
@@ -120,24 +112,22 @@ TEST_CASE("Purge data from buffer") {
     }
 
     SECTION("purge buffer with three objects, middle one gets deleted") {
-        osmium::memory::Buffer buffer(buffer_size);
-
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser_longer_name");
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser_longer_name");
         }
         buffer.commit();
 
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser");
-            node_builder.object().set_removed(true);
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser");
+            node_builder.set_removed(true);
         }
         buffer.commit();
 
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("sn");
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("sn");
         }
         buffer.commit();
 
@@ -151,26 +141,24 @@ TEST_CASE("Purge data from buffer") {
     }
 
     SECTION("purge buffer with three objects, all get deleted") {
-        osmium::memory::Buffer buffer(buffer_size);
-
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser_longer_name");
-            node_builder.object().set_removed(true);
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser_longer_name");
+            node_builder.set_removed(true);
         }
         buffer.commit();
 
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("testuser");
-            node_builder.object().set_removed(true);
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("testuser");
+            node_builder.set_removed(true);
         }
         buffer.commit();
 
         {
-            osmium::builder::NodeBuilder node_builder(buffer);
-            node_builder.add_user("sn");
-            node_builder.object().set_removed(true);
+            osmium::builder::NodeBuilder node_builder{buffer};
+            node_builder.set_user("sn");
+            node_builder.set_removed(true);
         }
         buffer.commit();
 
