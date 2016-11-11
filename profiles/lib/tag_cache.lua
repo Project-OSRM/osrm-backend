@@ -1,7 +1,7 @@
 TagCache = {}
 
-function TagCache.get(data, key)
-  local v = data.cache[key]
+function TagCache.get(way,cache,key)
+  local v = cache[key]
   if v then
     if v == '' then
       return nil
@@ -9,12 +9,12 @@ function TagCache.get(data, key)
       return v
     end
   else
-    v = data.way:get_value_by_key(key)
+    v = way:get_value_by_key(key)
     if v == nil then
-      data.cache[key] = ''
+      cache[key] = ''
       return nil
     else
-      data.cache[key] = v
+      cache[key] = v
       if v == '' then
         return nil
       else
@@ -24,11 +24,11 @@ function TagCache.get(data, key)
   end
 end
 
-function TagCache.set(data,key,value)
+function TagCache.set(cache,key,value)
   if value then
-    data.cache[key] = value
+    cache[key] = value
   else
-    data.cache[key] = ''
+    cache[key] = ''
   end    
 end
 
