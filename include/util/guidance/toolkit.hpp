@@ -3,6 +3,7 @@
 
 /* A set of tools required for guidance in both pre and post-processing */
 
+#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/suffix_table.hpp"
 #include "engine/guidance/route_step.hpp"
@@ -50,11 +51,11 @@ inline extractor::guidance::DirectionModifier::Enum getTurnDirection(const doubl
         return extractor::guidance::DirectionModifier::SharpRight;
     if (angle >= 60 && angle < 140)
         return extractor::guidance::DirectionModifier::Right;
-    if (angle >= 140 && angle < 170)
+    if (angle >= 140 && angle < 160)
         return extractor::guidance::DirectionModifier::SlightRight;
-    if (angle >= 165 && angle <= 195)
+    if (angle >= 160 && angle <= 200)
         return extractor::guidance::DirectionModifier::Straight;
-    if (angle > 190 && angle <= 220)
+    if (angle > 200 && angle <= 220)
         return extractor::guidance::DirectionModifier::SlightLeft;
     if (angle > 220 && angle <= 300)
         return extractor::guidance::DirectionModifier::Left;

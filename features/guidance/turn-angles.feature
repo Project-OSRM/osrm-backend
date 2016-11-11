@@ -773,7 +773,7 @@ Feature: Simple Turns
 
         When I route I should get
             | waypoints | route                   | turns                               |
-            | a,j       | Siemens,Siemens,Siemens | depart,continue slight right,arrive |
+            | a,j       | Siemens,Siemens,Siemens | depart,continue straight,arrive     |
             | a,g       | Siemens,Erna,Erna       | depart,new name slight left,arrive  |
             | g,j       | Erna,Siemens,Siemens    | depart,turn sharp left,arrive       |
             | g,a       | Erna,Siemens,Siemens    | depart,new name slight right,arrive |

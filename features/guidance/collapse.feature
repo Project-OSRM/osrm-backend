@@ -724,11 +724,11 @@ Feature: Collapse
             | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-            | waypoints | route                 | turns                                          |
-            | a,g       | road,cross,cross      | depart,turn left,arrive                        |
-            | a,e       | road,road,road        | depart,continue slight right,arrive            |
+            | waypoints | route                 | turns                                      |
+            | a,g       | road,cross,cross      | depart,turn left,arrive                    |
+            | a,e       | road,road,road        | depart,continue straight,arrive            |
             # We should discuss whether the next item should be collapsed to depart,turn right,arrive.
-            | a,f       | road,road,cross,cross | depart,continue slight right,turn right,arrive |
+            | a,f       | road,road,cross,cross | depart,continue straight,turn right,arrive |
 
     Scenario: On-Off on Highway
         Given the node map
@@ -755,12 +755,13 @@ Feature: Collapse
     Scenario: Don't collapse going straight if actual turn
         Given the node map
             """
-              c e
-                d   f
-
+                e
+             c  |
+              \ d - - - f
+               \|
                 b
-
-
+                |
+                |
                 a
             """
 
@@ -771,10 +772,10 @@ Feature: Collapse
             | df    | right    | residential |
 
         When I route I should get
-            | waypoints | route                     | turns                                  |
-            | a,c       | main,main                 | depart,arrive                          |
-            | a,e       | main,straight,straight    | depart,turn straight,arrive            |
-            | a,f       | main,straight,right,right | depart,turn straight,turn right,arrive |
+            | waypoints | route                     | turns                                  | locations |
+            | a,c       | main,main                 | depart,arrive                          | a,c       |
+            | a,e       | main,straight,straight    | depart,turn straight,arrive            | a,b,e     |
+            | a,f       | main,straight,right,right | depart,turn straight,turn right,arrive | a,b,d,f   |
 
     Scenario: Entering a segregated road
         Given the node map

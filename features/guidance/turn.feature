@@ -1373,5 +1373,5 @@ Feature: Simple Turns
             | kchm  | Alexanderstr  | primary   | yes    |
 
         When I route I should get
-            | waypoints | turns                           | route                                   |
-            | a,d       | depart,new name straight,arrive | Stralauer Str,Holzmarktstr,Holzmarktstr |
+            | waypoints | turns         | route                      |
+            | a,d       | depart,arrive | Stralauer Str,Holzmarktstr |
