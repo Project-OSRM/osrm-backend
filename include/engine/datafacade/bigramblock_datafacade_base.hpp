@@ -50,10 +50,6 @@ namespace datafacade
  */
 class BigRAMBlockDataFacadeBase : public BaseDataFacade
 {
-  protected:
-    storage::DataLayout *data_layout;
-    char *memory_block;
-
   private:
     using super = BaseDataFacade;
     using QueryGraph = util::StaticGraph<EdgeData, true>;
@@ -115,20 +111,20 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
     std::shared_ptr<util::RangeTable<16, true>> m_bearing_ranges_table;
     util::ShM<DiscreteBearing, true>::vector m_bearing_values_table;
 
-    void InitChecksum()
+    void InitChecksum(storage::DataLayout *data_layout, char *memory_block)
     {
         m_check_sum =
             *data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::HSGR_CHECKSUM);
         util::SimpleLogger().Write() << "set checksum: " << m_check_sum;
     }
 
-    void InitProfileProperties()
+    void InitProfileProperties(storage::DataLayout *data_layout, char *memory_block)
     {
         m_profile_properties = data_layout->GetBlockPtr<extractor::ProfileProperties>(
             memory_block, storage::DataLayout::PROPERTIES);
     }
 
-    void InitTimestamp()
+    void InitTimestamp(storage::DataLayout *data_layout, char *memory_block)
     {
         auto timestamp_ptr =
             data_layout->GetBlockPtr<char>(memory_block, storage::DataLayout::TIMESTAMP);
@@ -138,7 +134,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
                   m_timestamp.begin());
     }
 
-    void InitRTree()
+    void InitRTree(storage::DataLayout *data_layout, char *memory_block)
     {
         BOOST_ASSERT_MSG(!m_coordinate_list.empty(), "coordinates must be loaded before r-tree");
 
@@ -163,7 +159,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
     }
 
-    void InitGraph()
+    void InitGraph(storage::DataLayout *data_layout, char *memory_block)
     {
         auto graph_nodes_ptr =
             data_layout->GetBlockPtr<GraphNode>(memory_block, storage::DataLayout::GRAPH_NODE_LIST);
@@ -178,7 +174,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
         m_query_graph.reset(new QueryGraph(node_list, edge_list));
     }
 
-    void InitNodeAndEdgeInformation()
+    void InitNodeAndEdgeInformation(storage::DataLayout *data_layout, char *memory_block)
     {
         const auto coordinate_list_ptr = data_layout->GetBlockPtr<util::Coordinate>(
             memory_block, storage::DataLayout::COORDINATE_LIST);
@@ -251,7 +247,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
         m_post_turn_bearing = std::move(post_turn_bearing);
     }
 
-    void InitViaNodeList()
+    void InitViaNodeList(storage::DataLayout *data_layout, char *memory_block)
     {
         auto via_geometry_list_ptr =
             data_layout->GetBlockPtr<GeometryID>(memory_block, storage::DataLayout::VIA_NODE_LIST);
@@ -260,7 +256,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
         m_via_geometry_list = std::move(via_geometry_list);
     }
 
-    void InitNames()
+    void InitNames(storage::DataLayout *data_layout, char *memory_block)
     {
         auto offsets_ptr =
             data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::NAME_OFFSETS);
@@ -281,7 +277,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
         m_names_char_list = std::move(names_char_list);
     }
 
-    void InitTurnLaneDescriptions()
+    void InitTurnLaneDescriptions(storage::DataLayout *data_layout, char *memory_block)
     {
         auto offsets_ptr = data_layout->GetBlockPtr<std::uint32_t>(
             memory_block, storage::DataLayout::LANE_DESCRIPTION_OFFSETS);
@@ -297,7 +293,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
         m_lane_description_masks = std::move(masks);
     }
 
-    void InitCoreInformation()
+    void InitCoreInformation(storage::DataLayout *data_layout, char *memory_block)
     {
         auto core_marker_ptr =
             data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CORE_MARKER);
@@ -306,7 +302,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
         m_is_core_node = std::move(is_core_node);
     }
 
-    void InitGeometries()
+    void InitGeometries(storage::DataLayout *data_layout, char *memory_block)
     {
         auto geometries_index_ptr =
             data_layout->GetBlockPtr<unsigned>(memory_block, storage::DataLayout::GEOMETRIES_INDEX);
@@ -363,7 +359,7 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
         m_datasource_name_lengths = std::move(datasource_name_lengths);
     }
 
-    void InitIntersectionClasses()
+    void InitIntersectionClasses(storage::DataLayout *data_layout, char *memory_block)
     {
         auto bearing_class_id_ptr = data_layout->GetBlockPtr<BearingClassID>(
             memory_block, storage::DataLayout::BEARING_CLASSID);
@@ -397,20 +393,20 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
     }
 
   public:
-    void Init()
+    void Init(storage::DataLayout *data_layout, char *memory_block)
     {
-        InitGraph();
-        InitChecksum();
-        InitNodeAndEdgeInformation();
-        InitGeometries();
-        InitTimestamp();
-        InitViaNodeList();
-        InitNames();
-        InitTurnLaneDescriptions();
-        InitCoreInformation();
-        InitProfileProperties();
-        InitRTree();
-        InitIntersectionClasses();
+        InitGraph(data_layout, memory_block);
+        InitChecksum(data_layout, memory_block);
+        InitNodeAndEdgeInformation(data_layout, memory_block);
+        InitGeometries(data_layout, memory_block);
+        InitTimestamp(data_layout, memory_block);
+        InitViaNodeList(data_layout, memory_block);
+        InitNames(data_layout, memory_block);
+        InitTurnLaneDescriptions(data_layout, memory_block);
+        InitCoreInformation(data_layout, memory_block);
+        InitProfileProperties(data_layout, memory_block);
+        InitRTree(data_layout, memory_block);
+        InitIntersectionClasses(data_layout, memory_block);
     }
 
     // search graph access
