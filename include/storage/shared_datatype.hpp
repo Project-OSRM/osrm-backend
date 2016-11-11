@@ -172,20 +172,6 @@ struct DataLayout
 
         return ptr;
     }
-    friend std::ostream &operator<<(std::ostream &os, const DataLayout &layout)
-    {
-        os << "Memory layout: " << std::endl;
-        os << "  Total size: " << layout.GetSizeOfLayout() << std::endl;
-
-        for (unsigned bid = 0; bid < BlockID::NUM_BLOCKS; bid++)
-        {
-            os << "  " << block_id_to_name[bid]
-               << " offset: " << layout.GetBlockOffset(BlockID(bid))
-               << " size: " << layout.GetBlockSize(BlockID(bid)) << std::endl;
-        }
-
-        return os;
-    }
 };
 
 enum SharedDataType
