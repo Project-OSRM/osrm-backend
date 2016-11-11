@@ -1,11 +1,5 @@
 #include "util/simple_logger.hpp"
-#ifdef _MSC_VER
-#include <io.h>
-#define isatty _isatty
-#define fileno _fileno
-#else
-#include <unistd.h>
-#endif
+#include "util/isatty.hpp"
 #include <cstdio>
 #include <iostream>
 #include <mutex>
@@ -77,7 +71,7 @@ SimpleLogger::~SimpleLogger()
     std::lock_guard<std::mutex> lock(get_mutex());
     if (!LogPolicy::GetInstance().IsMute())
     {
-        const bool is_terminal = static_cast<bool>(isatty(fileno(stdout)));
+        const bool is_terminal = IsStdoutATTY();
         switch (level)
         {
         case logWARNING:
