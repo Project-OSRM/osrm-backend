@@ -41,12 +41,8 @@ class InternalDataFacade final : public BigRAMBlockDataFacadeBase
         internal_memory.reset(new char[internal_layout->GetSizeOfLayout()]);
         storage.LoadData(internal_layout.get(), internal_memory.get());
 
-        // Set the common base-class pointers
-        data_layout = internal_layout.get();
-        memory_block = internal_memory.get();
-
         // Adjust all the private m_* members to point to the right places
-        Init();
+        Init(internal_layout.get(), internal_memory.get());
     }
 };
 }

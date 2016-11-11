@@ -80,12 +80,11 @@ class SharedDataFacade : public BigRAMBlockDataFacadeBase
         BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
         m_layout_memory = storage::makeSharedMemory(layout_region);
 
-        data_layout = static_cast<storage::DataLayout *>(m_layout_memory->Ptr());
-
         BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
         m_large_memory = storage::makeSharedMemory(data_region);
-        memory_block = (char *)(m_large_memory->Ptr());
-        Init();
+
+        Init(static_cast<storage::DataLayout *>(m_layout_memory->Ptr()),
+             static_cast<char *>(m_large_memory->Ptr()));
     }
 };
 }
