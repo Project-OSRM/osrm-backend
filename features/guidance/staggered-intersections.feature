@@ -13,7 +13,7 @@ Feature: Staggered Intersections
                 j
             a b c
                 d
-                e f g
+                e f  g
                 h
                 i
             """
@@ -98,3 +98,48 @@ Feature: Staggered Intersections
             | waypoints | route                         | turns                              |
             | a,g       | Oak St,Cedar Dr,Elm St,Elm St | depart,turn right,turn left,arrive |
             | g,a       | Elm St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive |
+
+    Scenario: Staggered Intersection: do not collapse if a mode change is involved
+        Given the node map
+            """
+                j
+            a b c
+                d
+                e  f g
+                h
+            """
+
+        And the ways
+            | nodes  | highway | name     | route |
+            | abc    | primary | to_sea   |       |
+            | ef     |         | to_sea   | ferry |
+            | fg     | primary | road     |       |
+            | jcdeh  | primary | road     |       |
+
+        When I route I should get
+            | waypoints | route                          | turns                              | modes                         |
+            | a,g       | to_sea,road,to_sea,road,road   | depart,turn right,turn left,notification straight,arrive | driving,driving,ferry,driving,driving |
+            | g,a       | road,to_sea,road,to_sea,to_sea | depart,notification straight,turn right,turn left,arrive | driving,ferry,driving,driving,driving |
+
+    Scenario: Staggered Intersection: do not collapse if a road class change is involved
+        Given the node map
+            """
+                j
+            a b c
+                d
+                e f g
+                h
+                i
+            """
+
+        And the ways
+            | nodes  | highway     | name     |
+            | abc    | primary     | Oak St   |
+            | efg    | residential | Oak St   |
+            | jcdehi | residential | Cedar Dr |
+
+        When I route I should get
+            | waypoints | route         | turns         |
+            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive |
+            | g,a       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive |
+

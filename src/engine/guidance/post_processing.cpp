@@ -443,7 +443,7 @@ std::size_t getPreviousIndex(std::size_t index, const std::vector<RouteStep> &st
         --index;
 
     return index;
-};
+}
 
 void collapseUTurn(std::vector<RouteStep> &steps,
                    const std::size_t two_back_index,
@@ -853,7 +853,9 @@ bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current
     // We are only interested in the distance between the first and the second.
     const auto is_short = previous.distance < MAX_STAGGERED_DISTANCE;
 
-    return is_short && (left_right || right_left);
+    const auto no_mode_change = previous.mode == current.mode;
+
+    return is_short && (left_right || right_left) && no_mode_change;
 }
 
 } // namespace
