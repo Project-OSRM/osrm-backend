@@ -334,10 +334,6 @@ function handle_blocking(way,result,cache)
   if "impassable" == status then
     return false
   end
-
-  if handle_hov(way,result,cache) == false then
-    return false
-  end
 end
 
 -- set default mode
@@ -686,6 +682,7 @@ function way_function(way, result)
   if handle_default_mode(way,result,cache) == false then return end
   if handle_blocking(way,result,cache) == false then return end
   if handle_access(way,result,cache,data) == false then return end
+  if handle_hov(way,result,cache) == false then return false end
   if handle_ferries(way,result,cache) == false then return end
   if handle_movables(way,result,cache) == false then return end
   if handle_service(way,result,cache) == false then return end
