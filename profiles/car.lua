@@ -236,8 +236,10 @@ function node_function (node, result)
 end
 
 -- abort early if this way is obviouslt not routable
-function handle_initial_check(way,result,cache)
-  return TagCache.get(way,cache,'highway') ~= nil or
+function handle_initial_check(way,result,cache,data)
+  data.speed_type = TagCache.get(way,cache,'highway')
+
+  return data.speed_type ~= nil or
          TagCache.get(way,cache,'route') ~= nil or
          TagCache.get(way,cache,'bridge') ~= nil
 end
@@ -371,7 +373,6 @@ function handle_ferries(way,result,cache)
   local route = TagCache.get(way,cache,"route")
   local route_speed = speed_profile[route]
   if (route_speed and route_speed > 0) then
-   TagCache.set(cache,"highway",route)
    local duration  = TagCache.get(way,cache,"duration")
    if duration and durationIsValid(duration) then
      result.duration = max( parseDuration(duration), 1 )
@@ -389,7 +390,6 @@ function handle_movables(way,result,cache)
   local bridge_speed = speed_profile[bridge]
   local capacity_car = TagCache.get(way,cache,"capacity:car")
   if (bridge_speed and bridge_speed > 0) and (capacity_car ~= 0) then
-    TagCache.set(cache,"highway",bridge)
     local duration  = TagCache.get(way,cache,"duration")
     if duration and durationIsValid(duration) then
       result.duration = max( parseDuration(duration), 1 )
@@ -690,7 +690,7 @@ function way_function(way, result)
   -- most steps can abort processing, meaning the way
   -- is not routable  
   
-  if handle_initial_check(way,result,cache) == false then return end
+  if handle_initial_check(way,result,cache,data) == false then return end
   if handle_default_mode(way,result,cache) == false then return end
   if handle_blocking(way,result,cache) == false then return end
   if handle_access(way,result,cache,data) == false then return end

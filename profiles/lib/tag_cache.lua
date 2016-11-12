@@ -24,12 +24,4 @@ function TagCache.get(way,cache,key)
   end
 end
 
-function TagCache.set(cache,key,value)
-  if value then
-    cache[key] = value
-  else
-    cache[key] = ''
-  end    
-end
-
 return TagCache
