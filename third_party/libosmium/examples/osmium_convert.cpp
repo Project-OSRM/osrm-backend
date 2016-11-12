@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 
     // Read options from command line.
     while (true) {
-        int c = getopt_long(argc, argv, "dhf:t:", long_options, 0);
+        const int c = getopt_long(argc, argv, "dhf:t:", long_options, 0);
         if (c == -1) {
             break;
         }
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    int remaining_args = argc - optind;
+    const int remaining_args = argc - optind;
     if (remaining_args > 2) {
         std::cerr << "Usage: " << argv[0] << " [OPTIONS] [INFILE [OUTFILE]]\n";
         std::exit(1);
@@ -124,13 +124,13 @@ int main(int argc, char* argv[]) {
         osmium::io::Reader reader{input_file};
 
         // Get header from input file and change the "generator" setting to
-        // outselves.
+        // ourselves.
         osmium::io::Header header = reader.header();
         header.set("generator", "osmium_convert");
 
         // Initialize Writer using the header from above and tell it that it
         // is allowed to overwrite a possibly existing file.
-        osmium::io::Writer writer(output_file, header, osmium::io::overwrite::allow);
+        osmium::io::Writer writer{output_file, header, osmium::io::overwrite::allow};
 
         // Copy the contents from the input to the output file one buffer at
         // a time. This is much easier and faster than copying each object

@@ -43,11 +43,14 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
     namespace builder {
-        template <typename> class ObjectBuilder;
+        template <typename TDerived, typename T>
+        class OSMObjectBuilder;
+
         class RelationMemberListBuilder;
     } // namespace builder
 
@@ -109,7 +112,8 @@ namespace osmium {
             return m_ref;
         }
 
-        RelationMember& ref(object_id_type ref) noexcept {
+        /// @deprecated Use set_ref() instead.
+        OSMIUM_DEPRECATED RelationMember& ref(object_id_type ref) noexcept {
             m_ref = ref;
             return *this;
         }
@@ -149,14 +153,8 @@ namespace osmium {
 
     public:
 
-        using size_type = size_t;
-
         RelationMemberList() :
             osmium::memory::Collection<RelationMember, osmium::item_type::relation_member_list>() {
-        }
-
-        size_type size() const noexcept {
-            return static_cast<size_type>(std::distance(begin(), end()));
         }
 
     }; // class RelationMemberList
@@ -165,7 +163,8 @@ namespace osmium {
 
     class Relation : public OSMObject {
 
-        friend class osmium::builder::ObjectBuilder<osmium::Relation>;
+        template <typename TDerived, typename T>
+        friend class osmium::builder::OSMObjectBuilder;
 
         Relation() noexcept :
             OSMObject(sizeof(Relation), osmium::item_type::relation) {

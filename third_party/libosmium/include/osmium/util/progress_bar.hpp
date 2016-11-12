@@ -172,6 +172,18 @@ namespace osmium {
             }
         }
 
+        /**
+         * Removes the progress bar. Call this before doing any other output.
+         * The next time update() is called, the progress bar will be visible
+         * again.
+         */
+        void remove() {
+            if (m_enable) {
+                std::cerr << spc() << "         \r";
+                m_prev_percent = 100 + 1;
+            }
+        }
+
     }; // class ProgressBar
 
 } // namespace osmium

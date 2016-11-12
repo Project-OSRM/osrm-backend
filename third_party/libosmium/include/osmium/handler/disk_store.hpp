@@ -51,6 +51,9 @@ namespace osmium {
     namespace handler {
 
         /**
+         * Writes OSM data in the Osmium-internal serialized format to disk
+         * keeping track of object offsets in the indexes given to the
+         * constructor.
          *
          * Note: This handler will only work if either all object IDs are
          *       positive or all object IDs are negative.
@@ -95,10 +98,8 @@ namespace osmium {
                 m_offset += relation.byte_size();
             }
 
-            // XXX
             void operator()(const osmium::memory::Buffer& buffer) {
                 osmium::io::detail::reliable_write(m_data_fd, buffer.data(), buffer.committed());
-
                 osmium::apply(buffer.begin(), buffer.end(), *this);
             }
 

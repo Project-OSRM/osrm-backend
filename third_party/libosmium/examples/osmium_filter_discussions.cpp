@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     // file for the output file. This will copy over some header information.
     // The last parameter will tell the writer that it is allowed to overwrite
     // an existing file. Without it, it will refuse to do so.
-    osmium::io::Writer writer(output_file, header, osmium::io::overwrite::allow);
+    osmium::io::Writer writer{output_file, header, osmium::io::overwrite::allow};
 
     // Create range of input iterators that will iterator over all changesets
     // delivered from input file through the "reader".

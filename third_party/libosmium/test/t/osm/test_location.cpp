@@ -166,41 +166,44 @@ TEST_CASE("Location hash") {
     }
 }
 
-#define CR(s, v, r) { \
-                const char* strm = "-" s; \
-                const char* strp = strm + 1; \
-                REQUIRE(std::atof(strp) == Approx( v / 10000000.0)); \
-                REQUIRE(std::atof(strm) == Approx(-v / 10000000.0)); \
-                const char** data = &strp; \
-                REQUIRE(osmium::detail::string_to_location_coordinate(data) == v); \
-                REQUIRE(std::string{*data} == r); \
-                data = &strm; \
-                REQUIRE(osmium::detail::string_to_location_coordinate(data) == -v); \
-                REQUIRE(std::string{*data} == r); \
-                }
+void C(const char* s, long v, const char* r = "") {
+    std::string strm{"-"};
+    strm += s;
+    REQUIRE(std::atof(strm.c_str() + 1) == Approx( v / 10000000.0));
+    REQUIRE(std::atof(strm.c_str()    ) == Approx(-v / 10000000.0));
+    const char* x = strm.c_str() + 1;
+    const char** data = &x;
+    REQUIRE(osmium::detail::string_to_location_coordinate(data) == v);
+    REQUIRE(std::string{*data} == r);
+    x = strm.c_str();
+    data = &x;
+    REQUIRE(osmium::detail::string_to_location_coordinate(data) == -v);
+    REQUIRE(std::string{*data} == r);
+}
 
-#define C(s, v) CR(s, v, "")
-
-#define F(s) { \
-             const char* strm = "-" s; \
-             const char* strp = strm + 1; \
-             const char** data = &strp; \
-             REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), osmium::invalid_location); \
-             data = &strm; \
-             REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), osmium::invalid_location); \
-             }
+void F(const char* s) {
+    std::string strm{"-"};
+    strm += s;
+    const char* x = strm.c_str();
+    const char** data = &x;
+    REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), osmium::invalid_location);
+    ++x;
+    data = &x;
+    REQUIRE_THROWS_AS(osmium::detail::string_to_location_coordinate(data), osmium::invalid_location);
+}
 
 TEST_CASE("Parsing coordinates from strings") {
     F("x");
     F(".");
+    F(".e2");
     F("--");
     F("");
     F(" ");
     F(" 123");
 
-    CR("123 ", 1230000000, " ");
-    CR("123x", 1230000000, "x");
-    CR("1.2x",   12000000, "x");
+    C("123 ", 1230000000, " ");
+    C("123x", 1230000000, "x");
+    C("1.2x",   12000000, "x");
 
     C("0",              0);
 
@@ -223,14 +226,19 @@ TEST_CASE("Parsing coordinates from strings") {
     F("1234");
     F("1234.");
     F("12345678901234567890");
+    F("1.1234568111111111111111111111111111111");
+    F("112.34568111111111111111111111111111111");
 
     C("0.",             0);
+    C(".0",             0);
     C("0.0",            0);
     C("1.",      10000000);
     C("1.0",     10000000);
     C("1.2",     12000000);
     C("0.1",      1000000);
+    C(".1",       1000000);
     C("0.01",      100000);
+    C(".01",       100000);
     C("0.001",      10000);
     C("0.0001",      1000);
     C("0.00001",      100);
@@ -251,6 +259,24 @@ TEST_CASE("Parsing coordinates from strings") {
     C("179.99999999", 1800000000);
     C("200.123",      2001230000);
 
+    C("8.109E-4" , 8109);
+    C("8.1090E-4" , 8109);
+    C("8.10909E-4" , 8109);
+    C("8.109095E-4" , 8109);
+    C("8.1090959E-4" , 8109);
+    C("8.10909598E-4" , 8109);
+    C("8.109095988E-4" , 8109);
+    C("8.1090959887E-4" , 8109);
+    C("8.10909598870E-4" , 8109);
+    C("8.109095988709E-4" , 8109);
+    C("8.1090959887098E-4" , 8109);
+    C("8.10909598870983E-4" , 8109);
+    C("8.109095988709837E-4" , 8109);
+    C("81.09095988709837E-4" , 81091);
+    C("810.9095988709837E-4" , 810910);
+    C(".8109095988709837E-4" , 811);
+    C(".08109095988709837E-4" , 81);
+
     C("1e2",   1000000000);
     C("1e1",    100000000);
     C("1e0",     10000000);
@@ -263,8 +289,10 @@ TEST_CASE("Parsing coordinates from strings") {
     C("1e-7",           1);
 
     C("1.0e2",   1000000000);
+    C("1.e2",    1000000000);
     C("1.1e1",    110000000);
     C("0.1e1",     10000000);
+    C(".1e1",      10000000);
     C("1.2e0",     12000000);
     C("1.9e-1",     1900000);
     C("2.0e-2",      200000);
@@ -291,32 +319,35 @@ TEST_CASE("Parsing coordinates from strings") {
     F("5.0e2");
     F("3e2");
     F("1e");
+    F("1e-");
+    F("1e1234567");
     F("0.5e");
     F("1e10");
 
-    CR("1e2 ",   1000000000, " ");
-    CR("1.1e2 ", 1100000000, " ");
-    CR("1.1e2x", 1100000000, "x");
-    CR("1.1e2:", 1100000000, ":");
+    C("1e2 ",   1000000000, " ");
+    C("1.1e2 ", 1100000000, " ");
+    C("1.1e2x", 1100000000, "x");
+    C("1.1e2:", 1100000000, ":");
 }
 
-#undef C
-#undef CR
-#undef F
+TEST_CASE("Writing zero coordinate into string") {
+    std::string buffer;
+    osmium::detail::append_location_coordinate_to_string(std::back_inserter(buffer), 0);
+    REQUIRE(buffer == "0");
+}
 
-#define CW(v, s) buffer.clear(); \
-                 osmium::detail::append_location_coordinate_to_string(std::back_inserter(buffer), v); \
-                 CHECK(buffer == s); \
-                 buffer.clear(); \
-                 osmium::detail::append_location_coordinate_to_string(std::back_inserter(buffer), -v); \
-                 CHECK(buffer == "-" s);
-
-TEST_CASE("Writing coordinates into string") {
+void CW(long v, const char* s) {
     std::string buffer;
 
-    osmium::detail::append_location_coordinate_to_string(std::back_inserter(buffer), 0);
-    CHECK(buffer == "0");
+    osmium::detail::append_location_coordinate_to_string(std::back_inserter(buffer), v);
+    REQUIRE(buffer == s);
+    buffer.clear();
+    osmium::detail::append_location_coordinate_to_string(std::back_inserter(buffer), -v);
+    REQUIRE(buffer[0] == '-');
+    REQUIRE_FALSE(std::strcmp(buffer.c_str() + 1, s));
+}
 
+TEST_CASE("Writing coordinate into string") {
     CW(  10000000, "1");
     CW(  90000000, "9");
     CW( 100000000, "10");
@@ -337,8 +368,6 @@ TEST_CASE("Writing coordinates into string") {
     CW( 494561234, "49.4561234");
     CW(1799999999, "179.9999999");
 }
-
-#undef CW
 
 TEST_CASE("set lon/lat from string") {
     osmium::Location loc;

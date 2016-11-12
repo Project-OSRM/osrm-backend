@@ -617,7 +617,7 @@ namespace osmium {
 
             template <typename TBuilder, typename... TArgs>
             inline void add_user(TBuilder& builder, const TArgs&... args) {
-                builder.add_user(get_user(args...));
+                builder.set_user(get_user(args...));
             }
 
             // ==============================================================
@@ -761,11 +761,13 @@ namespace osmium {
             static_assert(sizeof...(args) > 0, "add_node() must have buffer and at least one additional argument");
             static_assert(detail::are_all_handled_by<detail::any_node_handlers, TArgs...>::value, "Attribute not allowed in add_node()");
 
-            NodeBuilder builder(buffer);
+            {
+                NodeBuilder builder(buffer);
 
-            detail::add_basic<detail::node_handler>(builder, args...);
-            detail::add_user(builder, args...);
-            detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
+                detail::add_basic<detail::node_handler>(builder, args...);
+                detail::add_user(builder, args...);
+                detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
+            }
 
             return buffer.commit();
         }
@@ -782,12 +784,14 @@ namespace osmium {
             static_assert(sizeof...(args) > 0, "add_way() must have buffer and at least one additional argument");
             static_assert(detail::are_all_handled_by<detail::any_way_handlers, TArgs...>::value, "Attribute not allowed in add_way()");
 
-            WayBuilder builder(buffer);
+            {
+                WayBuilder builder(buffer);
 
-            detail::add_basic<detail::object_handler>(builder, args...);
-            detail::add_user(builder, args...);
-            detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
-            detail::add_list<WayNodeListBuilder, detail::nodes_handler>(builder, args...);
+                detail::add_basic<detail::object_handler>(builder, args...);
+                detail::add_user(builder, args...);
+                detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
+                detail::add_list<WayNodeListBuilder, detail::nodes_handler>(builder, args...);
+            }
 
             return buffer.commit();
         }
@@ -804,12 +808,14 @@ namespace osmium {
             static_assert(sizeof...(args) > 0, "add_relation() must have buffer and at least one additional argument");
             static_assert(detail::are_all_handled_by<detail::any_relation_handlers, TArgs...>::value, "Attribute not allowed in add_relation()");
 
-            RelationBuilder builder(buffer);
+            {
+                RelationBuilder builder(buffer);
 
-            detail::add_basic<detail::object_handler>(builder, args...);
-            detail::add_user(builder, args...);
-            detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
-            detail::add_list<RelationMemberListBuilder, detail::members_handler>(builder, args...);
+                detail::add_basic<detail::object_handler>(builder, args...);
+                detail::add_user(builder, args...);
+                detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
+                detail::add_list<RelationMemberListBuilder, detail::members_handler>(builder, args...);
+            }
 
             return buffer.commit();
         }
@@ -826,12 +832,14 @@ namespace osmium {
             static_assert(sizeof...(args) > 0, "add_changeset() must have buffer and at least one additional argument");
             static_assert(detail::are_all_handled_by<detail::any_changeset_handlers, TArgs...>::value, "Attribute not allowed in add_changeset()");
 
-            ChangesetBuilder builder(buffer);
+            {
+                ChangesetBuilder builder(buffer);
 
-            detail::add_basic<detail::changeset_handler>(builder, args...);
-            detail::add_user(builder, args...);
-            detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
-            detail::add_list<ChangesetDiscussionBuilder, detail::discussion_handler>(builder, args...);
+                detail::add_basic<detail::changeset_handler>(builder, args...);
+                detail::add_user(builder, args...);
+                detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
+                detail::add_list<ChangesetDiscussionBuilder, detail::discussion_handler>(builder, args...);
+            }
 
             return buffer.commit();
         }
@@ -848,15 +856,17 @@ namespace osmium {
             static_assert(sizeof...(args) > 0, "add_area() must have buffer and at least one additional argument");
             static_assert(detail::are_all_handled_by<detail::any_area_handlers, TArgs...>::value, "Attribute not allowed in add_area()");
 
-            AreaBuilder builder(buffer);
+            {
+                AreaBuilder builder(buffer);
 
-            detail::add_basic<detail::object_handler>(builder, args...);
-            detail::add_user(builder, args...);
-            detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
+                detail::add_basic<detail::object_handler>(builder, args...);
+                detail::add_user(builder, args...);
+                detail::add_list<TagListBuilder, detail::tags_handler>(builder, args...);
 
-            (void)std::initializer_list<int>{
-                (detail::ring_handler::set_value(builder, args), 0)...
-            };
+                (void)std::initializer_list<int>{
+                    (detail::ring_handler::set_value(builder, args), 0)...
+                };
+            }
 
             return buffer.commit();
         }

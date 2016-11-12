@@ -6,7 +6,7 @@
 using namespace osmium::builder::attr;
 
 inline const osmium::WayNodeList& create_test_wnl_okay(osmium::memory::Buffer& buffer) {
-    auto pos = osmium::builder::add_way_node_list(buffer, _nodes({
+    const auto pos = osmium::builder::add_way_node_list(buffer, _nodes({
         {1, {3.2, 4.2}},
         {3, {3.5, 4.7}},
         {4, {3.5, 4.7}},
@@ -25,7 +25,7 @@ inline const osmium::WayNodeList& create_test_wnl_empty(osmium::memory::Buffer& 
 }
 
 inline const osmium::WayNodeList& create_test_wnl_same_location(osmium::memory::Buffer& buffer) {
-    auto pos = osmium::builder::add_way_node_list(buffer, _nodes({
+    const auto pos = osmium::builder::add_way_node_list(buffer, _nodes({
         {1, {3.5, 4.7}},
         {2, {3.5, 4.7}}
     }));
@@ -34,7 +34,7 @@ inline const osmium::WayNodeList& create_test_wnl_same_location(osmium::memory::
 }
 
 inline const osmium::WayNodeList& create_test_wnl_undefined_location(osmium::memory::Buffer& buffer) {
-    auto pos = osmium::builder::add_way_node_list(buffer, _nodes({
+    const auto pos = osmium::builder::add_way_node_list(buffer, _nodes({
         {1, {3.5, 4.7}},
         {2, osmium::Location()}
     }));

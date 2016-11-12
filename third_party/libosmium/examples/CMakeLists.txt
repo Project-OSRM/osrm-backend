@@ -10,18 +10,20 @@ message(STATUS "Configuring examples")
 
 set(EXAMPLES
     area_test
+    change_tags
     convert
     count
+    create_pois
     debug
+    dump_internal
     filter_discussions
-    index
+    index_lookup
     location_cache_create
     location_cache_use
     pub_names
     read
     read_with_progress
     road_length
-    serdump
     tiles
     CACHE STRING "Example programs"
 )
@@ -32,7 +34,7 @@ set(EXAMPLES
 #  Examples depending on wingetopt
 #
 #-----------------------------------------------------------------------------
-set(GETOPT_EXAMPLES area_test convert index serdump)
+set(GETOPT_EXAMPLES area_test convert index_lookup)
 if(NOT GETOPT_MISSING)
     foreach(example ${GETOPT_EXAMPLES})
         list(APPEND EXAMPLE_LIBS_${example} ${GETOPT_LIBRARY})

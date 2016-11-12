@@ -50,7 +50,8 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     namespace builder {
-        template <class T> class ObjectBuilder;
+        template <typename TDerived, typename T>
+        class OSMObjectBuilder;
     } // namespace builder
 
     /**
@@ -117,7 +118,8 @@ namespace osmium {
      */
     class Area : public OSMObject {
 
-        friend class osmium::builder::ObjectBuilder<osmium::Area>;
+        template <typename TDerived, typename T>
+        friend class osmium::builder::OSMObjectBuilder;
 
         Area() :
             OSMObject(sizeof(Area), osmium::item_type::area) {
@@ -130,6 +132,8 @@ namespace osmium {
         /**
          * Was this area created from a way? (In contrast to areas
          * created from a relation and their members.)
+         *
+         * Complexity: Constant.
          */
         bool from_way() const noexcept {
             return (positive_id() & 0x1) == 0;
@@ -137,6 +141,8 @@ namespace osmium {
 
         /**
          * Return the Id of the way or relation this area was created from.
+         *
+         * Complexity: Constant.
          */
         osmium::object_id_type orig_id() const noexcept {
             return osmium::area_id_to_object_id(id());
@@ -144,6 +150,8 @@ namespace osmium {
 
         /**
          * Count the number of outer and inner rings of this area.
+         *
+         * Complexity: Linear in the number of rings.
          *
          * @returns Pair (number outer rings, number inner rings)
          */

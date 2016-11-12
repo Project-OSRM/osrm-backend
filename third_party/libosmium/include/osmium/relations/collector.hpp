@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 #include <osmium/osm/item_type.hpp>
@@ -353,7 +354,7 @@ namespace osmium {
                         member_meta(member.type()).emplace_back(member.ref(), m_relations.size(), n);
                         relation_meta.increment_need_members();
                     } else {
-                        member.ref(0); // set member id to zero to indicate we are not interested
+                        member.set_ref(0); // set member id to zero to indicate we are not interested
                     }
                     ++n;
                 }
@@ -494,10 +495,63 @@ namespace osmium {
                 return m_members_buffer;
             }
 
+            /**
+             * Is the given member available in the members buffer?
+             *
+             * If you also need the offset of the object, use
+             * get_availability_and_offset() instead, it is more efficient
+             * that way.
+             *
+             * @param type Item type
+             * @param id Object Id
+             * @returns True if the object is available, false otherwise.
+             */
+            bool is_available(osmium::item_type type, osmium::object_id_type id) {
+                const auto range = find_member_meta(type, id);
+                assert(!range.empty());
+                return range.begin()->is_available();
+            }
+
+            /**
+             * Get offset of a member in the members buffer.
+             *
+             * @pre The member must be available. If you are not sure, call
+             *      get_availability_and_offset() instead.
+             * @param type Item type
+             * @param id Object Id
+             * @returns The offset of the object in the members buffer.
+             */
             size_t get_offset(osmium::item_type type, osmium::object_id_type id) {
                 const auto range = find_member_meta(type, id);
                 assert(!range.empty());
+                assert(range.begin()->is_available());
                 return range.begin()->buffer_offset();
+            }
+
+            /**
+             * Checks whether a member is available in the members buffer
+             * and returns its offset.
+             *
+             * If the member is not available, the boolean returned as the
+             * first element in the pair is false. In that case the offset
+             * in the second element is undefined.
+             *
+             * If the member is available, the boolean returned as the first
+             * element in the pair is true and the second element of the
+             * pair contains the offset into the members buffer.
+             *
+             * @param type Item type
+             * @param id Object Id
+             * @returns Pair of bool (showing availability) and the offset.
+             */
+            std::pair<bool, size_t> get_availability_and_offset(osmium::item_type type, osmium::object_id_type id) {
+                const auto range = find_member_meta(type, id);
+                assert(!range.empty());
+                if (range.begin()->is_available()) {
+                    return std::make_pair(true, range.begin()->buffer_offset());
+                } else {
+                    return std::make_pair(false, 0);
+                }
             }
 
             template <typename TIter>
@@ -525,7 +579,7 @@ namespace osmium {
             /**
              * Decide whether to purge removed members and then do it.
              *
-             * Currently the purging is done every thousand calls.
+             * Currently the purging is done every 10000 calls.
              * This could probably be improved upon.
              */
             void possibly_purge_removed_members() {

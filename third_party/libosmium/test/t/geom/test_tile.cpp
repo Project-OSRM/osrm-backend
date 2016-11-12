@@ -4,8 +4,6 @@
 
 #include <osmium/geom/tile.hpp>
 
-#include "helper.hpp"
-
 #include "test_tile_data.hpp"
 
 TEST_CASE("Tile from x0.0 y0.0 at zoom 0") {
