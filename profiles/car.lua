@@ -303,35 +303,17 @@ function handle_hov(way,result,cache)
   end
 end
 
--- handle squares and other areas
-function handle_area(way,result,cache)
-  -- we dont route over areas
-  local area = TagCache.get(way,cache,"area")
-  if ignore_areas and area and "yes" == area then
-    return false
-  end
-end
-
--- handle toll roads
-function handle_toll(way,result,cache)
-  -- respect user-preference for toll=yes ways
-  local toll = TagCache.get(way,cache,"toll")
-  if ignore_toll_ways and toll and "yes" == toll then
-    return false
-  end
-end
-
 -- handle various that can block access
 function handle_blocking(way,result,cache)
-  if handle_area(way,result,cache) == false then
+  -- we dont route over areas
+  local area = TagCache.get(way,cache,"area")
+  if ignore_areas and "yes" == area then
     return false
   end
   
-  if handle_hov(way,result,cache) == false then
-    return false
-  end
-  
-  if handle_toll(way,result,cache) == false then
+  -- respect user-preference for toll=yes ways
+  local toll = TagCache.get(way,cache,"toll")
+  if ignore_toll_ways and "yes" == toll then
     return false
   end
 
@@ -350,6 +332,10 @@ function handle_blocking(way,result,cache)
 
   local status = TagCache.get(way,cache,"status")
   if "impassable" == status then
+    return false
+  end
+
+  if handle_hov(way,result,cache) == false then
     return false
   end
 end
