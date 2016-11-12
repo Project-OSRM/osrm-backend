@@ -672,11 +672,6 @@ function handle_startpoint(way,result,cache)
                               result.backward_mode == mode.driving
 end
 
--- leave early if this way is not accessible
-function handle_way_type(way,result,cache)
-  if "" == TagCache.get(way,cache,"highway") then return false end
-end
-
 -- set the road classification based on guidance globals configuration
 function handle_classification(way,result,cache)
   set_classification(TagCache.get(way,cache,"highway"),result,way)
