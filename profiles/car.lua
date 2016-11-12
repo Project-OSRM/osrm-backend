@@ -211,13 +211,13 @@ end
 function node_function (node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, access_tags_hierarchy)
-  if access and access ~= "" then
+  if access and access ~= '' then
     if access_tag_blacklist[access] then
       result.barrier = true
     end
   else
     local barrier = node:get_value_by_key("barrier")
-    if barrier and "" ~= barrier then
+    if barrier and '' ~= barrier then
       --  make an exception for rising bollard barriers
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
@@ -247,7 +247,7 @@ function handle_hov(way,result,cache)
   -- respect user-preference for HOV-only ways
   if ignore_hov_ways then
     local hov = TagCache.get(way,cache,"hov")
-    if hov and "designated" == hov then
+    if "designated" == hov then
       return false
     end
 
@@ -269,18 +269,18 @@ function handle_hov(way,result,cache)
     local hov_lanes_forward = TagCache.get(way,cache,"hov:lanes:forward")
     local hov_lanes_backward = TagCache.get(way,cache,"hov:lanes:backward")
 
-    local hov_all_designated = hov_lanes and hov_lanes ~= ""
-                               and has_all_designated_hov_lanes(hov_lanes)
+    local hov_all_designated = hov_lanes and
+                               has_all_designated_hov_lanes(hov_lanes)
 
-    local hov_all_designated_forward = hov_lanes_forward and hov_lanes_forward ~= ""
-                                       and has_all_designated_hov_lanes(hov_lanes_forward)
+    local hov_all_designated_forward = hov_lanes_forward and
+                                       has_all_designated_hov_lanes(hov_lanes_forward)
 
-    local hov_all_designated_backward = hov_lanes_backward and hov_lanes_backward ~= ""
-                                        and has_all_designated_hov_lanes(hov_lanes_backward)
+    local hov_all_designated_backward = hov_lanes_backward and
+                                        has_all_designated_hov_lanes(hov_lanes_backward)
 
     -- forward/backward lane depend on a way's direction
     local oneway = TagCache.get(way,cache,"oneway")
-    local reverse = oneway and oneway == "-1"
+    local reverse = oneway == "-1"
 
     if hov_all_designated or hov_all_designated_forward then
       if reverse then
@@ -337,17 +337,17 @@ function handle_blocking(way,result,cache)
   -- do not route over these at all at the moment because of time dependence.
   -- Note: alternating (high frequency) oneways are handled below with penalty.
   local oneway = TagCache.get(way,cache,"oneway")
-  if oneway and "reversible" == oneway then
+  if "reversible" == oneway then
     return false
   end
 
   local impassable = TagCache.get(way,cache,"impassable")
-  if impassable and "yes" == impassable then
+  if "yes" == impassable then
     return false
   end
 
   local status = TagCache.get(way,cache,"status")
-  if status and "impassable" == status then
+  if "impassable" == status then
     return false
   end
 end
@@ -359,9 +359,9 @@ function handle_default_mode(way,result,cache)
 end
 
 -- check accessibility by traversing our acces tag hierarchy
-function handle_access(way,result,cache)
-  access = find_access_tag(way, access_tags_hierarchy)
-  if access_tag_blacklist[access] then
+function handle_access(way,result,cache,data)
+  data.access = find_access_tag(way, access_tags_hierarchy)
+  if access_tag_blacklist[data.access] then
     return false
   end
 end
@@ -400,7 +400,7 @@ function handle_movables(way,result,cache)
 end
 
 -- handle speed (excluding maxspeed)
-function handle_speed(way,result,cache)
+function handle_speed(way,result,cache,data)
   if result.forward_speed == -1 then
     local highway_speed = speed_profile[TagCache.get(way,cache,"highway")]
     local max_speed = parse_maxspeed( TagCache.get(way,cache,"maxspeed") )
@@ -416,7 +416,7 @@ function handle_speed(way,result,cache)
       end
     else
       -- Set the avg speed on ways that are marked accessible
-      if access_tag_whitelist[access] then
+      if access_tag_whitelist[data.access] then
         result.forward_speed = speed_profile["default"]
         result.backward_speed = speed_profile["default"]
       end
@@ -492,20 +492,20 @@ end
 
 -- handle turn lanes
 function handle_turn_lanes(way,result,cache)
-  local turn_lanes = ""
-  local turn_lanes_forward = ""
-  local turn_lanes_backward = ""
+  local turn_lanes = ''
+  local turn_lanes_forward = ''
+  local turn_lanes_backward = ''
 
   turn_lanes, turn_lanes_forward, turn_lanes_backward = get_turn_lanes(way)
-  if turn_lanes and turn_lanes ~= "" then
+  if turn_lanes and turn_lanes ~= '' then
     result.turn_lanes_forward = turn_lanes;
     result.turn_lanes_backward = turn_lanes;
   else
-    if turn_lanes_forward and turn_lanes_forward ~= ""  then
+    if turn_lanes_forward and turn_lanes_forward ~= ''  then
       result.turn_lanes_forward = turn_lanes_forward;
     end
 
-    if turn_lanes_backward and turn_lanes_backward ~= "" then
+    if turn_lanes_backward and turn_lanes_backward ~= '' then
       result.turn_lanes_backward = turn_lanes_backward;
     end
   end
@@ -519,8 +519,8 @@ function handle_junctions(way,result,cache)
 end
 
 -- Set access restriction flag if access is allowed under certain restrictions only
-function handle_restricted(way,result,cache)
-  if access ~= "" and access_tag_restricted[access] then
+function handle_restricted(way,result,cache,data)
+  if data.access and access_tag_restricted[data.access] then
     result.is_access_restricted = true
   end
 end
@@ -566,7 +566,7 @@ function handle_speed_scaling(way,result,cache)
   if result.forward_speed > 0 then
     local scaled_speed = result.forward_speed * speed_reduction
     local penalized_speed = math.huge
-    if service and service ~= "" and service_speeds[service] then
+    if service and service_speeds[service] then
       penalized_speed = service_speeds[service]
     elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
       penalized_speed = result.forward_speed / 2
@@ -577,7 +577,7 @@ function handle_speed_scaling(way,result,cache)
   if result.backward_speed > 0 then
     local scaled_speed = result.backward_speed * speed_reduction
     local penalized_speed = math.huge
-    if service and service ~= "" and service_speeds[service]then
+    if service and service_speeds[service]then
       penalized_speed = service_speeds[service]
     elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
       penalized_speed = result.backward_speed / 2
@@ -680,34 +680,31 @@ end
 -- main entry point for processsing a way
 function way_function(way, result)
   
-  -- define a table that we can pass around to helper functions
-  -- so they have access to the input/output objects.
+  -- local cache of tags, to reduce calls into C++
+  local cache = {}
   
-  -- we also use a table as a local cache of tags, to avoid calling
-  -- into C++ more than once for each tag, without having to
-  -- pass lists of already fetches tags around.
-
-  cache = {}
+  -- table of temporary values, e.g. computed access status
+  local data = {}
   
   -- perform each procesing step sequentially.
   -- most steps can abort processing, meaning the way
   -- is not routable  
   
   if handle_initial_check(way,result,cache) == false then return end
-  if handle_default_mode(way,result,cache) == false then return end--
+  if handle_default_mode(way,result,cache) == false then return end
   if handle_blocking(way,result,cache) == false then return end
-  if handle_access(way,result,cache) == false then return end
-  if handle_ferries(way,result,cache) == false then return end--
-  if handle_movables(way,result,cache) == false then return end--
+  if handle_access(way,result,cache,data) == false then return end
+  if handle_ferries(way,result,cache) == false then return end
+  if handle_movables(way,result,cache) == false then return end
   if handle_service(way,result,cache) == false then return end
-  if handle_oneway(way,result,cache) == false then return end--
-  if handle_speed(way,result,cache) == false then return end
-  if handle_turn_lanes(way,result,cache) == false then return end--
-  if handle_junctions(way,result,cache) == false then return end--
-  if handle_startpoint(way,result,cache) == false then return end--
-  if handle_restricted(way,result,cache) == false then return end--
-  if handle_classification(way,result,cache) == false then return end--
-  if handle_names(way,result,cache) == false then return end--
+  if handle_oneway(way,result,cache) == false then return end
+  if handle_speed(way,result,cache,data) == false then return end
+  if handle_turn_lanes(way,result,cache) == false then return end
+  if handle_junctions(way,result,cache) == false then return end
+  if handle_startpoint(way,result,cache) == false then return end
+  if handle_restricted(way,result,cache,data) == false then return end
+  if handle_classification(way,result,cache) == false then return end
+  if handle_names(way,result,cache) == false then return end
 end
 
 function turn_function (angle)
