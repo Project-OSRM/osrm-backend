@@ -371,31 +371,37 @@ end
 -- handling ferries and piers
 function handle_ferries(way,result,cache)
   local route = TagCache.get(way,cache,"route")
-  local route_speed = speed_profile[route]
-  if (route_speed and route_speed > 0) then
-   local duration  = TagCache.get(way,cache,"duration")
-   if duration and durationIsValid(duration) then
-     result.duration = max( parseDuration(duration), 1 )
-   end
-   result.forward_mode = mode.ferry
-   result.backward_mode = mode.ferry
-   result.forward_speed = route_speed
-   result.backward_speed = route_speed
+  if route then
+    local route_speed = speed_profile[route]
+    if route_speed and route_speed > 0 then
+     local duration  = TagCache.get(way,cache,"duration")
+     if duration and durationIsValid(duration) then
+       result.duration = max( parseDuration(duration), 1 )
+     end
+     result.forward_mode = mode.ferry
+     result.backward_mode = mode.ferry
+     result.forward_speed = route_speed
+     result.backward_speed = route_speed
+    end
   end
 end
 
 -- handling movable bridges
 function handle_movables(way,result,cache)
   local bridge = TagCache.get(way,cache,"bridge")
-  local bridge_speed = speed_profile[bridge]
-  local capacity_car = TagCache.get(way,cache,"capacity:car")
-  if (bridge_speed and bridge_speed > 0) and (capacity_car ~= 0) then
-    local duration  = TagCache.get(way,cache,"duration")
-    if duration and durationIsValid(duration) then
-      result.duration = max( parseDuration(duration), 1 )
+  if bridge then
+    local bridge_speed = speed_profile[bridge]
+    if bridge_speed and bridge_speed > 0 then
+      local capacity_car = TagCache.get(way,cache,"capacity:car")
+      if capacity_car ~= 0 then
+        local duration  = TagCache.get(way,cache,"duration")
+        if duration and durationIsValid(duration) then
+          result.duration = max( parseDuration(duration), 1 )
+        end
+        result.forward_speed = bridge_speed
+        result.backward_speed = bridge_speed
+      end
     end
-    result.forward_speed = bridge_speed
-    result.backward_speed = bridge_speed
   end
 end
 
