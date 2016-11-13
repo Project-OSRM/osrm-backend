@@ -4,8 +4,6 @@ local get_destination = require("lib/destination").get_destination
 local set_classification = require("lib/guidance").set_classification
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
 
-require("lib/tag_cache")
-
 -- Begin of globals
 barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
 access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
@@ -211,13 +209,13 @@ end
 function node_function (node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, access_tags_hierarchy)
-  if access and access ~= '' then
+  if access then
     if access_tag_blacklist[access] then
       result.barrier = true
     end
   else
     local barrier = node:get_value_by_key("barrier")
-    if barrier and '' ~= barrier then
+    if barrier then
       --  make an exception for rising bollard barriers
       local bollard = node:get_value_by_key("bollard")
       local rising_bollard = bollard and "rising" == bollard
@@ -230,25 +228,25 @@ function node_function (node, result)
 
   -- check if node is a traffic light
   local tag = node:get_value_by_key("highway")
-  if tag and "traffic_signals" == tag then
+  if "traffic_signals" == tag then
     result.traffic_lights = true
   end
 end
 
 -- abort early if this way is obviouslt not routable
-function handle_initial_check(way,result,cache,data)
-  data.speed_type = TagCache.get(way,cache,'highway')
+function handle_initial_check(way,result,data)
+  data.speed_type = way:get_value_by_key('highway')
 
   return data.speed_type ~= nil or
-         TagCache.get(way,cache,'route') ~= nil or
-         TagCache.get(way,cache,'bridge') ~= nil
+         way:get_value_by_key('route') ~= nil or
+         way:get_value_by_key('bridge') ~= nil
 end
 
 -- handle high occupancy vehicle tags
-function handle_hov(way,result,cache)
+function handle_hov(way,result)
   -- respect user-preference for HOV-only ways
   if ignore_hov_ways then
-    local hov = TagCache.get(way,cache,"hov")
+    local hov = way:get_value_by_key("hov")
     if "designated" == hov then
       return false
     end
@@ -267,9 +265,9 @@ function handle_hov(way,result,cache)
       return all
     end
 
-    local hov_lanes = TagCache.get(way,cache,"hov:lanes")
-    local hov_lanes_forward = TagCache.get(way,cache,"hov:lanes:forward")
-    local hov_lanes_backward = TagCache.get(way,cache,"hov:lanes:backward")
+    local hov_lanes = way:get_value_by_key("hov:lanes")
+    local hov_lanes_forward = way:get_value_by_key("hov:lanes:forward")
+    local hov_lanes_backward = way:get_value_by_key("hov:lanes:backward")
 
     local hov_all_designated = hov_lanes and
                                has_all_designated_hov_lanes(hov_lanes)
@@ -281,7 +279,7 @@ function handle_hov(way,result,cache)
                                         has_all_designated_hov_lanes(hov_lanes_backward)
 
     -- forward/backward lane depend on a way's direction
-    local oneway = TagCache.get(way,cache,"oneway")
+    local oneway = way:get_value_by_key("oneway")
     local reverse = oneway == "-1"
 
     if hov_all_designated or hov_all_designated_forward then
@@ -304,15 +302,15 @@ function handle_hov(way,result,cache)
 end
 
 -- handle various that can block access
-function handle_blocking(way,result,cache)
+function handle_blocking(way,result)
   -- we dont route over areas
-  local area = TagCache.get(way,cache,"area")
+  local area = way:get_value_by_key("area")
   if ignore_areas and "yes" == area then
     return false
   end
   
   -- respect user-preference for toll=yes ways
-  local toll = TagCache.get(way,cache,"toll")
+  local toll = way:get_value_by_key("toll")
   if ignore_toll_ways and "yes" == toll then
     return false
   end
@@ -320,30 +318,30 @@ function handle_blocking(way,result,cache)
   -- Reversible oneways change direction with low frequency (think twice a day):
   -- do not route over these at all at the moment because of time dependence.
   -- Note: alternating (high frequency) oneways are handled below with penalty.
-  local oneway = TagCache.get(way,cache,"oneway")
+  local oneway = way:get_value_by_key("oneway")
   if "reversible" == oneway then
     return false
   end
 
-  local impassable = TagCache.get(way,cache,"impassable")
+  local impassable = way:get_value_by_key("impassable")
   if "yes" == impassable then
     return false
   end
 
-  local status = TagCache.get(way,cache,"status")
+  local status = way:get_value_by_key("status")
   if "impassable" == status then
     return false
   end
 end
 
 -- set default mode
-function handle_default_mode(way,result,cache)
+function handle_default_mode(way,result)
   result.forward_mode = mode.driving
   result.backward_mode = mode.driving
 end
 
 -- check accessibility by traversing our acces tag hierarchy
-function handle_access(way,result,cache,data)
+function handle_access(way,result,data)
   data.access = find_access_tag(way, access_tags_hierarchy)
   if access_tag_blacklist[data.access] then
     return false
@@ -351,12 +349,12 @@ function handle_access(way,result,cache,data)
 end
 
 -- handling ferries and piers
-function handle_ferries(way,result,cache)
-  local route = TagCache.get(way,cache,"route")
+function handle_ferries(way,result)
+  local route = way:get_value_by_key("route")
   if route then
     local route_speed = speed_profile[route]
     if route_speed and route_speed > 0 then
-     local duration  = TagCache.get(way,cache,"duration")
+     local duration  = way:get_value_by_key("duration")
      if duration and durationIsValid(duration) then
        result.duration = max( parseDuration(duration), 1 )
      end
@@ -369,14 +367,14 @@ function handle_ferries(way,result,cache)
 end
 
 -- handling movable bridges
-function handle_movables(way,result,cache)
-  local bridge = TagCache.get(way,cache,"bridge")
+function handle_movables(way,result)
+  local bridge = way:get_value_by_key("bridge")
   if bridge then
     local bridge_speed = speed_profile[bridge]
     if bridge_speed and bridge_speed > 0 then
-      local capacity_car = TagCache.get(way,cache,"capacity:car")
+      local capacity_car = way:get_value_by_key("capacity:car")
       if capacity_car ~= 0 then
-        local duration  = TagCache.get(way,cache,"duration")
+        local duration  = way:get_value_by_key("duration")
         if duration and durationIsValid(duration) then
           result.duration = max( parseDuration(duration), 1 )
         end
@@ -388,10 +386,10 @@ function handle_movables(way,result,cache)
 end
 
 -- handle speed (excluding maxspeed)
-function handle_speed(way,result,cache,data)
+function handle_speed(way,result,data)
   if result.forward_speed == -1 then
-    local highway_speed = speed_profile[TagCache.get(way,cache,"highway")]
-    local max_speed = parse_maxspeed( TagCache.get(way,cache,"maxspeed") )
+    local highway_speed = speed_profile[way:get_value_by_key("highway")]
+    local max_speed = parse_maxspeed( way:get_value_by_key("maxspeed") )
     -- Set the avg speed on the way if it is accessible by road class
     if highway_speed then
       if max_speed and max_speed > highway_speed then
@@ -420,16 +418,16 @@ function handle_speed(way,result,cache,data)
     return false
   end
   
-  if handle_side_roads(way,result,cache) == false then return false end
-  if handle_surface(way,result,cache) == false then return false end
-  if handle_maxspeed(way,result,cache) == false then return false end
-  if handle_speed_scaling(way,result,cache) == false then return false end
-  if handle_alternating_speed(way,result,cache) == false then return false end
+  if handle_side_roads(way,result) == false then return false end
+  if handle_surface(way,result) == false then return false end
+  if handle_maxspeed(way,result) == false then return false end
+  if handle_speed_scaling(way,result) == false then return false end
+  if handle_alternating_speed(way,result) == false then return false end
 end
 
 -- reduce speed on special side roads
-function handle_side_roads(way,result,cache)  
-  local sideway = TagCache.get(way,cache,"side_road")
+function handle_side_roads(way,result)  
+  local sideway = way:get_value_by_key("side_road")
   if "yes" == sideway or
   "rotary" == sideway then
     result.forward_speed = result.forward_speed * side_road_speed_multiplier
@@ -438,10 +436,10 @@ function handle_side_roads(way,result,cache)
 end
 
 -- reduce speed on bad surfaces
-function handle_surface(way,result,cache)
-  local surface = TagCache.get(way,cache,"surface")
-  local tracktype = TagCache.get(way,cache,"tracktype")
-  local smoothness = TagCache.get(way,cache,"smoothness")
+function handle_surface(way,result)
+  local surface = way:get_value_by_key("surface")
+  local tracktype = way:get_value_by_key("tracktype")
+  local smoothness = way:get_value_by_key("smoothness")
 
   if surface and surface_speeds[surface] then
     result.forward_speed = math.min(surface_speeds[surface], result.forward_speed)
@@ -458,11 +456,11 @@ function handle_surface(way,result,cache)
 end
 
 -- handles name, including ref and pronunciation
-function handle_names(way,result,cache)
+function handle_names(way,result)
   -- parse the remaining tags
-  local name = TagCache.get(way,cache,"name")
-  local pronunciation = TagCache.get(way,cache,"name:pronunciation")
-  local ref = TagCache.get(way,cache,"ref")
+  local name = way:get_value_by_key("name")
+  local pronunciation = way:get_value_by_key("name:pronunciation")
+  local ref = way:get_value_by_key("ref")
 
   -- Set the name that will be used for instructions
   if name then
@@ -479,7 +477,7 @@ function handle_names(way,result,cache)
 end
 
 -- handle turn lanes
-function handle_turn_lanes(way,result,cache)
+function handle_turn_lanes(way,result)
   local turn_lanes = ''
   local turn_lanes_forward = ''
   local turn_lanes_backward = ''
@@ -500,22 +498,22 @@ function handle_turn_lanes(way,result,cache)
 end
 
 -- junctions
-function handle_junctions(way,result,cache)
-  if TagCache.get(way,cache,"junction") == "roundabout" then
+function handle_junctions(way,result)
+  if way:get_value_by_key("junction") == "roundabout" then
     result.roundabout = true
   end
 end
 
 -- Set access restriction flag if access is allowed under certain restrictions only
-function handle_restricted(way,result,cache,data)
+function handle_restricted(way,result,data)
   if data.access and access_tag_restricted[data.access] then
     result.is_access_restricted = true
   end
 end
 
 -- service roads
-function handle_service(way,result,cache)
-  local service = TagCache.get(way,cache,"service")
+function handle_service(way,result)
+  local service = way:get_value_by_key("service")
   if service then
     -- Set access restriction flag if service is allowed under certain restrictions only
     if service_tag_restricted[service] then
@@ -532,16 +530,16 @@ function handle_service(way,result,cache)
 end
 
 -- scale speeds to get better average driving times
-function handle_speed_scaling(way,result,cache)
+function handle_speed_scaling(way,result)
   local width = math.huge
   local lanes = math.huge
   if result.forward_speed > 0 or result.backward_speed > 0 then
-    local width_string = TagCache.get(way,cache,"width")
+    local width_string = way:get_value_by_key("width")
     if width_string and tonumber(width_string:match("%d*")) then
       width = tonumber(width_string:match("%d*"))
     end
 
-    local lanes_string = TagCache.get(way,cache,"lanes")
+    local lanes_string = way:get_value_by_key("lanes")
     if lanes_string and tonumber(lanes_string:match("%d*")) then
       lanes = tonumber(lanes_string:match("%d*"))
     end
@@ -550,7 +548,7 @@ function handle_speed_scaling(way,result,cache)
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and 
                            result.backward_mode ~= mode.inaccessible
 
-  local service = TagCache.get(way,cache,"service")
+  local service = way:get_value_by_key("service")
   if result.forward_speed > 0 then
     local scaled_speed = result.forward_speed * speed_reduction
     local penalized_speed = math.huge
@@ -575,8 +573,8 @@ function handle_speed_scaling(way,result,cache)
 end
 
 -- oneways
-function handle_oneway(way,result,cache)
-  local oneway = TagCache.get(way,cache,"oneway")
+function handle_oneway(way,result)
+  local oneway = way:get_value_by_key("oneway")
   if obey_oneway then
     if oneway == "-1" then
       result.forward_mode = mode.inaccessible
@@ -587,8 +585,8 @@ function handle_oneway(way,result,cache)
     elseif oneway == "yes" or
            oneway == "1" or
            oneway == "true" or
-           TagCache.get(way,cache,"junction") == "roundabout" or
-           (TagCache.get(way,cache,"highway") == "motorway" and oneway ~= "no") then
+           way:get_value_by_key("junction") == "roundabout" or
+           (way:get_value_by_key("highway") == "motorway" and oneway ~= "no") then
 
       result.backward_mode = mode.inaccessible
 
@@ -600,10 +598,10 @@ function handle_oneway(way,result,cache)
 end
 
 -- maxspeed and advisory maxspeed
-function handle_maxspeed(way,result,cache)
+function handle_maxspeed(way,result)
   -- Override speed settings if explicit forward/backward maxspeeds are given
-  local maxspeed_forward = parse_maxspeed(TagCache.get(way,cache,"maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(TagCache.get(way,cache,"maxspeed:backward"))
+  local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward"))
+  local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward"))
   if maxspeed_forward and maxspeed_forward > 0 then
     if mode.inaccessible ~= result.forward_mode and 
        mode.inaccessible ~= result.backward_mode then
@@ -616,9 +614,9 @@ function handle_maxspeed(way,result,cache)
   end
 
   -- Override speed settings if advisory forward/backward maxspeeds are given
-  local advisory_speed = parse_maxspeed(TagCache.get(way,cache,"maxspeed:advisory"))
-  local advisory_forward = parse_maxspeed(TagCache.get(way,cache,"maxspeed:advisory:forward"))
-  local advisory_backward = parse_maxspeed(TagCache.get(way,cache,"maxspeed:advisory:backward"))
+  local advisory_speed = parse_maxspeed(way:get_value_by_key("maxspeed:advisory"))
+  local advisory_forward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:forward"))
+  local advisory_backward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:backward"))
   -- apply bi-directional advisory speed first
   if advisory_speed and advisory_speed > 0 then
     if mode.inaccessible ~= result.forward_mode then
@@ -641,8 +639,8 @@ end
 
 -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
 -- Scaling speed to take average waiting time into account plus some more for start / stop.
-function handle_alternating_speed(way,result,cache)
-  if "alternating" == TagCache.get(way,cache,'oneway') then
+function handle_alternating_speed(way,result)
+  if "alternating" == way:get_value_by_key('oneway') then
     local scaling_factor = 0.4
     if result.forward_speed ~= math.huge then
       result.forward_speed = result.forward_speed * scaling_factor
@@ -654,23 +652,19 @@ function handle_alternating_speed(way,result,cache)
 end
 
 -- determine if this way can be used as a start/end point for routing
-function handle_startpoint(way,result,cache)
+function handle_startpoint(way,result)
   -- only allow this road as start point if it not a ferry
   result.is_startpoint = result.forward_mode == mode.driving or 
                               result.backward_mode == mode.driving
 end
 
 -- set the road classification based on guidance globals configuration
-function handle_classification(way,result,cache)
-  set_classification(TagCache.get(way,cache,"highway"),result,way)
+function handle_classification(way,result)
+  set_classification(way:get_value_by_key("highway"),result,way)
 end
 
 -- main entry point for processsing a way
 function way_function(way, result)
-  
-  -- local cache of tags, to reduce calls into C++
-  local cache = {}
-  
   -- table of temporary values, e.g. computed access status
   local data = {}
   
@@ -678,22 +672,22 @@ function way_function(way, result)
   -- most steps can abort processing, meaning the way
   -- is not routable  
   
-  if handle_initial_check(way,result,cache,data) == false then return end
-  if handle_default_mode(way,result,cache) == false then return end
-  if handle_blocking(way,result,cache) == false then return end
-  if handle_access(way,result,cache,data) == false then return end
-  if handle_hov(way,result,cache) == false then return false end
-  if handle_ferries(way,result,cache) == false then return end
-  if handle_movables(way,result,cache) == false then return end
-  if handle_service(way,result,cache) == false then return end
-  if handle_oneway(way,result,cache) == false then return end
-  if handle_speed(way,result,cache,data) == false then return end
-  if handle_turn_lanes(way,result,cache) == false then return end
-  if handle_junctions(way,result,cache) == false then return end
-  if handle_startpoint(way,result,cache) == false then return end
-  if handle_restricted(way,result,cache,data) == false then return end
-  if handle_classification(way,result,cache) == false then return end
-  if handle_names(way,result,cache) == false then return end
+  if handle_initial_check(way,result,data) == false then return end
+  if handle_default_mode(way,result) == false then return end
+  if handle_blocking(way,result) == false then return end
+  if handle_access(way,result,data) == false then return end
+  if handle_hov(way,result) == false then return false end
+  if handle_ferries(way,result) == false then return end
+  if handle_movables(way,result) == false then return end
+  if handle_service(way,result) == false then return end
+  if handle_oneway(way,result) == false then return end
+  if handle_speed(way,result,data) == false then return end
+  if handle_turn_lanes(way,result) == false then return end
+  if handle_junctions(way,result) == false then return end
+  if handle_startpoint(way,result) == false then return end
+  if handle_restricted(way,result,data) == false then return end
+  if handle_classification(way,result) == false then return end
+  if handle_names(way,result) == false then return end
 end
 
 function turn_function (angle)
