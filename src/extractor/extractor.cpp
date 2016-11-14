@@ -44,6 +44,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <numeric> //partial_sum
 #include <thread>
@@ -409,33 +410,29 @@ std::shared_ptr<RestrictionMap> Extractor::LoadRestrictionMap()
   \brief Load node based graph from .osrm file
   */
 std::shared_ptr<util::NodeBasedDynamicGraph>
-Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
-                              std::unordered_set<NodeID> &traffic_lights,
+Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
+                              std::unordered_set<NodeID> &traffic_signals,
                               std::vector<QueryNode> &internal_to_external_node_map)
 {
-    std::vector<NodeBasedEdge> edge_list;
+    boost::filesystem::ifstream stream(config.output_file_name, std::ios::binary);
 
-    boost::filesystem::ifstream input_stream(config.output_file_name,
-                                             std::ios::in | std::ios::binary);
+    if (!stream)
+    {
+        throw util::exception("Unable to open " + config.output_file_name +
+                              " trying to read the node based graph");
+    }
 
-    std::vector<NodeID> barrier_list;
-    std::vector<NodeID> traffic_light_list;
+    auto barriers_iter = inserter(barriers, end(barriers));
+    auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
+
     NodeID number_of_node_based_nodes = util::loadNodesFromFile(
-        input_stream, barrier_list, traffic_light_list, internal_to_external_node_map);
+        stream, barriers_iter, traffic_signals_iter, internal_to_external_node_map);
 
-    util::SimpleLogger().Write() << " - " << barrier_list.size() << " bollard nodes, "
-                                 << traffic_light_list.size() << " traffic lights";
+    util::SimpleLogger().Write() << " - " << barriers.size() << " bollard nodes, "
+                                 << traffic_signals.size() << " traffic lights";
 
-    // insert into unordered sets for fast lookup
-    barrier_nodes.insert(barrier_list.begin(), barrier_list.end());
-    traffic_lights.insert(traffic_light_list.begin(), traffic_light_list.end());
-
-    barrier_list.clear();
-    barrier_list.shrink_to_fit();
-    traffic_light_list.clear();
-    traffic_light_list.shrink_to_fit();
-
-    util::loadEdgesFromFile(input_stream, edge_list);
+    std::vector<NodeBasedEdge> edge_list;
+    util::loadEdgesFromFile(stream, edge_list);
 
     if (edge_list.empty())
     {

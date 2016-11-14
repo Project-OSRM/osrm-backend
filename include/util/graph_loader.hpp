@@ -20,6 +20,7 @@
 
 #include <fstream>
 #include <ios>
+#include <unordered_set>
 #include <vector>
 
 namespace osrm
@@ -58,14 +59,15 @@ inline unsigned loadRestrictionsFromFile(std::istream &input_stream,
 
 /**
  * Reads the beginning of an .osrm file and produces:
- *  - list of barrier nodes
- *  - list of traffic lights
+ *  - barrier nodes
+ *  - traffic lights
  *  - nodes indexed by their internal (non-osm) id
  */
-inline NodeID loadNodesFromFile(std::istream &input_stream,
-                                std::vector<NodeID> &barrier_node_list,
-                                std::vector<NodeID> &traffic_light_node_list,
-                                std::vector<extractor::QueryNode> &node_array)
+template <typename BarrierOutIter, typename TrafficSignalsOutIter>
+NodeID loadNodesFromFile(std::istream &input_stream,
+                         BarrierOutIter barriers,
+                         TrafficSignalsOutIter traffic_signals,
+                         std::vector<extractor::QueryNode> &node_array)
 {
     const FingerPrint fingerprint_valid = FingerPrint::GetValid();
     FingerPrint fingerprint_loaded;
@@ -89,19 +91,19 @@ inline NodeID loadNodesFromFile(std::istream &input_stream,
         input_stream.read(reinterpret_cast<char *>(&current_node),
                           sizeof(extractor::ExternalMemoryNode));
         node_array.emplace_back(current_node.lon, current_node.lat, current_node.node_id);
+
         if (current_node.barrier)
         {
-            barrier_node_list.emplace_back(i);
+            *barriers = i;
+            ++barriers;
         }
+
         if (current_node.traffic_lights)
         {
-            traffic_light_node_list.emplace_back(i);
+            *traffic_signals = i;
+            ++traffic_signals;
         }
     }
-
-    // tighten vector sizes
-    barrier_node_list.shrink_to_fit();
-    traffic_light_node_list.shrink_to_fit();
 
     return n;
 }

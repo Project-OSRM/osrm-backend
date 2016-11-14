@@ -9,6 +9,7 @@
 #include "util/typedefs.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/function_output_iterator.hpp>
 
 #if defined(__APPLE__) || defined(_WIN32)
 #include <gdal.h>
@@ -53,24 +54,20 @@ std::size_t loadGraph(const char *path,
                       std::vector<extractor::QueryNode> &coordinate_list,
                       std::vector<TarjanEdge> &graph_edge_list)
 {
-    std::ifstream input_stream(path, std::ifstream::in | std::ifstream::binary);
-    if (!input_stream.is_open())
+    std::ifstream stream(path, std::ifstream::binary);
+    if (!stream)
     {
         throw util::exception("Cannot open osrm file");
     }
 
     // load graph data
     std::vector<extractor::NodeBasedEdge> edge_list;
-    std::vector<NodeID> traffic_light_node_list;
-    std::vector<NodeID> barrier_node_list;
 
-    auto number_of_nodes = util::loadNodesFromFile(
-        input_stream, barrier_node_list, traffic_light_node_list, coordinate_list);
+    auto nop = boost::make_function_output_iterator([](auto) {});
 
-    util::loadEdgesFromFile(input_stream, edge_list);
+    auto number_of_nodes = util::loadNodesFromFile(stream, nop, nop, coordinate_list);
 
-    traffic_light_node_list.clear();
-    traffic_light_node_list.shrink_to_fit();
+    util::loadEdgesFromFile(stream, edge_list);
 
     // Building an node-based graph
     for (const auto &input_edge : edge_list)
