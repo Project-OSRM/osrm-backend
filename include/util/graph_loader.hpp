@@ -81,6 +81,8 @@ NodeID loadNodesFromFile(std::istream &input_stream,
     input_stream.read(reinterpret_cast<char *>(&n), sizeof(NodeID));
     SimpleLogger().Write() << "Importing n = " << n << " nodes ";
 
+    node_array.reserve(n);
+
     extractor::ExternalMemoryNode current_node;
     for (NodeID i = 0; i < n; ++i)
     {
