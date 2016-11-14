@@ -35,8 +35,8 @@ class SharedDataFacade : public BigRAMBlockDataFacadeBase
 
   public:
     // this function handle the deallocation of the shared memory it we can prove it will not be
-    // used anymore
-    virtual ~SharedDataFacade()
+    // used anymore.  We crash hard here if something goes wrong (noexcept).
+    virtual ~SharedDataFacade() noexcept
     {
         boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> exclusive_lock(
             data_region == storage::DATA_1 ? shared_barriers->regions_1_mutex

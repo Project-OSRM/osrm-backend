@@ -346,12 +346,12 @@ class StaticRTree
                          const CoordinateListT &coordinate_list)
         : m_coordinate_list(coordinate_list)
     {
-        storage::io::File tree_node_file(node_file);
+        storage::io::FileReader tree_node_file(node_file);
 
-        const auto tree_size = tree_node_file.readElementCount64();
+        const auto tree_size = tree_node_file.ReadElementCount64();
 
         m_search_tree.resize(tree_size);
-        storage::io::readRamIndex(tree_node_file, &m_search_tree[0], tree_size);
+        tree_node_file.ReadInto(&m_search_tree[0], tree_size);
 
         MapLeafNodesFile(leaf_file);
     }
