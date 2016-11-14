@@ -32,6 +32,7 @@ We may introduce forward-compatible changes: query parameters and response prope
 
 - The `master` branch is for the bleeding edge development
 - We create and maintain release branches `x.y` to control the release flow
+- We create the release branch once we tagged the final version `x.y.0` version, RCs go on master
 - No minor or major version will be released without a code-equal release candidates
 - For quality assurance, release candidates will be run on the demo server for 24 hours before releaseing the version proper
 - Patch versions may be released without a release candidate
