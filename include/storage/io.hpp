@@ -148,7 +148,7 @@ inline std::uint64_t readElementCount64(boost::filesystem::ifstream &input_strea
     return number_of_elements;
 }
 
-inline std::uint64_t readElementCount32(boost::filesystem::ifstream &input_stream)
+inline std::uint32_t readElementCount32(boost::filesystem::ifstream &input_stream)
 {
     std::uint32_t number_of_elements = 0;
     input_stream.read(reinterpret_cast<char *>(&number_of_elements), sizeof(number_of_elements));
