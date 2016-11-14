@@ -780,8 +780,8 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         const auto profile_properties_ptr =
             layout_ptr->GetBlockPtr<extractor::ProfileProperties, true>(memory_ptr,
                                                                         DataLayout::PROPERTIES);
-        const auto properties_size = io::readPropertiesCount();
-        io::readProperties(profile_properties_file, profile_properties_ptr, properties_size);
+        profile_properties_file.ReadInto(profile_properties_ptr,
+                                         layout_ptr->num_entries[DataLayout::PROPERTIES]);
     }
 
     // Load intersection data

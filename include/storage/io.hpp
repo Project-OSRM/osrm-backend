@@ -143,15 +143,6 @@ class FileReader
 // To make function calls consistent, this function returns the fixed number of properties
 inline std::size_t readPropertiesCount() { return 1; }
 
-// Returns the number of bytes in a file
-inline std::size_t readNumberOfBytes(boost::filesystem::ifstream &input_stream)
-{
-    input_stream.seekg(0, input_stream.end);
-    auto length = input_stream.tellg();
-    input_stream.seekg(0, input_stream.beg);
-    return length;
-}
-
 #pragma pack(push, 1)
 struct HSGRHeader
 {
@@ -199,25 +190,6 @@ inline void readHSGR(io::FileReader &input_file,
     BOOST_ASSERT(edge_buffer);
     input_file.ReadInto(node_buffer, number_of_nodes);
     input_file.ReadInto(edge_buffer, number_of_edges);
-}
-
-// Loads properties from a `.properties` file into memory
-inline void readProperties(io::FileReader &properties_file,
-                           extractor::ProfileProperties *properties,
-                           const std::size_t properties_size)
-{
-    BOOST_ASSERT(properties);
-    properties_file.ReadInto(properties, properties_size);
-}
-
-// Reads the timestamp in a `.timestamp` file
-// Use readNumberOfBytes() beforehand to get the length of the file
-inline void readTimestamp(boost::filesystem::ifstream &timestamp_input_stream,
-                          char *timestamp,
-                          const std::size_t timestamp_length)
-{
-    BOOST_ASSERT(timestamp);
-    timestamp_input_stream.read(timestamp, timestamp_length * sizeof(char));
 }
 
 // Loads datasource_indexes from .datasource_indexes into memory
