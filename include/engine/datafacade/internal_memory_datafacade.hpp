@@ -38,7 +38,7 @@ class InternalDataFacade final : public BigRAMBlockDataFacadeBase
         storage.LoadLayout(internal_layout.get());
 
         // Allocate the memory block, then load data from files into it
-        internal_memory.reset(new char[internal_layout->GetSizeOfLayout()]);
+        internal_memory = std::make_unique<char[]>(internal_layout->GetSizeOfLayout());
         storage.LoadData(internal_layout.get(), internal_memory.get());
 
         // Adjust all the private m_* members to point to the right places
