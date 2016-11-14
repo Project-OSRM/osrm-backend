@@ -49,6 +49,8 @@ class BaseDataFacade
 
     virtual unsigned GetNumberOfEdges() const = 0;
 
+    virtual unsigned GetNumberOfNonShortcutEdges() const = 0;
+
     virtual unsigned GetOutDegree(const NodeID n) const = 0;
 
     virtual NodeID GetTarget(const EdgeID e) const = 0;

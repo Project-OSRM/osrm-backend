@@ -484,6 +484,8 @@ class SharedDataFacade final : public BaseDataFacade
 
     unsigned GetNumberOfEdges() const override final { return m_query_graph->GetNumberOfEdges(); }
 
+    unsigned GetNumberOfNonShortcutEdges() const override final { return m_via_geometry_list.size(); }
+
     unsigned GetOutDegree(const NodeID n) const override final
     {
         return m_query_graph->GetOutDegree(n);

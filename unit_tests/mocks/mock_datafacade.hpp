@@ -25,6 +25,7 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
   public:
     unsigned GetNumberOfNodes() const override { return 0; }
     unsigned GetNumberOfEdges() const override { return 0; }
+    unsigned GetNumberOfNonShortcutEdges() const override { return 0; }
     unsigned GetOutDegree(const NodeID /* n */) const override { return 0; }
     NodeID GetTarget(const EdgeID /* e */) const override { return SPECIAL_NODEID; }
     const EdgeData &GetEdgeData(const EdgeID /* e */) const override { return foo; }
