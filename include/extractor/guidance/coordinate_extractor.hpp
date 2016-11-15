@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_COORDINATE_EXTRACTOR_HPP_
 #define OSRM_EXTRACTOR_COORDINATE_EXTRACTOR_HPP_
 
+#include <utility>
 #include <vector>
 
 #include "extractor/compressed_edge_container.hpp"
@@ -28,6 +29,7 @@ class CoordinateExtractor
     /* Find a interpolated coordinate a long the compressed geometries. The desired coordinate
      * should be in a certain distance. This method is dedicated to find representative coordinates
      * at turns.
+     * Since we are computing the length of the segment anyhow, we also return it.
      */
     OSRM_ATTR_WARN_UNUSED
     util::Coordinate GetCoordinateAlongRoad(const NodeID intersection_node,
@@ -36,12 +38,23 @@ class CoordinateExtractor
                                             const NodeID to_node,
                                             const std::uint8_t number_of_in_lanes) const;
 
-    // instead of finding only a single coordinate, we can also list all coordinates along a road.
+    // same as above, only with precomputed coordinate vector (move it in)
     OSRM_ATTR_WARN_UNUSED
-    std::vector<util::Coordinate> GetCoordinatesAlongRoad(const NodeID intersection_node,
-                                                          const EdgeID turn_edge,
-                                                          const bool traversed_in_reverse,
-                                                          const NodeID to_node) const;
+    util::Coordinate
+    ExtractRepresentativeCoordinate(const NodeID intersection_node,
+                                    const EdgeID turn_edge,
+                                    const bool traversed_in_reverse,
+                                    const NodeID to_node,
+                                    const std::uint8_t intersection_lanes,
+                                    std::vector<util::Coordinate> coordinates) const;
+
+    // instead of finding only a single coordinate, we can also list all coordinates along a
+    // road.
+    OSRM_ATTR_WARN_UNUSED std::vector<util::Coordinate>
+    GetCoordinatesAlongRoad(const NodeID intersection_node,
+                            const EdgeID turn_edge,
+                            const bool traversed_in_reverse,
+                            const NodeID to_node) const;
 
     // wrapper in case of normal forward edges (traversed_in_reverse = false, to_node =
     // node_based_graph.GetTarget(turn_edge)

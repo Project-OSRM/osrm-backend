@@ -68,6 +68,9 @@ class TurnAnalysis
     std::vector<TurnOperation>
     transformIntersectionIntoTurns(const Intersection &intersection) const;
 
+    Intersection
+    assignTurnTypes(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
+
     const IntersectionGenerator &GetIntersectionGenerator() const;
 
   private:
@@ -78,9 +81,6 @@ class TurnAnalysis
     const MotorwayHandler motorway_handler;
     const TurnHandler turn_handler;
     const SliproadHandler sliproad_handler;
-
-    Intersection
-    assignTurnTypes(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
 
     // Utility function, setting basic turn types. Prepares for normal turn handling.
     Intersection

@@ -8,8 +8,8 @@
 #include "util/json_renderer.hpp"
 #include "util/simple_logger.hpp"
 #include "util/string_util.hpp"
-#include "util/typedefs.hpp"
 #include "util/timing_util.hpp"
+#include "util/typedefs.hpp"
 
 #include "engine/status.hpp"
 #include "osrm/osrm.hpp"
@@ -146,11 +146,11 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
                 << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
                 << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
                 << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
-                << time_stamp->tm_sec << " "
-                << TIMER_MSEC(request_duration) << "ms " << current_request.endpoint.to_string() << " "
-                << current_request.referrer << (0 == current_request.referrer.length() ? "- " : " ")
-                << current_request.agent << (0 == current_request.agent.length() ? "- " : " ")
-                << current_reply.status << " " //
+                << time_stamp->tm_sec << " " << TIMER_MSEC(request_duration) << "ms "
+                << current_request.endpoint.to_string() << " " << current_request.referrer
+                << (0 == current_request.referrer.length() ? "- " : " ") << current_request.agent
+                << (0 == current_request.agent.length() ? "- " : " ") << current_reply.status
+                << " " //
                 << request_string;
         }
     }

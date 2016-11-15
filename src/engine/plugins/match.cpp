@@ -19,7 +19,8 @@
 #include <string>
 #include <vector>
 
-static double search_radius_for_gps_radius(double gps_radius) {
+static double search_radius_for_gps_radius(double gps_radius)
+{
     // For a given GPS radius, determine the radius we need to search for candidate street segments
     // to have a 99.9% chance of finding the correct segment.
     // For more detail, see the analysis at https://github.com/Project-OSRM/osrm-backend/pull/3184

@@ -19,7 +19,7 @@ const constexpr bool USE_LOW_PRECISION_MODE = true;
 
 bool findPreviousIntersection(const NodeID node_v,
                               const EdgeID via_edge,
-                              const Intersection intersection,
+                              const Intersection &intersection,
                               const IntersectionGenerator &intersection_generator,
                               const util::NodeBasedDynamicGraph &node_based_graph,
                               // output parameters
@@ -55,6 +55,14 @@ bool findPreviousIntersection(const NodeID node_v,
     // (looking at the reverse direction).
     const auto node_w = node_based_graph.GetTarget(via_edge);
     const auto u_turn_at_node_w = intersection[0].eid;
+    // make sure the ID is actually valid
+    BOOST_ASSERT(node_based_graph.BeginEdges(node_w) <= u_turn_at_node_w &&
+                 u_turn_at_node_w <= node_based_graph.EndEdges(node_w));
+
+    // if we can't find the correct road, stop
+    if (node_based_graph.GetTarget(u_turn_at_node_w) != node_v)
+        return false;
+
     const auto node_v_reverse_intersection =
         intersection_generator.GetConnectedRoads(node_w, u_turn_at_node_w, USE_LOW_PRECISION_MODE);
 
@@ -77,6 +85,8 @@ bool findPreviousIntersection(const NodeID node_v,
     // The u-turn at the now found intersection should, hopefully, represent the previous edge.
     result_node = node_u;
     result_via_edge = node_u_reverse_intersection[0].eid;
+    if (node_based_graph.GetTarget(result_via_edge) != node_v)
+        return false;
 
     // if the edge is not traversable, we obviously don't have a previous intersection or couldn't
     // find it.

@@ -22,7 +22,7 @@ namespace lanes
 bool findPreviousIntersection(
     const NodeID node,
     const EdgeID via_edge,
-    const Intersection intersection,
+    const Intersection &intersection,
     const IntersectionGenerator &intersection_generator,
     const util::NodeBasedDynamicGraph &node_based_graph, // query edge data
     // output parameters, will be in an arbitrary state on failure

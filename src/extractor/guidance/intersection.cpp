@@ -17,8 +17,10 @@ namespace extractor
 namespace guidance
 {
 
-ConnectedRoad::ConnectedRoad(const TurnOperation turn, const bool entry_allowed)
-    : TurnOperation(turn), entry_allowed(entry_allowed)
+ConnectedRoad::ConnectedRoad(const TurnOperation turn,
+                             const bool entry_allowed,
+                             boost::optional<double> segment_length)
+    : TurnOperation(turn), entry_allowed(entry_allowed), segment_length(segment_length)
 {
 }
 

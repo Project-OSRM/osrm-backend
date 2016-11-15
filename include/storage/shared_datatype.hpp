@@ -134,11 +134,11 @@ struct DataLayout
     // Interface Similar to [ptr.align] but omits space computation.
     // The method can be removed and changed directly to an std::align
     // function call after dropping gcc < 5 support.
-    inline void* align(std::size_t align, std::size_t , void*& ptr) const noexcept
+    inline void *align(std::size_t align, std::size_t, void *&ptr) const noexcept
     {
         const auto intptr = reinterpret_cast<uintptr_t>(ptr);
         const auto aligned = (intptr - 1u + align) & -align;
-        return ptr = reinterpret_cast<void*>(aligned);
+        return ptr = reinterpret_cast<void *>(aligned);
     }
 
     inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const

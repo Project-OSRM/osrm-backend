@@ -365,11 +365,17 @@ Intersection IntersectionNormalizer::AdjustForJoiningRoads(const NodeID node_at_
     if (intersection.size() <= 1)
         return intersection;
 
-    const util::Coordinate coordinate_at_intersection = node_coordinates[node_at_intersection];
+    // we don't adjust any road that is longer than 30 meters (between centers of intersections),
+    // since the road is probably too long otherwise to impact perception.
+    const double constexpr PRUNING_DISTANCE = 30;
     // never adjust u-turns
     for (std::size_t index = 1; index < intersection.size(); ++index)
     {
         auto &road = intersection[index];
+        // only consider roads that are close
+        if (road.segment_length && *(road.segment_length) > PRUNING_DISTANCE)
+            continue;
+
         // to find out about the above situation, we need to look at the next intersection (at d in
         // the example). If the initial road can be merged to the left/right, we are about to adjust
         // the angle.
@@ -380,11 +386,6 @@ Intersection IntersectionNormalizer::AdjustForJoiningRoads(const NodeID node_at_
             continue;
 
         const auto node_at_next_intersection = node_based_graph.GetTarget(road.eid);
-        const util::Coordinate coordinate_at_next_intersection =
-            node_coordinates[node_at_next_intersection];
-        if (util::coordinate_calculation::haversineDistance(coordinate_at_intersection,
-                                                            coordinate_at_next_intersection) > 30)
-            continue;
 
         const auto adjustAngle = [](double angle, double offset) {
             angle += offset;

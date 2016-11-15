@@ -9,6 +9,8 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp" // EdgeID
 
+#include <boost/optional.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -53,10 +55,13 @@ struct ConnectedRoad final : public TurnOperation
 {
     using Base = TurnOperation;
 
-    ConnectedRoad(const TurnOperation turn, const bool entry_allowed = false);
+    ConnectedRoad(const TurnOperation turn,
+                  const bool entry_allowed = false,
+                  const boost::optional<double> segment_length = {});
 
     // a turn may be relevant to good instructions, even if we cannot enter the road
     bool entry_allowed;
+    boost::optional<double> segment_length;
 
     // used to sort the set of connected roads (we require sorting throughout turn handling)
     bool compareByAngle(const ConnectedRoad &other) const;

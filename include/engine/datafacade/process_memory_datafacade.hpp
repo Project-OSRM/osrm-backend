@@ -3,8 +3,8 @@
 
 // implements all data storage when shared memory is _NOT_ used
 
-#include "engine/datafacade/contiguous_internalmem_datafacade_base.hpp"
 #include "storage/storage.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade_base.hpp"
 
 namespace osrm
 {

@@ -338,10 +338,10 @@ Feature: Collapse
         Given the node map
             """
               a f       g
-
-              b e
-
-
+              | |   . '
+              b-e '
+              / /
+             / /
             c d
             """
 
@@ -353,13 +353,13 @@ Feature: Collapse
             | ge    | primary | second | no     |
 
         When I route I should get
-            | waypoints | route               | turns                          |
-            | d,c       | first,first,first   | depart,continue uturn,arrive   |
-            | a,f       | first,first,first   | depart,continue uturn,arrive   |
-            | a,g       | first,second,second | depart,turn left,arrive        |
-            | d,g       | first,second,second | depart,turn right,arrive       |
-            | g,f       | second,first,first  | depart,turn right,arrive       |
-            | g,c       | second,first,first  | depart,end of road left,arrive |
+            | waypoints | route               | turns                        |
+            | d,c       | first,first,first   | depart,continue uturn,arrive |
+            | a,f       | first,first,first   | depart,continue uturn,arrive |
+            | a,g       | first,second,second | depart,turn left,arrive      |
+            | d,g       | first,second,second | depart,turn right,arrive     |
+            | g,f       | second,first,first  | depart,turn right,arrive     |
+            | g,c       | second,first,first  | depart,turn left,arrive      |
 
     Scenario: Do not collapse turning roads
         Given the node map
