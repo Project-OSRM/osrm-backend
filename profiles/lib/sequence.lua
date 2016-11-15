@@ -1,5 +1,5 @@
 -- Sequence of items
--- Ordered, but no have to loop through items to check for inclusion.
+-- Ordered, but have to loop through items to check for inclusion.
 -- Currently the same as a table.
 
 
