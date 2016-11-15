@@ -35,11 +35,11 @@ class ProcessMemoryDataFacade final : public ContiguousInternalMemoryDataFacadeB
 
         // Calculate the layout/size of the memory block
         internal_layout = std::make_unique<storage::DataLayout>();
-        storage.LoadLayout(internal_layout.get());
+        storage.PopulateLayout(*internal_layout);
 
         // Allocate the memory block, then load data from files into it
         internal_memory = std::make_unique<char[]>(internal_layout->GetSizeOfLayout());
-        storage.LoadData(internal_layout.get(), internal_memory.get());
+        storage.PopulateData(*internal_layout, internal_memory.get());
 
         // Adjust all the private m_* members to point to the right places
         Init(internal_layout.get(), internal_memory.get());

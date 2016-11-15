@@ -122,7 +122,6 @@ class FileReader
         {
             while (std::getline(input_stream, thisline))
             {
-                std::clog << "Read " << thisline << std::endl;
                 result.push_back(thisline);
             }
         }

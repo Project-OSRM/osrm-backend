@@ -53,8 +53,8 @@ class Storage
 
     ReturnCode Run(int max_wait);
 
-    void LoadLayout(DataLayout *layout);
-    void LoadData(DataLayout *layout_ptr, char *memory_ptr);
+    void PopulateLayout(DataLayout &layout);
+    void PopulateData(const DataLayout &layout, char *memory_ptr);
 
   private:
     StorageConfig config;
