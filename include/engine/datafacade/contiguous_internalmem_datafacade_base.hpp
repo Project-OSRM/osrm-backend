@@ -50,7 +50,6 @@ template <typename T, typename = std::enable_if<std::is_const<T>::value>>
 using ConstArrayRef = boost::iterator_range<T>;
 
 using CoordinateArrayRef = ConstArrayRef<const util::Coordinate *>;
-using OSMNodeArrayRef = ConstArrayRef<const OSMNodeID *>;
 }
 
 /**
@@ -80,7 +79,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     extractor::ProfileProperties *m_profile_properties;
 
     CoordinateArrayRef m_coordinate_list;
-    OSMNodeArrayRef m_osmnodeid_list;
+    util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
     util::ShM<GeometryID, true>::vector m_via_geometry_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
     util::ShM<LaneDataID, true>::vector m_lane_data_id;
@@ -199,11 +198,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             BOOST_ASSERT(GetCoordinateOfNode(i).IsValid());
         }
 
-        const auto osmnodeid_list_ptr = data_layout->GetBlockPtr<OSMNodeID>(
+        const auto osmnodeid_list_ptr = data_layout->GetBlockPtr<std::uint64_t>(
             memory_block, storage::DataLayout::OSM_NODE_ID_LIST);
-        m_osmnodeid_list = OSMNodeArrayRef(
-            osmnodeid_list_ptr,
-            osmnodeid_list_ptr + data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
+        m_osmnodeid_list.reset(osmnodeid_list_ptr,
+                               data_layout->num_entries[storage::DataLayout::OSM_NODE_ID_LIST]);
+        // We (ab)use the number of coordinates here because we know we have the same amount of ids
+        m_osmnodeid_list.set_number_of_entries(
+            data_layout->num_entries[storage::DataLayout::COORDINATE_LIST]);
 
         const auto travel_mode_list_ptr = data_layout->GetBlockPtr<extractor::TravelMode>(
             memory_block, storage::DataLayout::TRAVEL_MODE);
@@ -478,7 +479,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
     {
-        return m_osmnodeid_list[id];
+        return m_osmnodeid_list.at(id);
     }
 
     virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
