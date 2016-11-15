@@ -3,7 +3,7 @@
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
-#include "engine/datafacade/internal_memory_datafacade.hpp"
+#include "engine/datafacade/process_memory_datafacade.hpp"
 #include "engine/datafacade/shared_memory_datafacade.hpp"
 
 #include "storage/shared_barriers.hpp"
@@ -81,7 +81,7 @@ Engine::Engine(const EngineConfig &config)
             throw util::exception("Invalid file paths given!");
         }
         immutable_data_facade =
-            std::make_shared<datafacade::InternalDataFacade>(config.storage_config);
+            std::make_shared<datafacade::ProcessMemoryDataFacade>(config.storage_config);
     }
 }
 

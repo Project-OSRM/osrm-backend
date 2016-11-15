@@ -102,10 +102,10 @@ class DataWatchdog
         boost::upgrade_to_unique_lock<boost::upgrade_mutex> unique_facade_lock(facade_lock);
 
         current_timestamp = *shared_timestamp;
-        facade = std::make_shared<datafacade::SharedDataFacade>(shared_barriers,
-                                                                current_timestamp.layout,
-                                                                current_timestamp.data,
-                                                                current_timestamp.timestamp);
+        facade = std::make_shared<datafacade::SharedMemoryDataFacade>(shared_barriers,
+                                                                      current_timestamp.layout,
+                                                                      current_timestamp.data,
+                                                                      current_timestamp.timestamp);
 
         return get_locked_facade();
     }
@@ -119,7 +119,7 @@ class DataWatchdog
     std::unique_ptr<storage::SharedMemory> shared_regions;
 
     mutable boost::shared_mutex facade_mutex;
-    std::shared_ptr<datafacade::SharedDataFacade> facade;
+    std::shared_ptr<datafacade::SharedMemoryDataFacade> facade;
     storage::SharedDataTimestamp current_timestamp;
 };
 }
