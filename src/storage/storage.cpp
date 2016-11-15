@@ -276,11 +276,9 @@ void Storage::PopulateLayout(DataLayout &layout)
     {
         std::vector<std::uint32_t> lane_description_offsets;
         std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
-        if (!util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
-                                             lane_description_offsets,
-                                             lane_description_masks))
-            throw util::exception("Failed to read lane descriptions from: " +
-                                  config.turn_lane_description_path.string());
+        util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
+                                        lane_description_offsets,
+                                        lane_description_masks);
         layout.SetBlockSize<std::uint32_t>(DataLayout::LANE_DESCRIPTION_OFFSETS,
                                            lane_description_offsets.size());
         layout.SetBlockSize<extractor::guidance::TurnLaneType::Mask>(
@@ -545,15 +543,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Turn lane descriptions
     {
-        /* NOTE: file io - refactor this in the future */
         std::vector<std::uint32_t> lane_description_offsets;
         std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
-        if (!util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
-                                             lane_description_offsets,
-                                             lane_description_masks))
-            throw util::exception("Failed to read lane descriptions from: " +
-                                  config.turn_lane_description_path.string());
-        /* END NOTE */
+        util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
+                                        lane_description_offsets,
+                                        lane_description_masks);
+
         const auto turn_lane_offset_ptr = layout.GetBlockPtr<std::uint32_t, true>(
             memory_ptr, DataLayout::LANE_DESCRIPTION_OFFSETS);
         if (!lane_description_offsets.empty())

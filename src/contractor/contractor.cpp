@@ -10,6 +10,7 @@
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/io.hpp"
+#include "storage/io.hpp"
 #include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
@@ -164,14 +165,12 @@ int Contractor::Run()
     util::SimpleLogger().Write() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
     std::string node_file_name = config.osrm_input_path.string() + ".enw";
-    if (util::deserializeVector(node_file_name, node_weights))
+
     {
-        util::SimpleLogger().Write() << "Done reading node weights.";
+        storage::io::FileReader node_file(node_file_name, true);
+        node_file.DeserializeVector(node_weights);
     }
-    else
-    {
-        throw util::exception("Failed reading node weights.");
-    }
+    util::SimpleLogger().Write() << "Done reading node weights.";
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
     ContractGraph(max_edge_id,
