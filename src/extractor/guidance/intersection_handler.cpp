@@ -11,6 +11,11 @@
 #include <algorithm>
 #include <cstddef>
 
+// // uncomment for @fork_geoprinting
+// #include "util/geojson_debug_logger.hpp"
+// #include "util/geojson_debug_policies.hpp"
+
+
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
 using osrm::extractor::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
@@ -172,6 +177,22 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
     }
 }
 
+
+// // uncomment for @fork_geoprinting
+// void printLine(const util::NodeBasedDynamicGraph &node_based_graph,
+//                const EdgeID via_edge,
+//                ConnectedRoad &road)
+// {
+//     util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString>::Write(std::vector<NodeID>{
+//         node_based_graph.GetTarget(via_edge), node_based_graph.GetTarget(road.eid)});
+// }
+// // uncomment for @fork_geoprinting
+// void printNode(const std::vector<NodeID> nodes)
+// {
+//     util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint>::Write(nodes);
+// }
+
+
 void IntersectionHandler::assignFork(const EdgeID via_edge,
                                      ConnectedRoad &left,
                                      ConnectedRoad &right) const
@@ -205,6 +226,12 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
                 }
                 else
                 {
+                    // // uncomment for @fork_geoprinting
+                    // printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+                    //                               node_based_graph.GetTarget(right.eid),
+                    //                               node_based_graph.GetTarget(left.eid)});
+                    // printLine(node_based_graph, via_edge, left);
+                    // printLine(node_based_graph, via_edge, right);
                     left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
                     right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
                 }
@@ -244,6 +271,12 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
                     }
                     else
                     {
+                        // // uncomment for @fork_geoprinting
+                        // printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+                        //                               node_based_graph.GetTarget(left.eid),
+                        //                               node_based_graph.GetTarget(right.eid)});
+                        // printLine(node_based_graph, via_edge, left);
+                        // printLine(node_based_graph, via_edge, right);
                         right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
                         left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
                     }
@@ -263,9 +296,17 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
     else
     {
         if (low_priority_left && !low_priority_right)
+        {
             left.instruction = {TurnType::Turn, DirectionModifier::SlightLeft};
+        }
         else
+        {
+        //     // uncomment for @fork_geoprinting
+        //     printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+        //                                   node_based_graph.GetTarget(left.eid)});
+        //     printLine(node_based_graph, via_edge, left);
             left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+        }
     }
 
     // right side of fork
@@ -274,9 +315,17 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
     else
     {
         if (low_priority_right && !low_priority_left)
+        {
             right.instruction = {TurnType::Turn, DirectionModifier::SlightRight};
+        }
         else
+        {
+            // // uncomment for @fork_geoprinting
+            // printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+            //                               node_based_graph.GetTarget(right.eid)});
+            // printLine(node_based_graph, via_edge, right);
             right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
+        }
     }
 }
 
@@ -288,6 +337,10 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
     // TODO handle low priority road classes in a reasonable way
     if (left.entry_allowed && center.entry_allowed && right.entry_allowed)
     {
+        // // uncomment for @fork_geoprinting
+        // printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+        //                               node_based_graph.GetTarget(left.eid)});
+        // printLine(node_based_graph, via_edge, left);
         left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
         if (angularDeviation(center.angle, 180) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION)
         {
@@ -295,6 +348,10 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
             const auto &out_data = node_based_graph.GetEdgeData(center.eid);
             if (detail::requiresAnnouncement(in_data, out_data))
             {
+                // // uncomment for @fork_geoprinting
+                // printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+                //                               node_based_graph.GetTarget(center.eid)});
+                // printLine(node_based_graph, via_edge, center);
                 center.instruction = {TurnType::Fork, DirectionModifier::Straight};
             }
             else
@@ -304,8 +361,16 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
         }
         else
         {
+            // // uncomment for @fork_geoprinting
+            // printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+            //                               node_based_graph.GetTarget(center.eid)});
+            // printLine(node_based_graph, via_edge, center);
             center.instruction = {TurnType::Fork, DirectionModifier::Straight};
         }
+        // // uncomment for @fork_geoprinting}
+        // printNode(std::vector<NodeID>{node_based_graph.GetTarget(via_edge),
+        //                               node_based_graph.GetTarget(right.eid)});
+        // printLine(node_based_graph, via_edge, right);
         right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
     }
     else if (left.entry_allowed)

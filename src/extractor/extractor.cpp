@@ -55,6 +55,11 @@
 #include <unordered_map>
 #include <vector>
 
+// // uncomment for @fork_geoprinting
+// #include "util/geojson_debug_logger.hpp"
+// #include "util/geojson_debug_policies.hpp"
+
+
 namespace osrm
 {
 namespace extractor
@@ -491,6 +496,11 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
         turn_lane_offsets,
         turn_lane_masks,
         turn_lane_map);
+
+
+    // // uncomment for @fork_geoprinting
+    // util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString> line_logger_guard("fork-lines.geojson", internal_to_external_node_map);
+    // util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint> point_logger_guard("fork-points.geojson", internal_to_external_node_map);
 
     edge_based_graph_factory.Run(scripting_environment,
                                  config.edge_output_path,

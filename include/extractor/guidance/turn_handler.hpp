@@ -10,6 +10,9 @@
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 
+#include <boost/optional.hpp>
+
+
 #include <cstddef>
 #include <utility>
 #include <vector>
@@ -45,6 +48,15 @@ class TurnHandler : public IntersectionHandler
                             Intersection intersection) const override final;
 
   private:
+    struct Fork
+    {
+        const std::size_t right;
+        const std::size_t left;
+        const std::size_t size;
+
+        Fork(const std::size_t right, const std::size_t left);
+    };
+
     bool isObviousOfTwo(const EdgeID via_edge,
                         const ConnectedRoad &road,
                         const ConnectedRoad &other) const;
@@ -54,9 +66,7 @@ class TurnHandler : public IntersectionHandler
                     const std::size_t right,
                     const std::size_t left) const;
 
-    std::tuple<std::size_t, double> findClosestToStraight(const Intersection &intersection) const;
-
-    std::pair<std::size_t, std::size_t>
+    boost::optional<Fork>
     findLeftAndRightmostForkCandidates(const Intersection &intersection) const;
 
     bool isCompatibleByRoadClass(const Intersection &intersection,
@@ -83,8 +93,7 @@ class TurnHandler : public IntersectionHandler
     handleDistinctConflict(const EdgeID via_edge, ConnectedRoad &left, ConnectedRoad &right) const;
 
     // Classification
-    std::pair<std::size_t, std::size_t> findFork(const EdgeID via_edge,
-                                                 const Intersection &intersection) const;
+    boost::optional<Fork> findFork(const EdgeID via_edge, const Intersection &intersection) const;
 
     OSRM_ATTR_WARN_UNUSED
     Intersection assignLeftTurns(const EdgeID via_edge,

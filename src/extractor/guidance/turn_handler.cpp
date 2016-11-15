@@ -9,18 +9,39 @@
 #include <utility>
 
 #include <boost/assert.hpp>
+#include <boost/optional.hpp>
+
 
 using osrm::extractor::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
-namespace osrm
-{
-namespace extractor
-{
-namespace guidance
-{
 namespace
 {
+
+using namespace osrm::extractor::guidance;
+// given two adjacent roads and `road1` being a candidate for a fork,
+// return false, if next road `road2` is also a fork candidate or
+// return true, if `road2` is not a suitable fork candidate and thus, `road1` the outermost fork
+bool isOutermostForkCandidate(const ConnectedRoad &road1, const ConnectedRoad &road2)
+{
+    const auto angle_between_next_road_and_straight = angularDeviation(road2.angle, STRAIGHT_ANGLE);
+    const auto angle_between_prev_road_and_next = angularDeviation(road1.angle, road2.angle);
+    const auto angle_between_prev_road_and_straight = angularDeviation(road1.angle, STRAIGHT_ANGLE);
+
+    // a road is a fork candidate if it is close to straight or
+    // close to a street that goes close to straight
+    // (reverse to find fork non-candidate)
+    if (angle_between_next_road_and_straight > NARROW_TURN_ANGLE)
+    {
+        if (angle_between_prev_road_and_next > NARROW_TURN_ANGLE ||
+            angle_between_prev_road_and_straight > GROUP_ANGLE)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+// @CHAU_TODO get rid of
 bool isEndOfRoad(const ConnectedRoad &,
                  const ConnectedRoad &possible_right_turn,
                  const ConnectedRoad &possible_left_turn)
@@ -30,6 +51,79 @@ bool isEndOfRoad(const ConnectedRoad &,
            angularDeviation(possible_right_turn.angle, possible_left_turn.angle) >
                2 * NARROW_TURN_ANGLE;
 }
+
+
+template <typename Iterator>
+std::size_t findOutermostForkCandidate(const Iterator base, const Iterator start, const Iterator end)
+{
+    const auto outermost_fork_candidate = std::adjacent_find(start, end, isOutermostForkCandidate);
+    auto outermost_fork_candidate_index = std::distance(base, outermost_fork_candidate);
+    // if Iterator is a reverse iterator (when searching for the rightmost instead of the leftmost
+    // road), the index is negaitive and has to be reversed
+    if (outermost_fork_candidate_index < 0)
+    {
+        outermost_fork_candidate_index = std::abs(outermost_fork_candidate_index) - 1;
+    }
+
+    if (outermost_fork_candidate != end)
+    {
+        return outermost_fork_candidate_index;
+    }
+    // if all roads are part of a fork, set `candidate` to the last road
+    else
+    {
+        return outermost_fork_candidate_index - 1;
+    }
+}
+
+struct StraightestTurnAtIntersection
+{
+    StraightestTurnAtIntersection(std::size_t id, double deviation_from_straight)
+        : id(id), deviation_from_straight(deviation_from_straight) {};
+
+    std::size_t id;
+    double deviation_from_straight;
+};
+
+// returns a tuple {i, angle_dev} of the road at the intersection that is closest to going straight:
+//     `intersection[i]` is the actual road
+//     `angle_dev` is the angle between going straight and taking the road `intersection[i]`
+StraightestTurnAtIntersection
+findClosestToStraight(const Intersection &intersection)
+{
+    std::size_t best = 0;
+    double best_deviation = 180;
+
+    // find the intersection[best] that is the closest to a turn going straight
+    for (std::size_t i = 1; i < intersection.size(); ++i)
+    {
+        const double deviation = angularDeviation(intersection[i].angle, STRAIGHT_ANGLE);
+        if (intersection[i].entry_allowed && deviation < best_deviation)
+        {
+            best_deviation = deviation;
+            best = i;
+        }
+    }
+    return StraightestTurnAtIntersection(best, best_deviation);
+}
+
+
+}
+
+namespace osrm
+{
+namespace extractor
+{
+namespace guidance
+{
+
+// a wrapper to handle road indices of forks at intersections
+TurnHandler::Fork::Fork(const std::size_t right, const std::size_t left)
+    : right(right), left(left), size(left - right + 1)
+{
+    BOOST_ASSERT(right < left);
+    BOOST_ASSERT(size >= 2);
+    BOOST_ASSERT(size <= 3);
 }
 
 TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
@@ -189,9 +283,11 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                OOOOOOO
      */
 
-    const auto fork_range = findFork(via_edge, intersection);
-    if (fork_range.first == 1 && fork_range.second == 2 && obvious_index == 0)
-        assignFork(via_edge, intersection[2], intersection[1]);
+    auto fork = findFork(via_edge, intersection);
+    if (fork && fork->right == 1 && fork->left == 2 && obvious_index == 0)
+    {
+        assignFork(via_edge, intersection[fork->left], intersection[fork->right]);
+    }
 
     /*  T Intersection
 
@@ -259,8 +355,9 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 
 Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection intersection) const
 {
+    // @CHAU_TODO check whether obvious check here and obvious check in findFork are redundant
     const std::size_t obvious_index = findObviousTurn(via_edge, intersection);
-    const auto fork_range = findFork(via_edge, intersection);
+    const auto fork = findFork(via_edge, intersection);
     std::size_t straightmost_turn = 0;
     double straightmost_deviation = 180;
     for (std::size_t i = 0; i < intersection.size(); ++i)
@@ -286,12 +383,13 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
         intersection = assignLeftTurns(via_edge, std::move(intersection), obvious_index + 1);
         intersection = assignRightTurns(via_edge, std::move(intersection), obvious_index);
     }
-    else if (fork_range.first != 0 && fork_range.second - fork_range.first <= 2) // found fork
+    else if (fork && fork->size <= 3) // found fork
     {
-        if (fork_range.second - fork_range.first == 1)
+        auto &right = intersection[fork->right];
+        auto &left = intersection[fork->left];
+
+        if (fork->size == 2)
         {
-            auto &left = intersection[fork_range.second];
-            auto &right = intersection[fork_range.first];
             const auto left_classification =
                 node_based_graph.GetEdgeData(left.eid).road_classification;
             const auto right_classification =
@@ -313,16 +411,17 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
                                      DirectionModifier::SlightRight};
             }
         }
-        else if (fork_range.second - fork_range.first == 2)
+        else if (fork->size == 3)
         {
             assignFork(via_edge,
-                       intersection[fork_range.second],
-                       intersection[fork_range.first + 1],
-                       intersection[fork_range.first]);
+                       left,
+                       // middle fork road
+                       intersection[fork->right + 1],
+                       right);
         }
         // assign left/right turns
-        intersection = assignLeftTurns(via_edge, std::move(intersection), fork_range.second + 1);
-        intersection = assignRightTurns(via_edge, std::move(intersection), fork_range.first);
+        intersection = assignLeftTurns(via_edge, std::move(intersection), fork->left + 1);
+        intersection = assignRightTurns(via_edge, std::move(intersection), fork->right);
     }
     else if (straightmost_deviation < FUZZY_ANGLE_DIFFERENCE &&
              !intersection[straightmost_turn].entry_allowed)
@@ -505,124 +604,63 @@ Intersection TurnHandler::assignRightTurns(const EdgeID via_edge,
     return intersection;
 }
 
-// given two adjacent roads and `road1` being a candidate for a fork,
-// return false, if next road `road2` is also a fork candidate or
-// return true, if `road2` is not a suitable fork candidate and thus, `road1` the outermost fork
-bool isOutermostForkCandidate(const ConnectedRoad &road1, const ConnectedRoad &road2)
-{
-    const auto angle_between_next_road_and_straight = angularDeviation(road2.angle, STRAIGHT_ANGLE);
-    const auto angle_between_prev_road_and_next = angularDeviation(road1.angle, road2.angle);
-    const auto angle_between_prev_road_and_straight = angularDeviation(road1.angle, STRAIGHT_ANGLE);
-
-    // a road is a fork candidate if it is close to straight or
-    // close to a street that goes close to straight
-    // (reverse to find fork non-candidate)
-    if (angle_between_next_road_and_straight > NARROW_TURN_ANGLE)
-    {
-        if (angle_between_prev_road_and_next > NARROW_TURN_ANGLE ||
-            angle_between_prev_road_and_straight > GROUP_ANGLE)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-template <typename Iterator>
-std::size_t findOutermostForkCandidate(Iterator base, Iterator start, Iterator end)
-{
-    const auto outermost_fork_candidate = std::adjacent_find(start, end, isOutermostForkCandidate);
-    auto outermost_fork_candidate_index = std::distance(base, outermost_fork_candidate);
-    // if Iterator is a reverse iterator, the index is different
-    if (outermost_fork_candidate_index < 0)
-    {
-        outermost_fork_candidate_index = std::abs(outermost_fork_candidate_index) - 1;
-    }
-
-    if (outermost_fork_candidate != end)
-    {
-        return outermost_fork_candidate_index;
-    }
-    // if all roads are part of a fork, set `candidate` to the last road
-    else
-    {
-        return outermost_fork_candidate_index - 1;
-    }
-}
-
-// @CODE_REVIEW_QUESTION: tuple or struct? I cannot decide
-// returns a tuple {i, angle_dev} of the road at the intersection that is closest to going straight:
-//     `intersection[i]` is the actual road
-//     `angle_dev` is the angle between going straight and taking the road `intersection[i]`
-std::tuple<std::size_t, double>
-TurnHandler::findClosestToStraight(const Intersection &intersection) const
-{
-    std::size_t best = 0;
-    double best_deviation = 180;
-
-    // find the intersection[best] that is the closest to a turn going straight
-    for (std::size_t i = 1; i < intersection.size(); ++i)
-    {
-        const double deviation = angularDeviation(intersection[i].angle, STRAIGHT_ANGLE);
-        if (intersection[i].entry_allowed && deviation < best_deviation)
-        {
-            best_deviation = deviation;
-            best = i;
-        }
-    }
-    return std::make_tuple(best, best_deviation);
-}
-
-std::pair<std::size_t, std::size_t>
+boost::optional<TurnHandler::Fork>
 TurnHandler::findLeftAndRightmostForkCandidates(const Intersection &intersection) const
 {
-    std::size_t best;
-    double best_deviation;
-    std::tie(best, best_deviation) = findClosestToStraight(intersection);
-
-    // no fork found
-    if (best_deviation > NARROW_TURN_ANGLE)
+    if (intersection.size() >= 3)
     {
-        return std::make_pair(std::size_t{0}, std::size_t{0});
+        const auto straightest = findClosestToStraight(intersection);
+
+        // Forks can only happen when two or more roads have a pretty narrow angle between each
+        // other and are close to going straight
+        //
+        //
+        //     left   right          left   right
+        //        \   /                 \ | /
+        //         \ /                   \|/
+        //          |                     |
+        //          |                     |
+        //          |                     |
+        //
+        //   possibly a fork         possibly a fork
+        //
+        //
+        //           left             left
+        //            /                 \
+        //           /____ right         \ ______ right
+        //          |                     |
+        //          |                     |
+        //          |                     |
+        //
+        //   not a fork cause      not a fork cause
+        //    it's not going       angle is too wide
+        //     straigthish
+        //
+        //
+        // left and right will be indices of the leftmost and rightmost connected roads that are
+        // fork candidates
+
+        if (straightest.deviation_from_straight <= NARROW_TURN_ANGLE)
+        {
+            // find the leftmost road that might be part of a fork
+            const auto right = findOutermostForkCandidate(
+                intersection.rend(), intersection.rend() - straightest.id - 1, intersection.rend());
+            const auto left = findOutermostForkCandidate(
+                intersection.begin(), intersection.begin() + straightest.id, intersection.end());
+
+            // if the leftmost and rightmost roads with the conditions above are the same
+            // or if there are more than three fork candidates
+            // they cannot be fork candidates
+            if (right < left && left - right + 1 <= 3)
+            {
+                return Fork(right, left);
+            }
+        }
     }
-
-    // Forks can only happen when two or more roads have a pretty narrow angle between each
-    // other and are close to going straight
-    //
-    //
-    //     left   right          left   right
-    //        \   /                 \ | /
-    //         \ /                   \|/
-    //          |                     |
-    //          |                     |
-    //          |                     |
-    //
-    //   possibly a fork         possibly a fork
-    //
-    //
-    //           left             left
-    //            /                 \
-    //           /____ right         \ ______ right
-    //          |                     |
-    //          |                     |
-    //          |                     |
-    //
-    //   not a fork cause      not a fork cause
-    //    it's not going       angle is too wide
-    //     straigthish
-    //
-    //
-    // left and right will be indices of the leftmost and rightmost connected roads that are
-    // fork candidates
-
-    // find the leftmost road that might be part of a fork
-    const auto right = findOutermostForkCandidate(
-        intersection.rend(), intersection.rend() - best - 1, intersection.rend());
-    const auto left = findOutermostForkCandidate(
-        intersection.begin(), intersection.begin() + best, intersection.end());
-
-    return std::make_pair(right, left);
+    return boost::none;
 }
+
+
 
 // check if the fork candidates (all roads between left and right) and the
 // incoming edge are compatible by class
@@ -672,51 +710,41 @@ bool TurnHandler::isCompatibleByRoadClass(const Intersection &intersection,
 
 // Checks whether a three-way-intersection coming from `via_edge` is a fork
 // with `intersection` as described as in #IntersectionExplanation@intersection_handler.hpp
-std::pair<std::size_t, std::size_t> TurnHandler::findFork(const EdgeID via_edge,
-                                                          const Intersection &intersection) const
+boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
+                                        const Intersection &intersection) const
 {
-    std::size_t right;
-    std::size_t left;
-    std::tie(right, left) = findLeftAndRightmostForkCandidates(intersection);
-
-    // if the leftmost and rightmost roads with the conditions above are the same
-    // or if there are more than three fork candidates
-    // they cannot be fork candidates
-    if ((left == right) || ((left - right + 1) > 3))
+    // @CHAU_TODO: Consider using iterators instead of indices
+    const auto fork = findLeftAndRightmostForkCandidates(intersection);
+    if (fork)
     {
-        return std::make_pair(std::size_t{0}, std::size_t{0});
+        const auto right = fork->right;
+        const auto left = fork->left;
+        // makes sure that the fork is isolated from other neighbouring streets on the left and
+        // right side
+        const bool separated_at_left_side =
+            angularDeviation(intersection[left].angle,
+                             intersection[(left + 1) % intersection.size()].angle) >= GROUP_ANGLE;
+        const bool separated_at_right_side =
+            angularDeviation(intersection[right].angle, intersection[right - 1].angle) >= GROUP_ANGLE;
+
+        // check whether there is an obvious turn to take; forks are never obvious - if there is an
+        // obvious turn, it's not a fork
+        const bool has_obvious = hasObvious(via_edge, intersection, right, left);
+
+        // A fork can only happen between edges of similar types where none of the ones is obvious
+        const bool has_compatible_classes = isCompatibleByRoadClass(intersection, right, left);
+
+        // check if all entries in the fork range allow entry
+        const bool only_valid_entries = intersection.hasValidEntries(right, left);
+
+        if (separated_at_left_side && separated_at_right_side && !has_obvious &&
+            has_compatible_classes && only_valid_entries)
+        {
+            return fork;
+        }
     }
 
-    BOOST_ASSERT(0 < right);
-    BOOST_ASSERT(left < intersection.size());
-    BOOST_ASSERT(right < left);
-
-    // makes sure that the fork is isolated from other neighbouring streets on the left and
-    // right side
-    const bool separated_at_left_side =
-        angularDeviation(intersection[left].angle,
-                         intersection[(left + 1) % intersection.size()].angle) >= GROUP_ANGLE;
-    const bool separated_at_right_side =
-        angularDeviation(intersection[right].angle, intersection[right - 1].angle) >= GROUP_ANGLE;
-
-    // check whether there is an obvious turn to take; forks are never obvious - if there is an
-    // obvious turn, it's not a fork
-    const bool has_obvious = hasObvious(via_edge, intersection, right, left);
-
-    // A fork can only happen between edges of similar types where none of the ones is obvious
-    const bool has_compatible_classes = isCompatibleByRoadClass(intersection, right, left);
-
-    // check if all entries in the fork range allow entry
-    const bool only_valid_entries = intersection.hasValidEntries(right, left);
-
-    // TODO check whether 2*NARROW_TURN is too large
-    if (separated_at_left_side && separated_at_right_side && !has_obvious &&
-        has_compatible_classes && only_valid_entries)
-    {
-        return std::make_pair(right, left);
-    }
-
-    return std::make_pair(std::size_t{0}, std::size_t{0});
+    return boost::none;
 }
 
 void TurnHandler::handleDistinctConflict(const EdgeID via_edge,

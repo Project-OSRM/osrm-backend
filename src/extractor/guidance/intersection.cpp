@@ -3,6 +3,8 @@
 #include <limits>
 #include <string>
 
+#include <boost/range/adaptors.hpp>
+
 using osrm::util::angularDeviation;
 
 namespace osrm
@@ -132,16 +134,9 @@ bool Intersection::hasValidEntries(std::size_t first, std::size_t last) const
 {
     BOOST_ASSERT(last < size());
 
-    for (std::size_t i = first; i <= last; ++i)
-    {
-        if (!operator[](i).entry_allowed)
-        {
-            return false;
-        }
-    }
-    // if no entry was found that forbids entry, the intersection entries in the range are all
-    // valid.
-    return true;
+    return all_of(begin() + first, begin() + last + 1, [&](const ConnectedRoad &road) {
+        return road.entry_allowed;
+    });
 }
 
 } // namespace guidance
