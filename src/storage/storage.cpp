@@ -485,10 +485,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         std::fill(file_index_path_ptr,
                   file_index_path_ptr + layout_ptr->GetBlockSize(DataLayout::FILE_INDEX_PATH),
                   0);
-        auto absolute_file_index_path = boost::filesystem::absolute(config.file_index_path);
-        std::copy(absolute_file_index_path.string().begin(),
-                  absolute_file_index_path.string().end(),
-                  file_index_path_ptr);
+        const auto absolute_file_index_path =
+            boost::filesystem::absolute(config.file_index_path).string();
+        std::copy(
+            absolute_file_index_path.begin(), absolute_file_index_path.end(), file_index_path_ptr);
     }
 
     // Name data
