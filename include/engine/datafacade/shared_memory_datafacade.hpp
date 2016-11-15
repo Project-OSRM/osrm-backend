@@ -83,8 +83,8 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
         BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
         m_large_memory = storage::makeSharedMemory(data_region);
 
-        Init(static_cast<storage::DataLayout *>(m_layout_memory->Ptr()),
-             static_cast<char *>(m_large_memory->Ptr()));
+        InitializeInternalPointers(*reinterpret_cast<storage::DataLayout *>(m_layout_memory->Ptr()),
+                                   reinterpret_cast<char *>(m_large_memory->Ptr()));
     }
 };
 }

@@ -42,7 +42,7 @@ class ProcessMemoryDataFacade final : public ContiguousInternalMemoryDataFacadeB
         storage.PopulateData(*internal_layout, internal_memory.get());
 
         // Adjust all the private m_* members to point to the right places
-        Init(internal_layout.get(), internal_memory.get());
+        InitializeInternalPointers(*internal_layout.get(), internal_memory.get());
     }
 };
 }
