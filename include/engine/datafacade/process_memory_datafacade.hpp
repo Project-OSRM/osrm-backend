@@ -1,9 +1,9 @@
-#ifndef INTERNAL_DATAFACADE_HPP
-#define INTERNAL_DATAFACADE_HPP
+#ifndef PROCESS_MEMORY_DATAFACADE_HPP
+#define PROCESS_MEMORY_DATAFACADE_HPP
 
 // implements all data storage when shared memory is _NOT_ used
 
-#include "engine/datafacade/bigramblock_datafacade_base.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade_base.hpp"
 #include "storage/storage.hpp"
 
 namespace osrm
@@ -16,12 +16,12 @@ namespace datafacade
 /**
  * This datafacade uses a process-local memory block to load
  * data into.  The structure and layout is the same as when using
- * shared memory, so this class, and the SharedDatafacade both
+ * shared memory, so this class, and the SharedMemoryDataFacade both
  * share a common base.
  * This class holds a unique_ptr to the memory block, so it
  * is auto-freed upon destruction.
  */
-class InternalDataFacade final : public BigRAMBlockDataFacadeBase
+class ProcessMemoryDataFacade final : public ContiguousInternalMemoryDataFacadeBase
 {
 
   private:
@@ -29,7 +29,7 @@ class InternalDataFacade final : public BigRAMBlockDataFacadeBase
     std::unique_ptr<storage::DataLayout> internal_layout;
 
   public:
-    explicit InternalDataFacade(const storage::StorageConfig &config)
+    explicit ProcessMemoryDataFacade(const storage::StorageConfig &config)
     {
         storage::Storage storage(config);
 
@@ -49,4 +49,4 @@ class InternalDataFacade final : public BigRAMBlockDataFacadeBase
 }
 }
 
-#endif // INTERNAL_DATAFACADE_HPP
+#endif // PROCESS_MEMORY_DATAFACADE_HPP

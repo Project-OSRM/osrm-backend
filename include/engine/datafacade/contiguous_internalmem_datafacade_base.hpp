@@ -1,7 +1,5 @@
-#ifndef MEMORYBLOCK_DATAFACADE_HPP
-#define MEMORYBLOCK_DATAFACADE_HPP
-
-// implements all data storage when shared memory _IS_ used
+#ifndef CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP
+#define CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP
 
 #include "engine/datafacade/datafacade_base.hpp"
 
@@ -57,9 +55,12 @@ using OSMNodeArrayRef = ConstArrayRef<const OSMNodeID *>;
 
 /**
  * This base class implements the Datafacade interface for accessing
- * data that's stored in a single large block of memory.
+ * data that's stored in a single large block of memory (RAM).
+ *
+ * In this case "internal memory" refers to RAM - as opposed to "external memory",
+ * which usually refers to disk.
  */
-class BigRAMBlockDataFacadeBase : public BaseDataFacade
+class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 {
   private:
     using super = BaseDataFacade;
@@ -940,4 +941,4 @@ class BigRAMBlockDataFacadeBase : public BaseDataFacade
 }
 }
 
-#endif // MEMORYBLOCK_DATAFACADE_HPP
+#endif // CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP

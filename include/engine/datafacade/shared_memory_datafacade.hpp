@@ -6,7 +6,7 @@
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "engine/datafacade/bigramblock_datafacade_base.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade_base.hpp"
 
 namespace osrm
 {
@@ -17,10 +17,10 @@ namespace datafacade
 
 /**
  * This datafacade uses an IPC shared memory block as the data location.
- * Many SharedDataFacade objects can be created that point to the same shared
+ * Many SharedMemoryDataFacade objects can be created that point to the same shared
  * memory block.
  */
-class SharedDataFacade : public BigRAMBlockDataFacadeBase
+class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
 {
 
   protected:
@@ -31,12 +31,12 @@ class SharedDataFacade : public BigRAMBlockDataFacadeBase
     storage::SharedDataType data_region;
     unsigned shared_timestamp;
 
-    SharedDataFacade() {}
+    SharedMemoryDataFacade() {}
 
   public:
     // this function handle the deallocation of the shared memory it we can prove it will not be
     // used anymore.  We crash hard here if something goes wrong (noexcept).
-    virtual ~SharedDataFacade() noexcept
+    virtual ~SharedMemoryDataFacade() noexcept
     {
         boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> exclusive_lock(
             data_region == storage::DATA_1 ? shared_barriers->regions_1_mutex
@@ -67,10 +67,10 @@ class SharedDataFacade : public BigRAMBlockDataFacadeBase
         }
     }
 
-    SharedDataFacade(const std::shared_ptr<storage::SharedBarriers> &shared_barriers_,
-                     storage::SharedDataType layout_region_,
-                     storage::SharedDataType data_region_,
-                     unsigned shared_timestamp_)
+    SharedMemoryDataFacade(const std::shared_ptr<storage::SharedBarriers> &shared_barriers_,
+                           storage::SharedDataType layout_region_,
+                           storage::SharedDataType data_region_,
+                           unsigned shared_timestamp_)
         : shared_barriers(shared_barriers_), layout_region(layout_region_),
           data_region(data_region_), shared_timestamp(shared_timestamp_)
     {
