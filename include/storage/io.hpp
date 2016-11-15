@@ -56,20 +56,16 @@ class FileReader
                       "bytewise reading requires trivially copyable type");
         if (count == 0)
             return;
-        input_stream.read(reinterpret_cast<char *>(dest), count * sizeof(T));
 
-        // safe to cast here, according to CPP docs, negative values for gcount
-        // are never used.
-        const unsigned long bytes_read = static_cast<unsigned long>(input_stream.gcount());
-        const auto expected_bytes = count * sizeof(T);
-
-        if (bytes_read == 0)
+        const auto &result = input_stream.read(reinterpret_cast<char *>(dest), count * sizeof(T));
+        if (!result)
         {
+            if (result.eof())
+            {
+                throw util::exception("Error reading from " + filename +
+                                      ": Unexpected end of file");
+            }
             throw util::exception("Error reading from " + filename + ": " + std::strerror(errno));
-        }
-        else if (bytes_read < expected_bytes)
-        {
-            throw util::exception("Error reading from " + filename + ": Unexpected end of file");
         }
     }
 
