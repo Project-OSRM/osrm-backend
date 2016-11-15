@@ -7,7 +7,6 @@
 #include <cstdint>
 
 #include <array>
-#include <iostream>
 
 namespace osrm
 {

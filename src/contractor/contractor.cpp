@@ -167,7 +167,8 @@ int Contractor::Run()
     std::string node_file_name = config.osrm_input_path.string() + ".enw";
 
     {
-        storage::io::FileReader node_file(node_file_name, true);
+        storage::io::FileReader node_file(node_file_name,
+                                          storage::io::FileReader::VerifyFingerprint);
         node_file.DeserializeVector(node_weights);
     }
     util::SimpleLogger().Write() << "Done reading node weights.";

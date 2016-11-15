@@ -346,7 +346,8 @@ class StaticRTree
                          const CoordinateListT &coordinate_list)
         : m_coordinate_list(coordinate_list)
     {
-        storage::io::FileReader tree_node_file(node_file);
+        storage::io::FileReader tree_node_file(node_file,
+                                               storage::io::FileReader::HasNoFingerprint);
 
         const auto tree_size = tree_node_file.ReadElementCount64();
 

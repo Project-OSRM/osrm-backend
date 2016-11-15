@@ -30,12 +30,8 @@ inline bool writeFingerprint(std::ostream &stream)
 }
 
 template <typename simple_type>
-bool serializeVector(const std::string &filename, const std::vector<simple_type> &data)
+bool serializeVector(std::ostream &stream, const std::vector<simple_type> &data)
 {
-    std::ofstream stream(filename, std::ios::binary);
-
-    writeFingerprint(stream);
-
     std::uint64_t count = data.size();
     stream.write(reinterpret_cast<const char *>(&count), sizeof(count));
     if (!data.empty())
@@ -44,13 +40,13 @@ bool serializeVector(const std::string &filename, const std::vector<simple_type>
 }
 
 template <typename simple_type>
-bool serializeVector(std::ostream &stream, const std::vector<simple_type> &data)
+bool serializeVector(const std::string &filename, const std::vector<simple_type> &data)
 {
-    std::uint64_t count = data.size();
-    stream.write(reinterpret_cast<const char *>(&count), sizeof(count));
-    if (!data.empty())
-        stream.write(reinterpret_cast<const char *>(&data[0]), sizeof(simple_type) * count);
-    return static_cast<bool>(stream);
+    std::ofstream stream(filename, std::ios::binary);
+
+    writeFingerprint(stream);
+
+    return serializeVector(stream, data);
 }
 
 // serializes a vector of vectors into an adjacency array (creates a copy of the data internally)
@@ -116,7 +112,7 @@ void deserializeAdjacencyArray(const std::string &filename,
                                std::vector<std::uint32_t> &offsets,
                                std::vector<simple_type> &data)
 {
-    storage::io::FileReader file(filename);
+    storage::io::FileReader file(filename, storage::io::FileReader::HasNoFingerprint);
 
     file.DeserializeVector(offsets);
     file.DeserializeVector(data);

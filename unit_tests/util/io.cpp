@@ -20,8 +20,9 @@ BOOST_AUTO_TEST_CASE(io_data)
 
     osrm::util::serializeVector(IO_TMP_FILE, data_in);
 
-    osrm::storage::io::FileReader f(IO_TMP_FILE);
-    f.DeserializeVector(data_out);
+    osrm::storage::io::FileReader infile(IO_TMP_FILE,
+                                         osrm::storage::io::FileReader::VerifyFingerprint);
+    infile.DeserializeVector(data_out);
 
     BOOST_REQUIRE_EQUAL(data_in.size(), data_out.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(data_out.begin(), data_out.end(), data_in.begin(), data_in.end());

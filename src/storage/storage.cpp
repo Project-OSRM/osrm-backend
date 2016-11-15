@@ -261,7 +261,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         // collect number of elements to store in shared memory object
         util::SimpleLogger().Write() << "load names from: " << config.names_data_path;
         // number of entries in name index
-        io::FileReader name_file(config.names_data_path);
+        io::FileReader name_file(config.names_data_path, io::FileReader::HasNoFingerprint);
 
         const auto name_blocks = name_file.ReadElementCount32();
         layout.SetBlockSize<unsigned>(DataLayout::NAME_OFFSETS, name_blocks);
@@ -287,7 +287,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // Loading information for original edges
     {
-        io::FileReader edges_file(config.edges_data_path);
+        io::FileReader edges_file(config.edges_data_path, io::FileReader::HasNoFingerprint);
         const auto number_of_original_edges = edges_file.ReadElementCount64();
 
         // note: settings this all to the same size is correct, we extract them from the same struct
@@ -306,7 +306,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader hsgr_file(config.hsgr_data_path);
+        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::HasNoFingerprint);
 
         const auto hsgr_header = io::readHSGRHeader(hsgr_file);
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
@@ -318,7 +318,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load rsearch tree size
     {
-        io::FileReader tree_node_file(config.ram_index_path);
+        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::HasNoFingerprint);
 
         const auto tree_size = tree_node_file.ReadElementCount64();
         layout.SetBlockSize<RTreeNode>(DataLayout::R_SEARCH_TREE, tree_size);
@@ -332,21 +332,21 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // read timestampsize
     {
-        io::FileReader timestamp_file(config.timestamp_path);
+        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::HasNoFingerprint);
         const auto timestamp_size = timestamp_file.Size();
         layout.SetBlockSize<char>(DataLayout::TIMESTAMP, timestamp_size);
     }
 
     // load core marker size
     {
-        io::FileReader core_marker_file(config.core_data_path);
+        io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
         const auto number_of_core_markers = core_marker_file.ReadElementCount32();
         layout.SetBlockSize<unsigned>(DataLayout::CORE_MARKER, number_of_core_markers);
     }
 
     // load coordinate size
     {
-        io::FileReader node_file(config.nodes_data_path);
+        io::FileReader node_file(config.nodes_data_path, io::FileReader::HasNoFingerprint);
         const auto coordinate_list_size = node_file.ReadElementCount64();
         layout.SetBlockSize<util::Coordinate>(DataLayout::COORDINATE_LIST, coordinate_list_size);
         // we'll read a list of OSM node IDs from the same data, so set the block size for the same
@@ -358,7 +358,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     // load geometries sizes
     {
-        io::FileReader geometry_file(config.geometries_path);
+        io::FileReader geometry_file(config.geometries_path, io::FileReader::HasNoFingerprint);
 
         const auto number_of_geometries_indices = geometry_file.ReadElementCount32();
         layout.SetBlockSize<unsigned>(DataLayout::GEOMETRIES_INDEX, number_of_geometries_indices);
@@ -377,7 +377,8 @@ void Storage::PopulateLayout(DataLayout &layout)
     // load datasource sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist.
     {
-        io::FileReader geometry_datasource_file(config.datasource_indexes_path);
+        io::FileReader geometry_datasource_file(config.datasource_indexes_path,
+                                                io::FileReader::HasNoFingerprint);
         const auto number_of_compressed_datasources = geometry_datasource_file.ReadElementCount64();
         layout.SetBlockSize<uint8_t>(DataLayout::DATASOURCES_LIST,
                                      number_of_compressed_datasources);
@@ -386,7 +387,8 @@ void Storage::PopulateLayout(DataLayout &layout)
     // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't
     // exist
     {
-        io::FileReader datasource_names_file(config.datasource_names_path);
+        io::FileReader datasource_names_file(config.datasource_names_path,
+                                             io::FileReader::HasNoFingerprint);
 
         const io::DatasourceNamesData datasource_names_data =
             io::readDatasourceNames(datasource_names_file);
@@ -400,7 +402,8 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader intersection_file(config.intersection_class_path, true);
+        io::FileReader intersection_file(config.intersection_class_path,
+                                         io::FileReader::VerifyFingerprint);
 
         std::vector<BearingClassID> bearing_class_id_table;
         intersection_file.DeserializeVector(bearing_class_id_table);
@@ -435,7 +438,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     {
         // Loading turn lane data
-        io::FileReader lane_data_file(config.turn_lane_data_path);
+        io::FileReader lane_data_file(config.turn_lane_data_path, io::FileReader::HasNoFingerprint);
         const auto lane_tuple_count = lane_data_file.ReadElementCount64();
         layout.SetBlockSize<util::guidance::LaneTupleIdPair>(DataLayout::TURN_LANE_DATA,
                                                              lane_tuple_count);
@@ -450,7 +453,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load the HSGR file
     {
-        io::FileReader hsgr_file(config.hsgr_data_path);
+        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::HasNoFingerprint);
         auto hsgr_header = io::readHSGRHeader(hsgr_file);
         unsigned *checksum_ptr =
             layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
@@ -491,9 +494,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Name data
     {
-        io::FileReader name_file(config.names_data_path);
+        io::FileReader name_file(config.names_data_path, io::FileReader::HasNoFingerprint);
         const auto name_blocks_count = name_file.ReadElementCount32();
-        const auto name_char_list_count = name_file.ReadElementCount32();
+        name_file.Skip<std::uint32_t>(1); // name_char_list_count
 
         using NameRangeTable = util::RangeTable<16, true>;
 
@@ -528,7 +531,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Turn lane data
     {
-        io::FileReader lane_data_file(config.turn_lane_data_path);
+        io::FileReader lane_data_file(config.turn_lane_data_path, io::FileReader::HasNoFingerprint);
 
         const auto lane_tuple_count = lane_data_file.ReadElementCount64();
 
@@ -579,7 +582,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load original edge data
     {
-        io::FileReader edges_input_file(config.edges_data_path);
+        io::FileReader edges_input_file(config.edges_data_path, io::FileReader::HasNoFingerprint);
 
         const auto number_of_original_edges = edges_input_file.ReadElementCount64();
 
@@ -620,7 +623,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load compressed geometry
     {
-        io::FileReader geometry_input_file(config.geometries_path);
+        io::FileReader geometry_input_file(config.geometries_path,
+                                           io::FileReader::HasNoFingerprint);
 
         const auto geometry_index_count = geometry_input_file.ReadElementCount32();
         const auto geometries_index_ptr =
@@ -649,7 +653,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     }
 
     {
-        io::FileReader geometry_datasource_file(config.datasource_indexes_path);
+        io::FileReader geometry_datasource_file(config.datasource_indexes_path,
+                                                io::FileReader::HasNoFingerprint);
         const auto number_of_compressed_datasources = geometry_datasource_file.ReadElementCount64();
 
         // load datasource information (if it exists)
@@ -664,7 +669,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     {
         /* Load names */
-        io::FileReader datasource_names_file(config.datasource_names_path);
+        io::FileReader datasource_names_file(config.datasource_names_path,
+                                             io::FileReader::HasNoFingerprint);
 
         const auto datasource_names_data = io::readDatasourceNames(datasource_names_file);
 
@@ -711,7 +717,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Loading list of coordinates
     {
-        io::FileReader nodes_file(config.nodes_data_path);
+        io::FileReader nodes_file(config.nodes_data_path, io::FileReader::HasNoFingerprint);
         nodes_file.Skip<std::uint64_t>(1); // node_count
         const auto coordinates_ptr =
             layout.GetBlockPtr<util::Coordinate, true>(memory_ptr, DataLayout::COORDINATE_LIST);
@@ -729,7 +735,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // store timestamp
     {
-        io::FileReader timestamp_file(config.timestamp_path);
+        io::FileReader timestamp_file(config.timestamp_path, io::FileReader::HasNoFingerprint);
         const auto timestamp_size = timestamp_file.Size();
 
         const auto timestamp_ptr =
@@ -740,7 +746,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // store search tree portion of rtree
     {
-        io::FileReader tree_node_file(config.ram_index_path);
+        io::FileReader tree_node_file(config.ram_index_path, io::FileReader::HasNoFingerprint);
         // perform this read so that we're at the right stream position for the next
         // read.
         tree_node_file.Skip<std::uint64_t>(1);
@@ -751,7 +757,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     }
 
     {
-        io::FileReader core_marker_file(config.core_data_path);
+        io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
         const auto number_of_core_markers = core_marker_file.ReadElementCount32();
 
         // load core markers
@@ -785,7 +791,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load profile properties
     {
-        io::FileReader profile_properties_file(config.properties_path);
+        io::FileReader profile_properties_file(config.properties_path,
+                                               io::FileReader::HasNoFingerprint);
         const auto profile_properties_ptr = layout.GetBlockPtr<extractor::ProfileProperties, true>(
             memory_ptr, DataLayout::PROPERTIES);
         profile_properties_file.ReadInto(profile_properties_ptr,
@@ -794,7 +801,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load intersection data
     {
-        io::FileReader intersection_file(config.intersection_class_path, true);
+        io::FileReader intersection_file(config.intersection_class_path,
+                                         io::FileReader::VerifyFingerprint);
 
         std::vector<BearingClassID> bearing_class_id_table;
         intersection_file.DeserializeVector(bearing_class_id_table);
