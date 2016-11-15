@@ -37,7 +37,6 @@ namespace osrm
 {
 namespace extractor
 {
-
 struct ExtractorConfig
 {
     ExtractorConfig() noexcept : requested_num_threads(0) {}
@@ -102,8 +101,13 @@ struct ExtractorConfig
     bool generate_edge_lookup;
     std::string edge_penalty_path;
     std::string edge_segment_lookup_path;
+
+    std::string cache_file_type;
+    std::string cache_file_path;
 };
 }
 }
+
+
 
 #endif // EXTRACTOR_CONFIG_HPP

@@ -234,9 +234,17 @@ function node_function (node, result)
 end
 
 function way_function (way, result)
+
+ -- print("way id : ", way:id());
+ -- for node in way:get_nodes() do
+   -- print("  node id  : ", node:id())
+   -- print("  node lat :", node:location():lat())
+ -- end
+
   local highway = way:get_value_by_key("highway")
   local route = way:get_value_by_key("route")
   local bridge = way:get_value_by_key("bridge")
+
 
   if not ((highway and highway ~= "") or (route and route ~= "") or (bridge and bridge ~= "")) then
     return
