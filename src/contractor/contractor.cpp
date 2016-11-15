@@ -164,6 +164,8 @@ int Contractor::Run()
     util::SimpleLogger().Write() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
     std::string node_file_name = config.osrm_input_path.string() + ".enw";
+
+	// TODO normalize I/O
     if (util::deserializeVector(node_file_name, node_weights))
     {
         util::SimpleLogger().Write() << "Done reading node weights.";
@@ -295,6 +297,7 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
         const auto filename = segment_speed_filenames[idx];
 
+		// TODO normalize I/O
         std::ifstream segment_speed_file{filename, std::ios::binary};
         if (!segment_speed_file)
             throw util::exception{"Unable to open segment speed file " + filename};
@@ -383,6 +386,7 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
         const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
         const auto filename = turn_penalty_filenames[idx];
 
+		// TODO normalize I/O
         std::ifstream turn_penalty_file{filename, std::ios::binary};
         if (!turn_penalty_file)
             throw util::exception{"Unable to open turn penalty file " + filename};
@@ -564,6 +568,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         if (!(update_edge_weights || update_turn_penalties))
             return;
 
+		// TODO normalize I/O
         boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
 
         if (!nodes_input_stream)
@@ -584,6 +589,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         if (!(update_edge_weights || update_turn_penalties))
             return;
 
+		// TODO normalize I/O
         std::ifstream geometry_stream(geometry_filename, std::ios::binary);
         if (!geometry_stream)
         {
@@ -768,6 +774,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
             return;
 
         // Now save out the updated compressed geometries
+		// TODO normalize I/O
         std::ofstream geometry_stream(geometry_filename, std::ios::binary);
         if (!geometry_stream)
         {
@@ -789,6 +796,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     };
 
     const auto save_datasource_indexes = [&] {
+		// TODO normalize I/O
         std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
         if (!datasource_stream)
         {
@@ -805,6 +813,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     };
 
     const auto save_datastore_names = [&] {
+		// TODO normalize I/O
         std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
         if (!datasource_stream)
         {
@@ -936,6 +945,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
 void Contractor::ReadNodeLevels(std::vector<float> &node_levels) const
 {
+	// TODO normalize I/O
     boost::filesystem::ifstream order_input_stream(config.level_output_path, std::ios::binary);
 
     unsigned level_size;
@@ -948,6 +958,7 @@ void Contractor::WriteNodeLevels(std::vector<float> &&in_node_levels) const
 {
     std::vector<float> node_levels(std::move(in_node_levels));
 
+	// TODO normalize I/O
     boost::filesystem::ofstream order_output_stream(config.level_output_path, std::ios::binary);
 
     unsigned level_size = node_levels.size();
@@ -964,6 +975,7 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
         unpacked_bool_flags[i] = is_core_node[i] ? 1 : 0;
     }
 
+	// TODO normalize I/O
     boost::filesystem::ofstream core_marker_output_stream(config.core_output_path,
                                                           std::ios::binary);
     unsigned size = unpacked_bool_flags.size();
@@ -983,6 +995,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
                                  << " edges";
 
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
+	// TODO normalize I/O
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
     const NodeID max_used_node_id = [&contracted_edge_list] {

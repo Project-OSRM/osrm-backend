@@ -31,6 +31,7 @@ using BenchStaticRTree =
 
 std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nodes_file)
 {
+	// TODO normalize I/O
     boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
     extractor::QueryNode current_node;

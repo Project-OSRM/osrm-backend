@@ -203,6 +203,7 @@ class StaticRTree
             });
 
         // open leaf file
+		// TODO normalize I/O
         boost::filesystem::ofstream leaf_node_file(leaf_node_filename, std::ios::binary);
 
         // sort the hilbert-value representatives
@@ -331,6 +332,7 @@ class StaticRTree
             });
 
         // open tree file
+		// TODO normalize I/O
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);
 
         std::uint64_t size_of_tree = m_search_tree.size();
@@ -355,6 +357,8 @@ class StaticRTree
         {
             throw exception("ram index file is empty");
         }
+
+		// TODO normalize I/O
         boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
 
         const auto tree_size = storage::io::readElementCount(tree_node_file);

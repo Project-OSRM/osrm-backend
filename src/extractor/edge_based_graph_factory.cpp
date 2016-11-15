@@ -320,6 +320,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     skipped_uturns_counter = 0;
     skipped_barrier_turns_counter = 0;
 
+	// TODO normalize I/O
     std::ofstream edge_data_file(original_edge_data_filename.c_str(), std::ios::binary);
     std::ofstream edge_segment_file;
     std::ofstream edge_penalty_file;
@@ -577,6 +578,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                  << bearing_class_hash.size() << " Bearing Classes";
 
     util::SimpleLogger().Write() << "Writing Turn Lane Data to File...";
+	// TODO normalize I/O
     std::ofstream turn_lane_data_file(turn_lane_data_filename.c_str(), std::ios::binary);
     std::vector<util::guidance::LaneTupleIdPair> lane_data(lane_data_map.size());
     // extract lane data sorted by ID
