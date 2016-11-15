@@ -487,6 +487,8 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
                   0);
         const auto absolute_file_index_path =
             boost::filesystem::absolute(config.file_index_path).string();
+        BOOST_ASSERT(static_cast<std::size_t>(layout_ptr->GetBlockSize(
+                         DataLayout::FILE_INDEX_PATH)) == absolute_file_index_path.size());
         std::copy(
             absolute_file_index_path.begin(), absolute_file_index_path.end(), file_index_path_ptr);
     }
@@ -559,8 +561,11 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
             memory_ptr, DataLayout::LANE_DESCRIPTION_OFFSETS);
         if (!lane_description_offsets.empty())
         {
-            BOOST_ASSERT(layout_ptr->GetBlockSize(DataLayout::LANE_DESCRIPTION_OFFSETS) >=
-                         sizeof(lane_description_offsets[0]) * lane_description_offsets.size());
+            BOOST_ASSERT(
+                static_cast<std::size_t>(
+                    layout_ptr->GetBlockSize(DataLayout::LANE_DESCRIPTION_OFFSETS)) ==
+                std::distance(lane_description_offsets.begin(), lane_description_offsets.end()) *
+                    sizeof(decltype(lane_description_offsets)::value_type));
             std::copy(lane_description_offsets.begin(),
                       lane_description_offsets.end(),
                       turn_lane_offset_ptr);
@@ -571,8 +576,11 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
                 memory_ptr, DataLayout::LANE_DESCRIPTION_MASKS);
         if (!lane_description_masks.empty())
         {
-            BOOST_ASSERT(layout_ptr->GetBlockSize(DataLayout::LANE_DESCRIPTION_MASKS) >=
-                         sizeof(lane_description_masks[0]) * lane_description_masks.size());
+            BOOST_ASSERT(
+                static_cast<std::size_t>(
+                    layout_ptr->GetBlockSize(DataLayout::LANE_DESCRIPTION_MASKS)) ==
+                std::distance(lane_description_masks.begin(), lane_description_masks.end()) *
+                    sizeof(decltype(lane_description_masks)::value_type));
             std::copy(
                 lane_description_masks.begin(), lane_description_masks.end(), turn_lane_mask_ptr);
         }
@@ -676,6 +684,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
             layout_ptr->GetBlockPtr<char, true>(memory_ptr, DataLayout::DATASOURCE_NAME_DATA);
         if (layout_ptr->GetBlockSize(DataLayout::DATASOURCE_NAME_DATA) > 0)
         {
+            BOOST_ASSERT(std::distance(datasource_names_data.names.begin(),
+                                       datasource_names_data.names.end()) *
+                             sizeof(decltype(datasource_names_data.names)::value_type) ==
+                         layout_ptr->GetBlockSize(DataLayout::DATASOURCE_NAME_DATA));
             std::copy(datasource_names_data.names.begin(),
                       datasource_names_data.names.end(),
                       datasource_name_data_ptr);
@@ -685,6 +697,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
             memory_ptr, DataLayout::DATASOURCE_NAME_OFFSETS);
         if (layout_ptr->GetBlockSize(DataLayout::DATASOURCE_NAME_OFFSETS) > 0)
         {
+            BOOST_ASSERT(std::distance(datasource_names_data.offsets.begin(),
+                                       datasource_names_data.offsets.end()) *
+                             sizeof(decltype(datasource_names_data.offsets)::value_type) ==
+                         layout_ptr->GetBlockSize(DataLayout::DATASOURCE_NAME_OFFSETS));
             std::copy(datasource_names_data.offsets.begin(),
                       datasource_names_data.offsets.end(),
                       datasource_name_offsets_ptr);
@@ -694,6 +710,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
             memory_ptr, DataLayout::DATASOURCE_NAME_LENGTHS);
         if (layout_ptr->GetBlockSize(DataLayout::DATASOURCE_NAME_LENGTHS) > 0)
         {
+            BOOST_ASSERT(std::distance(datasource_names_data.lengths.begin(),
+                                       datasource_names_data.lengths.end()) *
+                             sizeof(decltype(datasource_names_data.lengths)::value_type) ==
+                         layout_ptr->GetBlockSize(DataLayout::DATASOURCE_NAME_LENGTHS));
             std::copy(datasource_names_data.lengths.begin(),
                       datasource_names_data.lengths.end(),
                       datasource_name_lengths_ptr);
@@ -814,6 +834,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         {
             const auto bearing_id_ptr = layout_ptr->GetBlockPtr<BearingClassID, true>(
                 memory_ptr, DataLayout::BEARING_CLASSID);
+            BOOST_ASSERT(
+                static_cast<std::size_t>(layout_ptr->GetBlockSize(DataLayout::BEARING_CLASSID)) ==
+                std::distance(bearing_class_id_table.begin(), bearing_class_id_table.end()) *
+                    sizeof(decltype(bearing_class_id_table)::value_type));
             std::copy(bearing_class_id_table.begin(), bearing_class_id_table.end(), bearing_id_ptr);
         }
 
@@ -821,6 +845,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         {
             const auto bearing_offsets_ptr =
                 layout_ptr->GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::BEARING_OFFSETS);
+            BOOST_ASSERT(
+                static_cast<std::size_t>(layout_ptr->GetBlockSize(DataLayout::BEARING_OFFSETS)) ==
+                std::distance(bearing_offsets_data.begin(), bearing_offsets_data.end()) *
+                    sizeof(decltype(bearing_offsets_data)::value_type));
             std::copy(
                 bearing_offsets_data.begin(), bearing_offsets_data.end(), bearing_offsets_ptr);
         }
@@ -830,6 +858,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
             const auto bearing_blocks_ptr =
                 layout_ptr->GetBlockPtr<typename util::RangeTable<16, true>::BlockT, true>(
                     memory_ptr, DataLayout::BEARING_BLOCKS);
+            BOOST_ASSERT(
+                static_cast<std::size_t>(layout_ptr->GetBlockSize(DataLayout::BEARING_BLOCKS)) ==
+                std::distance(bearing_blocks_data.begin(), bearing_blocks_data.end()) *
+                    sizeof(decltype(bearing_blocks_data)::value_type));
             std::copy(bearing_blocks_data.begin(), bearing_blocks_data.end(), bearing_blocks_ptr);
         }
 
@@ -837,6 +869,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         {
             const auto bearing_class_ptr = layout_ptr->GetBlockPtr<DiscreteBearing, true>(
                 memory_ptr, DataLayout::BEARING_VALUES);
+            BOOST_ASSERT(
+                static_cast<std::size_t>(layout_ptr->GetBlockSize(DataLayout::BEARING_VALUES)) ==
+                std::distance(bearing_class_table.begin(), bearing_class_table.end()) *
+                    sizeof(decltype(bearing_class_table)::value_type));
             std::copy(bearing_class_table.begin(), bearing_class_table.end(), bearing_class_ptr);
         }
 
@@ -844,6 +880,10 @@ void Storage::LoadData(DataLayout *layout_ptr, char *memory_ptr)
         {
             const auto entry_class_ptr = layout_ptr->GetBlockPtr<util::guidance::EntryClass, true>(
                 memory_ptr, DataLayout::ENTRY_CLASS);
+            BOOST_ASSERT(
+                static_cast<std::size_t>(layout_ptr->GetBlockSize(DataLayout::ENTRY_CLASS)) ==
+                std::distance(entry_class_table.begin(), entry_class_table.end()) *
+                    sizeof(decltype(entry_class_table)::value_type));
             std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
         }
     }
