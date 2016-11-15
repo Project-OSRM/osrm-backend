@@ -3,48 +3,100 @@ local find_access_tag = require("lib/access").find_access_tag
 local get_destination = require("lib/destination").get_destination
 local set_classification = require("lib/guidance").set_classification
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
+local Set = require('lib/set')
+local Sequence = require('lib/sequence')
 
 -- Begin of globals
-barrier_whitelist = { ["cattle_grid"] = true, ["border_control"] = true, ["checkpoint"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["lift_gate"] = true, ["no"] = true, ["entrance"] = true }
-access_tag_whitelist = { ["yes"] = true, ["motorcar"] = true, ["motor_vehicle"] = true, ["vehicle"] = true, ["permissive"] = true, ["designated"] = true, ["destination"] = true }
-access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["emergency"] = true, ["psv"] = true, ["delivery"] = true }
-access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
-access_tags_hierarchy = { "motorcar", "motor_vehicle", "vehicle", "access" }
-service_tag_restricted = { ["parking_aisle"] = true, ["parking"] = true }
-service_tag_forbidden = { ["emergency_access"] = true }
-restrictions = { "motorcar", "motor_vehicle", "vehicle" }
+barrier_whitelist = Set {
+  'cattle_grid',
+  'border_control',
+  'checkpoint',
+  'toll_booth',
+  'sally_port',
+  'gate',
+  'lift_gate',
+  'no',
+  'entrance'
+}
+
+access_tag_whitelist = Set {
+  'yes',
+  'motorcar',
+  'motor_vehicle',
+  'vehicle',
+  'permissive',
+  'designated',
+  'destination'
+}
+
+access_tag_blacklist = Set {
+  'no',
+  'private',
+  'agricultural',
+  'forestry',
+  'emergency',
+  'psv',
+  'delivery'
+}
+
+access_tag_restricted = Set {
+  'destination',
+  'delivery'
+}
+
+access_tags_hierarchy = Sequence {
+  'motorcar',
+  'motor_vehicle',
+  'vehicle',
+  'access'
+}
+
+service_tag_restricted = Set {
+  'parking_aisle',
+  'parking'
+}
+
+service_tag_forbidden = Set {
+  'emergency_access'
+}
+
+restrictions = Sequence {
+  'motorcar', "motor_vehicle", "vehicle" }
 
 -- A list of suffixes to suppress in name change instructions
-suffix_list = { "N", "NE", "E", "SE", "S", "SW", "W", "NW", "North", "South", "West", "East" }
+-- Note: a Set does not work here because it's read from C++
+suffix_list = {
+  'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
+}
 
 speed_profile = {
-  ["motorway"] = 90,
-  ["motorway_link"] = 45,
-  ["trunk"] = 85,
-  ["trunk_link"] = 40,
-  ["primary"] = 65,
-  ["primary_link"] = 30,
-  ["secondary"] = 55,
-  ["secondary_link"] = 25,
-  ["tertiary"] = 40,
-  ["tertiary_link"] = 20,
-  ["unclassified"] = 25,
-  ["residential"] = 25,
-  ["living_street"] = 10,
-  ["service"] = 15,
---  ["track"] = 5,
-  ["ferry"] = 5,
-  ["movable"] = 5,
-  ["shuttle_train"] = 10,
-  ["default"] = 10
+  motorway = 90,
+  motorway_link = 45,
+  trunk = 85,
+  trunk_link = 40,
+  primary = 65,
+  primary_link = 30,
+  secondary = 55,
+  secondary_link = 25,
+  tertiary = 40,
+  tertiary_link = 20,
+  unclassified = 25,
+  residential = 25,
+  living_street = 10,
+  service = 15,
+--track = 5,
+  ferry = 5,
+  movable = 5,
+  shuttle_train = 10,
+  default = 10
 }
 
 -- service speeds
 service_speeds = {
-  ["alley"] = 5,
-  ["parking"] = 5,
-  ["parking_aisle"] = 5,
-  ["driveway"] = 5,
+  alley = 5,
+  parking = 5,
+  parking_aisle = 5,
+  driveway = 5,
   ["drive-through"] = 5
 }
 
@@ -53,67 +105,67 @@ service_speeds = {
 
 -- max speed for surfaces
 surface_speeds = {
-  ["asphalt"] = nil,    -- nil mean no limit. removing the line has the same effect
-  ["concrete"] = nil,
+  asphalt = nil,    -- nil mean no limit. removing the line has the same effect
+  concrete = nil,
   ["concrete:plates"] = nil,
   ["concrete:lanes"] = nil,
-  ["paved"] = nil,
+  paved = nil,
 
-  ["cement"] = 80,
-  ["compacted"] = 80,
-  ["fine_gravel"] = 80,
+  cement = 80,
+  compacted = 80,
+  fine_gravel = 80,
 
-  ["paving_stones"] = 60,
-  ["metal"] = 60,
-  ["bricks"] = 60,
+  paving_stones = 60,
+  metal = 60,
+  bricks = 60,
 
-  ["grass"] = 40,
-  ["wood"] = 40,
-  ["sett"] = 40,
-  ["grass_paver"] = 40,
-  ["gravel"] = 40,
-  ["unpaved"] = 40,
-  ["ground"] = 40,
-  ["dirt"] = 40,
-  ["pebblestone"] = 40,
-  ["tartan"] = 40,
+  grass = 40,
+  wood = 40,
+  sett = 40,
+  grass_paver = 40,
+  gravel = 40,
+  unpaved = 40,
+  ground = 40,
+  dirt = 40,
+  pebblestone = 40,
+  tartan = 40,
 
-  ["cobblestone"] = 30,
-  ["clay"] = 30,
+  cobblestone = 30,
+  clay = 30,
 
-  ["earth"] = 20,
-  ["stone"] = 20,
-  ["rocky"] = 20,
-  ["sand"] = 20,
+  earth = 20,
+  stone = 20,
+  rocky = 20,
+  sand = 20,
 
-  ["mud"] = 10
+  mud = 10
 }
 
 -- max speed for tracktypes
 tracktype_speeds = {
-  ["grade1"] =  60,
-  ["grade2"] =  40,
-  ["grade3"] =  30,
-  ["grade4"] =  25,
-  ["grade5"] =  20
+  grade1 =  60,
+  grade2 =  40,
+  grade3 =  30,
+  grade4 =  25,
+  grade5 =  20
 }
 
 -- max speed for smoothnesses
 smoothness_speeds = {
-  ["intermediate"]    =  80,
-  ["bad"]             =  40,
-  ["very_bad"]        =  20,
-  ["horrible"]        =  10,
-  ["very_horrible"]   =  5,
-  ["impassable"]      =  0
+  intermediate    =  80,
+  bad             =  40,
+  very_bad        =  20,
+  horrible        =  10,
+  very_horrible   =  5,
+  impassable      =  0
 }
 
 -- http://wiki.openstreetmap.org/wiki/Speed_limits
 maxspeed_table_default = {
-  ["urban"] = 50,
-  ["rural"] = 90,
-  ["trunk"] = 110,
-  ["motorway"] = 130
+  urban = 50,
+  rural = 90,
+  trunk = 110,
+  motorway = 130
 }
 
 -- List only exceptions
@@ -676,7 +728,7 @@ function way_function(way, result)
   if handle_default_mode(way,result) == false then return end
   if handle_blocking(way,result) == false then return end
   if handle_access(way,result,data) == false then return end
-  if handle_hov(way,result) == false then return false end
+  if handle_hov(way,result) == false then return end
   if handle_ferries(way,result) == false then return end
   if handle_movables(way,result) == false then return end
   if handle_service(way,result) == false then return end
