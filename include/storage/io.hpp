@@ -31,19 +31,24 @@ class FileReader
     boost::filesystem::ifstream input_stream;
 
   public:
-    FileReader(const std::string &filename, const bool check_fingerprint = false)
-        : FileReader(boost::filesystem::path(filename), check_fingerprint)
+    enum FingerprintFlag
+    {
+        VerifyFingerprint,
+        HasNoFingerprint
+    };
+    FileReader(const std::string &filename, const FingerprintFlag flag)
+        : FileReader(boost::filesystem::path(filename), flag)
     {
     }
 
-    FileReader(const boost::filesystem::path &filename_, const bool check_fingerprint = false)
+    FileReader(const boost::filesystem::path &filename_, const FingerprintFlag flag)
         : filename(filename_.string())
     {
         input_stream.open(filename_, std::ios::binary);
         if (!input_stream)
             throw util::exception("Error opening " + filename + ":" + std::strerror(errno));
 
-        if (check_fingerprint && !ReadAndCheckFingerprint())
+        if (flag == VerifyFingerprint && !ReadAndCheckFingerprint())
         {
             throw util::exception("Fingerprint mismatch in " + filename);
         }
