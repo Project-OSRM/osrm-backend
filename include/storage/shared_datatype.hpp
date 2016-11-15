@@ -142,7 +142,7 @@ struct DataLayout
     }
 
     template <typename T, bool WRITE_CANARY = false>
-    inline T *GetBlockPtr(char *shared_memory, BlockID bid)
+    inline T *GetBlockPtr(char *shared_memory, BlockID bid) const
     {
         T *ptr = (T *)(shared_memory + GetBlockOffset(bid));
         if (WRITE_CANARY)
