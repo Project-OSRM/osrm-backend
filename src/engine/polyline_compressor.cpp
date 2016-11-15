@@ -33,20 +33,16 @@ std::string encode(std::vector<int> &numbers)
     std::string output;
     for (auto &number : numbers)
     {
-        bool isNegative = number < 0;
-
-        if (isNegative)
+        if (number < 0)
         {
             const unsigned binary = std::llabs(number);
             const unsigned twos = (~binary) + 1u;
-            number = twos;
+            const unsigned shl = twos << 1u;
+            number = static_cast<int>(~shl);
         }
-
-        number <<= 1u;
-
-        if (isNegative)
+        else
         {
-            number = ~number;
+            number <<= 1u;
         }
     }
     for (const int number : numbers)
