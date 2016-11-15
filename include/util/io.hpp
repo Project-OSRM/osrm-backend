@@ -53,30 +53,6 @@ bool serializeVector(std::ostream &stream, const std::vector<simple_type> &data)
     return static_cast<bool>(stream);
 }
 
-template <typename simple_type>
-bool deserializeVector(const std::string &filename, std::vector<simple_type> &data)
-{
-
-    storage::io::FileReader file(filename, true);
-
-    const auto count = file.ReadElementCount64();
-    data.resize(count);
-    if (count)
-        file.ReadInto(data.data(), count);
-    return true;
-}
-
-template <typename simple_type>
-bool deserializeVector(std::istream &stream, std::vector<simple_type> &data)
-{
-    std::uint64_t count = 0;
-    stream.read(reinterpret_cast<char *>(&count), sizeof(count));
-    data.resize(count);
-    if (count)
-        stream.read(reinterpret_cast<char *>(&data[0]), sizeof(simple_type) * count);
-    return static_cast<bool>(stream);
-}
-
 // serializes a vector of vectors into an adjacency array (creates a copy of the data internally)
 template <typename simple_type>
 bool serializeVectorIntoAdjacencyArray(const std::string &filename,
@@ -136,23 +112,20 @@ bool serializeVector(std::ofstream &out_stream, const stxxl::vector<simple_type>
 }
 
 template <typename simple_type>
-bool deserializeAdjacencyArray(const std::string &filename,
+void deserializeAdjacencyArray(const std::string &filename,
                                std::vector<std::uint32_t> &offsets,
                                std::vector<simple_type> &data)
 {
-    std::ifstream in_stream(filename, std::ios::binary);
+    storage::io::FileReader file(filename);
 
-    if (!deserializeVector(in_stream, offsets))
-        return false;
-
-    if (!deserializeVector(in_stream, data))
-        return false;
+    file.DeserializeVector(offsets);
+    file.DeserializeVector(data);
 
     // offsets have to match up with the size of the data
     if (offsets.empty() || (offsets.back() != boost::numeric_cast<std::uint32_t>(data.size())))
-        return false;
-
-    return static_cast<bool>(in_stream);
+        throw util::exception("Error in " + filename + (offsets.empty()
+                                                            ? "Offsets are empty"
+                                                            : "Offset and data size do not match"));
 }
 
 inline bool serializeFlags(const boost::filesystem::path &path, const std::vector<bool> &flags)
@@ -183,28 +156,6 @@ inline bool serializeFlags(const boost::filesystem::path &path, const std::vecto
     return static_cast<bool>(flag_stream);
 }
 
-inline bool deserializeFlags(const boost::filesystem::path &path, std::vector<bool> &flags)
-{
-    SimpleLogger().Write() << "Reading flags from " << path;
-    storage::io::FileReader flag_file(path, true);
-
-    const auto number_of_bits = flag_file.ReadOne<std::uint32_t>();
-    flags.resize(number_of_bits);
-    // putting bits in ints
-    std::uint32_t chunks = (number_of_bits + 31) / 32;
-    std::size_t bit_position = 0;
-    std::uint32_t chunk;
-    for (std::size_t chunk_id = 0; chunk_id < chunks; ++chunk_id)
-    {
-        flag_file.ReadInto(chunk);
-        std::bitset<32> chunk_bits(chunk);
-        for (std::size_t bit = 0; bit < 32 && bit_position < number_of_bits; ++bit, ++bit_position)
-            flags[bit_position] = chunk_bits[bit];
-    }
-    SimpleLogger().Write() << "Read " << number_of_bits << " bits in " << chunks
-                           << " Chunks from disk.";
-    return true;
-}
 } // namespace util
 } // namespace osrm
 
