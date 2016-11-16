@@ -1,6 +1,7 @@
 #ifndef RANGE_TABLE_HPP
 #define RANGE_TABLE_HPP
 
+#include "storage/io.hpp"
 #include "util/integer_range.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 
@@ -136,6 +137,21 @@ template <unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY> class RangeTable
                      block_offsets.size() == number_of_blocks);
 
         sum_lengths = lengths_prefix_sum;
+    }
+
+    void ReadARangeTable(osrm::storage::io::FileReader &filereader)
+    {
+        unsigned number_of_blocks = filereader.ReadElementCount32();
+        // read total length
+        filereader.ReadInto(&sum_lengths, 1);
+
+        block_offsets.resize(number_of_blocks);
+        diff_blocks.resize(number_of_blocks);
+
+        // read block offsets
+        filereader.ReadInto(block_offsets.data(), number_of_blocks);
+        // read blocks
+        filereader.ReadInto(diff_blocks.data(), number_of_blocks);
     }
 
     inline RangeT GetRange(const unsigned id) const

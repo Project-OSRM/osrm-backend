@@ -7,6 +7,7 @@
 #include "extractor/node_based_edge.hpp"
 
 #include "storage/io.hpp"
+#include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
@@ -299,9 +300,8 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
         const auto filename = segment_speed_filenames[idx];
 
-        std::ifstream segment_speed_file{filename, std::ios::binary};
-        if (!segment_speed_file)
-            throw util::exception{"Unable to open segment speed file " + filename};
+        storage::io::FileReader segment_speed_file_reader(
+            filename, storage::io::FileReader::HasNoFingerprint);
 
         SegmentSpeedSourceFlatMap local;
 
@@ -309,30 +309,33 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         std::uint64_t to_node_id{};
         unsigned speed{};
 
-        for (std::string line; std::getline(segment_speed_file, line);)
-        {
-            using namespace boost::spirit::qi;
+        std::for_each(
+            segment_speed_file_reader.GetLineIteratorBegin(),
+            segment_speed_file_reader.GetLineIteratorEnd(),
+            [&](const std::string &line) {
 
-            auto it = begin(line);
-            const auto last = end(line);
+                using namespace boost::spirit::qi;
 
-            // The ulong_long -> uint64_t will likely break on 32bit platforms
-            const auto ok =
-                parse(it,
-                      last,                                                                  //
-                      (ulong_long >> ',' >> ulong_long >> ',' >> uint_ >> *(',' >> *char_)), //
-                      from_node_id,
-                      to_node_id,
-                      speed); //
+                auto it = begin(line);
+                const auto last = end(line);
 
-            if (!ok || it != last)
-                throw util::exception{"Segment speed file " + filename + " malformed"};
+                // The ulong_long -> uint64_t will likely break on 32bit platforms
+                const auto ok =
+                    parse(it,
+                          last,                                                                  //
+                          (ulong_long >> ',' >> ulong_long >> ',' >> uint_ >> *(',' >> *char_)), //
+                          from_node_id,
+                          to_node_id,
+                          speed); //
 
-            SegmentSpeedSource val{{OSMNodeID{from_node_id}, OSMNodeID{to_node_id}},
-                                   {speed, static_cast<std::uint8_t>(file_id)}};
+                if (!ok || it != last)
+                    throw util::exception{"Segment speed file " + filename + " malformed"};
 
-            local.push_back(std::move(val));
-        }
+                SegmentSpeedSource val{{OSMNodeID{from_node_id}, OSMNodeID{to_node_id}},
+                                       {speed, static_cast<std::uint8_t>(file_id)}};
+
+                local.push_back(std::move(val));
+            });
 
         util::SimpleLogger().Write() << "Loaded speed file " << filename << " with " << local.size()
                                      << " speeds";
@@ -387,10 +390,8 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
         const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
         const auto filename = turn_penalty_filenames[idx];
 
-        std::ifstream turn_penalty_file{filename, std::ios::binary};
-        if (!turn_penalty_file)
-            throw util::exception{"Unable to open turn penalty file " + filename};
-
+        storage::io::FileReader turn_penalty_file_reader(filename,
+                                                         storage::io::FileReader::HasNoFingerprint);
         TurnPenaltySourceFlatMap local;
 
         std::uint64_t from_node_id{};
@@ -398,31 +399,34 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
         std::uint64_t to_node_id{};
         double penalty{};
 
-        for (std::string line; std::getline(turn_penalty_file, line);)
-        {
-            using namespace boost::spirit::qi;
+        std::for_each(
+            turn_penalty_file_reader.GetLineIteratorBegin(),
+            turn_penalty_file_reader.GetLineIteratorEnd(),
+            [&](const std::string &line) {
 
-            auto it = begin(line);
-            const auto last = end(line);
+                using namespace boost::spirit::qi;
 
-            // The ulong_long -> uint64_t will likely break on 32bit platforms
-            const auto ok = parse(it,
-                                  last, //
-                                  (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >> ',' >>
-                                   double_ >> *(',' >> *char_)), //
-                                  from_node_id,
-                                  via_node_id,
-                                  to_node_id,
-                                  penalty); //
+                auto it = begin(line);
+                const auto last = end(line);
 
-            if (!ok || it != last)
-                throw util::exception{"Turn penalty file " + filename + " malformed"};
+                // The ulong_long -> uint64_t will likely break on 32bit platforms
+                const auto ok = parse(it,
+                                      last, //
+                                      (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >>
+                                       ',' >> double_ >> *(',' >> *char_)), //
+                                      from_node_id,
+                                      via_node_id,
+                                      to_node_id,
+                                      penalty); //
 
-            TurnPenaltySource val{
-                {OSMNodeID{from_node_id}, OSMNodeID{via_node_id}, OSMNodeID{to_node_id}},
-                {penalty, static_cast<std::uint8_t>(file_id)}};
-            local.push_back(std::move(val));
-        }
+                if (!ok || it != last)
+                    throw util::exception{"Turn penalty file " + filename + " malformed"};
+
+                TurnPenaltySource val{
+                    {OSMNodeID{from_node_id}, OSMNodeID{via_node_id}, OSMNodeID{to_node_id}},
+                    {penalty, static_cast<std::uint8_t>(file_id)}};
+                local.push_back(std::move(val));
+            });
 
         util::SimpleLogger().Write() << "Loaded penalty file " << filename << " with "
                                      << local.size() << " turn penalties";
@@ -568,44 +572,24 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         if (!(update_edge_weights || update_turn_penalties))
             return;
 
-        boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
+        storage::io::FileReader nodes_file(nodes_filename,
+                                           storage::io::FileReader::HasNoFingerprint);
 
-        if (!nodes_input_stream)
-        {
-            throw util::exception("Failed to open " + nodes_filename);
-        }
+        nodes_file.DeserializeVector(internal_to_external_node_map);
 
-        std::uint64_t number_of_nodes = 0;
-        nodes_input_stream.read((char *)&number_of_nodes, sizeof(std::uint64_t));
-        internal_to_external_node_map.resize(number_of_nodes);
-
-        // Load all the query nodes into a vector
-        nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
-                                number_of_nodes * sizeof(extractor::QueryNode));
     };
 
     const auto maybe_load_geometries = [&] {
         if (!(update_edge_weights || update_turn_penalties))
             return;
 
-        std::ifstream geometry_stream(geometry_filename, std::ios::binary);
-        if (!geometry_stream)
-        {
-            throw util::exception("Failed to open " + geometry_filename);
-        }
-        unsigned number_of_indices = 0;
-        unsigned number_of_compressed_geometries = 0;
-
-        geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
-
+        storage::io::FileReader geometry_file(geometry_filename,
+                                              storage::io::FileReader::HasNoFingerprint);
+        const auto number_of_indices = geometry_file.ReadElementCount32();
         m_geometry_indices.resize(number_of_indices);
-        if (number_of_indices > 0)
-        {
-            geometry_stream.read((char *)&(m_geometry_indices[0]),
-                                 number_of_indices * sizeof(unsigned));
-        }
+        geometry_file.ReadInto(m_geometry_indices.data(), number_of_indices);
 
-        geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
+        const auto number_of_compressed_geometries = geometry_file.ReadElementCount32();
 
         BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
         m_geometry_node_list.resize(number_of_compressed_geometries);
@@ -614,14 +598,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
         if (number_of_compressed_geometries > 0)
         {
-            geometry_stream.read((char *)&(m_geometry_node_list[0]),
-                                 number_of_compressed_geometries * sizeof(NodeID));
-
-            geometry_stream.read((char *)&(m_geometry_fwd_weight_list[0]),
-                                 number_of_compressed_geometries * sizeof(EdgeWeight));
-
-            geometry_stream.read((char *)&(m_geometry_rev_weight_list[0]),
-                                 number_of_compressed_geometries * sizeof(EdgeWeight));
+            geometry_file.ReadInto(m_geometry_node_list.data(), number_of_compressed_geometries);
+            geometry_file.ReadInto(m_geometry_fwd_weight_list.data(),
+                                   number_of_compressed_geometries);
+            geometry_file.ReadInto(m_geometry_rev_weight_list.data(),
+                                   number_of_compressed_geometries);
         }
     };
 
@@ -940,12 +921,12 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
 void Contractor::ReadNodeLevels(std::vector<float> &node_levels) const
 {
-    boost::filesystem::ifstream order_input_stream(config.level_output_path, std::ios::binary);
+    storage::io::FileReader order_file(config.level_output_path,
+                                       storage::io::FileReader::HasNoFingerprint);
 
-    unsigned level_size;
-    order_input_stream.read((char *)&level_size, sizeof(unsigned));
+    const auto level_size = order_file.ReadElementCount32();
     node_levels.resize(level_size);
-    order_input_stream.read((char *)node_levels.data(), sizeof(float) * node_levels.size());
+    order_file.ReadInto(node_levels);
 }
 
 void Contractor::WriteNodeLevels(std::vector<float> &&in_node_levels) const
