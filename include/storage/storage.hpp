@@ -28,8 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef STORAGE_HPP
 #define STORAGE_HPP
 
-#include "storage/storage_config.hpp"
 #include "storage/shared_datatype.hpp"
+#include "storage/storage_config.hpp"
 
 #include <boost/filesystem/path.hpp>
 

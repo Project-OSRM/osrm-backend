@@ -143,15 +143,12 @@ class FileReader
 // To make function calls consistent, this function returns the fixed number of properties
 inline std::size_t readPropertiesCount() { return 1; }
 
-#pragma pack(push, 1)
 struct HSGRHeader
 {
     std::uint32_t checksum;
     std::uint64_t number_of_nodes;
     std::uint64_t number_of_edges;
 };
-#pragma pack(pop)
-static_assert(sizeof(HSGRHeader) == 20, "HSGRHeader is not packed");
 
 // Reads the checksum, number of nodes and number of edges written in the header file of a `.hsgr`
 // file and returns them in a HSGRHeader struct

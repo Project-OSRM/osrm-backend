@@ -520,8 +520,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         const auto name_char_ptr =
             layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::NAME_CHAR_LIST);
 
-        BOOST_ASSERT_MSG(layout.AlignBlockSize(temp_count) ==
-                             layout.GetBlockSize(DataLayout::NAME_CHAR_LIST),
+        BOOST_ASSERT_MSG(temp_count == layout.GetBlockSize(DataLayout::NAME_CHAR_LIST),
                          "Name file corrupted!");
 
         name_file.ReadInto(name_char_ptr, temp_count);

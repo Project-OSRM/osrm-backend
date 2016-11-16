@@ -4,9 +4,9 @@
 #include "util/exception.hpp"
 #include "util/simple_logger.hpp"
 
-#include <cstdint>
-
 #include <array>
+#include <cstdint>
+#include <memory>
 
 namespace osrm
 {
@@ -98,21 +98,17 @@ struct DataLayout
         NUM_BLOCKS
     };
 
-    std::array<uint64_t, NUM_BLOCKS> num_entries;
-    std::array<uint64_t, NUM_BLOCKS> entry_size;
+    std::array<std::uint64_t, NUM_BLOCKS> num_entries;
+    std::array<std::size_t, NUM_BLOCKS> entry_size;
+    std::array<std::size_t, NUM_BLOCKS> entry_align;
 
-    DataLayout() : num_entries(), entry_size() {}
+    DataLayout() : num_entries(), entry_size(), entry_align() {}
 
     template <typename T> inline void SetBlockSize(BlockID bid, uint64_t entries)
     {
         num_entries[bid] = entries;
         entry_size[bid] = sizeof(T);
-    }
-
-    inline uint64_t AlignBlockSize(uint64_t block_size) const
-    {
-        const uint64_t alignment = 4;
-        return (block_size + (alignment - 1)) & ~(alignment - 1);
+        entry_align[bid] = alignof(T);
     }
 
     inline uint64_t GetBlockSize(BlockID bid) const
@@ -120,41 +116,53 @@ struct DataLayout
         // special bit encoding
         if (bid == CORE_MARKER)
         {
-            return AlignBlockSize((num_entries[bid] / 32 + 1) * entry_size[bid]);
+            return (num_entries[bid] / 32 + 1) * entry_size[bid];
         }
-        return AlignBlockSize(num_entries[bid] * entry_size[bid]);
+        return num_entries[bid] * entry_size[bid];
     }
 
     inline uint64_t GetSizeOfLayout() const
     {
-        return GetBlockOffset(NUM_BLOCKS) + NUM_BLOCKS * 2 * sizeof(CANARY);
-    }
-
-    inline uint64_t GetBlockOffset(BlockID bid) const
-    {
-        uint64_t result = sizeof(CANARY);
-        for (auto i = 0; i < bid; i++)
+        uint64_t result = 0;
+        for (auto i = 0; i < NUM_BLOCKS; i++)
         {
-            result += GetBlockSize((BlockID)i) + 2 * sizeof(CANARY);
+            result += 2 * sizeof(CANARY) + GetBlockSize((BlockID)i) + entry_align[i];
         }
         return result;
+    }
+
+    inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const
+    {
+        for (auto i = 0; i < bid; i++)
+        {
+            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+            std::size_t space = 2 * entry_align[i] + entry_size[i];
+            ptr = std::align(entry_align[i], entry_size[i], ptr, space);
+            ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
+            ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+        }
+
+        ptr = static_cast<char *>(ptr) + sizeof(CANARY);
+        std::size_t space = 2 * entry_align[bid] + entry_size[bid];
+        ptr = std::align(entry_align[bid], entry_size[bid], ptr, space);
+        return ptr;
     }
 
     template <typename T, bool WRITE_CANARY = false>
     inline T *GetBlockPtr(char *shared_memory, BlockID bid) const
     {
-        T *ptr = (T *)(shared_memory + GetBlockOffset(bid));
+        char *ptr = (char *)GetAlignedBlockPtr(shared_memory, bid);
         if (WRITE_CANARY)
         {
-            char *start_canary_ptr = shared_memory + GetBlockOffset(bid) - sizeof(CANARY);
-            char *end_canary_ptr = shared_memory + GetBlockOffset(bid) + GetBlockSize(bid);
+            char *start_canary_ptr = ptr - sizeof(CANARY);
+            char *end_canary_ptr = ptr + GetBlockSize(bid);
             std::copy(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
             std::copy(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
         }
         else
         {
-            char *start_canary_ptr = shared_memory + GetBlockOffset(bid) - sizeof(CANARY);
-            char *end_canary_ptr = shared_memory + GetBlockOffset(bid) + GetBlockSize(bid);
+            char *start_canary_ptr = ptr - sizeof(CANARY);
+            char *end_canary_ptr = ptr + GetBlockSize(bid);
             bool start_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), start_canary_ptr);
             bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
             if (!start_canary_alive)
@@ -169,7 +177,7 @@ struct DataLayout
             }
         }
 
-        return ptr;
+        return (T *)ptr;
     }
 };
 
