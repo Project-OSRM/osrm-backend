@@ -512,9 +512,9 @@ namespace osmium {
 
         template <>
         inline size_t hash<8>(const osmium::Location& location) noexcept {
-            size_t h = location.x();
+            uint64_t h = location.x();
             h <<= 32;
-            return h ^ location.y();
+            return static_cast<size_t>(h ^ location.y());
         }
 
     } // namespace detail
