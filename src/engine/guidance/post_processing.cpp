@@ -855,7 +855,11 @@ bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current
 
     const auto no_mode_change = previous.mode == current.mode;
 
-    return is_short && (left_right || right_left) && no_mode_change;
+    // previous step maneuver intersections should be length 1 to indicate that
+    // there are no intersections between the two potentially collapsible turns
+    const auto no_intermediary_intersections = previous.intersections.size() == 1;
+
+    return is_short && (left_right || right_left) && no_mode_change && no_intermediary_intersections;
 }
 
 } // namespace
@@ -1164,8 +1168,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                 invalidateStep(steps[index]);
             }
         }
-        // If we look at two consecutive name changes, we can check for a name oszillation.
-        // A name oszillation changes from name A shortly to name B and back to A.
+        // If we look at two consecutive name changes, we can check for a name oscillation.
+        // A name oscillation changes from name A shortly to name B and back to A.
         // In these cases, the name change will be suppressed.
         else if (one_back_index > 0 && compatible(current_step, one_back_step) &&
                  ((isCollapsableInstruction(current_step.maneuver.instruction) &&
