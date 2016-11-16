@@ -1,6 +1,4 @@
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-
 #include "catch.hpp"
 
 #include <memory>
@@ -9,6 +7,9 @@
 
 #include <osmium/geom/ogr.hpp>
 #include <osmium/geom/wkb.hpp>
+#include <osmium/util/endian.hpp>
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
 
 #include "area_helper.hpp"
 #include "wnl_helper.hpp"

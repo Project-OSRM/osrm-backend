@@ -75,7 +75,10 @@ class pbf_reader {
     T get_fixed() {
         T result;
         skip_bytes(sizeof(T));
-        detail::copy_or_byteswap<sizeof(T)>(m_data - sizeof(T), &result);
+        std::memcpy(&result, m_data - sizeof(T), sizeof(T));
+#if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
+        detail::byteswap_inplace(&result);
+#endif
         return result;
     }
 
@@ -134,7 +137,7 @@ public:
     /**
      * Construct a pbf_reader message from a data_view. The pointer from the
      * data_view will be stored inside the pbf_reader object, no data is
-     * copied. So you must* make sure the view stays valid as long as the
+     * copied. So you must make sure the view stays valid as long as the
      * pbf_reader object is used.
      *
      * The buffer must contain a complete protobuf message.
@@ -149,25 +152,27 @@ public:
     }
 
     /**
-     * Construct a pbf_reader message from a data pointer and a length. The pointer
-     * will be stored inside the pbf_reader object, no data is copied. So you must
-     * make sure the buffer stays valid as long as the pbf_reader object is used.
+     * Construct a pbf_reader message from a data pointer and a length. The
+     * pointer will be stored inside the pbf_reader object, no data is copied.
+     * So you must make sure the buffer stays valid as long as the pbf_reader
+     * object is used.
      *
      * The buffer must contain a complete protobuf message.
      *
      * @post There is no current field.
      */
-    pbf_reader(const char* data, std::size_t length) noexcept
+    pbf_reader(const char* data, std::size_t size) noexcept
         : m_data(data),
-          m_end(data + length),
+          m_end(data + size),
           m_wire_type(pbf_wire_type::unknown),
           m_tag(0) {
     }
 
     /**
-     * Construct a pbf_reader message from a data pointer and a length. The pointer
-     * will be stored inside the pbf_reader object, no data is copied. So you must
-     * make sure the buffer stays valid as long as the pbf_reader object is used.
+     * Construct a pbf_reader message from a data pointer and a length. The
+     * pointer will be stored inside the pbf_reader object, no data is copied.
+     * So you must make sure the buffer stays valid as long as the pbf_reader
+     * object is used.
      *
      * The buffer must contain a complete protobuf message.
      *
@@ -181,10 +186,10 @@ public:
     }
 
     /**
-     * Construct a pbf_reader message from a std::string. A pointer to the string
-     * internals will be stored inside the pbf_reader object, no data is copied.
-     * So you must make sure the string is unchanged as long as the pbf_reader
-     * object is used.
+     * Construct a pbf_reader message from a std::string. A pointer to the
+     * string internals will be stored inside the pbf_reader object, no data
+     * is copied. So you must make sure the string is unchanged as long as the
+     * pbf_reader object is used.
      *
      * The string must contain a complete protobuf message.
      *
@@ -231,8 +236,9 @@ public:
     }
 
     /**
-     * In a boolean context the pbf_reader class evaluates to `true` if there are
-     * still fields available and to `false` if the last field has been read.
+     * In a boolean context the pbf_reader class evaluates to `true` if there
+     * are still fields available and to `false` if the last field has been
+     * read.
      */
     operator bool() const noexcept {
         return m_data < m_end;
@@ -276,7 +282,8 @@ public:
 
         // tags 0 and 19000 to 19999 are not allowed as per
         // https://developers.google.com/protocol-buffers/docs/proto
-        protozero_assert(((m_tag > 0 && m_tag < 19000) || (m_tag > 19999 && m_tag <= ((1 << 29) - 1))) && "tag out of range");
+        protozero_assert(((m_tag >     0 && m_tag < 19000) ||
+                          (m_tag > 19999 && m_tag <= ((1 << 29) - 1))) && "tag out of range");
 
         m_wire_type = pbf_wire_type(value & 0x07);
         switch (m_wire_type) {
@@ -317,9 +324,9 @@ public:
      * @pre There must be no current field.
      * @post If it returns `true` there is a current field now with the given tag.
      */
-    bool next(pbf_tag_type tag) {
+    bool next(pbf_tag_type next_tag) {
         while (next()) {
-            if (m_tag == tag) {
+            if (m_tag == next_tag) {
                 return true;
             } else {
                 skip();

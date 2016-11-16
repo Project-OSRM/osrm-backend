@@ -51,9 +51,9 @@ TEST_CASE("Iterating over IdSetDense") {
     s.set(35);
     s.set(35);
     s.set(20);
-    s.set(1LL << 33);
+    s.set(1ULL << 33);
     s.set(21);
-    s.set((1LL << 27) + 13);
+    s.set((1ULL << 27) + 13);
 
     REQUIRE(s.size() == 6);
 
@@ -71,10 +71,10 @@ TEST_CASE("Iterating over IdSetDense") {
     REQUIRE(*it == 35);
     ++it;
     REQUIRE(it != s.end());
-    REQUIRE(*it == (1LL << 27) + 13);
+    REQUIRE(*it == (1ULL << 27) + 13);
     ++it;
     REQUIRE(it != s.end());
-    REQUIRE(*it == 1LL << 33);
+    REQUIRE(*it == 1ULL << 33);
     ++it;
     REQUIRE(it == s.end());
 }
@@ -133,9 +133,9 @@ TEST_CASE("Iterating over IdSetSmall") {
     s.set(35);
     s.set(35);
     s.set(20);
-    s.set(1LL << 33);
+    s.set(1ULL << 33);
     s.set(21);
-    s.set((1LL << 27) + 13);
+    s.set((1ULL << 27) + 13);
 
     // needs to be called before size() and iterator will work properly
     s.sort_unique();
@@ -156,10 +156,10 @@ TEST_CASE("Iterating over IdSetSmall") {
     REQUIRE(*it == 35);
     ++it;
     REQUIRE(it != s.end());
-    REQUIRE(*it == (1LL << 27) + 13);
+    REQUIRE(*it == (1ULL << 27) + 13);
     ++it;
     REQUIRE(it != s.end());
-    REQUIRE(*it == 1LL << 33);
+    REQUIRE(*it == 1ULL << 33);
     ++it;
     REQUIRE(it == s.end());
 }
