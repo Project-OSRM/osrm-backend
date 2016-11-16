@@ -43,7 +43,7 @@ mode = {
 
 -- input tags, normally extracted from OSM data
 local way = {
-  highway = 'primary',
+  highway = 'motorway',
   name = 'Main Street',
   --width = '3',
   --maxspeed = '30',
@@ -57,6 +57,9 @@ local way = {
   --duration = '00:01:00',
   --hov = 'designated',
   --access = 'no'
+  --destination = 'Berlin',
+  ["destination:ref"] = 'Nuremberg',
+  --["destination:ref:forward"] = 'Hamburg;Dresden',
 }
 -- tag function normally provided via C++
 function way:get_value_by_key(k)

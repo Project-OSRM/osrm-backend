@@ -61,7 +61,7 @@ function Guidance.set_classification (highway, result, input_way)
     end
 
     local lane_count = input_way:get_value_by_key("lanes")
-    if lane_count and lane_count ~= "" then
+    if lane_count then
         local lc = tonumber(lane_count)
         if lc ~= nil then
             result.road_classification.num_lanes = lc
@@ -69,14 +69,14 @@ function Guidance.set_classification (highway, result, input_way)
     else
         local total_count = 0
         local forward_count = input_way:get_value_by_key("lanes:forward")
-        if forward_count and forward_count ~= "" then
+        if forward_count then
             local fc = tonumber(forward_count)
             if fc ~= nil then
                 total_count = fc
             end
         end
         local backward_count = input_way:get_value_by_key("lanes:backward")
-        if backward_count and backward_count ~= "" then
+        if backward_count then
             local bc = tonumber(backward_count)
             if bc ~= nil then
                 total_count = total_count + bc
@@ -96,19 +96,19 @@ local function get_psv_counts(way)
 
     local fw = 0;
     local bw = 0;
-    if  psv and psv ~= ""  then
+    if  psv then
         fw = tonumber(psv)
         if( fw == nil ) then
             fw = 0
         end
     end
-    if psv_forward and psv_forward ~= "" then
+    if psv_forward then
         fw = tonumber(psv_forward)
         if( fw == nil ) then
             fw = 0
         end
     end
-    if psv_backward and psv_backward ~= "" then
+    if psv_backward then
         bw = tonumber(psv_backward);
         if( bw == nil ) then
             bw = 0
@@ -119,8 +119,8 @@ end
 
 -- trims lane string with regard to supported lanes
 local function process_lanes(turn_lane,vehicle_lane,first_count,second_count)
-    if turn_lane and turn_lane ~= "" then
-        if vehicle_lane and vehicle_lane ~= "" then
+    if turn_lane then
+        if vehicle_lane then
             turn_lane = applyAccessTokens(turn_lane,vehicle_lane)
         elseif first_count ~= 0 or second_count ~= 0 then
             turn_lane = trimLaneString(turn_lane, first_count, second_count)
