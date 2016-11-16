@@ -672,4 +672,15 @@ The `x`, `y`, and `zoom` values are the same as described at https://wiki.openst
 
 The response object is either a binary encoded blob with a `Content-Type` of `application/x-protobuf`, or a `404` error.  Note that OSRM is hard-coded to only return tiles from zoom level 12 and higher (to avoid accidentally returning extremely large vector tiles).
 
-Vector tiles contain just a single layer named `speeds`.  Within that layer, features can have `speed` (int) and `is_small` (boolean) attributes.
+Vector tiles contain two layers:
+
+| Layer    | Field        | Type      | Description                              |
+| -------- | ------------ | --------- | ---------------------------------------- |
+| `speeds` | `speed`      | `integer` | the speed on that road segment, in km/h  |
+|          | `is_small`   | `boolean` | whether this segment belongs to a small (<1000 node) [strongly connected component](https://en.wikipedia.org/wiki/Strongly_connected_component) |
+|          | `datasource` | `string`  | the source for the speed value (normally `lua profile` unless you're using the [traffic update feature](https://github.com/Project-OSRM/osrm-backend/wiki/Traffic), in which case it contains the stem of the filename that supplied the speed value for this segment |
+|          | `duration`   | `float`   | how long this segment takes to traverse, in seconds |
+|          | `name`       | `string`  | the name of the road this segment belongs to |
+| `turns`  | `bearing_in` | `integer` | the absolute bearing that approaches the intersection.  -180 to +180, 0 = North, 90 = East |
+|          | `turn_angle` | `integer` | the angle of the turn, relative to the `bearing_in`.  -180 to +180, 0 = straight ahead, 90 = 90-degrees to the right |
+|          | `cost`       | `float`   | the time we think it takes to make that turn, in seconds.  May be negative, depending on how the data model is constructed (some turns get a "bonus"). |
