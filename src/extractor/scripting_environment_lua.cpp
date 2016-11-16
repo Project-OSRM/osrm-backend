@@ -34,7 +34,12 @@ namespace
 template <class T>
 auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_value_by_key(key))
 {
-    return object.get_value_by_key(key);
+    auto v = object.get_value_by_key(key);
+    if( v && *v ) {             // non-empty string?
+        return v;
+    } else {
+        return NULL;
+    }
 }
 
 template <class T> double latToDouble(T const &object)
