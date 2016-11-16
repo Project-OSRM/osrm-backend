@@ -12,21 +12,17 @@ function Destination.get_directional_tag(way, is_forward, tag)
   end
 end
 
-function Destination.join(a,b)
-  if a and b then
-    return a .. ': ' .. b
-  else
-    return a or b
-  end
-end
-
 -- Assemble destination as: "A59: Düsseldorf, Köln"
 --          destination:ref  ^    ^  destination
 
 function Destination.get_destination(way, is_forward)
-  destination_ref = Destination.get_directional_tag(way, is_forward, 'destination:ref')
-  destination     = Destination.get_directional_tag(way, is_forward, 'destination')
-  return Destination.join(destination_ref, destination) or ''
+  ref  = Destination.get_directional_tag(way, is_forward, 'destination:ref')
+  dest = Destination.get_directional_tag(way, is_forward, 'destination')
+  if ref and dest then
+    return ref .. ': ' .. dest
+  else
+    return ref or dest or ''
+  end
 end
 
 return Destination
