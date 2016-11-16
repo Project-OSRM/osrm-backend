@@ -283,6 +283,12 @@ In addition to the [general options](#general-options) the following options are
 |timestamp   |`integer` UNIX-like timestamp |
 |radius      |`double >= 0` (default 5m)    |
 
+The radius for each point should be the standard error of the location, measured in meters from the true location. Use
+`Location.getAccuracy()` on Android or `CLLocation.horizontalAccuracy` on iOS. This value is used to determine which
+points should be considered as candidates (larger radius means more candidates) and how likely each candidate is (larger
+radius means far-away candidates are penalized less). The area to search is chosen such that the correct candidate
+should be considered 99.9% of the time (for more details, see https://github.com/Project-OSRM/osrm-backend/pull/3184).
+
 ### Response
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `tracepoints`: Array of `Waypoint` objects representing all points of the trace in order.
