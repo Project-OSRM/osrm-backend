@@ -498,11 +498,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         const auto name_blocks_count = name_file.ReadElementCount32();
         name_file.Skip<std::uint32_t>(1); // name_char_list_count
 
-        using NameRangeTable = util::RangeTable<16, true>;
-
         BOOST_ASSERT(name_blocks_count * sizeof(unsigned) ==
                      layout.GetBlockSize(DataLayout::NAME_OFFSETS));
-        BOOST_ASSERT(name_blocks_count * sizeof(typename NameRangeTable::BlockT) ==
+        BOOST_ASSERT(name_blocks_count * sizeof(typename util::RangeTable<16, true>::BlockT) ==
                      layout.GetBlockSize(DataLayout::NAME_BLOCKS));
 
         // Loading street names
