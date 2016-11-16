@@ -35,22 +35,12 @@
 #include <utility>
 #include <vector>
 
-#include <boost/multi_array.hpp>
-#include <boost/range/iterator_range.hpp>
-
 namespace osrm
 {
 namespace engine
 {
 namespace datafacade
 {
-namespace
-{
-template <typename T, typename = std::enable_if<std::is_const<T>::value>>
-using ConstArrayRef = boost::iterator_range<T>;
-
-using CoordinateArrayRef = ConstArrayRef<const util::Coordinate *>;
-}
 
 /**
  * This base class implements the Datafacade interface for accessing
@@ -69,7 +59,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     using IndexBlock = util::RangeTable<16, true>::BlockT;
     using InputEdge = QueryGraph::InputEdge;
     using RTreeLeaf = super::RTreeLeaf;
-    using SharedRTree = util::StaticRTree<RTreeLeaf, CoordinateArrayRef, true>;
+    using SharedRTree =
+        util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
@@ -78,7 +69,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
 
-    CoordinateArrayRef m_coordinate_list;
+    util::ShM<util::Coordinate, true>::vector m_coordinate_list;
     util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
     util::ShM<GeometryID, true>::vector m_via_geometry_list;
     util::ShM<unsigned, true>::vector m_name_ID_list;
@@ -189,10 +180,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         const auto coordinate_list_ptr = data_layout.GetBlockPtr<util::Coordinate>(
             memory_block, storage::DataLayout::COORDINATE_LIST);
-
-        m_coordinate_list = CoordinateArrayRef(
-            coordinate_list_ptr,
-            coordinate_list_ptr + data_layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
+        m_coordinate_list.reset(coordinate_list_ptr,
+                                data_layout.num_entries[storage::DataLayout::COORDINATE_LIST]);
 
         for (unsigned i = 0; i < m_coordinate_list.size(); ++i)
         {
