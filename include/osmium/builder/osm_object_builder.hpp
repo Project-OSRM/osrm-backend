@@ -413,11 +413,10 @@ namespace osmium {
                 const auto available_space = min_size_for_user - sizeof(string_size_type) - 1;
                 if (length > available_space) {
                     const auto space_needed = osmium::memory::padded_length(length - available_space);
-                    reserve_space(space_needed);
+                    std::fill_n(reserve_space(space_needed), space_needed, 0);
                     add_size(static_cast<uint32_t>(space_needed));
                 }
                 std::copy_n(user, length, object().data() + size_of_object);
-                std::fill_n(object().data() + size_of_object + length, osmium::memory::padded_length(length + 1) - length, 0);
                 object().set_user_size(length + 1);
 
                 return static_cast<TDerived&>(*this);
@@ -612,11 +611,10 @@ namespace osmium {
                 const auto available_space = min_size_for_user - 1;
                 if (length > available_space) {
                     const auto space_needed = osmium::memory::padded_length(length - available_space);
-                    reserve_space(space_needed);
+                    std::fill_n(reserve_space(space_needed), space_needed, 0);
                     add_size(static_cast<uint32_t>(space_needed));
                 }
                 std::copy_n(user, length, object().data() + sizeof(Changeset));
-                std::fill_n(object().data() + sizeof(Changeset) + length, osmium::memory::padded_length(length + 1) - length, 0);
                 object().set_user_size(length + 1);
 
                 return *this;

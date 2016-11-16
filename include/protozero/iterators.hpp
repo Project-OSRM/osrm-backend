@@ -29,21 +29,6 @@ documentation.
 
 namespace protozero {
 
-namespace detail {
-
-    // Copy N bytes from src to dest on little endian machines, on big
-    // endian swap the bytes in the process.
-    template <int N>
-    inline void copy_or_byteswap(const char* src, void* dest) noexcept {
-#if PROTOZERO_BYTE_ORDER == PROTOZERO_LITTLE_ENDIAN
-        std::memcpy(dest, src, N);
-#else
-        byteswap<N>(src, reinterpret_cast<char*>(dest));
-#endif
-    }
-
-} // end namespace detail
-
 /**
  * A range of iterators based on std::pair. Created from beginning and
  * end iterators. Used as a return type from some pbf_reader methods
@@ -213,7 +198,10 @@ public:
 
     value_type operator*() const {
         value_type result;
-        detail::copy_or_byteswap<sizeof(value_type)>(m_data , &result);
+        std::memcpy(&result, m_data, sizeof(value_type));
+#if PROTOZERO_BYTE_ORDER != PROTOZERO_LITTLE_ENDIAN
+        detail::byteswap_inplace(&result);
+#endif
         return result;
     }
 

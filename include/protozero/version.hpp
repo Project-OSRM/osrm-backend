@@ -23,13 +23,13 @@ documentation.
 #define PROTOZERO_VERSION_MINOR 4
 
 /// The patch number
-#define PROTOZERO_VERSION_PATCH 2
+#define PROTOZERO_VERSION_PATCH 4
 
 /// The complete version number
 #define PROTOZERO_VERSION_CODE (PROTOZERO_VERSION_MAJOR * 10000 + PROTOZERO_VERSION_MINOR * 100 + PROTOZERO_VERSION_PATCH)
 
 /// Version number as string
-#define PROTOZERO_VERSION_STRING "1.4.2"
+#define PROTOZERO_VERSION_STRING "1.4.4"
 
 
 #endif // PROTOZERO_VERSION_HPP

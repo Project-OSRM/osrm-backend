@@ -78,12 +78,12 @@ public:
     /**
      * Create data_view from pointer and size.
      *
-     * @param data Pointer to the data.
-     * @param size Length of the data.
+     * @param ptr Pointer to the data.
+     * @param length Length of the data.
      */
-    constexpr data_view(const char* data, std::size_t size) noexcept
-        : m_data(data),
-          m_size(size) {
+    constexpr data_view(const char* ptr, std::size_t length) noexcept
+        : m_data(ptr),
+          m_size(length) {
     }
 
     /**
@@ -99,11 +99,11 @@ public:
     /**
      * Create data_view from zero-terminated string.
      *
-     * @param data Pointer to the data.
+     * @param ptr Pointer to the data.
      */
-    data_view(const char* data) noexcept
-        : m_data(data),
-          m_size(std::strlen(data)) {
+    data_view(const char* ptr) noexcept
+        : m_data(ptr),
+          m_size(std::strlen(ptr)) {
     }
 
     /**

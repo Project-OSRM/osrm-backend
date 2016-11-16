@@ -91,13 +91,16 @@ namespace osmium {
         template <typename T>
         class IdSetDenseIterator {
 
+            static_assert(std::is_unsigned<T>::value, "Needs unsigned type");
+            static_assert(sizeof(T) >= 4, "Needs at least 32bit type");
+
             const IdSetDense<T>* m_set;
             T m_value;
             T m_last;
 
             void next() noexcept {
                 while (m_value != m_last && !m_set->get(m_value)) {
-                    const auto cid = IdSetDense<T>::chunk_id(m_value);
+                    const T cid = IdSetDense<T>::chunk_id(m_value);
                     assert(cid < m_set->m_data.size());
                     if (!m_set->m_data[cid]) {
                         m_value = (cid + 1) << (IdSetDense<T>::chunk_bits + 3);
@@ -179,7 +182,7 @@ namespace osmium {
             constexpr static const size_t chunk_size = 1 << chunk_bits;
 
             std::vector<std::unique_ptr<unsigned char[]>> m_data;
-            size_t m_size = 0;
+            T m_size = 0;
 
             static size_t chunk_id(T id) noexcept {
                 return id >> (chunk_bits + 3);
@@ -194,7 +197,7 @@ namespace osmium {
             }
 
             T last() const noexcept {
-                return m_data.size() * chunk_size * 8;
+                return static_cast<T>(m_data.size()) * chunk_size * 8;
             }
 
             unsigned char& get_element(T id) {
@@ -285,7 +288,7 @@ namespace osmium {
             /**
              * The number of Ids stored in the set.
              */
-            size_t size() const noexcept {
+            T size() const noexcept {
                 return m_size;
             }
 

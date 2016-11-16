@@ -13,6 +13,29 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 
+## [2.10.2] - 2016-11-16
+
+### Changed
+
+- Updated embedded protozero to 1.4.4.
+
+### Fixed
+
+- Buffer overflow in osmium::Buffer.
+
+
+## [2.10.1] - 2016-11-15
+
+### Changed
+
+- Updated embedded protozero to 1.4.3.
+
+### Fixed
+
+- Made IdSet work on 32bit systems.
+- Fixed endianness check for WKB tests.
+
+
 ## [2.10.0] - 2016-11-11
 
 ### Added
@@ -457,7 +480,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.10.0...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.10.2...HEAD
+[2.10.2]: https://github.com/osmcode/libosmium/compare/v2.10.1...v2.10.2
+[2.10.1]: https://github.com/osmcode/libosmium/compare/v2.10.0...v2.10.1
 [2.10.0]: https://github.com/osmcode/libosmium/compare/v2.9.0...v2.10.0
 [2.9.0]: https://github.com/osmcode/libosmium/compare/v2.8.0...v2.9.0
 [2.8.0]: https://github.com/osmcode/libosmium/compare/v2.7.2...v2.8.0

@@ -79,8 +79,8 @@ public:
         return pbf_reader::next();
     }
 
-    bool next(T tag) {
-        return pbf_reader::next(pbf_tag_type(tag));
+    bool next(T next_tag) {
+        return pbf_reader::next(pbf_tag_type(next_tag));
     }
 
     T tag() const noexcept {
