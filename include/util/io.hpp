@@ -14,8 +14,8 @@
 #include <stxxl/vector>
 #include <vector>
 
-#include "util/fingerprint.hpp"
 #include "storage/io.hpp"
+#include "util/fingerprint.hpp"
 
 namespace osrm
 {
