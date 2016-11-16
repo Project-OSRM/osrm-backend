@@ -400,7 +400,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         }
         if (data.reverse_segment_id.id != SPECIAL_SEGMENTID)
         {
-            reverse_weight *= 1.0 - ratio;
+            const EdgeWeight difference = reverse_weight * ratio;
+            reverse_weight -= difference;
         }
 
         auto transformed = PhantomNodeWithDistance{PhantomNode{data,
