@@ -5,17 +5,18 @@
 #include "extractor/extractor.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/query_node.hpp"
+#include "util/exception.hpp"
 #include "util/fingerprint.hpp"
 #include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
-#include "util/exception.hpp"
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/seek.hpp>
 
-#include <tuple>
-#include <cstring>
 #include <cerrno>
+#include <cstring>
+#include <tuple>
+#include <type_traits>
 
 namespace osrm
 {
@@ -57,8 +58,11 @@ class FileReader
     /* Read count objects of type T into pointer dest */
     template <typename T> void ReadInto(T *dest, const std::size_t count)
     {
+#if not defined __GNUC__ or __GNUC__ > 4
         static_assert(std::is_trivially_copyable<T>::value,
                       "bytewise reading requires trivially copyable type");
+#endif
+
         if (count == 0)
             return;
 

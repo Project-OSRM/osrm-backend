@@ -10,7 +10,7 @@
 #define isatty _isatty
 #define fileno _fileno
 #else
-#error Unknown platform - don't know which header to include for isatty()
+#error Unknown platform - isatty implementation required
 #endif // win32
 #endif // unix
 
