@@ -79,6 +79,14 @@ matrix:
       compiler: "gcc-6-release-i686"
       env: TARGET_ARCH='i686' CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
 
+    - os: linux
+      compiler: "gcc-4.9-release"
+      addons: &gcc49
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-4.9', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
+      env: CCOMPILER='gcc-4.9' CXXCOMPILER='g++-4.9' BUILD_TYPE='Release'
+
       # Disabled because of CI slowness
       #- os: linux
       #- compiler: clang
