@@ -6,7 +6,6 @@
 
 #include <array>
 #include <cstdint>
-#include <memory>
 
 namespace osrm
 {
@@ -131,20 +130,29 @@ struct DataLayout
         return result;
     }
 
+    // \brief Fit aligned storage in buffer.
+    // Interface Similar to [ptr.align] but omits space computation.
+    // The method can be removed and changed directly to an std::align
+    // function call after dropping gcc < 5 support.
+    inline void* align(std::size_t align, std::size_t , void*& ptr) const noexcept
+    {
+        const auto intptr = reinterpret_cast<uintptr_t>(ptr);
+        const auto aligned = (intptr - 1u + align) & -align;
+        return ptr = reinterpret_cast<void*>(aligned);
+    }
+
     inline void *GetAlignedBlockPtr(void *ptr, BlockID bid) const
     {
         for (auto i = 0; i < bid; i++)
         {
             ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-            std::size_t space = 2 * entry_align[i] + entry_size[i];
-            ptr = std::align(entry_align[i], entry_size[i], ptr, space);
+            ptr = align(entry_align[i], entry_size[i], ptr);
             ptr = static_cast<char *>(ptr) + GetBlockSize((BlockID)i);
             ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         }
 
         ptr = static_cast<char *>(ptr) + sizeof(CANARY);
-        std::size_t space = 2 * entry_align[bid] + entry_size[bid];
-        ptr = std::align(entry_align[bid], entry_size[bid], ptr, space);
+        ptr = align(entry_align[bid], entry_size[bid], ptr);
         return ptr;
     }
 
