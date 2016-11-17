@@ -26,7 +26,7 @@ Feature: Bike - Surfaces
         Then routability should be
         | highway  | surface | bothw |
         | cycleway |         | 48 s  |
-        | path     |         | 60 s  |
+        | path     |         | 59.9 s +- 1 |
         | track    |         | 60 s  |
         | track    | asphalt | 60 s  |
         | path     | asphalt | 60 s  |
