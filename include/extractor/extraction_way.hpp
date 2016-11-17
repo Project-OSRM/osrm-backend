@@ -31,6 +31,8 @@ struct ExtractionWay
         duration = -1;
         roundabout = false;
         is_startpoint = true;
+        is_priority_road_forward = false;
+        is_priority_road_backward = false;
         is_access_restricted = false;
         name.clear();
         ref.clear();
@@ -62,6 +64,8 @@ struct ExtractionWay
     bool roundabout;
     bool is_access_restricted;
     bool is_startpoint;
+    bool is_priority_road_forward;
+    bool is_priority_road_backward;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
     guidance::RoadClassification road_classification;

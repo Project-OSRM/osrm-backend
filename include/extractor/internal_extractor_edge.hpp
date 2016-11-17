@@ -48,6 +48,8 @@ struct InternalExtractorEdge
                  false,
                  false,
                  true,
+                 false, // road_priority_forward
+                 false, // road_priority_backward
                  TRAVEL_MODE_INACCESSIBLE,
                  false,
                  guidance::TurnLaneType::empty,
@@ -64,6 +66,8 @@ struct InternalExtractorEdge
                                    bool roundabout,
                                    bool access_restricted,
                                    bool startpoint,
+                                   bool road_priority_forward,
+                                   bool road_priority_backward,
                                    TravelMode travel_mode,
                                    bool is_split,
                                    LaneDescriptionID lane_description,
@@ -77,6 +81,8 @@ struct InternalExtractorEdge
                  roundabout,
                  access_restricted,
                  startpoint,
+                 road_priority_forward,
+                 road_priority_backward,
                  travel_mode,
                  is_split,
                  lane_description,
@@ -104,6 +110,8 @@ struct InternalExtractorEdge
                                      false,
                                      false,
                                      true,
+                                     false, // road_priority_forward
+                                     false, // road_priority_backward
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
                                      INVALID_LANE_DESCRIPTIONID,
@@ -120,6 +128,8 @@ struct InternalExtractorEdge
                                      false,
                                      false,
                                      true,
+                                     false, // road_priority_forward
+                                     false, // road_priority_backward
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
                                      INVALID_LANE_DESCRIPTIONID,

@@ -24,6 +24,8 @@ struct NodeBasedEdge
                   bool roundabout,
                   bool access_restricted,
                   bool startpoint,
+                  bool priority_road_forward,
+                  bool priority_road_backward,
                   TravelMode travel_mode,
                   bool is_split,
                   const LaneDescriptionID lane_description_id,
@@ -40,6 +42,8 @@ struct NodeBasedEdge
     bool roundabout : 1;
     bool access_restricted : 1;
     bool startpoint : 1;
+    bool priority_road_forward : 1;
+    bool priority_road_backward : 1;
     bool is_split : 1;
     TravelMode travel_mode : 4;
     LaneDescriptionID lane_description_id;
@@ -57,6 +61,8 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          bool roundabout,
                          bool access_restricted,
                          bool startpoint,
+                         bool priority_road_forward,
+                         bool priority_road_backward,
                          TravelMode travel_mode,
                          bool is_split,
                          const LaneDescriptionID lane_description_id,
@@ -71,7 +77,8 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 inline NodeBasedEdge::NodeBasedEdge()
     : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), forward(false),
       backward(false), roundabout(false), access_restricted(false), startpoint(true),
-      is_split(false), travel_mode(false), lane_description_id(INVALID_LANE_DESCRIPTIONID)
+      priority_road_forward(false), priority_road_backward(false), is_split(false),
+      travel_mode(false), lane_description_id(INVALID_LANE_DESCRIPTIONID)
 {
 }
 
@@ -84,13 +91,16 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     bool roundabout,
                                     bool access_restricted,
                                     bool startpoint,
+                                    bool priority_road_forward,
+                                    bool priority_road_backward,
                                     TravelMode travel_mode,
                                     bool is_split,
                                     const LaneDescriptionID lane_description_id,
                                     guidance::RoadClassification road_classification)
     : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
       backward(backward), roundabout(roundabout), access_restricted(access_restricted),
-      startpoint(startpoint), is_split(is_split), travel_mode(travel_mode),
+      startpoint(startpoint), priority_road_forward(priority_road_forward),
+      priority_road_backward(priority_road_backward), is_split(is_split), travel_mode(travel_mode),
       lane_description_id(lane_description_id), road_classification(std::move(road_classification))
 {
 }
@@ -121,6 +131,8 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   bool roundabout,
                                                   bool access_restricted,
                                                   bool startpoint,
+                                                  bool priority_road_forward,
+                                                  bool priority_road_backward,
                                                   TravelMode travel_mode,
                                                   bool is_split,
                                                   const LaneDescriptionID lane_description_id,
@@ -134,6 +146,8 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     roundabout,
                     access_restricted,
                     startpoint,
+                    priority_road_forward,
+                    priority_road_backward,
                     travel_mode,
                     is_split,
                     lane_description_id,
