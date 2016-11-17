@@ -50,24 +50,20 @@ void deleteFileIfExists(const std::string &file_name)
     }
 }
 
-std::size_t loadGraph(const char *path,
+std::size_t loadGraph(const std::string &path,
                       std::vector<extractor::QueryNode> &coordinate_list,
                       std::vector<TarjanEdge> &graph_edge_list)
 {
-    std::ifstream stream(path, std::ifstream::binary);
-    if (!stream)
-    {
-        throw util::exception("Cannot open osrm file");
-    }
+    storage::io::FileReader file_reader(path, storage::io::FileReader::VerifyFingerprint);
 
     // load graph data
     std::vector<extractor::NodeBasedEdge> edge_list;
 
     auto nop = boost::make_function_output_iterator([](auto) {});
 
-    auto number_of_nodes = util::loadNodesFromFile(stream, nop, nop, coordinate_list);
+    auto number_of_nodes = util::loadNodesFromFile(file_reader, nop, nop, coordinate_list);
 
-    util::loadEdgesFromFile(stream, edge_list);
+    util::loadEdgesFromFile(file_reader, edge_list);
 
     // Building an node-based graph
     for (const auto &input_edge : edge_list)
@@ -111,7 +107,8 @@ int main(int argc, char *argv[])
     }
 
     std::vector<osrm::tools::TarjanEdge> graph_edge_list;
-    auto number_of_nodes = osrm::tools::loadGraph(argv[1], coordinate_list, graph_edge_list);
+    auto number_of_nodes =
+        osrm::tools::loadGraph(std::string(argv[1]), coordinate_list, graph_edge_list);
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
     const auto graph = std::make_shared<osrm::tools::TarjanGraph>(number_of_nodes, graph_edge_list);
