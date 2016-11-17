@@ -127,23 +127,6 @@ module.exports = function () {
                 var parseRes = (key, scb) => {
                     if (result.forw[key] === result.backw[key]) {
                         result.bothw[key] = result.forw[key];
-                    // FIXME these time and speed checks are stopgaps for precision errors in how
-                    // OSRM returns inconsistent durations for rev/for requests along the same way
-                    } else if (key === 'time') {
-                        var range = [result.forw[key] - 1, result.forw[key] + 1];
-                        if (result.backw[key] >= range[0] && result.backw[key] <= range[1])
-                            // usually when we see minor differences here there's an integer
-                            // duration value and one that comes back with a .9 or .1 rounding.
-                            // This returns the integer one
-                            result.bothw[key] = parseInt(result.forw[key]) === result.forw[key] ? result.forw[key] : result.backw[key];
-                        else
-                            result.bothw[key] = 'diff';
-                    } else if (key === 'speed') {
-                        if (Math.abs(result.backw.time - result.forw.time) < 0.2) {
-                            result.bothw[key] = parseInt(result.forw[key]) === result.forw[key] ? result.forw[key] : result.backw[key];
-                        } else {
-                            result.bothw[key] = 'diff';
-                        }
                     } else {
                         result.bothw[key] = 'diff';
                     }
