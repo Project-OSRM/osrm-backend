@@ -1,4 +1,4 @@
-## Environent Variables
+## Environment Variables
 
 ### SIGNAL_PARENT_WHEN_READY
 
