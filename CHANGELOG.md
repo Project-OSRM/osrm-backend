@@ -8,6 +8,7 @@
       - the car profile has been refactored into smaller functions
       - get_value_by_key() is now guaranteed never to return empty strings, nil is returned instead.
       - debug.lua was added to make it easier to test/develop profile code.
+      - `car.lua` now depends on lib/set.lua and lib/sequence.lua
       - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
       - replaced lhs/rhs profiles by using test defined profiles
       - Handle `oneway=alternating` (routed over with penalty) separately from `oneway=reversible` (not routed over due to time dependence)
