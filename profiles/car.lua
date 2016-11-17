@@ -286,7 +286,7 @@ function node_function (node, result)
 end
 
 -- abort early if this way is obviouslt not routable
-function handle_initial_check(way,result,data)
+function initial_routability_check(way,result,data)
   data.speed_type = way:get_value_by_key('highway')
 
   return data.speed_type ~= nil or
@@ -354,7 +354,7 @@ function handle_hov(way,result)
 end
 
 -- handle various that can block access
-function handle_blocking(way,result)
+function is_way_blocked(way,result)
   -- we dont route over areas
   local area = way:get_value_by_key("area")
   if ignore_areas and "yes" == area then
@@ -387,7 +387,7 @@ function handle_blocking(way,result)
 end
 
 -- set default mode
-function handle_default_mode(way,result)
+function set_default_mode(way,result)
   result.forward_mode = mode.driving
   result.backward_mode = mode.driving
 end
@@ -550,7 +550,7 @@ function handle_turn_lanes(way,result)
 end
 
 -- junctions
-function handle_junctions(way,result)
+function handle_roundabouts(way,result)
   if way:get_value_by_key("junction") == "roundabout" then
     result.roundabout = true
   end
@@ -717,28 +717,66 @@ end
 
 -- main entry point for processsing a way
 function way_function(way, result)
-  -- table of temporary values, e.g. computed access status
+  -- intermediate values used during processing
   local data = {}
+
+  -- to optimize processing, we should try to abort as soon as
+  -- possible if the way is not routable, to avoid doing
+  -- unnecessary work. this implies we should check things that
+  -- commonly forbids access early, and handle complicated edge
+  -- cases later.
   
-  -- perform each procesing step sequentially.
-  -- most steps can abort processing, meaning the way
-  -- is not routable  
-  
-  if handle_initial_check(way,result,data) == false then return end
-  if handle_default_mode(way,result) == false then return end
-  if handle_blocking(way,result) == false then return end
+  -- perform an quick initial check and abort if way is obviously
+  -- not routable, e.g. because it does not have any of the key
+  -- tags indicating routability
+  if initial_routability_check(way,result,data) == false then return end
+
+  -- set the default mode for this profile. if can be changed later
+  -- in case it turns we're e.g. on a ferry
+  if set_default_mode(way,result) == false then return end
+
+  -- check various tags that could indicate that the way is not
+  -- routable. this includes things like status=impassable,
+  -- toll=yes and oneway=reversible
+  if is_way_blocked(way,result) == false then return end
+
+  -- determine access status by checking our hierarchy of
+  -- access tags, e.g: motorcar, motor_vehicle, vehicle
   if handle_access(way,result,data) == false then return end
+
+  -- check high occupancy vehicle restrictions
   if handle_hov(way,result) == false then return end
+
+  -- check whether we're using a special transport mode
   if handle_ferries(way,result) == false then return end
   if handle_movables(way,result) == false then return end
+
+  -- handle service road restrictions
   if handle_service(way,result) == false then return end
+
+  -- check whether forward/backward directons are routable
   if handle_oneway(way,result) == false then return end
+
+  -- compute speed taking into account way type, maxspeed tags, etc.
   if handle_speed(way,result,data) == false then return end
+
+  -- handle turn lanes and road classification, used for guidance
   if handle_turn_lanes(way,result) == false then return end
-  if handle_junctions(way,result) == false then return end
+  if handle_classification(way,result) == false then return end
+
+  -- handle various other flags
+  if handle_roundabouts(way,result) == false then return end
   if handle_startpoint(way,result) == false then return end
   if handle_restricted(way,result,data) == false then return end
-  if handle_classification(way,result) == false then return end
+
+  -- handle roundabout flags
+  if handle_roundabouts(way,result) == false then return end
+
+  -- check if this way can be routed through, but not used as
+  -- origin or destination
+  if handle_restricted(way,result,data) == false then return end
+
+  -- set name, ref and pronunciation
   if handle_names(way,result) == false then return end
 end
 
