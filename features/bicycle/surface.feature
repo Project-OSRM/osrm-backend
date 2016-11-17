@@ -8,7 +8,7 @@ Feature: Bike - Surfaces
         Then routability should be
             | highway  | surface               | bothw |
             | cycleway |                       | 48 s  |
-            | cycleway | asphalt               | 48 s  |
+            | cycleway | asphalt               | 47.9 s|
             | cycleway | cobblestone:flattened | 72 s  |
             | cycleway | paving_stones         | 72 s  |
             | cycleway | compacted             | 72 s  |
@@ -26,7 +26,7 @@ Feature: Bike - Surfaces
         Then routability should be
         | highway  | surface | bothw |
         | cycleway |         | 48 s  |
-        | path     |         | 59.9 s +- 1 |
+        | path     |         | 59.9 s|
         | track    |         | 60 s  |
         | track    | asphalt | 60 s  |
         | path     | asphalt | 60 s  |
