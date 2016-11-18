@@ -363,25 +363,60 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
 
-    for (const auto node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+    // going over all nodes (which form the center of an intersection), we compute all
+    // possible turns along these intersections.
+    for (const auto node_at_center_of_intersection :
+         util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
     {
-        progress.PrintStatus(node_u);
-        for (const EdgeID edge_from_u : m_node_based_graph->GetAdjacentEdgeRange(node_u))
-        {
-            if (m_node_based_graph->GetEdgeData(edge_from_u).reversed)
-            {
-                continue;
-            }
+        progress.PrintStatus(node_at_center_of_intersection);
 
-            const NodeID node_v = m_node_based_graph->GetTarget(edge_from_u);
+        const auto shape_result =
+            turn_analysis.ComputeIntersectionShapes(node_at_center_of_intersection);
+
+        // all nodes in the graph are connected in both directions. We check all outgoing nodes to
+        // find the incoming edge. This is a larger search overhead, but the cost we need to pay to
+        // generate edges here is worth the additional search overhead.
+        //
+        // a -> b <-> c
+        //      |
+        //      v
+        //      d
+        //
+        // will have:
+        // a: b,rev=0
+        // b: a,rev=1 c,rev=0 d,rev=0
+        // c: b,rev=0
+        //
+        // From the flags alone, we cannot determine which nodes are connected to `b` by an outgoing
+        // edge. Therefore, we have to search all connected edges for edges entering `b`
+        for (const EdgeID outgoing_edge :
+             m_node_based_graph->GetAdjacentEdgeRange(node_at_center_of_intersection))
+        {
+            const NodeID node_along_road_entering = m_node_based_graph->GetTarget(outgoing_edge);
+
+            const auto incoming_edge = m_node_based_graph->FindEdge(node_along_road_entering,
+                                                                    node_at_center_of_intersection);
+
+            if (m_node_based_graph->GetEdgeData(incoming_edge).reversed)
+                continue;
+
             ++node_based_edge_counter;
-            auto intersection = turn_analysis(node_u, edge_from_u);
+
+            auto intersection_with_flags_and_angles =
+                turn_analysis.GetIntersectionGenerator().TransformIntersectionShapeIntoView(
+                    node_along_road_entering,
+                    incoming_edge,
+                    shape_result.normalised_intersection_shape,
+                    shape_result.intersection_shape,
+                    shape_result.merging_map);
+
+            auto intersection = turn_analysis.AssignTurnTypes(
+                node_along_road_entering, incoming_edge, intersection_with_flags_and_angles);
+
             BOOST_ASSERT(intersection.valid());
 
-            intersection =
-                turn_lane_handler.assignTurnLanes(node_u, edge_from_u, std::move(intersection));
-
-            const auto possible_turns = turn_analysis.transformIntersectionIntoTurns(intersection);
+            intersection = turn_lane_handler.assignTurnLanes(
+                node_along_road_entering, incoming_edge, std::move(intersection));
 
             // the entry class depends on the turn, so we have to classify the interesction for
             // every edge
@@ -412,12 +447,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     return bearing_class_hash.find(bearing_class)->second;
                 }
             }(turn_classification.second);
-            bearing_class_by_node_based_node[node_v] = bearing_class_id;
+            bearing_class_by_node_based_node[node_at_center_of_intersection] = bearing_class_id;
 
-            for (const auto turn : possible_turns)
+            for (const auto &turn : intersection)
             {
+                // only keep valid turns
+                if (!turn.entry_allowed)
+                    continue;
+
                 // only add an edge if turn is not prohibited
-                const EdgeData &edge_data1 = m_node_based_graph->GetEdgeData(edge_from_u);
+                const EdgeData &edge_data1 = m_node_based_graph->GetEdgeData(incoming_edge);
                 const EdgeData &edge_data2 = m_node_based_graph->GetEdgeData(turn.eid);
 
                 BOOST_ASSERT(edge_data1.edge_id != edge_data2.edge_id);
@@ -426,7 +465,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                 // the following is the core of the loop.
                 unsigned distance = edge_data1.distance;
-                if (m_traffic_lights.find(node_v) != m_traffic_lights.end())
+                if (m_traffic_lights.find(node_at_center_of_intersection) != m_traffic_lights.end())
                 {
                     distance += profile_properties.traffic_signal_penalty;
                 }
@@ -435,7 +474,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     scripting_environment.GetTurnPenalty(180. - turn.angle);
 
                 const auto turn_instruction = turn.instruction;
-
                 if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
                 {
                     distance += profile_properties.u_turn_penalty;
@@ -447,16 +485,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     distance += turn_penalty;
 
                 const bool is_encoded_forwards =
-                    m_compressed_edge_container.HasZippedEntryForForwardID(edge_from_u);
+                    m_compressed_edge_container.HasZippedEntryForForwardID(incoming_edge);
                 const bool is_encoded_backwards =
-                    m_compressed_edge_container.HasZippedEntryForReverseID(edge_from_u);
+                    m_compressed_edge_container.HasZippedEntryForReverseID(incoming_edge);
                 BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
                 if (is_encoded_forwards)
                 {
                     original_edge_data_vector.emplace_back(
-                        GeometryID{
-                            m_compressed_edge_container.GetZippedPositionForForwardID(edge_from_u),
-                            true},
+                        GeometryID{m_compressed_edge_container.GetZippedPositionForForwardID(
+                                       incoming_edge),
+                                   true},
                         edge_data1.name_id,
                         turn.lane_data_id,
                         turn_instruction,
@@ -468,9 +506,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 else if (is_encoded_backwards)
                 {
                     original_edge_data_vector.emplace_back(
-                        GeometryID{
-                            m_compressed_edge_container.GetZippedPositionForReverseID(edge_from_u),
-                            false},
+                        GeometryID{m_compressed_edge_container.GetZippedPositionForReverseID(
+                                       incoming_edge),
+                                   false},
                         edge_data1.name_id,
                         turn.lane_data_id,
                         turn_instruction,
@@ -498,6 +536,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                     distance,
                                                     true,
                                                     false);
+                BOOST_ASSERT(original_edges_counter == m_edge_based_edge_list.size());
 
                 // Here is where we write out the mapping between the edge-expanded edges, and
                 // the node-based edges that are originally used to calculate the `distance`
@@ -514,8 +553,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 if (generate_edge_lookup)
                 {
                     const auto node_based_edges =
-                        m_compressed_edge_container.GetBucketReference(edge_from_u);
-                    NodeID previous = node_u;
+                        m_compressed_edge_container.GetBucketReference(incoming_edge);
+                    NodeID previous = node_along_road_entering;
 
                     const unsigned node_count = node_based_edges.size() + 1;
                     const QueryNode &first_node = m_node_info_list[previous];
@@ -547,18 +586,19 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                     // If this edge is 'trivial' -- where the compressed edge corresponds
                     // exactly to an original OSM segment -- we can pull the turn's preceding
-                    // node ID directly with `node_u`; otherwise, we need to look up the node
+                    // node ID directly with `node_along_road_entering`; otherwise, we need to look
+                    // up the node
                     // immediately preceding the turn from the compressed edge container.
-                    const bool isTrivial = m_compressed_edge_container.IsTrivial(edge_from_u);
+                    const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
 
                     const auto &from_node =
                         isTrivial
-                            ? m_node_info_list[node_u]
+                            ? m_node_info_list[node_along_road_entering]
                             : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(
-                                  edge_from_u)];
+                                  incoming_edge)];
                     const auto &via_node =
                         m_node_info_list[m_compressed_edge_container.GetLastEdgeTargetID(
-                            edge_from_u)];
+                            incoming_edge)];
                     const auto &to_node =
                         m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
                             turn.eid)];

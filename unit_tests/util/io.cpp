@@ -117,7 +117,8 @@ BOOST_AUTO_TEST_CASE(io_read_lines)
         auto startiter = infile.GetLineIteratorBegin();
         auto enditer = infile.GetLineIteratorEnd();
         std::vector<std::string> resultlines;
-        while (startiter != enditer) {
+        while (startiter != enditer)
+        {
             resultlines.push_back(*startiter);
             ++startiter;
         }

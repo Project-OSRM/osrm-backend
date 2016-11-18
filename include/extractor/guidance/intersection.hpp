@@ -5,11 +5,10 @@
 #include <vector>
 
 #include "extractor/guidance/turn_instruction.hpp"
+#include "util/bearing.hpp"
 #include "util/guidance/toolkit.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp" // EdgeID
-
-#include <boost/optional.hpp>
 
 namespace osrm
 {
@@ -18,16 +17,37 @@ namespace extractor
 namespace guidance
 {
 
-// Every Turn Operation describes a way of switching onto a segment, indicated by an EdgeID. The
-// associated turn is described by an angle and an instruction that is used to announce it.
-// The Turn Operation indicates what is exposed to the outside of the turn analysis.
-struct TurnOperation
+// the shape of an intersection only knows about edge IDs and bearings
+struct IntersectionShapeData
 {
     EdgeID eid;
-    double angle;
     double bearing;
-    TurnInstruction instruction;
-    LaneDataID lane_data_id;
+    double segment_length;
+};
+
+inline auto makeCompareShapeDataByBearing(const double base_bearing)
+{
+    return [base_bearing](const IntersectionShapeData &lhs, const IntersectionShapeData &rhs) {
+        return util::bearing::angleBetweenBearings(base_bearing, lhs.bearing) <
+               util::bearing::angleBetweenBearings(base_bearing, rhs.bearing);
+    };
+};
+
+// When viewing an intersection from an incoming edge, we can transform a shape into a view which
+// gives additional information on angles and whether a turn is allowed
+struct IntersectionViewData : IntersectionShapeData
+{
+    IntersectionViewData(const IntersectionShapeData &shape,
+                         const bool entry_allowed,
+                         const double angle)
+        : IntersectionShapeData(shape), entry_allowed(entry_allowed), angle(angle)
+    {
+    }
+
+    bool entry_allowed;
+    double angle;
+
+    bool CompareByAngle(const IntersectionViewData &other) const;
 };
 
 // A Connected Road is the internal representation of a potential turn. Internally, we require
@@ -51,17 +71,17 @@ struct TurnOperation
 // aaaaaaaa
 //
 // We would perceive a->c as a sharp turn, a->b as a slight turn, and b->c as a slight turn.
-struct ConnectedRoad final : public TurnOperation
+struct ConnectedRoad final : IntersectionViewData
 {
-    using Base = TurnOperation;
+    ConnectedRoad(const IntersectionViewData &view,
+                  const TurnInstruction instruction,
+                  const LaneDataID lane_data_id)
+        : IntersectionViewData(view), instruction(instruction), lane_data_id(lane_data_id)
+    {
+    }
 
-    ConnectedRoad(const TurnOperation turn,
-                  const bool entry_allowed = false,
-                  const boost::optional<double> segment_length = {});
-
-    // a turn may be relevant to good instructions, even if we cannot enter the road
-    bool entry_allowed;
-    boost::optional<double> segment_length;
+    TurnInstruction instruction;
+    LaneDataID lane_data_id;
 
     // used to sort the set of connected roads (we require sorting throughout turn handling)
     bool compareByAngle(const ConnectedRoad &other) const;
@@ -76,10 +96,24 @@ struct ConnectedRoad final : public TurnOperation
 // small helper function to print the content of a connected road
 std::string toString(const ConnectedRoad &road);
 
-struct Intersection final : public std::vector<ConnectedRoad>
+using IntersectionShape = std::vector<IntersectionShapeData>;
+
+struct IntersectionView final : std::vector<IntersectionViewData>
+{
+    using Base = std::vector<IntersectionViewData>;
+
+    bool valid() const
+    {
+        return std::is_sorted(begin(), end(), std::mem_fn(&IntersectionViewData::CompareByAngle));
+    };
+
+    Base::iterator findClosestTurn(double angle);
+    Base::const_iterator findClosestTurn(double angle) const;
+};
+
+struct Intersection final : std::vector<ConnectedRoad>
 {
     using Base = std::vector<ConnectedRoad>;
-
     /*
      * find the turn whose angle offers the least angularDeviation to the specified angle
      * E.g. for turn angles [0,90,260] and a query of 180 we return the 260 degree turn (difference

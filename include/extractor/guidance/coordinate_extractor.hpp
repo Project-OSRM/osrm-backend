@@ -38,7 +38,8 @@ class CoordinateExtractor
                                             const NodeID to_node,
                                             const std::uint8_t number_of_in_lanes) const;
 
-    // same as above, only with precomputed coordinate vector (move it in)
+    // Given a set of precomputed coordinates, select the representative coordinate along the road
+    // that best describes the turn
     OSRM_ATTR_WARN_UNUSED
     util::Coordinate
     ExtractRepresentativeCoordinate(const NodeID intersection_node,
@@ -240,6 +241,14 @@ class CoordinateExtractor
                         const double segment_length,
                         const std::vector<double> &segment_distances,
                         const std::uint8_t considered_lanes) const;
+
+    // find the coordinate at a specific location in the vector
+    util::Coordinate ExtractCoordinateAtLength(const double distance,
+                                               const std::vector<util::Coordinate> &coordinates,
+                                               const std::vector<double> &length_cache) const;
+    util::Coordinate
+    ExtractCoordinateAtLength(const double distance,
+                              const std::vector<util::Coordinate> &coordinates) const;
 };
 
 } // namespace guidance

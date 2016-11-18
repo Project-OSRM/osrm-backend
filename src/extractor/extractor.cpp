@@ -245,7 +245,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         // Transform the node-based graph that OSM is based on into an edge-based graph
         // that is better for routing.  Every edge becomes a node, and every valid
         // movement (e.g. turn from A->B, and B->A) becomes an edge
-        //
         util::SimpleLogger().Write() << "Generating edge-expanded graph representation";
 
         TIMER_START(expansion);

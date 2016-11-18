@@ -1179,8 +1179,8 @@ Feature: Simple Turns
      Scenario: Obvious Index wigh very narrow turn to the right
         Given the node map
             """
-            a   b           c
-                            d
+            a - b -.-.- - - c
+                       ' ' 'd
             """
 
         And the ways
@@ -1198,8 +1198,8 @@ Feature: Simple Turns
      Scenario: Obvious Index wigh very narrow turn to the right
         Given the node map
             """
-            a   b           c
-                    e       d f
+            a - b - . -.- - c
+                    e - -'-'d-f
             """
 
         And the ways
@@ -1218,8 +1218,8 @@ Feature: Simple Turns
     Scenario: Obvious Index wigh very narrow turn to the left
         Given the node map
             """
-                            d
-            a   b           c
+                       . . .d
+            a - b -'-'- - - c
             """
 
         And the ways
@@ -1237,8 +1237,8 @@ Feature: Simple Turns
      Scenario: Obvious Index wigh very narrow turn to the left
         Given the node map
             """
-                    e       d f
-            a   b           c
+                    e - -.- d-f
+            a - b - ' - - - c
             """
 
         And the ways

@@ -133,7 +133,7 @@ struct IntersectionFinderAccumulator
     // the result we are looking for
     NodeID nid;
     EdgeID via_edge_id;
-    Intersection intersection;
+    IntersectionView intersection;
 };
 
 template <class accumulator_type, class selector_type>

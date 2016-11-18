@@ -106,7 +106,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
             // itself. If that is the case, the road is obviously not a sliproad.
 
             // a sliproad has to enter a road without choice
-            const auto couldBeSliproad = [](const Intersection &intersection) {
+            const auto couldBeSliproad = [](const IntersectionView &intersection) {
                 if (intersection.size() != 3)
                     return false;
                 if ((intersection[1].entry_allowed && intersection[2].entry_allowed) ||
@@ -218,7 +218,7 @@ operator()(const NodeID, const EdgeID source_edge_id, Intersection intersection)
                     std::find_if(
                         target_intersection.begin() + 1,
                         target_intersection.end(),
-                        [this, &link_data](const ConnectedRoad &road) {
+                        [this, &link_data](const IntersectionViewData &road) {
                             const auto &road_edge_data = node_based_graph.GetEdgeData(road.eid);
 
                             const auto same_name =

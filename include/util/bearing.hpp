@@ -8,9 +8,9 @@ namespace osrm
 {
 namespace util
 {
-
 namespace bearing
 {
+
 inline std::string get(const double heading)
 {
     BOOST_ASSERT(heading >= 0);
@@ -96,8 +96,40 @@ inline double reverseBearing(const double bearing)
         return bearing - 180.;
     return bearing + 180;
 }
+
+// Compute the angle between two bearings on a normal turn circle
+//
+//      Bearings                      Angles
+//
+//         0                           180
+//   315         45               225       135
+//
+// 270     x       90           270     x      90
+//
+//   225        135               315        45
+//        180                           0
+//
+// A turn from north to north-east offerst bearing 0 and 45 has to be translated
+// into a turn of 135 degrees. The same holdes for 90 - 135 (east to south
+// east).
+// For north, the transformation works by angle = 540 (360 + 180) - exit_bearing
+// % 360;
+// All other cases are handled by first rotating both bearings to an
+// entry_bearing of 0.
+inline double angleBetweenBearings(const double entry_bearing, const double exit_bearing)
+{
+    const double offset = 360 - entry_bearing;
+    const double rotated_exit = [](double bearing, const double offset) {
+        bearing += offset;
+        return bearing > 360 ? bearing - 360 : bearing;
+    }(exit_bearing, offset);
+
+    const auto angle = 540 - rotated_exit;
+    return angle >= 360 ? angle - 360 : angle;
 }
-}
-}
+
+} // namespace bearing
+} // namespace util
+} // namespace osrm
 
 #endif // BEARING_HPP

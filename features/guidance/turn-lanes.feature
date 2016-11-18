@@ -116,24 +116,25 @@ Feature: Turn Lane Guidance
     Scenario: Basic Turn Lane 4-Way With U-Turn Lane
         Given the node map
             """
-                e
-            a 1 b   c
-                d
+                   e
+            f  a-1-b---c
+                   d
             """
 
         And the ways
-            | nodes  | turn:lanes     | turn:lanes:forward          | name     |
-            | ab     |                | reverse;left\|through;right | in       |
-            | bc     |                |                             | straight |
-            | bd     |                |                             | right    |
-            | be     |                |                             | left     |
+            | nodes  | turn:lanes     | turn:lanes:forward          | name          | #                                                                |
+            | ab     |                | reverse;left\|through;right | in            |                                                                  |
+            | bc     |                |                             | straight      |                                                                  |
+            | bd     |                |                             | right         |                                                                  |
+            | be     |                |                             | left          |                                                                  |
+            | fa     |                |                             | uturn-avoider | #due to https://github.com/Project-OSRM/osrm-backend/issues/3359 |
 
        When I route I should get
-            | from | to | bearings        | route                | turns                           | lanes                                  |
-            | a    | c  | 180,180 180,180 | in,straight,straight | depart,new name straight,arrive | ,left;uturn:false straight;right:true, |
-            | a    | d  | 180,180 180,180 | in,right,right       | depart,turn right,arrive        | ,left;uturn:false straight;right:true, |
-            | a    | e  | 180,180 180,180 | in,left,left         | depart,turn left,arrive         | ,left;uturn:true straight;right:false, |
-            | 1    | a  | 90,2 270,2      | in,in,in             | depart,turn uturn,arrive        | ,left;uturn:true straight;right:false, |
+            | from | to | bearings        | route                | turns                           | lanes                                  | locations |
+            | a    | c  | 180,180 180,180 | in,straight,straight | depart,new name straight,arrive | ,left;uturn:false straight;right:true, | a,b,c     |
+            | a    | d  | 180,180 180,180 | in,right,right       | depart,turn right,arrive        | ,left;uturn:false straight;right:true, | a,b,d     |
+            | a    | e  | 180,180 180,180 | in,left,left         | depart,turn left,arrive         | ,left;uturn:true straight;right:false, | a,b,e     |
+            | 1    | a  | 90,2 270,2      | in,in,in             | depart,turn uturn,arrive        | ,left;uturn:true straight;right:false, | _,b,a     |
 
 
     #this next test requires decision on how to announce lanes for going straight if there is no turn

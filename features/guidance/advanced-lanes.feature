@@ -72,16 +72,16 @@ Feature: Turn Lane Guidance
         Given the node map
             """
                           e
-            a     b       c g
-                          d
-                          f
-
-
-
-
-
-
-            i     h       j
+            a - - b.-.- - c-g
+                  |    ' 'd
+                  |       f
+                  |
+                  |
+                  |
+                  |
+                  |
+                  |
+            i - - h - - - j
             """
 
         And the ways

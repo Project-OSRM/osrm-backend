@@ -28,7 +28,7 @@ bool findPreviousIntersection(
     // output parameters, will be in an arbitrary state on failure
     NodeID &result_node,
     EdgeID &result_via_edge,
-    Intersection &result_intersection);
+    IntersectionView &result_intersection);
 
 } // namespace lanes
 } // namespace guidance
