@@ -5,6 +5,7 @@ local set_classification = require("lib/guidance").set_classification
 local get_turn_lanes = require("lib/guidance").get_turn_lanes
 local Set = require('lib/set')
 local Sequence = require('lib/sequence')
+local Directional = require('lib/directional')
 
 -- Begin of globals
 barrier_whitelist = Set {
@@ -287,69 +288,51 @@ end
 
 -- abort early if this way is obviouslt not routable
 function initial_routability_check(way,result,data)
-  data.speed_type = way:get_value_by_key('highway')
+  data.highway = way:get_value_by_key('highway')
 
-  return data.speed_type ~= nil or
+  return data.highway ~= nil or
          way:get_value_by_key('route') ~= nil or
          way:get_value_by_key('bridge') ~= nil
 end
 
--- handle high occupancy vehicle tags
-function handle_hov(way,result)
-  -- respect user-preference for HOV-only ways
-  if ignore_hov_ways then
-    local hov = way:get_value_by_key("hov")
-    if "designated" == hov then
+-- all lanes restricted to hov vehicles?
+local function has_all_designated_hov_lanes(lanes)
+  if not lanes then
+    return false
+  end
+  -- This gmatch call effectively splits the string on | chars.
+  -- we append an extra | to the end so that we can match the final part
+  for lane in (lanes .. '|'):gmatch("([^|]*)|") do
+    if lane and lane ~= "designated" then
       return false
     end
+  end
+  return true
+end
 
-    -- also respect user-preference for HOV-only ways when all lanes are HOV-designated
-    local function has_all_designated_hov_lanes(lanes)
-      local all = true
-      -- This gmatch call effectively splits the string on | chars.
-      -- we append an extra | to the end so that we can match the final part
-      for lane in (lanes .. '|'):gmatch("([^|]*)|") do
-        if lane and lane ~= "designated" then
-          all = false
-          break
-        end
-      end
-      return all
-    end
+-- handle high occupancy vehicle tags
+function handle_hov(way,result,data)
+  -- respect user-preference for HOV
+  if not ignore_hov_ways then
+    return
+  end
 
-    local hov_lanes = way:get_value_by_key("hov:lanes")
-    local hov_lanes_forward = way:get_value_by_key("hov:lanes:forward")
-    local hov_lanes_backward = way:get_value_by_key("hov:lanes:backward")
+  -- check if way is hov only
+  local hov = way:get_value_by_key("hov")
+  if "designated" == hov then
+    return false
+  end
 
-    local hov_all_designated = hov_lanes and
-                               has_all_designated_hov_lanes(hov_lanes)
+  -- check if all lanes are hov only
+  local hov_lanes_forward, hov_lanes_backward = Directional.get_values_by_key(way,data,'hov:lanes')
+  local inaccessible_forward = has_all_designated_hov_lanes(hov_lanes_forward)
+  local inaccessible_backward = has_all_designated_hov_lanes(hov_lanes_backward)
 
-    local hov_all_designated_forward = hov_lanes_forward and
-                                       has_all_designated_hov_lanes(hov_lanes_forward)
-
-    local hov_all_designated_backward = hov_lanes_backward and
-                                        has_all_designated_hov_lanes(hov_lanes_backward)
-
-    -- forward/backward lane depend on a way's direction
-    local oneway = way:get_value_by_key("oneway")
-    local reverse = oneway == "-1"
-
-    if hov_all_designated or hov_all_designated_forward then
-      if reverse then
-        result.backward_mode = mode.inaccessible
-      else
-        result.forward_mode = mode.inaccessible
-      end
-    end
-
-    if hov_all_designated_backward then
-      if reverse then
-        result.forward_mode = mode.inaccessible
-      else
-        result.backward_mode = mode.inaccessible
-      end
-    end
-
+  if inaccessible_forward then
+    result.forward_mode = mode.inaccessible
+  end
+  if inaccessible_backward then
+    result.backward_mode = mode.inaccessible
   end
 end
 
@@ -440,18 +423,11 @@ end
 -- handle speed (excluding maxspeed)
 function handle_speed(way,result,data)
   if result.forward_speed == -1 then
-    local highway_speed = speed_profile[way:get_value_by_key("highway")]
-    local max_speed = parse_maxspeed( way:get_value_by_key("maxspeed") )
+    local highway_speed = speed_profile[data.highway]
     -- Set the avg speed on the way if it is accessible by road class
     if highway_speed then
-      if max_speed and max_speed > highway_speed then
-        result.forward_speed = max_speed
-        result.backward_speed = max_speed
-        -- max_speed = math.huge
-      else
-        result.forward_speed = highway_speed
-        result.backward_speed = highway_speed
-      end
+      result.forward_speed = highway_speed
+      result.backward_speed = highway_speed
     else
       -- Set the avg speed on ways that are marked accessible
       if access_tag_whitelist[data.access] then
@@ -459,11 +435,6 @@ function handle_speed(way,result,data)
         result.backward_speed = speed_profile["default"]
       end
     end
-    if 0 == max_speed then
-      max_speed = math.huge
-    end
-    result.forward_speed = min(result.forward_speed, max_speed)
-    result.backward_speed = min(result.backward_speed, max_speed)
   end
 
   if -1 == result.forward_speed and -1 == result.backward_speed then
@@ -472,7 +443,7 @@ function handle_speed(way,result,data)
   
   if handle_side_roads(way,result) == false then return false end
   if handle_surface(way,result) == false then return false end
-  if handle_maxspeed(way,result) == false then return false end
+  if handle_maxspeed(way,data,result) == false then return false end
   if handle_speed_scaling(way,result) == false then return false end
   if handle_alternating_speed(way,result) == false then return false end
 end
@@ -529,23 +500,15 @@ function handle_names(way,result)
 end
 
 -- handle turn lanes
-function handle_turn_lanes(way,result)
-  local turn_lanes = ''
-  local turn_lanes_forward = ''
-  local turn_lanes_backward = ''
+function handle_turn_lanes(way,result,data)
+  local forward, backward = get_turn_lanes(way,data)
 
-  turn_lanes, turn_lanes_forward, turn_lanes_backward = get_turn_lanes(way)
-  if turn_lanes and turn_lanes ~= '' then
-    result.turn_lanes_forward = turn_lanes;
-    result.turn_lanes_backward = turn_lanes;
-  else
-    if turn_lanes_forward and turn_lanes_forward ~= ''  then
-      result.turn_lanes_forward = turn_lanes_forward;
-    end
+  if forward then
+    result.turn_lanes_forward = forward
+  end
 
-    if turn_lanes_backward and turn_lanes_backward ~= '' then
-      result.turn_lanes_backward = turn_lanes_backward;
-    end
+  if backward then
+    result.turn_lanes_backward = backward
   end
 end
 
@@ -633,69 +596,55 @@ function handle_speed_scaling(way,result)
   end
 end
 
--- oneways
-function handle_oneway(way,result)
+-- handle oneways tags
+function handle_oneway(way,result,data)
   local oneway = way:get_value_by_key("oneway")
+  data.oneway = oneway
   if obey_oneway then
     if oneway == "-1" then
+      data.is_reverse_oneway = true
       result.forward_mode = mode.inaccessible
-
-      local is_forward = false
-      local destination = get_destination(way, is_forward)
-      result.destinations = canonicalizeStringList(destination, ",")
     elseif oneway == "yes" or
            oneway == "1" or
-           oneway == "true" or
-           way:get_value_by_key("junction") == "roundabout" or
-           way:get_value_by_key("junction") == "circular" or
-           (way:get_value_by_key("highway") == "motorway" and oneway ~= "no") then
-
+           oneway == "true" then
+      data.is_forward_oneway = true
       result.backward_mode = mode.inaccessible
-
-      local is_forward = true
-      local destination = get_destination(way, is_forward)
-      result.destinations = canonicalizeStringList(destination, ",")
+    else
+      local junction = way:get_value_by_key("junction")
+      if data.highway == "motorway" or
+         junction == "roundabout" or 
+         junction == "circular" then
+        if oneway ~= "no" then
+          -- implied oneway
+          data.is_forward_oneway = true
+          result.backward_mode = mode.inaccessible
+        end
+      end
     end
   end
 end
 
--- maxspeed and advisory maxspeed
-function handle_maxspeed(way,result)
-  -- Override speed settings if explicit forward/backward maxspeeds are given
-  local maxspeed_forward = parse_maxspeed(way:get_value_by_key("maxspeed:forward"))
-  local maxspeed_backward = parse_maxspeed(way:get_value_by_key("maxspeed:backward"))
-  if maxspeed_forward and maxspeed_forward > 0 then
-    if mode.inaccessible ~= result.forward_mode and 
-       mode.inaccessible ~= result.backward_mode then
-       result.backward_speed = result.forward_speed
-    end
-    result.forward_speed = maxspeed_forward
+-- handle destination tags
+function handle_destinations(way,result,data)
+  if data.is_forward_oneway or data.is_reverse_oneway then
+    local destination = get_destination(way, data.is_forward_oneway)
+    result.destinations = canonicalizeStringList(destination, ",")
   end
-  if maxspeed_backward and maxspeed_backward > 0 then
-    result.backward_speed = maxspeed_backward
+end
+
+-- maxspeed and advisory maxspeed
+function handle_maxspeed(way,data,result)
+  local keys = Sequence { 'maxspeed:advisory', 'maxspeed' }
+  local forward, backward = Directional.get_values_by_set(way,data,keys)
+  forward = parse_maxspeed(forward)
+  backward = parse_maxspeed(backward)
+
+  if forward and forward > 0 then
+    result.forward_speed = forward
   end
 
-  -- Override speed settings if advisory forward/backward maxspeeds are given
-  local advisory_speed = parse_maxspeed(way:get_value_by_key("maxspeed:advisory"))
-  local advisory_forward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:forward"))
-  local advisory_backward = parse_maxspeed(way:get_value_by_key("maxspeed:advisory:backward"))
-  -- apply bi-directional advisory speed first
-  if advisory_speed and advisory_speed > 0 then
-    if mode.inaccessible ~= result.forward_mode then
-      result.forward_speed = advisory_speed
-    end
-    if mode.inaccessible ~= result.backward_mode then
-      result.backward_speed = advisory_speed
-    end
-  end
-  if advisory_forward and advisory_forward > 0 then
-    if mode.inaccessible ~= result.forward_mode and mode.inaccessible ~= result.backward_mode then
-      result.backward_speed = result.forward_speed
-    end
-    result.forward_speed = advisory_forward
-  end
-  if advisory_backward and advisory_backward > 0 then
-    result.backward_speed = advisory_backward
+  if backward and backward > 0 then
+    result.backward_speed = backward
   end
 end
 
@@ -713,6 +662,7 @@ function handle_alternating_speed(way,result)
   end
 end
 
+
 -- determine if this way can be used as a start/end point for routing
 function handle_startpoint(way,result)
   -- only allow this road as start point if it not a ferry
@@ -721,8 +671,8 @@ function handle_startpoint(way,result)
 end
 
 -- set the road classification based on guidance globals configuration
-function handle_classification(way,result)
-  set_classification(way:get_value_by_key("highway"),result,way)
+function handle_classification(way,result,data)
+  set_classification(data.highway,result,way)
 end
 
 -- main entry point for processsing a way
@@ -754,8 +704,11 @@ function way_function(way, result)
   -- access tags, e.g: motorcar, motor_vehicle, vehicle
   if handle_access(way,result,data) == false then return end
 
-  -- check high occupancy vehicle restrictions
-  if handle_hov(way,result) == false then return end
+  -- check whether forward/backward directons are routable
+  if handle_oneway(way,result,data) == false then return end
+
+  -- check whether forward/backward directons are routable
+  if handle_destinations(way,result,data) == false then return end
 
   -- check whether we're using a special transport mode
   if handle_ferries(way,result) == false then return end
@@ -764,23 +717,20 @@ function way_function(way, result)
   -- handle service road restrictions
   if handle_service(way,result) == false then return end
 
-  -- check whether forward/backward directons are routable
-  if handle_oneway(way,result) == false then return end
+  -- check high occupancy vehicle restrictions
+  if handle_hov(way,result,data) == false then return end
 
   -- compute speed taking into account way type, maxspeed tags, etc.
   if handle_speed(way,result,data) == false then return end
 
   -- handle turn lanes and road classification, used for guidance
-  if handle_turn_lanes(way,result) == false then return end
-  if handle_classification(way,result) == false then return end
+  if handle_turn_lanes(way,result,data) == false then return end
+  if handle_classification(way,result,data) == false then return end
 
   -- handle various other flags
   if handle_roundabouts(way,result) == false then return end
   if handle_startpoint(way,result) == false then return end
   if handle_restricted(way,result,data) == false then return end
-
-  -- handle roundabout flags
-  if handle_roundabouts(way,result) == false then return end
 
   -- check if this way can be routed through, but not used as
   -- origin or destination

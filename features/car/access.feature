@@ -149,6 +149,7 @@ Feature: Car - Restricted access
             | runway  |      |         |     | yes       |       |
             | primary |      |         |     | no        | x     |
 
+    @hov
     Scenario: Car - only designated HOV ways are ignored by default
         Then routability should be
             | highway | hov        | bothw |
@@ -156,6 +157,7 @@ Feature: Car - Restricted access
             | primary | yes        | x     |
             | primary | no         | x     |
 
+    @hov
     Scenario: Car - a way with all lanes HOV-designated is inaccessible by default (similar to hov=designated)
         Then routability should be
             | highway | hov:lanes:forward      | hov:lanes:backward     | hov:lanes              | oneway | forw | backw |
@@ -166,8 +168,8 @@ Feature: Car - Restricted access
             | primary | designated\|no         | designated\|no         |                        |        | x    | x     |
             | primary | yes\|no                | yes\|no                |                        |        | x    | x     |
             | primary |                        |                        |                        |        | x    | x     |
-            | primary | designated             |                        |                        | -1     |      |       |
-            | primary |                        | designated             |                        | -1     |      | x     |
+            | primary | designated             |                        |                        | -1     |      | x     |
+            | primary |                        | designated             |                        | -1     |      |       |
             | primary |                        |                        | designated             | yes    |      |       |
             | primary |                        |                        | designated             | -1     |      |       |
             | primary |                        |                        | designated\|           | yes    | x    |       |
