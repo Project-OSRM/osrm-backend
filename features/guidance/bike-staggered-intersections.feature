@@ -24,9 +24,9 @@ Feature: Staggered Intersections
             | ihedcj | residential | Cedar Dr | yes    |
 
         When I route I should get
-            | waypoints | route         | turns         |
-            | a,g       | Oak St,Oak St | depart,arrive |
-            | g,a       | Oak St,Oak St | depart,arrive |
+            | waypoints | route                         | turns                              | modes                                |
+            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | cycling,pushing bike,cycling,cycling |
+            | g,a       | Oak St,Oak St                 | depart,arrive                      | cycling,cycling                      |
 
     Scenario: Staggered Intersection - pushing at start
         Given the node map
@@ -46,9 +46,9 @@ Feature: Staggered Intersections
             | ihedcj | residential | Cedar Dr |        |
 
         When I route I should get
-            | waypoints | route         | turns         |
-            | a,g       | Oak St,Oak St | depart,arrive |
-            | g,a       | Oak St,Oak St | depart,arrive |
+            | waypoints | route                         | turns                              | modes                                |
+            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,cycling,cycling |
+            | g,a       | Oak St,Oak St                 | depart,arrive                      | cycling,cycling                      |
 
     Scenario: Staggered Intersection - pushing at end
         Given the node map
@@ -68,9 +68,9 @@ Feature: Staggered Intersections
             | ihedcj | residential | Cedar Dr |        |
 
         When I route I should get
-            | waypoints | route         | turns         |
-            | a,g       | Oak St,Oak St | depart,arrive |
-            | g,a       | Oak St,Oak St | depart,arrive |
+            | waypoints | route         | turns                                              | modes                                     |
+            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | cycling,cycling,pushing bike,pushing bike |
+            | g,a       | Oak St,Oak St | depart,arrive                                      | cycling,cycling                           |
 
     Scenario: Staggered Intersection - pushing at start and end
         Given the node map
@@ -90,6 +90,6 @@ Feature: Staggered Intersections
             | ihedcj | residential | Cedar Dr |        |
 
         When I route I should get
-            | waypoints | route         | turns         |
-            | a,g       | Oak St,Oak St | depart,arrive |
-            | g,a       | Oak St,Oak St | depart,arrive |
+            | waypoints | route                         | turns                              | modes                                          |
+            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike |
+            | g,a       | Oak St,Oak St                 | depart,arrive                      | cycling,cycling                                |
