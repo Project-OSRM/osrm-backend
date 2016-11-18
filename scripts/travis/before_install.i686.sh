@@ -1,9 +1,5 @@
 #!/bin/sh -ex
 
-## Generate code for 32-bit ABI with default for x86_84 fpmath
-export CFLAGS='-m32 -msse2 -mfpmath=sse'
-export CXXFLAGS='-m32 -msse2 -mfpmath=sse'
-
 sudo dpkg --add-architecture i386
 sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test && ( sudo apt-get update -qq --yes || true )
 
