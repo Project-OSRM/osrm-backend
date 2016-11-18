@@ -93,3 +93,47 @@ Feature: Staggered Intersections
             | waypoints | route                         | turns                              | modes                                          |
             | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike |
             | g,a       | Oak St,Oak St                 | depart,arrive                      | cycling,cycling                                |
+
+    Scenario: Staggered Intersection - pushing at start and end
+        Given the node map
+            """
+                j
+            a b c
+                d
+                e f g
+                h
+                i
+            """
+
+        And the ways
+            | nodes  | highway     | name     |
+            | cba    | pedestrian  | Oak St   |
+            | gfe    | pedestrian  | Oak St   |
+            | ihedcj | residential | Cedar Dr |
+
+        When I route I should get
+            | waypoints | route                         | turns                              | modes                                          |
+            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike |
+            | g,a       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike |
+
+    Scenario: Staggered Intersection - control, all cycling on staggered intersection
+        Given the node map
+            """
+                j
+            a b c
+                d
+                e f g
+                h
+                i
+            """
+
+        And the ways
+            | nodes  | highway     | name     |
+            | cba    | residential | Oak St   |
+            | gfe    | residential | Oak St   |
+            | ihedcj | residential | Cedar Dr |
+
+        When I route I should get
+            | waypoints | route         | turns         | modes           |
+            | a,g       | Oak St,Oak St | depart,arrive | cycling,cycling |
+            | g,a       | Oak St,Oak St | depart,arrive | cycling,cycling |
