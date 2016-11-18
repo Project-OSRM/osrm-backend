@@ -322,29 +322,12 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     std::cout << "[extractor] Setting start coords      ... " << std::flush;
     TIMER_START(set_start_coords);
     // Traverse list of edges and nodes in parallel and set start coord
-    auto node_iterator = used_node_id_list.begin();
     auto edge_iterator = all_edges_list.begin();
 
     const auto all_edges_list_end = all_edges_list.end();
-    const auto used_node_id_list_end = used_node_id_list.end();
 
-    while (edge_iterator != all_edges_list_end && node_iterator != used_node_id_list_end)
+    while (edge_iterator != all_edges_list_end)
     {
-        if (edge_iterator->result.osm_source_id < *node_iterator)
-        {
-            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
-                                                           << edge_iterator->result.source;
-            edge_iterator->result.source = SPECIAL_NODEID;
-            ++edge_iterator;
-            continue;
-        }
-        if (edge_iterator->result.osm_source_id > *node_iterator)
-        {
-            node_iterator++;
-            continue;
-        }
-
-        // remove loops
         if (edge_iterator->result.osm_source_id == edge_iterator->result.osm_target_id)
         {
             edge_iterator->result.source = SPECIAL_NODEID;
@@ -356,8 +339,15 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         BOOST_ASSERT(edge_iterator->result.osm_source_id == *node_iterator);
 
         // assign new node id
-        auto id_iter = external_to_internal_node_id_map.find(*node_iterator);
-        BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
+        auto id_iter = external_to_internal_node_id_map.find(edge_iterator->result.osm_source_id);
+        if (id_iter == external_to_internal_node_id_map.end())
+        {
+            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
+                                                           << edge_iterator->result.source;
+            edge_iterator->result.source = SPECIAL_NODEID;
+            ++edge_iterator;
+            continue;
+        }
         edge_iterator->result.source = id_iter->second;
 
         edge_iterator->source_coordinate.lat = all_nodes_list[id_iter->second].lat;
@@ -387,12 +377,10 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     // Compute edge weights
     std::cout << "[extractor] Computing edge weights    ... " << std::flush;
     TIMER_START(compute_weights);
-    node_iterator = used_node_id_list.begin();
     edge_iterator = all_edges_list.begin();
     const auto all_edges_list_end_ = all_edges_list.end();
-    const auto used_nodes_list_end_ = used_node_id_list.end();
 
-    while (edge_iterator != all_edges_list_end_ && node_iterator != used_nodes_list_end_)
+    while (edge_iterator != all_edges_list_end_)
     {
         // skip all invalid edges
         if (edge_iterator->result.source == SPECIAL_NODEID)
@@ -401,7 +389,14 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             continue;
         }
 
-        if (edge_iterator->result.osm_target_id < *node_iterator)
+        BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
+        BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
+                     util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
+        BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
+                     util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
+
+        auto id_iter = external_to_internal_node_id_map.find(edge_iterator->result.osm_target_id);
+        if (id_iter == external_to_internal_node_id_map.end())
         {
             util::SimpleLogger().Write(LogLevel::logDEBUG)
                 << "Found invalid node reference "
@@ -410,21 +405,6 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             ++edge_iterator;
             continue;
         }
-        if (edge_iterator->result.osm_target_id > *node_iterator)
-        {
-            ++node_iterator;
-            continue;
-        }
-
-        BOOST_ASSERT(edge_iterator->result.osm_target_id == *node_iterator);
-        BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
-        BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
-                     util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
-        BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
-                     util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
-
-        auto id_iter = external_to_internal_node_id_map.find(*node_iterator);
-        BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
 
         const auto node_coord = util::Coordinate(all_nodes_list[id_iter->second].lon,
                                                  all_nodes_list[id_iter->second].lat);
