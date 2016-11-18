@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <iomanip>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <set>
@@ -74,36 +75,74 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
 {
 }
 
-Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
-                                           const EdgeID via_eid,
-                                           Intersection intersection) const
+Intersection TurnAnalysis::operator()(const NodeID node_prior_to_intersection,
+                                      const EdgeID entering_via_edge) const
+{
+    TurnAnalysis::ShapeResult shape_result =
+        ComputeIntersectionShapes(node_based_graph.GetTarget(entering_via_edge));
+
+    // assign valid flags to normalised_shape
+    const auto intersection_view = intersection_generator.TransformIntersectionShapeIntoView(
+        node_prior_to_intersection,
+        entering_via_edge,
+        shape_result.normalised_intersection_shape,
+        shape_result.intersection_shape,
+        shape_result.merging_map);
+
+    // assign the turn types to the intersection
+    return AssignTurnTypes(node_prior_to_intersection, entering_via_edge, intersection_view);
+}
+
+Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersection,
+                                           const EdgeID entering_via_edge,
+                                           const IntersectionView &intersection_view) const
 {
     // Roundabouts are a main priority. If there is a roundabout instruction present, we process the
     // turn as a roundabout
-    if (roundabout_handler.canProcess(from_nid, via_eid, intersection))
+
+    // the following lines create a partly invalid intersection object. We might want to refactor
+    // this at some point
+    Intersection intersection;
+    intersection.reserve(intersection_view.size());
+    std::transform(intersection_view.begin(),
+                   intersection_view.end(),
+                   std::back_inserter(intersection),
+                   [&](const IntersectionViewData &data) {
+                       return ConnectedRoad(data,
+                                            {TurnType::Invalid, DirectionModifier::UTurn},
+                                            INVALID_LANE_DATAID);
+                   });
+    if (roundabout_handler.canProcess(node_prior_to_intersection, entering_via_edge, intersection))
     {
-        intersection = roundabout_handler(from_nid, via_eid, std::move(intersection));
+        intersection = roundabout_handler(
+            node_prior_to_intersection, entering_via_edge, std::move(intersection));
     }
     else
     {
         // set initial defaults for normal turns and modifier based on angle
-        intersection = setTurnTypes(from_nid, via_eid, std::move(intersection));
-        if (motorway_handler.canProcess(from_nid, via_eid, intersection))
+        intersection =
+            setTurnTypes(node_prior_to_intersection, entering_via_edge, std::move(intersection));
+        if (motorway_handler.canProcess(
+                node_prior_to_intersection, entering_via_edge, intersection))
         {
-            intersection = motorway_handler(from_nid, via_eid, std::move(intersection));
+            intersection = motorway_handler(
+                node_prior_to_intersection, entering_via_edge, std::move(intersection));
         }
         else
         {
-            BOOST_ASSERT(turn_handler.canProcess(from_nid, via_eid, intersection));
-            intersection = turn_handler(from_nid, via_eid, std::move(intersection));
+            BOOST_ASSERT(turn_handler.canProcess(
+                node_prior_to_intersection, entering_via_edge, intersection));
+            intersection = turn_handler(
+                node_prior_to_intersection, entering_via_edge, std::move(intersection));
         }
     }
     // Handle sliproads
-    if (sliproad_handler.canProcess(from_nid, via_eid, intersection))
-        intersection = sliproad_handler(from_nid, via_eid, std::move(intersection));
+    if (sliproad_handler.canProcess(node_prior_to_intersection, entering_via_edge, intersection))
+        intersection = sliproad_handler(
+            node_prior_to_intersection, entering_via_edge, std::move(intersection));
 
     // Turn On Ramps Into Off Ramps, if we come from a motorway-like road
-    if (node_based_graph.GetEdgeData(via_eid).road_classification.IsMotorwayClass())
+    if (node_based_graph.GetEdgeData(entering_via_edge).road_classification.IsMotorwayClass())
     {
         std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
             if (road.instruction.type == TurnType::OnRamp)
@@ -113,34 +152,24 @@ Intersection TurnAnalysis::assignTurnTypes(const NodeID from_nid,
     return intersection;
 }
 
-std::vector<TurnOperation>
-TurnAnalysis::transformIntersectionIntoTurns(const Intersection &intersection) const
+TurnAnalysis::ShapeResult
+TurnAnalysis::ComputeIntersectionShapes(const NodeID node_at_center_of_intersection) const
 {
-    std::vector<TurnOperation> turns;
-    for (auto road : intersection)
-        if (road.entry_allowed)
-            turns.emplace_back(road);
+    ShapeResult intersection_shape;
+    intersection_shape.intersection_shape =
+        intersection_generator.ComputeIntersectionShape(node_at_center_of_intersection);
 
-    return turns;
-}
+    std::tie(intersection_shape.normalised_intersection_shape, intersection_shape.merging_map) =
+        intersection_normalizer(node_at_center_of_intersection,
+                                intersection_shape.intersection_shape);
 
-Intersection TurnAnalysis::operator()(const NodeID from_nid, const EdgeID via_eid) const
-{
-    return PostProcess(from_nid, via_eid, intersection_generator(from_nid, via_eid));
-}
-
-Intersection TurnAnalysis::PostProcess(const NodeID from_node,
-                                       const EdgeID via_eid,
-                                       Intersection intersection) const
-{
-    const auto node_at_intersection = node_based_graph.GetTarget(via_eid);
-    return assignTurnTypes(
-        from_node, via_eid, intersection_normalizer(node_at_intersection, std::move(intersection)));
+    return intersection_shape;
 }
 
 // Sets basic turn types as fallback for otherwise unhandled turns
-Intersection
-TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection intersection) const
+Intersection TurnAnalysis::setTurnTypes(const NodeID node_prior_to_intersection,
+                                        const EdgeID,
+                                        Intersection intersection) const
 {
     for (auto &road : intersection)
     {
@@ -151,8 +180,8 @@ TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection int
         const NodeID to_nid = node_based_graph.GetTarget(onto_edge);
 
         road.instruction = {TurnType::Turn,
-                            (from_nid == to_nid) ? DirectionModifier::UTurn
-                                                 : getTurnDirection(road.angle)};
+                            (node_prior_to_intersection == to_nid) ? DirectionModifier::UTurn
+                                                                   : getTurnDirection(road.angle)};
     }
     return intersection;
 }

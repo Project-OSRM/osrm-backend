@@ -10,12 +10,12 @@ Feature: Simple Turns
             """
               a
               b
-
-
+              ^
+             / \
             c   d
-
-                  e
-
+                |\
+                | e
+                |
                 f
             """
 
@@ -96,16 +96,16 @@ Feature: Simple Turns
         Given the node map
             """
               a
-
-              b
+              |
+             .b.
             c   h
-
-
+            |   |
+            |   |
             1   2
-
+            |   |
             d   g
-              e
-
+             'e'
+              |
               f
             """
 

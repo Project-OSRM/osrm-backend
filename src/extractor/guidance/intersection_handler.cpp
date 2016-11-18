@@ -749,16 +749,9 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         // obvious due to a very short segment in between. So if the segment coming in is very
         // short, we check the previous intersection for other continues in the opposite bearing.
         const auto node_at_intersection = node_based_graph.GetTarget(via_edge);
-        const util::Coordinate coordinate_at_intersection = node_info_list[node_at_intersection];
-
-        const auto node_at_u_turn = node_based_graph.GetTarget(intersection[0].eid);
-        const util::Coordinate coordinate_at_u_turn = node_info_list[node_at_u_turn];
 
         const double constexpr MAX_COLLAPSE_DISTANCE = 30;
-        const auto distance_at_u_turn = intersection[0].segment_length
-                                            ? *intersection[0].segment_length
-                                            : util::coordinate_calculation::haversineDistance(
-                                                  coordinate_at_intersection, coordinate_at_u_turn);
+        const auto distance_at_u_turn = intersection[0].segment_length;
         if (distance_at_u_turn < MAX_COLLAPSE_DISTANCE)
         {
             // this request here actually goes against the direction of the ingoing edgeid. This can

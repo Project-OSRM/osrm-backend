@@ -17,11 +17,9 @@ namespace extractor
 namespace guidance
 {
 
-ConnectedRoad::ConnectedRoad(const TurnOperation turn,
-                             const bool entry_allowed,
-                             boost::optional<double> segment_length)
-    : TurnOperation(turn), entry_allowed(entry_allowed), segment_length(segment_length)
+bool IntersectionViewData::CompareByAngle(const IntersectionViewData &other) const
 {
+    return angle < other.angle;
 }
 
 bool ConnectedRoad::compareByAngle(const ConnectedRoad &other) const { return angle < other.angle; }
@@ -70,6 +68,23 @@ std::string toString(const ConnectedRoad &road)
               std::to_string(static_cast<std::int32_t>(road.instruction.direction_modifier)) + " " +
               std::to_string(static_cast<std::int32_t>(road.lane_data_id));
     return result;
+}
+
+IntersectionView::Base::iterator IntersectionView::findClosestTurn(double angle)
+{
+    // use the const operator to avoid code duplication
+    return begin() +
+           std::distance(cbegin(),
+                         static_cast<const IntersectionView *>(this)->findClosestTurn(angle));
+}
+
+IntersectionView::Base::const_iterator IntersectionView::findClosestTurn(double angle) const
+{
+    return std::min_element(
+        begin(), end(), [angle](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
+            return util::guidance::angularDeviation(lhs.angle, angle) <
+                   util::guidance::angularDeviation(rhs.angle, angle);
+        });
 }
 
 Intersection::Base::iterator Intersection::findClosestTurn(double angle)

@@ -186,6 +186,7 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
     // Due to sliproads, we might need access to the previous intersection at this point already;
     previous_node = SPECIAL_NODEID;
     previous_via_edge = SPECIAL_EDGEID;
+    IntersectionView previous_intersection_view;
     if (findPreviousIntersection(at,
                                  via_edge,
                                  intersection,
@@ -193,11 +194,11 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
                                  node_based_graph,
                                  previous_node,
                                  previous_via_edge,
-                                 previous_intersection))
+                                 previous_intersection_view))
     {
         extractLaneData(previous_via_edge, previous_description_id, previous_lane_data);
-        previous_intersection = turn_analysis.assignTurnTypes(
-            previous_node, previous_via_edge, std::move(previous_intersection));
+        previous_intersection = turn_analysis.AssignTurnTypes(
+            previous_node, previous_via_edge, previous_intersection_view);
         for (std::size_t road_index = 0; road_index < previous_intersection.size(); ++road_index)
         {
             const auto &road = previous_intersection[road_index];
@@ -542,7 +543,7 @@ std::pair<LaneDataVector, LaneDataVector> TurnLaneHandler::partitionLaneData(
 
     // find out about the next intersection. To check for valid matches, we also need the turn
     // types. We can skip merging/angle adjustments, though
-    const auto next_intersection = turn_analysis.assignTurnTypes(
+    const auto next_intersection = turn_analysis.AssignTurnTypes(
         at, straightmost->eid, turn_analysis.GetIntersectionGenerator()(at, straightmost->eid));
 
     // check where we can match turn lanes

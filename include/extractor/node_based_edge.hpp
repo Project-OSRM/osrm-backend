@@ -73,8 +73,9 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 
 inline NodeBasedEdge::NodeBasedEdge()
     : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), forward(false),
-      backward(false), roundabout(false), circular(false), access_restricted(false), startpoint(true),
-      is_split(false), travel_mode(false), lane_description_id(INVALID_LANE_DESCRIPTIONID)
+      backward(false), roundabout(false), circular(false), access_restricted(false),
+      startpoint(true), is_split(false), travel_mode(false),
+      lane_description_id(INVALID_LANE_DESCRIPTIONID)
 {
 }
 
@@ -93,9 +94,10 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     const LaneDescriptionID lane_description_id,
                                     guidance::RoadClassification road_classification)
     : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
-      backward(backward), roundabout(roundabout), circular(circular), access_restricted(access_restricted),
-      startpoint(startpoint), is_split(is_split), travel_mode(travel_mode),
-      lane_description_id(lane_description_id), road_classification(std::move(road_classification))
+      backward(backward), roundabout(roundabout), circular(circular),
+      access_restricted(access_restricted), startpoint(startpoint), is_split(is_split),
+      travel_mode(travel_mode), lane_description_id(lane_description_id),
+      road_classification(std::move(road_classification))
 {
 }
 

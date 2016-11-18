@@ -443,9 +443,9 @@ Feature: Simple Turns
             | ef      | residential  | road | 2     | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                        |
-            | g,f       | turn,road      | depart,arrive                |
-            | c,f       | road,road,road | depart,continue right,arrive |
+            | waypoints | route          | turns                        | locations |
+            | g,f       | turn,road,road | depart,turn left,arrive      | g,e,f     |
+            | c,f       | road,road,road | depart,continue right,arrive | c,b,f     |
 
     #http://www.openstreetmap.org/search?query=52.479264%2013.295617#map=19/52.47926/13.29562
     Scenario: Splitting Roads with curved split

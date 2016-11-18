@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -36,7 +37,6 @@ namespace guidance
 
 class TurnAnalysis
 {
-
   public:
     TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                  const std::vector<QueryNode> &node_info_list,
@@ -47,29 +47,35 @@ class TurnAnalysis
                  const SuffixTable &street_name_suffix_table,
                  const ProfileProperties &profile_properties);
 
+    /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is
+     * relatively expensive */
+    OSRM_ATTR_WARN_UNUSED
+    Intersection operator()(const NodeID node_prior_to_intersection,
+                            const EdgeID entering_via_edge) const;
+
     /*
      * Returns a normalized intersection without any assigned turn types.
      * This intersection can be used as input for intersection classification, turn lane assignment
      * and similar.
      */
+    struct ShapeResult
+    {
+        // the basic shape, containing all turns
+        IntersectionShape intersection_shape;
+        // normalised shape, merged some roads into others, adjusted bearings
+        // see intersection_normaliser for further explanations
+        IntersectionShape normalised_intersection_shape;
+        // map containing information about which road was merged into which
+        std::vector<std::pair<EdgeID, EdgeID>> merging_map;
+    };
     OSRM_ATTR_WARN_UNUSED
-    Intersection operator()(const NodeID from_node, const EdgeID via_eid) const;
+    ShapeResult ComputeIntersectionShapes(const NodeID node_at_center_of_intersection) const;
 
-    /*
-     * Post-Processing a generated intersection is useful for any intersection that was simply
-     * generated using an intersection generator. In the normal use case, you don't have to call
-     * this function.
-     * This function is part of the normal process of the operator().
-     */
+    // Select turn types based on the intersection shape
     OSRM_ATTR_WARN_UNUSED
-    Intersection
-    PostProcess(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
-
-    std::vector<TurnOperation>
-    transformIntersectionIntoTurns(const Intersection &intersection) const;
-
-    Intersection
-    assignTurnTypes(const NodeID from_node, const EdgeID via_eid, Intersection intersection) const;
+    Intersection AssignTurnTypes(const NodeID from_node,
+                                 const EdgeID via_eid,
+                                 const IntersectionView &intersection) const;
 
     const IntersectionGenerator &GetIntersectionGenerator() const;
 
