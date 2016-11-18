@@ -289,9 +289,13 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
         WriteEdgeBasedGraph(config.edge_graph_output_path, max_edge_id, edge_based_edge_list);
 
-        util::SimpleLogger().Write()
-            << "Expansion  : " << (number_of_node_based_nodes / TIMER_SEC(expansion))
-            << " nodes/sec and " << ((max_edge_id + 1) / TIMER_SEC(expansion)) << " edges/sec";
+        const auto nodes_per_second =
+            static_cast<std::uint64_t>(number_of_node_based_nodes / TIMER_SEC(expansion));
+        const auto edges_per_second =
+            static_cast<std::uint64_t>((max_edge_id + 1) / TIMER_SEC(expansion));
+
+        util::SimpleLogger().Write() << "Expansion: " << nodes_per_second << " nodes/sec and "
+                                     << edges_per_second << " edges/sec";
         util::SimpleLogger().Write() << "To prepare the data for routing, run: "
                                      << "./osrm-contract " << config.output_file_name << std::endl;
     }

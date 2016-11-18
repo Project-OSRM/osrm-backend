@@ -6,11 +6,11 @@
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/node_based_edge.hpp"
 
+#include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/io.hpp"
-#include "storage/io.hpp"
 #include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
@@ -193,10 +193,14 @@ int Contractor::Run()
 
     TIMER_STOP(preparing);
 
+    const auto nodes_per_second =
+        static_cast<std::uint64_t>((max_edge_id + 1) / TIMER_SEC(contraction));
+    const auto edges_per_second =
+        static_cast<std::uint64_t>(number_of_used_edges / TIMER_SEC(contraction));
+
     util::SimpleLogger().Write() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
-    util::SimpleLogger().Write() << "Contraction: " << ((max_edge_id + 1) / TIMER_SEC(contraction))
-                                 << " nodes/sec and "
-                                 << number_of_used_edges / TIMER_SEC(contraction) << " edges/sec";
+    util::SimpleLogger().Write() << "Contraction: " << nodes_per_second << " nodes/sec and "
+                                 << edges_per_second << " edges/sec";
 
     util::SimpleLogger().Write() << "finished preprocessing";
 
