@@ -69,16 +69,21 @@ void transposeCoordinate(std::uint32_t *x)
 }
 } // anonymous ns
 
-std::uint64_t hilbertCode(const Coordinate coordinate)
+std::uint64_t hilbertCode(const FixedLongitude &lon, const FixedLatitude &lat)
 {
     std::uint32_t location[2];
-    location[0] = static_cast<std::int32_t>(coordinate.lon) +
-                  static_cast<std::int32_t>(180 * COORDINATE_PRECISION);
-    location[1] = static_cast<std::int32_t>(coordinate.lat) +
-                  static_cast<std::int32_t>(90 * COORDINATE_PRECISION);
+    location[0] =
+        static_cast<std::int32_t>(lon) + static_cast<std::int32_t>(180 * COORDINATE_PRECISION);
+    location[1] =
+        static_cast<std::int32_t>(lat) + static_cast<std::int32_t>(90 * COORDINATE_PRECISION);
 
     transposeCoordinate(location);
     return bitInterleaving(location[0], location[1]);
+}
+
+std::uint64_t hilbertCode(const Coordinate &coordinate)
+{
+    return hilbertCode(coordinate.lon, coordinate.lat);
 }
 }
 }

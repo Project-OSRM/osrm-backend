@@ -9,6 +9,7 @@
 #include "util/io.hpp"
 #include "util/simple_logger.hpp"
 #include "util/timing_util.hpp"
+#include "util/hilbert_value.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -234,14 +235,11 @@ void ExtractionContainers::PrepareNodes()
     TIMER_START(sorting_nodes);
     stxxl::sort(all_nodes_list.begin(),
                 all_nodes_list.end(),
-                ExternalMemoryNodeSTXXLCompare(),
+                ExternalMemoryNodeWithHilbertSTXXLIDCompare(),
                 stxxl_memory);
     TIMER_STOP(sorting_nodes);
     std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
 
-    std::cout << "[extractor] Building node id map      ... " << std::flush;
-    TIMER_START(id_map);
-    external_to_internal_node_id_map.reserve(used_node_id_list.size());
     auto node_iter = all_nodes_list.begin();
     auto ref_iter = used_node_id_list.begin();
     const auto all_nodes_list_end = all_nodes_list.end();
@@ -250,8 +248,9 @@ void ExtractionContainers::PrepareNodes()
     // handle > uint32_t actual usable nodes.  This should be OK for a while
     // because we usually route on a *lot* less than 2^32 of the OSM
     // graph nodes.
-    std::uint64_t internal_id = 0;
 
+    std::cout << "[extractor] Calculating Hilbert codes for used nodes      ... " << std::flush;
+    TIMER_START(calculating_hilbert_codes);
     // compute the intersection of nodes that were referenced and nodes we actually have
     while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
     {
@@ -266,18 +265,49 @@ void ExtractionContainers::PrepareNodes()
             continue;
         }
         BOOST_ASSERT(node_iter->node_id == *ref_iter);
-        external_to_internal_node_id_map[*ref_iter] = static_cast<NodeID>(internal_id++);
+        node_iter->hilbert_code = util::hilbertCode(node_iter->lon, node_iter->lat);
+
         node_iter++;
         ref_iter++;
     }
+    TIMER_STOP(calculating_hilbert_codes);
+    std::cout << "ok, after " << TIMER_SEC(calculating_hilbert_codes) << "s" << std::endl;
+
+    // Spatially sort nodes for cache locality later
+    std::cout << "[extractor] Re-sorting used nodes spatially         ... " << std::flush;
+    TIMER_START(spatially_sorting_nodes);
+
+    // This would be a perfect candidate for std::partial_sort, because we only care
+    //      about keeping the first part of the list (all nodes with .used=true) sorted
+    //      by hilbert code.  Unfortunately, STXXL does not have an implementation of that :-(
+    stxxl::sort(all_nodes_list.begin(),
+                all_nodes_list.end(),
+                ExternalMemoryNodeWithHilbertSTXXLUsedSpatialCompare(),
+                stxxl_memory);
+    TIMER_STOP(spatially_sorting_nodes);
+    std::cout << "ok, after " << TIMER_SEC(spatially_sorting_nodes) << "s" << std::endl;
+
+    std::cout << "[extractor] Creating external to internal node map         ... " << std::flush;
+    TIMER_START(id_map);
+    external_to_internal_node_id_map.reserve(used_node_id_list.size());
+    std::uint64_t internal_id = 0;
+    for (const auto &node : all_nodes_list)
+    {
+        // Used nodes should be at the start of our data after sorting, so we can break
+        // once we hit one with an uninitialized hilbert code
+        if (node.hilbert_code == std::numeric_limits<std::uint64_t>::max())
+            break;
+        external_to_internal_node_id_map[node.node_id] = static_cast<NodeID>(internal_id++);
+    }
+    TIMER_STOP(id_map);
+    std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
+
     if (internal_id > std::numeric_limits<NodeID>::max())
     {
         throw util::exception("There are too many nodes remaining after filtering, OSRM only "
                               "supports 2^32 unique nodes");
     }
     max_internal_node_id = boost::numeric_cast<NodeID>(internal_id);
-    TIMER_STOP(id_map);
-    std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
 }
 
 void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
@@ -292,15 +322,15 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     std::cout << "[extractor] Setting start coords      ... " << std::flush;
     TIMER_START(set_start_coords);
     // Traverse list of edges and nodes in parallel and set start coord
-    auto node_iterator = all_nodes_list.begin();
+    auto node_iterator = used_node_id_list.begin();
     auto edge_iterator = all_edges_list.begin();
 
     const auto all_edges_list_end = all_edges_list.end();
-    const auto all_nodes_list_end = all_nodes_list.end();
+    const auto used_node_id_list_end = used_node_id_list.end();
 
-    while (edge_iterator != all_edges_list_end && node_iterator != all_nodes_list_end)
+    while (edge_iterator != all_edges_list_end && node_iterator != used_node_id_list_end)
     {
-        if (edge_iterator->result.osm_source_id < node_iterator->node_id)
+        if (edge_iterator->result.osm_source_id < *node_iterator)
         {
             util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
                                                            << edge_iterator->result.source;
@@ -308,7 +338,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             ++edge_iterator;
             continue;
         }
-        if (edge_iterator->result.osm_source_id > node_iterator->node_id)
+        if (edge_iterator->result.osm_source_id > *node_iterator)
         {
             node_iterator++;
             continue;
@@ -323,15 +353,15 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             continue;
         }
 
-        BOOST_ASSERT(edge_iterator->result.osm_source_id == node_iterator->node_id);
+        BOOST_ASSERT(edge_iterator->result.osm_source_id == *node_iterator);
 
         // assign new node id
-        auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
+        auto id_iter = external_to_internal_node_id_map.find(*node_iterator);
         BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
         edge_iterator->result.source = id_iter->second;
 
-        edge_iterator->source_coordinate.lat = node_iterator->lat;
-        edge_iterator->source_coordinate.lon = node_iterator->lon;
+        edge_iterator->source_coordinate.lat = all_nodes_list[id_iter->second].lat;
+        edge_iterator->source_coordinate.lon = all_nodes_list[id_iter->second].lon;
         ++edge_iterator;
     }
 
@@ -357,12 +387,12 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     // Compute edge weights
     std::cout << "[extractor] Computing edge weights    ... " << std::flush;
     TIMER_START(compute_weights);
-    node_iterator = all_nodes_list.begin();
+    node_iterator = used_node_id_list.begin();
     edge_iterator = all_edges_list.begin();
     const auto all_edges_list_end_ = all_edges_list.end();
-    const auto all_nodes_list_end_ = all_nodes_list.end();
+    const auto used_nodes_list_end_ = used_node_id_list.end();
 
-    while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
+    while (edge_iterator != all_edges_list_end_ && node_iterator != used_nodes_list_end_)
     {
         // skip all invalid edges
         if (edge_iterator->result.source == SPECIAL_NODEID)
@@ -371,7 +401,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             continue;
         }
 
-        if (edge_iterator->result.osm_target_id < node_iterator->node_id)
+        if (edge_iterator->result.osm_target_id < *node_iterator)
         {
             util::SimpleLogger().Write(LogLevel::logDEBUG)
                 << "Found invalid node reference "
@@ -380,25 +410,30 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             ++edge_iterator;
             continue;
         }
-        if (edge_iterator->result.osm_target_id > node_iterator->node_id)
+        if (edge_iterator->result.osm_target_id > *node_iterator)
         {
             ++node_iterator;
             continue;
         }
 
-        BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
+        BOOST_ASSERT(edge_iterator->result.osm_target_id == *node_iterator);
         BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
         BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
                      util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
         BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
                      util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
 
+        auto id_iter = external_to_internal_node_id_map.find(*node_iterator);
+        BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
+
+        const auto node_coord = util::Coordinate(all_nodes_list[id_iter->second].lon,
+                                                 all_nodes_list[id_iter->second].lat);
+
         const double distance = util::coordinate_calculation::greatCircleDistance(
-            edge_iterator->source_coordinate,
-            util::Coordinate(node_iterator->lon, node_iterator->lat));
+            edge_iterator->source_coordinate, node_coord);
 
         scripting_environment.ProcessSegment(
-            edge_iterator->source_coordinate, *node_iterator, distance, edge_iterator->weight_data);
+            edge_iterator->source_coordinate, node_coord, distance, edge_iterator->weight_data);
 
         const double weight = [distance](const InternalExtractorEdge::WeightData &data) {
             switch (data.type)
@@ -420,8 +455,6 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
 
         // assign new node id
-        auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
-        BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
         edge.target = id_iter->second;
 
         // orient edges consistently: source id < target id
@@ -603,30 +636,14 @@ void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
 
     std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
     TIMER_START(write_nodes);
-    // identify all used nodes by a merging step of two sorted lists
-    auto node_iterator = all_nodes_list.begin();
-    auto node_id_iterator = used_node_id_list.begin();
-    const auto used_node_id_list_end = used_node_id_list.end();
-    const auto all_nodes_list_end = all_nodes_list.end();
 
-    while (node_id_iterator != used_node_id_list_end && node_iterator != all_nodes_list_end)
+    for (const auto &node : all_nodes_list)
     {
-        if (*node_id_iterator < node_iterator->node_id)
-        {
-            ++node_id_iterator;
-            continue;
-        }
-        if (*node_id_iterator > node_iterator->node_id)
-        {
-            ++node_iterator;
-            continue;
-        }
-        BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
-
-        file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
-
-        ++node_id_iterator;
-        ++node_iterator;
+        // Used nodes should be at the start of our data after sorting, so we can break
+        // once we hit one with an uninitialized hilbert code
+        if (node.hilbert_code == std::numeric_limits<std::uint64_t>::max())
+            break;
+        file_out_stream.write((char *)&(node), sizeof(ExternalMemoryNode));
     }
     TIMER_STOP(write_nodes);
     std::cout << "ok, after " << TIMER_SEC(write_nodes) << "s" << std::endl;
