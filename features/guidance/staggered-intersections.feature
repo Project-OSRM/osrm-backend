@@ -127,37 +127,19 @@ Feature: Staggered Intersections
                 j
             a b c
                 e f g
+                d
                 k l m
                 i
             """
 
         And the ways
-            | nodes  | highway     | name     |
-            | abc    | primary     | Oak St   |
-            | efg    | residential | Elm St   |
-            | klm    | residential | Oak St   |
-            | jceki  | residential | Cedar Dr |
+            | nodes   | highway     | name     |
+            | abc     | primary     | Oak St   |
+            | efg     | residential | Elm St   |
+            | klm     | residential | Oak St   |
+            | jcedki  | residential | Cedar Dr |
 
         When I route I should get
             | waypoints | route         | turns         |
             | a,m       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive |
             | m,a       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive |
-
-    Scenario: Staggered Intersection:
-        Given the node map
-            """
-                j h i
-            a b c
-                e f g
-            """
-
-        And the ways
-            | nodes  | highway     | name     |
-            | abc    | primary     | Oak St   |
-            | efg    | residential | Oak St   |
-            | jce    | residential | Cedar Dr |
-            | jhi    | residential | Maple Dr |
-
-        When I route I should get
-            | waypoints | route                    | turns                    |
-            | a,e       | Oak St,Cedar Dr,Cedar Dr | depart,turn right,arrive |
