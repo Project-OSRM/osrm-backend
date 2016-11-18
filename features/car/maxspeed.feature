@@ -123,3 +123,14 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |   30     |   1    | -1     |         | 23 km/h |
             | primary |   30     |   1    |        | 15 km/h | 15 km/h |
             | primary |   30     |   2    |        | 23 km/h | 23 km/h |
+
+    Scenario: Car - Forwward/backward maxspeed on reverse oneways
+        Then routability should be
+            | highway | maxspeed | maxspeed:forward | maxspeed:backward | oneway | forw    | backw   |
+            | primary |          |                  |                   | -1     |         | 52 km/h |
+            | primary | 30       |                  |                   | -1     |         | 23 km/h |
+            | primary |          | 30               |                   | -1     |         | 52 km/h |
+            | primary |          |                  | 30                | -1     |         | 23 km/h |
+            | primary | 20       | 30               |                   | -1     |         | 16 km/h |
+            | primary | 20       |                  | 30                | -1     |         | 23 km/h |
+
