@@ -127,6 +127,7 @@ before_install:
       export JOBS=$((`sysctl -n hw.ncpu` + 1))
       sudo mdutil -i off /
     fi
+  - echo "Using ${JOBS} jobs"
   - source ./scripts/install_node.sh 4
   - npm install
   - ./third_party/mason/mason install ccache ${CCACHE_VERSION}
