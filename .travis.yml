@@ -55,12 +55,13 @@ matrix:
     - os: osx
       # TODO: xcode8 triggers undefined symbol 'clock_gettime' in boost::interprocess
       osx_image: xcode7.3
-      compiler: clang
-      env: CLANG_VERSION='3.8.1' ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON
+      compiler: "mason-osx-release"
+      # we use the xcode provides clang and don't install our own
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON
 
     # Release Builds
     - os: linux
-      compiler: "mason-release"
+      compiler: "mason-linux-release"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
