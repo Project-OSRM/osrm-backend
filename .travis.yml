@@ -25,7 +25,6 @@ env:
    - CCACHE_TEMPDIR=/tmp/.ccache-temp
    - CCACHE_COMPRESS=1
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
-   - JOBS=4
    - CCACHE_VERSION=3.3.1
    - CMAKE_VERSION=3.6.2
 
@@ -119,7 +118,15 @@ matrix:
 
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
-  - if [[ $(uname -s) == 'Darwin' ]]; then sudo mdutil -i off /; fi;
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      export JOBS=$((`nproc` + 1))
+    fi
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      export JOBS=$((`sysctl -n hw.ncpu` + 1))
+      sudo mdutil -i off /
+    fi
   - source ./scripts/install_node.sh 4
   - npm install
   - ./third_party/mason/mason install ccache ${CCACHE_VERSION}
@@ -145,7 +152,6 @@ install:
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
-  - make osrm-extract --jobs=3
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
@@ -159,7 +165,7 @@ install:
   - popd
   - mkdir example/build && pushd example/build
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-  - make
+  - make --jobs=${JOBS}
   - popd
 
 script:
