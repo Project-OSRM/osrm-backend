@@ -56,7 +56,7 @@ matrix:
       # TODO: xcode8 triggers undefined symbol 'clock_gettime' in boost::interprocess
       osx_image: xcode7.3
       compiler: clang
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON
+      env: CLANG_VERSION='3.8.1' ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON
 
     # Release Builds
     - os: linux
@@ -65,7 +65,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: BUILD_TYPE='Release' ENABLE_MASON=ON
+      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Release' ENABLE_MASON=ON
 
     - os: linux
       compiler: "gcc-6-release"
@@ -156,13 +156,6 @@ install:
       sudo ldconfig
     fi
   - popd
-  - |
-    if [[ ${ENABLE_MASON:-OFF} == 'ON' ]]; then
-      # for mason builds we need to point the example
-      # at the clang++ installed by the CMakeLists.txt automatically
-      export CXX=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang++
-      export CC=$(./third_party/mason/mason prefix clang++ 3.8.1)/bin/clang
-    fi
   - mkdir example/build && pushd example/build
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make
