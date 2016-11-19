@@ -40,12 +40,6 @@ if(ENABLE_MASON)
 
   set(MASON_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason)
   include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason.cmake)
-  if(NOT CMAKE_CXX_COMPILER)
-    mason_use(clang++ VERSION ${MASON_CLANG_VERSION})
-    message(STATUS "Setting compiler to clang++ ${MASON_CLANG_VERSION} (via mason) ${MASON_PACKAGE_clang++_PREFIX}/bin/clang++")
-    set(CMAKE_CXX_COMPILER "${MASON_PACKAGE_clang++_PREFIX}/bin/clang++")
-    set(CMAKE_C_COMPILER "${MASON_PACKAGE_clang++_PREFIX}/bin/clang")
-  endif()
 endif()
 
 project(OSRM C CXX)
