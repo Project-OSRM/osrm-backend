@@ -126,7 +126,7 @@ before_install:
   - ./third_party/mason/mason install cmake ${CMAKE_VERSION}
   - export PATH=$(./third_party/mason/mason prefix cmake ${CMAKE_VERSION})/bin:${PATH}
   - |
-    if [[ ${CLANG_VERSION:-false} != false ]]; then
+    if [[ ! -z ${CLANG_VERSION} ]]; then
       export CCOMPILER='clang'
       export CXXCOMPILER='clang++'
       ./third_party/mason/mason install clang++ ${CLANG_VERSION}
