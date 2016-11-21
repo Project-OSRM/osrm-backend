@@ -197,6 +197,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         }
         nodeReader.close();
 
+        extraction_containers.prepareCache();
+
         // WAY AND RELATION PARSING
         osmium::io::Reader wayReader(input_file, osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation, osmium::io::read_meta::no);
         while (const osmium::memory::Buffer buffer = wayReader.read())
@@ -231,6 +233,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             }
         }
         TIMER_STOP(parsing);
+
+        // Clear cache data
+        extraction_containers.clearCache();
 
         util::SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing)
                                      << " seconds";
