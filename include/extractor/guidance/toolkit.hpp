@@ -165,6 +165,7 @@ inline bool obviousByRoadClass(const RoadClassification in_classification,
                                const RoadClassification obvious_candidate,
                                const RoadClassification compare_candidate)
 {
+    // lower numbers are of higher priority
     const bool has_high_priority = PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
                                    compare_candidate.GetPriority();
 
