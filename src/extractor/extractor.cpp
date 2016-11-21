@@ -194,6 +194,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                         static_cast<const osmium::Node &>(*(osm_elements[result.first])),
                         result.second);
                 }
+                
+                if(!node)
+                {
+                    extraction_containers.prepareCache();
+                }
             }
 
             if(!node)
@@ -216,6 +221,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             }
         }
         TIMER_STOP(parsing);
+
+// Clear cache data
+extraction_containers.clearCache();
+
         util::SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing)
                                      << " seconds";
 
