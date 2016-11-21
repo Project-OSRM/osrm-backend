@@ -198,6 +198,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                 if(!node)
                 {
                     extraction_containers.prepareCache();
+                    scripting_environment.setupCache(extraction_containers.nodeCache);
                 }
             }
 

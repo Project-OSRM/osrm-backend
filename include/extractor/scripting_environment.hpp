@@ -5,6 +5,7 @@
 #include "extractor/internal_extractor_edge.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
+#include "extractor/extraction_containers.hpp"
 
 #include <osmium/memory/buffer.hpp>
 
@@ -31,7 +32,7 @@ struct Coordinate;
 
 namespace extractor
 {
-
+class ExtractionContainers;
 class RestrictionParser;
 struct ExtractionNode;
 struct ExtractionWay;
@@ -69,6 +70,8 @@ class ScriptingEnvironment
                     tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
                     tbb::concurrent_vector<boost::optional<InputRestrictionContainer>>
                         &resulting_restrictions) = 0;
+
+    virtual void setupCache(std::unordered_map<OSMNodeID, osmium::Location> &cache) = 0;
 };
 }
 }

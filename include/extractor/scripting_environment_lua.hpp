@@ -2,8 +2,8 @@
 #define SCRIPTING_ENVIRONMENT_LUA_HPP
 
 #include "extractor/scripting_environment.hpp"
-
 #include "extractor/raster_source.hpp"
+#include "extractor/extraction_containers.hpp"
 
 #include "util/lua_util.hpp"
 
@@ -71,6 +71,12 @@ class LuaScriptingEnvironment final : public ScriptingEnvironment
                     tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
                     tbb::concurrent_vector<boost::optional<InputRestrictionContainer>>
                         &resulting_restrictions) override;
+
+    void setupCache(std::unordered_map<OSMNodeID, osmium::Location> &cache) override;
+    // FIXME This is static because I don't know how to access to this in lua nodeRef class binding.
+    //static ExtractionContainers *extraction_containers;
+    //osmium::Location getLocation(osmium::NodeRef &nref);
+    static std::unordered_map<OSMNodeID, osmium::Location> nodeCache;
 
   private:
     void InitContext(LuaScriptingContext &context);
