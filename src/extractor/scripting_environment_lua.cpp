@@ -35,9 +35,12 @@ template <class T>
 auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_value_by_key(key))
 {
     auto v = object.get_value_by_key(key);
-    if (v && *v) {             // non-empty string?
+    if (v && *v)
+    { // non-empty string?
         return v;
-    } else {
+    }
+    else
+    {
         return NULL;
     }
 }
@@ -82,6 +85,23 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     util::luaAddScriptFolderToLoadPath(context.state, file_name.c_str());
 
+    // In the following we have to register several char typedefs to Lua which we can't
+    // make proper enums (since enums can't be bit-packed but chars can).
+    //
+    // Luabind crashes hard (sometimes on some platforms) during runtime when registering
+    // the same type (e.g. our char typedefs) multiple times.
+    //
+    // We work around this by creating separate enum types for all typedefs here.
+    // This makes sure they have different typeid()s which Luabind dispatches upon.
+    //
+    // We still bind the typedef values to the enum since the enum is integral by default.
+    enum TravelModeEnumDummyForLuabind
+    {
+    };
+    enum RoadPriorityClassEnumDummyForLuabind
+    {
+    };
+
     // Add our function to the state's global scope
     luabind::module(context.state)
         [luabind::def("durationIsValid", durationIsValid),
@@ -89,7 +109,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
          luabind::def("trimLaneString", trimLaneString),
          luabind::def("applyAccessTokens", applyAccessTokens),
          luabind::def("canonicalizeStringList", canonicalizeStringList),
-         luabind::class_<TravelMode>("mode").enum_(
+         luabind::class_<TravelModeEnumDummyForLuabind>("mode").enum_(
              "enums")[luabind::value("inaccessible", TRAVEL_MODE_INACCESSIBLE),
                       luabind::value("driving", TRAVEL_MODE_DRIVING),
                       luabind::value("cycling", TRAVEL_MODE_CYCLING),
@@ -103,7 +123,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
                       luabind::value("river_down", TRAVEL_MODE_RIVER_DOWN),
                       luabind::value("route", TRAVEL_MODE_ROUTE)],
 
-         luabind::class_<extractor::guidance::RoadPriorityClass::Enum>("road_priority_class")
+         luabind::class_<RoadPriorityClassEnumDummyForLuabind>("road_priority_class")
              .enum_("enums")
                  [luabind::value("motorway", extractor::guidance::RoadPriorityClass::MOTORWAY),
                   luabind::value("trunk", extractor::guidance::RoadPriorityClass::TRUNK),
@@ -188,10 +208,17 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
              .def_readwrite("backward_speed", &ExtractionWay::backward_speed)
              .property("name", &ExtractionWay::GetName, &ExtractionWay::SetName)
              .property("ref", &ExtractionWay::GetRef, &ExtractionWay::SetRef)
-             .property("pronunciation", &ExtractionWay::GetPronunciation, &ExtractionWay::SetPronunciation)
-             .property("destinations", &ExtractionWay::GetDestinations, &ExtractionWay::SetDestinations)
-             .property("turn_lanes_forward", &ExtractionWay::GetTurnLanesForward, &ExtractionWay::SetTurnLanesForward)
-             .property("turn_lanes_backward", &ExtractionWay::GetTurnLanesBackward, &ExtractionWay::SetTurnLanesBackward)
+             .property("pronunciation",
+                       &ExtractionWay::GetPronunciation,
+                       &ExtractionWay::SetPronunciation)
+             .property(
+                 "destinations", &ExtractionWay::GetDestinations, &ExtractionWay::SetDestinations)
+             .property("turn_lanes_forward",
+                       &ExtractionWay::GetTurnLanesForward,
+                       &ExtractionWay::SetTurnLanesForward)
+             .property("turn_lanes_backward",
+                       &ExtractionWay::GetTurnLanesBackward,
+                       &ExtractionWay::SetTurnLanesBackward)
              .def_readwrite("roundabout", &ExtractionWay::roundabout)
              .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
              .def_readwrite("is_startpoint", &ExtractionWay::is_startpoint)
