@@ -198,6 +198,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         nodeReader.close();
 
         extraction_containers.prepareCache();
+        scripting_environment.setupCache(extraction_containers.nodeCache);
 
         // WAY AND RELATION PARSING
         osmium::io::Reader wayReader(input_file, osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation, osmium::io::read_meta::no);

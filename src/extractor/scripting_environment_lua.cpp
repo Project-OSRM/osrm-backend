@@ -24,6 +24,8 @@
 #include <memory>
 #include <sstream>
 
+#include <functional>
+
 namespace osrm
 {
 namespace extractor
@@ -66,11 +68,24 @@ int luaErrorCallback(lua_State *state)
 }
 }
 
+//ExtractionContainers *LuaScriptingEnvironment::extraction_containers = nullptr;
+std::unordered_map<OSMNodeID, osmium::Location> LuaScriptingEnvironment::nodeCache;
+void LuaScriptingEnvironment::setupCache(std::unordered_map< OSMNodeID, osmium::Location > &cache)
+{
+    nodeCache = cache;
+}
+
 LuaScriptingEnvironment::LuaScriptingEnvironment(const std::string &file_name)
     : file_name(file_name)
 {
     util::SimpleLogger().Write() << "Using script " << file_name;
 }
+
+/*
+osmium::Location LuaScriptingEnvironment::getLocation(osmium::NodeRef &nref)
+{
+    return LuaScriptingEnvironment::extraction_containers->getLocationForNode(nref);
+}*/
 
 void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 {
@@ -205,10 +220,9 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
          luabind::class_<osmium::WayNodeList>("WayNodeList").def(luabind::constructor<>()),
          luabind::class_<osmium::NodeRef>("NodeRef")
              .def(luabind::constructor<>())
-             // Dear ambitious reader: registering .location() as in:
-             // .def("location", +[](const osmium::NodeRef& nref){ return nref.location(); })
-             // will crash at runtime, since we're not (yet?) using libosnmium's
-             // NodeLocationsForWays cache
+             .def("location", +[](osmium::NodeRef &nref){
+                 return nodeCache.at(OSMNodeID{nref.ref()});})
+             //.def("location", &LuaScriptingEnvironment::getLocation)
              .def("id", &osmium::NodeRef::ref),
          luabind::class_<osmium::Way>("Way")
              .def("get_value_by_key", &osmium::Way::get_value_by_key)
@@ -232,7 +246,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
 
     luabind::globals(context.state)["properties"] = &context.properties;
     luabind::globals(context.state)["sources"] = &context.sources;
-
+ 
     if (0 != luaL_dofile(context.state, file_name.c_str()))
     {
         luabind::object error_msg(luabind::from_stack(context.state, -1));

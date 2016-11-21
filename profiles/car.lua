@@ -288,7 +288,6 @@ end
 -- abort early if this way is obviouslt not routable
 function initial_routability_check(way,result,data)
   data.speed_type = way:get_value_by_key('highway')
-
   return data.speed_type ~= nil or
          way:get_value_by_key('route') ~= nil or
          way:get_value_by_key('bridge') ~= nil
@@ -717,6 +716,15 @@ end
 
 -- main entry point for processsing a way
 function way_function(way, result)
+
+  -- Only for test, remove before merge.
+  print("way id : ", way:id());
+  for node in way:get_nodes() do
+   print("  node id  : ", node:id())
+   print("  node lat : ", node:location():lat())
+   print("  node lon : ", node:location():lon())
+  end
+
   -- intermediate values used during processing
   local data = {}
 
