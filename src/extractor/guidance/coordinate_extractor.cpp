@@ -260,8 +260,10 @@ CoordinateExtractor::GetCoordinateAlongRoad(const NodeID intersection_node,
          */
         const double offset = 0.5 * considered_lanes * ASSUMED_LANE_WIDTH;
         coordinates = TrimCoordinatesToLength(std::move(coordinates), offset, segment_distances);
+        BOOST_ASSERT(coordinates.size() >= 2);
         segment_distances.resize(coordinates.size());
-        segment_distances.back() = offset;
+        segment_distances.back() = util::coordinate_calculation::haversineDistance(
+            *(coordinates.end() - 2), coordinates.back());
         const auto vector_head = coordinates.back();
         coordinates =
             TrimCoordinatesToLength(std::move(coordinates), 0.5 * offset, segment_distances);
