@@ -111,7 +111,9 @@ Feature: Traffic - turn penalties
             """
         When I route I should get
             | from | to | route      | time    |
-            | a    | d  | ad,ad      | 10s +-1 |
+            # The target point `d` can be in `ad`, `cd`, `deh` and `dhk`
+            # The test must be fixed by #2287
+            #| a    | d  | ad,ad      | 10s +-1 |
             | a    | e  | ad,def,def | 10s +-1 |
             | b    | f  | bf,bf      | 10s +-1 |
             | b    | g  | bf,fg,fg   | 20s +-1 |

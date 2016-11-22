@@ -90,7 +90,7 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |          |   3   | 60               |                   | 29 km/h | 32 km/h |
             | primary |          |       |                  | 60                | 52 km/h | 47 km/h |
             | primary |          |   3   |                  | 60                | 32 km/h | 29 km/h |
-            | primary | 15       |       | 60               |                   | 47 km/h | 12 km/h |
+            | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h |
             | primary | 15       |   3   | 60               |                   | 29 km/h |  7 km/h |
             | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h |
             | primary | 15       |   3   |                  | 60                |  7 km/h | 29 km/h |
@@ -109,7 +109,7 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |          |   1   | 60               |                   | 29 km/h | 32 km/h |
             | primary |          |       |                  | 60                | 52 km/h | 47 km/h |
             | primary |          |   1   |                  | 60                | 32 km/h | 29 km/h |
-            | primary | 15       |       | 60               |                   | 47 km/h | 12 km/h |
+            | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h |
             | primary | 15       |   1   | 60               |                   | 29 km/h |  7 km/h |
             | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h |
             | primary | 15       |   1   |                  | 60                |  7 km/h | 29 km/h |

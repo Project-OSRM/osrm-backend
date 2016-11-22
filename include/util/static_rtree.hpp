@@ -198,7 +198,7 @@ class StaticRTree
                         COORDINATE_PRECISION *
                         web_mercator::latToY(toFloating(current_centroid.lat)))};
 
-                    current_wrapper.m_hilbert_value = hilbertCode(current_centroid);
+                    current_wrapper.m_hilbert_value = GetHilbertCode(current_centroid);
                 }
             });
 
