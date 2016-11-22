@@ -27,7 +27,10 @@ Feature: Basic Routing
         When I route I should get
             | waypoints | route                               | summary                 |
             | a,e       | road,,1 st,1 st                     | road, 1 st              |
-            | a,d,f     | road,,,street,street                | road;street             |
+            # The via node `d` belongs to `cd`, `de`, `df`, `dg` and depending on the edge
+            # summary can be "road;street", "road, 1 st;1 st, street", "road, blvd;blvd, street"
+            # The test must be fixed by #2287
+            #| a,d,f     | road,,,street,street                | road;street             |
             | a,e,f     | road,,1 st,1 st,1 st,street,street  | road, 1 st;1 st, street |
 
      Scenario: Name Empty
