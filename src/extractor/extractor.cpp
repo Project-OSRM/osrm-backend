@@ -9,6 +9,7 @@
 #include "extractor/scripting_environment.hpp"
 
 #include "extractor/raster_source.hpp"
+#include "storage/io.hpp"
 #include "util/graph_loader.hpp"
 #include "util/io.hpp"
 #include "util/name_table.hpp"
@@ -399,11 +400,11 @@ void Extractor::FindComponents(unsigned max_edge_id,
   */
 std::shared_ptr<RestrictionMap> Extractor::LoadRestrictionMap()
 {
-    boost::filesystem::ifstream input_stream(config.restriction_file_name,
-                                             std::ios::in | std::ios::binary);
-
+    storage::io::FileReader file_reader(config.restriction_file_name,
+                                        storage::io::FileReader::VerifyFingerprint);
     std::vector<TurnRestriction> restriction_list;
-    util::loadRestrictionsFromFile(input_stream, restriction_list);
+
+    util::loadRestrictionsFromFile(file_reader, restriction_list);
 
     util::SimpleLogger().Write() << " - " << restriction_list.size() << " restrictions.";
 
@@ -418,25 +419,20 @@ Extractor::LoadNodeBasedGraph(std::unordered_set<NodeID> &barriers,
                               std::unordered_set<NodeID> &traffic_signals,
                               std::vector<QueryNode> &internal_to_external_node_map)
 {
-    boost::filesystem::ifstream stream(config.output_file_name, std::ios::binary);
-
-    if (!stream)
-    {
-        throw util::exception("Unable to open " + config.output_file_name +
-                              " trying to read the node based graph");
-    }
+    storage::io::FileReader file_reader(config.output_file_name,
+                                        storage::io::FileReader::VerifyFingerprint);
 
     auto barriers_iter = inserter(barriers, end(barriers));
     auto traffic_signals_iter = inserter(traffic_signals, end(traffic_signals));
 
     NodeID number_of_node_based_nodes = util::loadNodesFromFile(
-        stream, barriers_iter, traffic_signals_iter, internal_to_external_node_map);
+        file_reader, barriers_iter, traffic_signals_iter, internal_to_external_node_map);
 
     util::SimpleLogger().Write() << " - " << barriers.size() << " bollard nodes, "
                                  << traffic_signals.size() << " traffic lights";
 
     std::vector<NodeBasedEdge> edge_list;
-    util::loadEdgesFromFile(stream, edge_list);
+    util::loadEdgesFromFile(file_reader, edge_list);
 
     if (edge_list.empty())
     {
