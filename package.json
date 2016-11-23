@@ -17,11 +17,18 @@
   "bin": {
     "cucumber": "./node_modules/cucumber/bin/cucumber.js"
   },
+  "browserify": {
+    "transform": [
+      "babelify",
+      "brfs"
+    ]
+  },
   "scripts": {
     "lint": "eslint -c ./.eslintrc features/step_definitions/ features/support/",
     "test": "npm run lint && ./node_modules/cucumber/bin/cucumber.js features/ -p verify",
     "clean-test": "rm -rf test/cache",
-    "cucumber": "./node_modules/cucumber/bin/cucumber.js"
+    "cucumber": "./node_modules/cucumber/bin/cucumber.js",
+    "build-api-docs": "./scripts/build_api_docs.sh"
   },
   "repository": {
     "type": "git",
@@ -37,6 +44,7 @@
     "node": ">=4.0.0"
   },
   "devDependencies": {
+    "docbox": "^1.0.2",
     "eslint": "^2.4.0"
   }
 }

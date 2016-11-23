@@ -34,6 +34,7 @@
       - File reading now has much better error handling
     - Misc
       - Progress indicators now print newlines when stdout is not a TTY
+      - Prettier API documentation now generated via `npm run build-api-docs` output `build/docs`
 
 # 5.4.3
   - Changes from 5.4.2
