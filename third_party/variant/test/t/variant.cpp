@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
-#include "variant.hpp"
-#include "variant_io.hpp"
+#include <mapbox/variant.hpp>
+#include <mapbox/variant_io.hpp>
 
 #include <algorithm>
 #include <cstdint>
@@ -325,7 +325,7 @@ TEST_CASE("implicit conversion", "[variant][implicit conversion]")
 TEST_CASE("implicit conversion to first type in variant type list", "[variant][implicit conversion]")
 {
     using variant_type = mapbox::util::variant<long, char>;
-    variant_type var = 5.0; // converted to long
+    variant_type var = 5l; // converted to long
     REQUIRE(var.get<long>() == 5);
     REQUIRE_THROWS_AS({
         var.get<char>();
@@ -543,9 +543,9 @@ TEST_CASE("storing reference wrappers to consts works")
     int a = 1;
     variant_type v{std::cref(a)};
     REQUIRE(v.get<int const>() == 1);
-    REQUIRE(v.get<int>() == 1); // this works (see #82)
+    REQUIRE(v.get<int>() == 1);
     REQUIRE(mapbox::util::get<int const>(v) == 1);
-    //    REQUIRE(mapbox::util::get<int>(v) == 1); // this doesn't work (see #82)
+    REQUIRE(mapbox::util::get<int>(v) == 1);
     REQUIRE_THROWS_AS({
         v.get<double const>();
     },
@@ -567,4 +567,27 @@ TEST_CASE("storing reference wrappers to consts works")
         mapbox::util::get<int const>(v);
     },
                       mapbox::util::bad_variant_access&);
+}
+
+TEST_CASE("recursive wrapper")
+{
+    using variant_type = mapbox::util::variant<mapbox::util::recursive_wrapper<int>>;
+    variant_type v(1);
+    REQUIRE(v.is<int>());
+    REQUIRE(v.get<int>() == 1);
+}
+
+
+TEST_CASE("variant : direct_type helper should match T, references (T&)  and const references (T const&) to the original type T)")
+{
+    using value = mapbox::util::variant<bool, std::uint64_t>;
+
+    std::uint64_t u(1234);
+    REQUIRE(value(u).is<std::uint64_t>()); // matches T
+
+    std::uint64_t& ur(u);
+    REQUIRE(value(ur).is<std::uint64_t>()); // matches T&
+
+    std::uint64_t const& ucr(u);
+    REQUIRE(value(ucr).is<std::uint64_t>()); // matches T const&
 }

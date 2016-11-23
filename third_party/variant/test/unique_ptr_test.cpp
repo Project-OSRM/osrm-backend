@@ -6,9 +6,9 @@
 #include <typeinfo>
 #include <utility>
 
-#include <boost/timer/timer.hpp>
+#include "auto_cpu_timer.hpp"
 
-#include "variant.hpp"
+#include <mapbox/variant.hpp>
 
 using namespace mapbox;
 
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
     int total = 0;
     {
-        boost::timer::auto_cpu_timer t;
+        auto_cpu_timer t;
         for (std::size_t i = 0; i < NUM_ITER; ++i)
         {
             total += util::apply_visitor(test::calculator(), result);

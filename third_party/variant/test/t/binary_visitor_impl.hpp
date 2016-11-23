@@ -3,7 +3,7 @@
 
 #include "catch.hpp"
 
-#include "variant_io.hpp"
+#include <mapbox/variant_io.hpp>
 
 struct add_visitor
 {

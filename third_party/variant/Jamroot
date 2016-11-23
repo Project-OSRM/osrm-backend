@@ -1,4 +1,4 @@
-# Inofficial and incomplete build file using Boost build system.
+# Unofficial and incomplete build file using Boost build system.
 # You should use make unless you know what you are doing.
 
 local BOOST_DIR = "/usr/local" ;
@@ -17,9 +17,10 @@ exe variant-test
     .//chrono
     :
     <include>$(BOOST_DIR)/include
-    <include>./
+    <include>./include
+    <include>./test/include
     #<define>SINGLE_THREADED
-    <variant>release:<cxxflags>-march=native
+    <variant>release:<cxxflags>"-march=native -Wweak-vtables"
     ;
 
 
@@ -31,7 +32,8 @@ exe binary-visitor-test
     .//chrono
     :
     <include>$(BOOST_DIR)/include
-    <include>./
+    <include>./include
+    <include>./test/include
     <variant>release:<cxxflags>-march=native
     ;
 
@@ -43,7 +45,8 @@ exe recursive-wrapper-test
     .//chrono
     :
     <include>$(BOOST_DIR)/include
-    <include>./
+    <include>./include
+    <include>./test/include
     <variant>release:<cxxflags>-march=native
     ;
 
@@ -55,7 +58,8 @@ exe unique-ptr-test
     .//chrono
     :
     <include>$(BOOST_DIR)/include
-    <include>./
+    <include>./include
+    <include>./test/include
     <variant>release:<cxxflags>-march=native
     ;
 
@@ -68,6 +72,7 @@ exe reference_wrapper_test
     .//chrono
     :
     <include>$(BOOST_DIR)/include
-    <include>./
+    <include>./include
+    <include>./test/include
     <variant>release:<cxxflags>-march=native
     ;
