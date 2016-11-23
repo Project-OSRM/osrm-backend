@@ -13,7 +13,7 @@ OSMIUM_REPO=https://github.com/osmcode/libosmium.git
 OSMIUM_TAG=v2.10.2
 
 VARIANT_REPO=https://github.com/mapbox/variant.git
-VARIANT_TAG=v1.1.0
+VARIANT_TAG=v1.1.4
 
 MASON_REPO=https://github.com/mapbox/mason.git
 MASON_TAG=v0.1.1
