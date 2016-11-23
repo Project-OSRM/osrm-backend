@@ -167,6 +167,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         // setup restriction parser
         const RestrictionParser restriction_parser(scripting_environment);
 
+        bool node = true;
         while (const osmium::memory::Buffer buffer = reader.read())
         {
             // create a vector of iterators into the buffer
@@ -181,30 +182,37 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             resulting_ways.clear();
             resulting_restrictions.clear();
 
-            scripting_environment.ProcessElements(osm_elements,
-                                                  restriction_parser,
-                                                  resulting_nodes,
-                                                  resulting_ways,
-                                                  resulting_restrictions);
+            if(node)
+            {
+                node = scripting_environment.ProcessNodeElements(osm_elements,
+                                                          resulting_nodes);
+                number_of_nodes += resulting_nodes.size();
+                // put parsed objects thru extractor callbacks
+                for (const auto &result : resulting_nodes)
+                {
+                    extractor_callbacks->ProcessNode(
+                        static_cast<const osmium::Node &>(*(osm_elements[result.first])),
+                        result.second);
+                }
+            }
 
-            number_of_nodes += resulting_nodes.size();
-            // put parsed objects thru extractor callbacks
-            for (const auto &result : resulting_nodes)
+            if(!node)
             {
-                extractor_callbacks->ProcessNode(
-                    static_cast<const osmium::Node &>(*(osm_elements[result.first])),
-                    result.second);
-            }
-            number_of_ways += resulting_ways.size();
-            for (const auto &result : resulting_ways)
-            {
-                extractor_callbacks->ProcessWay(
-                    static_cast<const osmium::Way &>(*(osm_elements[result.first])), result.second);
-            }
-            number_of_relations += resulting_restrictions.size();
-            for (const auto &result : resulting_restrictions)
-            {
-                extractor_callbacks->ProcessRestriction(result);
+                scripting_environment.ProcessElements(osm_elements,
+                                                      restriction_parser,
+                                                      resulting_ways,
+                                                      resulting_restrictions);
+                number_of_ways += resulting_ways.size();
+                for (const auto &result : resulting_ways)
+                {
+                    extractor_callbacks->ProcessWay(
+                        static_cast<const osmium::Way &>(*(osm_elements[result.first])), result.second);
+                }
+                number_of_relations += resulting_restrictions.size();
+                for (const auto &result : resulting_restrictions)
+                {
+                    extractor_callbacks->ProcessRestriction(result);
+                }
             }
         }
         TIMER_STOP(parsing);

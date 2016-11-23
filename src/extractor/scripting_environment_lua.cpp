@@ -267,13 +267,12 @@ LuaScriptingContext &LuaScriptingEnvironment::GetLuaContext()
     return *ref;
 }
 
-void LuaScriptingEnvironment::ProcessElements(
+bool LuaScriptingEnvironment::ProcessNodeElements(
     const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
-    const RestrictionParser &restriction_parser,
-    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
-    tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
-    tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
+    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes)
 {
+    bool res = true;
+
     // parse OSM entities in parallel, store in resulting vectors
     tbb::parallel_for(
         tbb::blocked_range<std::size_t>(0, osm_elements.size()),
@@ -297,6 +296,46 @@ void LuaScriptingEnvironment::ProcessElements(
                     }
                     resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
                     break;
+                default:
+                    res = false;
+                    break;
+                }
+            }
+        });
+    return res;
+}
+
+void LuaScriptingEnvironment::ProcessElements(
+    const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+    const RestrictionParser &restriction_parser,
+//     tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
+    tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
+    tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions)
+{
+    // parse OSM entities in parallel, store in resulting vectors
+    tbb::parallel_for(
+        tbb::blocked_range<std::size_t>(0, osm_elements.size()),
+        [&](const tbb::blocked_range<std::size_t> &range) {
+            ExtractionNode result_node;
+            ExtractionWay result_way;
+            auto &local_context = this->GetLuaContext();
+
+            for (auto x = range.begin(), end = range.end(); x != end; ++x)
+            {
+                const auto entity = osm_elements[x];
+
+                switch (entity->type())
+                {
+// FIXME supress this
+//                 case osmium::item_type::node:
+//                     result_node.clear();
+//                     if (local_context.has_node_function)
+//                     {
+//                         local_context.processNode(static_cast<const osmium::Node &>(*entity),
+//                                                   result_node);
+//                     }
+//                     resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
+//                     break;
                 case osmium::item_type::way:
                     result_way.clear();
                     if (local_context.has_way_function)

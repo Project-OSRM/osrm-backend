@@ -60,10 +60,14 @@ class LuaScriptingEnvironment final : public ScriptingEnvironment
                         const osrm::util::Coordinate &target,
                         double distance,
                         InternalExtractorEdge::WeightData &weight) override;
+
+    bool
+    ProcessNodeElements(const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes) override;
+
     void
     ProcessElements(const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
                     const RestrictionParser &restriction_parser,
-                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
                     tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
                     tbb::concurrent_vector<boost::optional<InputRestrictionContainer>>
                         &resulting_restrictions) override;

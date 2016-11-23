@@ -58,10 +58,14 @@ class ScriptingEnvironment
                                 const osrm::util::Coordinate &target,
                                 double distance,
                                 InternalExtractorEdge::WeightData &weight) = 0;
+
+    virtual bool
+    ProcessNodeElements(const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
+                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes) = 0;
+
     virtual void
     ProcessElements(const std::vector<osmium::memory::Buffer::const_iterator> &osm_elements,
                     const RestrictionParser &restriction_parser,
-                    tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
                     tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
                     tbb::concurrent_vector<boost::optional<InputRestrictionContainer>>
                         &resulting_restrictions) = 0;
