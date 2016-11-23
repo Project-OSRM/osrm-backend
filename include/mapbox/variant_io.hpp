@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 
-#include "variant.hpp"
+#include <mapbox/variant.hpp>
 
 namespace mapbox {
 namespace util {
@@ -13,7 +13,7 @@ namespace detail {
 template <typename Out>
 class printer
 {
-  public:
+public:
     explicit printer(Out& out)
         : out_(out) {}
     printer& operator=(printer const&) = delete;
@@ -25,7 +25,7 @@ class printer
         out_ << operand;
     }
 
-  private:
+private:
     Out& out_;
 };
 }

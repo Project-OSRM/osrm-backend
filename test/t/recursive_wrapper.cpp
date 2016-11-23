@@ -1,7 +1,7 @@
 
 #include "catch.hpp"
 
-#include "recursive_wrapper.hpp"
+#include <mapbox/recursive_wrapper.hpp>
 
 #include <type_traits>
 #include <utility>

@@ -29,7 +29,7 @@ class recursive_wrapper
         this->get() = rhs;
     }
 
-  public:
+public:
     using type = T;
 
     /**
@@ -42,9 +42,9 @@ class recursive_wrapper
      * @throws any exception thrown by the default constructur of T.
      */
     recursive_wrapper()
-        : p_(new T){};
+        : p_(new T){}
 
-    ~recursive_wrapper() noexcept { delete p_; };
+    ~recursive_wrapper() noexcept { delete p_; }
 
     recursive_wrapper(recursive_wrapper const& operand)
         : p_(new T(operand.get())) {}
