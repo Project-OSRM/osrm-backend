@@ -77,6 +77,7 @@ struct ExtractorConfig
         intersection_class_data_output_path = basepath + ".osrm.icd";
     }
 
+    boost::filesystem::path config_file_path;
     boost::filesystem::path input_path;
     boost::filesystem::path profile_path;
 

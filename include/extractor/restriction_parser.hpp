@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+struct lua_State;
 namespace osmium
 {
 class Relation;
@@ -18,7 +19,7 @@ namespace osrm
 namespace extractor
 {
 
-class ScriptingEnvironment;
+struct ProfileProperties;
 
 /**
  * Parses the relations that represents turn restrictions.
@@ -41,10 +42,11 @@ class ScriptingEnvironment;
 class RestrictionParser
 {
   public:
-    RestrictionParser(ScriptingEnvironment &scripting_environment);
+    RestrictionParser(lua_State *lua_state, const ProfileProperties &properties);
     boost::optional<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
 
   private:
+    void ReadRestrictionExceptions(lua_State *lua_state);
     bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;
 
     std::vector<std::string> restriction_exceptions;

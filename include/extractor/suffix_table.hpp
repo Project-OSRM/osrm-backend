@@ -4,20 +4,19 @@
 #include <string>
 #include <unordered_set>
 
+struct lua_State;
+
 namespace osrm
 {
 namespace extractor
 {
-
-class ScriptingEnvironment;
-
 // A table containing suffixes.
 // At the moment, it is only a front for an unordered set. At some point we might want to make it
 // country dependent and have it behave accordingly
 class SuffixTable final
 {
   public:
-    SuffixTable(ScriptingEnvironment &scripting_environment);
+    SuffixTable(lua_State *lua_state);
 
     // check whether a string is part of the know suffix list
     bool isSuffix(const std::string &possible_suffix) const;
