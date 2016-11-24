@@ -360,8 +360,7 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                                                   const bool can_exit_roundabout_separately,
                                                   Intersection intersection) const
 {
-    // detect via radius (get via circle through three vertices)
-    NodeID node_v = node_based_graph.GetTarget(via_eid);
+    NodeID node_at_center_of_intersection = node_based_graph.GetTarget(via_eid);
 
     const bool lhs = profile_properties.left_hand_driving;
     const int step = lhs ? -1 : 1;
@@ -380,7 +379,7 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
             if (out_data.roundabout)
             {
                 // TODO can forks happen in roundabouts? E.g. required lane changes
-                if (1 == node_based_graph.GetDirectedOutDegree(node_v))
+                if (1 == node_based_graph.GetDirectedOutDegree(node_at_center_of_intersection))
                 {
                     // No turn possible.
                     if (intersection.size() == 2)
@@ -394,8 +393,25 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                 }
                 else
                 {
-                    turn.instruction = TurnInstruction::REMAIN_ROUNDABOUT(
-                        roundabout_type, getTurnDirection(turn.angle));
+                    // check if there is a non-service exit
+                    const auto has_non_ignorable_exit = [&]() {
+                        for (const auto eid :
+                             node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
+                        {
+                            const auto &data_of_leaving_edge = node_based_graph.GetEdgeData(eid);
+                            if (!data_of_leaving_edge.reversed &&
+                                !data_of_leaving_edge.roundabout &&
+                                !data_of_leaving_edge.road_classification.IsLowPriorityRoadClass())
+                                return true;
+                        }
+                        return false;
+                    }();
+
+                    if (has_non_ignorable_exit)
+                        turn.instruction = TurnInstruction::REMAIN_ROUNDABOUT(
+                            roundabout_type, getTurnDirection(turn.angle));
+                    else
+                        turn.instruction = {TurnType::Suppressed, getTurnDirection(turn.angle)};
                 }
             }
             else

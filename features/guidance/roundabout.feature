@@ -38,6 +38,30 @@ Feature: Basic Roundabout
            | h,c       | gh,bcegb,bcegb | depart,roundabout-exit-undefined,arrive |
            | h,e       | gh,bcegb,bcegb | depart,roundabout-exit-undefined,arrive |
 
+    Scenario: Roundabout With Service
+        Given the node map
+            """
+                a h
+                bg
+            d c
+                e
+                f
+            """
+
+        And the ways
+            | nodes  | junction   | highway |
+            | ab     |            | primary |
+            | cd     |            | primary |
+            | ef     |            | service |
+            | gh     |            | primary |
+            | bcegb  | roundabout | primary |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,d       | ab,cd,cd | depart,roundabout-exit-1,arrive |
+            | a,h       | ab,gh,gh | depart,roundabout-exit-2,arrive |
+            | a,f       | ab,ef,ef | depart,roundabout-exit-2,arrive |
+
     #2927
     Scenario: Only Roundabout
         Given the node map
