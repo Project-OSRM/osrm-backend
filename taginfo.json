@@ -351,6 +351,11 @@
             "value": "roundabout"
         },
         {
+            "key": "junction",
+            "object_types": [ "way" ],
+            "value": "circular"
+        },
+        {
             "key": "type",
             "value": "restriction",
             "object_types": [ "relation" ]

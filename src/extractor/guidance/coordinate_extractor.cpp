@@ -88,7 +88,7 @@ CoordinateExtractor::GetCoordinateAlongRoad(const NodeID intersection_node,
     const auto &turn_edge_data = node_based_graph.GetEdgeData(turn_edge);
 
     // roundabouts, check early to avoid other costly checks
-    if (turn_edge_data.roundabout)
+    if (turn_edge_data.roundabout || turn_edge_data.circular )
         return TrimCoordinatesToLength(std::move(coordinates),
                                        distance_to_skip_over_due_to_coordinate_inaccuracies)
             .back();

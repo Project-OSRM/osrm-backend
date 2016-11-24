@@ -56,7 +56,8 @@ bool IntersectionNormalizer::CanMerge(const NodeID node_at_intersection,
         return false;
 
     // may not be on a roundabout
-    if (first_data.roundabout || second_data.roundabout)
+    if (first_data.roundabout || second_data.roundabout || first_data.circular ||
+        second_data.circular)
         return false;
 
     // exactly one of them has to be reversed
@@ -237,7 +238,8 @@ Intersection IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersect
     const bool is_connected_to_roundabout = [this, &intersection]() {
         for (const auto &road : intersection)
         {
-            if (node_based_graph.GetEdgeData(road.eid).roundabout)
+            if (node_based_graph.GetEdgeData(road.eid).roundabout ||
+                node_based_graph.GetEdgeData(road.eid).circular)
                 return true;
         }
         return false;

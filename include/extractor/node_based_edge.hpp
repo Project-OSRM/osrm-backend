@@ -22,6 +22,7 @@ struct NodeBasedEdge
                   bool forward,
                   bool backward,
                   bool roundabout,
+                  bool circular,
                   bool access_restricted,
                   bool startpoint,
                   TravelMode travel_mode,
@@ -38,6 +39,7 @@ struct NodeBasedEdge
     bool forward : 1;
     bool backward : 1;
     bool roundabout : 1;
+    bool circular : 1;
     bool access_restricted : 1;
     bool startpoint : 1;
     bool is_split : 1;
@@ -55,6 +57,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          bool forward,
                          bool backward,
                          bool roundabout,
+                         bool circular,
                          bool access_restricted,
                          bool startpoint,
                          TravelMode travel_mode,
@@ -70,7 +73,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 
 inline NodeBasedEdge::NodeBasedEdge()
     : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), forward(false),
-      backward(false), roundabout(false), access_restricted(false), startpoint(true),
+      backward(false), roundabout(false), circular(false), access_restricted(false), startpoint(true),
       is_split(false), travel_mode(false), lane_description_id(INVALID_LANE_DESCRIPTIONID)
 {
 }
@@ -82,6 +85,7 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     bool forward,
                                     bool backward,
                                     bool roundabout,
+                                    bool circular,
                                     bool access_restricted,
                                     bool startpoint,
                                     TravelMode travel_mode,
@@ -89,7 +93,7 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     const LaneDescriptionID lane_description_id,
                                     guidance::RoadClassification road_classification)
     : source(source), target(target), name_id(name_id), weight(weight), forward(forward),
-      backward(backward), roundabout(roundabout), access_restricted(access_restricted),
+      backward(backward), roundabout(roundabout), circular(circular), access_restricted(access_restricted),
       startpoint(startpoint), is_split(is_split), travel_mode(travel_mode),
       lane_description_id(lane_description_id), road_classification(std::move(road_classification))
 {
@@ -119,6 +123,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   bool forward,
                                                   bool backward,
                                                   bool roundabout,
+                                                  bool circular,
                                                   bool access_restricted,
                                                   bool startpoint,
                                                   TravelMode travel_mode,
@@ -132,6 +137,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     forward,
                     backward,
                     roundabout,
+                    circular,
                     access_restricted,
                     startpoint,
                     travel_mode,
