@@ -156,9 +156,12 @@ function way_function (way, result)
     result.ref = ref
   end
 
-    -- roundabouts
+  -- roundabouts
   if "roundabout" == junction then
     result.roundabout = true
+  end
+  if "circular" == junction then
+    result.circular = true
   end
 
     -- speed

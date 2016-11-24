@@ -551,10 +551,16 @@ end
 
 -- junctions
 function handle_roundabouts(way,result)
-  if way:get_value_by_key("junction") == "roundabout" then
+  local junction = way:get_value_by_key("junction");
+
+  if junction == "roundabout" then
     result.roundabout = true
   end
-  if way:get_value_by_key("junction") == "circular" then
+
+  -- See Issue 3361: roundabout-shaped not following roundabout rules.
+  -- This will get us "At Strausberger Platz do Maneuver X" instead of multiple quick turns.
+  -- In a new API version we can think of having a separate type passing it through to the user.
+  if junction == "circular" then
     result.circular = true
   end
 end

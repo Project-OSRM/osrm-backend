@@ -353,7 +353,8 @@
         {
             "key": "junction",
             "object_types": [ "way" ],
-            "value": "circular"
+            "value": "circular",
+            "description": "A Roundabout where the traffic on the roundabout not always has right of way."
         },
         {
             "key": "type",
