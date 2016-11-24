@@ -492,3 +492,46 @@ Feature: Basic Roundabout
         When I route I should get
             | waypoints | route            | turns                           |
             | e,h       | left,right,right | depart,roundabout-exit-2,arrive |
+
+    @3361
+    Scenario: Bersarinplatz (Not a Roundabout)
+        Given the node map
+            """
+                   a    n
+
+                   b     m
+
+                c          l
+
+            d  e         j   k
+
+                f     h
+
+                g     i
+            """
+
+        And the ways
+            | nodes     | junction   | name                 | ref   | highway     | oneway |
+            | ab        |            | Petersburger Strasse | B 96a | primary     | yes    |
+            | bc        | circular   | Bersarinplatz        | B 96a | primary     |        |
+            | ce        | circular   | Bersarinplatz        | B 96a | primary     |        |
+            | ed        |            | Weidenweg            |       | residential |        |
+            | ef        | circular   | Bersarinplatz        | B 96a | primary     |        |
+            | fg        |            | Petersburger Strasse | B 96a | primary     | yes    |
+            | fh        | circular   | Bersarinplatz        |       | secondary   |        |
+            | ih        |            | Petersburger Strasse | B 96a | primary     | yes    |
+            | hj        | circular   | Bersarinplatz        |       | secondary   |        |
+            | jk        |            | Rigaer Strasse       |       | residential |        |
+            | jl        | circular   | Bersarinplatz        |       | secondary   |        |
+            | lm        | circular   | Bersarinplatz        |       | secondary   |        |
+            | mb        | circular   | Bersarinplatz        |       | secondary   |        |
+            | mn        |            | Petersburger Strasse | B 96a | primary     | yes    |
+
+        When I route I should get
+            | waypoints | route                                                          | turns                                                                            |
+            | a,g       | Petersburger Strasse,Petersburger Strasse,Petersburger Strasse | depart,Bersarinplatz-exit-2,arrive |
+            | d,g       | Weidenweg,Petersburger Strasse,Petersburger Strasse            | depart,Bersarinplatz-exit-1,arrive |
+            | i,k       | Petersburger Strasse,Rigaer Strasse,Rigaer Strasse             | depart,Bersarinplatz-exit-1,arrive |
+            | i,n       | Petersburger Strasse,Petersburger Strasse,Petersburger Strasse | depart,Bersarinplatz-exit-2,arrive |
+            | i,d       | Petersburger Strasse,Weidenweg,Weidenweg                       | depart,Bersarinplatz-exit-3,arrive |
+            | i,g       | Petersburger Strasse,Petersburger Strasse,Petersburger Strasse | depart,Bersarinplatz-exit-4,arrive |
