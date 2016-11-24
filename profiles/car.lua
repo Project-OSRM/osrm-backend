@@ -554,6 +554,9 @@ function handle_roundabouts(way,result)
   if way:get_value_by_key("junction") == "roundabout" then
     result.roundabout = true
   end
+  if way:get_value_by_key("junction") == "circular" then
+    result.circular = true
+  end
 end
 
 -- Set access restriction flag if access is allowed under certain restrictions only
@@ -638,6 +641,7 @@ function handle_oneway(way,result)
            oneway == "1" or
            oneway == "true" or
            way:get_value_by_key("junction") == "roundabout" or
+           way:get_value_by_key("junction") == "circular" or
            (way:get_value_by_key("highway") == "motorway" and oneway ~= "no") then
 
       result.backward_mode = mode.inaccessible

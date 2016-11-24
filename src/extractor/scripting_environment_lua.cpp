@@ -220,6 +220,7 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
                        &ExtractionWay::GetTurnLanesBackward,
                        &ExtractionWay::SetTurnLanesBackward)
              .def_readwrite("roundabout", &ExtractionWay::roundabout)
+             .def_readwrite("circular", &ExtractionWay::circular)
              .def_readwrite("is_access_restricted", &ExtractionWay::is_access_restricted)
              .def_readwrite("is_startpoint", &ExtractionWay::is_startpoint)
              .def_readwrite("duration", &ExtractionWay::duration)

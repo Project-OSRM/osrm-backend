@@ -43,11 +43,12 @@ struct InternalExtractorEdge
                  MIN_OSM_NODEID,
                  0,
                  0,
-                 false,
-                 false,
-                 false,
-                 false,
-                 true,
+                 false, // forward
+                 false, // backward
+                 false, // roundabout
+                 false, // circular
+                 false, // access restricted
+                 true,  // can be startpoint
                  TRAVEL_MODE_INACCESSIBLE,
                  false,
                  guidance::TurnLaneType::empty,
@@ -62,6 +63,7 @@ struct InternalExtractorEdge
                                    bool forward,
                                    bool backward,
                                    bool roundabout,
+                                   bool circular,
                                    bool access_restricted,
                                    bool startpoint,
                                    TravelMode travel_mode,
@@ -75,6 +77,7 @@ struct InternalExtractorEdge
                  forward,
                  backward,
                  roundabout,
+                 circular,
                  access_restricted,
                  startpoint,
                  travel_mode,
@@ -99,11 +102,12 @@ struct InternalExtractorEdge
                                      MIN_OSM_NODEID,
                                      0,
                                      WeightData(),
-                                     false,
-                                     false,
-                                     false,
-                                     false,
-                                     true,
+                                     false, // forward
+                                     false, // backward
+                                     false, // roundabout
+                                     false, // circular
+                                     false, // access restricted
+                                     true,  // can be startpoint
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
                                      INVALID_LANE_DESCRIPTIONID,
@@ -115,11 +119,12 @@ struct InternalExtractorEdge
                                      MAX_OSM_NODEID,
                                      SPECIAL_NODEID,
                                      WeightData(),
-                                     false,
-                                     false,
-                                     false,
-                                     false,
-                                     true,
+                                     false, // forward
+                                     false, // backward
+                                     false, // roundabout
+                                     false, // circular
+                                     false, // access restricted
+                                     true,  // can be startpoint
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
                                      INVALID_LANE_DESCRIPTIONID,

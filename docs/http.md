@@ -547,7 +547,7 @@ step.
   | `use lane`       | going straight on a specific lane                            |
   | `continue`       | Turn in direction of `modifier` to stay on the same road     |
   | `roundabout`     | traverse roundabout, has additional field `exit` with NR if the roundabout is left. `the modifier specifies the direction of entering the roundabout` |
-  | `rotary`         | a larger version of a roundabout, can offer `rotary_name/rotary_pronunciation` in addition to the `exit` parameter.  |
+  | `rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name/rotary_pronunciation` in addition to the `exit` parameter.  |
   | `roundabout turn`| Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
   | `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode.  If the road takes a turn itself, the `modifier` describes the direction |
 

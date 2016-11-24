@@ -45,6 +45,7 @@ struct ExtractionWay
         backward_speed = -1;
         duration = -1;
         roundabout = false;
+        circular = false;
         is_startpoint = true;
         is_access_restricted = false;
         name.clear();
@@ -89,6 +90,7 @@ struct ExtractionWay
     std::string turn_lanes_forward;
     std::string turn_lanes_backward;
     bool roundabout;
+    bool circular;
     bool is_access_restricted;
     bool is_startpoint;
     TravelMode forward_travel_mode : 4;

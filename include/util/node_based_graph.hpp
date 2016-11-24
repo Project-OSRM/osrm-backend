@@ -20,7 +20,7 @@ struct NodeBasedEdgeData
     NodeBasedEdgeData()
         : distance(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), access_restricted(false), reversed(false),
-          roundabout(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          roundabout(false), circular(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
           lane_description_id(INVALID_LANE_DESCRIPTIONID)
     {
     }
@@ -31,12 +31,14 @@ struct NodeBasedEdgeData
                       bool access_restricted,
                       bool reversed,
                       bool roundabout,
+                      bool circular,
                       bool startpoint,
                       extractor::TravelMode travel_mode,
                       const LaneDescriptionID lane_description_id)
         : distance(distance), edge_id(edge_id), name_id(name_id),
           access_restricted(access_restricted), reversed(reversed), roundabout(roundabout),
-          startpoint(startpoint), travel_mode(travel_mode), lane_description_id(lane_description_id)
+          circular(circular), startpoint(startpoint), travel_mode(travel_mode),
+          lane_description_id(lane_description_id)
     {
     }
 
@@ -46,6 +48,7 @@ struct NodeBasedEdgeData
     bool access_restricted : 1;
     bool reversed : 1;
     bool roundabout : 1;
+    bool circular : 1;
     bool startpoint : 1;
     extractor::TravelMode travel_mode : 4;
     LaneDescriptionID lane_description_id;
@@ -54,7 +57,8 @@ struct NodeBasedEdgeData
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {
         return (reversed == other.reversed) && (roundabout == other.roundabout) &&
-               (startpoint == other.startpoint) && (access_restricted == other.access_restricted) &&
+               (circular == other.circular) && (startpoint == other.startpoint) &&
+               (access_restricted == other.access_restricted) &&
                (travel_mode == other.travel_mode) &&
                (road_classification == other.road_classification);
     }
@@ -82,6 +86,7 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             BOOST_ASSERT(output_edge.data.distance > 0);
 
             output_edge.data.roundabout = input_edge.roundabout;
+            output_edge.data.circular = input_edge.circular;
             output_edge.data.name_id = input_edge.name_id;
             output_edge.data.access_restricted = input_edge.access_restricted;
             output_edge.data.travel_mode = input_edge.travel_mode;
