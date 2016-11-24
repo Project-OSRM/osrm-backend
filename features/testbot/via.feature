@@ -327,3 +327,19 @@ Feature: Via points
         When I route I should get
             | waypoints | route |
             | a,b,e     |       |
+
+    @todo @3359
+     Scenario: U-Turn In Bearings
+        Given the node map
+            """
+            a 1 b
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I route I should get
+            | waypoints | bearings   | route    | turns                    |
+            | 1,a       | 90,2 270,2 | ab,ab,ab | depart,turn uturn,arrive |
+            | 1,b       | 270,2 90,2 | ab,ab,ab | depart,turn uturn,arrive |
