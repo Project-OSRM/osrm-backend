@@ -44,7 +44,7 @@ class ExtractionContainers
 
   public:
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
-    using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
+    using STXXLNodeVector = stxxl::vector<ExternalMemoryNodeWithHilbert>;
     using STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
     using STXXLRestrictionsVector = stxxl::vector<InputRestrictionContainer>;
     using STXXLWayIDStartEndVector = stxxl::vector<FirstAndLastSegmentOfWay>;
