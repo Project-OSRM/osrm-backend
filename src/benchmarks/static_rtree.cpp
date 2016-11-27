@@ -34,8 +34,8 @@ std::vector<util::Coordinate> loadCoordinates(const boost::filesystem::path &nod
     boost::filesystem::ifstream nodes_input_stream(nodes_file, std::ios::binary);
 
     extractor::QueryNode current_node;
-    unsigned coordinate_count = 0;
-    nodes_input_stream.read((char *)&coordinate_count, sizeof(unsigned));
+    std::uint64_t coordinate_count = 0;
+    nodes_input_stream.read((char *)&coordinate_count, sizeof(std::uint64_t));
     std::vector<util::Coordinate> coords(coordinate_count);
     for (unsigned i = 0; i < coordinate_count; ++i)
     {
