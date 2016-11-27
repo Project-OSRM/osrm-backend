@@ -7,6 +7,13 @@ Please create a directory and run cmake from there, passing the path to this sou
 This process created the file `CMakeCache.txt' and the directory `CMakeFiles'. Please delete them.")
 endif()
 
+# detect if this is included as subproject and if so expose
+# some variables to its parent scope
+get_directory_property(BUILD_AS_SUBPROJECT PARENT_DIRECTORY)
+if(BUILD_AS_SUBPROJECT)
+  message(STATUS "Building libosrm as subproject.")
+endif()
+
 option(ENABLE_MASON "Use mason for dependencies" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(BUILD_TOOLS "Build OSRM tools" OFF)
@@ -42,20 +49,25 @@ if(ENABLE_MASON)
   include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason.cmake)
 endif()
 
+# be compatible with version handling before cmake 3.x
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 OLD)
+endif()
 project(OSRM C CXX)
 set(OSRM_VERSION_MAJOR 5)
 set(OSRM_VERSION_MINOR 4)
 set(OSRM_VERSION_PATCH 0)
+set(OSRM_VERSION "${OSRM_VERSION_MAJOR}.${OSRM_VERSION_MINOR}.${OSRM_VERSION_PATCH}")
 
 # these two functions build up custom variables:
-#   OSRM_INCLUDE_PATHS and OSRM_DEFINES
+#   DEPENDENCIES_INCLUDE_DIRS and OSRM_DEFINES
 # These variables we want to pass to
 # include_directories and add_definitions for both
 # this build and for sharing externally via pkg-config
 
 function(add_dependency_includes includes)
-  list(APPEND OSRM_INCLUDE_PATHS "${includes}")
-  set(OSRM_INCLUDE_PATHS "${OSRM_INCLUDE_PATHS}" PARENT_SCOPE)
+  list(APPEND DEPENDENCIES_INCLUDE_DIRS "${includes}")
+  set(DEPENDENCIES_INCLUDE_DIRS "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
 endfunction(add_dependency_includes)
 
 function(add_dependency_defines defines)
@@ -234,7 +246,7 @@ if (ENABLE_COVERAGE)
 endif()
 if (ENABLE_SANITIZER)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-  set(OSRM_CFLAGS "${OSRM_CFLAGS} -fsanitize=address")
+  set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -fsanitize=address")
 endif()
 
 # Configuring compilers
@@ -291,7 +303,7 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 # Activate C++1y
 if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
-  set(OSRM_CFLAGS "${OSRM_CFLAGS} -std=c++1y")
+  set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -std=c++1y")
 endif()
 
 # Configuring other platform dependencies
@@ -385,7 +397,6 @@ if(ENABLE_MASON)
     set(LINKER_FLAGS "${TBB_LINKER_RPATHS} '-Wl,-rpath,$ORIGIN' -Wl,-z,origin")
   endif()
 
-  set(OSRM_LIB_LINKER_FLAGS "${OSRM_LIB_LINKER_FLAGS} ${LINKER_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
@@ -494,7 +505,7 @@ if(OPENMP_FOUND)
 endif()
 
 add_definitions(${OSRM_DEFINES})
-include_directories(SYSTEM ${OSRM_INCLUDE_PATHS})
+include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
 set(BOOST_BASE_LIBRARIES
    ${Boost_DATE_TIME_LIBRARY}
@@ -629,9 +640,8 @@ install(TARGETS osrm_extract DESTINATION lib)
 install(TARGETS osrm_contract DESTINATION lib)
 install(TARGETS osrm_store DESTINATION lib)
 
-foreach(lib ${ENGINE_LIBRARIES})
-  set(ENGINE_LIBRARY_LISTING "${ENGINE_LIBRARY_LISTING} ${lib}")
-endforeach()
+# Setup exporting variables for pkgconfig and subproject
+#
 
 if(BUILD_DEBIAN_PACKAGE)
   include(CPackDebianConfig)
@@ -643,9 +653,31 @@ function(JOIN VALUES GLUE OUTPUT)
   set (${OUTPUT} "${_TMP_STR}" PARENT_SCOPE)
 endfunction()
 
-# Set up variables, then write to pkgconfig file
-JOIN("${OSRM_DEFINES}" " " OSRM_DEFINES_STRING)
-JOIN("-I${OSRM_INCLUDE_PATHS}" " -I" OSRM_INCLUDE_PATHS_STRING)
+JOIN("${OSRM_DEFINES}" " " TMP_OSRM_DEFINES)
+set(LibOSRM_CXXFLAGS "${OSRM_CXXFLAGS} ${TMP_OSRM_DEFINES}")
+
+if(BUILD_AS_SUBPROJECT)
+  set(LibOSRM_CXXFLAGS "${LibOSRM_CXXFLAGS}" PARENT_SCOPE)
+  set(LibOSRM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" PARENT_SCOPE)
+  set(LibOSRM_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
+  set(LibOSRM_LIBRARIES "osrm" PARENT_SCOPE)
+  set(LibOSRM_DEPENDENT_LIBRARIES "${ENGINE_LIBRARIES}" PARENT_SCOPE)
+  set(LibOSRM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
+                           "${CMAKE_CURRENT_SOURCE_DIR}/include/osrm"
+                           "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
+                           "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
+  set(LibOSRM_LIBRARY_DIRS "${LibOSRM_LIBRARY_DIR}" PARENT_SCOPE)
+endif()
+
+# pkgconfig defines
+set(PKGCONFIG_OSRM_CXXFLAGS "${LibOSRM_CXXFLAGS}")
+set(PKGCONFIG_LIBRARY_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(PKGCONFIG_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include")
+
+list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}")
+list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}/osrm")
+JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
+JOIN("${ENGINE_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
 install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
