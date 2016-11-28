@@ -65,7 +65,7 @@ class RoadClassification
   public:
     // default construction
     RoadClassification()
-        : motorway_class(0), link_class(0), may_be_ignored(1),
+        : motorway_class(0), link_class(0), may_be_ignored(0),
           road_priority_class(RoadPriorityClass::CONNECTIVITY), number_of_lanes(0)
     {
     }
