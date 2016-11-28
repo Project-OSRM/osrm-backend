@@ -3,6 +3,7 @@
 
 #include "util/integer_range.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
+#include "storage/io.hpp"
 
 #include <array>
 #include <fstream>
