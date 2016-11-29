@@ -528,32 +528,32 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 
     // check if the actual turn we wan't to announce is delayed. This situation describes a turn
     // that is expressed by two turns,
-    const auto isDelayedTurn = [](const RouteStep &openining_turn,
+    const auto isDelayedTurn = [](const RouteStep &opening_turn,
                                   const RouteStep &finishing_turn) {
         // only possible if both are compatible
-        if (!compatible(openining_turn, finishing_turn))
+        if (!compatible(opening_turn, finishing_turn))
             return false;
         else
         {
             const auto is_short_and_collapsable =
-                openining_turn.distance <= MAX_COLLAPSE_DISTANCE &&
+                opening_turn.distance <= MAX_COLLAPSE_DISTANCE &&
                 isCollapsableInstruction(finishing_turn.maneuver.instruction);
 
-            const auto without_choice = choiceless(finishing_turn, openining_turn);
+            const auto without_choice = choiceless(finishing_turn, opening_turn);
 
             const auto is_not_too_long_and_choiceless =
-                openining_turn.distance <= 2 * MAX_COLLAPSE_DISTANCE && without_choice;
+                opening_turn.distance <= 2 * MAX_COLLAPSE_DISTANCE && without_choice;
 
             // for ramps we allow longer stretches, since they are often on some major brides/large
             // roads. A combined distance of of 4 intersections would be to long for a normal
             // collapse. In case of a ramp though, we also account for situations that have the ramp
             // tagged late
             const auto is_delayed_turn_onto_a_ramp =
-                openining_turn.distance <= 4 * MAX_COLLAPSE_DISTANCE && without_choice &&
+                opening_turn.distance <= 4 * MAX_COLLAPSE_DISTANCE && without_choice &&
                 util::guidance::hasRampType(finishing_turn.maneuver.instruction);
-            return !util::guidance::hasRampType(openining_turn.maneuver.instruction) &&
+            return !util::guidance::hasRampType(opening_turn.maneuver.instruction) &&
                    (is_short_and_collapsable || is_not_too_long_and_choiceless ||
-                    isLinkroad(openining_turn) || is_delayed_turn_onto_a_ramp);
+                    isLinkroad(opening_turn) || is_delayed_turn_onto_a_ramp);
         }
     };
 
