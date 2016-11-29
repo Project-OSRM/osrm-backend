@@ -189,7 +189,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "id",
         &osmium::Way::id,
         "get_nodes",
-        [](const osmium::Way &way) { return sol::as_table(way.nodes()); });
+        [](const osmium::Way &way) { return sol::as_table(way.nodes()); },
+        "version",
+        &osmium::Way::version);
 
     context.state.new_usertype<osmium::Node>("Node",
                                              "location",
@@ -197,7 +199,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                              "get_value_by_key",
                                              &get_value_by_key<osmium::Node>,
                                              "id",
-                                             &osmium::Node::id);
+                                             &osmium::Node::id,
+                                             "version",
+                                             &osmium::Way::version);
 
     context.state.new_usertype<ExtractionNode>("ResultNode",
                                                "traffic_lights",
