@@ -141,6 +141,7 @@ if(ENABLE_GOLD_LINKER)
     if("${LD_VERSION}" MATCHES "GNU gold")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
+        set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -fuse-ld=gold -Wl,--disable-new-dtags")
         message(STATUS "Using GNU gold as linker.")
 
         # Issue 2785: check gold binutils version and don't use gc-sections for versions prior 2.25
@@ -194,8 +195,18 @@ endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
   message(STATUS "Configuring release mode optimizations")
+  # clang requires -flto in linker flags as well as cxxflags
+  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+    # skip check_cxx_compiler_flag since we know it works
+    # bug causes cmake to ignore LINKER_FLAGS, so we use ENV['LDFLAGS']
+    # https://cmake.org/Bug/view.php?id=15264
+    set(OLD_LDFLAGS_ENV ENV{LDFLAGS})
+    set(ENV{LDFLAGS} "$ENV{LDFLAGS} -flto")
+  endif()
+
   # Check if LTO is available
   check_cxx_compiler_flag("-flto" LTO_AVAILABLE)
+
   if(ENABLE_LTO AND LTO_AVAILABLE)
     set(OLD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     # GCC in addition allows parallelizing LTO
@@ -210,6 +221,13 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
     check_cxx_source_compiles("${CHECK_LTO_SRC}" LTO_WORKS)
     if(LTO_WORKS)
       message(STATUS "LTO working")
+      set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -flto")
+      if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -flto")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
+        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flto")
+      endif()
     else()
       message(STATUS "LTO broken")
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
@@ -228,9 +246,15 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
     endif()
   endif()
+
+  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND NOT LTO_AVAILABLE OR NOT LTO_WORKS)
+    # restore the original, unmodified linker flags
+    set(ENV{LDFLAGS} "${OLD_LDFLAGS_ENV}")
+  endif()
+
 endif()
 
-if (ENABLE_MASON AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
+if(UNIX AND NOT APPLE AND ENABLE_MASON AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
   message(WARNING "ENABLE_MASON and ENABLE_LTO/ENABLE_GOLD_LINKER may not work on all linux systems currently")
   message(WARNING "For more details see: https://github.com/Project-OSRM/osrm-backend/issues/3202")
 endif()
@@ -293,9 +317,11 @@ if("${LINKER_VERSION}" MATCHES "GNU gold" OR "${LINKER_VERSION}" MATCHES "GNU ld
   endif()
   # Default linker optimization flags
   set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,-O1 -Wl,--hash-style=gnu -Wl,--sort-common")
+
 else()
   message(STATUS "Using unknown linker, not setting linker optimizations")
 endif ()
+set(OSRM_LDFLAGS "${OSRM_LDFLAGS} ${LINKER_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
@@ -655,6 +681,7 @@ endfunction()
 
 JOIN("${OSRM_DEFINES}" " " TMP_OSRM_DEFINES)
 set(LibOSRM_CXXFLAGS "${OSRM_CXXFLAGS} ${TMP_OSRM_DEFINES}")
+set(LibOSRM_LDFLAGS "${OSRM_LDFLAGS}")
 
 if(BUILD_AS_SUBPROJECT)
   set(LibOSRM_CXXFLAGS "${LibOSRM_CXXFLAGS}" PARENT_SCOPE)
@@ -671,6 +698,7 @@ endif()
 
 # pkgconfig defines
 set(PKGCONFIG_OSRM_CXXFLAGS "${LibOSRM_CXXFLAGS}")
+set(PKGCONFIG_OSRM_LDFLAGS "${LibOSRM_LDFLAGS}")
 set(PKGCONFIG_LIBRARY_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 set(PKGCONFIG_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include")
 
@@ -703,6 +731,7 @@ if (ENABLE_FUZZING)
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize-coverage=edge,indirect-calls,8bit-counters -fsanitize=address")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+  set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -fsanitize=address")
 
   message(STATUS "Using -fsanitize=${FUZZ_SANITIZER} for Fuzz testing")
 
