@@ -212,7 +212,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return lane_description;
     };
 
-    // convert the lane description into an ID and, if necessary, remembr the description in the
+    // convert the lane description into an ID and, if necessary, remember the description in the
     // description_map
     const auto requestId = [&](const std::string &lane_string) {
         if (lane_string.empty())
