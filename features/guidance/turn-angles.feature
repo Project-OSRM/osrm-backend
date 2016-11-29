@@ -201,14 +201,14 @@ Feature: Simple Turns
             | ef      | residential  | road | 2     | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                        |
-            | a,c       | road,road      | depart,arrive                |
-            | c,a       | road,road      | depart,arrive                |
-            | g,a       | turn,road,road | depart,turn left,arrive      |
-            | g,c       | turn,road,road | depart,turn right,arrive     |
-            | g,f       | turn,road      | depart,arrive                |
-            | c,f       | road,road,road | depart,continue right,arrive |
-            | a,f       | road,road,road | depart,continue uturn,arrive |
+            | waypoints | route          | turns                        | locations |
+            | a,c       | road,road      | depart,arrive                | a,c       |
+            | c,a       | road,road      | depart,arrive                | c,a       |
+            | g,a       | turn,road,road | depart,turn left,arrive      | g,b,a     |
+            | g,c       | turn,road,road | depart,turn right,arrive     | g,b,c     |
+            | g,f       | turn,road,road | depart,turn left,arrive      | g,e,f     |
+            | c,f       | road,road,road | depart,continue right,arrive | c,b,f     |
+            | a,f       | road,road,road | depart,continue uturn,arrive | a,b,f     |
 
     # http://www.openstreetmap.org/#map=19/52.48753/13.52838
     Scenario: Traffic Circle
@@ -773,9 +773,9 @@ Feature: Simple Turns
 
         When I route I should get
             | waypoints | route                   | turns                               |
-            | a,j       | Siemens,Siemens,Siemens | depart,continue straight,arrive     |
+            | a,j       | Siemens,Siemens,Siemens | depart,continue slight right,arrive |
             | a,g       | Siemens,Erna,Erna       | depart,new name slight left,arrive  |
-            | g,j       | Erna,Siemens,Siemens    | depart,turn sharp left,arrive       |
+            | g,j       | Erna,Siemens,Siemens    | depart,turn left,arrive             |
             | g,a       | Erna,Siemens,Siemens    | depart,new name slight right,arrive |
 
      #http://www.openstreetmap.org/#map=19/52.51303/13.32170

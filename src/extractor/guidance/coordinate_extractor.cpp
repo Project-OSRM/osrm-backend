@@ -38,6 +38,24 @@ const constexpr double FAR_LOOKAHEAD_DISTANCE = 20.0;
 // directions or a lane count specified, we use 2. Overestimating only makes our calculations safer,
 // so we are fine for 1-lane ways. larger than 2 lanes should usually be specified in the data.
 const constexpr std::uint16_t ASSUMED_LANE_COUNT = 2;
+
+// When looking at lane offsets, motorway exits often are modelled not at a 90 degree angle but at
+// some slight turn. To correctly detect these offsets, we need to allow for a bit more than just
+// the lane width as an offset
+double GetOffsetCorrectionFactor(const RoadClassification &road_classification)
+{
+    if (road_classification.IsMotorwayClass() || road_classification.IsRampClass())
+        return 2.5;
+    switch (road_classification.GetClass())
+    {
+    case RoadPriorityClass::TRUNK:
+        return 2.0;
+    case RoadPriorityClass::PRIMARY:
+        return 1.5;
+    default:
+        return 1.0;
+    };
+};
 }
 
 CoordinateExtractor::CoordinateExtractor(
@@ -77,7 +95,8 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     std::vector<util::Coordinate> coordinates) const
 {
     const auto considered_lanes =
-        (intersection_lanes == 0) ? ASSUMED_LANE_COUNT : intersection_lanes;
+        GetOffsetCorrectionFactor(node_based_graph.GetEdgeData(turn_edge).road_classification) *
+        ((intersection_lanes == 0) ? ASSUMED_LANE_COUNT : intersection_lanes);
 
     /* if we are looking at a straight line, we don't care where exactly the coordinate
      * is. Simply return the final coordinate. Turn angles/turn vectors are the same no matter which
@@ -104,7 +123,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     const auto &turn_edge_data = node_based_graph.GetEdgeData(turn_edge);
 
     // roundabouts, check early to avoid other costly checks
-    if (turn_edge_data.roundabout || turn_edge_data.circular )
+    if (turn_edge_data.roundabout || turn_edge_data.circular)
         return TrimCoordinatesToLength(std::move(coordinates),
                                        distance_to_skip_over_due_to_coordinate_inaccuracies)
             .back();
@@ -654,7 +673,7 @@ bool CoordinateExtractor::IsDirectOffset(const std::vector<util::Coordinate> &co
         // a road usually is connected to the middle of the lanes. So the lane-offset has to
         // consider half to road
         const auto lane_offset = 0.5 * considered_lanes * ASSUMED_LANE_WIDTH;
-        return std::abs(width - lane_offset) < 0.5 * ASSUMED_LANE_WIDTH;
+        return width - lane_offset < ASSUMED_LANE_WIDTH; // less or going over at most a small bit
     };
 
     // Check whether the very first coordinate is simply an offset. This is the case if the initial
@@ -665,8 +684,10 @@ bool CoordinateExtractor::IsDirectOffset(const std::vector<util::Coordinate> &co
     if (offset_index + 1 >= coordinates.size())
         return false;
 
+    BOOST_ASSERT(segment_distances.size() == coordinates.size());
     // the straight part has to be around the lane distance
-    if (!IsCloseToLaneDistance(segment_distances[offset_index]))
+    if (!IsCloseToLaneDistance(std::accumulate(
+            segment_distances.begin(), segment_distances.begin() + offset_index + 1, 0.)))
         return false;
 
     // the segment itself cannot be short
@@ -674,14 +695,32 @@ bool CoordinateExtractor::IsDirectOffset(const std::vector<util::Coordinate> &co
         return false;
 
     // if the remaining segment is short, we don't consider it an offset
-    if ((segment_length - std::max(straight_distance, segment_distances[1])) > 0.1 * segment_length)
+    if ((segment_length - std::max(straight_distance, segment_distances[1])) < 0.1 * segment_length)
         return false;
+
+    // when we compare too long a distance, we run into problems due to turning roads. Here we
+    // compute which index to consider when checking if the remaining road remains straight
+    const auto segment_offset_past_thirty_meters =
+        std::find_if(segment_distances.begin() + offset_index,
+                     segment_distances.end(),
+                     [accumulated_distance = 0.](const auto value) mutable {
+                         accumulated_distance += value;
+                         return value >= 30;
+                     });
+
+    // transform the found offset in the segment distances into the appropriate part in the
+    // coordinates array
+    const auto deviation_compare_end =
+        coordinates.begin() +
+        std::min<std::size_t>(
+            coordinates.size(), // don't go over
+            std::distance(segment_distances.begin(), segment_offset_past_thirty_meters) + 1);
 
     // finally, we cannot be far off from a straight line for the remaining coordinates
     return 0.5 * ASSUMED_LANE_WIDTH > GetMaxDeviation(coordinates.begin() + offset_index,
-                                                      coordinates.end(),
+                                                      deviation_compare_end,
                                                       coordinates[offset_index],
-                                                      coordinates.back());
+                                                      *(deviation_compare_end - 1));
 }
 
 std::vector<double>
