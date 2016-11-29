@@ -1,6 +1,6 @@
-#include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/post_processing.hpp"
 #include "engine/guidance/toolkit.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
@@ -528,8 +528,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 
     // check if the actual turn we wan't to announce is delayed. This situation describes a turn
     // that is expressed by two turns,
-    const auto isDelayedTurn = [](const RouteStep &opening_turn,
-                                  const RouteStep &finishing_turn) {
+    const auto isDelayedTurn = [](const RouteStep &opening_turn, const RouteStep &finishing_turn) {
         // only possible if both are compatible
         if (!compatible(opening_turn, finishing_turn))
             return false;
@@ -816,13 +815,17 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 //      |       or       |       becomes  a   ->   b
 // a -> *                * -> b
 //
-bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current)
+bool isStaggeredIntersection(const std::vector<RouteStep> &steps,
+                             const std::size_t &current_index,
+                             const std::size_t &previous_index)
 {
+    const RouteStep previous = steps[previous_index];
+    const RouteStep current = steps[current_index];
+
     // don't touch roundabouts
     if (entersRoundabout(previous.maneuver.instruction) ||
         entersRoundabout(current.maneuver.instruction))
         return false;
-
     // Base decision on distance since the zig-zag is a visual clue.
     // If adjusted, make sure to check validity of the is_right/is_left classification below
     const constexpr auto MAX_STAGGERED_DISTANCE = 3; // debatable, but keep short to be on safe side
@@ -853,13 +856,21 @@ bool isStaggeredIntersection(const RouteStep &previous, const RouteStep &current
     // We are only interested in the distance between the first and the second.
     const auto is_short = previous.distance < MAX_STAGGERED_DISTANCE;
 
-    const auto no_mode_change = previous.mode == current.mode;
+    auto intermediary_mode_change = false;
+    if (current_index > 1)
+    {
+        const auto &two_back_index = getPreviousIndex(previous_index, steps);
+        const auto two_back_step = steps[two_back_index];
+        intermediary_mode_change =
+            two_back_step.mode == current.mode && previous.mode != current.mode;
+    }
 
     // previous step maneuver intersections should be length 1 to indicate that
     // there are no intersections between the two potentially collapsible turns
     const auto no_intermediary_intersections = previous.intersections.size() == 1;
 
-    return is_short && (left_right || right_left) && no_mode_change && no_intermediary_intersections;
+    return is_short && (left_right || right_left) && !intermediary_mode_change &&
+           no_intermediary_intersections;
 }
 
 } // namespace
@@ -1174,7 +1185,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         else if (one_back_index > 0 && compatible(current_step, one_back_step) &&
                  ((isCollapsableInstruction(current_step.maneuver.instruction) &&
                    isCollapsableInstruction(one_back_step.maneuver.instruction)) ||
-                  isStaggeredIntersection(one_back_step, current_step)))
+                  isStaggeredIntersection(steps, step_index, one_back_index)))
         {
             const auto two_back_index = getPreviousIndex(one_back_index, steps);
             BOOST_ASSERT(two_back_index < steps.size());
