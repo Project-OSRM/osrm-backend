@@ -140,9 +140,14 @@ before_install:
       export CXXCOMPILER='clang++'
       ./third_party/mason/mason install clang++ ${CLANG_VERSION}
       export PATH=$(./third_party/mason/mason prefix clang++ ${CLANG_VERSION})/bin:${PATH}
-      export CMAKE_EXTRA="-DCMAKE_AR=$(which llvm-ar) -DCMAKE_RANLIB=$(which llvm-ranlib)"
-      ./third_party/mason/mason install binutils 2.27
-      export PATH=$(./third_party/mason/mason prefix binutils 2.27)/bin:${PATH}
+      # we only enable lto for release builds
+      # and therefore don't need to us ld.gold or llvm tools for linking
+      # for debug builds
+      if [[ ${BUILD_TYPE} == 'Release' ]]; then
+        export CMAKE_EXTRA="-DCMAKE_AR=$(which llvm-ar) -DCMAKE_RANLIB=$(which llvm-ranlib)"
+        ./third_party/mason/mason install binutils 2.27
+        export PATH=$(./third_party/mason/mason prefix binutils 2.27)/bin:${PATH}
+      fi
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
 
