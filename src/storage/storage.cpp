@@ -7,6 +7,7 @@
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
 #include "storage/io.hpp"
+#include "storage/dedicated_io.hpp"
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
