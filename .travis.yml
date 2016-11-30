@@ -147,7 +147,7 @@ before_install:
       which llvm-ar
       which llvm-ranlib
       which llvm-nm
-      export CMAKE_EXTRA="-DCMAKE_AR=$(which llvm-ar) -DCMAKE_NM=$(which llvm-nm) -DCMAKE_RANLIB=$(which llvm-ranlib)"
+      export CMAKE_EXTRA="-DCMAKE_AR=$(which llvm-ar) -DCMAKE_RANLIB=$(which llvm-ranlib)"
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
 
