@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(io_read_lines)
 {
     {
         std::ofstream f(IO_TEXT_FILE);
-        char str[] = "A\nB\nC\nD";
-        f.write(str, strlen(str));
+        // use std::endl so that newlines work on both Windows and non-Windows test environments
+        f <<  "A" << std::endl << "B" << std::endl << "C" << std::endl << "D";
     }
     {
         osrm::storage::io::FileReader infile(IO_TEXT_FILE,
