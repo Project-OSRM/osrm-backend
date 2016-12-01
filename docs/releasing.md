@@ -45,6 +45,7 @@ We may introduce forward-compatible changes: query parameters and response prope
 3. Make sure `CHANGELOG.md` is up to date.
 4. Make sure the OSRM version in `CMakeLists.txt` is up to date
 5. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries.
+6. Use `npm run build-api-docs` to generate the API documentation.  Copy `build/docs/*` to `https://github.com/Project-OSRM/project-osrm.github.com` in the `docs/vN.N.N/api` directory
 6. Push tags and commits: `git push; git push --tags`
 8. Proceede with the `node-osrm` release as [outlined in the repository](https://github.com/Project-OSRM/node-osrm/blob/master/docs/releasing.md).
 9. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
