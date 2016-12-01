@@ -7,6 +7,7 @@
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
 #include "storage/io.hpp"
+#include "storage/serialization.hpp"
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
@@ -308,7 +309,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     {
         io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::HasNoFingerprint);
 
-        const auto hsgr_header = io::readHSGRHeader(hsgr_file);
+        const auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
         layout.SetBlockSize<QueryGraph::NodeArrayEntry>(DataLayout::GRAPH_NODE_LIST,
                                                         hsgr_header.number_of_nodes);
@@ -326,7 +327,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     {
         // allocate space in shared memory for profile properties
-        const auto properties_size = io::readPropertiesCount();
+        const auto properties_size = serialization::readPropertiesCount();
         layout.SetBlockSize<extractor::ProfileProperties>(DataLayout::PROPERTIES, properties_size);
     }
 
@@ -390,8 +391,8 @@ void Storage::PopulateLayout(DataLayout &layout)
         io::FileReader datasource_names_file(config.datasource_names_path,
                                              io::FileReader::HasNoFingerprint);
 
-        const io::DatasourceNamesData datasource_names_data =
-            io::readDatasourceNames(datasource_names_file);
+        const serialization::DatasourceNamesData datasource_names_data =
+            serialization::readDatasourceNames(datasource_names_file);
 
         layout.SetBlockSize<char>(DataLayout::DATASOURCE_NAME_DATA,
                                   datasource_names_data.names.size());
@@ -454,7 +455,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // Load the HSGR file
     {
         io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::HasNoFingerprint);
-        auto hsgr_header = io::readHSGRHeader(hsgr_file);
+        auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
         unsigned *checksum_ptr =
             layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
         *checksum_ptr = hsgr_header.checksum;
@@ -469,11 +470,11 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(memory_ptr,
                                                                  DataLayout::GRAPH_EDGE_LIST);
 
-        io::readHSGR(hsgr_file,
-                     graph_node_list_ptr,
-                     hsgr_header.number_of_nodes,
-                     graph_edge_list_ptr,
-                     hsgr_header.number_of_edges);
+        serialization::readHSGR(hsgr_file,
+                                graph_node_list_ptr,
+                                hsgr_header.number_of_nodes,
+                                graph_edge_list_ptr,
+                                hsgr_header.number_of_edges);
     }
 
     // store the filename of the on-disk portion of the RTree
@@ -606,16 +607,16 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         const auto entry_class_id_ptr =
             layout.GetBlockPtr<EntryClassID, true>(memory_ptr, DataLayout::ENTRY_CLASSID);
 
-        io::readEdges(edges_input_file,
-                      via_geometry_ptr,
-                      name_id_ptr,
-                      turn_instructions_ptr,
-                      lane_data_id_ptr,
-                      travel_mode_ptr,
-                      entry_class_id_ptr,
-                      pre_turn_bearing_ptr,
-                      post_turn_bearing_ptr,
-                      number_of_original_edges);
+        serialization::readEdges(edges_input_file,
+                                 via_geometry_ptr,
+                                 name_id_ptr,
+                                 turn_instructions_ptr,
+                                 lane_data_id_ptr,
+                                 travel_mode_ptr,
+                                 entry_class_id_ptr,
+                                 pre_turn_bearing_ptr,
+                                 post_turn_bearing_ptr,
+                                 number_of_original_edges);
     }
 
     // load compressed geometry
@@ -659,7 +660,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             layout.GetBlockPtr<uint8_t, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
         if (number_of_compressed_datasources > 0)
         {
-            io::readDatasourceIndexes(
+            serialization::readDatasourceIndexes(
                 geometry_datasource_file, datasources_list_ptr, number_of_compressed_datasources);
         }
     }
@@ -669,7 +670,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         io::FileReader datasource_names_file(config.datasource_names_path,
                                              io::FileReader::HasNoFingerprint);
 
-        const auto datasource_names_data = io::readDatasourceNames(datasource_names_file);
+        const auto datasource_names_data =
+            serialization::readDatasourceNames(datasource_names_file);
 
         // load datasource name information (if it exists)
         const auto datasource_name_data_ptr =
@@ -724,10 +726,10 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
         osmnodeid_list.reset(osmnodeid_ptr, layout.num_entries[DataLayout::OSM_NODE_ID_LIST]);
 
-        io::readNodes(nodes_file,
-                      coordinates_ptr,
-                      osmnodeid_list,
-                      layout.num_entries[DataLayout::COORDINATE_LIST]);
+        serialization::readNodes(nodes_file,
+                                 coordinates_ptr,
+                                 osmnodeid_list,
+                                 layout.num_entries[DataLayout::COORDINATE_LIST]);
     }
 
     // store timestamp

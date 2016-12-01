@@ -15,27 +15,20 @@ namespace util
 
 NameTable::NameTable(const std::string &filename)
 {
-    boost::filesystem::ifstream name_stream(filename, std::ios::binary);
+    storage::io::FileReader name_stream_file_reader(filename,
+                                                    storage::io::FileReader::HasNoFingerprint);
 
-    if (!name_stream)
-        throw exception("Failed to open " + filename + " for reading.");
+    // name_stream >> m_name_table;
 
-    name_stream >> m_name_table;
+    m_name_table.ReadARangeTable(name_stream_file_reader);
 
-    if (!name_stream)
-        throw exception("Unable to deserialize RangeTable for NameTable");
-
-    unsigned number_of_chars = 0;
-    name_stream.read(reinterpret_cast<char *>(&number_of_chars), sizeof(number_of_chars));
-    if (!name_stream)
-        throw exception("Encountered invalid file, failed to read number of contained chars");
+    unsigned number_of_chars = name_stream_file_reader.ReadElementCount32();
 
     m_names_char_list.resize(number_of_chars + 1); //+1 gives sentinel element
     m_names_char_list.back() = 0;
     if (number_of_chars > 0)
     {
-        name_stream.read(reinterpret_cast<char *>(&m_names_char_list[0]),
-                         number_of_chars * sizeof(m_names_char_list[0]));
+        name_stream_file_reader.ReadInto(&m_names_char_list[0], number_of_chars);
     }
     else
     {
@@ -43,9 +36,6 @@ NameTable::NameTable(const std::string &filename)
             << "list of street names is empty in construction of name table from: \"" << filename
             << "\"";
     }
-    if (!name_stream)
-        throw exception("Failed to read " + std::to_string(number_of_chars) + " characters from " +
-                        filename);
 }
 
 std::string NameTable::GetNameForID(const unsigned name_id) const

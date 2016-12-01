@@ -18,7 +18,7 @@ class NameTable
 {
   private:
     // FIXME should this use shared memory
-    RangeTable<16, false> m_name_table;
+    util::RangeTable<16, false> m_name_table;
     ShM<char, false>::vector m_names_char_list;
 
   public:
