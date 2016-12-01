@@ -49,7 +49,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
 
     - os: osx
       osx_image: xcode8.2
@@ -64,7 +64,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Release' ENABLE_MASON=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON
 
     - os: linux
       compiler: "gcc-6-release"
@@ -140,6 +140,14 @@ before_install:
       export CXXCOMPILER='clang++'
       ./third_party/mason/mason install clang++ ${CLANG_VERSION}
       export PATH=$(./third_party/mason/mason prefix clang++ ${CLANG_VERSION})/bin:${PATH}
+      # we only enable lto for release builds
+      # and therefore don't need to us ld.gold or llvm tools for linking
+      # for debug builds
+      if [[ ${BUILD_TYPE} == 'Release' ]]; then
+        export CMAKE_EXTRA="-DCMAKE_AR=$(which llvm-ar) -DCMAKE_RANLIB=$(which llvm-ranlib)"
+        ./third_party/mason/mason install binutils f0e9390be
+        export PATH=$(./third_party/mason/mason prefix binutils f0e9390be)/bin:${PATH}
+      fi
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
 
@@ -151,7 +159,7 @@ install:
   - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
   - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
+  - cmake .. ${CMAKE_EXTRA:-} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DBUILD_COMPONENTS=${BUILD_COMPONENTS:-OFF} -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
@@ -165,7 +173,7 @@ install:
     fi
   - popd
   - mkdir example/build && pushd example/build
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+  - cmake .. ${CMAKE_EXTRA:-} -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make --jobs=${JOBS}
   - popd
   - npm run build-api-docs
