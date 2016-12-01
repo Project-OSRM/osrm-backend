@@ -26,9 +26,7 @@ option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 
 if(ENABLE_MASON)
-
   # versions in use
-  set(MASON_CLANG_VERSION "3.8.1")
   set(MASON_BOOST_VERSION "1.61.0")
   set(MASON_STXXL_VERSION "1.4.1")
   set(MASON_EXPAT_VERSION "2.2.0")
@@ -36,7 +34,6 @@ if(ENABLE_MASON)
   set(MASON_LUABIND_VERSION "e414c57bcb687bb3091b7c55bbff6947f052e46b")
   set(MASON_BZIP2_VERSION "1.0.6")
   set(MASON_TBB_VERSION "43_20150316")
-  set(MASON_CCACHE_VERSION "3.3.1")
 
   message(STATUS "Enabling mason")
 
@@ -434,15 +431,6 @@ if(ENABLE_MASON)
   # current mason packages target -D_GLIBCXX_USE_CXX11_ABI=0
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
 
-  if(ENABLE_CCACHE)
-    mason_use(ccache VERSION ${MASON_CCACHE_VERSION})
-    message(STATUS "Setting ccache to ccache ${MASON_CCACHE_VERSION} (via mason) ${MASON_PACKAGE_ccache_PREFIX}/bin/ccache")
-    message(STATUS "Using ccache to speed up incremental builds")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${MASON_PACKAGE_ccache_PREFIX}/bin/ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${MASON_PACKAGE_ccache_PREFIX}/bin/ccache)
-    set(ENV{CCACHE_CPP2} "true")
-  endif()
-
   # note: we avoid calling find_package(Osmium ...) here to ensure that the
   # expat and bzip2 are used from mason rather than the system
   include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
@@ -486,23 +474,23 @@ else()
   )
   endif()
 
-  # prefix compilation with ccache by default if available and on clang or gcc
-  if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU"))
-    find_program(CCACHE_FOUND ccache)
-    if(CCACHE_FOUND)
-      message(STATUS "Using ccache to speed up incremental builds")
-      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-      set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-      set(ENV{CCACHE_CPP2} "true")
-    endif()
-  endif()
-
   # note libosmium depends on expat and bzip2
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
   set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 
+endif()
+
+# prefix compilation with ccache by default if available and on clang or gcc
+if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU"))
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+    message(STATUS "Using ccache to speed up incremental builds")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    set(ENV{CCACHE_CPP2} "true")
+  endif()
 endif()
 
 # even with mason builds we want to link to system zlib
