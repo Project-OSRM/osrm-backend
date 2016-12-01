@@ -43,8 +43,10 @@ mode = {
 
 -- input tags, normally extracted from OSM data
 local way = {
-  highway = 'motorway',
+  highway = 'primary',
   name = 'Main Street',
+  --access = 'no'
+  ["access:forward"] = 'no'
   --width = '3',
   --maxspeed = '30',
   --['maxspeed:advisory'] = '25',
@@ -56,8 +58,8 @@ local way = {
   --route = 'ferry',
   --duration = '00:01:00',
   --hov = 'designated',
-  ["hov:lanes:forward"] = 'designated',
-  --access = 'no'
+  --hov:lanes:forward"] = 'designated',
+
   --destination = 'Berlin',
   --["destination:ref"] = 'Nuremberg',
   --["destination:ref:forward"] = 'Hamburg;Dresden',
