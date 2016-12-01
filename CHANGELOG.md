@@ -31,6 +31,7 @@
       - Added support for turn penalties
     - Internals
       - Internal/Shared memory datafacades now share common memory layout and data loading code
+      - File reading now has much better error handling
     - Misc
       - Progress indicators now print newlines when stdout is not a TTY
 
