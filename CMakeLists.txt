@@ -92,7 +92,7 @@ endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/variant/include)
 
 add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
   "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}"
@@ -637,7 +637,7 @@ set_property(TARGET osrm-contract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-file(GLOB VariantGlob third_party/variant/*.hpp)
+file(GLOB VariantGlob third_party/variant/include/mapbox/*.hpp)
 file(GLOB LibraryGlob include/osrm/*.hpp)
 file(GLOB ParametersGlob include/engine/api/*_parameters.hpp)
 set(EngineHeader include/engine/status.hpp include/engine/engine_config.hpp include/engine/hint.hpp include/engine/bearing.hpp include/engine/phantom_node.hpp)
@@ -652,7 +652,7 @@ install(FILES ${ExtractorHeader} DESTINATION include/osrm/extractor)
 install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
 install(FILES ${LibraryGlob} DESTINATION include/osrm)
 install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api)
-install(FILES ${VariantGlob} DESTINATION include/variant)
+install(FILES ${VariantGlob} DESTINATION include/mapbox)
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-contract DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
