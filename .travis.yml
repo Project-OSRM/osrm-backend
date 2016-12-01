@@ -49,7 +49,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CLANG_VERSION='3.9.0' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
 
     - os: osx
       osx_image: xcode8.2
@@ -64,7 +64,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='3.9.0' BUILD_TYPE='Release' ENABLE_MASON=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON
 
     - os: linux
       compiler: "gcc-6-release"
