@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "variant.hpp"
+#include <mapbox/variant.hpp>
 
 using namespace mapbox;
 
@@ -41,9 +41,12 @@ struct print
     void operator()(line_string const& line) const
     {
         std::cerr << "Line(";
+        bool first = true;
         for (auto const& pt : line)
         {
-            std::cerr << pt.x << " " << pt.y << ",";
+            if (!first) std::cerr << ",";
+            std::cerr << pt.x << " " << pt.y;
+            if (first) first = false;
         }
         std::cerr << ")" << std::endl;
     }

@@ -1,4 +1,4 @@
-#include "variant.hpp"
+#include <mapbox/variant.hpp>
 
 #include <stdexcept>
 

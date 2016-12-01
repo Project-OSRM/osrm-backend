@@ -1,7 +1,6 @@
-
 // @EXPECTED:
 
-#include <variant.hpp>
+#include <mapbox/variant.hpp>
 
 int main()
 {
