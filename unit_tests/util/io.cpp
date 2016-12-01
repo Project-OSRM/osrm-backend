@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
 BOOST_AUTO_TEST_CASE(io_read_lines)
 {
     {
-        std::ofstream f(IO_TEXT_FILE);
+        std::ofstream f(IO_TEXT_FILE, std::ios::binary);
         char str[] = "A\nB\nC\nD";
         f.write(str, strlen(str));
     }
