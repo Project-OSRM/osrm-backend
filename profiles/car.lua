@@ -377,8 +377,18 @@ end
 
 -- check accessibility by traversing our acces tag hierarchy
 function handle_access(way,result,data)
-  data.access = find_access_tag(way, access_tags_hierarchy)
-  if access_tag_blacklist[data.access] then
+  data.forward_access, data.backward_access =
+    Directional.get_values_by_set(way,data,access_tags_hierarchy)
+
+  if access_tag_blacklist[data.forward_access] then
+    result.forward_mode = mode.inaccessible
+  end
+
+  if access_tag_blacklist[data.backward_access] then
+    result.backward_mode = mode.inaccessible
+  end
+
+  if result.forward_mode == mode.inaccessible and result.backward_mode == mode.inaccessible then
     return false
   end
 end
@@ -430,8 +440,11 @@ function handle_speed(way,result,data)
       result.backward_speed = highway_speed
     else
       -- Set the avg speed on ways that are marked accessible
-      if access_tag_whitelist[data.access] then
+      if access_tag_whitelist[data.forward_access] then
         result.forward_speed = speed_profile["default"]
+      end
+
+      if access_tag_whitelist[data.backward_access] then
         result.backward_speed = speed_profile["default"]
       end
     end
@@ -530,7 +543,8 @@ end
 
 -- Set access restriction flag if access is allowed under certain restrictions only
 function handle_restricted(way,result,data)
-  if data.access and access_tag_restricted[data.access] then
+  if (data.forward_access and access_tag_restricted[data.forward_access]) or
+     (data.backward_access and access_tag_restricted[data.backward_access]) then
     result.is_access_restricted = true
   end
 end

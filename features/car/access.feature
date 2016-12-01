@@ -30,6 +30,35 @@ Feature: Car - Restricted access
             |        |         | no            | yes      | x     |
             |        |         | yes           | no       |       |
 
+    Scenario: Car - Access tag hierarchy and forward/backward
+        Then routability should be
+            | access | access:forward | access:backward | motorcar | motorcar:forward | motorcar:backward | forw | backw |
+            |        |                |                 |          |                  |                   | x    | x     |
+            | yes    |                |                 |          |                  |                   | x    | x     |
+            | yes    | no             |                 |          |                  |                   |      | x     |
+            | yes    | yes            |                 | no       |                  |                   |      |       |
+            | yes    | yes            |                 | yes      | no               |                   |      | x     |
+            | yes    |                |                 |          |                  |                   | x    | x     |
+            | yes    |                | no              |          |                  |                   | x    |       |
+            | yes    |                | yes             | no       |                  |                   |      |       |
+            | yes    |                | yes             | yes      |                  | no                | x    |       |
+            | no     |                |                 |          |                  |                   |      |       |
+            | no     | yes            |                 |          |                  |                   | x    |       |
+            | no     | no             |                 | yes      |                  |                   | x    | x     |
+            | no     | no             |                 | no       | yes              |                   | x    |       |
+            | no     |                |                 |          |                  |                   |      |       |
+            | no     |                | yes             |          |                  |                   |      | x     |
+            | no     |                | no              | yes      |                  |                   | x    | x     |
+            | no     |                | no              | no       |                  | yes               |      | x     |
+            |        | no             |                 |          | no               |                   |      | x     |
+            |        |                | no              |          |                  | no                | x    |       |
+            |        | no             |                 |          |                  | no                |      |       |
+            |        |                | no              | no       |                  |                   |      |       |
+            |        | no             |                 |          | yes              |                   | x    | x     |
+            |        |                | no              |          |                  | yes               | x    | x     |
+            |        | yes            |                 |          | no               |                   |      | x     |
+            |        |                | yes             |          |                  | no                | x    |       |
+
     Scenario: Car - Access tag hierarchy on nodes
         Then routability should be
             | node/access | node/vehicle | node/motor_vehicle | node/motorcar | bothw |
