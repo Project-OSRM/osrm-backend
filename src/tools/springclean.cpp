@@ -2,7 +2,7 @@
 
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 namespace osrm
 {
@@ -36,14 +36,14 @@ void deleteRegion(const SharedDataType region)
             }
         }();
 
-        util::SimpleLogger().Write(logWARNING) << "could not delete shared memory region " << name;
+        util::Log(logWARNING) << "could not delete shared memory region " << name;
     }
 }
 
 // find all existing shmem regions and remove them.
 void springclean()
 {
-    util::SimpleLogger().Write() << "spring-cleaning all shared memory regions";
+    util::Log() << "spring-cleaning all shared memory regions";
     deleteRegion(DATA_1);
     deleteRegion(LAYOUT_1);
     deleteRegion(DATA_2);
@@ -56,19 +56,18 @@ void springclean()
 int main()
 {
     osrm::util::LogPolicy::GetInstance().Unmute();
-    osrm::util::SimpleLogger().Write() << "Releasing all locks";
-    osrm::util::SimpleLogger().Write() << "ATTENTION! BE CAREFUL!";
-    osrm::util::SimpleLogger().Write() << "----------------------";
-    osrm::util::SimpleLogger().Write() << "This tool may put osrm-routed into an undefined state!";
-    osrm::util::SimpleLogger().Write()
-        << "Type 'Y' to acknowledge that you know what your are doing.";
-    osrm::util::SimpleLogger().Write() << "\n\nDo you want to purge all shared memory allocated "
-                                       << "by osrm-datastore? [type 'Y' to confirm]";
+    osrm::util::Log() << "Releasing all locks";
+    osrm::util::Log() << "ATTENTION! BE CAREFUL!";
+    osrm::util::Log() << "----------------------";
+    osrm::util::Log() << "This tool may put osrm-routed into an undefined state!";
+    osrm::util::Log() << "Type 'Y' to acknowledge that you know what your are doing.";
+    osrm::util::Log() << "\n\nDo you want to purge all shared memory allocated "
+                      << "by osrm-datastore? [type 'Y' to confirm]";
 
     const auto letter = getchar();
     if (letter != 'Y')
     {
-        osrm::util::SimpleLogger().Write() << "aborted.";
+        osrm::util::Log() << "aborted.";
         return EXIT_SUCCESS;
     }
     osrm::tools::springclean();

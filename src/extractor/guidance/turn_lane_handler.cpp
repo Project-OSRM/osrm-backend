@@ -3,7 +3,7 @@
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 
 #include <cstddef>
@@ -46,8 +46,8 @@ TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_g
 
 TurnLaneHandler::~TurnLaneHandler()
 {
-    std::cout << "Handled: " << count_handled << " of " << count_called
-              << " lanes: " << (double)(count_handled * 100) / (count_called) << " %." << std::endl;
+    util::Log() << "Handled: " << count_handled << " of " << count_called
+                << " lanes: " << (double)(count_handled * 100) / (count_called) << " %.";
 }
 
 /*

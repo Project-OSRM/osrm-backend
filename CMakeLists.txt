@@ -56,6 +56,8 @@ set(OSRM_VERSION_MINOR 5)
 set(OSRM_VERSION_PATCH 0)
 set(OSRM_VERSION "${OSRM_VERSION_MAJOR}.${OSRM_VERSION_MINOR}.${OSRM_VERSION_PATCH}")
 
+add_definitions(-DOSRM_PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
 # these two functions build up custom variables:
 #   DEPENDENCIES_INCLUDE_DIRS and OSRM_DEFINES
 # These variables we want to pass to

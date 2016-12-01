@@ -1,5 +1,5 @@
 #include "extractor/compressed_edge_container.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -300,14 +300,13 @@ void CompressedEdgeContainer::PrintStatistics() const
         longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());
     }
 
-    util::SimpleLogger().Write()
-        << "Geometry successfully removed:"
-           "\n  compressed edges: "
-        << compressed_edges << "\n  compressed geometries: " << compressed_geometries
-        << "\n  longest chain length: " << longest_chain_length << "\n  cmpr ratio: "
-        << ((float)compressed_edges / std::max(compressed_geometries, (uint64_t)1))
-        << "\n  avg chain length: "
-        << (float)compressed_geometries / std::max((uint64_t)1, compressed_edges);
+    util::Log() << "Geometry successfully removed:"
+                   "\n  compressed edges: "
+                << compressed_edges << "\n  compressed geometries: " << compressed_geometries
+                << "\n  longest chain length: " << longest_chain_length << "\n  cmpr ratio: "
+                << ((float)compressed_edges / std::max(compressed_geometries, (uint64_t)1))
+                << "\n  avg chain length: "
+                << (float)compressed_geometries / std::max((uint64_t)1, compressed_edges);
 }
 
 const CompressedEdgeContainer::OnewayEdgeBucket &

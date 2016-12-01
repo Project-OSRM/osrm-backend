@@ -5,9 +5,10 @@
 #include "util/range_table.hpp"
 
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
@@ -21,6 +22,7 @@
 #include <chrono>
 #include <limits>
 #include <mutex>
+#include <sstream>
 
 namespace
 {
@@ -170,7 +172,8 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
 
 void ExtractionContainers::WriteCharData(const std::string &file_name)
 {
-    std::cout << "[extractor] writing street name index ... " << std::flush;
+    util::UnbufferedLog log;
+    log << "writing street name index ... ";
     TIMER_START(write_index);
     boost::filesystem::ofstream file_stream(file_name, std::ios::binary);
 
@@ -211,254 +214,289 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     file_stream.write(write_buffer, buffer_len);
 
     TIMER_STOP(write_index);
-    std::cout << "ok, after " << TIMER_SEC(write_index) << "s" << std::endl;
+    log << "ok, after " << TIMER_SEC(write_index) << "s";
 }
 
 void ExtractionContainers::PrepareNodes()
 {
-    std::cout << "[extractor] Sorting used nodes        ... " << std::flush;
-    TIMER_START(sorting_used_nodes);
-    stxxl::sort(
-        used_node_id_list.begin(), used_node_id_list.end(), OSMNodeIDSTXXLLess(), stxxl_memory);
-    TIMER_STOP(sorting_used_nodes);
-    std::cout << "ok, after " << TIMER_SEC(sorting_used_nodes) << "s" << std::endl;
-
-    std::cout << "[extractor] Erasing duplicate nodes   ... " << std::flush;
-    TIMER_START(erasing_dups);
-    auto new_end = std::unique(used_node_id_list.begin(), used_node_id_list.end());
-    used_node_id_list.resize(new_end - used_node_id_list.begin());
-    TIMER_STOP(erasing_dups);
-    std::cout << "ok, after " << TIMER_SEC(erasing_dups) << "s" << std::endl;
-
-    std::cout << "[extractor] Sorting all nodes         ... " << std::flush;
-    TIMER_START(sorting_nodes);
-    stxxl::sort(all_nodes_list.begin(),
-                all_nodes_list.end(),
-                ExternalMemoryNodeSTXXLCompare(),
-                stxxl_memory);
-    TIMER_STOP(sorting_nodes);
-    std::cout << "ok, after " << TIMER_SEC(sorting_nodes) << "s" << std::endl;
-
-    std::cout << "[extractor] Building node id map      ... " << std::flush;
-    TIMER_START(id_map);
-    external_to_internal_node_id_map.reserve(used_node_id_list.size());
-    auto node_iter = all_nodes_list.begin();
-    auto ref_iter = used_node_id_list.begin();
-    const auto all_nodes_list_end = all_nodes_list.end();
-    const auto used_node_id_list_end = used_node_id_list.end();
-    // Note: despite being able to handle 64 bit OSM node ids, we can't
-    // handle > uint32_t actual usable nodes.  This should be OK for a while
-    // because we usually route on a *lot* less than 2^32 of the OSM
-    // graph nodes.
-    std::uint64_t internal_id = 0;
-
-    // compute the intersection of nodes that were referenced and nodes we actually have
-    while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
     {
-        if (node_iter->node_id < *ref_iter)
+        util::UnbufferedLog log;
+        log << "Sorting used nodes        ... " << std::flush;
+        TIMER_START(sorting_used_nodes);
+        stxxl::sort(
+            used_node_id_list.begin(), used_node_id_list.end(), OSMNodeIDSTXXLLess(), stxxl_memory);
+        TIMER_STOP(sorting_used_nodes);
+        log << "ok, after " << TIMER_SEC(sorting_used_nodes) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Erasing duplicate nodes   ... " << std::flush;
+        TIMER_START(erasing_dups);
+        auto new_end = std::unique(used_node_id_list.begin(), used_node_id_list.end());
+        used_node_id_list.resize(new_end - used_node_id_list.begin());
+        TIMER_STOP(erasing_dups);
+        log << "ok, after " << TIMER_SEC(erasing_dups) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Sorting all nodes         ... " << std::flush;
+        TIMER_START(sorting_nodes);
+        stxxl::sort(all_nodes_list.begin(),
+                    all_nodes_list.end(),
+                    ExternalMemoryNodeSTXXLCompare(),
+                    stxxl_memory);
+        TIMER_STOP(sorting_nodes);
+        log << "ok, after " << TIMER_SEC(sorting_nodes) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Building node id map      ... " << std::flush;
+        TIMER_START(id_map);
+        external_to_internal_node_id_map.reserve(used_node_id_list.size());
+        auto node_iter = all_nodes_list.begin();
+        auto ref_iter = used_node_id_list.begin();
+        const auto all_nodes_list_end = all_nodes_list.end();
+        const auto used_node_id_list_end = used_node_id_list.end();
+        // Note: despite being able to handle 64 bit OSM node ids, we can't
+        // handle > uint32_t actual usable nodes.  This should be OK for a while
+        // because we usually route on a *lot* less than 2^32 of the OSM
+        // graph nodes.
+        std::uint64_t internal_id = 0;
+
+        // compute the intersection of nodes that were referenced and nodes we actually have
+        while (node_iter != all_nodes_list_end && ref_iter != used_node_id_list_end)
         {
+            if (node_iter->node_id < *ref_iter)
+            {
+                node_iter++;
+                continue;
+            }
+            if (node_iter->node_id > *ref_iter)
+            {
+                ref_iter++;
+                continue;
+            }
+            BOOST_ASSERT(node_iter->node_id == *ref_iter);
+            external_to_internal_node_id_map[*ref_iter] = static_cast<NodeID>(internal_id++);
             node_iter++;
-            continue;
-        }
-        if (node_iter->node_id > *ref_iter)
-        {
             ref_iter++;
-            continue;
         }
-        BOOST_ASSERT(node_iter->node_id == *ref_iter);
-        external_to_internal_node_id_map[*ref_iter] = static_cast<NodeID>(internal_id++);
-        node_iter++;
-        ref_iter++;
+        if (internal_id > std::numeric_limits<NodeID>::max())
+        {
+            throw util::exception("There are too many nodes remaining after filtering, OSRM only "
+                                  "supports 2^32 unique nodes, but there were " +
+                                  std::to_string(internal_id) + SOURCE_REF);
+        }
+        max_internal_node_id = boost::numeric_cast<NodeID>(internal_id);
+        TIMER_STOP(id_map);
+        log << "ok, after " << TIMER_SEC(id_map) << "s";
     }
-    if (internal_id > std::numeric_limits<NodeID>::max())
-    {
-        throw util::exception("There are too many nodes remaining after filtering, OSRM only "
-                              "supports 2^32 unique nodes");
-    }
-    max_internal_node_id = boost::numeric_cast<NodeID>(internal_id);
-    TIMER_STOP(id_map);
-    std::cout << "ok, after " << TIMER_SEC(id_map) << "s" << std::endl;
 }
 
 void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
 {
     // Sort edges by start.
-    std::cout << "[extractor] Sorting edges by start    ... " << std::flush;
-    TIMER_START(sort_edges_by_start);
-    stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMStartID(), stxxl_memory);
-    TIMER_STOP(sort_edges_by_start);
-    std::cout << "ok, after " << TIMER_SEC(sort_edges_by_start) << "s" << std::endl;
-
-    std::cout << "[extractor] Setting start coords      ... " << std::flush;
-    TIMER_START(set_start_coords);
-    // Traverse list of edges and nodes in parallel and set start coord
-    auto node_iterator = all_nodes_list.begin();
-    auto edge_iterator = all_edges_list.begin();
-
-    const auto all_edges_list_end = all_edges_list.end();
-    const auto all_nodes_list_end = all_nodes_list.end();
-
-    while (edge_iterator != all_edges_list_end && node_iterator != all_nodes_list_end)
     {
-        if (edge_iterator->result.osm_source_id < node_iterator->node_id)
-        {
-            util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
-                                                           << edge_iterator->result.source;
-            edge_iterator->result.source = SPECIAL_NODEID;
-            ++edge_iterator;
-            continue;
-        }
-        if (edge_iterator->result.osm_source_id > node_iterator->node_id)
-        {
-            node_iterator++;
-            continue;
-        }
-
-        // remove loops
-        if (edge_iterator->result.osm_source_id == edge_iterator->result.osm_target_id)
-        {
-            edge_iterator->result.source = SPECIAL_NODEID;
-            edge_iterator->result.target = SPECIAL_NODEID;
-            ++edge_iterator;
-            continue;
-        }
-
-        BOOST_ASSERT(edge_iterator->result.osm_source_id == node_iterator->node_id);
-
-        // assign new node id
-        auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
-        BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
-        edge_iterator->result.source = id_iter->second;
-
-        edge_iterator->source_coordinate.lat = node_iterator->lat;
-        edge_iterator->source_coordinate.lon = node_iterator->lon;
-        ++edge_iterator;
+        util::UnbufferedLog log;
+        log << "Sorting edges by start    ... " << std::flush;
+        TIMER_START(sort_edges_by_start);
+        stxxl::sort(
+            all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMStartID(), stxxl_memory);
+        TIMER_STOP(sort_edges_by_start);
+        log << "ok, after " << TIMER_SEC(sort_edges_by_start) << "s";
     }
 
-    // Remove all remaining edges. They are invalid because there are no corresponding nodes for
-    // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
-    auto markSourcesInvalid = [](InternalExtractorEdge &edge) {
-        util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
-                                                       << edge.result.source;
-        edge.result.source = SPECIAL_NODEID;
-        edge.result.osm_source_id = SPECIAL_OSM_NODEID;
-    };
-    std::for_each(edge_iterator, all_edges_list_end, markSourcesInvalid);
-    TIMER_STOP(set_start_coords);
-    std::cout << "ok, after " << TIMER_SEC(set_start_coords) << "s" << std::endl;
-
-    // Sort Edges by target
-    std::cout << "[extractor] Sorting edges by target   ... " << std::flush;
-    TIMER_START(sort_edges_by_target);
-    stxxl::sort(all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMTargetID(), stxxl_memory);
-    TIMER_STOP(sort_edges_by_target);
-    std::cout << "ok, after " << TIMER_SEC(sort_edges_by_target) << "s" << std::endl;
-
-    // Compute edge weights
-    std::cout << "[extractor] Computing edge weights    ... " << std::flush;
-    TIMER_START(compute_weights);
-    node_iterator = all_nodes_list.begin();
-    edge_iterator = all_edges_list.begin();
-    const auto all_edges_list_end_ = all_edges_list.end();
-    const auto all_nodes_list_end_ = all_nodes_list.end();
-
-    while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
     {
-        // skip all invalid edges
-        if (edge_iterator->result.source == SPECIAL_NODEID)
+        util::UnbufferedLog log;
+        log << "Setting start coords      ... " << std::flush;
+        TIMER_START(set_start_coords);
+        // Traverse list of edges and nodes in parallel and set start coord
+        auto node_iterator = all_nodes_list.begin();
+        auto edge_iterator = all_edges_list.begin();
+
+        const auto all_edges_list_end = all_edges_list.end();
+        const auto all_nodes_list_end = all_nodes_list.end();
+
+        while (edge_iterator != all_edges_list_end && node_iterator != all_nodes_list_end)
         {
-            ++edge_iterator;
-            continue;
-        }
-
-        if (edge_iterator->result.osm_target_id < node_iterator->node_id)
-        {
-            util::SimpleLogger().Write(LogLevel::logDEBUG)
-                << "Found invalid node reference "
-                << static_cast<uint64_t>(edge_iterator->result.osm_target_id);
-            edge_iterator->result.target = SPECIAL_NODEID;
-            ++edge_iterator;
-            continue;
-        }
-        if (edge_iterator->result.osm_target_id > node_iterator->node_id)
-        {
-            ++node_iterator;
-            continue;
-        }
-
-        BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
-        BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
-        BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
-                     util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
-        BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
-                     util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
-
-        const double distance = util::coordinate_calculation::greatCircleDistance(
-            edge_iterator->source_coordinate,
-            util::Coordinate(node_iterator->lon, node_iterator->lat));
-
-        scripting_environment.ProcessSegment(
-            edge_iterator->source_coordinate, *node_iterator, distance, edge_iterator->weight_data);
-
-        const double weight = [distance](const InternalExtractorEdge::WeightData &data) {
-            switch (data.type)
+            if (edge_iterator->result.osm_source_id < node_iterator->node_id)
             {
-            case InternalExtractorEdge::WeightType::EDGE_DURATION:
-            case InternalExtractorEdge::WeightType::WAY_DURATION:
-                return data.duration * 10.;
-                break;
-            case InternalExtractorEdge::WeightType::SPEED:
-                return (distance * 10.) / (data.speed / 3.6);
-                break;
-            case InternalExtractorEdge::WeightType::INVALID:
-                util::exception("invalid weight type");
+                util::Log(logDEBUG) << "Found invalid node reference "
+                                    << edge_iterator->result.source;
+                edge_iterator->result.source = SPECIAL_NODEID;
+                ++edge_iterator;
+                continue;
             }
-            return -1.0;
-        }(edge_iterator->weight_data);
+            if (edge_iterator->result.osm_source_id > node_iterator->node_id)
+            {
+                node_iterator++;
+                continue;
+            }
 
-        auto &edge = edge_iterator->result;
-        edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
+            // remove loops
+            if (edge_iterator->result.osm_source_id == edge_iterator->result.osm_target_id)
+            {
+                edge_iterator->result.source = SPECIAL_NODEID;
+                edge_iterator->result.target = SPECIAL_NODEID;
+                ++edge_iterator;
+                continue;
+            }
 
-        // assign new node id
-        auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
-        BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
-        edge.target = id_iter->second;
+            BOOST_ASSERT(edge_iterator->result.osm_source_id == node_iterator->node_id);
 
-        // orient edges consistently: source id < target id
-        // important for multi-edge removal
-        if (edge.source > edge.target)
-        {
-            std::swap(edge.source, edge.target);
+            // assign new node id
+            auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
+            BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
+            edge_iterator->result.source = id_iter->second;
 
-            // std::swap does not work with bit-fields
-            bool temp = edge.forward;
-            edge.forward = edge.backward;
-            edge.backward = temp;
+            edge_iterator->source_coordinate.lat = node_iterator->lat;
+            edge_iterator->source_coordinate.lon = node_iterator->lon;
+            ++edge_iterator;
         }
-        ++edge_iterator;
+
+        // Remove all remaining edges. They are invalid because there are no corresponding nodes for
+        // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
+        auto markSourcesInvalid = [](InternalExtractorEdge &edge) {
+            util::Log(logDEBUG) << "Found invalid node reference " << edge.result.source;
+            edge.result.source = SPECIAL_NODEID;
+            edge.result.osm_source_id = SPECIAL_OSM_NODEID;
+        };
+        std::for_each(edge_iterator, all_edges_list_end, markSourcesInvalid);
+        TIMER_STOP(set_start_coords);
+        log << "ok, after " << TIMER_SEC(set_start_coords) << "s";
     }
 
-    // Remove all remaining edges. They are invalid because there are no corresponding nodes for
-    // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
-    auto markTargetsInvalid = [](InternalExtractorEdge &edge) {
-        util::SimpleLogger().Write(LogLevel::logDEBUG) << "Found invalid node reference "
-                                                       << edge.result.target;
-        edge.result.target = SPECIAL_NODEID;
-    };
-    std::for_each(edge_iterator, all_edges_list_end_, markTargetsInvalid);
-    TIMER_STOP(compute_weights);
-    std::cout << "ok, after " << TIMER_SEC(compute_weights) << "s" << std::endl;
+    {
+        // Sort Edges by target
+        util::UnbufferedLog log;
+        log << "Sorting edges by target   ... " << std::flush;
+        TIMER_START(sort_edges_by_target);
+        stxxl::sort(
+            all_edges_list.begin(), all_edges_list.end(), CmpEdgeByOSMTargetID(), stxxl_memory);
+        TIMER_STOP(sort_edges_by_target);
+        log << "ok, after " << TIMER_SEC(sort_edges_by_target) << "s";
+    }
+
+    {
+        // Compute edge weights
+        util::UnbufferedLog log;
+        log << "Computing edge weights    ... " << std::flush;
+        TIMER_START(compute_weights);
+        auto node_iterator = all_nodes_list.begin();
+        auto edge_iterator = all_edges_list.begin();
+        const auto all_edges_list_end_ = all_edges_list.end();
+        const auto all_nodes_list_end_ = all_nodes_list.end();
+
+        while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
+        {
+            // skip all invalid edges
+            if (edge_iterator->result.source == SPECIAL_NODEID)
+            {
+                ++edge_iterator;
+                continue;
+            }
+
+            if (edge_iterator->result.osm_target_id < node_iterator->node_id)
+            {
+                util::Log(logDEBUG) << "Found invalid node reference "
+                                    << static_cast<uint64_t>(edge_iterator->result.osm_target_id);
+                edge_iterator->result.target = SPECIAL_NODEID;
+                ++edge_iterator;
+                continue;
+            }
+            if (edge_iterator->result.osm_target_id > node_iterator->node_id)
+            {
+                ++node_iterator;
+                continue;
+            }
+
+            BOOST_ASSERT(edge_iterator->result.osm_target_id == node_iterator->node_id);
+            BOOST_ASSERT(edge_iterator->weight_data.speed >= 0);
+            BOOST_ASSERT(edge_iterator->source_coordinate.lat !=
+                         util::FixedLatitude{std::numeric_limits<std::int32_t>::min()});
+            BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
+                         util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
+
+            const double distance = util::coordinate_calculation::greatCircleDistance(
+                edge_iterator->source_coordinate,
+                util::Coordinate(node_iterator->lon, node_iterator->lat));
+
+            scripting_environment.ProcessSegment(edge_iterator->source_coordinate,
+                                                 *node_iterator,
+                                                 distance,
+                                                 edge_iterator->weight_data);
+
+            const double weight = [distance, edge_iterator, node_iterator](
+                const InternalExtractorEdge::WeightData &data) {
+                switch (data.type)
+                {
+                case InternalExtractorEdge::WeightType::EDGE_DURATION:
+                case InternalExtractorEdge::WeightType::WAY_DURATION:
+                    return data.duration * 10.;
+                    break;
+                case InternalExtractorEdge::WeightType::SPEED:
+                    return (distance * 10.) / (data.speed / 3.6);
+                    break;
+                case InternalExtractorEdge::WeightType::INVALID:
+                    std::stringstream coordstring;
+                    coordstring << edge_iterator->source_coordinate << " to " << node_iterator->lon
+                                << "," << node_iterator->lat;
+                    util::exception("Encountered invalid weight at segment " + coordstring.str() +
+                                    SOURCE_REF);
+                }
+                return -1.0;
+            }(edge_iterator->weight_data);
+
+            auto &edge = edge_iterator->result;
+            edge.weight = std::max(1, static_cast<int>(std::floor(weight + .5)));
+
+            // assign new node id
+            auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
+            BOOST_ASSERT(id_iter != external_to_internal_node_id_map.end());
+            edge.target = id_iter->second;
+
+            // orient edges consistently: source id < target id
+            // important for multi-edge removal
+            if (edge.source > edge.target)
+            {
+                std::swap(edge.source, edge.target);
+
+                // std::swap does not work with bit-fields
+                bool temp = edge.forward;
+                edge.forward = edge.backward;
+                edge.backward = temp;
+            }
+            ++edge_iterator;
+        }
+
+        // Remove all remaining edges. They are invalid because there are no corresponding nodes for
+        // them. This happens when using osmosis with bbox or polygon to extract smaller areas.
+        auto markTargetsInvalid = [](InternalExtractorEdge &edge) {
+            util::Log(logDEBUG) << "Found invalid node reference " << edge.result.target;
+            edge.result.target = SPECIAL_NODEID;
+        };
+        std::for_each(edge_iterator, all_edges_list_end_, markTargetsInvalid);
+        TIMER_STOP(compute_weights);
+        log << "ok, after " << TIMER_SEC(compute_weights) << "s";
+    }
 
     // Sort edges by start.
-    std::cout << "[extractor] Sorting edges by renumbered start ... " << std::flush;
-    TIMER_START(sort_edges_by_renumbered_start);
-    std::mutex name_data_mutex;
-    stxxl::sort(all_edges_list.begin(),
-                all_edges_list.end(),
-                CmpEdgeByInternalSourceTargetAndName{name_data_mutex, name_char_data, name_offsets},
-                stxxl_memory);
-    TIMER_STOP(sort_edges_by_renumbered_start);
-    std::cout << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s" << std::endl;
+    {
+        util::UnbufferedLog log;
+        log << "Sorting edges by renumbered start ... ";
+        TIMER_START(sort_edges_by_renumbered_start);
+        std::mutex name_data_mutex;
+        stxxl::sort(
+            all_edges_list.begin(),
+            all_edges_list.end(),
+            CmpEdgeByInternalSourceTargetAndName{name_data_mutex, name_char_data, name_offsets},
+            stxxl_memory);
+        TIMER_STOP(sort_edges_by_renumbered_start);
+        log << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s";
+    }
 
     BOOST_ASSERT(all_edges_list.size() > 0);
     for (unsigned i = 0; i < all_edges_list.size();)
@@ -553,85 +591,101 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 
 void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
 {
-    std::cout << "[extractor] Writing used edges       ... " << std::flush;
-    TIMER_START(write_edges);
-    // Traverse list of edges and nodes in parallel and set target coord
+
+    std::size_t start_position = 0;
     std::uint64_t used_edges_counter = 0;
     std::uint32_t used_edges_counter_buffer = 0;
-
-    auto start_position = file_out_stream.tellp();
-    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(used_edges_counter_buffer));
-
-    for (const auto &edge : all_edges_list)
     {
-        if (edge.result.source == SPECIAL_NODEID || edge.result.target == SPECIAL_NODEID)
+        util::UnbufferedLog log;
+        log << "Writing used edges       ... " << std::flush;
+        TIMER_START(write_edges);
+        // Traverse list of edges and nodes in parallel and set target coord
+
+        start_position = file_out_stream.tellp();
+        file_out_stream.write((char *)&used_edges_counter_buffer,
+                              sizeof(used_edges_counter_buffer));
+
+        for (const auto &edge : all_edges_list)
         {
-            continue;
+            if (edge.result.source == SPECIAL_NODEID || edge.result.target == SPECIAL_NODEID)
+            {
+                continue;
+            }
+
+            // IMPORTANT: here, we're using slicing to only write the data from the base
+            // class of NodeBasedEdgeWithOSM
+            NodeBasedEdge tmp = edge.result;
+            file_out_stream.write((char *)&tmp, sizeof(NodeBasedEdge));
+            used_edges_counter++;
         }
 
-        // IMPORTANT: here, we're using slicing to only write the data from the base
-        // class of NodeBasedEdgeWithOSM
-        NodeBasedEdge tmp = edge.result;
-        file_out_stream.write((char *)&tmp, sizeof(NodeBasedEdge));
-        used_edges_counter++;
+        if (used_edges_counter > std::numeric_limits<unsigned>::max())
+        {
+            throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
+        }
+        TIMER_STOP(write_edges);
+        log << "ok, after " << TIMER_SEC(write_edges) << "s";
     }
 
-    if (used_edges_counter > std::numeric_limits<unsigned>::max())
     {
-        throw util::exception("There are too many edges, OSRM only supports 2^32");
+        util::UnbufferedLog log;
+        log << "setting number of edges   ... " << std::flush;
+
+        used_edges_counter_buffer = boost::numeric_cast<std::uint32_t>(used_edges_counter);
+
+        file_out_stream.seekp(start_position);
+        file_out_stream.write((char *)&used_edges_counter_buffer,
+                              sizeof(used_edges_counter_buffer));
+        log << "ok";
     }
-    TIMER_STOP(write_edges);
-    std::cout << "ok, after " << TIMER_SEC(write_edges) << "s" << std::endl;
 
-    std::cout << "[extractor] setting number of edges   ... " << std::flush;
-
-    used_edges_counter_buffer = boost::numeric_cast<std::uint32_t>(used_edges_counter);
-
-    file_out_stream.seekp(start_position);
-    file_out_stream.write((char *)&used_edges_counter_buffer, sizeof(used_edges_counter_buffer));
-    std::cout << "ok" << std::endl;
-
-    util::SimpleLogger().Write() << "Processed " << used_edges_counter << " edges";
+    util::Log() << "Processed " << used_edges_counter << " edges";
 }
 
 void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
 {
-    // write dummy value, will be overwritten later
-    std::cout << "[extractor] setting number of nodes   ... " << std::flush;
-    file_out_stream.write((char *)&max_internal_node_id, sizeof(unsigned));
-    std::cout << "ok" << std::endl;
-
-    std::cout << "[extractor] Confirming/Writing used nodes     ... " << std::flush;
-    TIMER_START(write_nodes);
-    // identify all used nodes by a merging step of two sorted lists
-    auto node_iterator = all_nodes_list.begin();
-    auto node_id_iterator = used_node_id_list.begin();
-    const auto used_node_id_list_end = used_node_id_list.end();
-    const auto all_nodes_list_end = all_nodes_list.end();
-
-    while (node_id_iterator != used_node_id_list_end && node_iterator != all_nodes_list_end)
     {
-        if (*node_id_iterator < node_iterator->node_id)
-        {
-            ++node_id_iterator;
-            continue;
-        }
-        if (*node_id_iterator > node_iterator->node_id)
-        {
-            ++node_iterator;
-            continue;
-        }
-        BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
-
-        file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
-
-        ++node_id_iterator;
-        ++node_iterator;
+        // write dummy value, will be overwritten later
+        util::UnbufferedLog log;
+        log << "setting number of nodes   ... " << std::flush;
+        file_out_stream.write((char *)&max_internal_node_id, sizeof(unsigned));
+        log << "ok";
     }
-    TIMER_STOP(write_nodes);
-    std::cout << "ok, after " << TIMER_SEC(write_nodes) << "s" << std::endl;
 
-    util::SimpleLogger().Write() << "Processed " << max_internal_node_id << " nodes";
+    {
+        util::UnbufferedLog log;
+        log << "Confirming/Writing used nodes     ... ";
+        TIMER_START(write_nodes);
+        // identify all used nodes by a merging step of two sorted lists
+        auto node_iterator = all_nodes_list.begin();
+        auto node_id_iterator = used_node_id_list.begin();
+        const auto used_node_id_list_end = used_node_id_list.end();
+        const auto all_nodes_list_end = all_nodes_list.end();
+
+        while (node_id_iterator != used_node_id_list_end && node_iterator != all_nodes_list_end)
+        {
+            if (*node_id_iterator < node_iterator->node_id)
+            {
+                ++node_id_iterator;
+                continue;
+            }
+            if (*node_id_iterator > node_iterator->node_id)
+            {
+                ++node_iterator;
+                continue;
+            }
+            BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
+
+            file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
+
+            ++node_id_iterator;
+            ++node_iterator;
+        }
+        TIMER_STOP(write_nodes);
+        log << "ok, after " << TIMER_SEC(write_nodes) << "s";
+    }
+
+    util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
 void ExtractionContainers::WriteRestrictions(const std::string &path) const
@@ -658,203 +712,210 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
     }
     restrictions_out_stream.seekp(count_position);
     restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
-    util::SimpleLogger().Write() << "usable restrictions: " << written_restriction_count;
+    util::Log() << "usable restrictions: " << written_restriction_count;
 }
 
 void ExtractionContainers::PrepareRestrictions()
 {
-    std::cout << "[extractor] Sorting used ways         ... " << std::flush;
-    TIMER_START(sort_ways);
-    stxxl::sort(way_start_end_id_list.begin(),
-                way_start_end_id_list.end(),
-                FirstAndLastSegmentOfWayStxxlCompare(),
-                stxxl_memory);
-    TIMER_STOP(sort_ways);
-    std::cout << "ok, after " << TIMER_SEC(sort_ways) << "s" << std::endl;
-
-    std::cout << "[extractor] Sorting " << restrictions_list.size() << " restriction. by from... "
-              << std::flush;
-    TIMER_START(sort_restrictions);
-    stxxl::sort(restrictions_list.begin(),
-                restrictions_list.end(),
-                CmpRestrictionContainerByFrom(),
-                stxxl_memory);
-    TIMER_STOP(sort_restrictions);
-    std::cout << "ok, after " << TIMER_SEC(sort_restrictions) << "s" << std::endl;
-
-    std::cout << "[extractor] Fixing restriction starts ... " << std::flush;
-    TIMER_START(fix_restriction_starts);
-    auto restrictions_iterator = restrictions_list.begin();
-    auto way_start_and_end_iterator = way_start_end_id_list.cbegin();
-    const auto restrictions_list_end = restrictions_list.end();
-    const auto way_start_end_id_list_end = way_start_end_id_list.cend();
-
-    while (way_start_and_end_iterator != way_start_end_id_list_end &&
-           restrictions_iterator != restrictions_list_end)
     {
-        if (way_start_and_end_iterator->way_id <
-            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
-        {
-            ++way_start_and_end_iterator;
-            continue;
-        }
-
-        if (way_start_and_end_iterator->way_id >
-            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
-        {
-            util::SimpleLogger().Write(LogLevel::logDEBUG)
-                << "Restriction references invalid way: "
-                << restrictions_iterator->restriction.from.way;
-            restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
-            ++restrictions_iterator;
-            continue;
-        }
-
-        BOOST_ASSERT(
-            way_start_and_end_iterator->way_id ==
-            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
-        // we do not remap the via id yet, since we will need it for the to node as well
-        const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
-
-        // check if via is actually valid, if not invalidate
-        auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
-        if (via_id_iter == external_to_internal_node_id_map.end())
-        {
-            util::SimpleLogger().Write(LogLevel::logDEBUG)
-                << "Restriction references invalid node: "
-                << restrictions_iterator->restriction.via.node;
-            restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
-            ++restrictions_iterator;
-            continue;
-        }
-
-        if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
-        {
-            // assign new from node id
-            auto id_iter = external_to_internal_node_id_map.find(
-                way_start_and_end_iterator->first_segment_target_id);
-            if (id_iter == external_to_internal_node_id_map.end())
-            {
-                util::SimpleLogger().Write(LogLevel::logDEBUG)
-                    << "Way references invalid node: "
-                    << way_start_and_end_iterator->first_segment_target_id;
-                restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
-                ++restrictions_iterator;
-                ++way_start_and_end_iterator;
-                continue;
-            }
-            restrictions_iterator->restriction.from.node = id_iter->second;
-        }
-        else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
-        {
-            // assign new from node id
-            auto id_iter = external_to_internal_node_id_map.find(
-                way_start_and_end_iterator->last_segment_source_id);
-            if (id_iter == external_to_internal_node_id_map.end())
-            {
-                util::SimpleLogger().Write(LogLevel::logDEBUG)
-                    << "Way references invalid node: "
-                    << way_start_and_end_iterator->last_segment_target_id;
-                restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
-                ++restrictions_iterator;
-                ++way_start_and_end_iterator;
-                continue;
-            }
-            restrictions_iterator->restriction.from.node = id_iter->second;
-        }
-        ++restrictions_iterator;
+        util::UnbufferedLog log;
+        log << "Sorting used ways         ... ";
+        TIMER_START(sort_ways);
+        stxxl::sort(way_start_end_id_list.begin(),
+                    way_start_end_id_list.end(),
+                    FirstAndLastSegmentOfWayStxxlCompare(),
+                    stxxl_memory);
+        TIMER_STOP(sort_ways);
+        log << "ok, after " << TIMER_SEC(sort_ways) << "s";
     }
 
-    TIMER_STOP(fix_restriction_starts);
-    std::cout << "ok, after " << TIMER_SEC(fix_restriction_starts) << "s" << std::endl;
-
-    std::cout << "[extractor] Sorting restrictions. by to  ... " << std::flush;
-    TIMER_START(sort_restrictions_to);
-    stxxl::sort(restrictions_list.begin(),
-                restrictions_list.end(),
-                CmpRestrictionContainerByTo(),
-                stxxl_memory);
-    TIMER_STOP(sort_restrictions_to);
-    std::cout << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s" << std::endl;
-
-    std::cout << "[extractor] Fixing restriction ends   ... " << std::flush;
-    TIMER_START(fix_restriction_ends);
-    restrictions_iterator = restrictions_list.begin();
-    way_start_and_end_iterator = way_start_end_id_list.cbegin();
-    const auto way_start_end_id_list_end_ = way_start_end_id_list.cend();
-    const auto restrictions_list_end_ = restrictions_list.end();
-
-    while (way_start_and_end_iterator != way_start_end_id_list_end_ &&
-           restrictions_iterator != restrictions_list_end_)
     {
-        if (way_start_and_end_iterator->way_id <
-            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
-        {
-            ++way_start_and_end_iterator;
-            continue;
-        }
-        if (restrictions_iterator->restriction.from.node == SPECIAL_NODEID ||
-            restrictions_iterator->restriction.via.node == SPECIAL_NODEID)
-        {
-            ++restrictions_iterator;
-            continue;
-        }
-        if (way_start_and_end_iterator->way_id >
-            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
-        {
-            util::SimpleLogger().Write(LogLevel::logDEBUG)
-                << "Restriction references invalid way: "
-                << restrictions_iterator->restriction.to.way;
-            restrictions_iterator->restriction.to.way = SPECIAL_NODEID;
-            ++restrictions_iterator;
-            continue;
-        }
-        BOOST_ASSERT(
-            way_start_and_end_iterator->way_id ==
-            OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
-        const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
-
-        // assign new via node id
-        auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
-        BOOST_ASSERT(via_id_iter != external_to_internal_node_id_map.end());
-        restrictions_iterator->restriction.via.node = via_id_iter->second;
-
-        if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
-        {
-            auto to_id_iter = external_to_internal_node_id_map.find(
-                way_start_and_end_iterator->first_segment_target_id);
-            if (to_id_iter == external_to_internal_node_id_map.end())
-            {
-                util::SimpleLogger().Write(LogLevel::logDEBUG)
-                    << "Way references invalid node: "
-                    << way_start_and_end_iterator->first_segment_source_id;
-                restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
-                ++restrictions_iterator;
-                ++way_start_and_end_iterator;
-                continue;
-            }
-            restrictions_iterator->restriction.to.node = to_id_iter->second;
-        }
-        else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
-        {
-            auto to_id_iter = external_to_internal_node_id_map.find(
-                way_start_and_end_iterator->last_segment_source_id);
-            if (to_id_iter == external_to_internal_node_id_map.end())
-            {
-                util::SimpleLogger().Write(LogLevel::logDEBUG)
-                    << "Way references invalid node: "
-                    << way_start_and_end_iterator->last_segment_source_id;
-                restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
-                ++restrictions_iterator;
-                ++way_start_and_end_iterator;
-                continue;
-            }
-            restrictions_iterator->restriction.to.node = to_id_iter->second;
-        }
-        ++restrictions_iterator;
+        util::UnbufferedLog log;
+        log << "Sorting " << restrictions_list.size() << " restriction. by from... ";
+        TIMER_START(sort_restrictions);
+        stxxl::sort(restrictions_list.begin(),
+                    restrictions_list.end(),
+                    CmpRestrictionContainerByFrom(),
+                    stxxl_memory);
+        TIMER_STOP(sort_restrictions);
+        log << "ok, after " << TIMER_SEC(sort_restrictions) << "s";
     }
-    TIMER_STOP(fix_restriction_ends);
-    std::cout << "ok, after " << TIMER_SEC(fix_restriction_ends) << "s" << std::endl;
+
+    {
+        util::UnbufferedLog log;
+        log << "Fixing restriction starts ... " << std::flush;
+        TIMER_START(fix_restriction_starts);
+        auto restrictions_iterator = restrictions_list.begin();
+        auto way_start_and_end_iterator = way_start_end_id_list.cbegin();
+        const auto restrictions_list_end = restrictions_list.end();
+        const auto way_start_end_id_list_end = way_start_end_id_list.cend();
+
+        while (way_start_and_end_iterator != way_start_end_id_list_end &&
+               restrictions_iterator != restrictions_list_end)
+        {
+            if (way_start_and_end_iterator->way_id <
+                OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
+            {
+                ++way_start_and_end_iterator;
+                continue;
+            }
+
+            if (way_start_and_end_iterator->way_id >
+                OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)})
+            {
+                util::Log(logDEBUG) << "Restriction references invalid way: "
+                                    << restrictions_iterator->restriction.from.way;
+                restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
+                ++restrictions_iterator;
+                continue;
+            }
+
+            BOOST_ASSERT(
+                way_start_and_end_iterator->way_id ==
+                OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.from.way)});
+            // we do not remap the via id yet, since we will need it for the to node as well
+            const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
+
+            // check if via is actually valid, if not invalidate
+            auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
+            if (via_id_iter == external_to_internal_node_id_map.end())
+            {
+                util::Log(logDEBUG) << "Restriction references invalid node: "
+                                    << restrictions_iterator->restriction.via.node;
+                restrictions_iterator->restriction.via.node = SPECIAL_NODEID;
+                ++restrictions_iterator;
+                continue;
+            }
+
+            if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
+            {
+                // assign new from node id
+                auto id_iter = external_to_internal_node_id_map.find(
+                    way_start_and_end_iterator->first_segment_target_id);
+                if (id_iter == external_to_internal_node_id_map.end())
+                {
+                    util::Log(logDEBUG) << "Way references invalid node: "
+                                        << way_start_and_end_iterator->first_segment_target_id;
+                    restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
+                    ++restrictions_iterator;
+                    ++way_start_and_end_iterator;
+                    continue;
+                }
+                restrictions_iterator->restriction.from.node = id_iter->second;
+            }
+            else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
+            {
+                // assign new from node id
+                auto id_iter = external_to_internal_node_id_map.find(
+                    way_start_and_end_iterator->last_segment_source_id);
+                if (id_iter == external_to_internal_node_id_map.end())
+                {
+                    util::Log(logDEBUG) << "Way references invalid node: "
+                                        << way_start_and_end_iterator->last_segment_target_id;
+                    restrictions_iterator->restriction.from.node = SPECIAL_NODEID;
+                    ++restrictions_iterator;
+                    ++way_start_and_end_iterator;
+                    continue;
+                }
+                restrictions_iterator->restriction.from.node = id_iter->second;
+            }
+            ++restrictions_iterator;
+        }
+
+        TIMER_STOP(fix_restriction_starts);
+        log << "ok, after " << TIMER_SEC(fix_restriction_starts) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Sorting restrictions. by to  ... " << std::flush;
+        TIMER_START(sort_restrictions_to);
+        stxxl::sort(restrictions_list.begin(),
+                    restrictions_list.end(),
+                    CmpRestrictionContainerByTo(),
+                    stxxl_memory);
+        TIMER_STOP(sort_restrictions_to);
+        log << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s";
+    }
+
+    {
+        util::UnbufferedLog log;
+        log << "Fixing restriction ends   ... " << std::flush;
+        TIMER_START(fix_restriction_ends);
+        auto restrictions_iterator = restrictions_list.begin();
+        auto way_start_and_end_iterator = way_start_end_id_list.cbegin();
+        const auto way_start_end_id_list_end_ = way_start_end_id_list.cend();
+        const auto restrictions_list_end_ = restrictions_list.end();
+
+        while (way_start_and_end_iterator != way_start_end_id_list_end_ &&
+               restrictions_iterator != restrictions_list_end_)
+        {
+            if (way_start_and_end_iterator->way_id <
+                OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
+            {
+                ++way_start_and_end_iterator;
+                continue;
+            }
+            if (restrictions_iterator->restriction.from.node == SPECIAL_NODEID ||
+                restrictions_iterator->restriction.via.node == SPECIAL_NODEID)
+            {
+                ++restrictions_iterator;
+                continue;
+            }
+            if (way_start_and_end_iterator->way_id >
+                OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)})
+            {
+                util::Log(logDEBUG) << "Restriction references invalid way: "
+                                    << restrictions_iterator->restriction.to.way;
+                restrictions_iterator->restriction.to.way = SPECIAL_NODEID;
+                ++restrictions_iterator;
+                continue;
+            }
+            BOOST_ASSERT(
+                way_start_and_end_iterator->way_id ==
+                OSMWayID{static_cast<std::uint32_t>(restrictions_iterator->restriction.to.way)});
+            const OSMNodeID via_node_id = OSMNodeID{restrictions_iterator->restriction.via.node};
+
+            // assign new via node id
+            auto via_id_iter = external_to_internal_node_id_map.find(via_node_id);
+            BOOST_ASSERT(via_id_iter != external_to_internal_node_id_map.end());
+            restrictions_iterator->restriction.via.node = via_id_iter->second;
+
+            if (way_start_and_end_iterator->first_segment_source_id == via_node_id)
+            {
+                auto to_id_iter = external_to_internal_node_id_map.find(
+                    way_start_and_end_iterator->first_segment_target_id);
+                if (to_id_iter == external_to_internal_node_id_map.end())
+                {
+                    util::Log(logDEBUG) << "Way references invalid node: "
+                                        << way_start_and_end_iterator->first_segment_source_id;
+                    restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
+                    ++restrictions_iterator;
+                    ++way_start_and_end_iterator;
+                    continue;
+                }
+                restrictions_iterator->restriction.to.node = to_id_iter->second;
+            }
+            else if (way_start_and_end_iterator->last_segment_target_id == via_node_id)
+            {
+                auto to_id_iter = external_to_internal_node_id_map.find(
+                    way_start_and_end_iterator->last_segment_source_id);
+                if (to_id_iter == external_to_internal_node_id_map.end())
+                {
+                    util::Log(logDEBUG) << "Way references invalid node: "
+                                        << way_start_and_end_iterator->last_segment_source_id;
+                    restrictions_iterator->restriction.to.node = SPECIAL_NODEID;
+                    ++restrictions_iterator;
+                    ++way_start_and_end_iterator;
+                    continue;
+                }
+                restrictions_iterator->restriction.to.node = to_id_iter->second;
+            }
+            ++restrictions_iterator;
+        }
+        TIMER_STOP(fix_restriction_ends);
+        log << "ok, after " << TIMER_SEC(fix_restriction_ends) << "s";
+    }
 }
 }
 }

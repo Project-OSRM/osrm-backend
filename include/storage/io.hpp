@@ -2,8 +2,9 @@
 #define OSRM_STORAGE_IO_HPP_
 
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/seek.hpp>
@@ -55,7 +56,7 @@ class FileReader
 
         if (flag == VerifyFingerprint && !ReadAndCheckFingerprint())
         {
-            throw util::exception("Fingerprint mismatch in " + filepath.string());
+            throw util::exception("Fingerprint mismatch in " + filepath_.string() + SOURCE_REF);
         }
     }
 
@@ -77,9 +78,9 @@ class FileReader
             if (result.eof())
             {
                 throw util::exception("Error reading from " + filepath.string() +
-                                      ": Unexpected end of file");
+                                      ": Unexpected end of file " + SOURCE_REF);
             }
-            throw util::exception("Error reading from " + filepath.string());
+            throw util::exception("Error reading from " + filepath.string() + " " + SOURCE_REF);
         }
     }
 

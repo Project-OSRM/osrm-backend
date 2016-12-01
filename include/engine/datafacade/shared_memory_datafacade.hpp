@@ -56,8 +56,7 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
 
             if (current_timestamp->timestamp == shared_timestamp)
             {
-                util::SimpleLogger().Write(logDEBUG) << "Retaining data with shared timestamp "
-                                                     << shared_timestamp;
+                util::Log(logDEBUG) << "Retaining data with shared timestamp " << shared_timestamp;
             }
             else
             {
@@ -74,8 +73,7 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
         : shared_barriers(shared_barriers_), layout_region(layout_region_),
           data_region(data_region_), shared_timestamp(shared_timestamp_)
     {
-        util::SimpleLogger().Write(logDEBUG) << "Loading new data with shared timestamp "
-                                             << shared_timestamp;
+        util::Log(logDEBUG) << "Loading new data with shared timestamp " << shared_timestamp;
 
         BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
         m_layout_memory = storage::makeSharedMemory(layout_region);

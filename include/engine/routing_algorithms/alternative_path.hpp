@@ -235,10 +235,10 @@ class AlternativeRouting final
             }
         }
 
-        // util::SimpleLogger().Write(logDEBUG) << "fwd_search_space size: " <<
+        // util::Log(logDEBUG) << "fwd_search_space size: " <<
         // forward_search_space.size() << ", marked " << approximated_forward_sharing.size() << "
         // nodes";
-        // util::SimpleLogger().Write(logDEBUG) << "rev_search_space size: " <<
+        // util::Log(logDEBUG) << "rev_search_space size: " <<
         // reverse_search_space.size() << ", marked " << approximated_reverse_sharing.size() << "
         // nodes";
 
@@ -601,7 +601,7 @@ class AlternativeRouting final
     //     //compute forward sharing
     //     while( (packed_alternate_path[aindex] == packed_shortest_path[aindex]) &&
     //     (packed_alternate_path[aindex+1] == packed_shortest_path[aindex+1]) ) {
-    //         //            util::SimpleLogger().Write() << "retrieving edge (" <<
+    //         //            util::Log() << "retrieving edge (" <<
     //         packed_alternate_path[aindex] << "," << packed_alternate_path[aindex+1] << ")";
     //         EdgeID edgeID = facade->FindEdgeInEitherDirection(packed_alternate_path[aindex],
     //         packed_alternate_path[aindex+1]);
@@ -640,7 +640,7 @@ class AlternativeRouting final
         const NodeID node = forward_heap.DeleteMin();
         const int weight = forward_heap.GetKey(node);
         // const NodeID parentnode = forward_heap.GetData(node).parent;
-        // util::SimpleLogger().Write() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled
+        // util::Log() << (is_forward_directed ? "[fwd] " : "[rev] ") << "settled
         // edge ("
         // << parentnode << "," << node << "), dist: " << weight;
 
@@ -665,11 +665,11 @@ class AlternativeRouting final
                 {
                     *middle_node = node;
                     *upper_bound_to_shortest_path_weight = new_weight;
-                    //     util::SimpleLogger().Write() << "accepted middle_node " << *middle_node
+                    //     util::Log() << "accepted middle_node " << *middle_node
                     //     << " at
                     //     weight " << new_weight;
                     // } else {
-                    //     util::SimpleLogger().Write() << "discarded middle_node " << *middle_node
+                    //     util::Log() << "discarded middle_node " << *middle_node
                     //     << "
                     //     at weight " << new_weight;
                 }

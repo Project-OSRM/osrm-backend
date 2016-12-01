@@ -6,7 +6,7 @@
 #include "server/http/request.hpp"
 
 #include "util/json_renderer.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/string_util.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
@@ -42,7 +42,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
     if (!service_handler)
     {
         current_reply = http::reply::stock_reply(http::reply::internal_server_error);
-        util::SimpleLogger().Write(logWARNING) << "No service handler registered." << std::endl;
+        util::Log(logWARNING) << "No service handler registered." << std::endl;
         return;
     }
 
@@ -52,7 +52,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         TIMER_START(request_duration);
         std::string request_string;
         util::URIDecode(current_request.uri, request_string);
-        util::SimpleLogger().Write(logDEBUG) << "req: " << request_string;
+        util::Log(logDEBUG) << "req: " << request_string;
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
@@ -125,7 +125,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         {
             // deactivated as GCC apparently does not implement that, not even in 4.9
             // std::time_t t = std::time(nullptr);
-            // util::SimpleLogger().Write() << std::put_time(std::localtime(&t), "%m-%d-%Y
+            // util::Log() << std::put_time(std::localtime(&t), "%m-%d-%Y
             // %H:%M:%S") <<
             //     " " << current_request.endpoint.to_string() << " " <<
             //     current_request.referrer << ( 0 == current_request.referrer.length() ? "- " :" ")
@@ -140,25 +140,26 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
             ltime = time(nullptr);
             time_stamp = localtime(&ltime);
             // log timestamp
-            util::SimpleLogger().Write()
-                << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
-                << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1) << "-"
-                << 1900 + time_stamp->tm_year << " " << (time_stamp->tm_hour < 10 ? "0" : "")
-                << time_stamp->tm_hour << ":" << (time_stamp->tm_min < 10 ? "0" : "")
-                << time_stamp->tm_min << ":" << (time_stamp->tm_sec < 10 ? "0" : "")
-                << time_stamp->tm_sec << " " << TIMER_MSEC(request_duration) << "ms "
-                << current_request.endpoint.to_string() << " " << current_request.referrer
-                << (0 == current_request.referrer.length() ? "- " : " ") << current_request.agent
-                << (0 == current_request.agent.length() ? "- " : " ") << current_reply.status
-                << " " //
-                << request_string;
+            util::Log() << (time_stamp->tm_mday < 10 ? "0" : "") << time_stamp->tm_mday << "-"
+                        << (time_stamp->tm_mon + 1 < 10 ? "0" : "") << (time_stamp->tm_mon + 1)
+                        << "-" << 1900 + time_stamp->tm_year << " "
+                        << (time_stamp->tm_hour < 10 ? "0" : "") << time_stamp->tm_hour << ":"
+                        << (time_stamp->tm_min < 10 ? "0" : "") << time_stamp->tm_min << ":"
+                        << (time_stamp->tm_sec < 10 ? "0" : "") << time_stamp->tm_sec << " "
+                        << TIMER_MSEC(request_duration) << "ms "
+                        << current_request.endpoint.to_string() << " " << current_request.referrer
+                        << (0 == current_request.referrer.length() ? "- " : " ")
+                        << current_request.agent
+                        << (0 == current_request.agent.length() ? "- " : " ")
+                        << current_reply.status << " " //
+                        << request_string;
         }
     }
     catch (const std::exception &e)
     {
         current_reply = http::reply::stock_reply(http::reply::internal_server_error);
-        util::SimpleLogger().Write(logWARNING) << "[server error] code: " << e.what()
-                                               << ", uri: " << current_request.uri;
+        util::Log(logWARNING) << "[server error] code: " << e.what()
+                              << ", uri: " << current_request.uri;
     }
 }
 }

@@ -8,7 +8,7 @@
 #include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -60,7 +60,7 @@ NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
                          std::vector<extractor::QueryNode> &node_array)
 {
     NodeID number_of_nodes = file_reader.ReadElementCount32();
-    SimpleLogger().Write() << "Importing number_of_nodes new = " << number_of_nodes << " nodes ";
+    Log() << "Importing number_of_nodes new = " << number_of_nodes << " nodes ";
 
     node_array.resize(number_of_nodes);
 
@@ -99,14 +99,14 @@ inline NodeID loadEdgesFromFile(storage::io::FileReader &file_reader,
     BOOST_ASSERT(sizeof(EdgeID) == sizeof(number_of_edges));
 
     edge_list.resize(number_of_edges);
-    SimpleLogger().Write() << " and " << number_of_edges << " edges ";
+    Log() << " and " << number_of_edges << " edges ";
 
     file_reader.ReadInto(edge_list.data(), number_of_edges);
 
     BOOST_ASSERT(edge_list.size() > 0);
 
 #ifndef NDEBUG
-    SimpleLogger().Write() << "Validating loaded edges...";
+    Log() << "Validating loaded edges...";
     tbb::parallel_sort(
         edge_list.begin(),
         edge_list.end(),
@@ -129,7 +129,7 @@ inline NodeID loadEdgesFromFile(storage::io::FileReader &file_reader,
     }
 #endif
 
-    SimpleLogger().Write() << "Graph loaded ok and has " << edge_list.size() << " edges";
+    Log() << "Graph loaded ok and has " << edge_list.size() << " edges";
 
     return number_of_edges;
 }

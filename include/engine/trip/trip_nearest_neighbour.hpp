@@ -2,7 +2,7 @@
 #define TRIP_NEAREST_NEIGHBOUR_HPP
 
 #include "util/dist_table_wrapper.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 
 #include "osrm/json_container.hpp"

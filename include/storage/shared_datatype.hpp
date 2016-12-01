@@ -2,7 +2,8 @@
 #define SHARED_DATA_TYPE_HPP
 
 #include "util/exception.hpp"
-#include "util/simple_logger.hpp"
+#include "util/exception_utils.hpp"
+#include "util/log.hpp"
 
 #include <array>
 #include <cstdint>
@@ -175,13 +176,13 @@ struct DataLayout
             bool end_canary_alive = std::equal(CANARY, CANARY + sizeof(CANARY), end_canary_ptr);
             if (!start_canary_alive)
             {
-                throw util::exception(std::string("Start canary of block corrupted. (") +
-                                      block_id_to_name[bid] + ")");
+                throw util::exception("Start canary of block corrupted. (" +
+                                      std::string(block_id_to_name[bid]) + ")" + SOURCE_REF);
             }
             if (!end_canary_alive)
             {
-                throw util::exception(std::string("End canary of block corrupted. (") +
-                                      block_id_to_name[bid] + ")");
+                throw util::exception("End canary of block corrupted. (" +
+                                      std::string(block_id_to_name[bid]) + ")" + SOURCE_REF);
             }
         }
 

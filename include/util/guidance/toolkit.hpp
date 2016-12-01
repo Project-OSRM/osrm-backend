@@ -11,8 +11,8 @@
 #include "util/attributes.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/log.hpp"
 #include "util/name_table.hpp"
-#include "util/simple_logger.hpp"
 
 #include <algorithm>
 #include <string>

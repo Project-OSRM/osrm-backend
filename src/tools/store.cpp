@@ -1,6 +1,6 @@
 #include "storage/storage.hpp"
 #include "util/exception.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 #include "util/version.hpp"
 
@@ -49,7 +49,7 @@ bool generateDataStoreOptions(const int argc,
     // print help options if no infile is specified
     if (argc < 2)
     {
-        util::SimpleLogger().Write() << visible_options;
+        util::Log() << visible_options;
         return false;
     }
 
@@ -66,19 +66,19 @@ bool generateDataStoreOptions(const int argc,
     }
     catch (const boost::program_options::error &e)
     {
-        util::SimpleLogger().Write(logWARNING) << "[error] " << e.what();
+        util::Log(logERROR) << e.what();
         return false;
     }
 
     if (option_variables.count("version"))
     {
-        util::SimpleLogger().Write() << OSRM_VERSION;
+        util::Log() << OSRM_VERSION;
         return false;
     }
 
     if (option_variables.count("help"))
     {
-        util::SimpleLogger().Write() << visible_options;
+        util::Log() << visible_options;
         return false;
     }
 
@@ -100,7 +100,7 @@ int main(const int argc, const char *argv[]) try
     storage::StorageConfig config(base_path);
     if (!config.IsValid())
     {
-        util::SimpleLogger().Write(logWARNING) << "Config contains invalid file paths. Exiting!";
+        util::Log(logERROR) << "Config contains invalid file paths. Exiting!";
         return EXIT_FAILURE;
     }
     storage::Storage storage(std::move(config));
@@ -115,8 +115,8 @@ int main(const int argc, const char *argv[]) try
     {
         if (retry_counter > 0)
         {
-            util::SimpleLogger().Write(logWARNING) << "Try number " << (retry_counter + 1)
-                                                   << " to load the dataset.";
+            util::Log(logWARNING) << "Try number " << (retry_counter + 1)
+                                  << " to load the dataset.";
         }
         code = storage.Run(max_wait);
         retry_counter++;
@@ -131,9 +131,8 @@ int main(const int argc, const char *argv[]) try
 }
 catch (const std::bad_alloc &e)
 {
-    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    util::SimpleLogger().Write(logWARNING)
-        << "Please provide more memory or disable locking the virtual "
-           "address space (note: this makes OSRM swap, i.e. slow)";
+    util::Log(logERROR) << "[exception] " << e.what();
+    util::Log(logERROR) << "Please provide more memory or disable locking the virtual "
+                           "address space (note: this makes OSRM swap, i.e. slow)";
     return EXIT_FAILURE;
 }

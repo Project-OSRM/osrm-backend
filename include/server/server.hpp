@@ -6,7 +6,7 @@
 #include "server/service_handler.hpp"
 
 #include "util/integer_range.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -36,8 +36,7 @@ class Server
     static std::shared_ptr<Server>
     CreateServer(std::string &ip_address, int ip_port, unsigned requested_num_threads)
     {
-        util::SimpleLogger().Write() << "http 1.1 compression handled by zlib version "
-                                     << zlibVersion();
+        util::Log() << "http 1.1 compression handled by zlib version " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
         return std::make_shared<Server>(ip_address, ip_port, real_num_threads);
@@ -62,7 +61,7 @@ class Server
         acceptor.bind(endpoint);
         acceptor.listen();
 
-        util::SimpleLogger().Write() << "Listening on: " << acceptor.local_endpoint();
+        util::Log() << "Listening on: " << acceptor.local_endpoint();
 
         acceptor.async_accept(
             new_connection->socket(),

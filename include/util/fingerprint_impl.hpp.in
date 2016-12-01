@@ -1,4 +1,5 @@
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 
 #include <boost/uuid/name_generator.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -57,7 +58,7 @@ bool FingerPrint::TestGraphUtil(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw exception("hsgr input file misses magic number. Check or reprocess the file");
+        throw exception(std::string("hsgr input file misses magic number. Check or reprocess the file") + SOURCE_REF);
     }
     return std::equal(md5_graph, md5_graph + 32, other.md5_graph);
 }
@@ -66,7 +67,7 @@ bool FingerPrint::TestContractor(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw exception("osrm input file misses magic number. Check or reprocess the file");
+        throw exception(std::string("osrm input file misses magic number. Check or reprocess the file") + SOURCE_REF);
     }
     return std::equal(md5_prepare, md5_prepare + 32, other.md5_prepare);
 }
@@ -75,7 +76,7 @@ bool FingerPrint::TestRTree(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw exception("r-tree input file misses magic number. Check or reprocess the file");
+        throw exception(std::string("r-tree input file misses magic number. Check or reprocess the file") + SOURCE_REF);
     }
     return std::equal(md5_tree, md5_tree + 32, other.md5_tree);
 }
@@ -84,7 +85,7 @@ bool FingerPrint::TestQueryObjects(const FingerPrint &other) const
 {
     if (!IsMagicNumberOK(other))
     {
-        throw exception("missing magic number. Check or reprocess the file");
+        throw exception(std::string("missing magic number. Check or reprocess the file") + SOURCE_REF);
     }
     return std::equal(md5_objects, md5_objects + 32, other.md5_objects);
 }

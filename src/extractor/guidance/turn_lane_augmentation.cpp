@@ -1,6 +1,6 @@
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -104,7 +104,7 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
             }
         }
         // this should, theoretically, never be reached
-        util::SimpleLogger().Write(logWARNING) << "Failed lane assignment. Reached bad situation.";
+        util::Log(logWARNING) << "Failed lane assignment. Reached bad situation.";
         return std::make_pair(std::size_t{0}, std::size_t{0});
     }();
     for (auto intersection_index = range.first; intersection_index < range.second;

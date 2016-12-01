@@ -8,7 +8,7 @@
 #include "util/typedefs.hpp"
 
 #include "util/integer_range.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/std_hash.hpp"
 #include "util/timing_util.hpp"
 
@@ -146,8 +146,8 @@ template <typename GraphT> class TarjanSCC
 
                         if (size_of_current_component > 1000)
                         {
-                            util::SimpleLogger().Write() << "large component [" << component_index
-                                                         << "]=" << size_of_current_component;
+                            util::Log() << "large component [" << component_index
+                                        << "]=" << size_of_current_component;
                         }
 
                         ++component_index;
@@ -158,7 +158,7 @@ template <typename GraphT> class TarjanSCC
         }
 
         TIMER_STOP(SCC_RUN);
-        util::SimpleLogger().Write() << "SCC run took: " << TIMER_MSEC(SCC_RUN) / 1000. << "s";
+        util::Log() << "SCC run took: " << TIMER_MSEC(SCC_RUN) / 1000. << "s";
 
         size_one_counter = std::count_if(component_size_vector.begin(),
                                          component_size_vector.end(),

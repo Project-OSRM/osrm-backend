@@ -1,12 +1,12 @@
 #include "storage/shared_barriers.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <iostream>
 
 int main()
 {
     osrm::util::LogPolicy::GetInstance().Unmute();
-    osrm::util::SimpleLogger().Write() << "Releasing all locks";
+    osrm::util::Log() << "Releasing all locks";
 
     osrm::storage::SharedBarriers::resetCurrentRegions();
     osrm::storage::SharedBarriers::resetRegions1();

@@ -7,7 +7,7 @@
 #include "engine/datafacade/shared_memory_datafacade.hpp"
 
 #include "storage/shared_barriers.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/interprocess/sync/named_condition.hpp>
@@ -68,7 +68,9 @@ Engine::Engine(const EngineConfig &config)
         if (!DataWatchdog::TryConnect())
         {
             throw util::exception(
-                "No shared memory blocks found, have you forgotten to run osrm-datastore?");
+                std::string(
+                    "No shared memory blocks found, have you forgotten to run osrm-datastore?") +
+                SOURCE_REF);
         }
 
         watchdog = std::make_unique<DataWatchdog>();
@@ -78,7 +80,7 @@ Engine::Engine(const EngineConfig &config)
     {
         if (!config.storage_config.IsValid())
         {
-            throw util::exception("Invalid file paths given!");
+            throw util::exception("Invalid file paths given!" + SOURCE_REF);
         }
         immutable_data_facade =
             std::make_shared<datafacade::ProcessMemoryDataFacade>(config.storage_config);

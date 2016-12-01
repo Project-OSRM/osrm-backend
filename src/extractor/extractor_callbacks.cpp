@@ -8,7 +8,7 @@
 
 #include "util/for_each_pair.hpp"
 #include "util/guidance/turn_lanes.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/optional/optional.hpp>
@@ -62,7 +62,7 @@ void ExtractorCallbacks::ProcessRestriction(
     if (restriction)
     {
         external_memory.restrictions_list.push_back(restriction.get());
-        // util::SimpleLogger().Write() << "from: " << restriction.get().restriction.from.node <<
+        // util::Log() << "from: " << restriction.get().restriction.from.node <<
         //                           ",via: " << restriction.get().restriction.via.node <<
         //                           ", to: " << restriction.get().restriction.to.node <<
         //                           ", only: " << (restriction.get().restriction.flags.is_only ?
@@ -96,8 +96,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     if (std::numeric_limits<decltype(input_way.id())>::max() == input_way.id())
     {
-        util::SimpleLogger().Write(logDEBUG) << "found bogus way with id: " << input_way.id()
-                                             << " of size " << input_way.nodes().size();
+        util::Log(logDEBUG) << "found bogus way with id: " << input_way.id() << " of size "
+                            << input_way.nodes().size();
         return;
     }
 
@@ -135,8 +135,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (forward_weight_data.type == InternalExtractorEdge::WeightType::INVALID &&
         backward_weight_data.type == InternalExtractorEdge::WeightType::INVALID)
     {
-        util::SimpleLogger().Write(logDEBUG) << "found way with bogus speed, id: "
-                                             << input_way.id();
+        util::Log(logDEBUG) << "found way with bogus speed, id: " << input_way.id();
         return;
     }
 
@@ -196,8 +195,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                 if (translated_mask == TurnLaneType::empty)
                 {
                     // if we have unsupported tags, don't handle them
-                    util::SimpleLogger().Write(logDEBUG) << "Unsupported lane tag found: \""
-                                                         << *token_itr << "\"";
+                    util::Log(logDEBUG) << "Unsupported lane tag found: \"" << *token_itr << "\"";
                     return {};
                 }
 
