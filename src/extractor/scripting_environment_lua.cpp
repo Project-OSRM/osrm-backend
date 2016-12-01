@@ -306,6 +306,20 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     context.has_node_function = node_function.valid();
     context.has_way_function = way_function.valid();
     context.has_segment_function = segment_function.valid();
+    auto maybe_version = context.state.get<sol::optional<int>>("api_version");
+    if (maybe_version)
+     {
+         context.api_version = *maybe_version;
+     }
+
+    if (context.api_version < SUPPORTED_MIN_API_VERSION ||
+        context.api_version > SUPPORTED_MAX_API_VERSION )
+    {
+        throw util::exception("Invalid profile API version " + std::to_string(context.api_version) +
+                              " only versions from " + std::to_string(SUPPORTED_MIN_API_VERSION) +
+                              " to " + std::to_string(SUPPORTED_MAX_API_VERSION) +
+                              " are supported." + SOURCE_REF);
+    }
 }
 
 const ProfileProperties &Sol2ScriptingEnvironment::GetProfileProperties()

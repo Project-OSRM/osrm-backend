@@ -1,3 +1,4 @@
+api_version = 0
 -- Testbot profile
 
 -- Moves at fixed, well-known speeds, practical for testing speed and travel times:
