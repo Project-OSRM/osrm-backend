@@ -1,3 +1,5 @@
+api_version = 0
+
 -- Car profile
 local find_access_tag = require("lib/access").find_access_tag
 local get_destination = require("lib/destination").get_destination

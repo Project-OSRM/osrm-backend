@@ -1,3 +1,5 @@
+api_version = 0
+
 -- Bicycle profile
 
 local find_access_tag = require("lib/access").find_access_tag
