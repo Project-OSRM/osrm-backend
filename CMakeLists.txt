@@ -192,17 +192,8 @@ endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
   message(STATUS "Configuring release mode optimizations")
-  # clang requires -flto in linker flags as well as cxxflags
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-    # skip check_cxx_compiler_flag since we know it works
-    # bug causes cmake to ignore LINKER_FLAGS, so we use ENV['LDFLAGS']
-    # https://cmake.org/Bug/view.php?id=15264
-    set(OLD_LDFLAGS_ENV ENV{LDFLAGS})
-    set(ENV{LDFLAGS} "$ENV{LDFLAGS} -flto")
-  endif()
-
   # Check if LTO is available
-  check_cxx_compiler_flag("-flto" LTO_AVAILABLE)
+  check_cxx_compiler_flag("-Wl,-flto" LTO_AVAILABLE)
 
   if(ENABLE_LTO AND LTO_AVAILABLE)
     set(OLD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
@@ -219,36 +210,53 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
     if(LTO_WORKS)
       message(STATUS "LTO working")
       set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -flto")
-      if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-        set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -flto")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
-        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flto")
-      endif()
+      set(OSRM_LDFLAGS "${OSRM_LDFLAGS} -flto")
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
+      set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -flto")
     else()
       message(STATUS "LTO broken")
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
+      set(ENABLE_LTO Off)
     endif()
 
     # Since gcc 4.9 the LTO format is non-standart ('slim'), so we need to use the build-in tools
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
         NOT "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0" AND NOT MINGW)
-      message(STATUS "Using gcc specific binutils for LTO.")
-      set(CMAKE_AR     "/usr/bin/gcc-ar")
-      set(CMAKE_RANLIB "/usr/bin/gcc-ranlib")
+      find_program(GCC_AR gcc-ar)
+      find_program(GCC_RANLIB gcc-ranlib)
+      if ("${GCC_AR}" STREQUAL "GCC_AR-NOTFOUND" OR "${GCC_RANLIB}" STREQUAL "GCC_RANLIB-NOTFOUND")
+        message(WARNING "GCC specific binutils not found.")
+      else()
+        message(STATUS "Using GCC specific binutils for LTO:")
+        message(STATUS " ${GCC_AR}")
+        message(STATUS " ${GCC_RANLIB}")
+        set(CMAKE_AR ${GCC_AR})
+        set(CMAKE_RANLIB ${GCC_RANLIB})
+      endif()
+    endif()
+
+    # Same for clang LTO requires their own toolchain
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+      find_program(LLVM_AR llvm-ar)
+      find_program(LLVM_RANLIB llvm-ranlib)
+      if ("${LLVM_AR}" STREQUAL "LLVM_AR-NOTFOUND" OR "${LLVM_RANLIB}" STREQUAL "LLVM_RANLIB-NOTFOUND")
+        message(WARNING "LLVM specific binutils not found.")
+      else()
+        message(STATUS "Using LLVM specific binutils for LTO:")
+        message(STATUS " ${LLVM_AR}")
+        message(STATUS " ${LLVM_RANLIB}")
+        set(CMAKE_AR ${LLVM_AR})
+        set(CMAKE_RANLIB ${LLVM_RANLIB})
+      endif()
     endif()
 
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND "${CMAKE_CXX_COMPILER_VERSION}" VERSION_LESS "4.9.0")
       message(STATUS "Disabling LTO on GCC < 4.9.0 since it is broken, see: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57038")
       set(CMAKE_CXX_FLAGS "${OLD_CXX_FLAGS}")
+      set(ENABLE_LTO Off)
     endif()
   endif()
-
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND NOT LTO_AVAILABLE OR NOT LTO_WORKS)
-    # restore the original, unmodified linker flags
-    set(ENV{LDFLAGS} "${OLD_LDFLAGS_ENV}")
-  endif()
-
 endif()
 
 if(UNIX AND NOT APPLE AND ENABLE_MASON AND (LTO_WORKS OR ENABLE_GOLD_LINKER))
