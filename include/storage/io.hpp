@@ -8,7 +8,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/seek.hpp>
 
-#include <cerrno>
 #include <cstring>
 #include <tuple>
 #include <type_traits>
@@ -23,7 +22,7 @@ namespace io
 class FileReader
 {
   private:
-    const std::string filename;
+    const boost::filesystem::path filepath;
     boost::filesystem::ifstream input_stream;
 
   public:
@@ -47,16 +46,16 @@ class FileReader
     {
     }
 
-    FileReader(const boost::filesystem::path &filename_, const FingerprintFlag flag)
-        : filename(filename_.string())
+    FileReader(const boost::filesystem::path &filepath_, const FingerprintFlag flag)
+        : filepath(filepath_)
     {
-        input_stream.open(filename_, std::ios::binary);
+        input_stream.open(filepath, std::ios::binary);
         if (!input_stream)
-            throw util::exception("Error opening " + filename + ":" + std::strerror(errno));
+            throw util::exception("Error opening " + filepath.string());
 
         if (flag == VerifyFingerprint && !ReadAndCheckFingerprint())
         {
-            throw util::exception("Fingerprint mismatch in " + filename);
+            throw util::exception("Fingerprint mismatch in " + filepath.string());
         }
     }
 
@@ -77,10 +76,10 @@ class FileReader
         {
             if (result.eof())
             {
-                throw util::exception("Error reading from " + filename +
+                throw util::exception("Error reading from " + filepath.string() +
                                       ": Unexpected end of file");
             }
-            throw util::exception("Error reading from " + filename + ": " + std::strerror(errno));
+            throw util::exception("Error reading from " + filepath.string());
         }
     }
 
@@ -168,6 +167,78 @@ class FileReader
                 throw;
         }
         return thisline;
+    }
+};
+
+class FileWriter
+{
+  private:
+    const boost::filesystem::path filepath;
+    boost::filesystem::ofstream output_stream;
+
+  public:
+    enum FingerprintFlag
+    {
+        GenerateFingerprint,
+        HasNoFingerprint
+    };
+
+    FileWriter(const std::string &filename, const FingerprintFlag flag)
+        : FileWriter(boost::filesystem::path(filename), flag)
+    {
+    }
+
+    FileWriter(const boost::filesystem::path &filepath_, const FingerprintFlag flag)
+        : filepath(filepath_)
+    {
+        output_stream.open(filepath, std::ios::binary);
+        if (!output_stream)
+            throw util::exception("Error opening " + filepath.string());
+
+        if (flag == GenerateFingerprint)
+        {
+            WriteFingerprint();
+        }
+    }
+
+    /* Write count objects of type T from pointer src to output stream */
+    template <typename T> bool WriteFrom(T *src, const std::size_t count)
+    {
+#if not defined __GNUC__ or __GNUC__ > 4
+        static_assert(std::is_trivially_copyable<T>::value,
+                      "bytewise writing requires trivially copyable type");
+#endif
+
+        if (count == 0)
+            return true;
+
+        const auto &result = output_stream.write(reinterpret_cast<char *>(src), count * sizeof(T));
+        if (!result)
+        {
+            throw util::exception("Error writing to " + filepath.string());
+        }
+
+        return static_cast<bool>(output_stream);
+    }
+
+    template <typename T> bool WriteFrom(T &target) { return WriteFrom(&target, 1); }
+
+    template <typename T> bool WriteOne(T tmp) { return WriteFrom(tmp); }
+
+    bool WriteElementCount32(const std::uint32_t count) { return WriteOne<std::uint32_t>(count); }
+    bool WriteElementCount64(const std::uint64_t count) { return WriteOne<std::uint64_t>(count); }
+
+    template <typename T> bool SerializeVector(std::vector<T> &data)
+    {
+        const auto count = data.size();
+        WriteElementCount64(count);
+        return WriteFrom(data.data(), count);
+    }
+
+    bool WriteFingerprint()
+    {
+        const auto fingerprint = util::FingerPrint::GetValid();
+        return WriteOne(fingerprint);
     }
 };
 }
