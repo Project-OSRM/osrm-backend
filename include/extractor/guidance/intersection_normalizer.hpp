@@ -57,16 +57,17 @@ class IntersectionNormalizer
 
     const IntersectionGenerator &intersection_generator;
 
-    // check if two indices in an intersection can be seen as a single road in the perceived
-    // intersection representation. See below for an example. Utility function for
-    // MergeSegregatedRoads. It also checks for neighboring merges.
-    // This is due possible segments where multiple roads could end up being merged into one.
-    // We only support merging two roads, not three or more, though.
-    //       c                                  c
-    //      /                                  /
-    // a - b     -> a - b - (c,d) but not a - b d   -> a,b,(cde)
-    //      \                                  \
-    //       d                                  e
+    /* check if two indices in an intersection can be seen as a single road in the perceived
+     * intersection representation. See below for an example. Utility function for
+     * MergeSegregatedRoads. It also checks for neighboring merges.
+     * This is due possible segments where multiple roads could end up being merged into one.
+     * We only support merging two roads, not three or more, though.
+     *        c                                  c
+     *       /                                  /
+     *  a - b     -> a - b - (c,d) but not a - b d   -> a,b,(cde)
+     *       \                                  \
+     *       d                                  e
+     */
     bool CanMerge(const NodeID intersection_node,
                   const IntersectionShape &intersection,
                   std::size_t first_index,
