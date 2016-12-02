@@ -9,7 +9,6 @@
 
 #include "util/attributes.hpp"
 #include "util/coordinate.hpp"
-#include "util/coordinate_calculation.hpp"
 #include "util/node_based_graph.hpp"
 
 namespace osrm

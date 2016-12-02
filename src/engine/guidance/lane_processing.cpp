@@ -1,10 +1,8 @@
 #include "util/for_each_pair.hpp"
 #include "util/group_by.hpp"
-#include "util/guidance/toolkit.hpp"
 
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
-#include "engine/guidance/toolkit.hpp"
 
 #include <iterator>
 #include <unordered_set>
@@ -14,8 +12,8 @@ using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
 namespace TurnType = osrm::extractor::guidance::TurnType;
 namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
 
-using osrm::util::guidance::isLeftTurn;
-using osrm::util::guidance::isRightTurn;
+using osrm::extractor::guidance::isLeftTurn;
+using osrm::extractor::guidance::isRightTurn;
 
 namespace osrm
 {
@@ -80,8 +78,8 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // where lanes in the turn fan in but for example the overall lanes at that location
             // fan out, we would have to know the asymmetric mapping of lanes. This is currently
             // not possible at the moment. In the following we implement a heuristic instead.
-            const LaneID current_num_lanes_right_of_turn = numLanesToTheRight(current);
-            const LaneID current_num_lanes_left_of_turn = numLanesToTheLeft(current);
+            const LaneID current_num_lanes_right_of_turn = current.numLanesToTheRight();
+            const LaneID current_num_lanes_left_of_turn = current.numLanesToTheLeft();
 
             const LaneID num_shared_lanes = std::min(current_lanes.lanes_in_turn,   //
                                                      previous_lanes.lanes_in_turn); //

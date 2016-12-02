@@ -3,7 +3,6 @@
 
 #include "util/dist_table_wrapper.hpp"
 #include "util/typedefs.hpp"
-#include "util/typedefs.hpp"
 
 #include "osrm/json_container.hpp"
 #include <boost/assert.hpp>

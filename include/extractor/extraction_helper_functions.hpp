@@ -12,7 +12,7 @@
 #include <limits>
 #include <string>
 
-#include "extractor/guidance/toolkit.hpp"
+#include "extractor/guidance/parsing_toolkit.hpp"
 
 namespace osrm
 {
@@ -109,13 +109,13 @@ inline unsigned parseDuration(const std::string &s)
 inline std::string
 trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t count_right)
 {
-    return extractor::guidance::trimLaneString(std::move(lane_string), count_left, count_right);
+    return guidance::trimLaneString(std::move(lane_string), count_left, count_right);
 }
 
 inline std::string applyAccessTokens(const std::string &lane_string,
                                      const std::string &access_tokens)
 {
-    return extractor::guidance::applyAccessTokens(lane_string, access_tokens);
+    return guidance::applyAccessTokens(lane_string, access_tokens);
 }
 
 // Takes a string representing a list separated by delim and canonicalizes containing spaces.

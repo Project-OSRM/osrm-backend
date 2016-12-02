@@ -1,10 +1,8 @@
 #include "extractor/guidance/turn_classification.hpp"
 
-#include "util/log.hpp"
-
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <iomanip>
 
 namespace osrm
 {

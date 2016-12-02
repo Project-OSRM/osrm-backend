@@ -11,9 +11,10 @@
 #include "util/guidance/turn_lanes.hpp"
 
 #include <cstddef>
-
 #include <string>
 #include <vector>
+
+#include <boost/range/iterator_range.hpp>
 
 namespace osrm
 {
@@ -71,6 +72,33 @@ struct RouteStep
     std::size_t geometry_begin;
     std::size_t geometry_end;
     std::vector<Intersection> intersections;
+
+    LaneID numLanesToTheRight() const
+    {
+        return intersections.front().lanes.first_lane_from_the_right;
+    }
+
+    LaneID numLanesToTheLeft() const
+    {
+        LaneID const total = intersections.front().lane_description.size();
+        return total - (intersections.front().lanes.lanes_in_turn +
+                        intersections.front().lanes.first_lane_from_the_right);
+    }
+
+    auto lanesToTheLeft() const
+    {
+        const auto &description = intersections.front().lane_description;
+        LaneID num_lanes_left = numLanesToTheLeft();
+        return boost::make_iterator_range(description.begin(),
+                                          description.begin() + num_lanes_left);
+    }
+
+    auto lanesToTheRight() const
+    {
+        const auto &description = intersections.front().lane_description;
+        LaneID num_lanes_right = numLanesToTheRight();
+        return boost::make_iterator_range(description.end() - num_lanes_right, description.end());
+    }
 };
 
 inline RouteStep getInvalidRouteStep()

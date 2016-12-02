@@ -10,7 +10,6 @@
 #include "util/percent.hpp"
 #include "util/timing_util.hpp"
 
-#include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/scripting_environment.hpp"
@@ -354,7 +353,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          street_name_suffix_table,
                                          profile_properties);
 
-    guidance::LaneDataIdMap lane_data_map;
+    util::guidance::LaneDataIdMap lane_data_map;
     guidance::lanes::TurnLaneHandler turn_lane_handler(*m_node_based_graph,
                                                        turn_lane_offsets,
                                                        turn_lane_masks,

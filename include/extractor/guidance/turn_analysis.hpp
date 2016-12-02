@@ -8,7 +8,6 @@
 #include "extractor/guidance/motorway_handler.hpp"
 #include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/sliproad_handler.hpp"
-#include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_classification.hpp"
 #include "extractor/guidance/turn_handler.hpp"
 #include "extractor/query_node.hpp"

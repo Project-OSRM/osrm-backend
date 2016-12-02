@@ -1,17 +1,19 @@
 #include "extractor/guidance/roundabout_handler.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/toolkit.hpp"
 
+#include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/guidance/toolkit.hpp"
 #include "util/log.hpp"
+#include "util/guidance/name_announcements.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
+#include <utility>
 
 #include <boost/assert.hpp>
 
-using osrm::util::guidance::getTurnDirection;
+using osrm::extractor::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -182,12 +184,23 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
                 // there is a single non-roundabout edge
                 const auto src_coordinate = getCoordinate(node);
 
-                const auto next_coordinate = coordinate_extractor.GetCoordinateAlongRoad(
-                    node,
-                    edge,
-                    edge_data.reversed,
-                    node_based_graph.GetTarget(edge),
-                    getLaneCountAtIntersection(node, node_based_graph));
+                const auto edge_range = node_based_graph.GetAdjacentEdgeRange(node);
+                const auto number_of_lanes_at_intersection = std::accumulate(
+                    edge_range.begin(),
+                    edge_range.end(),
+                    std::uint8_t{0},
+                    [this](const auto current_max, const auto current_eid) {
+                        return std::max(current_max,
+                                        node_based_graph.GetEdgeData(current_eid)
+                                            .road_classification.GetNumberOfLanes());
+                    });
+
+                const auto next_coordinate =
+                    coordinate_extractor.GetCoordinateAlongRoad(node,
+                                                                edge,
+                                                                false,
+                                                                node_based_graph.GetTarget(edge),
+                                                                number_of_lanes_at_intersection);
 
                 result.push_back(
                     util::coordinate_calculation::bearing(src_coordinate, next_coordinate));

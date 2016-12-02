@@ -2,15 +2,12 @@
 #define OSRM_EXTRACTOR_GUIDANCE_TURN_LANE_MATCHER_HPP_
 
 #include "extractor/guidance/intersection.hpp"
-#include "extractor/guidance/toolkit.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_data.hpp"
 
 #include "util/attributes.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/node_based_graph.hpp"
-
-#include <unordered_map>
 
 namespace osrm
 {
@@ -47,7 +44,7 @@ Intersection triviallyMatchLanesToTurns(Intersection intersection,
                                         const LaneDataVector &lane_data,
                                         const util::NodeBasedDynamicGraph &node_based_graph,
                                         const LaneDescriptionID lane_string_id,
-                                        LaneDataIdMap &lane_data_to_id);
+                                        util::guidance::LaneDataIdMap &lane_data_to_id);
 
 } // namespace lanes
 } // namespace guidance

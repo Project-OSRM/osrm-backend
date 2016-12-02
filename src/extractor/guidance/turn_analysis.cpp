@@ -4,19 +4,13 @@
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/guidance/toolkit.hpp"
-#include "util/log.hpp"
 
 #include <cstddef>
-#include <iomanip>
-#include <iterator>
-#include <limits>
-#include <map>
 #include <set>
-#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
-using osrm::util::guidance::getTurnDirection;
+using osrm::extractor::guidance::getTurnDirection;
 
 namespace osrm
 {

@@ -15,7 +15,6 @@
 #include "util/typedefs.hpp"
 
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace osrm
