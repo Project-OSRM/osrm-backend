@@ -55,7 +55,7 @@ double GetOffsetCorrectionFactor(const RoadClassification &road_classification)
     default:
         return 1.0;
     };
-};
+}
 }
 
 CoordinateExtractor::CoordinateExtractor(

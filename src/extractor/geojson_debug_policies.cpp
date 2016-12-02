@@ -14,7 +14,9 @@ IntersectionPrinter::IntersectionPrinter(
     const std::vector<extractor::QueryNode> &node_coordinates,
     const extractor::guidance::CoordinateExtractor &coordinate_extractor)
     : node_based_graph(node_based_graph), node_coordinates(node_coordinates),
-      coordinate_extractor(coordinate_extractor){};
+      coordinate_extractor(coordinate_extractor)
+{
+}
 
 util::json::Array IntersectionPrinter::
 operator()(const NodeID intersection_node,

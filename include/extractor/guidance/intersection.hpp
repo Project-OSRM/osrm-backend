@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_GUIDANCE_INTERSECTION_HPP_
 
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "extractor/guidance/turn_instruction.hpp"
@@ -27,11 +28,19 @@ struct IntersectionShapeData
 
 inline auto makeCompareShapeDataByBearing(const double base_bearing)
 {
-    return [base_bearing](const IntersectionShapeData &lhs, const IntersectionShapeData &rhs) {
+    return [base_bearing](const auto &lhs, const auto &rhs) {
         return util::bearing::angleBetweenBearings(base_bearing, lhs.bearing) <
                util::bearing::angleBetweenBearings(base_bearing, rhs.bearing);
     };
-};
+}
+
+inline auto makeCompareAngularDeviation(const double angle)
+{
+    return [angle](const auto &lhs, const auto &rhs) {
+        return util::guidance::angularDeviation(lhs.angle, angle) <
+               util::guidance::angularDeviation(rhs.angle, angle);
+    };
+}
 
 // When viewing an intersection from an incoming edge, we can transform a shape into a view which
 // gives additional information on angles and whether a turn is allowed
@@ -98,7 +107,25 @@ std::string toString(const ConnectedRoad &road);
 
 using IntersectionShape = std::vector<IntersectionShapeData>;
 
-struct IntersectionView final : std::vector<IntersectionViewData>
+// Common operations shared among IntersectionView and Intersections.
+// Inherit to enable those operations on your compatible type. CRTP pattern.
+template <typename Self> struct EnableIntersectionOps
+{
+    // Find the turn whose angle offers the least angular deviation to the specified angle
+    // For turn angles [0, 90, 260] and a query of 180 we return the 260 degree turn.
+    auto findClosestTurn(double angle) const
+    {
+        auto comp = makeCompareAngularDeviation(angle);
+        return std::min_element(self()->begin(), self()->end(), comp);
+    }
+
+  private:
+    auto self() { return static_cast<Self *>(this); }
+    auto self() const { return static_cast<const Self *>(this); }
+};
+
+struct IntersectionView final : std::vector<IntersectionViewData>,      //
+                                EnableIntersectionOps<IntersectionView> //
 {
     using Base = std::vector<IntersectionViewData>;
 
@@ -106,21 +133,12 @@ struct IntersectionView final : std::vector<IntersectionViewData>
     {
         return std::is_sorted(begin(), end(), std::mem_fn(&IntersectionViewData::CompareByAngle));
     };
-
-    Base::iterator findClosestTurn(double angle);
-    Base::const_iterator findClosestTurn(double angle) const;
 };
 
-struct Intersection final : std::vector<ConnectedRoad>
+struct Intersection final : std::vector<ConnectedRoad>,         //
+                            EnableIntersectionOps<Intersection> //
 {
     using Base = std::vector<ConnectedRoad>;
-    /*
-     * find the turn whose angle offers the least angularDeviation to the specified angle
-     * E.g. for turn angles [0,90,260] and a query of 180 we return the 260 degree turn (difference
-     * 80 over the difference of 90 to the 90 degree turn)
-     */
-    Base::iterator findClosestTurn(double angle);
-    Base::const_iterator findClosestTurn(double angle) const;
 
     /*
      * Check validity of the intersection object. We assume a few basic properties every set of
@@ -133,9 +151,6 @@ struct Intersection final : std::vector<ConnectedRoad>
     // is used, for example, during generation of intersections.
     std::uint8_t getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &) const;
 };
-
-Intersection::const_iterator findClosestTurn(const Intersection &intersection, const double angle);
-Intersection::iterator findClosestTurn(Intersection &intersection, const double angle);
 
 } // namespace guidance
 } // namespace extractor

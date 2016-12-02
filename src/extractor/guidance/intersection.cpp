@@ -70,39 +70,6 @@ std::string toString(const ConnectedRoad &road)
     return result;
 }
 
-IntersectionView::Base::iterator IntersectionView::findClosestTurn(double angle)
-{
-    // use the const operator to avoid code duplication
-    return begin() +
-           std::distance(cbegin(),
-                         static_cast<const IntersectionView *>(this)->findClosestTurn(angle));
-}
-
-IntersectionView::Base::const_iterator IntersectionView::findClosestTurn(double angle) const
-{
-    return std::min_element(
-        begin(), end(), [angle](const IntersectionViewData &lhs, const IntersectionViewData &rhs) {
-            return util::guidance::angularDeviation(lhs.angle, angle) <
-                   util::guidance::angularDeviation(rhs.angle, angle);
-        });
-}
-
-Intersection::Base::iterator Intersection::findClosestTurn(double angle)
-{
-    // use the const operator to avoid code duplication
-    return begin() +
-           std::distance(cbegin(), static_cast<const Intersection *>(this)->findClosestTurn(angle));
-}
-
-Intersection::Base::const_iterator Intersection::findClosestTurn(double angle) const
-{
-    return std::min_element(
-        begin(), end(), [angle](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
-            return util::guidance::angularDeviation(lhs.angle, angle) <
-                   util::guidance::angularDeviation(rhs.angle, angle);
-        });
-}
-
 bool Intersection::valid() const
 {
     return !empty() &&
