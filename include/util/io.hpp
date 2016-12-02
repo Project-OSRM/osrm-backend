@@ -54,7 +54,8 @@ template <typename simple_type>
 bool serializeVectorIntoAdjacencyArray(const std::string &filename,
                                        const std::vector<std::vector<simple_type>> &data)
 {
-    std::ofstream out_stream(filename, std::ios::binary);
+    storage::io::FileWriter file(filename, storage::io::FileWriter::HasNoFingerprint);
+
     std::vector<std::uint32_t> offsets;
     offsets.reserve(data.size() + 1);
     std::uint64_t current_offset = 0;
@@ -64,18 +65,23 @@ bool serializeVectorIntoAdjacencyArray(const std::string &filename,
         current_offset += vec.size();
         offsets.push_back(boost::numeric_cast<std::uint32_t>(current_offset));
     }
-    if (!serializeVector(out_stream, offsets))
-        return false;
 
     std::vector<simple_type> all_data;
     all_data.reserve(offsets.back());
     for (auto const &vec : data)
         all_data.insert(all_data.end(), vec.begin(), vec.end());
 
-    if (!serializeVector(out_stream, all_data))
+    if (!file.SerializeVector(offsets))
+    {
         return false;
+    }
 
-    return static_cast<bool>(out_stream);
+    if (!file.SerializeVector(all_data))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 template <typename simple_type, std::size_t WRITE_BLOCK_BUFFER_SIZE = 1024>

@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(io_nonexistent_file)
     {
         std::cout << e.what() << std::endl;
         BOOST_REQUIRE(std::string(e.what()) ==
-                      "Error opening non_existent_test_io.tmp:No such file or directory");
+                      "Error opening non_existent_test_io.tmp");
     }
 }
 
