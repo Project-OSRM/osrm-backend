@@ -16,7 +16,7 @@ namespace osrm
 {
 namespace extractor
 {
-
+class ScriptingEnvironment;
 /**
  * Uses external memory containers from stxxl to store all the data that
  * is collected by the extractor callbacks.
@@ -60,6 +60,10 @@ class ExtractionContainers
     STXXLRestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
+    // FIXME This map store the vector id for each osm_id contain in "all_nodes_list"
+    // FIXME add a lazy loading to init this cache when user need location on noderef
+    std::unordered_map<OSMNodeID, osmium::Location> nodeCache;
+
     unsigned max_internal_node_id;
 
     ExtractionContainers();
@@ -68,6 +72,9 @@ class ExtractionContainers
                      const std::string &output_file_name,
                      const std::string &restrictions_file_name,
                      const std::string &names_file_name);
+
+    void prepareCache();
+    void clearCache();
 };
 }
 }

@@ -130,8 +130,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         auto extractor_callbacks = std::make_unique<ExtractorCallbacks>(extraction_containers);
 
         const osmium::io::File input_file(config.input_path.string());
-        osmium::io::Reader reader(input_file, osmium::io::read_meta::no);
-        const osmium::io::Header header = reader.header();
+        osmium::io::Reader nodeReader(input_file, osmium::osm_entity_bits::node, osmium::io::read_meta::no);
+        const osmium::io::Header header = nodeReader.header();
 
         unsigned number_of_nodes = 0;
         unsigned number_of_ways = 0;
@@ -169,7 +169,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         // setup restriction parser
         const RestrictionParser restriction_parser(scripting_environment);
 
-        while (const osmium::memory::Buffer buffer = reader.read())
+        // NODE PARSING
+        while (const osmium::memory::Buffer buffer = nodeReader.read())
         {
             // create a vector of iterators into the buffer
             std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
@@ -180,8 +181,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
             // clear resulting vectors
             resulting_nodes.clear();
-            resulting_ways.clear();
-            resulting_restrictions.clear();
 
             scripting_environment.ProcessElements(osm_elements,
                                                   restriction_parser,
@@ -197,6 +196,33 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                     static_cast<const osmium::Node &>(*(osm_elements[result.first])),
                     result.second);
             }
+        }
+        nodeReader.close();
+
+        extraction_containers.prepareCache();
+        scripting_environment.setupCache(extraction_containers.nodeCache);
+
+        // WAY AND RELATION PARSING
+        osmium::io::Reader wayReader(input_file, osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation, osmium::io::read_meta::no);
+        while (const osmium::memory::Buffer buffer = wayReader.read())
+        {
+            // create a vector of iterators into the buffer
+            std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
+            for (auto iter = std::begin(buffer), end = std::end(buffer); iter != end; ++iter)
+            {
+                osm_elements.push_back(iter);
+            }
+
+            // clear resulting vectors
+            resulting_ways.clear();
+            resulting_restrictions.clear();
+
+            scripting_environment.ProcessElements(osm_elements,
+                                                  restriction_parser,
+                                                  resulting_nodes,
+                                                  resulting_ways,
+                                                  resulting_restrictions);
+
             number_of_ways += resulting_ways.size();
             for (const auto &result : resulting_ways)
             {
@@ -210,6 +236,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             }
         }
         TIMER_STOP(parsing);
+
+        // Clear cache data
+        extraction_containers.clearCache();
+
         util::SimpleLogger().Write() << "Parsing finished after " << TIMER_SEC(parsing)
                                      << " seconds";
 
