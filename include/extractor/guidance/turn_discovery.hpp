@@ -5,8 +5,6 @@
 #include "extractor/guidance/intersection_generator.hpp"
 #include "util/typedefs.hpp"
 
-#include <string>
-
 namespace osrm
 {
 namespace extractor

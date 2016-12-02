@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <unordered_map>
 #include <vector>
 
 #include "util/typedefs.hpp"
@@ -95,6 +96,8 @@ class LaneTupleIdPair
         return seed;
     }
 };
+
+using LaneDataIdMap = std::unordered_map<LaneTupleIdPair, LaneDataID, boost::hash<LaneTupleIdPair>>;
 
 } // namespace guidance
 } // namespace util

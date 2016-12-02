@@ -43,6 +43,7 @@ class IntersectionGenerator
      * The shape also only comes with turn bearings, not with turn angles. All turn angles will be
      * set to zero
      */
+    OSRM_ATTR_WARN_UNUSED
     IntersectionShape
     ComputeIntersectionShape(const NodeID center_node,
                              const boost::optional<NodeID> sorting_base = boost::none,
@@ -53,11 +54,11 @@ class IntersectionGenerator
     // intermediate intersection, if there is a traffic light in between. If we want to look farther
     // down a road, finding the next actual decision requires the look at multiple intersections.
     // Here we follow the road until we either reach a dead end or find the next intersection with
-    // more than a single next road.
-    IntersectionView GetActualNextIntersection(const NodeID starting_node,
-                                               const EdgeID via_edge,
-                                               NodeID *resulting_from_node,
-                                               EdgeID *resulting_via_edge) const;
+    // more than a single next road. This function skips over degree two nodes to find coorect input
+    // for GetConnectedRoads.
+    OSRM_ATTR_WARN_UNUSED
+    std::pair<NodeID, EdgeID> SkipDegreeTwoNodes(const NodeID starting_node,
+                                                 const EdgeID via_edge) const;
 
     // Allow access to the coordinate extractor for all owners
     const CoordinateExtractor &GetCoordinateExtractor() const;

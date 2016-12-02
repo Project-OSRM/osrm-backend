@@ -1,16 +1,12 @@
 #include "extractor/guidance/intersection_generator.hpp"
-#include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/toolkit.hpp"
 
 #include "util/bearing.hpp"
-#include "util/guidance/toolkit.hpp"
+#include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
-#include <functional>
-#include <iomanip>
-#include <iterator>
+#include <functional> // mem_fn
 #include <limits>
-#include <unordered_set>
+#include <numeric>
 #include <utility>
 
 #include <boost/range/algorithm/count_if.hpp>
@@ -58,8 +54,16 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
     const util::Coordinate turn_coordinate = node_info_list[node_at_center_of_intersection];
 
     // number of lanes at the intersection changes how far we look down the road
-    const auto intersection_lanes =
-        getLaneCountAtIntersection(node_at_center_of_intersection, node_based_graph);
+    const auto edge_range = node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection);
+    const auto max_lanes_intersection = std::accumulate(
+        edge_range.begin(),
+        edge_range.end(),
+        std::uint8_t{0},
+        [this](const auto current_max, const auto current_eid) {
+            return std::max(
+                current_max,
+                node_based_graph.GetEdgeData(current_eid).road_classification.GetNumberOfLanes());
+        });
 
     for (const EdgeID edge_connected_to_intersection :
          node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
@@ -86,7 +90,7 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
                              via_eid,
                              traversed_in_reverse,
                              to_node,
-                             intersection_lanes,
+                             max_lanes_intersection,
                              std::move(coordinates));
         };
 
@@ -112,9 +116,9 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
                                      return node_based_graph.GetTarget(data.eid) == *sorting_base;
                                  });
                 if (itr != intersection.end())
-                    return util::bearing::reverseBearing(itr->bearing);
+                    return util::reverseBearing(itr->bearing);
             }
-            return util::bearing::reverseBearing(intersection.begin()->bearing);
+            return util::reverseBearing(intersection.begin()->bearing);
         }();
         std::sort(
             intersection.begin(), intersection.end(), makeCompareShapeDataByBearing(base_bearing));
@@ -150,11 +154,8 @@ IntersectionView IntersectionGenerator::GetConnectedRoads(const NodeID from_node
     return TransformIntersectionShapeIntoView(from_node, via_eid, std::move(intersection));
 }
 
-IntersectionView
-IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
-                                                 const EdgeID via_edge,
-                                                 NodeID *resulting_from_node = nullptr,
-                                                 EdgeID *resulting_via_edge = nullptr) const
+std::pair<NodeID, EdgeID> IntersectionGenerator::SkipDegreeTwoNodes(const NodeID starting_node,
+                                                                    const EdgeID via_edge) const
 {
     NodeID query_node = starting_node;
     EdgeID query_edge = via_edge;
@@ -185,12 +186,7 @@ IntersectionGenerator::GetActualNextIntersection(const NodeID starting_node,
         query_edge = next_edge;
     }
 
-    if (resulting_from_node)
-        *resulting_from_node = query_node;
-    if (resulting_via_edge)
-        *resulting_via_edge = query_edge;
-
-    return GetConnectedRoads(query_node, query_edge);
+    return std::make_pair(query_node, query_edge);
 }
 
 IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
@@ -273,7 +269,7 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
                 normalised_intersection.end(),
                 [&](const IntersectionShapeData &road) { return road.eid == merged_into_id; });
             BOOST_ASSERT(merged_u_turn != normalised_intersection.end());
-            return util::bearing::reverseBearing(merged_u_turn->bearing);
+            return util::reverseBearing(merged_u_turn->bearing);
         }
         else
         {
@@ -283,8 +279,7 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
                              connect_to_previous_node);
             BOOST_ASSERT(uturn_edge_at_normalised_intersection_itr !=
                          normalised_intersection.end());
-            return util::bearing::reverseBearing(
-                uturn_edge_at_normalised_intersection_itr->bearing);
+            return util::reverseBearing(uturn_edge_at_normalised_intersection_itr->bearing);
         }
     }();
 
@@ -297,7 +292,7 @@ IntersectionView IntersectionGenerator::TransformIntersectionShapeIntoView(
                        return IntersectionViewData(
                            road,
                            is_allowed_turn(road),
-                           util::bearing::angleBetweenBearings(uturn_bearing, road.bearing));
+                           util::angleBetweenBearings(uturn_bearing, road.bearing));
                    });
 
     const auto uturn_edge_at_intersection_view_itr =

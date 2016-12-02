@@ -6,7 +6,6 @@
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
-#include "engine/guidance/toolkit.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/coordinate.hpp"

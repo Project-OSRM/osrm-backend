@@ -4,9 +4,8 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
-#include <unordered_map>
 
-#include <osmium/osm.hpp>
+#include "extractor/guidance/constants.hpp"
 
 namespace osrm
 {
@@ -126,6 +125,22 @@ inline bool canBeSeenAsFork(const RoadClassification first, const RoadClassifica
     return std::abs(static_cast<int>(first.GetPriority()) -
                     static_cast<int>(second.GetPriority())) <= 1;
 }
+
+inline bool obviousByRoadClass(const RoadClassification in_classification,
+                               const RoadClassification obvious_candidate,
+                               const RoadClassification compare_candidate)
+{
+    // lower numbers are of higher priority
+    const bool has_high_priority = PRIORITY_DISTINCTION_FACTOR * obvious_candidate.GetPriority() <
+                                   compare_candidate.GetPriority();
+
+    const bool continues_on_same_class = in_classification == obvious_candidate;
+    return (has_high_priority && continues_on_same_class) ||
+           (!obvious_candidate.IsLowPriorityRoadClass() &&
+            !in_classification.IsLowPriorityRoadClass() &&
+            compare_candidate.IsLowPriorityRoadClass());
+}
+
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm

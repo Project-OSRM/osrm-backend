@@ -4,13 +4,15 @@
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
 #include "util/log.hpp"
+#include "util/bearing.hpp"
 #include "util/typedefs.hpp"
 
 #include <cstddef>
 #include <cstdint>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+
+using osrm::util::angularDeviation;
 
 namespace osrm
 {
@@ -36,7 +38,7 @@ TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  std::vector<TurnLaneType::Mask> &turn_lane_masks,
                                  LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
-                                 LaneDataIdMap &id_map)
+                                 util::guidance::LaneDataIdMap &id_map)
     : node_based_graph(node_based_graph), turn_lane_offsets(turn_lane_offsets),
       turn_lane_masks(turn_lane_masks), lane_description_map(lane_description_map),
       turn_analysis(turn_analysis), id_map(id_map)

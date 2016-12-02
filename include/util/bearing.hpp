@@ -1,7 +1,9 @@
 #ifndef BEARING_HPP
 #define BEARING_HPP
 
+#include <algorithm>
 #include <boost/assert.hpp>
+#include <cmath>
 #include <string>
 
 namespace osrm
@@ -89,6 +91,7 @@ inline bool CheckInBounds(const int A, const int B, const int range)
         return normalized_B - range <= normalized_A && normalized_A <= normalized_B + range;
     }
 }
+} // namespace bearing
 
 inline double reverseBearing(const double bearing)
 {
@@ -128,7 +131,13 @@ inline double angleBetweenBearings(const double entry_bearing, const double exit
     return angle >= 360 ? angle - 360 : angle;
 }
 
-} // namespace bearing
+// minimal difference between two angles/bearings going left or right
+inline double angularDeviation(const double angle, const double from)
+{
+    const double deviation = std::abs(angle - from);
+    return std::min(360 - deviation, deviation);
+}
+
 } // namespace util
 } // namespace osrm
 

@@ -136,6 +136,9 @@ bool isCCW(const Coordinate first_coordinate,
            const Coordinate second_coordinate,
            const Coordinate third_coordinate);
 
+std::pair<util::Coordinate, util::Coordinate>
+leastSquareRegression(const std::vector<util::Coordinate> &coordinates);
+
 } // ns coordinate_calculation
 } // ns util
 } // ns osrm

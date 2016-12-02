@@ -8,14 +8,12 @@
 #include "engine/guidance/leg_geometry.hpp"
 #include "engine/guidance/route_step.hpp"
 #include "engine/guidance/step_maneuver.hpp"
-#include "engine/guidance/toolkit.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/entry_class.hpp"
-#include "util/guidance/toolkit.hpp"
 #include "util/guidance/turn_lanes.hpp"
 #include "util/typedefs.hpp"
 
@@ -156,7 +154,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                     intersection.entry.push_back(entry_class.allowsEntry(idx));
                 }
                 std::int16_t bearing_in_driving_direction =
-                    util::bearing::reverseBearing(std::round(bearings.first));
+                    util::reverseBearing(std::round(bearings.first));
                 maneuver = {intersection.location,
                             bearing_in_driving_direction,
                             bearings.second,
@@ -216,14 +214,13 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     BOOST_ASSERT(segment_index == number_of_segments - 1);
     bearings = detail::getArriveBearings(leg_geometry);
 
-    intersection = {
-        target_node.location,
-        std::vector<short>({static_cast<short>(util::bearing::reverseBearing(bearings.first))}),
-        std::vector<bool>({true}),
-        0,
-        Intersection::NO_INDEX,
-        util::guidance::LaneTuple(),
-        {}};
+    intersection = {target_node.location,
+                    std::vector<short>({static_cast<short>(util::reverseBearing(bearings.first))}),
+                    std::vector<bool>({true}),
+                    0,
+                    Intersection::NO_INDEX,
+                    util::guidance::LaneTuple(),
+                    {}};
 
     // This step has length zero, the only reason we need it is the target location
     maneuver = {intersection.location,

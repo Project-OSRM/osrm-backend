@@ -1,5 +1,5 @@
 #include "util/guidance/bearing_class.hpp"
-#include "util/guidance/toolkit.hpp"
+#include "util/bearing.hpp"
 
 #include <algorithm>
 #include <boost/assert.hpp>

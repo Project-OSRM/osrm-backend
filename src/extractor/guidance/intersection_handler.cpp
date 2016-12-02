@@ -1,16 +1,15 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/toolkit.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/guidance/toolkit.hpp"
 #include "util/log.hpp"
+#include "util/guidance/name_announcements.hpp"
 
 #include <algorithm>
 #include <cstddef>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
-using osrm::util::guidance::getTurnDirection;
+using osrm::util::angularDeviation;
 
 namespace osrm
 {
@@ -759,8 +758,12 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             // try to find whether there is a turn going to the opposite direction of our obvious
             // turn, this should be alright.
             NodeID new_node;
-            const auto previous_intersection = intersection_generator.GetActualNextIntersection(
-                node_at_intersection, intersection[0].eid, &new_node, nullptr);
+            const auto previous_intersection = [&]() {
+                EdgeID turn_edge;
+                std::tie(new_node, turn_edge) = intersection_generator.SkipDegreeTwoNodes(
+                    node_at_intersection, intersection[0].eid);
+                return intersection_generator.GetConnectedRoads(new_node, turn_edge);
+            }();
 
             if (new_node != node_at_intersection)
             {

@@ -1,17 +1,16 @@
 #include "extractor/guidance/sliproad_handler.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/guidance/toolkit.hpp"
-
-#include "util/guidance/toolkit.hpp"
+#include "util/bearing.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/guidance/name_announcements.hpp"
 
 #include <limits>
-#include <utility>
 
 #include <boost/assert.hpp>
 
 using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
-using osrm::util::guidance::getTurnDirection;
-using osrm::util::guidance::angularDeviation;
+using osrm::extractor::guidance::getTurnDirection;
+using osrm::util::angularDeviation;
 
 namespace osrm
 {

@@ -1,7 +1,12 @@
 #include "extractor/guidance/intersection_normalizer.hpp"
-#include "extractor/guidance/toolkit.hpp"
 #include "util/bearing.hpp"
-#include "util/guidance/toolkit.hpp"
+#include "util/coordinate_calculation.hpp"
+#include "util/guidance/name_announcements.hpp"
+
+#include <tuple>
+#include <utility>
+
+using osrm::util::angularDeviation;
 
 namespace osrm
 {
@@ -115,10 +120,10 @@ bool IntersectionNormalizer::InnerCanMerge(const NodeID node_at_intersection,
     const auto isValidYArm = [this, intersection, coordinate_at_intersection, node_at_intersection](
         const std::size_t index, const std::size_t other_index) {
         const auto GetActualTarget = [&](const std::size_t index) {
-            EdgeID last_in_edge_id;
-            intersection_generator.GetActualNextIntersection(
-                node_at_intersection, intersection[index].eid, nullptr, &last_in_edge_id);
-            return node_based_graph.GetTarget(last_in_edge_id);
+            EdgeID edge_id;
+            std::tie(std::ignore, edge_id) = intersection_generator.SkipDegreeTwoNodes(
+                node_at_intersection, intersection[index].eid);
+            return node_based_graph.GetTarget(edge_id);
         };
 
         const auto target_id = GetActualTarget(index);

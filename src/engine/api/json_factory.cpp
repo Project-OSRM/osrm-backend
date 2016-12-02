@@ -6,7 +6,6 @@
 
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
-#include "util/guidance/toolkit.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>

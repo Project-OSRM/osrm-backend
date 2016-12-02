@@ -9,8 +9,6 @@
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 
-#include <cstddef>
-#include <utility>
 #include <vector>
 
 namespace osrm

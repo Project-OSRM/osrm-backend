@@ -1,14 +1,12 @@
 #include "engine/guidance/post_processing.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
-#include "engine/guidance/toolkit.hpp"
 
 #include "engine/guidance/assemble_steps.hpp"
 #include "engine/guidance/lane_processing.hpp"
-#include "engine/guidance/toolkit.hpp"
 
 #include "util/bearing.hpp"
-#include "util/guidance/toolkit.hpp"
+#include "util/guidance/name_announcements.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
 #include <boost/assert.hpp>
@@ -25,8 +23,11 @@
 using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
 namespace TurnType = osrm::extractor::guidance::TurnType;
 namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
-using osrm::util::guidance::angularDeviation;
-using osrm::util::guidance::getTurnDirection;
+using osrm::util::angularDeviation;
+using osrm::extractor::guidance::getTurnDirection;
+using osrm::extractor::guidance::hasRampType;
+using osrm::extractor::guidance::mirrorDirectionModifier;
+using osrm::extractor::guidance::bearingToDirectionModifier;
 
 namespace osrm
 {
@@ -299,14 +300,13 @@ void closeOffRoundabout(const bool on_roundabout,
                              TurnType::EnterRoundaboutIntersectionAtExit)
                 {
                     BOOST_ASSERT(!propagation_step.intersections.empty());
-                    const double angle = util::bearing::angleBetweenBearings(
-                        util::bearing::reverseBearing(
-                            entry_intersection.bearings[entry_intersection.in]),
+                    const double angle = util::angleBetweenBearings(
+                        util::reverseBearing(entry_intersection.bearings[entry_intersection.in]),
                         exit_bearing);
 
                     auto bearings = propagation_step.intersections.front().bearings;
                     propagation_step.maneuver.instruction.direction_modifier =
-                        util::guidance::getTurnDirection(angle);
+                        getTurnDirection(angle);
                 }
 
                 forwardStepSignage(propagation_step, destination_copy);
@@ -346,7 +346,7 @@ bool isUTurn(const RouteStep &in_step, const RouteStep &out_step, const RouteSte
         (isLinkroad(in_step) && out_step.name_id != EMPTY_NAMEID &&
          pre_in_step.name_id != EMPTY_NAMEID && !isNoticeableNameChange(pre_in_step, out_step));
     const bool takes_u_turn = bearingsAreReversed(
-        util::bearing::reverseBearing(
+        util::reverseBearing(
             in_step.intersections.front().bearings[in_step.intersections.front().in]),
         out_step.intersections.front().bearings[out_step.intersections.front().out]);
 
@@ -358,20 +358,20 @@ double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_ste
     const auto exit_intersection = exit_step.intersections.front();
     const auto exit_step_exit_bearing = exit_intersection.bearings[exit_intersection.out];
     const auto exit_step_entry_bearing =
-        util::bearing::reverseBearing(exit_intersection.bearings[exit_intersection.in]);
+        util::reverseBearing(exit_intersection.bearings[exit_intersection.in]);
 
     const auto entry_intersection = entry_step.intersections.front();
     const auto entry_step_entry_bearing =
-        util::bearing::reverseBearing(entry_intersection.bearings[entry_intersection.in]);
+        util::reverseBearing(entry_intersection.bearings[entry_intersection.in]);
     const auto entry_step_exit_bearing = entry_intersection.bearings[entry_intersection.out];
 
     const auto exit_angle =
-        util::bearing::angleBetweenBearings(exit_step_entry_bearing, exit_step_exit_bearing);
+        util::angleBetweenBearings(exit_step_entry_bearing, exit_step_exit_bearing);
     const auto entry_angle =
-        util::bearing::angleBetweenBearings(entry_step_entry_bearing, entry_step_exit_bearing);
+        util::angleBetweenBearings(entry_step_entry_bearing, entry_step_exit_bearing);
 
     const double total_angle =
-        util::bearing::angleBetweenBearings(entry_step_entry_bearing, exit_step_exit_bearing);
+        util::angleBetweenBearings(entry_step_entry_bearing, exit_step_exit_bearing);
     // We allow for minor deviations from a straight line
     if (((entry_step.distance < MAX_COLLAPSE_DISTANCE && exit_step.intersections.size() == 1) ||
          (entry_angle <= 185 && exit_angle <= 185) || (entry_angle >= 175 && exit_angle >= 175)) &&
@@ -521,8 +521,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             // tagged late
             const auto is_delayed_turn_onto_a_ramp =
                 opening_turn.distance <= 4 * MAX_COLLAPSE_DISTANCE && without_choice &&
-                util::guidance::hasRampType(finishing_turn.maneuver.instruction);
-            return !util::guidance::hasRampType(opening_turn.maneuver.instruction) &&
+                hasRampType(finishing_turn.maneuver.instruction);
+            return !hasRampType(opening_turn.maneuver.instruction) &&
                    (is_short_and_collapsable || is_not_too_long_and_choiceless ||
                     isLinkroad(opening_turn) || is_delayed_turn_onto_a_ramp);
         }
@@ -539,8 +539,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         if (TurnType::Merge == current_step.maneuver.instruction.type)
         {
             steps[step_index].maneuver.instruction.direction_modifier =
-                util::guidance::mirrorDirectionModifier(
-                    steps[step_index].maneuver.instruction.direction_modifier);
+                mirrorDirectionModifier(steps[step_index].maneuver.instruction.direction_modifier);
             steps[step_index].maneuver.instruction.type = TurnType::Turn;
         }
         else
@@ -573,18 +572,18 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             if (continue_or_suppressed || turning_name)
             {
                 const auto in_bearing = [](const RouteStep &step) {
-                    return util::bearing::reverseBearing(
+                    return util::reverseBearing(
                         step.intersections.front().bearings[step.intersections.front().in]);
                 };
                 const auto out_bearing = [](const RouteStep &step) {
                     return step.intersections.front().bearings[step.intersections.front().out];
                 };
 
-                const auto first_angle = util::bearing::angleBetweenBearings(
-                    in_bearing(one_back_step), out_bearing(one_back_step));
-                const auto second_angle = util::bearing::angleBetweenBearings(
-                    in_bearing(current_step), out_bearing(current_step));
-                const auto bearing_turn_angle = util::bearing::angleBetweenBearings(
+                const auto first_angle = util::angleBetweenBearings(in_bearing(one_back_step),
+                                                                    out_bearing(one_back_step));
+                const auto second_angle =
+                    util::angleBetweenBearings(in_bearing(current_step), out_bearing(current_step));
+                const auto bearing_turn_angle = util::angleBetweenBearings(
                     in_bearing(one_back_step), out_bearing(current_step));
 
                 // When looking at an intersection, some angles, even though present, feel more like
@@ -669,7 +668,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                         DirectionModifier::Straight;
                 else
                     steps[step_index].maneuver.instruction.direction_modifier =
-                        util::guidance::getTurnDirection(bearing_turn_angle);
+                        getTurnDirection(bearing_turn_angle);
 
                 // if the total direction of this turn is now straight, we can keep it suppressed/as
                 // a new name. Else we have to interpret it as a turn.
@@ -718,7 +717,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             };
 
             // If we Merge onto the same street, we end up with a u-turn in some cases
-            if (bearingsAreReversed(util::bearing::reverseBearing(getBearing(true, one_back_step)),
+            if (bearingsAreReversed(util::reverseBearing(getBearing(true, one_back_step)),
                                     getBearing(false, current_step)))
             {
                 steps[one_back_index].maneuver.instruction.direction_modifier =
@@ -737,9 +736,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                                       // need a highway-suppressed to get the turn onto a
                                       // highway...
         {
-            steps[one_back_index].maneuver.instruction.direction_modifier =
-                util::guidance::mirrorDirectionModifier(
-                    steps[one_back_index].maneuver.instruction.direction_modifier);
+            steps[one_back_index].maneuver.instruction.direction_modifier = mirrorDirectionModifier(
+                steps[one_back_index].maneuver.instruction.direction_modifier);
         }
         // on non merge-types, we check for a combined turn angle
         else if (TurnType::Merge != one_back_step.maneuver.instruction.type)
@@ -759,8 +757,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
     {
         steps[one_back_index] = elongate(std::move(steps[one_back_index]), current_step);
         const auto angle = findTotalTurnAngle(one_back_step, current_step);
-        steps[one_back_index].maneuver.instruction.direction_modifier =
-            util::guidance::getTurnDirection(angle);
+        steps[one_back_index].maneuver.instruction.direction_modifier = getTurnDirection(angle);
 
         invalidateStep(steps[step_index]);
     }
@@ -772,8 +769,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         steps[one_back_index] = elongate(std::move(steps[one_back_index]), current_step);
         steps[one_back_index].maneuver.instruction.type = TurnType::OnRamp;
         const auto angle = findTotalTurnAngle(one_back_step, current_step);
-        steps[one_back_index].maneuver.instruction.direction_modifier =
-            util::guidance::getTurnDirection(angle);
+        steps[one_back_index].maneuver.instruction.direction_modifier = getTurnDirection(angle);
 
         forwardStepSignage(steps[one_back_index], current_step);
         invalidateStep(steps[step_index]);
@@ -806,7 +802,7 @@ bool isStaggeredIntersection(const std::vector<RouteStep> &steps,
         const auto &intersection = step.intersections.front();
         const auto entry_bearing = intersection.bearings[intersection.in];
         const auto exit_bearing = intersection.bearings[intersection.out];
-        return util::bearing::angleBetweenBearings(entry_bearing, exit_bearing);
+        return util::angleBetweenBearings(entry_bearing, exit_bearing);
     };
 
     // Instead of using turn modifiers (e.g. as in isRightTurn) we want to be more strict here.
@@ -1123,7 +1119,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 
                     const auto angle = findTotalTurnAngle(one_back_step, current_step);
                     steps[one_back_index].maneuver.instruction.direction_modifier =
-                        util::guidance::getTurnDirection(angle);
+                        getTurnDirection(angle);
                     invalidateStep(steps[step_index]);
                 }
                 else
@@ -1462,7 +1458,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             geometry.locations[next_to_last_step.geometry_end - 2],
             geometry.locations[last_step.geometry_begin]));
         last_step.maneuver.bearing_before = bearing;
-        last_step.intersections.front().bearings.front() = util::bearing::reverseBearing(bearing);
+        last_step.intersections.front().bearings.front() = util::reverseBearing(bearing);
     }
 
     BOOST_ASSERT(steps.back().geometry_end == geometry.locations.size());
@@ -1494,7 +1490,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
     const auto initial_modifier =
         distance_to_start >= MINIMAL_RELATIVE_DISTANCE &&
                 distance_to_start <= MAXIMAL_RELATIVE_DISTANCE
-            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
+            ? bearingToDirectionModifier(util::coordinate_calculation::computeAngle(
                   source_node.input_location, leg_geometry.locations[0], leg_geometry.locations[1]))
             : extractor::guidance::DirectionModifier::UTurn;
 
@@ -1505,7 +1501,7 @@ std::vector<RouteStep> assignRelativeLocations(std::vector<RouteStep> steps,
     const auto final_modifier =
         distance_from_end >= MINIMAL_RELATIVE_DISTANCE &&
                 distance_from_end <= MAXIMAL_RELATIVE_DISTANCE
-            ? angleToDirectionModifier(util::coordinate_calculation::computeAngle(
+            ? bearingToDirectionModifier(util::coordinate_calculation::computeAngle(
                   leg_geometry.locations[leg_geometry.locations.size() - 2],
                   leg_geometry.locations[leg_geometry.locations.size() - 1],
                   target_node.input_location))
@@ -1604,13 +1600,13 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         // the lane description is given left to right, lanes are counted from the right.
         // Therefore we access the lane description using the reverse iterator
 
-        auto right_most_lanes = lanesToTheRight(step);
+        auto right_most_lanes = step.lanesToTheRight();
         if (!right_most_lanes.empty() && containsTag(right_most_lanes.front(),
                                                      (extractor::guidance::TurnLaneType::straight |
                                                       extractor::guidance::TurnLaneType::none)))
             return false;
 
-        auto left_most_lanes = lanesToTheLeft(step);
+        auto left_most_lanes = step.lanesToTheLeft();
         if (!left_most_lanes.empty() && containsTag(left_most_lanes.back(),
                                                     (extractor::guidance::TurnLaneType::straight |
                                                      extractor::guidance::TurnLaneType::none)))
