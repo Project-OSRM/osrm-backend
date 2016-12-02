@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_GT(result.size(), 128);
+    BOOST_CHECK_EQUAL(result.size(), 114091);
 
     protozero::pbf_reader tile_message(result);
     tile_message.next();

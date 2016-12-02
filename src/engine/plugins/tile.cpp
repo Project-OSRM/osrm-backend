@@ -357,6 +357,26 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         return offset;
     };
 
+    // In order to ensure consistent tile encoding, we need to process
+    // all edges in the same order.  Differences in OSX/Linux/Windows
+    // sorting methods mean that GetEdgesInBox doesn't return the same
+    // ordered array on all platforms.
+    // GetEdgesInBox is marked `const`, so we can't sort the array itself,
+    // instead we create an array of indexes and sort that instead.
+    std::vector<std::size_t> sorted_edge_indexes(edges.size(), 0);
+    std::iota(sorted_edge_indexes.begin(), sorted_edge_indexes.end(), 0); // fill with 1,2,3,...N
+
+    // Now, sort that array based on the edges list, using the u/v node IDs
+    // as the sort condition
+    std::sort(sorted_edge_indexes.begin(),
+              sorted_edge_indexes.end(),
+              [edges](const std::size_t &left, const std::size_t &right) -> bool {
+                  return (edges[left].u != edges[right].u) ? edges[left].u < edges[right].u
+                                                           : edges[left].v < edges[right].v;
+              });
+    // From here on, we'll iterate over the sorted_edge_indexes instead of `edges` directly.
+    // Note, that we do this because `
+
     // If we're zooming into 16 or higher, include turn data.  Why?  Because turns make the map
     // really cramped, so we don't bother including the data for tiles that span a large area.
     if (parameters.z >= MIN_ZOOM_FOR_TURNS)
@@ -386,8 +406,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
 
         // Build an adjacency list for all the road segments visible in
         // the tile
-        for (const auto &edge : edges)
+        for (const auto &edge_index : sorted_edge_indexes)
         {
+            const auto &edge = edges[edge_index];
             if (edge.forward_segment_id.enabled)
             {
                 // operator[] will construct an empty vector at [edge.u] if there is no value.
@@ -435,11 +456,21 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
         //  vw is the "exit"
         std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
         std::vector<EdgeWeight> approach_weight_vector;
-        // Look at every node in the directed graph we created
+
+        // Make sure we traverse the startnodes in a consistent order
+        // to ensure identical PBF encoding on all platforms.
+        std::vector<NodeID> sorted_startnodes;
+        sorted_startnodes.reserve(directed_graph.size());
         for (const auto &startnode : directed_graph)
+            sorted_startnodes.push_back(startnode.first);
+        std::sort(sorted_startnodes.begin(), sorted_startnodes.end());
+
+        // Look at every node in the directed graph we created
+        for (const auto &startnode : sorted_startnodes)
         {
+            const auto &nodedata = directed_graph[startnode];
             // For all the outgoing edges from the node
-            for (const auto &approachedge : startnode.second)
+            for (const auto &approachedge : nodedata)
             {
                 // If the target of this edge doesn't exist in our directed
                 // graph, it's probably outside the tile, so we can skip it
@@ -455,7 +486,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                         continue;
 
                     // Skip u-turns
-                    if (startnode.first == exit_edge.target_node)
+                    if (startnode == exit_edge.target_node)
                         continue;
 
                     // Find the connection between our source road and the target node
@@ -528,7 +559,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                         const auto turn_cost = data.weight - sum_node_weight;
 
                         // Find the three nodes that make up the turn movement)
-                        const auto node_from = startnode.first;
+                        const auto node_from = startnode;
                         const auto node_via = approachedge.target_node;
                         const auto node_to = exit_edge.target_node;
 
@@ -584,8 +615,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     // to "pre-loop" over all the edges to create the lookup tables.  Once we have those, we
     // can then encode the features, and we'll know the indexes that feature properties
     // need to refer to.
-    for (const auto &edge : edges)
+    for (const auto &edge_index : sorted_edge_indexes)
     {
+        const auto &edge = edges[edge_index];
 
         const auto forward_datasource_vector =
             facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
@@ -636,8 +668,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
             // Because we need to know the indexes into the vector tile lookup table,
             // we need to do an initial pass over the data and create the complete
             // index of used values.
-            for (const auto &edge : edges)
+            for (const auto &edge_index : sorted_edge_indexes)
             {
+                const auto &edge = edges[edge_index];
                 const auto forward_weight_vector =
                     facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
                 const auto reverse_weight_vector =
@@ -653,8 +686,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
             {
                 // Each feature gets a unique id, starting at 1
                 unsigned id = 1;
-                for (const auto &edge : edges)
+                for (const auto &edge_index : sorted_edge_indexes)
                 {
+                    const auto &edge = edges[edge_index];
                     // Get coordinates for start/end nodes of segment (NodeIDs u and v)
                     const auto a = facade->GetCoordinateOfNode(edge.u);
                     const auto b = facade->GetCoordinateOfNode(edge.v);
