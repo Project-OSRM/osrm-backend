@@ -541,14 +541,6 @@ function handle_roundabouts(way,result)
   end
 end
 
--- Set access restriction flag if access is allowed under certain restrictions only
-function handle_restricted(way,result,data)
-  if (data.forward_access and access_tag_restricted[data.forward_access]) or
-     (data.backward_access and access_tag_restricted[data.backward_access]) then
-    result.is_access_restricted = true
-  end
-end
-
 -- service roads
 function handle_service(way,result)
   local service = way:get_value_by_key("service")
@@ -744,11 +736,6 @@ function way_function(way, result)
   -- handle various other flags
   if handle_roundabouts(way,result) == false then return end
   if handle_startpoint(way,result) == false then return end
-  if handle_restricted(way,result,data) == false then return end
-
-  -- check if this way can be routed through, but not used as
-  -- origin or destination
-  if handle_restricted(way,result,data) == false then return end
 
   -- set name, ref and pronunciation
   if handle_names(way,result) == false then return end
