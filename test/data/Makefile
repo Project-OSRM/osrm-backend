@@ -15,7 +15,7 @@ PROFILE:=$(PROFILE_ROOT)/car.lua
 all: $(DATA_NAME).osrm.hsgr
 
 clean:
-	rm $(DATA_NAME).*
+	-rm $(DATA_NAME).*
 
 $(DATA_NAME).osm.pbf:
 	wget $(DATA_URL) -O $(DATA_NAME).osm.pbf

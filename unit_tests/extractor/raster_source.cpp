@@ -23,8 +23,8 @@ int normalize(double coord) { return static_cast<int>(coord * COORDINATE_PRECISI
 BOOST_AUTO_TEST_CASE(raster_test)
 {
     SourceContainer sources;
-    int source_id = sources.LoadRasterSource(
-        "../unit_tests/fixtures/raster_data.asc", 1, 1.09, 1, 1.09, 10, 10);
+    int source_id =
+        sources.LoadRasterSource(OSRM_FIXTURES_DIR "/raster_data.asc", 1, 1.09, 1, 1.09, 10, 10);
     BOOST_CHECK_EQUAL(source_id, 0);
 
     // Expected nearest-neighbor queries
@@ -67,15 +67,15 @@ BOOST_AUTO_TEST_CASE(raster_test)
     CHECK_INTERPOLATE(0, 1.056, 1.028, 68);
     CHECK_INTERPOLATE(0, 1.05, 1.028, 56);
 
-    int source_already_loaded_id = sources.LoadRasterSource(
-        "../unit_tests/fixtures/raster_data.asc", 1, 1.09, 1, 1.09, 10, 10);
+    int source_already_loaded_id =
+        sources.LoadRasterSource(OSRM_FIXTURES_DIR "/raster_data.asc", 1, 1.09, 1, 1.09, 10, 10);
 
     BOOST_CHECK_EQUAL(source_already_loaded_id, 0);
     BOOST_CHECK_THROW(sources.GetRasterDataFromSource(1, normalize(1.02), normalize(1.02)),
                       util::exception);
 
     BOOST_CHECK_THROW(
-        sources.LoadRasterSource("../unit_tests/fixtures/nonexistent.asc", 0, 1.1, 0, 1.1, 7, 7),
+        sources.LoadRasterSource(OSRM_FIXTURES_DIR "/nonexistent.asc", 0, 1.1, 0, 1.1, 7, 7),
         util::exception);
 }
 
