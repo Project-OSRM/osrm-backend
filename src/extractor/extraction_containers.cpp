@@ -136,6 +136,22 @@ void ExtractionContainers::FlushVectors()
     way_start_end_id_list.flush();
 }
 
+void ExtractionContainers::prepareCache()
+{
+    nodeCache.reserve(all_nodes_list.size());
+    for(size_t i = 0; i < all_nodes_list.size(); i++)
+    {
+        //ExternalMemoryNode data = all_nodes_list[i];
+        osmium::Location location(static_cast<double>(util::toFloating(all_nodes_list[i].lon)), static_cast<double>(util::toFloating(all_nodes_list[i].lat)));
+        nodeCache.insert({OSMNodeID{static_cast<std::uint64_t>(all_nodes_list[i].node_id)}, location});
+    }
+}
+
+void ExtractionContainers::clearCache()
+{
+    nodeCache.clear();
+}
+
 /**
  * Processes the collected data and serializes it.
  * At this point nodes are still referenced by their OSM id.
