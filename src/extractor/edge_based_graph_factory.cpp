@@ -19,6 +19,7 @@
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <numeric>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -449,8 +450,47 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }(turn_classification.second);
             bearing_class_by_node_based_node[node_at_center_of_intersection] = bearing_class_id;
 
-            for (const auto &turn : intersection)
+            const EdgeWeight traffic_light_penalty = [&]() {
+                if (m_traffic_lights.find(node_at_center_of_intersection) != m_traffic_lights.end())
+                {
+                    return profile_properties.traffic_signal_penalty;
+                }
+                return 0;
+            }();
+
+            const auto turn_to_penalty =
+                [this, &scripting_environment, traffic_light_penalty](const auto &turn) -> int32_t {
+                    // don't add turn penalty if it is not an actual turn. This heuristic is
+                    // necessary since OSRM cannot handle looping roads/parallel roads
+                    if (turn.instruction.type == guidance::TurnType::NoTurn)
+                        return 0;
+
+                    int32_t turn_penalty =
+                        scripting_environment.GetTurnPenalty(180. - turn.angle);
+
+                    if (turn.instruction.direction_modifier == guidance::DirectionModifier::UTurn)
+                    {
+                        turn_penalty += profile_properties.u_turn_penalty;
+                    }
+
+                    turn_penalty += traffic_light_penalty;
+
+                    return turn_penalty;
+                };
+
+            std::vector<int32_t> turn_penalties(intersection.size());
+            std::transform(intersection.begin(),
+                           intersection.end(),
+                           turn_penalties.begin(),
+                           turn_to_penalty);
+            const int64_t total_turn_penalties = std::accumulate(turn_penalties.begin(), turn_penalties.end(), 0);
+            const int32_t average_turn_penalty = total_turn_penalties / intersection.size();
+
+            for (const auto turn_index : util::irange<std::size_t>(0, intersection.size()))
             {
+                const auto &turn = intersection[turn_index];
+                const auto turn_penalty = turn_penalties[turn_index];
+
                 // only keep valid turns
                 if (!turn.entry_allowed)
                     continue;
@@ -464,25 +504,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(!edge_data2.reversed);
 
                 // the following is the core of the loop.
-                unsigned distance = edge_data1.distance;
-                if (m_traffic_lights.find(node_at_center_of_intersection) != m_traffic_lights.end())
-                {
-                    distance += profile_properties.traffic_signal_penalty;
-                }
-
-                const int32_t turn_penalty =
-                    scripting_environment.GetTurnPenalty(180. - turn.angle);
-
-                const auto turn_instruction = turn.instruction;
-                if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
-                {
-                    distance += profile_properties.u_turn_penalty;
-                }
-
-                // don't add turn penalty if it is not an actual turn. This heuristic is necessary
-                // since OSRM cannot handle looping roads/parallel roads
-                if (turn_instruction.type != guidance::TurnType::NoTurn)
-                    distance += turn_penalty;
+                const EdgeWeight distance = edge_data1.distance + turn_penalty;
 
                 const bool is_encoded_forwards =
                     m_compressed_edge_container.HasZippedEntryForForwardID(incoming_edge);
@@ -497,7 +519,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                    true},
                         edge_data1.name_id,
                         turn.lane_data_id,
-                        turn_instruction,
+                        turn.instruction,
                         entry_class_id,
                         edge_data1.travel_mode,
                         util::guidance::TurnBearing(intersection[0].bearing),
@@ -511,7 +533,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                    false},
                         edge_data1.name_id,
                         turn.lane_data_id,
-                        turn_instruction,
+                        turn.instruction,
                         entry_class_id,
                         edge_data1.travel_mode,
                         util::guidance::TurnBearing(intersection[0].bearing),
@@ -603,7 +625,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
                             turn.eid)];
 
-                    const unsigned fixed_penalty = distance - edge_data1.distance;
+                    const int32_t fixed_penalty = turn_penalty - average_turn_penalty;
                     lookup::PenaltyBlock penaltyblock = {
                         fixed_penalty, from_node.node_id, via_node.node_id, to_node.node_id};
                     edge_penalty_file.write(reinterpret_cast<const char *>(&penaltyblock),

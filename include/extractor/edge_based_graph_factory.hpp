@@ -68,7 +68,7 @@ static_assert(sizeof(SegmentBlock) == 20, "SegmentBlock is not packed correctly"
 #pragma pack(push, 1)
 struct PenaltyBlock
 {
-    std::uint32_t fixed_penalty;
+    std::int32_t fixed_penalty;
     OSMNodeID from_id;
     OSMNodeID via_id;
     OSMNodeID to_id;
