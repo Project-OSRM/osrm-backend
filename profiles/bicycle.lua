@@ -8,10 +8,8 @@ local set_classification = require("lib/guidance").set_classification
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["block"] = true }
 access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["delivery"] = true }
-access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
-service_tag_restricted = { ["parking_aisle"] = true }
 restrictions = { "bicycle" }
 unsafe_highway_list = { ["primary"] = true, ["secondary"] = true, ["tertiary"] = true, ["primary_link"] = true, ["secondary_link"] = true, ["tertiary_link"] = true}
 
