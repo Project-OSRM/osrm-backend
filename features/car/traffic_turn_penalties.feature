@@ -53,23 +53,29 @@ Feature: Traffic - turn penalties
     Scenario: Weighting not based on turn penalty file
         When I route I should get
             | from | to | route           | speed   | time      |
+            # straight
             | a    | h  | ad,dhk,dhk      | 52 km/h | 14s +-1   |
-                                                                  # straight
+            # right
             | i    | g  | fim,fg,fg       | 45 km/h | 16s +-1   |
-                                                                  # right
+            # left
             | a    | e  | ad,def,def      | 38 km/h | 19s +-1   |
-                                                                  # left
+            # double straight
             | c    | g  | cd,def,fg,fg    | 52 km/h | 27s +-1   |
-                                                                  # double straight
+            # straight-right
             | p    | g  | mp,fim,fg,fg    | 48 km/h | 29s +-1   |
-                                                                  # straight-right
+            # straight-left
             | a    | l  | ad,dhk,klm,klm  | 44 km/h | 33s +-1   |
-                                                                  # straight-left
+            # double right
             | l    | e  | klm,dhk,def,def | 45 km/h | 32s +-1   |
-                                                                  # double right
+            # double left
             | g    | n  | fg,fim,mn,mn    | 38 km/h | 38s +-1   |
-                                                                  # double left
 
+    # i->f->g  1.8
+    # i->m->n  24.5
+    # h->d->c  35
+    # l->k->h  9
+    # h->k->l  23
+    # a->d->e  -0.2
     Scenario: Weighting based on turn penalty file
         Given the turn penalty file
             """
@@ -83,24 +89,24 @@ Feature: Traffic - turn penalties
         And the contract extra arguments "--turn-penalty-file {penalties_file}"
         When I route I should get
             | from | to | route                 | speed   | time      |
+            # straight - should not change
             | a    | h  | ad,dhk,dhk            | 52 km/h | 14s +-1   |
-                                                                              # straight
+            # right - ifg penalty
             | i    | g  | fim,fg,fg             | 46 km/h | 15s +-1   |
-                                                                              # right - ifg penalty
+            # left - faster because of negative ade penalty
             | a    | e  | ad,def,def            | 53 km/h | 14s +-1   |
-                                                                              # left - faster because of negative ade penalty
+            # double straight
             | c    | g  | cd,def,fg,fg          | 52 km/h | 27s +-1   |
-                                                                              # double straight
+            # straight-right - ifg penalty
             | p    | g  | mp,fim,fg,fg          | 49 km/h | 29s +-1   |
-                                                                              # straight-right - ifg penalty
+            # was straight-left - forced around by hkl penalty
             | a    | l  | ad,def,fim,klm,klm    | 48 km/h | 45s +-1   |
-                                                                              # was straight-left - forced around by hkl penalty
+            # double right - forced left by lkh penalty
             | l    | e  | klm,fim,def,def       | 38 km/h | 38s +-1   |
-                                                                              # double right - forced left by lkh penalty
+            # double left - imn penalty
             | g    | n  | fg,fim,mn,mn          | 25 km/h | 57s +-1   |
-                                                                              # double left - imn penalty
+            # double left - hdc penalty ever so slightly higher than imn; forces all the way around
             | j    | c  | jk,klm,fim,def,cd,cd  | 44 km/h | 65.8s +-1 |
-                                                                              # double left - hdc penalty ever so slightly higher than imn; forces all the way around
 
     Scenario: Too-negative penalty clamps, but does not fail
         Given the contract extra arguments "--turn-penalty-file {penalties_file}"
