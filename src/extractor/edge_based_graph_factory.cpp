@@ -462,8 +462,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 [this, &scripting_environment, traffic_light_penalty](const auto &turn) -> int32_t {
                     // don't add turn penalty if it is not an actual turn. This heuristic is
                     // necessary since OSRM cannot handle looping roads/parallel roads
-                    if (turn.instruction.type == guidance::TurnType::NoTurn)
+                    if (!turn.entry_allowed || turn.instruction.type == guidance::TurnType::NoTurn)
+                    {
                         return 0;
+                    }
 
                     int32_t turn_penalty =
                         scripting_environment.GetTurnPenalty(180. - turn.angle);
