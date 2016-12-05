@@ -1,5 +1,6 @@
 #include "server/service_handler.hpp"
 
+#include "server/service/isochrone_service.hpp"
 #include "server/service/match_service.hpp"
 #include "server/service/nearest_service.hpp"
 #include "server/service/route_service.hpp"
@@ -24,6 +25,7 @@ ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(con
     service_map["trip"] = std::make_unique<service::TripService>(routing_machine);
     service_map["match"] = std::make_unique<service::MatchService>(routing_machine);
     service_map["tile"] = std::make_unique<service::TileService>(routing_machine);
+    service_map["isochrone"] = std::make_unique<service::IsochroneService>(routing_machine);
 }
 
 engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,

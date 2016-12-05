@@ -44,6 +44,7 @@ using engine::api::NearestParameters;
 using engine::api::TripParameters;
 using engine::api::MatchParameters;
 using engine::api::TileParameters;
+using engine::api::IsochroneParameters;
 
 /**
  * Represents a Open Source Routing Machine with access to its services.
@@ -129,6 +130,11 @@ class OSRM final
      * \see Status, TileParameters and json::Object
      */
     Status Tile(const TileParameters &parameters, std::string &result) const;
+
+    /**
+     * Isochrone: isochrone (range polygon) from a point
+     */
+    Status Isochrone(const IsochroneParameters &parameters, std::string &result) const;
 
   private:
     std::unique_ptr<engine::Engine> engine_;

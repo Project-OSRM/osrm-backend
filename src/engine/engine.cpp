@@ -60,7 +60,8 @@ Engine::Engine(const EngineConfig &config)
       nearest_plugin(config.max_results_nearest),        //
       trip_plugin(config.max_locations_trip),            //
       match_plugin(config.max_locations_map_matching),   //
-      tile_plugin()                                      //
+      tile_plugin(),                                     //
+      isochrone_plugin()                                 //
 
 {
     if (config.use_shared_memory)
@@ -113,6 +114,11 @@ Status Engine::Match(const api::MatchParameters &params, util::json::Object &res
 Status Engine::Tile(const api::TileParameters &params, std::string &result) const
 {
     return RunQuery(watchdog, immutable_data_facade, params, tile_plugin, result);
+}
+
+Status Engine::Isochrone(const api::IsochroneParameters &params, std::string &result) const
+{
+    return RunQuery(watchdog, immutable_data_facade, params, isochrone_plugin, result);
 }
 
 } // engine ns
