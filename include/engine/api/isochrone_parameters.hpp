@@ -25,39 +25,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_FWD_HPP
-#define OSRM_FWD_HPP
+#ifndef ENGINE_API_ISOCHRONE_PARAMETERS_HPP
+#define ENGINE_API_ISOCHRONE_PARAMETERS_HPP
 
-// OSRM API forward declarations for usage in interfaces. Exposes forward declarations for:
-// osrm::util::json::Object, osrm::engine::api::XParameters
+#include <cmath>
 
 namespace osrm
 {
-
-namespace util
-{
-namespace json
-{
-struct Object;
-} // ns json
-} // ns util
-
 namespace engine
 {
 namespace api
 {
-struct RouteParameters;
-struct TableParameters;
-struct NearestParameters;
-struct TripParameters;
-struct MatchParameters;
-struct TileParameters;
-struct IsochroneParameters;
-} // ns api
 
-class Engine;
-struct EngineConfig;
-} // ns engine
-} // ns osrm
+/**
+ * Parameters specific to the OSRM Tile service.
+ *
+ * Holds member attributes:
+ *  - lon: centerpoint
+ *  - lat: centerpoint
+ *  - range: distance to travel
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
+struct IsochroneParameters final
+{
+    double lon;
+    double lat;
+    unsigned range;
+
+    bool IsValid() const { return true; };
+};
+}
+}
+}
 
 #endif

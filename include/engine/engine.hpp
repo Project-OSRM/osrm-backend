@@ -1,6 +1,8 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
+#include "storage/shared_barriers.hpp"
+#include "engine/api/isochrone_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
@@ -11,6 +13,7 @@
 #include "engine/datafacade/contiguous_block_allocator.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/engine_config.hpp"
+#include "engine/plugins/isochrone.hpp"
 #include "engine/plugins/match.hpp"
 #include "engine/plugins/nearest.hpp"
 #include "engine/plugins/table.hpp"
@@ -47,6 +50,7 @@ class Engine final
     Status Trip(const api::TripParameters &parameters, util::json::Object &result) const;
     Status Match(const api::MatchParameters &parameters, util::json::Object &result) const;
     Status Tile(const api::TileParameters &parameters, std::string &result) const;
+    Status Isochrone(const api::IsochroneParameters &parameters, std::string &result) const;
 
   private:
     const plugins::ViaRoutePlugin route_plugin;
@@ -55,6 +59,7 @@ class Engine final
     const plugins::TripPlugin trip_plugin;
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
+    const plugins::IsochronePlugin isochrone_plugin;
 
     // note in case of shared memory this will be empty, since the watchdog
     // will provide us with the up-to-date facade
