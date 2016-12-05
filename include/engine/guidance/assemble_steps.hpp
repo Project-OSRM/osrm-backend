@@ -20,6 +20,7 @@
 #include "util/typedefs.hpp"
 
 #include <boost/optional.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 #include <vector>
 
@@ -151,7 +152,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                           bearing_class.getAvailableBearings().end(),
                           std::back_inserter(intersection.bearings));
                 intersection.entry.clear();
-                for (auto idx : util::irange<std::size_t>(0, intersection.bearings.size()))
+                std::uint32_t bearing_size = boost::numeric_cast<std::uint32_t>(intersection.bearings.size());
+                for (auto idx : util::irange<std::uint32_t>(0, bearing_size))
                 {
                     intersection.entry.push_back(entry_class.allowsEntry(idx));
                 }
