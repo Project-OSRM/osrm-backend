@@ -317,30 +317,30 @@ Feature: Simple Turns
     Scenario: Curved Turn At Cross
         Given the node map
             """
-                                                h
-                                                |
-                                                |
-                                                |
-                                                |
-                                                |      . b - - - - - - - - - - - - - - - - - - a
-                                                |    .
-                                                |  .
-                                                | c
-                                                |
-                                                |
-                                                |
-                                                d
-                                                |
-                                                |
-                                                |
-                                              e |
-                                             .  |
-                                          .     |
-            g - - - - - - - - - - - - - f       |
-                                                |
-                                                |
-                                                |
-                                                i
+                                                          h
+                                                          |
+                                                          |
+                                                          |
+                                                          |
+                                                          |      . b - - - - - - - - - - - - - - - - - - - - - - - a
+                                                          |    .
+                                                          |  .
+                                                          | c
+                                                          |
+                                                          |
+                                                          |
+                                                          d
+                                                          |
+                                                          |
+                                                          |
+                                                        e |
+                                                       .  |
+                                                    .     |
+            g - - - - - - - - - - - - - - - - - - f       |
+                                                          |
+                                                          |
+                                                          |
+                                                          i
             """
 
         And the ways
@@ -443,9 +443,9 @@ Feature: Simple Turns
             | ef      | residential  | road | 2     | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                        | locations |
-            | g,f       | turn,road,road | depart,turn left,arrive      | g,e,f     |
-            | c,f       | road,road,road | depart,continue right,arrive | c,b,f     |
+            | waypoints | route          | turns                        | locations | #                                                                                       |
+            | g,f       | turn,road      | depart,arrive                | g,f       | #could offer an additional turn at `e` if you don't detect the turn in between as curve |
+            | c,f       | road,road,road | depart,continue right,arrive | c,b,f     |                                                                                         |
 
     #http://www.openstreetmap.org/search?query=52.479264%2013.295617#map=19/52.47926/13.29562
     Scenario: Splitting Roads with curved split
@@ -627,12 +627,14 @@ Feature: Simple Turns
             | 1,h       | ,allee,allee      | depart,turn left,arrive      |
             | 2,h       | ,allee,allee      | depart,turn left,arrive      |
 
+
     #http://www.openstreetmap.org/#map=18/52.56251/13.32650
+    @todo
     Scenario: Curved Turn on Separated Directions
         Given the node map
             """
                 e                               d
-                f - - - - - - - - - - - - - - - c - - - - - - - - - - - j
+                f                               c - - - - - - - - - - - j
                 |                     l    '    |
                 |                   '           |
                 |               '               |
@@ -669,6 +671,58 @@ Feature: Simple Turns
             | hbo    | Kapweg | yes    | 2     | primary       |
             | efg    | Kurt   | yes    | 4     | secondary     |
             | gh     | Kurt   | yes    | 2     | primary       |
+            | hi     | Kurt   | yes    | 3     | primary       |
+            | ab     | Kurt   | yes    | 4     | primary       |
+            | cd     | Kurt   | yes    | 3     | secondary     |
+            | bc     | Kurt   | yes    | 2     | primary       |
+
+        When I route I should get
+            | waypoints | route                | turns                        |
+            | j,i       | Kapweg,Kurt,Kurt     | depart,turn left,arrive      |
+            | j,o       | Kapweg,Kapweg,Kapweg | depart,continue uturn,arrive |
+            | a,i       | Kurt,Kurt,Kurt       | depart,continue uturn,arrive |
+
+    #http://www.openstreetmap.org/#map=18/52.56251/13.32650
+    Scenario: Curved Turn on Separated Directions
+        Given the node map
+            """
+                e                               d
+                f                               c - - - - - - - - - - - j
+                |                     l    '    |
+                |                   '           |
+                |               '               |
+                |            '                  |
+                |         '                     |
+                |     n                         |
+                |                               |
+                |   '                           |
+                |                               |
+                | '                             |
+                |                               |
+                |                               |
+                |                               |
+                |'                              |
+                |                               |
+                |                               |
+                |                               |
+                |                               |
+                g                               |
+                h - - - - - - - - - - - - - - - b - - - - - - - - - - - o
+                |                               |
+                |                               |
+                |                               |
+                |                               |
+                |                               |
+                |                               |
+                i                               a
+            """
+
+        And the ways
+            | nodes  | name   | oneway | lanes | highway       |
+            | jc     | Kapweg | yes    | 3     | primary       |
+            | clngh  | Kapweg | yes    |       | primary_link  |
+            | hbo    | Kapweg | yes    | 2     | primary       |
+            | efh    | Kurt   | yes    | 4     | secondary     |
             | hi     | Kurt   | yes    | 3     | primary       |
             | ab     | Kurt   | yes    | 4     | primary       |
             | cd     | Kurt   | yes    | 3     | secondary     |
@@ -1112,8 +1166,9 @@ Feature: Simple Turns
             """
 
      And the ways
-            | nodes             | name    | highway     | lanes |
-            | abcdefghijklmnopc | circled | residential | 1     |
+            | nodes           | name    | highway     | lanes | oneway |
+            | abc             | circled | residential | 1     | no     |
+            | cdefghijklmnopc | circled | residential | 1     | yes    |
 
      When I route I should get
             | waypoints | bearings     | route           | turns         |
@@ -1168,3 +1223,40 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route        |
             | a,e       | ab,bcde,bcde |
+
+
+    @3401
+    Scenario: Curve With Duplicated Coordinates
+        Given the node locations
+            | node | lat                | lon                | #          |
+            | a    | 0.9999280745650984 | 1.0                |            |
+            | b    | 0.9999280745650984 | 1.0000179813587253 |            |
+            | c    | 0.9999280745650984 | 1.0000359627174509 |            |
+            | d    | 0.9999460559238238 | 1.0000674300952204 |            |
+            | e    | 0.9999640372825492 | 1.0000809161142643 |            |
+            | f    | 0.9999820186412746 | 1.0000854114539457 |            |
+            | g    | 1.0                | 1.0000854114539457 |            |
+            | h    | 1.0                | 1.0000854114539457 | #same as g |
+            | z    | 0.9999100932063729 | 1.0000179813587253 |            |
+           #                   g
+           #                   |
+           #                   f
+           #                   '
+           #                  e
+           #                 '
+           #               d
+           #           '
+           #a - b - c
+           #    |
+           #    z
+
+        And the ways
+            | nodes   | oneway | lanes | #                        |
+            | ab      | yes    | 1     |                          |
+            | zb      | yes    | 1     |                          |
+            | bcdefgh | yes    | 1     | #intentional duplication |
+
+        # we don't care for turn instructions, this is a coordinate extraction bug check
+        When I route I should get
+            | waypoints | route              | intersections                                |
+            | a,g       | ab,bcdefgh,bcdefgh | true:90;true:45 false:180 false:270;true:180 |
