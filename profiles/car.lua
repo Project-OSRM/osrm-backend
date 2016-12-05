@@ -40,21 +40,11 @@ access_tag_blacklist = Set {
   'delivery'
 }
 
-access_tag_restricted = Set {
-  'destination',
-  'delivery'
-}
-
 access_tags_hierarchy = Sequence {
   'motorcar',
   'motor_vehicle',
   'vehicle',
   'access'
-}
-
-service_tag_restricted = Set {
-  'parking_aisle',
-  'parking'
 }
 
 service_tag_forbidden = Set {
@@ -545,11 +535,6 @@ end
 function handle_service(way,result)
   local service = way:get_value_by_key("service")
   if service then
-    -- Set access restriction flag if service is allowed under certain restrictions only
-    if service_tag_restricted[service] then
-      result.is_access_restricted = true
-    end
-
     -- Set don't allow access to certain service roads
     if service_tag_forbidden[service] then
       result.forward_mode = mode.inaccessible
