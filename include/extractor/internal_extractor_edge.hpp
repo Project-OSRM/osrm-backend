@@ -47,7 +47,6 @@ struct InternalExtractorEdge
                  false, // backward
                  false, // roundabout
                  false, // circular
-                 false, // access restricted
                  true,  // can be startpoint
                  TRAVEL_MODE_INACCESSIBLE,
                  false,
@@ -64,7 +63,6 @@ struct InternalExtractorEdge
                                    bool backward,
                                    bool roundabout,
                                    bool circular,
-                                   bool access_restricted,
                                    bool startpoint,
                                    TravelMode travel_mode,
                                    bool is_split,
@@ -78,7 +76,6 @@ struct InternalExtractorEdge
                  backward,
                  roundabout,
                  circular,
-                 access_restricted,
                  startpoint,
                  travel_mode,
                  is_split,
@@ -106,7 +103,6 @@ struct InternalExtractorEdge
                                      false, // backward
                                      false, // roundabout
                                      false, // circular
-                                     false, // access restricted
                                      true,  // can be startpoint
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,
@@ -123,7 +119,6 @@ struct InternalExtractorEdge
                                      false, // backward
                                      false, // roundabout
                                      false, // circular
-                                     false, // access restricted
                                      true,  // can be startpoint
                                      TRAVEL_MODE_INACCESSIBLE,
                                      false,

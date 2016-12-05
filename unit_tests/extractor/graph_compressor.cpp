@@ -22,14 +22,12 @@ namespace
 // creates a default edge of unit weight
 inline InputEdge MakeUnitEdge(const NodeID from, const NodeID to)
 {
-    // src, tgt, dist, edge_id, name_id, access_restricted, fwd, bkwd, roundabout, circular
-    // travel_mode
+    // src, tgt, dist, edge_id, name_id, fwd, bkwd, roundabout, circular, travel_mode
     return {from,
             to,
             1,
             SPECIAL_EDGEID,
             0,
-            false,
             false,
             false,
             false,
