@@ -164,13 +164,12 @@ function way_function (way, result)
     -- speed
   if route_speeds[route] then
     -- ferries (doesn't cover routes tagged using relations)
-    result.ignore_in_grid = true
-  if duration and durationIsValid(duration) then
-    result.duration = math.max( 1, parseDuration(duration) )
-  else
-    result.forward_speed = route_speeds[route]
-    result.backward_speed = route_speeds[route]
-  end
+      if duration and durationIsValid(duration) then
+        result.duration = math.max( 1, parseDuration(duration) )
+      else
+        result.forward_speed = route_speeds[route]
+        result.backward_speed = route_speeds[route]
+      end
     result.forward_mode = mode.ferry
     result.backward_mode = mode.ferry
   elseif railway and platform_speeds[railway] then

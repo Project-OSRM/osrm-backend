@@ -1,6 +1,6 @@
 #include "extractor/extractor.hpp"
 #include "extractor/extractor_config.hpp"
-#include "extractor/scripting_environment_sol2.hpp"
+#include "extractor/scripting_environment_lua.hpp"
 #include "util/log.hpp"
 #include "util/version.hpp"
 
