@@ -460,9 +460,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             const auto turn_to_penalty =
                 [this, &scripting_environment, traffic_light_penalty](const auto &turn) -> int32_t {
+                    BOOST_ASSERT(turn.entry_allowed);
+
                     // don't add turn penalty if it is not an actual turn. This heuristic is
                     // necessary since OSRM cannot handle looping roads/parallel roads
-                    if (!turn.entry_allowed || turn.instruction.type == guidance::TurnType::NoTurn)
+                    if (turn.instruction.type == guidance::TurnType::NoTurn)
                     {
                         return 0;
                     }
@@ -480,6 +482,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     return turn_penalty;
                 };
 
+            // Remove all invalid turns
+            auto new_end = std::remove_if(intersection.begin(),
+                                          intersection.end(),
+                                          [](const auto &turn) { return !turn.entry_allowed; });
+            intersection.erase(new_end, intersection.end());
+
             std::vector<int32_t> turn_penalties(intersection.size());
             std::transform(intersection.begin(),
                            intersection.end(),
@@ -493,9 +501,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 const auto &turn = intersection[turn_index];
                 const auto turn_penalty = turn_penalties[turn_index];
 
-                // only keep valid turns
-                if (!turn.entry_allowed)
-                    continue;
+                BOOST_ASSERT(turn.entry_allowed);
 
                 // only add an edge if turn is not prohibited
                 const EdgeData &edge_data1 = m_node_based_graph->GetEdgeData(incoming_edge);
