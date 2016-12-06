@@ -46,6 +46,30 @@ template <typename T> class DistTableWrapper
         return table_[index];
     }
 
+    void InvalidateRoute(NodeID from, NodeID to)
+    {
+        BOOST_ASSERT_MSG(from < number_of_nodes_, "from ID is out of bound");
+        BOOST_ASSERT_MSG(to < number_of_nodes_, "to ID is out of bound");
+
+        const auto index = from * number_of_nodes_ + to;
+
+        BOOST_ASSERT_MSG(index < table_.size(), "index is out of bound");
+
+        table_[index] = INVALID_EDGE_WEIGHT;
+    }
+
+    void ShortcutRoute(NodeID from, NodeID to)
+    {
+        BOOST_ASSERT_MSG(from < number_of_nodes_, "from ID is out of bound");
+        BOOST_ASSERT_MSG(to < number_of_nodes_, "to ID is out of bound");
+
+        const auto index = from * number_of_nodes_ + to;
+
+        BOOST_ASSERT_MSG(index < table_.size(), "index is out of bound");
+
+        table_[index] = 0;
+    }
+
     ConstIterator begin() const { return std::begin(table_); }
 
     Iterator begin() { return std::begin(table_); }

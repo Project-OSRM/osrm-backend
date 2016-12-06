@@ -50,8 +50,11 @@ GetShortestRoundTrip(const NodeID new_loc,
         const auto dist_to = dist_table(new_loc, *to_node);
         const auto trip_dist = dist_from + dist_to - dist_table(*from_node, *to_node);
 
-        BOOST_ASSERT_MSG(dist_from != INVALID_EDGE_WEIGHT, "distance has invalid edge weight");
-        BOOST_ASSERT_MSG(dist_to != INVALID_EDGE_WEIGHT, "distance has invalid edge weight");
+        // If the edge_weight is very large (INVALID_EDGE_WEIGHT) then the algorithm will not choose
+        // this edge in final minimal path. So instead of computing all the permutations after this
+        // large edge, discard this edge right here and don't consider the path after this edge.
+        if (dist_from == INVALID_EDGE_WEIGHT || dist_to == INVALID_EDGE_WEIGHT)
+            continue;
         // This is not neccessarily true:
         // Lets say you have an edge (u, v) with duration 100. If you place a coordinate exactly in
         // the middle of the segment yielding (u, v'), the adjusted duration will be 100 * 0.5 = 50.

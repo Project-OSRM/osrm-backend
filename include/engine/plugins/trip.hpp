@@ -36,7 +36,8 @@ class TripPlugin final : public BasePlugin
 
     InternalRouteResult ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                      const std::vector<PhantomNode> &phantom_node_list,
-                                     const std::vector<NodeID> &trip) const;
+                                     const std::vector<NodeID> &trip,
+                                     const bool roundtrip) const;
 
   public:
     explicit TripPlugin(const int max_locations_trip_)
