@@ -78,7 +78,7 @@ matrix:
       compiler: "gcc-6-release-i686"
       env: >
         TARGET_ARCH='i686' CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
-        CFLAGS='-m32 -msse2 -mfpmath=sse' CXXFLAGS='-m32 -msse2 -mfpmath=sse'
+        CFLAGS='-m32 -msse2 -mfpmath=sse' CXXFLAGS='-m32 -msse2 -mfpmath=sse' CHECK_HEADERS=yes
 
     - os: linux
       compiler: "gcc-4.9-release"
@@ -170,6 +170,7 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
+  - if [[ ${CHECK_HEADERS} == yes ]] ; then make check-headers ; fi
   - popd
   - mkdir example/build && pushd example/build
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}

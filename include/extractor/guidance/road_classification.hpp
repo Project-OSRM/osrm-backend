@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <string>
 
 #include "extractor/guidance/constants.hpp"

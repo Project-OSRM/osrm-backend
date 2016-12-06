@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 
+#include "util/exception.hpp"
 #include "util/json_container.hpp"
 #include "util/json_renderer.hpp"
 #include "util/log.hpp"
