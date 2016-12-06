@@ -495,9 +495,22 @@ BOOST_AUTO_TEST_CASE(valid_trip_urls)
     reference_1.coordinates = coords_1;
     auto result_1 = parseParameters<TripParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
-    CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
+
+    TripParameters reference_2{};
+    reference_2.coordinates = coords_1;
+    reference_2.source = 1;
+    reference_2.destination = 2;
+    auto result_2 = parseParameters<TripParameters>("1,2;3,4?source=1&destination=2");
+    BOOST_CHECK(result_2);
+    BOOST_CHECK_EQUAL(reference_2.source, result_2->source);
+    BOOST_CHECK_EQUAL(reference_2.destination, result_2->destination);
+    CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
+    CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
+
+    BOOST_CHECK_EQUAL(testInvalidOptions<TripParameters>("1,2;3,4?source=-1&destination=2"), 15UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<TripParameters>("1,2;3,4?source=0&destination=-1"), 29UL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
