@@ -5,8 +5,8 @@
 
 #include <boost/assert.hpp>
 
-#include <cmath>
-
+#include <algorithm>
+#include <iterator>
 #include <limits>
 #include <utility>
 
@@ -125,29 +125,17 @@ Coordinate centroid(const Coordinate lhs, const Coordinate rhs)
     return centroid;
 }
 
-double degToRad(const double degree)
-{
-    using namespace boost::math::constants;
-    return degree * (pi<double>() / 180.0);
-}
-
-double radToDeg(const double radian)
-{
-    using namespace boost::math::constants;
-    return radian * (180.0 * (1. / pi<double>()));
-}
-
 double bearing(const Coordinate first_coordinate, const Coordinate second_coordinate)
 {
     const double lon_diff =
         static_cast<double>(toFloating(second_coordinate.lon - first_coordinate.lon));
-    const double lon_delta = degToRad(lon_diff);
-    const double lat1 = degToRad(static_cast<double>(toFloating(first_coordinate.lat)));
-    const double lat2 = degToRad(static_cast<double>(toFloating(second_coordinate.lat)));
+    const double lon_delta = detail::degToRad(lon_diff);
+    const double lat1 = detail::degToRad(static_cast<double>(toFloating(first_coordinate.lat)));
+    const double lat2 = detail::degToRad(static_cast<double>(toFloating(second_coordinate.lat)));
     const double y = std::sin(lon_delta) * std::cos(lat2);
     const double x =
         std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
-    double result = radToDeg(std::atan2(y, x));
+    double result = detail::radToDeg(std::atan2(y, x));
     while (result < 0.0)
     {
         result += 360.0;
@@ -320,47 +308,72 @@ bool isCCW(const Coordinate first_coordinate,
     return signedArea(first_coordinate, second_coordinate, third_coordinate) > 0;
 }
 
-std::pair<util::Coordinate, util::Coordinate>
-leastSquareRegression(const std::vector<util::Coordinate> &coordinates)
+// find the closest distance between a coordinate and a segment
+double findClosestDistance(const Coordinate coordinate,
+                           const Coordinate segment_begin,
+                           const Coordinate segment_end)
 {
-    BOOST_ASSERT(coordinates.size() >= 2);
-    double sum_lon = 0, sum_lat = 0, sum_lon_lat = 0, sum_lon_lon = 0;
-    double min_lon = static_cast<double>(toFloating(coordinates.front().lon));
-    double max_lon = static_cast<double>(toFloating(coordinates.front().lon));
-    for (const auto coord : coordinates)
-    {
-        min_lon = std::min(min_lon, static_cast<double>(toFloating(coord.lon)));
-        max_lon = std::max(max_lon, static_cast<double>(toFloating(coord.lon)));
-        sum_lon += static_cast<double>(toFloating(coord.lon));
-        sum_lon_lon +=
-            static_cast<double>(toFloating(coord.lon)) * static_cast<double>(toFloating(coord.lon));
-        sum_lat += static_cast<double>(toFloating(coord.lat));
-        sum_lon_lat +=
-            static_cast<double>(toFloating(coord.lon)) * static_cast<double>(toFloating(coord.lat));
-    }
+    return haversineDistance(coordinate,
+                             projectPointOnSegment(segment_begin, segment_end, coordinate).second);
+}
 
-    const auto dividend = coordinates.size() * sum_lon_lat - sum_lon * sum_lat;
-    const auto divisor = coordinates.size() * sum_lon_lon - sum_lon * sum_lon;
-    if (std::abs(divisor) < std::numeric_limits<double>::epsilon())
-        return std::make_pair(coordinates.front(), coordinates.back());
+// find the closes distance between two sets of coordinates
+double findClosestDistance(const std::vector<Coordinate> &lhs, const std::vector<Coordinate> &rhs)
+{
+    double current_min = std::numeric_limits<double>::max();
 
-    // slope of the regression line
-    const auto slope = dividend / divisor;
-    const auto intercept = (sum_lat - slope * sum_lon) / coordinates.size();
-
-    const auto GetLatAtLon = [intercept,
-                              slope](const util::FloatLongitude longitude) -> util::FloatLatitude {
-        return {intercept + slope * static_cast<double>((longitude))};
+    const auto compute_minimum_distance_in_rhs = [&current_min, &rhs](const Coordinate coordinate) {
+        current_min =
+            std::min(current_min, findClosestDistance(coordinate, rhs.begin(), rhs.end()));
+        return false;
     };
 
-    const util::Coordinate regression_first = {
-        toFixed(util::FloatLongitude{min_lon - 1}),
-        toFixed(util::FloatLatitude(GetLatAtLon(util::FloatLongitude{min_lon - 1})))};
-    const util::Coordinate regression_end = {
-        toFixed(util::FloatLongitude{max_lon + 1}),
-        toFixed(util::FloatLatitude(GetLatAtLon(util::FloatLongitude{max_lon + 1})))};
+    std::find_if(std::begin(lhs), std::end(lhs), compute_minimum_distance_in_rhs);
+    return current_min;
+}
 
-    return {regression_first, regression_end};
+std::vector<double> getDeviations(const std::vector<Coordinate> &from,
+                                  const std::vector<Coordinate> &to)
+{
+    auto find_deviation = [&to](const Coordinate coordinate) {
+        return findClosestDistance(coordinate, to.begin(), to.end());
+    };
+
+    std::vector<double> deviations_from;
+    deviations_from.reserve(from.size());
+    std::transform(
+        std::begin(from), std::end(from), std::back_inserter(deviations_from), find_deviation);
+
+    return deviations_from;
+}
+
+Coordinate rotateCCWAroundZero(Coordinate coordinate, double angle_in_radians)
+{
+    /*
+     * a rotation  around 0,0 in vector space is defined as
+     *
+     * | cos a   -sin a | . | lon |
+     * | sin a    cos a |   | lat |
+     *
+     * resulting in cos a lon - sin a lon for the new longitude and sin a lon + cos a lat for the
+     * new latitude
+     */
+
+    const auto cos_alpha = cos(angle_in_radians);
+    const auto sin_alpha = sin(angle_in_radians);
+
+    const auto lon = static_cast<double>(toFloating(coordinate.lon));
+    const auto lat = static_cast<double>(toFloating(coordinate.lat));
+
+    return {util::FloatLongitude{cos_alpha * lon - sin_alpha * lat},
+            util::FloatLatitude{sin_alpha * lon + cos_alpha * lat}};
+}
+
+Coordinate difference(const Coordinate lhs, const Coordinate rhs)
+{
+    const auto lon_diff_int = static_cast<int>(lhs.lon) - static_cast<int>(rhs.lon);
+    const auto lat_diff_int = static_cast<int>(lhs.lat) - static_cast<int>(rhs.lat);
+    return {util::FixedLongitude{lon_diff_int}, util::FixedLatitude{lat_diff_int}};
 }
 
 } // ns coordinate_calculation

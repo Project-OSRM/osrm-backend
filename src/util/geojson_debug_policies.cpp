@@ -36,6 +36,7 @@ NodeIdVectorToMultiPoint::NodeIdVectorToMultiPoint(
     : node_coordinates(node_coordinates)
 {
 }
+
 util::json::Object NodeIdVectorToMultiPoint::
 operator()(const std::vector<NodeID> &node_ids,
            const boost::optional<json::Object> &properties) const

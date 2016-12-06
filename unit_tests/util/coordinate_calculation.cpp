@@ -1,6 +1,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 
 #include <osrm/coordinate.hpp>
@@ -323,6 +324,58 @@ BOOST_AUTO_TEST_CASE(squaredEuclideanDistance)
     const auto result = coordinate_calculation::squaredEuclideanDistance(lhs, rhs);
 
     BOOST_CHECK_EQUAL(result, 162000000000000000ull);
+}
+
+BOOST_AUTO_TEST_CASE(vertical_regression)
+{
+    // check a vertical line for its bearing
+    std::vector<Coordinate> coordinates;
+    for (std::size_t i = 0; i < 100; ++i)
+        coordinates.push_back(Coordinate(FloatLongitude{0.0}, FloatLatitude{i / 100.0}));
+
+    const auto regression =
+        util::coordinate_calculation::leastSquareRegression(coordinates.begin(), coordinates.end());
+    const auto is_valid =
+        util::angularDeviation(
+            util::coordinate_calculation::bearing(regression.first, regression.second), 0) < 2;
+    BOOST_CHECK(is_valid);
+}
+
+BOOST_AUTO_TEST_CASE(sinus_curve)
+{
+    // create a full sinus curve, sampled in 3.6 degree
+    std::vector<Coordinate> coordinates;
+    for (std::size_t i = 0; i < 360; ++i)
+        coordinates.push_back(Coordinate(
+            FloatLongitude{i / 360.0},
+            FloatLatitude{sin(util::coordinate_calculation::detail::degToRad(i / 360.0))}));
+
+    const auto regression =
+        util::coordinate_calculation::leastSquareRegression(coordinates.begin(), coordinates.end());
+    const auto is_valid =
+        util::angularDeviation(
+            util::coordinate_calculation::bearing(regression.first, regression.second), 90) < 2;
+
+    BOOST_CHECK(is_valid);
+}
+
+BOOST_AUTO_TEST_CASE(parallel_lines_slight_offset)
+{
+    std::vector<Coordinate> coordinates_lhs;
+    for (std::size_t i = 0; i < 100; ++i)
+        coordinates_lhs.push_back(Coordinate(util::FloatLongitude{(50 - (rand() % 101)) / 100000.0},
+                                             util::FloatLatitude{i / 100000.0}));
+    std::vector<Coordinate> coordinates_rhs;
+    for (std::size_t i = 0; i < 100; ++i)
+        coordinates_rhs.push_back(
+            Coordinate(util::FloatLongitude{(150 - (rand() % 101)) / 100000.0},
+                       util::FloatLatitude{i / 100000.0}));
+
+    const auto are_parallel = util::coordinate_calculation::areParallel(coordinates_lhs.begin(),
+                                                                        coordinates_lhs.end(),
+                                                                        coordinates_rhs.begin(),
+                                                                        coordinates_rhs.end());
+    BOOST_CHECK(are_parallel);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

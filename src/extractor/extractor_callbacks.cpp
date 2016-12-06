@@ -139,8 +139,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return;
     }
 
-    // FIXME this need to be moved into the profiles
-    const guidance::RoadClassification road_classification = parsed_way.road_classification;
     const auto laneStringToDescription = [](const std::string &lane_string) -> TurnLaneDescription {
         if (lane_string.empty())
             return {};
@@ -236,6 +234,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     // Otherwise fetches the id based on the name and returns it without insertion.
     const auto turn_lane_id_forward = requestId(parsed_way.turn_lanes_forward);
     const auto turn_lane_id_backward = requestId(parsed_way.turn_lanes_backward);
+
+    const auto road_classification = parsed_way.road_classification;
 
     const constexpr auto MAX_STRING_LENGTH = 255u;
     // Get the unique identifier for the street name, destination, and ref

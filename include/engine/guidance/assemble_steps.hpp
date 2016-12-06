@@ -154,7 +154,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                     intersection.entry.push_back(entry_class.allowsEntry(idx));
                 }
                 std::int16_t bearing_in_driving_direction =
-                    util::reverseBearing(std::round(bearings.first));
+                    util::bearing::reverse(std::round(bearings.first));
                 maneuver = {intersection.location,
                             bearing_in_driving_direction,
                             bearings.second,
@@ -214,13 +214,14 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     BOOST_ASSERT(segment_index == number_of_segments - 1);
     bearings = detail::getArriveBearings(leg_geometry);
 
-    intersection = {target_node.location,
-                    std::vector<short>({static_cast<short>(util::reverseBearing(bearings.first))}),
-                    std::vector<bool>({true}),
-                    0,
-                    IntermediateIntersection::NO_INDEX,
-                    util::guidance::LaneTuple(),
-                    {}};
+    intersection = {
+        target_node.location,
+        std::vector<short>({static_cast<short>(util::bearing::reverse(bearings.first))}),
+        std::vector<bool>({true}),
+        0,
+        IntermediateIntersection::NO_INDEX,
+        util::guidance::LaneTuple(),
+        {}};
 
     // This step has length zero, the only reason we need it is the target location
     maneuver = {intersection.location,

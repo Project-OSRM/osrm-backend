@@ -599,22 +599,21 @@ Feature: Turn Lane Guidance
     Scenario: Segregated Intersection Merges With Lanes
         Given the node map
             """
-                        f
-
-            e     d
-                      c g
-            a     b
-
-                      h
+                 a e
+                 | |
+                 | |
+                 b d
+            h     c
+             ' -- g - - f
             """
 
         And the ways
-            | nodes | name     | turn:lanes:forward                 | oneway | highway   |
-            | abc   | road     | left\|left\|left\|through\|through | yes    | primary   |
-            | cde   | road     |                                    | yes    | primary   |
-            | hc    | cross    |                                    | yes    | secondary |
-            | cg    | straight |                                    | no     | tertiary  |
-            | cf    | left     |                                    | yes    | primary   |
+            | nodes | name     | turn:lanes:forward                 | oneway | highway   | lanes |
+            | abc   | road     | left\|left\|left\|through\|through | yes    | primary   | 5     |
+            | cde   | road     |                                    | yes    | primary   | 3     |
+            | hc    | cross    |                                    | yes    | secondary |       |
+            | cg    | straight |                                    | no     | tertiary  |       |
+            | cf    | left     |                                    | yes    | primary   |       |
 
         When I route I should get
             | waypoints | route                  | turns                           | lanes                                                           |
