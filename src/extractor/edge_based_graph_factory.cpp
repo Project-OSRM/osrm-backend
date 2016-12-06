@@ -629,8 +629,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                     // we define turn penalty as the deviation from the average
                     const int32_t turn_penalty = turn_weight - average_turn_weight;
-                    lookup::PenaltyBlock penaltyblock = {
-                        turn_penalty, from_node.node_id, via_node.node_id, to_node.node_id};
+                    const int32_t turn_bias = turn_weight - incoming_data.distance - turn_penalty;
+                    lookup::PenaltyBlock penaltyblock = {turn_bias,
+                                                         turn_penalty,
+                                                         from_node.node_id,
+                                                         via_node.node_id,
+                                                         to_node.node_id};
                     edge_penalty_file.write(reinterpret_cast<const char *>(&penaltyblock),
                                             sizeof(penaltyblock));
                 }

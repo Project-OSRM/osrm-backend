@@ -848,7 +848,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 auto speed_iter =
                     find(segment_speed_lookup,
                          SegmentSpeedSource{
-                             previous_osm_node_id, segmentblocks[i].this_osm_node_id, {0, 0}});
+                         {previous_osm_node_id, segmentblocks[i].this_osm_node_id}, {0, 0}});
                 if (speed_iter != segment_speed_lookup.end())
                 {
                     if (speed_iter->speed_source.speed > 0)
@@ -889,16 +889,15 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
             const auto turn_iter =
                 find(turn_penalty_lookup,
                      TurnPenaltySource{
-                         penaltyblock->from_id, penaltyblock->via_id, penaltyblock->to_id, {0, 0}});
-            const int32_t turn_weight = [&]() {
+                     {penaltyblock->from_id, penaltyblock->via_id, penaltyblock->to_id}, {0, 0}});
+            const int32_t turn_weight = penaltyblock->turn_bias + [&]() {
                 if (turn_iter != turn_penalty_lookup.end())
                 {
                     return static_cast<int32_t>(turn_iter->penalty_source.penalty * 10);
-
                 }
                 else
                 {
-                    return penaltyblock->fixed_penalty;
+                    return penaltyblock->turn_penalty;
                 }
             }();
 
