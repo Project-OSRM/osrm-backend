@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(decode)
 
     BOOST_CHECK_EQUAL(cmp_coords.size(), coords.size());
 
-    for (unsigned i = 0; i < cmp_coords.size(); ++i)
+    for (std::size_t i = 0; i < cmp_coords.size(); ++i)
     {
         BOOST_CHECK_CLOSE(static_cast<double>(util::toFloating(coords[i].lat)),
                           static_cast<double>(util::toFloating(cmp_coords[i].lat)),
@@ -84,6 +84,63 @@ BOOST_AUTO_TEST_CASE(encode6)
     const auto encodedPolyline = encodePolyline<1000000>(cmp_coords.begin(), cmp_coords.end());
 
     BOOST_CHECK_EQUAL(encodedPolyline, polyline);
+}
+
+BOOST_AUTO_TEST_CASE(polyline_sign_check)
+{
+    // check sign conversion correctness from zig-zag encoding to two's complement
+    std::vector<util::Coordinate> coords = {
+        {util::FloatLongitude{0}, util::FloatLatitude{0}},
+        {util::FloatLongitude{-0.00001}, util::FloatLatitude{0.00000}},
+        {util::FloatLongitude{0.00000}, util::FloatLatitude{-0.00001}}};
+
+    const auto polyline = encodePolyline<100000>(coords.begin(), coords.end());
+    const auto result = decodePolyline(polyline);
+
+    BOOST_CHECK(coords.size() == result.size());
+    for (std::size_t i = 0; i < result.size(); ++i)
+    {
+        BOOST_CHECK(coords[i] == result[i]);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(polyline_short_strings)
+{
+    // check zero longitude difference in the last coordinate
+    // the polyline is incorrect, but decodePolyline must not fail
+    std::vector<util::Coordinate> coords = {
+        {util::FloatLongitude{13.32476}, util::FloatLatitude{52.52632}},
+        {util::FloatLongitude{13.30179}, util::FloatLatitude{52.59155}},
+        {util::FloatLongitude{13.30179}, util::FloatLatitude{52.60391}}};
+
+    const auto polyline = encodePolyline<100000>(coords.begin(), coords.end());
+    BOOST_CHECK(polyline.back() == '?');
+
+    const auto result_short = decodePolyline(polyline.substr(0, polyline.size() - 1));
+    BOOST_CHECK(coords.size() == result_short.size());
+    for (std::size_t i = 0; i < result_short.size(); ++i)
+    {
+        BOOST_CHECK(coords[i] == result_short[i]);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(incorrect_polylines)
+{
+    // check incorrect polylines
+    std::vector<std::string> polylines = {
+        "?",       // latitude only
+        "_",       // unfinished latitude
+        "?_",      // unfinished longitude
+        "?_______" // too long longitude (35 bits)
+    };
+    util::Coordinate coord{util::FloatLongitude{0}, util::FloatLatitude{0}};
+
+    for (auto polyline : polylines)
+    {
+        const auto result = decodePolyline(polyline);
+        BOOST_CHECK(result.size() == 1);
+        BOOST_CHECK(result.front() == coord);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
