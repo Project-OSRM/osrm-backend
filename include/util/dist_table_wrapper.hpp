@@ -1,6 +1,8 @@
 #ifndef DIST_TABLE_WRAPPER_H
 #define DIST_TABLE_WRAPPER_H
 
+#include "util/typedefs.hpp"
+
 #include <algorithm>
 #include <boost/assert.hpp>
 #include <cstddef>

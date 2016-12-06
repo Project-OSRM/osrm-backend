@@ -8,6 +8,7 @@
 #include <boost/assert.hpp>
 
 #include "extractor/guidance/road_classification.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "osrm/coordinate.hpp"
 #include <utility>
 
