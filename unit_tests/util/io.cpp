@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE(io_nonexistent_file)
     }
     catch (const osrm::util::exception &e)
     {
-        std::cout << e.what() << std::endl;
-        BOOST_REQUIRE(std::string(e.what()) ==
-                      "Error opening non_existent_test_io.tmp");
+        const std::string expected("Error opening non_existent_test_io.tmp");
+        const std::string got(e.what());
+        BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
     }
 }
 
@@ -71,9 +71,10 @@ BOOST_AUTO_TEST_CASE(file_too_small)
     }
     catch (const osrm::util::exception &e)
     {
-        std::cout << e.what() << std::endl;
-        BOOST_REQUIRE(std::string(e.what()) ==
-                      "Error reading from file_too_small_test_io.tmp: Unexpected end of file");
+        const std::string expected(
+            "Error reading from file_too_small_test_io.tmp: Unexpected end of file");
+        const std::string got(e.what());
+        BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
     }
 }
 
@@ -98,9 +99,9 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
     }
     catch (const osrm::util::exception &e)
     {
-        std::cout << e.what() << std::endl;
-        BOOST_REQUIRE(std::string(e.what()) ==
-                      "Fingerprint mismatch in corrupt_fingerprint_file_test_io.tmp");
+        const std::string expected("Fingerprint mismatch in corrupt_fingerprint_file_test_io.tmp");
+        const std::string got(e.what());
+        BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
     }
 }
 

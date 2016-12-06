@@ -3,7 +3,7 @@
 
 #include <boost/assert.hpp>
 
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <cstddef>
 

@@ -1,5 +1,5 @@
 #include "storage/storage_config.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -43,7 +43,7 @@ bool StorageConfig::IsValid() const
     {
         if (!boost::filesystem::is_regular_file(*path))
         {
-            util::SimpleLogger().Write(logWARNING) << "Missing/Broken File: " << path->string();
+            util::Log(logWARNING) << "Missing/Broken File: " << path->string();
             success = false;
         }
     }

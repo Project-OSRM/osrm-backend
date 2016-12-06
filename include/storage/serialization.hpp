@@ -8,7 +8,7 @@
 #include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/fingerprint.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/static_graph.hpp"
 
 #include <boost/filesystem/fstream.hpp>
@@ -44,8 +44,8 @@ inline HSGRHeader readHSGRHeader(io::FileReader &input_file)
     const auto fingerprint_loaded = input_file.ReadOne<util::FingerPrint>();
     if (!fingerprint_loaded.TestGraphUtil(fingerprint_valid))
     {
-        util::SimpleLogger().Write(logWARNING) << ".hsgr was prepared with different build.\n"
-                                                  "Reprocess to get rid of this warning.";
+        util::Log(logWARNING) << ".hsgr was prepared with different build.\n"
+                                 "Reprocess to get rid of this warning.";
     }
 
     HSGRHeader header;

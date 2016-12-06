@@ -1,6 +1,6 @@
 #include "util/name_table.hpp"
 #include "util/exception.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -32,9 +32,8 @@ NameTable::NameTable(const std::string &filename)
     }
     else
     {
-        util::SimpleLogger().Write(logINFO)
-            << "list of street names is empty in construction of name table from: \"" << filename
-            << "\"";
+        util::Log() << "list of street names is empty in construction of name table from: \""
+                    << filename << "\"";
     }
 }
 

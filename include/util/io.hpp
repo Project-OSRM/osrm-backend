@@ -1,7 +1,7 @@
 #ifndef OSRM_INCLUDE_UTIL_IO_HPP_
 #define OSRM_INCLUDE_UTIL_IO_HPP_
 
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -125,9 +125,10 @@ void deserializeAdjacencyArray(const std::string &filename,
 
     // offsets have to match up with the size of the data
     if (offsets.empty() || (offsets.back() != boost::numeric_cast<std::uint32_t>(data.size())))
-        throw util::exception("Error in " + filename + (offsets.empty()
-                                                            ? "Offsets are empty"
-                                                            : "Offset and data size do not match"));
+        throw util::exception(
+            "Error in " + filename +
+            (offsets.empty() ? "Offsets are empty" : "Offset and data size do not match") +
+            SOURCE_REF);
 }
 
 inline bool serializeFlags(const boost::filesystem::path &path, const std::vector<bool> &flags)
@@ -153,8 +154,7 @@ inline bool serializeFlags(const boost::filesystem::path &path, const std::vecto
         ++chunk_count;
         flag_stream.write(reinterpret_cast<const char *>(&chunk), sizeof(chunk));
     }
-    SimpleLogger().Write() << "Wrote " << number_of_bits << " bits in " << chunk_count
-                           << " chunks (Flags).";
+    Log() << "Wrote " << number_of_bits << " bits in " << chunk_count << " chunks (Flags).";
     return static_cast<bool>(flag_stream);
 }
 

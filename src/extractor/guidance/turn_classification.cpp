@@ -1,6 +1,6 @@
 #include "extractor/guidance/turn_classification.hpp"
 
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <cstddef>
 #include <cstdint>

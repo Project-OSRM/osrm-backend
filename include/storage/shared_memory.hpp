@@ -2,7 +2,8 @@
 #define SHARED_MEMORY_HPP
 
 #include "util/exception.hpp"
-#include "util/simple_logger.hpp"
+#include "util/exception_utils.hpp"
+#include "util/log.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -62,8 +63,7 @@ class SharedMemory
         {
             shm = boost::interprocess::xsi_shared_memory(boost::interprocess::open_only, key);
 
-            util::SimpleLogger().Write(logDEBUG) << "opening " << shm.get_shmid() << " from id "
-                                                 << id;
+            util::Log(logDEBUG) << "opening " << shm.get_shmid() << " from id " << id;
 
             region = boost::interprocess::mapped_region(shm, access);
         }
@@ -72,14 +72,14 @@ class SharedMemory
         {
             shm = boost::interprocess::xsi_shared_memory(
                 boost::interprocess::open_or_create, key, size);
-            util::SimpleLogger().Write(logDEBUG) << "opening/creating " << shm.get_shmid()
-                                                 << " from id " << id << " with size " << size;
+            util::Log(logDEBUG) << "opening/creating " << shm.get_shmid() << " from id " << id
+                                << " with size " << size;
 #ifdef __linux__
             if (-1 == shmctl(shm.get_shmid(), SHM_LOCK, nullptr))
             {
                 if (ENOMEM == errno)
                 {
-                    util::SimpleLogger().Write(logWARNING) << "could not lock shared memory to RAM";
+                    util::Log(logWARNING) << "could not lock shared memory to RAM";
                 }
             }
 #endif
@@ -133,7 +133,7 @@ class SharedMemory
     static bool Remove(const boost::interprocess::xsi_key &key)
     {
         boost::interprocess::xsi_shared_memory xsi(boost::interprocess::open_only, key);
-        util::SimpleLogger().Write(logDEBUG) << "deallocating prev memory " << xsi.get_shmid();
+        util::Log(logDEBUG) << "deallocating prev memory " << xsi.get_shmid();
         return boost::interprocess::xsi_shared_memory::remove(xsi.get_shmid());
     }
 
@@ -173,8 +173,7 @@ class SharedMemory
             shm.truncate(size);
             region = boost::interprocess::mapped_region(shm, access);
 
-            util::SimpleLogger().Write(logDEBUG) << "writeable memory allocated " << size
-                                                 << " bytes";
+            util::Log(logDEBUG) << "writeable memory allocated " << size << " bytes";
         }
     }
 
@@ -221,7 +220,7 @@ class SharedMemory
 
     static bool Remove(char *key)
     {
-        util::SimpleLogger().Write(logDEBUG) << "deallocating prev memory for key " << key;
+        util::Log(logDEBUG) << "deallocating prev memory for key " << key;
         return boost::interprocess::shared_memory_object::remove(key);
     }
 
@@ -242,7 +241,7 @@ makeSharedMemory(const IdentifierT &id, const uint64_t size = 0, bool read_write
         {
             if (0 == size)
             {
-                throw util::exception("lock file does not exist, exiting");
+                throw util::exception("lock file does not exist, exiting" + SOURCE_REF);
             }
             else
             {
@@ -253,9 +252,9 @@ makeSharedMemory(const IdentifierT &id, const uint64_t size = 0, bool read_write
     }
     catch (const boost::interprocess::interprocess_exception &e)
     {
-        util::SimpleLogger().Write(logWARNING) << "caught exception: " << e.what() << ", code "
-                                               << e.get_error_code();
-        throw util::exception(e.what());
+        util::Log(logERROR) << "Error while attempting to allocate shared memory: " << e.what()
+                            << ", code " << e.get_error_code();
+        throw util::exception(e.what() + SOURCE_REF);
     }
 }
 }

@@ -4,7 +4,7 @@
 #include "extractor/guidance/toolkit.hpp"
 
 #include "util/guidance/toolkit.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <limits>
 #include <utility>
@@ -197,9 +197,9 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
         else if (countValid(intersection) > 0) // check whether turns exist at all
         {
             // FALLBACK, this should hopefully never be reached
-            util::SimpleLogger().Write(logDEBUG)
-                << "Fallback reached from motorway, no continue angle, " << intersection.size()
-                << " roads, " << countValid(intersection) << " valid ones.";
+            util::Log(logDEBUG) << "Fallback reached from motorway, no continue angle, "
+                                << intersection.size() << " roads, " << countValid(intersection)
+                                << " valid ones.";
             return fallback(std::move(intersection));
         }
     }
@@ -275,7 +275,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                                              via_eid,
                                              isThroughStreet(1, intersection),
                                              intersection[1]);
-                util::SimpleLogger().Write(logDEBUG) << "Disabled U-Turn on a freeway";
+                util::Log(logDEBUG) << "Disabled U-Turn on a freeway";
                 intersection[0].entry_allowed = false; // UTURN on the freeway
             }
             else if (exiting_motorways == 2)
@@ -334,8 +334,8 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             }
             else
             {
-                util::SimpleLogger().Write(logDEBUG) << "Found motorway junction with more than "
-                                                        "2 exiting motorways or additional ramps";
+                util::Log(logDEBUG) << "Found motorway junction with more than "
+                                       "2 exiting motorways or additional ramps";
                 return fallback(std::move(intersection));
             }
         } // done for more than one highway exit
@@ -489,9 +489,8 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
     }
     else
     { // FALLBACK, hopefully this should never been reached
-        util::SimpleLogger().Write(logDEBUG) << "Reached fallback on motorway ramp with "
-                                             << intersection.size() << " roads and "
-                                             << countValid(intersection) << " valid turns.";
+        util::Log(logDEBUG) << "Reached fallback on motorway ramp with " << intersection.size()
+                            << " roads and " << countValid(intersection) << " valid turns.";
         return fallback(std::move(intersection));
     }
     return intersection;

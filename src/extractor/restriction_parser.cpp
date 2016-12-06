@@ -4,7 +4,7 @@
 
 #include "extractor/external_memory_node.hpp"
 
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -33,15 +33,15 @@ RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment
         const unsigned count = restrictions.size();
         if (count > 0)
         {
-            util::SimpleLogger().Write() << "Found " << count << " turn restriction tags:";
+            util::Log() << "Found " << count << " turn restriction tags:";
             for (const std::string &str : restrictions)
             {
-                util::SimpleLogger().Write() << "  " << str;
+                util::Log() << "  " << str;
             }
         }
         else
         {
-            util::SimpleLogger().Write() << "Found no turn restriction tags";
+            util::Log() << "Found no turn restriction tags";
         }
     }
 }

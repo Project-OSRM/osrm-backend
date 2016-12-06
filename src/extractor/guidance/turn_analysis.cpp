@@ -5,7 +5,7 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/toolkit.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <cstddef>
 #include <iomanip>

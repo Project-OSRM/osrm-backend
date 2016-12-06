@@ -9,8 +9,9 @@
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
+#include "util/log.hpp"
 #include "util/lua_util.hpp"
-#include "util/simple_logger.hpp"
 #include "util/typedefs.hpp"
 
 #include <luabind/iterator_policy.hpp>
@@ -65,14 +66,14 @@ int luaErrorCallback(lua_State *state)
     std::string error_msg = lua_tostring(state, -1);
     std::ostringstream error_stream;
     error_stream << error_msg;
-    throw util::exception("ERROR occurred in profile script:\n" + error_stream.str());
+    throw util::exception("ERROR occurred in profile script:\n" + error_stream.str() + SOURCE_REF);
 }
 }
 
 LuaScriptingEnvironment::LuaScriptingEnvironment(const std::string &file_name)
     : file_name(file_name)
 {
-    util::SimpleLogger().Write() << "Using script " << file_name;
+    util::Log() << "Using script " << file_name;
 }
 
 void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
@@ -265,7 +266,8 @@ void LuaScriptingEnvironment::InitContext(LuaScriptingContext &context)
         luabind::object error_msg(luabind::from_stack(context.state, -1));
         std::ostringstream error_stream;
         error_stream << error_msg;
-        throw util::exception("ERROR occurred in profile script:\n" + error_stream.str());
+        throw util::exception("ERROR occurred in profile script:\n" + error_stream.str() +
+                              SOURCE_REF);
     }
 
     context.has_turn_penalty_function = util::luaFunctionExists(context.state, "turn_function");
@@ -360,7 +362,7 @@ std::vector<std::string> LuaScriptingEnvironment::GetNameSuffixList()
     }
     catch (const luabind::error &er)
     {
-        util::SimpleLogger().Write(logWARNING) << er.what();
+        util::Log(logWARNING) << er.what();
     }
 
     return suffixes_vector;
@@ -406,7 +408,7 @@ int32_t LuaScriptingEnvironment::GetTurnPenalty(const double angle)
         }
         catch (const luabind::error &er)
         {
-            util::SimpleLogger().Write(logWARNING) << er.what();
+            util::Log(logWARNING) << er.what();
         }
     }
     return 0;

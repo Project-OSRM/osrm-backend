@@ -14,12 +14,13 @@
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
+#include "util/log.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
-#include "util/simple_logger.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
@@ -105,7 +106,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     {
         if (!current_regions_lock.try_lock())
         {
-            util::SimpleLogger().Write(logWARNING) << "A data update is in progress";
+            util::Log(logWARNING) << "A data update is in progress";
             return ReturnCode::Error;
         }
     }
@@ -122,7 +123,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     const bool lock_flags = MCL_CURRENT | MCL_FUTURE;
     if (-1 == mlockall(lock_flags))
     {
-        util::SimpleLogger().Write(logWARNING) << "Could not request RAM lock";
+        util::Log(logWARNING) << "Could not request RAM lock";
     }
 #endif
 
@@ -132,12 +133,12 @@ Storage::ReturnCode Storage::Run(int max_wait)
 
     if (max_wait > 0)
     {
-        util::SimpleLogger().Write() << "Waiting for " << max_wait
-                                     << " second for all queries on the old dataset to finish:";
+        util::Log() << "Waiting for " << max_wait
+                    << " second for all queries on the old dataset to finish:";
     }
     else
     {
-        util::SimpleLogger().Write() << "Waiting for all queries on the old dataset to finish:";
+        util::Log() << "Waiting for all queries on the old dataset to finish:";
     }
 
     boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> regions_lock(
@@ -148,8 +149,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
         if (!regions_lock.timed_lock(boost::posix_time::microsec_clock::universal_time() +
                                      boost::posix_time::seconds(max_wait)))
         {
-            util::SimpleLogger().Write(logWARNING) << "Queries did not finish in " << max_wait
-                                                   << " seconds. Claiming the lock by force.";
+            util::Log(logWARNING) << "Queries did not finish in " << max_wait
+                                  << " seconds. Claiming the lock by force.";
             // WARNING: if queries are still using the old dataset they might crash
             if (regions_layout.old_layout_region == LAYOUT_1)
             {
@@ -170,16 +171,18 @@ Storage::ReturnCode Storage::Run(int max_wait)
     {
         regions_lock.lock();
     }
-    util::SimpleLogger().Write() << "Ok.";
+    util::Log() << "Ok.";
 
     // since we can't change the size of a shared memory regions we delete and reallocate
     if (SharedMemory::RegionExists(layout_region) && !SharedMemory::Remove(layout_region))
     {
-        throw util::exception("Could not remove " + regionToString(layout_region));
+        throw util::exception("Could not remove shared memory region " +
+                              regionToString(layout_region) + SOURCE_REF);
     }
     if (SharedMemory::RegionExists(data_region) && !SharedMemory::Remove(data_region))
     {
-        throw util::exception("Could not remove " + regionToString(data_region));
+        throw util::exception("Could not remove shared memory region " +
+                              regionToString(data_region) + SOURCE_REF);
     }
 
     // Allocate a memory layout in shared memory
@@ -189,8 +192,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
     PopulateLayout(*shared_layout_ptr);
 
     // allocate shared memory block
-    util::SimpleLogger().Write() << "allocating shared memory of "
-                                 << shared_layout_ptr->GetSizeOfLayout() << " bytes";
+    util::Log() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout()
+                << " bytes";
     auto shared_memory = makeSharedMemory(data_region, shared_layout_ptr->GetSizeOfLayout(), true);
     char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
 
@@ -207,8 +210,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
 
         if (max_wait > 0)
         {
-            util::SimpleLogger().Write() << "Waiting for " << max_wait
-                                         << " seconds to write new dataset timestamp";
+            util::Log() << "Waiting for " << max_wait << " seconds to write new dataset timestamp";
             auto end_time = boost::posix_time::microsec_clock::universal_time() +
                             boost::posix_time::seconds(max_wait);
             current_regions_exclusive_lock =
@@ -217,9 +219,8 @@ Storage::ReturnCode Storage::Run(int max_wait)
 
             if (!current_regions_exclusive_lock.owns())
             {
-                util::SimpleLogger().Write(logWARNING) << "Aquiring the lock timed out after "
-                                                       << max_wait
-                                                       << " seconds. Claiming the lock by force.";
+                util::Log(logWARNING) << "Aquiring the lock timed out after " << max_wait
+                                      << " seconds. Claiming the lock by force.";
                 current_regions_lock.unlock();
                 current_regions_lock.release();
                 storage::SharedBarriers::resetCurrentRegions();
@@ -228,18 +229,18 @@ Storage::ReturnCode Storage::Run(int max_wait)
         }
         else
         {
-            util::SimpleLogger().Write() << "Waiting to write new dataset timestamp";
+            util::Log() << "Waiting to write new dataset timestamp";
             current_regions_exclusive_lock =
                 boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>(
                     std::move(current_regions_lock));
         }
 
-        util::SimpleLogger().Write() << "Ok.";
+        util::Log() << "Ok.";
         data_timestamp_ptr->layout = layout_region;
         data_timestamp_ptr->data = data_region;
         data_timestamp_ptr->timestamp += 1;
     }
-    util::SimpleLogger().Write() << "All data loaded.";
+    util::Log() << "All data loaded.";
 
     return ReturnCode::Ok;
 }
@@ -260,7 +261,7 @@ void Storage::PopulateLayout(DataLayout &layout)
 
     {
         // collect number of elements to store in shared memory object
-        util::SimpleLogger().Write() << "load names from: " << config.names_data_path;
+        util::Log() << "load names from: " << config.names_data_path;
         // number of entries in name index
         io::FileReader name_file(config.names_data_path, io::FileReader::HasNoFingerprint);
 

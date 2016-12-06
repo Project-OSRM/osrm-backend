@@ -7,7 +7,7 @@
 
 #include "util/json_container.hpp"
 #include "util/json_renderer.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 namespace osrm
 {
@@ -92,7 +92,7 @@ class GeojsonLogger
         // out on log output. Such a sad life
         if (ofs.is_open())
         {
-            util::SimpleLogger().Write(logWARNING)
+            util::Log(logWARNING)
                 << "Overwriting " << logfile
                 << ". Is this desired behaviour? If this message occurs more than once rethink the "
                    "location of your Logger Guard.";

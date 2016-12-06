@@ -1,6 +1,7 @@
 #include "contractor/contractor.hpp"
 #include "contractor/contractor_config.hpp"
-#include "util/simple_logger.hpp"
+#include "util/exception.hpp"
+#include "util/log.hpp"
 #include "util/version.hpp"
 
 #include <boost/filesystem.hpp>
@@ -92,19 +93,19 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
     }
     catch (const boost::program_options::error &e)
     {
-        util::SimpleLogger().Write(logWARNING) << "[error] " << e.what();
+        util::Log(logERROR) << e.what();
         return return_code::fail;
     }
 
     if (option_variables.count("version"))
     {
-        util::SimpleLogger().Write() << OSRM_VERSION;
+        std::cout << OSRM_VERSION << std::endl;
         return return_code::exit;
     }
 
     if (option_variables.count("help"))
     {
-        util::SimpleLogger().Write() << visible_options;
+        std::cout << visible_options;
         return return_code::exit;
     }
 
@@ -112,7 +113,7 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
 
     if (!option_variables.count("input"))
     {
-        util::SimpleLogger().Write() << visible_options;
+        std::cout << visible_options;
         return return_code::fail;
     }
 
@@ -121,6 +122,7 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
 
 int main(int argc, char *argv[]) try
 {
+
     util::LogPolicy::GetInstance().Unmute();
     contractor::ContractorConfig contractor_config;
 
@@ -140,7 +142,7 @@ int main(int argc, char *argv[]) try
 
     if (1 > contractor_config.requested_num_threads)
     {
-        util::SimpleLogger().Write(logWARNING) << "Number of threads must be 1 or larger";
+        util::Log(logERROR) << "Number of threads must be 1 or larger";
         return EXIT_FAILURE;
     }
 
@@ -148,21 +150,19 @@ int main(int argc, char *argv[]) try
 
     if (recommended_num_threads != contractor_config.requested_num_threads)
     {
-        util::SimpleLogger().Write(logWARNING)
-            << "The recommended number of threads is " << recommended_num_threads
-            << "! This setting may have performance side-effects.";
+        util::Log(logWARNING) << "The recommended number of threads is " << recommended_num_threads
+                              << "! This setting may have performance side-effects.";
     }
 
     if (!boost::filesystem::is_regular_file(contractor_config.osrm_input_path))
     {
-        util::SimpleLogger().Write(logWARNING)
-            << "Input file " << contractor_config.osrm_input_path.string() << " not found!";
+        util::Log(logERROR) << "Input file " << contractor_config.osrm_input_path.string()
+                            << " not found!";
         return EXIT_FAILURE;
     }
 
-    util::SimpleLogger().Write() << "Input file: "
-                                 << contractor_config.osrm_input_path.filename().string();
-    util::SimpleLogger().Write() << "Threads: " << contractor_config.requested_num_threads;
+    util::Log() << "Input file: " << contractor_config.osrm_input_path.filename().string();
+    util::Log() << "Threads: " << contractor_config.requested_num_threads;
 
     tbb::task_scheduler_init init(contractor_config.requested_num_threads);
 
@@ -170,8 +170,7 @@ int main(int argc, char *argv[]) try
 }
 catch (const std::bad_alloc &e)
 {
-    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    util::SimpleLogger().Write(logWARNING)
-        << "Please provide more memory or consider using a larger swapfile";
+    util::Log(logERROR) << "[exception] " << e.what();
+    util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }

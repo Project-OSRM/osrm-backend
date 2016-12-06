@@ -4,7 +4,7 @@
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/toolkit.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <algorithm>
 #include <cstddef>

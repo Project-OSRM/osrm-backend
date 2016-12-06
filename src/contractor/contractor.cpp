@@ -9,10 +9,11 @@
 #include "storage/io.hpp"
 #include "storage/io.hpp"
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/io.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/string_util.hpp"
@@ -105,13 +106,13 @@ EdgeWeight getNewWeight(IterType speed_iter,
         if (old_weight >= (new_segment_weight * log_edge_updates_factor))
         {
             auto speed_file = segment_speed_filenames.at(speed_iter->speed_source.source - 1);
-            util::SimpleLogger().Write(logWARNING)
-                << "[weight updates] Edge weight update from " << old_secs << "s to " << new_secs
-                << "s  New speed: " << speed_iter->speed_source.speed << " kph"
-                << ". Old speed: " << approx_original_speed << " kph"
-                << ". Segment length: " << segment_length << " m"
-                << ". Segment: " << speed_iter->segment.from << "," << speed_iter->segment.to
-                << " based on " << speed_file;
+            util::Log(logWARNING) << "[weight updates] Edge weight update from " << old_secs
+                                  << "s to " << new_secs
+                                  << "s  New speed: " << speed_iter->speed_source.speed << " kph"
+                                  << ". Old speed: " << approx_original_speed << " kph"
+                                  << ". Segment length: " << segment_length << " m"
+                                  << ". Segment: " << speed_iter->segment.from << ","
+                                  << speed_iter->segment.to << " based on " << speed_file;
         }
     }
 
@@ -131,12 +132,12 @@ int Contractor::Run()
 
     if (config.core_factor > 1.0 || config.core_factor < 0)
     {
-        throw util::exception("Core factor must be between 0.0 to 1.0 (inclusive)");
+        throw util::exception("Core factor must be between 0.0 to 1.0 (inclusive)" + SOURCE_REF);
     }
 
     TIMER_START(preparing);
 
-    util::SimpleLogger().Write() << "Loading edge-expanded graph representation";
+    util::Log() << "Loading edge-expanded graph representation";
 
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
@@ -163,7 +164,7 @@ int Contractor::Run()
         ReadNodeLevels(node_levels);
     }
 
-    util::SimpleLogger().Write() << "Reading node weights.";
+    util::Log() << "Reading node weights.";
     std::vector<EdgeWeight> node_weights;
     std::string node_file_name = config.osrm_input_path.string() + ".enw";
 
@@ -172,7 +173,7 @@ int Contractor::Run()
                                           storage::io::FileReader::VerifyFingerprint);
         node_file.DeserializeVector(node_weights);
     }
-    util::SimpleLogger().Write() << "Done reading node weights.";
+    util::Log() << "Done reading node weights.";
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
     ContractGraph(max_edge_id,
@@ -183,7 +184,7 @@ int Contractor::Run()
                   node_levels);
     TIMER_STOP(contraction);
 
-    util::SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
+    util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
     std::size_t number_of_used_edges = WriteContractedGraph(max_edge_id, contracted_edge_list);
     WriteCoreNodeMarker(std::move(is_core_node));
@@ -199,11 +200,11 @@ int Contractor::Run()
     const auto edges_per_second =
         static_cast<std::uint64_t>(number_of_used_edges / TIMER_SEC(contraction));
 
-    util::SimpleLogger().Write() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
-    util::SimpleLogger().Write() << "Contraction: " << nodes_per_second << " nodes/sec and "
-                                 << edges_per_second << " edges/sec";
+    util::Log() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
+    util::Log() << "Contraction: " << nodes_per_second << " nodes/sec and " << edges_per_second
+                << " edges/sec";
 
-    util::SimpleLogger().Write() << "finished preprocessing";
+    util::Log() << "finished preprocessing";
 
     return 0;
 }
@@ -309,10 +310,13 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         std::uint64_t to_node_id{};
         unsigned speed{};
 
+        std::size_t line_number = 0;
+
         std::for_each(
             segment_speed_file_reader.GetLineIteratorBegin(),
             segment_speed_file_reader.GetLineIteratorEnd(),
             [&](const std::string &line) {
+                ++line_number;
 
                 using namespace boost::spirit::qi;
 
@@ -329,7 +333,11 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
                           speed); //
 
                 if (!ok || it != last)
-                    throw util::exception{"Segment speed file " + filename + " malformed"};
+                {
+                    const std::string message{"Segment speed file " + filename +
+                                              " malformed on line " + std::to_string(line_number)};
+                    throw util::exception(message + SOURCE_REF);
+                }
 
                 SegmentSpeedSource val{{OSMNodeID{from_node_id}, OSMNodeID{to_node_id}},
                                        {speed, static_cast<std::uint8_t>(file_id)}};
@@ -337,8 +345,7 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
                 local.push_back(std::move(val));
             });
 
-        util::SimpleLogger().Write() << "Loaded speed file " << filename << " with " << local.size()
-                                     << " speeds";
+        util::Log() << "Loaded speed file " << filename << " with " << local.size() << " speeds";
 
         {
             Mutex::scoped_lock _{flatten_mutex};
@@ -349,7 +356,14 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
         }
     };
 
-    tbb::parallel_for(std::size_t{0}, segment_speed_filenames.size(), parse_segment_speed_file);
+    try
+    {
+        tbb::parallel_for(std::size_t{0}, segment_speed_filenames.size(), parse_segment_speed_file);
+    }
+    catch (const tbb::captured_exception &e)
+    {
+        throw util::exception(e.what() + SOURCE_REF);
+    }
 
     // With flattened map-ish view of all the files, sort and unique them on from,to,source
     // The greater '>' is used here since we want to give files later on higher precedence
@@ -370,9 +384,8 @@ parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_spee
 
     flatten.erase(it, end(flatten));
 
-    util::SimpleLogger().Write() << "In total loaded " << segment_speed_filenames.size()
-                                 << " speed file(s) with a total of " << flatten.size()
-                                 << " unique values";
+    util::Log() << "In total loaded " << segment_speed_filenames.size()
+                << " speed file(s) with a total of " << flatten.size() << " unique values";
 
     return flatten;
 }
@@ -399,10 +412,13 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
         std::uint64_t to_node_id{};
         double penalty{};
 
+        std::size_t line_number = 0;
+
         std::for_each(
             turn_penalty_file_reader.GetLineIteratorBegin(),
             turn_penalty_file_reader.GetLineIteratorEnd(),
             [&](const std::string &line) {
+                ++line_number;
 
                 using namespace boost::spirit::qi;
 
@@ -420,7 +436,11 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
                                       penalty); //
 
                 if (!ok || it != last)
-                    throw util::exception{"Turn penalty file " + filename + " malformed"};
+                {
+                    const std::string message{"Turn penalty file " + filename +
+                                              " malformed on line " + std::to_string(line_number)};
+                    throw util::exception(message + SOURCE_REF);
+                }
 
                 TurnPenaltySource val{
                     {OSMNodeID{from_node_id}, OSMNodeID{via_node_id}, OSMNodeID{to_node_id}},
@@ -428,8 +448,8 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
                 local.push_back(std::move(val));
             });
 
-        util::SimpleLogger().Write() << "Loaded penalty file " << filename << " with "
-                                     << local.size() << " turn penalties";
+        util::Log() << "Loaded penalty file " << filename << " with " << local.size()
+                    << " turn penalties";
 
         {
             Mutex::scoped_lock _{flatten_mutex};
@@ -440,7 +460,14 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
         }
     };
 
-    tbb::parallel_for(std::size_t{0}, turn_penalty_filenames.size(), parse_turn_penalty_file);
+    try
+    {
+        tbb::parallel_for(std::size_t{0}, turn_penalty_filenames.size(), parse_turn_penalty_file);
+    }
+    catch (const tbb::captured_exception &e)
+    {
+        throw util::exception(e.what() + SOURCE_REF);
+    }
 
     // With flattened map-ish view of all the files, sort and unique them on from,to,source
     // The greater '>' is used here since we want to give files later on higher precedence
@@ -463,9 +490,8 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
 
     map.erase(it, end(map));
 
-    util::SimpleLogger().Write() << "In total loaded " << turn_penalty_filenames.size()
-                                 << " turn penalty file(s) with a total of " << map.size()
-                                 << " unique values";
+    util::Log() << "In total loaded " << turn_penalty_filenames.size()
+                << " turn penalty file(s) with a total of " << map.size() << " unique values";
 
     return map;
 }
@@ -486,9 +512,10 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     const double log_edge_updates_factor)
 {
     if (segment_speed_filenames.size() > 255 || turn_penalty_filenames.size() > 255)
-        throw util::exception("Limit of 255 segment speed and turn penalty files each reached");
+        throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
+                              SOURCE_REF);
 
-    util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
+    util::Log() << "Opening " << edge_based_graph_filename;
 
     auto mmap_file = [](const std::string &filename) {
         using boost::interprocess::file_mapping;
@@ -542,8 +569,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     graph_header.fingerprint.TestContractor(fingerprint_valid);
 
     edge_based_edge_list.resize(graph_header.number_of_edges);
-    util::SimpleLogger().Write() << "Reading " << graph_header.number_of_edges
-                                 << " edges from the edge based graph";
+    util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
     SegmentSpeedSourceFlatMap segment_speed_lookup;
     TurnPenaltySourceFlatMap turn_penalty_lookup;
@@ -735,15 +761,15 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         {
             if (i == LUA_SOURCE)
             {
-                util::SimpleLogger().Write() << "Used " << merged_counters[LUA_SOURCE]
-                                             << " speeds from LUA profile or input map";
+                util::Log() << "Used " << merged_counters[LUA_SOURCE]
+                            << " speeds from LUA profile or input map";
             }
             else
             {
                 // segments_speeds_counters has 0 as LUA, segment_speed_filenames not, thus we need
                 // to susbstract 1 to avoid off-by-one error
-                util::SimpleLogger().Write() << "Used " << merged_counters[i] << " speeds from "
-                                             << segment_speed_filenames[i - 1];
+                util::Log() << "Used " << merged_counters[i] << " speeds from "
+                            << segment_speed_filenames[i - 1];
             }
         }
     }
@@ -756,7 +782,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         std::ofstream geometry_stream(geometry_filename, std::ios::binary);
         if (!geometry_stream)
         {
-            throw util::exception("Failed to open " + geometry_filename + " for writing");
+            const std::string message{"Failed to open " + geometry_filename + " for writing"};
+            throw util::exception(message + SOURCE_REF);
         }
         const unsigned number_of_indices = m_geometry_indices.size();
         const unsigned number_of_compressed_geometries = m_geometry_node_list.size();
@@ -777,7 +804,9 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_indexes_filename + " for writing");
+            const std::string message{"Failed to open " + datasource_indexes_filename +
+                                      " for writing"};
+            throw util::exception(message + SOURCE_REF);
         }
         std::uint64_t number_of_datasource_entries = m_geometry_datasource.size();
         datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
@@ -793,7 +822,9 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_names_filename + " for writing");
+            const std::string message{"Failed to open " + datasource_names_filename +
+                                      " for writing"};
+            throw util::exception(message + SOURCE_REF);
         }
         datasource_stream << "lua profile" << std::endl;
         for (auto const &name : segment_speed_filenames)
@@ -894,11 +925,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
                 if (new_turn_weight + new_weight < compressed_edge_nodes)
                 {
-                    util::SimpleLogger().Write(logWARNING)
-                        << "turn penalty " << turn_iter->penalty_source.penalty << " for turn "
-                        << penaltyblock->from_id << ", " << penaltyblock->via_id << ", "
-                        << penaltyblock->to_id << " is too negative: clamping turn weight to "
-                        << compressed_edge_nodes;
+                    util::Log(logWARNING) << "turn penalty " << turn_iter->penalty_source.penalty
+                                          << " for turn " << penaltyblock->from_id << ", "
+                                          << penaltyblock->via_id << ", " << penaltyblock->to_id
+                                          << " is too negative: clamping turn weight to "
+                                          << compressed_edge_nodes;
                 }
 
                 inbuffer.weight = std::max(new_turn_weight + new_weight, compressed_edge_nodes);
@@ -915,7 +946,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
 
-    util::SimpleLogger().Write() << "Done reading edges";
+    util::Log() << "Done reading edges";
     return graph_header.max_edge_id;
 }
 
@@ -964,8 +995,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
     const std::uint64_t contracted_edge_count = contracted_edge_list.size();
-    util::SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
-                                 << " edges";
+    util::Log() << "Serializing compacted graph of " << contracted_edge_count << " edges";
 
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
@@ -982,15 +1012,14 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
         return tmp_max;
     }();
 
-    util::SimpleLogger().Write(logDEBUG) << "input graph has " << (max_node_id + 1) << " nodes";
-    util::SimpleLogger().Write(logDEBUG) << "contracted graph has " << (max_used_node_id + 1)
-                                         << " nodes";
+    util::Log(logDEBUG) << "input graph has " << (max_node_id + 1) << " nodes";
+    util::Log(logDEBUG) << "contracted graph has " << (max_used_node_id + 1) << " nodes";
 
     std::vector<util::StaticGraph<EdgeData>::NodeArrayEntry> node_array;
     // make sure we have at least one sentinel
     node_array.resize(max_node_id + 2);
 
-    util::SimpleLogger().Write() << "Building node array";
+    util::Log() << "Building node array";
     util::StaticGraph<EdgeData>::EdgeIterator edge = 0;
     util::StaticGraph<EdgeData>::EdgeIterator position = 0;
     util::StaticGraph<EdgeData>::EdgeIterator last_edge;
@@ -1014,11 +1043,11 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
         node_array[sentinel_counter].first_edge = contracted_edge_count;
     }
 
-    util::SimpleLogger().Write() << "Serializing node array";
+    util::Log() << "Serializing node array";
 
     RangebasedCRC32 crc32_calculator;
     const unsigned edges_crc32 = crc32_calculator(contracted_edge_list);
-    util::SimpleLogger().Write() << "Writing CRC32: " << edges_crc32;
+    util::Log() << "Writing CRC32: " << edges_crc32;
 
     const std::uint64_t node_array_size = node_array.size();
     // serialize crc32, aka checksum
@@ -1036,7 +1065,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     }
 
     // serialize all edges
-    util::SimpleLogger().Write() << "Building edge array";
+    util::Log() << "Building edge array";
     std::size_t number_of_used_edges = 0;
 
     util::StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
@@ -1055,15 +1084,15 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
 #ifndef NDEBUG
         if (current_edge.data.weight <= 0)
         {
-            util::SimpleLogger().Write(logWARNING)
-                << "Edge: " << edge << ",source: " << contracted_edge_list[edge].source
-                << ", target: " << contracted_edge_list[edge].target
-                << ", weight: " << current_edge.data.weight;
+            util::Log(logWARNING) << "Edge: " << edge
+                                  << ",source: " << contracted_edge_list[edge].source
+                                  << ", target: " << contracted_edge_list[edge].target
+                                  << ", weight: " << current_edge.data.weight;
 
-            util::SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
-                                                   << contracted_edge_list[edge].source << "/"
-                                                   << node_array.size() - 1;
-            return 1;
+            util::Log(logWARNING) << "Failed at adjacency list of node "
+                                  << contracted_edge_list[edge].source << "/"
+                                  << node_array.size() - 1;
+            throw util::exception("Edge weight is <= 0" + SOURCE_REF);
         }
 #endif
         hsgr_output_stream.write((char *)&current_edge,

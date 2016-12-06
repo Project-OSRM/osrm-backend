@@ -1,7 +1,7 @@
 #include "util/coordinate_calculation.hpp"
 
 #ifndef NDEBUG
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #endif
 #include "osrm/coordinate.hpp"
 
