@@ -68,13 +68,14 @@ static_assert(sizeof(SegmentBlock) == 20, "SegmentBlock is not packed correctly"
 #pragma pack(push, 1)
 struct PenaltyBlock
 {
-    std::uint32_t fixed_penalty;
+    std::int32_t turn_bias;
+    std::int32_t turn_penalty;
     OSMNodeID from_id;
     OSMNodeID via_id;
     OSMNodeID to_id;
 };
 #pragma pack(pop)
-static_assert(sizeof(PenaltyBlock) == 28, "PenaltyBlock is not packed correctly");
+static_assert(sizeof(PenaltyBlock) == 32, "PenaltyBlock is not packed correctly");
 }
 
 class EdgeBasedGraphFactory

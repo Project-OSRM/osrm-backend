@@ -1,5 +1,5 @@
-#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -24,6 +24,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -449,74 +450,100 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             }(turn_classification.second);
             bearing_class_by_node_based_node[node_at_center_of_intersection] = bearing_class_id;
 
-            for (const auto &turn : intersection)
-            {
-                // only keep valid turns
-                if (!turn.entry_allowed)
-                    continue;
-
-                // only add an edge if turn is not prohibited
-                const EdgeData &edge_data1 = m_node_based_graph->GetEdgeData(incoming_edge);
-                const EdgeData &edge_data2 = m_node_based_graph->GetEdgeData(turn.eid);
-
-                BOOST_ASSERT(edge_data1.edge_id != edge_data2.edge_id);
-                BOOST_ASSERT(!edge_data1.reversed);
-                BOOST_ASSERT(!edge_data2.reversed);
-
-                // the following is the core of the loop.
-                unsigned distance = edge_data1.distance;
+            const EdgeWeight traffic_light_penalty = [&]() {
                 if (m_traffic_lights.find(node_at_center_of_intersection) != m_traffic_lights.end())
                 {
-                    distance += profile_properties.traffic_signal_penalty;
+                    return profile_properties.traffic_signal_penalty;
                 }
+                return 0;
+            }();
 
-                const int32_t turn_penalty =
-                    scripting_environment.GetTurnPenalty(180. - turn.angle);
+            const EdgeData &incoming_data = m_node_based_graph->GetEdgeData(incoming_edge);
+            BOOST_ASSERT(!incoming_data.reversed);
 
-                const auto turn_instruction = turn.instruction;
-                if (turn_instruction.direction_modifier == guidance::DirectionModifier::UTurn)
+            const auto turn_to_weight = [this,
+                                         &scripting_environment,
+                                         &incoming_data,
+                                         traffic_light_penalty](const auto &turn) -> int32_t {
+                BOOST_ASSERT(turn.entry_allowed);
+
+                int32_t turn_weight = incoming_data.distance + traffic_light_penalty;
+
+                // the geometry compression sometimes leaves a unnecessary node in the graph that
+                // induces a turn. This turn is actually not a turn, because there is no other
+                // option for the driver. In that case we don't actually want to apply this penalty,
+                // because there is no maneuver to be performed.
+                if (turn.instruction.type != guidance::TurnType::NoTurn)
                 {
-                    distance += profile_properties.u_turn_penalty;
+                    turn_weight += scripting_environment.GetTurnPenalty(180. - turn.angle);
                 }
 
-                // don't add turn penalty if it is not an actual turn. This heuristic is necessary
-                // since OSRM cannot handle looping roads/parallel roads
-                if (turn_instruction.type != guidance::TurnType::NoTurn)
-                    distance += turn_penalty;
+                if (turn.instruction.direction_modifier == guidance::DirectionModifier::UTurn)
+                {
+                    turn_weight += profile_properties.u_turn_penalty;
+                }
 
+                return turn_weight;
+            };
+
+            auto uturn_bearing = util::guidance::TurnBearing(intersection[0].bearing);
+
+            // Remove all invalid turns
+            auto new_end = std::remove_if(intersection.begin(),
+                                          intersection.end(),
+                                          [](const auto &turn) { return !turn.entry_allowed; });
+            intersection.erase(new_end, intersection.end());
+
+            if (intersection.size() == 0)
+                continue;
+
+            std::vector<int32_t> turn_weights(intersection.size());
+            std::transform(
+                intersection.begin(), intersection.end(), turn_weights.begin(), turn_to_weight);
+            const int64_t total_turn_weight =
+                std::accumulate(turn_weights.begin(), turn_weights.end(), 0);
+            const int32_t average_turn_weight = total_turn_weight / intersection.size();
+
+            const auto geometry_id = [this, incoming_edge]() {
                 const bool is_encoded_forwards =
                     m_compressed_edge_container.HasZippedEntryForForwardID(incoming_edge);
                 const bool is_encoded_backwards =
                     m_compressed_edge_container.HasZippedEntryForReverseID(incoming_edge);
                 BOOST_ASSERT(is_encoded_forwards || is_encoded_backwards);
+
                 if (is_encoded_forwards)
                 {
-                    original_edge_data_vector.emplace_back(
-                        GeometryID{m_compressed_edge_container.GetZippedPositionForForwardID(
-                                       incoming_edge),
-                                   true},
-                        edge_data1.name_id,
-                        turn.lane_data_id,
-                        turn_instruction,
-                        entry_class_id,
-                        edge_data1.travel_mode,
-                        util::guidance::TurnBearing(intersection[0].bearing),
-                        util::guidance::TurnBearing(turn.bearing));
+                    return GeometryID{
+                        m_compressed_edge_container.GetZippedPositionForForwardID(incoming_edge),
+                        true};
                 }
                 else if (is_encoded_backwards)
                 {
-                    original_edge_data_vector.emplace_back(
-                        GeometryID{m_compressed_edge_container.GetZippedPositionForReverseID(
-                                       incoming_edge),
-                                   false},
-                        edge_data1.name_id,
-                        turn.lane_data_id,
-                        turn_instruction,
-                        entry_class_id,
-                        edge_data1.travel_mode,
-                        util::guidance::TurnBearing(intersection[0].bearing),
-                        util::guidance::TurnBearing(turn.bearing));
+                    return GeometryID{
+                        m_compressed_edge_container.GetZippedPositionForReverseID(incoming_edge),
+                        false};
                 }
+            }();
+
+            for (const auto turn_index : util::irange<std::size_t>(0, intersection.size()))
+            {
+                const auto &turn = intersection[turn_index];
+                const auto turn_weight = turn_weights[turn_index];
+
+                BOOST_ASSERT(turn.entry_allowed);
+
+                const EdgeData &outgoing_data = m_node_based_graph->GetEdgeData(turn.eid);
+                BOOST_ASSERT(incoming_data.edge_id != outgoing_data.edge_id);
+                BOOST_ASSERT(!outgoing_data.reversed);
+
+                original_edge_data_vector.emplace_back(geometry_id,
+                                                       incoming_data.name_id,
+                                                       turn.lane_data_id,
+                                                       turn.instruction,
+                                                       entry_class_id,
+                                                       incoming_data.travel_mode,
+                                                       uturn_bearing,
+                                                       util::guidance::TurnBearing(turn.bearing));
 
                 ++original_edges_counter;
 
@@ -525,26 +552,23 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     FlushVectorToStream(edge_data_file, original_edge_data_vector);
                 }
 
-                BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
-                BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
+                BOOST_ASSERT(SPECIAL_NODEID != incoming_data.edge_id);
+                BOOST_ASSERT(SPECIAL_NODEID != outgoing_data.edge_id);
 
                 // NOTE: potential overflow here if we hit 2^32 routable edges
                 BOOST_ASSERT(m_edge_based_edge_list.size() <= std::numeric_limits<NodeID>::max());
-                m_edge_based_edge_list.emplace_back(edge_data1.edge_id,
-                                                    edge_data2.edge_id,
+                m_edge_based_edge_list.emplace_back(incoming_data.edge_id,
+                                                    outgoing_data.edge_id,
                                                     m_edge_based_edge_list.size(),
-                                                    distance,
+                                                    turn_weight,
                                                     true,
                                                     false);
                 BOOST_ASSERT(original_edges_counter == m_edge_based_edge_list.size());
 
                 // Here is where we write out the mapping between the edge-expanded edges, and
-                // the node-based edges that are originally used to calculate the `distance`
-                // for the edge-expanded edges.  About 40 lines back, there is:
-                //
-                //                 unsigned distance = edge_data1.distance;
-                //
-                // This tells us that the weight for an edge-expanded-edge is based on the weight
+                // the node-based edges that are originally used to calculate the `turn_weight`
+                // for the edge-expanded edges. The weight for an edge-expanded-edge is based on the
+                // weight
                 // of the *source* node-based edge.  Therefore, we will look up the individual
                 // segments of the source node-based edge, and write out a mapping between
                 // those and the edge-based-edge ID.
@@ -603,9 +627,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
                             turn.eid)];
 
-                    const unsigned fixed_penalty = distance - edge_data1.distance;
-                    lookup::PenaltyBlock penaltyblock = {
-                        fixed_penalty, from_node.node_id, via_node.node_id, to_node.node_id};
+                    // we define turn penalty as the deviation from the average
+                    const int32_t turn_penalty = turn_weight - average_turn_weight;
+                    const int32_t turn_bias = turn_weight - incoming_data.distance - turn_penalty;
+                    lookup::PenaltyBlock penaltyblock = {turn_bias,
+                                                         turn_penalty,
+                                                         from_node.node_id,
+                                                         via_node.node_id,
+                                                         to_node.node_id};
                     edge_penalty_file.write(reinterpret_cast<const char *>(&penaltyblock),
                                             sizeof(penaltyblock));
                 }

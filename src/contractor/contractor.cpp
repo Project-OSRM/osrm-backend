@@ -848,7 +848,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 auto speed_iter =
                     find(segment_speed_lookup,
                          SegmentSpeedSource{
-                             previous_osm_node_id, segmentblocks[i].this_osm_node_id, {0, 0}});
+                         {previous_osm_node_id, segmentblocks[i].this_osm_node_id}, {0, 0}});
                 if (speed_iter != segment_speed_lookup.end())
                 {
                     if (speed_iter->speed_source.speed > 0)
@@ -884,28 +884,36 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 continue;
             }
 
-            auto turn_iter =
+
+
+            const auto turn_iter =
                 find(turn_penalty_lookup,
                      TurnPenaltySource{
-                         penaltyblock->from_id, penaltyblock->via_id, penaltyblock->to_id, {0, 0}});
-            if (turn_iter != turn_penalty_lookup.end())
-            {
-                int new_turn_weight = static_cast<int>(turn_iter->penalty_source.penalty * 10);
-
-                if (new_turn_weight + new_weight < compressed_edge_nodes)
+                     {penaltyblock->from_id, penaltyblock->via_id, penaltyblock->to_id}, {0, 0}});
+            const int32_t turn_weight = penaltyblock->turn_bias + [&]() {
+                if (turn_iter != turn_penalty_lookup.end())
                 {
-                    util::SimpleLogger().Write(logWARNING)
-                        << "turn penalty " << turn_iter->penalty_source.penalty << " for turn "
-                        << penaltyblock->from_id << ", " << penaltyblock->via_id << ", "
-                        << penaltyblock->to_id << " is too negative: clamping turn weight to "
-                        << compressed_edge_nodes;
+                    return static_cast<int32_t>(turn_iter->penalty_source.penalty * 10);
                 }
+                else
+                {
+                    return penaltyblock->turn_penalty;
+                }
+            }();
 
-                inbuffer.weight = std::max(new_turn_weight + new_weight, compressed_edge_nodes);
+            if (turn_weight + new_weight < compressed_edge_nodes)
+            {
+                util::SimpleLogger().Write(logWARNING)
+                    << "turn penalty " << turn_iter->penalty_source.penalty << " for turn "
+                    << penaltyblock->from_id << ", " << penaltyblock->via_id << ", "
+                    << penaltyblock->to_id << " is too negative: clamping turn weight to "
+                    << compressed_edge_nodes;
+
+                inbuffer.weight = compressed_edge_nodes;
             }
             else
             {
-                inbuffer.weight = penaltyblock->fixed_penalty + new_weight;
+                inbuffer.weight = turn_weight + new_weight;
             }
 
             // Increment the pointer
