@@ -467,15 +467,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          traffic_light_penalty](const auto &turn) -> int32_t {
                 BOOST_ASSERT(turn.entry_allowed);
 
-                // don't add turn penalty if it is not an actual turn. This heuristic is
-                // necessary since OSRM cannot handle looping roads/parallel roads
-                if (turn.instruction.type == guidance::TurnType::NoTurn)
-                {
-                    return 0;
-                }
+                int32_t turn_weight = incoming_data.distance + traffic_light_penalty;
 
-                int32_t turn_weight = incoming_data.distance + traffic_light_penalty +
-                                      scripting_environment.GetTurnPenalty(180. - turn.angle);
+                // the geometry compression sometimes leaves a unnecessary node in the graph that
+                // induces a turn. This turn is actually not a turn, because there is no other
+                // option for the driver. In that case we don't actually want to apply this penalty,
+                // because there is no maneuver to be performed.
+                if (turn.instruction.type != guidance::TurnType::NoTurn)
+                {
+                    turn_weight += scripting_environment.GetTurnPenalty(180. - turn.angle);
+                }
 
                 if (turn.instruction.direction_modifier == guidance::DirectionModifier::UTurn)
                 {
@@ -535,15 +536,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 BOOST_ASSERT(incoming_data.edge_id != outgoing_data.edge_id);
                 BOOST_ASSERT(!outgoing_data.reversed);
 
-                original_edge_data_vector.emplace_back(
-                    geometry_id,
-                    incoming_data.name_id,
-                    turn.lane_data_id,
-                    turn.instruction,
-                    entry_class_id,
-                    incoming_data.travel_mode,
-                    uturn_bearing,
-                    util::guidance::TurnBearing(turn.bearing));
+                original_edge_data_vector.emplace_back(geometry_id,
+                                                       incoming_data.name_id,
+                                                       turn.lane_data_id,
+                                                       turn.instruction,
+                                                       entry_class_id,
+                                                       incoming_data.travel_mode,
+                                                       uturn_bearing,
+                                                       util::guidance::TurnBearing(turn.bearing));
 
                 ++original_edges_counter;
 
