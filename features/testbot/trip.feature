@@ -5,7 +5,7 @@ Feature: Basic trip planning
         Given the profile "testbot"
         Given a grid size of 10 meters
 
-    Scenario: Testbot - Trip planning with less than 10 nodes
+    Scenario: Testbot - Trip planning with less than 10 waypoints
         Given the node map
             """
             a b
@@ -24,7 +24,7 @@ Feature: Basic trip planning
             | a,b,c,d   | abcda  | 7.6       |
             | d,b,c,a   | dbcad  | 7.6       |
 
-    Scenario: Testbot - Trip planning with more than 10 nodes
+    Scenario: Testbot - Trip planning with more than 10 waypoints
         Given the node map
             """
             a b c d
@@ -37,7 +37,6 @@ Feature: Basic trip planning
             | nodes |
             | ab    |
             | bc    |
-            | cb    |
             | de    |
             | ef    |
             | fg    |
@@ -48,12 +47,66 @@ Feature: Basic trip planning
             | kl    |
             | la    |
 
-
         When I plan a trip I should get
             | waypoints               | trips         |
             | a,b,c,d,e,f,g,h,i,j,k,l | cbalkjihgfedc |
 
-    Scenario: Testbot - Trip planning with multiple scc
+
+    Scenario: Testbot - Trip planning with less than 10 waypoints tfse
+        Given the node map
+            """
+            a  b
+
+                  c
+            e  d
+            """
+ 
+         And the ways
+            | nodes |
+            | ab    |
+            | ac    |
+            | ad    |
+            | ae    |
+            | bc    |
+            | bd    |
+            | be    |
+            | cd    |
+            | ce    |
+            | de    |
+ 
+         When I plan a trip I should get
+            |  waypoints  | source | destination | trips  | durations         | distance |
+            |  a,b,c,d,e  | 4      | 4           | abcdea | 10.3              | 103      |
+            |  a,b,c,d,e  | 0      | 2           | abedc  | 8.200000000000001 | 81.6     |
+
+
+    Scenario: Testbot - Trip planning with more than 10 nodes tfse
+        Given the node map
+            """
+            a b c d e f g h i j k
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+            | de    |
+            | ef    |
+            | fg    |
+            | gh    |
+            | hi    |
+            | ij    |
+            | jk    |
+
+        When I plan a trip I should get
+            |  waypoints              | source | destination | trips        | durations  | distance  |
+            |  a,b,c,d,e,f,g,h,i,j,k  | 0      | 10          | abcdefghijk  | 10         | 99.9      |
+            |  a,b,c,d,e,f,g,h,i,j,k  | 4      | 4           | abcdefghijka | 20         | 199.9     |
+
+
+
+    Scenario: Testbot - Trip planning with multiple scc roundtrip
         Given the node map
             """
             a b c d
@@ -85,10 +138,32 @@ Feature: Basic trip planning
             | pq    |
             | qm    |
 
-
         When I plan a trip I should get
             | waypoints                       | trips               |
             | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | defghijklabcd,mnopm |
+
+
+    Scenario: Testbot - Trip planning with fixed start and end points errors
+        Given the node map
+            """
+            a b
+
+            d c
+            """
+
+         And the ways
+            | nodes |
+            | ab    |
+            | dc    |
+
+         When I plan a trip I should get
+            |  waypoints    | source  | destination | status         | message                                       |
+            |  a,b,c,d      | 0       | 3           | NoTrips        | No route possible from source to destination  |
+            |  a,b,c,d      | -1      | 1           | InvalidQuery   | Query string malformed close to position 123  |
+            |  a,b,c,d      | 1       | -1          | InvalidQuery   | Query string malformed close to position 137  |
+            |  a,b,c,d      | 10      | 1           | InvalidValue   | Invalid source or destination value.          |
+            |  a,b,c,d      | 1       | 10          | InvalidValue   | Invalid source or destination value.          |
+
 
     # Test single node in each component #1850
     Scenario: Testbot - Trip planning with less than 10 nodes

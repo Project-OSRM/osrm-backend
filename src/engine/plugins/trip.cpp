@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -59,7 +60,7 @@ struct SCC_Component
         return range.size() - 1;
     }
 
-    const std::vector<NodeID> component;
+    std::vector<NodeID> component;
     std::vector<std::size_t> range;
 };
 
@@ -69,7 +70,6 @@ struct SCC_Component
 SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
                                          const util::DistTableWrapper<EdgeWeight> &result_table)
 {
-
     if (std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
         std::end(result_table))
     {
@@ -117,10 +117,11 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
 InternalRouteResult
 TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                          const std::vector<PhantomNode> &snapped_phantoms,
-                         const std::vector<NodeID> &trip) const
+                         const std::vector<NodeID> &trip,
+                         const bool roundtrip) const
 {
     InternalRouteResult min_route;
-    // given he final trip, compute total duration and return the route and location permutation
+    // given the final trip, compute total duration and return the route and location permutation
     PhantomNodes viapoint;
     const auto start = std::begin(trip);
     const auto end = std::end(trip);
@@ -128,13 +129,29 @@ TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade>
     for (auto it = start; it != end; ++it)
     {
         const auto from_node = *it;
+
+        // if from_node is the last node and it is a fixed start and end trip,
+        // break out of this loop and return the route
+        if (!roundtrip && std::next(it) == end)
+            break;
+
         // if from_node is the last node, compute the route from the last to the first location
         const auto to_node = std::next(it) != end ? *std::next(it) : *start;
 
         viapoint = PhantomNodes{snapped_phantoms[from_node], snapped_phantoms[to_node]};
         min_route.segment_end_coordinates.emplace_back(viapoint);
     }
-    BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
+
+    if (roundtrip)
+    {
+        // trip comes out to be something like 0 1 4 3 2 0
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
+    }
+    else
+    {
+        // trip comes out to be something like 0 1 4 3 2, so the sizes don't match
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
+    }
 
     shortest_path(facade, min_route.segment_end_coordinates, {false}, min_route);
 
@@ -170,12 +187,24 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     }
     BOOST_ASSERT(phantom_node_pairs.size() == parameters.coordinates.size());
 
+    if (parameters.source >= parameters.coordinates.size() ||
+        parameters.destination >= parameters.coordinates.size())
+    {
+        return Error("InvalidValue", "Invalid source or destination value.", json_result);
+    }
+
+    bool roundtrip = true;
+    if (parameters.source != parameters.destination)
+    {
+        roundtrip = false;
+    }
+
     auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
 
     const auto number_of_locations = snapped_phantoms.size();
 
     // compute the duration table of all phantom nodes
-    const auto result_table = util::DistTableWrapper<EdgeWeight>(
+    auto result_table = util::DistTableWrapper<EdgeWeight>(
         duration_table(facade, snapped_phantoms, {}, {}), number_of_locations);
 
     if (result_table.size() == 0)
@@ -187,8 +216,87 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     BOOST_ASSERT_MSG(result_table.size() == number_of_locations * number_of_locations,
                      "Distance Table has wrong size");
 
+    // The following code manipulates the table and produces the new table for
+    // Trip with Fixed Start and End (TFSE). In the example the source is a
+    // and destination is c. The new table forces the roundtrip to start at
+    // source and end at destination by virtually squashing them together.
+    // This way the brute force and the farthest insertion algorithms don't
+    // have to be modified, and instead we can just pass a modified table to
+    // return a non-roundtrip "optimal" route from a start node to an end node.
+
+    // Original Table           // New Table
+    //   a  b  c  d  e          //   a        b         c        d         e
+    // a 0  15 36 34 30         // a 0        15        10000    34        30
+    // b 15 0  25 30 34         // b 10000    0         25       30        34
+    // c 36 25 0  18 32         // c 0        10000     0        10000     10000
+    // d 34 30 18 0  15         // d 10000    30        18       0         15
+    // e 30 34 32 15 0          // e 10000    34        32       15        0
+
+    if (!roundtrip)
+    {
+        // parameters.source column
+        // set any node to source to impossibly high numbers so it will never
+        // try to use any node->source in the middle of the "optimal path"
+        for (NodeID i = 0; i < result_table.GetNumberOfNodes(); i++)
+        {
+            if (i == (NodeID)parameters.source)
+                continue;
+            result_table.InvalidateRoute(i, parameters.source);
+        }
+
+        // parameters.destination row
+        // set destination to anywhere else to impossibly high numbers so it will
+        // never try to use destination->any node in the middle of the "optimal path"
+        for (NodeID i = 0; i < result_table.GetNumberOfNodes(); i++)
+        {
+            if (i == (NodeID)parameters.destination)
+                continue;
+            result_table.ShortcutRoute(parameters.destination, i);
+        }
+
+        // set destination->source to zero so rountrip treats source and
+        // destination as one location
+        result_table.ShortcutRoute(parameters.destination, parameters.source);
+
+        // set source->destination as very high number so algorithm is forced
+        // to find another path to get to destination
+        result_table.InvalidateRoute(parameters.source, parameters.destination);
+    }
+
     // get scc components
-    SCC_Component scc = SplitUnaccessibleLocations(number_of_locations, result_table);
+    SCC_Component scc = SplitUnaccessibleLocations(result_table.GetNumberOfNodes(), result_table);
+
+    if (!roundtrip)
+    {
+        // if source and destination are in different sccs then return error
+        if (scc.GetNumberOfComponents() > 1)
+        {
+            std::size_t source_component_id = std::numeric_limits<std::size_t>::max();
+            std::size_t destination_component_id = std::numeric_limits<std::size_t>::max();
+
+            for (std::size_t k = 0; k < scc.GetNumberOfComponents(); ++k)
+            {
+                auto route_begin = std::begin(scc.component) + scc.range[k];
+                auto route_end = std::begin(scc.component) + scc.range[k + 1];
+
+                std::for_each(route_begin, route_end, [&](const NodeID &id) {
+                    if ((NodeID)parameters.source == id)
+                        source_component_id = k;
+                    if ((NodeID)parameters.destination == id)
+                        destination_component_id = k;
+                });
+            }
+
+            if (destination_component_id == std::numeric_limits<std::size_t>::max() ||
+                source_component_id == std::numeric_limits<std::size_t>::max() ||
+                source_component_id != destination_component_id)
+            {
+                std::cout << "not in the same scc" << std::endl;
+                return Error(
+                    "NoTrips", "No route possible from source to destination", json_result);
+            }
+        }
+    }
 
     std::vector<std::vector<NodeID>> trips;
     trips.reserve(scc.GetNumberOfComponents());
@@ -205,7 +313,6 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
 
         if (component_size > 1)
         {
-
             if (component_size < BF_MAX_FEASABLE)
             {
                 scc_route =
@@ -234,7 +341,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     routes.reserve(trips.size());
     for (const auto &trip : trips)
     {
-        routes.push_back(ComputeRoute(facade, snapped_phantoms, trip));
+        routes.push_back(ComputeRoute(facade, snapped_phantoms, trip, roundtrip));
     }
 
     api::TripAPI trip_api{*facade, parameters};
