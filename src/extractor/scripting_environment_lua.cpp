@@ -1,4 +1,4 @@
-#include "extractor/scripting_environment_sol2.hpp"
+#include "extractor/scripting_environment_lua.hpp"
 
 #include "extractor/external_memory_node.hpp"
 #include "extractor/extraction_helper_functions.hpp"
@@ -11,7 +11,7 @@
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/lua_util.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 
 #include <osmium/osm.hpp>
@@ -79,7 +79,7 @@ auto get_nodes_for_way(const osmium::Way &way) -> decltype(way.nodes()) { return
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(const std::string &file_name)
     : file_name(file_name)
 {
-    util::SimpleLogger().Write() << "Using script " << file_name;
+    util::Log() << "Using script " << file_name;
 }
 
 void Sol2ScriptingEnvironment::InitContext(Sol2ScriptingContext &context)
@@ -348,7 +348,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
                     result_node.clear();
                     if (local_context.has_node_function)
                     {
-                        local_context.processNode(static_cast<const osmium::Node &>(*entity),
+                        local_context.ProcessNode(static_cast<const osmium::Node &>(*entity),
                                                   result_node);
                     }
                     resulting_nodes.push_back(std::make_pair(x, std::move(result_node)));
@@ -357,7 +357,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
                     result_way.clear();
                     if (local_context.has_way_function)
                     {
-                        local_context.processWay(static_cast<const osmium::Way &>(*entity),
+                        local_context.ProcessWay(static_cast<const osmium::Way &>(*entity),
                                                  result_way);
                     }
                     resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
@@ -452,7 +452,7 @@ void Sol2ScriptingEnvironment::ProcessSegment(const osrm::util::Coordinate &sour
     }
 }
 
-void Sol2ScriptingContext::processNode(const osmium::Node &node, ExtractionNode &result)
+void Sol2ScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
@@ -461,7 +461,7 @@ void Sol2ScriptingContext::processNode(const osmium::Node &node, ExtractionNode 
     node_function(node, result);
 }
 
-void Sol2ScriptingContext::processWay(const osmium::Way &way, ExtractionWay &result)
+void Sol2ScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 

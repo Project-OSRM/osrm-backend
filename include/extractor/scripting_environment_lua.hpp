@@ -19,8 +19,8 @@ namespace extractor
 
 struct Sol2ScriptingContext final
 {
-    void processNode(const osmium::Node &, ExtractionNode &result);
-    void processWay(const osmium::Way &, ExtractionWay &result);
+    void ProcessNode(const osmium::Node &, ExtractionNode &result);
+    void ProcessWay(const osmium::Way &, ExtractionWay &result);
 
     ProfileProperties properties;
     SourceContainer sources;
