@@ -20,6 +20,7 @@ A guard (ScopedGeojsonLoggerGuard) requires a logging policy. Per default we pro
 
 The initialisation to do so looks like this:
 `util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString> geojson_guard( "debug.geojson", data-for-conversion);`
+Make sure to give the guar a name, so it actually gets a lifetime.
 
 The field `data-for-conversion` can be an arbitrary long set of features and needs to match the parameters used for constructing our policy (in this case `util::NodeIdVectorToLineString`).
 

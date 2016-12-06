@@ -57,7 +57,6 @@ struct LengthLimitedCoordinateAccumulator
 {
     LengthLimitedCoordinateAccumulator(
         const extractor::guidance::CoordinateExtractor &coordinate_extractor,
-        const util::NodeBasedDynamicGraph &node_based_graph,
         const double max_length);
 
     /*
@@ -78,11 +77,12 @@ struct LengthLimitedCoordinateAccumulator
      */
     void update(const NodeID from_node, const EdgeID via_edge, const NodeID to_node);
 
-    const extractor::guidance::CoordinateExtractor &coordinate_extractor;
-    const util::NodeBasedDynamicGraph &node_based_graph;
-    const double max_length;
-    double accumulated_length;
+    double accumulated_length = 0;
     std::vector<util::Coordinate> coordinates;
+
+  private:
+    const extractor::guidance::CoordinateExtractor &coordinate_extractor;
+    const double max_length;
 };
 
 /*
@@ -105,10 +105,37 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
      */
     boost::optional<EdgeID> operator()(const NodeID nid,
                                        const EdgeID via_edge_id,
-                                       const Intersection &intersection,
+                                       const IntersectionView &intersection,
                                        const util::NodeBasedDynamicGraph &node_based_graph) const;
 
+  private:
     const NameID desired_name_id;
+    const bool requires_entry;
+};
+
+/* Following only a straight road
+ * Follow only the straightmost turn, as long as its the only choice or has the desired name
+ */
+struct SelectStraightmostRoadByNameAndOnlyChoice
+{
+    SelectStraightmostRoadByNameAndOnlyChoice(const NameID desired_name_id,
+                                              const double initial_bearing,
+                                              const bool requires_entry);
+
+    /*
+     * !! REQUIRED - Function for the use of TraverseRoad in the graph walker.
+     * The operator() needs to return (if any is found) the next road to continue in the graph
+     * traversal. If no such edge is found, return {} is allowed. Usually you want to choose some
+     * form of obious turn to follow.
+     */
+    boost::optional<EdgeID> operator()(const NodeID nid,
+                                       const EdgeID via_edge_id,
+                                       const IntersectionView &intersection,
+                                       const util::NodeBasedDynamicGraph &node_based_graph) const;
+
+  private:
+    const NameID desired_name_id;
+    const double initial_bearing;
     const bool requires_entry;
 };
 
@@ -166,8 +193,9 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
             return {};
 
         // look at the next intersection
-        const auto next_intersection =
-            intersection_generator.GetConnectedRoads(current_node_id, current_edge_id);
+        const constexpr auto LOW_PRECISION = true;
+        const auto next_intersection = intersection_generator.GetConnectedRoads(
+            current_node_id, current_edge_id, LOW_PRECISION);
 
         // don't follow u-turns or go past our initial intersection
         if (next_intersection.size() <= 1)
@@ -235,7 +263,7 @@ struct DistanceToNextIntersectionAccumulator
         using namespace util::coordinate_calculation;
 
         const auto coords = extractor.GetForwardCoordinatesAlongRoad(start, onto);
-        distance += getLength(coords, &haversineDistance);
+        distance += getLength(coords.begin(), coords.end(), &haversineDistance);
     }
 
     const extractor::guidance::CoordinateExtractor &extractor;

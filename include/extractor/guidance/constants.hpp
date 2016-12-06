@@ -12,6 +12,7 @@ const bool constexpr INVERT = true;
 
 // what angle is interpreted as going straight
 const double constexpr STRAIGHT_ANGLE = 180.;
+const double constexpr ORTHOGONAL_ANGLE = 90.;
 // if a turn deviates this much from going straight, it will be kept straight
 const double constexpr MAXIMAL_ALLOWED_NO_TURN_DEVIATION = 3.;
 // angle that lies between two nearly indistinguishable roads
@@ -35,6 +36,12 @@ const int constexpr MAX_SLIPROAD_THRESHOLD = 250;
 // service road over a primary road, the better priority can be seen as obvious due to its road
 // category).
 const double constexpr PRIORITY_DISTINCTION_FACTOR = 1.75;
+
+// the lane width we assume for a single lane
+const auto constexpr ASSUMED_LANE_WIDTH = 3.25;
+
+// how far apart can roads be at the most, when thinking about merging them?
+const auto constexpr MERGABLE_ANGLE_DIFFERENCE = 95.0;
 
 } // namespace guidance
 } // namespace extractor

@@ -91,9 +91,8 @@ inline bool CheckInBounds(const int A, const int B, const int range)
         return normalized_B - range <= normalized_A && normalized_A <= normalized_B + range;
     }
 }
-} // namespace bearing
 
-inline double reverseBearing(const double bearing)
+inline double reverse(const double bearing)
 {
     if (bearing >= 180)
         return bearing - 180.;
@@ -119,8 +118,9 @@ inline double reverseBearing(const double bearing)
 // % 360;
 // All other cases are handled by first rotating both bearings to an
 // entry_bearing of 0.
-inline double angleBetweenBearings(const double entry_bearing, const double exit_bearing)
+inline double angleBetween(const double entry_bearing, const double exit_bearing)
 {
+    // transform bearing from cw into ccw order
     const double offset = 360 - entry_bearing;
     const double rotated_exit = [](double bearing, const double offset) {
         bearing += offset;
@@ -131,11 +131,37 @@ inline double angleBetweenBearings(const double entry_bearing, const double exit
     return angle >= 360 ? angle - 360 : angle;
 }
 
-// minimal difference between two angles/bearings going left or right
-inline double angularDeviation(const double angle, const double from)
+} // namespace bearing
+
+// compute the minimum distance in degree between two angles/bearings
+inline double angularDeviation(const double angle_or_bearing, const double from)
 {
-    const double deviation = std::abs(angle - from);
+    const double deviation = std::abs(angle_or_bearing - from);
     return std::min(360 - deviation, deviation);
+}
+
+/* Angles in OSRM are expressed in the range of [0,360). During calculations, we might violate
+ * this range via offsets. This function helps to ensure the range is kept. */
+inline double restrictAngleToValidRange(const double angle)
+{
+    if (angle < 0)
+        return restrictAngleToValidRange(angle + 360.);
+    else if (angle > 360)
+        return restrictAngleToValidRange(angle - 360.);
+    else
+        return angle;
+}
+
+// finds the angle between two angles, based on the minum difference between the two
+inline double angleBetween(const double lhs, const double rhs)
+{
+    const auto difference = std::abs(lhs - rhs);
+    const auto is_clockwise_difference = difference <= 180;
+    const auto angle_between_candidate = .5 * (lhs + rhs);
+    if (is_clockwise_difference)
+        return angle_between_candidate;
+    else
+        return restrictAngleToValidRange(angle_between_candidate + 180);
 }
 
 } // namespace util

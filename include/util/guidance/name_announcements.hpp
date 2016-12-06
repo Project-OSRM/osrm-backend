@@ -22,7 +22,6 @@ namespace util
 {
 namespace guidance
 {
-
 // Name Change Logic
 // Used both during Extraction as well as during Post-Processing
 
@@ -157,25 +156,31 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
                                   const util::NameTable &name_table,
                                   const extractor::SuffixTable &suffix_table)
 {
-    return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
-                                 name_table.GetRefForID(from_name_id),
-                                 name_table.GetPronunciationForID(from_name_id),
-                                 name_table.GetNameForID(to_name_id),
-                                 name_table.GetRefForID(to_name_id),
-                                 name_table.GetPronunciationForID(to_name_id),
-                                 suffix_table);
+    if (from_name_id == to_name_id)
+        return false;
+    else
+        return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
+                                     name_table.GetRefForID(from_name_id),
+                                     name_table.GetPronunciationForID(from_name_id),
+                                     name_table.GetNameForID(to_name_id),
+                                     name_table.GetRefForID(to_name_id),
+                                     name_table.GetPronunciationForID(to_name_id),
+                                     suffix_table);
 }
 
 inline bool requiresNameAnnounced(const NameID from_name_id,
                                   const NameID to_name_id,
                                   const util::NameTable &name_table)
 {
-    return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
-                                 name_table.GetRefForID(from_name_id),
-                                 name_table.GetPronunciationForID(from_name_id),
-                                 name_table.GetNameForID(to_name_id),
-                                 name_table.GetRefForID(to_name_id),
-                                 name_table.GetPronunciationForID(to_name_id));
+    if (from_name_id == to_name_id)
+        return false;
+    else
+        return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
+                                     name_table.GetRefForID(from_name_id),
+                                     name_table.GetPronunciationForID(from_name_id),
+                                     name_table.GetNameForID(to_name_id),
+                                     name_table.GetRefForID(to_name_id),
+                                     name_table.GetPronunciationForID(to_name_id));
 }
 
 } // namespace guidance

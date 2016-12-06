@@ -5,7 +5,6 @@
 #include "util/guidance/name_announcements.hpp"
 
 #include <cmath>
-
 #include <algorithm>
 #include <iterator>
 #include <limits>

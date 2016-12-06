@@ -768,7 +768,31 @@ Feature: Simple Turns
 
                          .             .
 
-                        g             h
+                       .             .
+
+                      .             .
+
+                     .             .
+
+                    .             .
+
+                   .             .
+
+                  .             .
+
+                 .             .
+
+                .             .
+
+               .             .
+
+              .             .
+
+             .             .
+
+            .             .
+
+            g             h
             """
 
         And the nodes
@@ -784,15 +808,15 @@ Feature: Simple Turns
             | cjk    | Friede | no     |       | tertiary      |
 
         When I route I should get
-            | waypoints | route               | turns                              |
-            | a,g       | Perle,Heide,Heide   | depart,turn right,arrive           |
-            | a,k       | Perle,Friede,Friede | depart,turn left,arrive            |
-            | a,e       | Perle,Perle         | depart,arrive                      |
-            | e,k       | Perle,Friede,Friede | depart,turn right,arrive           |
-            | e,g       | Perle,Heide,Heide   | depart,turn left,arrive            |
-            | h,k       | Heide,Friede,Friede | depart,new name slight left,arrive |
-            | h,e       | Heide,Perle,Perle   | depart,turn right,arrive           |
-            | h,a       | Heide,Perle,Perle   | depart,turn left,arrive            |
+            | waypoints | route               | turns                           | intersections |
+            | a,g       | Perle,Heide,Heide   | depart,turn right,arrive        | true:90;true:90 true:180 false:270 true:345;true:18   |
+            | a,k       | Perle,Friede,Friede | depart,turn left,arrive         | true:90;true:90 true:180 false:270 true:345;true:153  |
+            | a,e       | Perle,Perle         | depart,arrive                   | true:90,true:90 true:180 false:270 true:345;true:270  |
+            | e,k       | Perle,Friede,Friede | depart,turn right,arrive        | true:270;false:90 true:180 true:270 true:345;true:153 |
+            | e,g       | Perle,Heide,Heide   | depart,turn left,arrive         | true:270;false:90 true:180 true:270 true:345;true:18  |
+            | h,k       | Heide,Friede,Friede | depart,new name straight,arrive | true:16;true:90 true:180 true:270 true:345;true:153   |
+            | h,e       | Heide,Perle,Perle   | depart,turn right,arrive        | true:16;true:90 true:180 true:270 true:345;true:270   |
+            | h,a       | Heide,Perle,Perle   | depart,turn left,arrive         | true:16;true:90 true:180 true:270 true:345;true:90    |
 
     #http://www.openstreetmap.org/#map=19/52.53293/13.32956
     Scenario: Curved Exit from Curved Road
@@ -930,6 +954,36 @@ Feature: Simple Turns
                 .                 .                  .
               .                    .                 .
             i                      .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
+                                   .                 .
                                     e                 a
             """
 

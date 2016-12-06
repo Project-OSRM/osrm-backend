@@ -508,15 +508,15 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             // even reverse the direction. Since we don't want to compute actual turns but simply
             // try to find whether there is a turn going to the opposite direction of our obvious
             // turn, this should be alright.
-            NodeID new_node;
-            const auto previous_intersection = [&]() {
-                EdgeID turn_edge;
-                std::tie(new_node, turn_edge) = intersection_generator.SkipDegreeTwoNodes(
+            const auto previous_intersection = [&]() -> IntersectionView {
+                const auto parameters = intersection_generator.SkipDegreeTwoNodes(
                     node_at_intersection, intersection[0].eid);
-                return intersection_generator.GetConnectedRoads(new_node, turn_edge);
+                if (node_based_graph.GetTarget(parameters.via_eid) == node_at_intersection)
+                    return {};
+                return intersection_generator.GetConnectedRoads(parameters.nid, parameters.via_eid);
             }();
 
-            if (new_node != node_at_intersection)
+            if (!previous_intersection.empty())
             {
                 const auto continue_road = intersection[best_continue];
                 for (const auto &comparison_road : previous_intersection)

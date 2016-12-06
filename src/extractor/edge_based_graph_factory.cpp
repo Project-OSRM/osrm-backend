@@ -415,9 +415,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     turn_analysis.GetIntersectionGenerator().TransformIntersectionShapeIntoView(
                         node_along_road_entering,
                         incoming_edge,
-                        shape_result.normalised_intersection_shape,
+                        shape_result.annotated_normalized_shape.normalized_shape,
                         shape_result.intersection_shape,
-                        shape_result.merging_map);
+                        shape_result.annotated_normalized_shape.performed_merges);
 
                 auto intersection = turn_analysis.AssignTurnTypes(
                     node_along_road_entering, incoming_edge, intersection_with_flags_and_angles);

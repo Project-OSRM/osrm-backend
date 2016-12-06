@@ -10,7 +10,6 @@
 
 #include <boost/assert.hpp>
 
-using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
 using osrm::extractor::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 

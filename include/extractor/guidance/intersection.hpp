@@ -8,15 +8,15 @@
 #include <type_traits>
 #include <vector>
 
-#include "extractor/guidance/turn_instruction.hpp"
 #include "util/bearing.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp" // EdgeID
 
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/range/algorithm/find_if.hpp>
+#include "extractor/guidance/turn_instruction.hpp"
 
-#include <boost/assert.hpp>
+#include <boost/range/algorithm/min_element.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/count_if.hpp>
 
 namespace osrm
 {
@@ -36,8 +36,8 @@ struct IntersectionShapeData
 inline auto makeCompareShapeDataByBearing(const double base_bearing)
 {
     return [base_bearing](const auto &lhs, const auto &rhs) {
-        return util::angleBetweenBearings(base_bearing, lhs.bearing) <
-               util::angleBetweenBearings(base_bearing, rhs.bearing);
+        return util::bearing::angleBetween(lhs.bearing, base_bearing) <
+               util::bearing::angleBetween(rhs.bearing, base_bearing);
     };
 }
 
@@ -45,6 +45,13 @@ inline auto makeCompareAngularDeviation(const double angle)
 {
     return [angle](const auto &lhs, const auto &rhs) {
         return util::angularDeviation(lhs.angle, angle) < util::angularDeviation(rhs.angle, angle);
+    };
+}
+
+inline auto makeExtractLanesForRoad(const util::NodeBasedDynamicGraph &node_based_graph)
+{
+    return [&node_based_graph](const auto &road) {
+        return node_based_graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
     };
 }
 
@@ -108,11 +115,60 @@ struct ConnectedRoad final : IntersectionViewData
 };
 
 // small helper function to print the content of a connected road
+std::string toString(const IntersectionShapeData &shape);
+std::string toString(const IntersectionViewData &view);
 std::string toString(const ConnectedRoad &road);
 
 // Intersections are sorted roads: [0] being the UTurn road, then from sharp right to sharp left.
+// common operations shared amongst all intersection types
+template <typename Self> struct EnableShapeOps
+{
+    // same as closest turn, but for bearings
+    auto FindClosestBearing(double bearing) const
+    {
+        auto comp = makeCompareShapeDataByBearing(bearing);
+        return std::min_element(self()->begin(), self()->end(), comp);
+    }
 
-using IntersectionShape = std::vector<IntersectionShapeData>;
+    // search a given eid in the intersection
+    auto FindEid(const EdgeID eid) const
+    {
+        return boost::range::find_if(
+            *self(), [eid](const auto &road) { return road.eid == eid; });
+    }
+
+    // find the maximum value based on a conversion operator
+    template <typename UnaryProjection> auto FindMaximum(UnaryProjection converter) const
+    {
+        BOOST_ASSERT(!self()->empty());
+        auto initial = converter(self()->front());
+
+        const auto extract_maximal_value = [&initial, converter](const auto &road) {
+            initial = std::max(initial, converter(road));
+            return false;
+        };
+
+        boost::range::find_if(*self(), extract_maximal_value);
+        return initial;
+    }
+
+    // find the maximum value based on a conversion operator and a predefined initial value
+    template <typename UnaryPredicate> auto Count(UnaryPredicate detector) const
+    {
+        BOOST_ASSERT(!self()->empty());
+        return boost::range::count_if(*self(), detector);
+    }
+
+  private:
+    auto self() { return static_cast<Self *>(this); }
+    auto self() const { return static_cast<const Self *>(this); }
+};
+
+struct IntersectionShape final : std::vector<IntersectionShapeData>, //
+                                 EnableShapeOps<IntersectionShape>   //
+{
+    using Base = std::vector<IntersectionShapeData>;
+};
 
 // Common operations shared among IntersectionView and Intersections.
 // Inherit to enable those operations on your compatible type. CRTP pattern.
@@ -123,12 +179,13 @@ template <typename Self> struct EnableIntersectionOps
     auto findClosestTurn(double angle) const
     {
         auto comp = makeCompareAngularDeviation(angle);
-        return std::min_element(self()->begin(), self()->end(), comp);
+        return boost::range::min_element(*self(), comp);
     }
 
-    // Check validity of the intersection object. We assume a few basic properties every set of
-    // connected roads should follow throughout guidance pre-processing. This utility function
-    // allows checking intersections for validity
+    /* Check validity of the intersection object. We assume a few basic properties every set of
+     * connected roads should follow throughout guidance pre-processing. This utility function
+     * allows checking intersections for validity
+     */
     auto valid() const
     {
         if (self()->empty())
@@ -147,26 +204,6 @@ template <typename Self> struct EnableIntersectionOps
             return false;
 
         return true;
-    }
-
-    // Given all possible turns which is the highest connected number of lanes per turn.
-    // This value is used for example during generation of intersections.
-    auto getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &graph) const
-    {
-        const std::function<std::uint8_t(const ConnectedRoad &)> to_lane_count =
-            [&](const ConnectedRoad &road) {
-                return graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
-            };
-
-        std::uint8_t max_lanes = 0;
-        const auto extract_maximal_value = [&max_lanes](std::uint8_t value) {
-            max_lanes = std::max(max_lanes, value);
-            return false;
-        };
-
-        const auto view = *self() | boost::adaptors::transformed(to_lane_count);
-        boost::range::find_if(view, extract_maximal_value);
-        return max_lanes;
     }
 
     // Returns the UTurn road we took to arrive at this intersection.
@@ -191,18 +228,37 @@ template <typename Self> struct EnableIntersectionOps
     auto isDeadEnd() const
     {
         auto pred = [](const auto &road) { return road.entry_allowed; };
-        return !std::any_of(self()->begin() + 1, self()->end(), pred);
+        return std::none_of(self()->begin() + 1, self()->end(), pred);
     }
 
     // Returns the number of roads we can enter at this intersection, respectively.
     auto countEnterable() const
     {
         auto pred = [](const auto &road) { return road.entry_allowed; };
-        return std::count_if(self()->begin(), self()->end(), pred);
+        return boost::range::count_if(*self(), pred);
     }
 
     // Returns the number of roads we can not enter at this intersection, respectively.
     auto countNonEnterable() const { return self()->size() - self()->countEnterable(); }
+
+    // same as find closests turn but with an additional predicate to allow filtering
+    // the filter has to return `true` for elements that should be ignored
+    template <typename UnaryPredicate>
+    auto findClosestTurn(const double angle, const UnaryPredicate filter) const
+    {
+        BOOST_ASSERT(!self()->empty());
+        const auto candidate = boost::range::min_element(
+            *self(), [angle, &filter](const auto &lhs, const auto &rhs) {
+                const auto filtered_lhs = filter(lhs), filtered_rhs = filter(rhs);
+                const auto deviation_lhs = util::angularDeviation(lhs.angle, angle),
+                           deviation_rhs = util::angularDeviation(rhs.angle, angle);
+                return std::tie(filtered_lhs, deviation_lhs) <
+                       std::tie(filtered_rhs, deviation_rhs);
+            });
+
+        // make sure only to return valid elements
+        return filter(*candidate) ? self()->end() : candidate;
+    }
 
   private:
     auto self() { return static_cast<Self *>(this); }
@@ -210,12 +266,14 @@ template <typename Self> struct EnableIntersectionOps
 };
 
 struct IntersectionView final : std::vector<IntersectionViewData>,      //
+                                EnableShapeOps<IntersectionView>,       //
                                 EnableIntersectionOps<IntersectionView> //
 {
     using Base = std::vector<IntersectionViewData>;
 };
 
 struct Intersection final : std::vector<ConnectedRoad>,         //
+                            EnableShapeOps<Intersection>,       //
                             EnableIntersectionOps<Intersection> //
 {
     using Base = std::vector<ConnectedRoad>;

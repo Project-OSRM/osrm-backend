@@ -251,6 +251,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
+
         auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
                                                  internal_to_external_node_map,
                                                  edge_based_node_list,
