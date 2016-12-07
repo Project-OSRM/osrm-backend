@@ -261,7 +261,7 @@ Feature: Ramp Guidance
             """
                                 d - e - g
                                 |
-            a - b ~ ~ ~ ~ ~ ~ ~ c 
+            a - b ~ ~ ~ ~ ~ ~ ~ c
                                   ` f
             """
 
@@ -271,8 +271,8 @@ Feature: Ramp Guidance
             | bc    |               | ferry | boaty mc boatface          | m2  |
             | cf    |               | ferry | boaty mc boatface          |     |
             | cd    |               | ferry | boaty mc boatface's cousin |     |
-            | de    | motorway_link |       |                   |     |
+            | de    | motorway_link |       |                            |     |
 
         When I route I should get
-            | waypoints | route                                                   |
-            | a,e       | boarding,boaty mc boatface,boaty mc boatface's cousin,, |
+            | waypoints | route                        |
+            | a,e       | boarding,boaty mc boatface,, |

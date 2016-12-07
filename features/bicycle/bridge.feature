@@ -44,8 +44,8 @@ Feature: Bicycle - Handle cycling
             | efg   | primary |         |          |
 
         When I route I should get
-            | from | to | route           | modes                                  | speed  |
+            | from | to | route           | modes                           | speed  |
             | a    | g  | abc,cde,efg,efg | cycling,cycling,cycling,cycling | 5 km/h |
             | b    | f  | abc,cde,efg,efg | cycling,cycling,cycling,cycling | 4 km/h |
-            | c    | e  | cde,cde         | cycling,cycling          | 2 km/h |
-            | e    | c  | cde,cde         | cycling,cycling          | 2 km/h |
+            | c    | e  | cde,cde         | cycling,cycling                 | 2 km/h |
+            | e    | c  | cde,cde         | cycling,cycling                 | 2 km/h |
