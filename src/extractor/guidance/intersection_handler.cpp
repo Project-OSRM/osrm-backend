@@ -1,5 +1,6 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/travel_mode.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
@@ -326,8 +327,10 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
 {
     for (std::size_t index = begin; index != end; ++index)
         if (intersection[index].entry_allowed)
+        {
             intersection[index].instruction = {findBasicTurnType(via_eid, intersection[index]),
                                                getTurnDirection(intersection[index].angle)};
+        }
 }
 
 bool IntersectionHandler::isThroughStreet(const std::size_t index,
