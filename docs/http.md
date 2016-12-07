@@ -577,9 +577,9 @@ step.
 
 - `location`: A `[longitude, latitude]` pair describing the location of the turn.
 - `bearing_before`: The clockwise angle from true north to the
-  direction of travel immediately before the maneuver.
+  direction of travel immediately before the maneuver.  Range 0-359.
 - `bearing_after`: The clockwise angle from true north to the
-  direction of travel immediately after the maneuver.
+  direction of travel immediately after the maneuver.  Range 0-359.
 - `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
    Types  unknown to the client should be handled like the `turn` type, the existance of correct `modifier` values is guranteed.
   
@@ -676,7 +676,7 @@ location of the StepManeuver. Further intersections are listed for every cross-w
 **Properties**
 
 - `location`: A `[longitude, latitude]` pair describing the location of the turn.
-- `bearings`: A list of bearing values (e.g. [0,90,180,270]) that are available at the intersection. The bearings describe all available roads at the intersection.
+- `bearings`: A list of bearing values (e.g. [0,90,180,270]) that are available at the intersection. The bearings describe all available roads at the intersection.  Values are between 0-359 (0=true north)
 - `entry`: A list of entry flags, corresponding in a 1:1 relationship to the bearings. A value of `true` indicates that the respective road could be entered on a valid route.
   `false` indicates that the turn onto the respective road would violate a restriction.
 - `in`: index into bearings/entry array. Used to calculate the bearing just before the turn. Namely, the clockwise angle from true north to the

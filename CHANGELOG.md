@@ -1,3 +1,8 @@
+# 5.5.1
+  - Changes from 5.5.0
+    - Bugfixes
+      - Fix #3418 and ensure we only return bearings in the range 0-359 in API responses
+
 # 5.5.0
   - Changes from 5.4.0
     - API:
