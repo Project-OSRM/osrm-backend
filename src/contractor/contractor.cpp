@@ -521,10 +521,18 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         using boost::interprocess::mapped_region;
         using boost::interprocess::read_only;
 
-        const file_mapping mapping{filename.c_str(), read_only};
-        mapped_region region{mapping, read_only};
-        region.advise(mapped_region::advice_sequential);
-        return region;
+        try
+        {
+            const file_mapping mapping{filename.c_str(), read_only};
+            mapped_region region{mapping, read_only};
+            region.advise(mapped_region::advice_sequential);
+            return region;
+        }
+        catch (const std::exception &e)
+        {
+            util::Log(logERROR) << "Error while trying to mmap " + filename + ": " + e.what();
+            throw;
+        }
     };
 
     const auto edge_based_graph_region = mmap_file(edge_based_graph_filename);
