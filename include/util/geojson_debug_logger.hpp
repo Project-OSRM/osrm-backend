@@ -63,11 +63,11 @@ class GeojsonLogger
         // make sure to syncronize logging output, our writing should be sequential
         std::lock_guard<std::mutex> guard(lock);
 
-        // if there is no logfile, we cannot write
+        // if there is no logfile, we cannot write (possible reason: the guard might be out of scope
+        // (e.g. if it is anonymous))
         if (!ofs.is_open() || (nullptr == policy))
         {
-            // this can only happend between two guards when concurrent writing occurs
-            return false;
+            throw util::exception("Trying to use the geojson printer without an open logger.");
         }
 
         // use our policy to convert the arguments into geojson, this can be done in parallel
