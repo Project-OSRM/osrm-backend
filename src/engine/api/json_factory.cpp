@@ -192,8 +192,8 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
 
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
-    step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);
-    step_maneuver.values["bearing_after"] = std::round(maneuver.bearing_after);
+    step_maneuver.values["bearing_before"] = std::fmod(std::round(maneuver.bearing_before), 360);
+    step_maneuver.values["bearing_after"] = std::fmod(std::round(maneuver.bearing_after), 360);
     if (maneuver.exit != 0)
         step_maneuver.values["exit"] = maneuver.exit;
 
@@ -207,9 +207,11 @@ util::json::Object makeIntersection(const guidance::Intersection &intersection)
     util::json::Array entry;
 
     bearings.values.reserve(intersection.bearings.size());
-    std::copy(intersection.bearings.begin(),
-              intersection.bearings.end(),
-              std::back_inserter(bearings.values));
+    std::transform(
+        intersection.bearings.begin(),
+        intersection.bearings.end(),
+        std::back_inserter(bearings.values),
+        [](const double bearing) -> util::json::Value { return std::fmod(bearing, 360); });
 
     entry.values.reserve(intersection.entry.size());
     std::transform(intersection.entry.begin(),
