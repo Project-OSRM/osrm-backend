@@ -82,7 +82,7 @@ Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(const std::string &file_name)
     util::Log() << "Using script " << file_name;
 }
 
-void Sol2ScriptingEnvironment::InitContext(Sol2ScriptingContext &context)
+void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 {
     context.state.open_libraries();
 
@@ -309,14 +309,14 @@ const ProfileProperties &Sol2ScriptingEnvironment::GetProfileProperties()
     return GetSol2Context().properties;
 }
 
-Sol2ScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
+LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 {
     std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = std::make_unique<Sol2ScriptingContext>();
+        ref = std::make_unique<LuaScriptingContext>();
         InitContext(*ref);
     }
 
@@ -452,7 +452,7 @@ void Sol2ScriptingEnvironment::ProcessSegment(const osrm::util::Coordinate &sour
     }
 }
 
-void Sol2ScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &result)
+void LuaScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 
@@ -461,7 +461,7 @@ void Sol2ScriptingContext::ProcessNode(const osmium::Node &node, ExtractionNode 
     node_function(node, result);
 }
 
-void Sol2ScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
+void LuaScriptingContext::ProcessWay(const osmium::Way &way, ExtractionWay &result)
 {
     BOOST_ASSERT(state.lua_state() != nullptr);
 

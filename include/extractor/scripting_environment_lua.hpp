@@ -1,5 +1,5 @@
-#ifndef SCRIPTING_ENVIRONMENT_SOL2_HPP
-#define SCRIPTING_ENVIRONMENT_SOL2_HPP
+#ifndef SCRIPTING_ENVIRONMENT_LUA_HPP
+#define SCRIPTING_ENVIRONMENT_LUA_HPP
 
 #include "extractor/raster_source.hpp"
 #include "extractor/scripting_environment.hpp"
@@ -17,7 +17,7 @@ namespace osrm
 namespace extractor
 {
 
-struct Sol2ScriptingContext final
+struct LuaScriptingContext final
 {
     void ProcessNode(const osmium::Node &, ExtractionNode &result);
     void ProcessWay(const osmium::Way &, ExtractionWay &result);
@@ -47,7 +47,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     const ProfileProperties &GetProfileProperties() override;
 
-    Sol2ScriptingContext &GetSol2Context();
+    LuaScriptingContext &GetSol2Context();
 
     std::vector<std::string> GetNameSuffixList() override;
     std::vector<std::string> GetRestrictions() override;
@@ -66,12 +66,12 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
                         &resulting_restrictions) override;
 
   private:
-    void InitContext(Sol2ScriptingContext &context);
+    void InitContext(LuaScriptingContext &context);
     std::mutex init_mutex;
     std::string file_name;
-    tbb::enumerable_thread_specific<std::unique_ptr<Sol2ScriptingContext>> script_contexts;
+    tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
 };
 }
 }
 
-#endif /* SCRIPTING_ENVIRONMENT_SOL2_HPP */
+#endif /* SCRIPTING_ENVIRONMENT_LUA_HPP */
