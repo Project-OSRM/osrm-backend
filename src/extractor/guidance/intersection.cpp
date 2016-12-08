@@ -130,11 +130,11 @@ Intersection::getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &gr
 }
 
 // check if all entries in the given range allow entry
-bool Intersection::hasValidEntries(std::size_t first, std::size_t last) const
+bool Intersection::hasValidEntries(Intersection::iterator first, Intersection::iterator last) const
 {
-    BOOST_ASSERT(last < size());
+    BOOST_ASSERT(last < end());
 
-    return all_of(begin() + first, begin() + last + 1, [&](const ConnectedRoad &road) {
+    return all_of(first, last + 1, [&](const ConnectedRoad &road) {
         return road.entry_allowed;
     });
 }

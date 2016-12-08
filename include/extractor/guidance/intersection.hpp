@@ -300,7 +300,7 @@ struct Intersection final : std::vector<ConnectedRoad>,         //
     std::uint8_t getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &) const;
 
     // check if all roads between first and last allow entry
-    bool hasValidEntries(std::size_t first, std::size_t last) const;
+    bool hasValidEntries(Intersection::iterator first, Intersection::iterator last) const;
 
     Base::iterator findClosestTurn(double angle);
     Base::const_iterator findClosestTurn(double angle) const;

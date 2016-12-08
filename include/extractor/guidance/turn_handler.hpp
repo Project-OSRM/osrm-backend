@@ -50,11 +50,10 @@ class TurnHandler : public IntersectionHandler
   private:
     struct Fork
     {
-        const std::size_t right;
-        const std::size_t left;
+        Intersection::iterator right;
+        Intersection::iterator left;
         const std::size_t size;
-
-        Fork(const std::size_t right, const std::size_t left);
+        Fork(Intersection::iterator right, Intersection::iterator left);
     };
 
     bool isObviousOfTwo(const EdgeID via_edge,
@@ -63,15 +62,13 @@ class TurnHandler : public IntersectionHandler
 
     bool hasObvious(const EdgeID &via_edge,
                     const Intersection &intersection,
-                    const std::size_t right,
-                    const std::size_t left) const;
+                    const Fork) const;
 
     boost::optional<Fork>
-    findLeftAndRightmostForkCandidates(const Intersection &intersection) const;
+    findLeftAndRightmostForkCandidates(Intersection &intersection) const;
 
     bool isCompatibleByRoadClass(const Intersection &intersection,
-                                 const std::size_t right,
-                                 const std::size_t left) const;
+                                 const Fork fork) const;
 
     // Dead end.
     OSRM_ATTR_WARN_UNUSED
@@ -93,7 +90,7 @@ class TurnHandler : public IntersectionHandler
     handleDistinctConflict(const EdgeID via_edge, ConnectedRoad &left, ConnectedRoad &right) const;
 
     // Classification
-    boost::optional<Fork> findFork(const EdgeID via_edge, const Intersection &intersection) const;
+    boost::optional<Fork> findFork(const EdgeID via_edge, Intersection &intersection) const;
 
     OSRM_ATTR_WARN_UNUSED
     Intersection assignLeftTurns(const EdgeID via_edge,
