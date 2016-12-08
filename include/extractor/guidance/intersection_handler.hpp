@@ -122,6 +122,7 @@ template <typename IntersectionType> // works with Intersection and Intersection
 std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                                                  const IntersectionType &intersection) const
 {
+    using Road = typename IntersectionType::value_type;
     using EdgeData = osrm::util::NodeBasedDynamicGraph::EdgeData;
     using osrm::util::angularDeviation;
 
@@ -269,7 +270,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 
     // checks if continue candidates are sharp turns
     const bool all_continues_are_narrow = [&]() {
-        return std::count_if(begin(intersection), end(intersection), [&](const auto &road) {
+        return std::count_if(begin(intersection), end(intersection), [&](const Road &road) {
                    const EdgeData &road_data = node_based_graph.GetEdgeData(road.eid);
                    const double &road_angle = angularDeviation(road.angle, STRAIGHT_ANGLE);
                    return IsContinueRoad(road_data) && (road_angle < NARROW_TURN_ANGLE);
