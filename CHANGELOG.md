@@ -29,6 +29,7 @@
       - fixed a bug that could result in crashes when leaving a ferry directly onto a motorway ramp
       - fixed a bug in the tile plugin that resulted in discovering invalid edges for connections
       - improved error messages when missing files during traffic updates (#3114)
+      - For single coordinate geometries the GeoJSON `Point` encoding was broken. We now always emit `LineString`s even in the one-coordinate-case (backwards compatible) (#3425)
     - Debug Tiles
       - Added support for turn penalties
     - Internals

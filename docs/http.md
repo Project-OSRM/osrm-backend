@@ -519,7 +519,7 @@ step.
 |------------|--------------------------------------------------------------------|
 | polyline   | [polyline](https://www.npmjs.com/package/polyline) with precision 5 in [latitude,longitude] encoding |
 | polyline6  | [polyline](https://www.npmjs.com/package/polyline) with precision 6 in [latitude,longitude] encoding |
-| geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) or [GeoJSON `Point`](http://geojson.org/geojson-spec.html#point) if it is only one coordinate (not wrapped by a GeoJSON feature)|
+| geojson    | [GeoJSON `LineString`](http://geojson.org/geojson-spec.html#linestring) |
 
 - `name`: The name of the way along which travel proceeds.
 - `ref`: A reference number or code for the way. Optionally included, if ref data is available for the given way.
