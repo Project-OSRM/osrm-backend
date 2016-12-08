@@ -161,7 +161,7 @@ class FileReader
         {
             std::getline(input_stream, thisline);
         }
-        catch (const std::ios_base::failure &e)
+        catch (const std::ios_base::failure & /*e*/)
         {
             // EOF is OK here, everything else, re-throw
             if (!input_stream.eof())
