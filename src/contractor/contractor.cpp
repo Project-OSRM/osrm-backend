@@ -136,12 +136,24 @@ int Contractor::Run()
 
     TIMER_START(preparing);
 
+    util::Log() << "Reading node weights.";
+    std::vector<EdgeWeight> node_weights;
+    std::string node_file_name = config.osrm_input_path.string() + ".enw";
+
+    {
+        storage::io::FileReader node_file(node_file_name,
+                                          storage::io::FileReader::VerifyFingerprint);
+        node_file.DeserializeVector(node_weights);
+    }
+    util::Log() << "Done reading node weights.";
+
     util::Log() << "Loading edge-expanded graph representation";
 
     util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
     EdgeID max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
                                                edge_based_edge_list,
+                                               node_weights,
                                                config.edge_segment_lookup_path,
                                                config.edge_penalty_path,
                                                config.segment_speed_lookup_paths,
@@ -162,17 +174,6 @@ int Contractor::Run()
     {
         ReadNodeLevels(node_levels);
     }
-
-    util::Log() << "Reading node weights.";
-    std::vector<EdgeWeight> node_weights;
-    std::string node_file_name = config.osrm_input_path.string() + ".enw";
-
-    {
-        storage::io::FileReader node_file(node_file_name,
-                                          storage::io::FileReader::VerifyFingerprint);
-        node_file.DeserializeVector(node_weights);
-    }
-    util::Log() << "Done reading node weights.";
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
     ContractGraph(max_edge_id,
@@ -499,6 +500,7 @@ parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_pe
 EdgeID Contractor::LoadEdgeExpandedGraph(
     std::string const &edge_based_graph_filename,
     util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+    std::vector<EdgeWeight> &node_weights,
     const std::string &edge_segment_lookup_filename,
     const std::string &edge_penalty_filename,
     const std::vector<std::string> &segment_speed_filenames,
@@ -913,6 +915,11 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
                 previous_osm_node_id = segmentblocks[i].this_osm_node_id;
             }
+
+            // Update the node-weight cache.  This is the weight of the edge-based-node only,
+            // it doesn't include the turn.  We may visit the same node multiple times, but
+            // we should always assign the same value here.
+            node_weights[inbuffer.source] = new_weight;
 
             // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
             // effectively removes it from the routing network.

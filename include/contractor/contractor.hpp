@@ -81,6 +81,7 @@ class Contractor
     EdgeID
     LoadEdgeExpandedGraph(const std::string &edge_based_graph_path,
                           util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+                          std::vector<EdgeWeight> &node_weights,
                           const std::string &edge_segment_lookup_path,
                           const std::string &edge_penalty_path,
                           const std::vector<std::string> &segment_speed_path,
