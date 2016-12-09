@@ -46,22 +46,27 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
         // if this returns false this is still in use
         if (exclusive_lock.try_lock())
         {
-            // Now check if this is still the newest dataset
-            const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
-                lock(shared_barriers->current_regions_mutex);
-
-            auto shared_regions = storage::makeSharedMemory(storage::CURRENT_REGIONS);
-            const auto current_timestamp =
-                static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
-
-            if (current_timestamp->timestamp == shared_timestamp)
+            if (storage::SharedMemory::RegionExists(data_region))
             {
-                util::Log(logDEBUG) << "Retaining data with shared timestamp " << shared_timestamp;
-            }
-            else
-            {
-                storage::SharedMemory::Remove(data_region);
-                storage::SharedMemory::Remove(layout_region);
+                BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
+
+                // Now check if this is still the newest dataset
+                const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
+                    lock(shared_barriers->current_regions_mutex);
+
+                auto shared_regions = storage::makeSharedMemory(storage::CURRENT_REGIONS);
+                const auto current_timestamp =
+                    static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
+
+                if (current_timestamp->timestamp == shared_timestamp)
+                {
+                    util::Log(logDEBUG) << "Retaining data with shared timestamp " << shared_timestamp;
+                }
+                else
+                {
+                    storage::SharedMemory::Remove(data_region);
+                    storage::SharedMemory::Remove(layout_region);
+                }
             }
         }
     }
