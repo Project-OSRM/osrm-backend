@@ -87,58 +87,6 @@ std::string toString(const ConnectedRoad &road)
     return result;
 }
 
-Intersection::Base::iterator Intersection::findClosestTurn(double angle)
-{
-    // use the const operator to avoid code duplication
-    return begin() +
-           std::distance(cbegin(), static_cast<const Intersection *>(this)->findClosestTurn(angle));
-}
-
-Intersection::Base::const_iterator Intersection::findClosestTurn(double angle) const
-{
-    return std::min_element(
-        begin(), end(), [angle](const ConnectedRoad &lhs, const ConnectedRoad &rhs) {
-            return angularDeviation(lhs.angle, angle) < angularDeviation(rhs.angle, angle);
-        });
-}
-bool Intersection::valid() const
-{
-    return !empty() &&
-           std::is_sorted(begin(), end(), std::mem_fn(&ConnectedRoad::compareByAngle)) &&
-           operator[](0).angle < std::numeric_limits<double>::epsilon();
-}
-
-std::uint8_t
-Intersection::getHighestConnectedLaneCount(const util::NodeBasedDynamicGraph &graph) const
-{
-    BOOST_ASSERT(valid()); // non empty()
-
-    const std::function<std::uint8_t(const ConnectedRoad &)> to_lane_count =
-        [&](const ConnectedRoad &road) {
-            return graph.GetEdgeData(road.eid).road_classification.GetNumberOfLanes();
-        };
-
-    std::uint8_t max_lanes = 0;
-    const auto extract_maximal_value = [&max_lanes](std::uint8_t value) {
-        max_lanes = std::max(max_lanes, value);
-        return false;
-    };
-
-    const auto view = *this | boost::adaptors::transformed(to_lane_count);
-    boost::range::find_if(view, extract_maximal_value);
-    return max_lanes;
-}
-
-// check if all entries in the given range allow entry
-bool Intersection::hasValidEntries(Intersection::iterator first, Intersection::iterator last) const
-{
-    BOOST_ASSERT(last < end());
-
-    return all_of(first, last + 1, [&](const ConnectedRoad &road) {
-        return road.entry_allowed;
-    });
-}
-
 } // namespace guidance
 } // namespace extractor
 } // namespace osrm

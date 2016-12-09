@@ -42,34 +42,10 @@ class IntersectionHandler
     virtual ~IntersectionHandler() = default;
 
     // check whether the handler can actually handle the intersection
-    //
-    // note that `intersection` is a ordered list of connected roads ordered from from sharp right
-    // counter-clockwise to sharp left where `intersection[0]` is always a u-turn
-    // #IntersectionExplanation@intersection_handler.hpp
-    //
-    //                                           |
-    //                                           |
-    //                                     (intersec[3])
-    //                                           |
-    //                                           |
-    //                                           |
-    //  nid ---(via_eid/intersec[0])--- nbg.GetTarget(via)  ---(intersec[2])---
-    //                                           |
-    //                                           |
-    //                                           |
-    //                                     (intersec[1])
-    //                                           |
-    //                                           |
-    //
-    // intersec := intersection
-    // nbh := node_based_graph
-    //
-    // #IntersectionExplanation@intersection_handler.hpp
     virtual bool
     canProcess(const NodeID nid, const EdgeID via_eid, const Intersection &intersection) const = 0;
 
-    // handle and process the intersection with parameters as described in
-    // #IntersectionExplanation@intersection_handler.hpp
+    // handle and process the intersection
     virtual Intersection
     operator()(const NodeID nid, const EdgeID via_eid, Intersection intersection) const = 0;
 
@@ -80,8 +56,6 @@ class IntersectionHandler
     const SuffixTable &street_name_suffix_table;
     const IntersectionGenerator &intersection_generator;
     const NodeBasedGraphWalker graph_walker; // for skipping traffic signal, distances etc.
-
-    std::size_t countValid(const Intersection &intersection) const;
 
     // Decide on a basic turn types
     TurnType::Enum findBasicTurnType(const EdgeID via_edge, const ConnectedRoad &candidate) const;
