@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export NVM_NODEJS_ORG_MIRROR=https://s3.amazonaws.com/mapbox/vendor/nodejs
+
 # here we set up the node version on the fly. currently only node 4, but can be used for more values if need be
 # This is done manually so that the build works the same on OS X
 rm -rf ~/.nvm/ && git clone --depth 1 --branch v0.30.1 https://github.com/creationix/nvm.git ~/.nvm
