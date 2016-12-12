@@ -60,6 +60,8 @@ class Extractor
     BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                            std::vector<QueryNode> &internal_to_external_node_map,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
+                           std::vector<RoadSegment> &road_segment_list,
+                           std::vector<std::pair<NodeID, NodeID>> &node_pair_list,
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
                            util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
@@ -70,8 +72,9 @@ class Extractor
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &edges,
                         std::vector<EdgeBasedNode> &nodes) const;
-    void BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
+    void BuildRTree(std::vector<RoadSegment> road_segment_list,
                     std::vector<bool> node_is_startpoint,
+                    std::vector<std::pair<NodeID, NodeID>> node_pair_list,
                     const std::vector<QueryNode> &internal_to_external_node_map);
     std::shared_ptr<RestrictionMap> LoadRestrictionMap();
     std::shared_ptr<util::NodeBasedDynamicGraph>

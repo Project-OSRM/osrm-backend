@@ -247,6 +247,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         TIMER_START(expansion);
 
         std::vector<EdgeBasedNode> edge_based_node_list;
+        std::vector<RoadSegment> road_segment_list;
+        std::vector<std::pair<NodeID, NodeID>> node_pair_list;
         util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
         std::vector<bool> node_is_startpoint;
         std::vector<EdgeWeight> edge_based_node_weights;
@@ -254,6 +256,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
                                                  internal_to_external_node_map,
                                                  edge_based_node_list,
+                                                 road_segment_list,
+                                                 node_pair_list,
                                                  node_is_startpoint,
                                                  edge_based_node_weights,
                                                  edge_based_edge_list,
@@ -275,11 +279,16 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
         util::Log() << "Building r-tree ...";
         TIMER_START(rtree);
-        BuildRTree(std::move(edge_based_node_list),
+        BuildRTree(std::move(road_segment_list),
                    std::move(node_is_startpoint),
+                   std::move(node_pair_list),
                    internal_to_external_node_map);
 
         TIMER_STOP(rtree);
+
+        util::Log() << "Write edge-based-nodes...";
+        util::serializeVector("test.ebn", edge_based_node_list);
+        util::Log() << "done writing";
 
         util::Log() << "Writing node map ...";
         WriteNodeMapping(internal_to_external_node_map);
@@ -446,7 +455,9 @@ std::pair<std::size_t, EdgeID>
 Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                   std::vector<QueryNode> &internal_to_external_node_map,
                                   std::vector<EdgeBasedNode> &node_based_edge_list,
-                                  std::vector<bool> &node_is_startpoint,
+                                  std::vector<RoadSegment> &road_segment_list,
+                                  std::vector<std::pair<NodeID, NodeID>> &node_pair_list,
+                                  std::vector<bool> &segment_is_startpoint,
                                   std::vector<EdgeWeight> &edge_based_node_weights,
                                   util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
                                   const std::string &intersection_class_output_file)
@@ -499,7 +510,9 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
-    edge_based_graph_factory.GetStartPointMarkers(node_is_startpoint);
+    edge_based_graph_factory.GetRoadSegments(road_segment_list);
+    edge_based_graph_factory.GetNodePairs(node_pair_list);
+    edge_based_graph_factory.GetStartPointMarkers(segment_is_startpoint);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
     auto max_edge_id = edge_based_graph_factory.GetHighestEdgeID();
 
@@ -533,22 +546,23 @@ void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_exter
 
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
-void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
+void Extractor::BuildRTree(std::vector<RoadSegment> road_segment_list,
                            std::vector<bool> node_is_startpoint,
+                           std::vector<std::pair<NodeID, NodeID>> node_pair_list,
                            const std::vector<QueryNode> &internal_to_external_node_map)
 {
-    util::Log() << "constructing r-tree of " << node_based_edge_list.size()
+    util::Log() << "constructing r-tree of " << road_segment_list.size()
                 << " edge elements build on-top of " << internal_to_external_node_map.size()
                 << " coordinates";
 
-    BOOST_ASSERT(node_is_startpoint.size() == node_based_edge_list.size());
+    BOOST_ASSERT(node_is_startpoint.size() == road_segment_list.size());
 
     // Filter node based edges based on startpoint
-    auto out_iter = node_based_edge_list.begin();
-    auto in_iter = node_based_edge_list.begin();
+    auto out_iter = road_segment_list.begin();
+    auto in_iter = road_segment_list.begin();
     for (auto index : util::irange<std::size_t>(0UL, node_is_startpoint.size()))
     {
-        BOOST_ASSERT(in_iter != node_based_edge_list.end());
+        BOOST_ASSERT(in_iter != road_segment_list.end());
         if (node_is_startpoint[index])
         {
             *out_iter = *in_iter;
@@ -556,20 +570,22 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
         }
         in_iter++;
     }
-    auto new_size = out_iter - node_based_edge_list.begin();
+    auto new_size = out_iter - road_segment_list.begin();
     if (new_size == 0)
     {
         throw util::exception("There are no snappable edges left after processing.  Are you "
                               "setting travel modes correctly in the profile?  Cannot continue." +
                               SOURCE_REF);
     }
-    node_based_edge_list.resize(new_size);
+    road_segment_list.resize(new_size);
+    node_pair_list.resize(new_size);
 
     TIMER_START(construction);
-    util::StaticRTree<EdgeBasedNode, std::vector<QueryNode>> rtree(node_based_edge_list,
-                                                                   config.rtree_nodes_output_path,
-                                                                   config.rtree_leafs_output_path,
-                                                                   internal_to_external_node_map);
+    util::StaticRTree<RoadSegment, std::vector<QueryNode>> rtree(road_segment_list,
+                                                                 node_pair_list,
+                                                                 config.rtree_nodes_output_path,
+                                                                 config.rtree_leafs_output_path,
+                                                                 internal_to_external_node_map);
 
     TIMER_STOP(construction);
     util::Log() << "finished r-tree construction in " << TIMER_SEC(construction) << " seconds";
