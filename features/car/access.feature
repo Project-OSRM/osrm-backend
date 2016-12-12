@@ -221,7 +221,6 @@ Feature: Car - Restricted access
             | highway | toll        | bothw |
             | primary | yes         |       |
 
-
     Scenario: Car - directional access tags
         Then routability should be
             | highway | access | access:forward | access:backward | forw | backw |
@@ -264,3 +263,10 @@ Feature: Car - Restricted access
             | steps   | no     |      |       |
             | primary |        |  x   |   x   |
 
+    Scenario: Car - Access combinations
+        Then routability should be
+            | highway    | access     | bothw |
+            | primary    | permissive | x     |
+            | steps      | permissive |       |
+            | footway    | permissive | x     |
+            | garbagetag | permissive | x     |
