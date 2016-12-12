@@ -132,7 +132,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     {
         const auto result = ExtractCoordinateAtLength(
             skipping_inaccuracies_distance, coordinates);
-        BOOST_ASSERT(is_valid_result(coordinates.back()));
+        BOOST_ASSERT(is_valid_result(result));
         return result;
     }
 
