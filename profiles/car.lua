@@ -443,7 +443,7 @@ function handle_speed(way,result,data)
   if -1 == result.forward_speed and -1 == result.backward_speed then
     return false
   end
-  
+
   if handle_side_roads(way,result) == false then return false end
   if handle_surface(way,result) == false then return false end
   if handle_maxspeed(way,data,result) == false then return false end
@@ -676,7 +676,7 @@ function way_function(way, result)
   -- unnecessary work. this implies we should check things that
   -- commonly forbids access early, and handle complicated edge
   -- cases later.
-  
+
   -- perform an quick initial check and abort if way is obviously
   -- not routable, e.g. because it does not have any of the key
   -- tags indicating routability
