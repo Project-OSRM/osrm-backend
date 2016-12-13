@@ -40,6 +40,11 @@ util::json::Array coordinateToLonLat(const util::Coordinate coordinate);
 
 std::string modeToString(const extractor::TravelMode mode);
 
+/**
+ * Ensures that a bearing value is a whole number, and clamped to the range 0-359
+ */
+inline double roundAndClampBearing(double bearing) { return std::fmod(std::round(bearing), 360); }
+
 } // namespace detail
 
 template <unsigned POLYLINE_PRECISION, typename ForwardIter>
