@@ -180,3 +180,25 @@ Feature: Snap start/end point to the nearest way
             | x    | n  | xf,xf |
             | x    | o  | xg,xg |
             | x    | p  | xh,xh |
+
+    Scenario: Allow routing between small components
+        Given a grid size of 20 meters
+        Given the extract extra arguments "--small-component-size 2"
+        Given the node map
+            """
+            a - b - c - d - e - f - g
+                |               |
+                h - - - i - - 1 j
+            """
+
+        And the ways
+            | nodes   | oneway |
+            | abcdefg | no     |
+            | bh      | yes    |
+            | hi      | yes    |
+            | ij      | yes    |
+            | fj      | yes    |
+
+        When I route I should get
+            | waypoints | route    |
+            | h,1       | hi,ij,ij |
