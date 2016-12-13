@@ -221,6 +221,7 @@ Feature: Car - Restricted access
             | highway | toll        | bothw |
             | primary | yes         |       |
 
+
     Scenario: Car - directional access tags
         Then routability should be
             | highway | access | access:forward | access:backward | forw | backw |
@@ -232,3 +233,15 @@ Feature: Car - Restricted access
             | primary | no     |                | yes             |      | x     |
             | primary | no     | yes            |                 | x    |       |
             | primary | no     | yes            | yes             | x    | x     |
+
+
+     Scenario: Car - barrier=gate should be routed over unless explicitely forbidden
+        Then routability should be
+            | node/barrier | access     | bothw |
+            | gate         |            | x     |
+            | gate         | no         |       |
+            | gate         | yes        | x     |
+            | gate         | permissive | x     |
+            | gate         | designated | x     |
+            | gate         | private    |       |
+            | gate         | garbagetag | x     |
