@@ -139,14 +139,14 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 intersection.out = bearing_class.findMatchingBearing(bearings.second);
                 intersection.location = facade.GetCoordinateOfNode(path_point.turn_via_node);
                 intersection.bearings.clear();
-                intersection.bearings.reserve(bearing_class.getAvailableBearings().size());
+                intersection.bearings.reserve(bearing_data.size());
                 intersection.lanes = path_point.lane_data.first;
                 intersection.lane_description =
                     path_point.lane_data.second != INVALID_LANE_DESCRIPTIONID
                         ? facade.GetTurnDescription(path_point.lane_data.second)
                         : extractor::guidance::TurnLaneDescription();
-                std::copy(bearing_class.getAvailableBearings().begin(),
-                          bearing_class.getAvailableBearings().end(),
+                std::copy(bearing_data.begin(),
+                          bearing_data.end(),
                           std::back_inserter(intersection.bearings));
                 intersection.entry.clear();
                 for (auto idx : util::irange<std::size_t>(0, intersection.bearings.size()))
