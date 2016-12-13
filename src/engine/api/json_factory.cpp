@@ -211,7 +211,7 @@ util::json::Object makeIntersection(const guidance::Intersection &intersection)
         intersection.bearings.begin(),
         intersection.bearings.end(),
         std::back_inserter(bearings.values),
-        [](const double bearing) -> util::json::Value { return std::fmod(bearing, 360); });
+        [](const double bearing) -> util::json::Value { BOOST_ASSERT(bearing != 360.0); return std::fmod(bearing, 360); });
 
     entry.values.reserve(intersection.entry.size());
     std::transform(intersection.entry.begin(),
