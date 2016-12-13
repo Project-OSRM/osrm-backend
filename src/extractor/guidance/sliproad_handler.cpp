@@ -186,11 +186,9 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             if (is_left_sliproad_turn)
                 return main_road_intersection->intersection.getLeftmostRoad();
 
-            if (is_right_sliproad_turn)
-                return main_road_intersection->intersection.getRightmostRoad();
-
-            BOOST_ASSERT_MSG(false, "Sliproad is neither a left nor right of obvious main road");
-            return main_road_intersection->intersection.getLeftmostRoad();
+            BOOST_ASSERT_MSG(is_right_sliproad_turn,
+                             "Sliproad is neither a left nor right of obvious main road");
+            return main_road_intersection->intersection.getRightmostRoad();
         }();
 
         const auto &crossing_road_data = node_based_graph.GetEdgeData(crossing_road.eid);
