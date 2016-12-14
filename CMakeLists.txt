@@ -454,7 +454,7 @@ if(ENABLE_MASON)
 
 else()
 
-  find_package(Boost 1.49.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+  find_package(Boost 1.54 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   add_dependency_includes(${Boost_INCLUDE_DIRS})
 
   find_package(TBB REQUIRED)
