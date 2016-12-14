@@ -239,7 +239,7 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES MinRelSize OR CM
       find_program(GCC_AR gcc-ar)
       find_program(GCC_RANLIB gcc-ranlib)
       if ("${GCC_AR}" STREQUAL "GCC_AR-NOTFOUND" OR "${GCC_RANLIB}" STREQUAL "GCC_RANLIB-NOTFOUND")
-        message(WARNING "GCC specific binutils not found.")
+        message(WARNING "GCC specific binutils not found. In case of linker issues export env vars: AR=gcc-ar, NM=gcc-nm, RANLIB=gcc-ranlib")
       else()
         message(STATUS "Using GCC specific binutils for LTO:")
         message(STATUS " ${GCC_AR}")
