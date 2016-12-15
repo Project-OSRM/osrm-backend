@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) try
     }
     else
     {
-        extractor::LuaScriptingEnvironment scripting_environment(
+        extractor::Sol2ScriptingEnvironment scripting_environment(
             extractor_config.profile_path.string().c_str());
         exitcode = extractor::Extractor(extractor_config).run(scripting_environment);
     }
