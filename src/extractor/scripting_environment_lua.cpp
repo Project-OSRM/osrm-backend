@@ -21,6 +21,7 @@
 #include <memory>
 #include <sstream>
 
+
 namespace sol
 {
 template <> struct is_container<osmium::Node> : std::false_type

@@ -2,6 +2,7 @@
 #include "extractor/extractor_config.hpp"
 #include "extractor/scripting_environment_lua.hpp"
 #include "util/log.hpp"
+#include "util/stacktrace.hpp"
 #include "util/version.hpp"
 
 #include <tbb/task_scheduler_init.h>
@@ -115,6 +116,8 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
 
 int main(int argc, char *argv[]) try
 {
+    util::InstallStacktraceHandler();
+
     util::LogPolicy::GetInstance().Unmute();
     extractor::ExtractorConfig extractor_config;
 
