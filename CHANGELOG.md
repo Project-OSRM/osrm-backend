@@ -2,6 +2,7 @@
   - Changes from 5.5.0
     - Bugfixes
       - Fix #3418 and ensure we only return bearings in the range 0-359 in API responses
+      - Fixed a bug that could lead to emitting false instructions for staying on a roundabout
 
 # 5.5.0
   - Changes from 5.4.0

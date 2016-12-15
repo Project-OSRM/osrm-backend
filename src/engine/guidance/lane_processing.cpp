@@ -180,29 +180,6 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
     return steps;
 }
 
-std::vector<RouteStep> removeLanesFromRoundabouts(std::vector<RouteStep> steps)
-{
-    using namespace util::guidance;
-
-    const auto removeLanes = [](RouteStep &step) {
-        for (auto &intersection : step.intersections)
-        {
-            intersection.lane_description = {};
-            intersection.lanes = {};
-        }
-    };
-
-    for (auto &step : steps)
-    {
-        const auto inst = step.maneuver.instruction;
-
-        if (entersRoundabout(inst) || staysOnRoundabout(inst) || leavesRoundabout(inst))
-            removeLanes(step);
-    }
-
-    return steps;
-}
-
 } // namespace guidance
 } // namespace engine
 } // namespace osrm

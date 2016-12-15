@@ -564,16 +564,16 @@ Feature: Basic Roundabout
             | kl    | trunk       | yes    |            | Europastrasse |                                        |
             | km    | trunk       | yes    | roundabout | Europaplatz   |                                        |
             | nm    | trunk       | yes    |            | Europastrasse |                                        |
-            | mo    | trunk       | yes    | rounadbout | Europaplatz   |                                        |
+            | mo    | trunk       | yes    | roundabout | Europaplatz   |                                        |
             | op    | trunk_link  | yes    |            |               |                                        |
             | ob    | trunk       | yes    | roundabout | Europaplatz   |                                        |
 
        When I route I should get
-           | waypoints | route                                    | turns                           | lanes |
-           | a,d       | ,Europaplatz,Europastrasse,Europastrasse | depart,roundabout-exit-1,arrive | ,,    |
-           | a,h       | ,Europaplatz,Allee Cite,Allee Cite       | depart,roundabout-exit-2,arrive | ,,    |
-           | a,l       | ,Europaplatz,Europastrasse,Europastrasse | depart,roundabout-exit-3,arrive | ,,    |
-           | a,p       | ,Europaplatz,,                           | depart,roundabout-exit-4,arrive | ,,    |
+           | waypoints | route                        | turns                            | lanes |
+           | a,d       | ,Europastrasse,Europastrasse | depart,Europaplatz-exit-1,arrive | ,,    |
+           | a,h       | ,Allee Cite,Allee Cite       | depart,Europaplatz-exit-2,arrive | ,,    |
+           | a,l       | ,Europastrasse,Europastrasse | depart,Europaplatz-exit-3,arrive | ,,    |
+           | a,p       | ,,                           | depart,Europaplatz-exit-4,arrive | ,,    |
 
     @turboroundabout
     # http://www.openstreetmap.org/?mlat=50.180039&mlon=8.474939&zoom=16#map=19/50.17999/8.47506
