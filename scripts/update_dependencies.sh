@@ -16,7 +16,7 @@ VARIANT_REPO=https://github.com/mapbox/variant.git
 VARIANT_TAG=v1.1.0
 
 MASON_REPO=https://github.com/mapbox/mason.git
-MASON_TAG=v0.1.1
+MASON_TAG=v0.3.0
 
 SOL_REPO="https://github.com/ThePhD/sol2.git"
 SOL_TAG=v2.15.4
