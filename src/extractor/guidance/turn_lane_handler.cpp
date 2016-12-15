@@ -3,8 +3,8 @@
 #include "extractor/guidance/turn_discovery.hpp"
 #include "extractor/guidance/turn_lane_augmentation.hpp"
 #include "extractor/guidance/turn_lane_matcher.hpp"
-#include "util/log.hpp"
 #include "util/bearing.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 
 #include <cstddef>
@@ -149,6 +149,17 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
                                                  LaneDataVector &previous_lane_data,
                                                  LaneDescriptionID &previous_description_id)
 {
+    // as long as we don't want to emit lanes on roundabout, don't assign them
+    if (node_based_graph.GetEdgeData(via_edge).roundabout)
+        return TurnLaneScenario::NONE;
+
+    // really don't touch roundabouts (#2626)
+    if (intersection.end() !=
+        std::find_if(intersection.begin(), intersection.end(), [](const auto &road) {
+            return hasRoundaboutType(road.instruction);
+        }))
+        return TurnLaneScenario::NONE;
+
     // if only a uturn exists, there is nothing we can do
     if (intersection.size() == 1)
         return TurnLaneScenario::NONE;

@@ -1053,9 +1053,13 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         const auto &current_step = steps[step_index];
         const auto next_step_index = step_index + 1;
         const auto one_back_index = getPreviousIndex(step_index, steps);
+
         BOOST_ASSERT(one_back_index < steps.size());
 
         const auto &one_back_step = steps[one_back_index];
+        if (hasRoundaboutType(current_step.maneuver.instruction) ||
+            hasRoundaboutType(one_back_step.maneuver.instruction))
+            continue;
 
         if (!hasManeuver(one_back_step, current_step))
             continue;

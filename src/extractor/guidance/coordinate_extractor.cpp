@@ -146,8 +146,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     // roundabouts, check early to avoid other costly checks
     if (turn_edge_data.roundabout || turn_edge_data.circular)
     {
-        const auto result = ExtractCoordinateAtLength(
-            skipping_inaccuracies_distance, coordinates);
+        const auto result = ExtractCoordinateAtLength(skipping_inaccuracies_distance, coordinates);
         BOOST_ASSERT(is_valid_result(result));
         return result;
     }
@@ -234,8 +233,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
         std::accumulate(segment_distances.begin(), segment_distances.end(), 0.);
 
     // if we are now left with two, well than we don't have to worry, or the segment is very small
-    if (coordinates.size() == 2 ||
-        total_distance <= skipping_inaccuracies_distance)
+    if (coordinates.size() == 2 || total_distance <= skipping_inaccuracies_distance)
     {
         BOOST_ASSERT(is_valid_result(coordinates.back()));
         return coordinates.back();
@@ -252,8 +250,8 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
         // As a back-up, we have to check for this case
         if (coordinates.front() == coordinates.back())
         {
-            const auto result = ExtractCoordinateAtLength(
-                skipping_inaccuracies_distance, coordinates);
+            const auto result =
+                ExtractCoordinateAtLength(skipping_inaccuracies_distance, coordinates);
             BOOST_ASSERT(is_valid_result(result));
             return result;
         }
@@ -373,18 +371,15 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
          * We distinguish between turns that simply model the initial way of getting onto the
          * destination lanes and the ones that performa a larger turn.
          */
-        coordinates =
-            TrimCoordinatesToLength(std::move(coordinates),
-                                    2 * skipping_inaccuracies_distance,
-                                    segment_distances);
+        coordinates = TrimCoordinatesToLength(
+            std::move(coordinates), 2 * skipping_inaccuracies_distance, segment_distances);
         BOOST_ASSERT(coordinates.size() >= 2);
         segment_distances.resize(coordinates.size());
         segment_distances.back() = util::coordinate_calculation::haversineDistance(
             *(coordinates.end() - 2), coordinates.back());
         const auto vector_head = coordinates.back();
-        coordinates = TrimCoordinatesToLength(std::move(coordinates),
-                                              skipping_inaccuracies_distance,
-                                              segment_distances);
+        coordinates = TrimCoordinatesToLength(
+            std::move(coordinates), skipping_inaccuracies_distance, segment_distances);
         BOOST_ASSERT(coordinates.size() >= 2);
         const auto result =
             GetCorrectedCoordinate(turn_coordinate, coordinates.back(), vector_head);
