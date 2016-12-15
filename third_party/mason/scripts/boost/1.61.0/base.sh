@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# NOTE: use the ./util/new_boost.sh script to create new versions
+
 export MASON_VERSION=1.61.0
 export BOOST_VERSION=${MASON_VERSION//./_}
 export BOOST_TOOLSET="clang"

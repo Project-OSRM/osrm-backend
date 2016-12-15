@@ -10,7 +10,10 @@ function mason_build {
 
     # copy include/c++
     mkdir -p "${MASON_PREFIX}/include"
-    cp -r "${CLANG_PREFIX}/include/c++" "${MASON_PREFIX}/include/"
+    # if custom libc++ was built
+    if [[ $(uname -s) == 'Linux' ]]; then
+        cp -r "${CLANG_PREFIX}/include/c++" "${MASON_PREFIX}/include/"
+    fi
     # copy libs
     mkdir -p "${MASON_PREFIX}/lib"
     mkdir -p "${MASON_PREFIX}/lib/clang"

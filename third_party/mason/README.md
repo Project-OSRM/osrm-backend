@@ -170,9 +170,9 @@ This command only works if the package has already been installed. When run it s
 
 In order to ensure that all prebuilt binaries are consistent and reproducible, we perform the final build and publish operation on Travis CI.
 
-First set the `TRAVIS_TOKEN` environment variable. You can do this either by installing the `travis` gem and running `travis token` or by using `curl` to hit the Travis api directly. See details on this below.
+First set the `MASON_TRAVIS_TOKEN` environment variable. You can do this either by installing the `travis` gem and running `travis token` or by using `curl` to hit the Travis api directly. See details on this below. **WARNING: be careful to keep this token safe. Cycling it requires emailing support@travis-ci.com. Giving someone an access token is like giving them full access to your Travis account.**
 
-Once you are set up with your `TRAVIS_TOKEN` then use the `trigger` command to kick off a build:
+Once you are set up with your `MASON_TRAVIS_TOKEN` then use the `trigger` command to kick off a build:
 
 ```bash
 ./mason trigger <package name> <package version>
@@ -180,7 +180,7 @@ Once you are set up with your `TRAVIS_TOKEN` then use the `trigger` command to k
 
 Run this command from the root of a local mason repository checkout. It makes a request to the Travis API to build and publish the specified version of the package, using the Travis configuration in `./scripts/${MASON_NAME}/${MASON_VERSION}/.travis.yml`.
 
-1) Using curl and travis api to generate TRAVIS_TOKEN
+1) Using curl and travis api to generate MASON_TRAVIS_TOKEN
 
 First generate a github personal access token that has `repo` scope by going to https://github.com/settings/tokens. More details at https://help.github.com/articles/creating-an-access-token-for-command-line-use/.
 

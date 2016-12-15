@@ -1,0 +1,37 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      compiler: clang
+      sudo: false
+    - os: osx
+      env: MASON_PLATFORM=ios
+      compiler: clang
+    - os: linux
+      compiler: clang
+      sudo: false
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - libstdc++-5-dev
+    - os: osx
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v5
+    - os: osx
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v7
+    - os: osx
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v8
+    - os: osx
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86
+    - os: osx
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86-64
+    - os: osx
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips
+    - os: osx
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips-64
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

@@ -7,7 +7,7 @@ MASON_VERSION=$1 ; shift
 set -e
 set -o pipefail
 
-MASON_RELEASED_VERSION="0.1.1"
+MASON_RELEASED_VERSION="0.3.0"
 
 if [ "${MASON_COMMAND}" = "--version" ]; then
     echo ${MASON_RELEASED_VERSION}
@@ -43,8 +43,8 @@ elif [ -z "${MASON_VERSION}" ]; then
 fi
 
 if [ "${MASON_COMMAND}" = "trigger" ]; then
-    if [ -z "${TRAVIS_TOKEN}" ]; then
-        echo "TRAVIS_TOKEN is not set."
+    if [ -z "${MASON_TRAVIS_TOKEN}" ]; then
+        echo "MASON_TRAVIS_TOKEN is not set."
         exit 1
     fi
 
@@ -54,6 +54,8 @@ if [ "${MASON_COMMAND}" = "trigger" ]; then
     config = YAML.load_file("scripts/${MASON_NAME}/${MASON_VERSION}/.travis.yml")
     config["env"] ||= {}
     config["env"]["global"] ||= []
+    config["env"]["global"] << {"secure" => "VI6PAoen/TwUM2ynPt8890HKq6zc/e/jTZwYX1D9/BdzkOrTcztxZxO9hP5lsnYeqcNeLXgHpO4LVxm95gjodLLkSXUNW6JndRaiCVHS7dwkN+Oe9XWJajw5z1fRJjnCxhgICfHK/J3H+klKtvOJb2OMDc6W7UAoH/OWGDbBJ5w="}
+    config["env"]["global"] << {"secure" => "BVefSxpbYyQbruXm61pDwnawEN0KdvM865muccfEshAM9pPxd24NoB7JYeUdkktgWnO3QCmy3RTw0ck7DbjHTt0HT6AqXcNFYjCxbLWM+jmQDnDv8bxWas/2XU8jP+vK+OUDsYE5IL7ZevBYPY1dUWv6fOQt7NPKnhoar9KsDoQ="}
     config["env"]["global"] << "MASON_NAME=${MASON_NAME}" << "MASON_VERSION=${MASON_VERSION}"
     puts JSON.pretty_generate(config)
 RUBY
@@ -71,7 +73,7 @@ RUBY
         -H "Content-Type: application/json" \
         -H "Accept: application/json" \
         -H "Travis-API-Version: 3" \
-        -H "Authorization: token ${TRAVIS_TOKEN}" \
+        -H "Authorization: token ${MASON_TRAVIS_TOKEN}" \
         -d "$body"
 
     echo "Now go to https://travis-ci.org/mapbox/mason/builds to view build status"
