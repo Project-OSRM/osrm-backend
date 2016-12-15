@@ -6,6 +6,7 @@ local get_turn_lanes = require("lib/guidance").get_turn_lanes
 local Set = require('lib/set')
 local Sequence = require('lib/sequence')
 local Directional = require('lib/directional')
+local Units = require('lib/units')
 
 -- Begin of globals
 barrier_whitelist = Set {
@@ -188,16 +189,17 @@ maxspeed_table = {
 }
 
 -- set profile properties
-properties.u_turn_penalty                  = 20
-properties.traffic_signal_penalty          = 2
-properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
+properties.u_turn_penalty                  = Units.Seconds(20)
+properties.traffic_signal_penalty          = Units.Seconds(2)
+properties.max_speed_for_map_matching      = Units.MetersPerSeconds(180/3.6)
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false
 
 local side_road_speed_multiplier = 0.8
 
-local turn_penalty               = 7.5
+local turn_penalty               = Units.Seconds(7.5)
+
 -- Note: this biases right-side driving.  Should be
 -- inverted for left-driving countries.
 local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1.075
