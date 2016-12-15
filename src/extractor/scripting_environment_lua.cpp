@@ -177,7 +177,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &std::vector<std::string>::push_back));
 
     context.state.new_usertype<osmium::Location>(
-        "Location", "lat", &osmium::Location::lat, "lon", &osmium::Location::lon);
+        "Location", "lat", &osmium::Location::lat, "lon", &osmium::Location::lon, "valid", &osmium::Location::valid);
 
     context.state.new_usertype<osmium::Way>("Way",
                                             "get_value_by_key",
