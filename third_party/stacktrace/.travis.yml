@@ -1,0 +1,120 @@
+# Use, modification, and distribution are
+# subject to the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+#
+# Copyright Antony Polukhin 2014-2016.
+
+#
+# See https://svn.boost.org/trac/boost/wiki/TravisCoverals for description of this file
+# and how it can be used with Boost libraries.
+#
+# File revision #7
+
+sudo: false
+language: cpp
+compiler:
+    - gcc
+#    - clang
+
+os:
+    - linux
+
+env:
+    global:
+        # Autodetect Boost branch by using the following code: - BRANCH_TO_TEST=$TRAVIS_BRANCH
+        # or just directly specify it
+        #- BRANCH_TO_TEST=$TRAVIS_BRANCH
+        - BRANCH_TO_TEST=develop
+
+        # Files, which coverage results must be ignored (files from other projects).
+        # Example: - IGNORE_COVERAGE='*/boost/progress.hpp */filesystem/src/*'
+        - IGNORE_COVERAGE='*/numeric/conversion/converter_policies.hpp'
+
+        # Explicitly remove the following library from Boost. This may be usefull, if you're for example running Travis
+        # from `Boost.DLL` repo, while Boost already has `dll`.
+        #
+        # By default is eaual to - BOOST_REMOVE=$(basename $TRAVIS_BUILD_DIR)
+        # This will force to use local repo content, instead of the Boost's default.
+        - BOOST_REMOVE=$(basename $TRAVIS_BUILD_DIR)
+
+    matrix:
+        # Note that "--coverage -fsanitize=address,leak,undefined -DBOOST_TRAVISCI_BUILD" are added automatically lower in code
+        - CXX_FLAGS="-std=c++98" LINK_FLAGS="" TOOLSET=gcc-6
+        - CXX_FLAGS="-std=c++11" LINK_FLAGS="" TOOLSET=gcc-6
+        - CXX_FLAGS="-std=c++1y" LINK_FLAGS="" TOOLSET=gcc-6
+        #- CXX_FLAGS="-std=c++11 -stdlib=libc++" LINK_FLAGS="-stdlib=libc++" TOOLSET=clang
+        #- CXX_FLAGS="-std=c++1y -stdlib=libc++" LINK_FLAGS="-stdlib=libc++" TOOLSET=clang
+
+###############################################################################################################
+# From this point and below code is same for all the Boost libs
+###############################################################################################################
+
+
+# Installing additional tools
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - git-core
+    packages:
+    - git
+    - python-yaml
+    - gcc-6
+    - g++-6
+    - clang
+    - libc++-dev
+
+before_install:
+    # Set this to the name of the library
+    - PROJECT_TO_TEST=`basename $TRAVIS_BUILD_DIR`
+    # Cloning Boost libraries (fast nondeep cloning)
+    - BOOST=$HOME/boost-local
+    - echo "Testing $PROJECT_TO_TEST, to remove $BOOST/libs/$BOOST_REMOVE, testing branch $BRANCH_TO_TEST"
+    - git init $BOOST
+    - cd $BOOST
+    - git remote add --no-tags -t $BRANCH_TO_TEST origin https://github.com/boostorg/boost.git
+    - git fetch --depth=1
+    - git checkout $BRANCH_TO_TEST
+    - git submodule update --jobs=3 --init --merge
+    - git remote set-branches --add origin $BRANCH_TO_TEST
+    - git pull --recurse-submodules
+    - git status
+    - rm -rf $BOOST/libs/$BOOST_REMOVE
+    - mv $TRAVIS_BUILD_DIR $BOOST/libs/$PROJECT_TO_TEST
+    - TRAVIS_BUILD_DIR=$BOOST/libs/$PROJECT_TO_TEST
+    - ./bootstrap.sh
+    - ./b2 headers
+    - cd $BOOST/libs/$PROJECT_TO_TEST/test/
+
+script:
+    # `--coverage` flags required to generate coverage info for Coveralls
+    - ../../../b2 "testing.launcher=LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.3 " address-model=64 architecture=x86 toolset=$TOOLSET cxxflags="--coverage -fsanitize=address,leak,undefined -DBOOST_TRAVISCI_BUILD $CXX_FLAGS" linkflags="$LINK_FLAGS --coverage -lasan -lubsan"
+
+after_success:
+    # Copying Coveralls data to a separate folder
+    - mkdir -p $TRAVIS_BUILD_DIR/coverals
+    - find ../../../bin.v2/ -name "*.gcda" -exec cp "{}" $TRAVIS_BUILD_DIR/coverals/ \;
+    - find ../../../bin.v2/ -name "*.gcno" -exec cp "{}" $TRAVIS_BUILD_DIR/coverals/ \;
+    - find ../../../bin.v2/ -name "*.da" -exec cp "{}" $TRAVIS_BUILD_DIR/coverals/ \;
+    - find ../../../bin.v2/ -name "*.no" -exec cp "{}" $TRAVIS_BUILD_DIR/coverals/ \;
+    - wget https://github.com/linux-test-project/lcov/archive/v1.12.zip
+    - unzip v1.12.zip
+    - LCOV="`pwd`/lcov-1.12/bin/lcov --gcov-tool gcov-6"
+
+    # Preparing Coveralls data by changind data format to a readable one
+    - echo "$LCOV --directory $TRAVIS_BUILD_DIR/coverals --base-directory `pwd` --capture --output-file $TRAVIS_BUILD_DIR/coverals/coverage.info"
+    - $LCOV --directory $TRAVIS_BUILD_DIR/coverals --base-directory `pwd` --capture --output-file $TRAVIS_BUILD_DIR/coverals/coverage.info
+
+    # ... erasing /test/ /example/ folder data
+    - cd $BOOST
+    - $LCOV --remove $TRAVIS_BUILD_DIR/coverals/coverage.info "/usr*" "*/$PROJECT_TO_TEST/test/*" $IGNORE_COVERAGE "*/$PROJECT_TO_TEST/tests/*" "*/$PROJECT_TO_TEST/examples/*" "*/$PROJECT_TO_TEST/example/*" -o $TRAVIS_BUILD_DIR/coverals/coverage.info
+
+    # ... erasing data that is not related to this project directly
+    - OTHER_LIBS=`grep "submodule .*" .gitmodules | sed 's/\[submodule\ "\(.*\)"\]/"\*\/boost\/\1\.hpp" "\*\/boost\/\1\/\*"/g'| sed "/\"\*\/boost\/$PROJECT_TO_TEST\/\*\"/d" | sed ':a;N;$!ba;s/\n/ /g'`
+    - echo $OTHER_LIBS
+    - eval "$LCOV --remove $TRAVIS_BUILD_DIR/coverals/coverage.info $OTHER_LIBS -o $TRAVIS_BUILD_DIR/coverals/coverage.info"
+
+    # Sending data to Coveralls
+    - cd $TRAVIS_BUILD_DIR
+    - gem install coveralls-lcov
+    - coveralls-lcov coverals/coverage.info

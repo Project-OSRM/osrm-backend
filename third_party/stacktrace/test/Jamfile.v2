@@ -1,0 +1,64 @@
+#  Copyright (C) 2016, Antony Polukhin.
+#
+# Use, modification and distribution is subject to the Boost Software License,
+# Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+#
+
+lib dl : : <link>shared ;
+lib gcc_s ;
+lib Dbghelp ;
+
+project
+  : requirements
+    <toolset>msvc:<asynch-exceptions>on
+    <warnings>all
+    <debug-symbols>on
+    <test-info>always_show_run_output
+    <target-os>linux:<cxxflags>"-fvisibility=hidden"
+  ;
+
+
+local BT_DEPS   = <target-os>linux:<library>dl [ check-target-builds ../build//backtrace : : <build>no ] ;
+local UNWD_DEPS = <target-os>linux:<library>dl  [ check-target-builds ../build//unwind : : <build>no ] ;
+local WIND_DEPS = <library>Dbghelp [ check-target-builds ../build//WinDbg : : <build>no ] ;
+local NOOP_DEPS =  ;
+local AUTO_DEPS = <target-os>linux:<library>dl [ check-target-builds ../build//WinDbg : <library>Dbghelp ] ;
+
+local LINKSHARED_BT   = <link>shared <define>BOOST_STACKTRACE_DYN_LINK <library>/boost/stacktrace//boost_stacktrace_backtrace  $(BT_DEPS)   ;
+local LINKSHARED_UNWD = <link>shared <define>BOOST_STACKTRACE_DYN_LINK <library>/boost/stacktrace//boost_stacktrace_unwind     $(UNWD_DEPS) ;
+local LINKSHARED_WIND = <link>shared <define>BOOST_STACKTRACE_DYN_LINK <library>/boost/stacktrace//boost_stacktrace_windbg     $(WIND_DEPS) ;
+local LINKSHARED_NOOP = <link>shared <define>BOOST_STACKTRACE_DYN_LINK <library>/boost/stacktrace//boost_stacktrace_noop       $(NOOP_DEPS) ;
+
+lib test_impl_lib_backtrace : test_impl.cpp : $(LINKSHARED_BT) ;
+lib test_impl_lib_unwind    : test_impl.cpp : $(LINKSHARED_UNWD) ;
+lib test_impl_lib_windbg    : test_impl.cpp : $(LINKSHARED_WIND) ;
+lib test_impl_lib_noop      : test_impl.cpp : $(LINKSHARED_NOOP) ;
+
+test-suite stacktrace_tests
+  :
+    # Header only tests
+    [ run test.cpp test_impl.cpp        : : : <define>BOOST_STACKTRACE_USE_BACKTRACE $(BT_DEPS)   : backtrace_ho ]
+    [ run test.cpp test_impl.cpp        : : : <define>BOOST_STACKTRACE_USE_UNWIND $(UNWD_DEPS)   : unwind_ho ]
+    [ run test.cpp test_impl.cpp        : : : <define>BOOST_STACKTRACE_USE_WINDBG $(WIND_DEPS) : windbg_ho ]
+    [ run test_noop.cpp test_impl.cpp   : : : <define>BOOST_STACKTRACE_USE_NOOP $(NOOP_DEPS) : noop_ho ]
+    [ run test.cpp test_impl.cpp        : : : $(AUTO_DEPS) : autodetect_ho ]
+
+    # Test with shared linked backends
+    [ run test.cpp      : : : <library>.//test_impl_lib_backtrace $(LINKSHARED_BT)   : backtrace_lib ]
+    [ run test.cpp      : : : <library>.//test_impl_lib_unwind $(LINKSHARED_UNWD)   : unwind_lib ]
+    [ run test.cpp      : : : <library>.//test_impl_lib_windbg $(LINKSHARED_WIND) : windbg_lib ]
+    [ run test_noop.cpp : : : <library>.//test_impl_lib_noop $(LINKSHARED_NOOP) : noop_lib ]
+  ;
+
+# Assuring that examples compile and run. Adding sources from `examples` directory to the `type_index` test suite. 
+for local p in [ glob ../example/*.cpp ]
+{
+    stacktrace_tests += [ run $(p) : : : $(LINKSHARED_BT) : backtrace_$(p[1]:B) ] ;
+    stacktrace_tests += [ run $(p) : : : $(LINKSHARED_UNWD) : unwind_$(p[1]:B) ] ;
+    stacktrace_tests += [ run $(p) : : : $(LINKSHARED_WIND) : windbg_$(p[1]:B) ] ;
+    stacktrace_tests += [ run $(p) : : : $(LINKSHARED_NOOP) : noop_$(p[1]:B) ] ;
+    stacktrace_tests += [ run $(p) : : : $(AUTO_DEPS) : autodetect_$(p[1]:B) ] ;
+
+}
+
