@@ -82,21 +82,46 @@ Status ViaRoutePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataF
                 !continue_straight_at_waypoint;
         }
     };
-    util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
-    if (1 == raw_route.segment_end_coordinates.size())
+    if (phantom_node_pairs.size() == 2)
     {
-        if (route_parameters.alternatives && facade->GetCoreSize() == 0)
+        // first try the route with the original input, if a route should exist
+        BOOST_ASSERT(snapped_phantoms.size() == 2);
+        // phantom nodes only support ==, not !=
+        if ((!(snapped_phantoms[0] == phantom_node_pairs[0].first)) ||
+            (!(snapped_phantoms[1] == phantom_node_pairs[1].first)))
         {
-            alternative_path(*facade, raw_route.segment_end_coordinates.front(), raw_route);
+            raw_route.segment_end_coordinates.push_back(
+                {phantom_node_pairs[0].first, phantom_node_pairs[1].first});
+            if (route_parameters.alternatives && facade->GetCoreSize() == 0)
+            {
+                alternative_path(*facade, raw_route.segment_end_coordinates.front(), raw_route);
+            }
+            else
+            {
+                direct_shortest_path(*facade, raw_route.segment_end_coordinates, raw_route);
+            }
         }
-        else
+        // if we didn't find a route between the selected components, we fall back to the
+        // alternatives
+        if (!raw_route.is_valid())
         {
-            direct_shortest_path(*facade, raw_route.segment_end_coordinates, raw_route);
+            // reset the route object
+            raw_route = {};
+            util::for_each_pair(snapped_phantoms, build_phantom_pairs);
+            if (route_parameters.alternatives && facade->GetCoreSize() == 0)
+            {
+                alternative_path(*facade, raw_route.segment_end_coordinates.front(), raw_route);
+            }
+            else
+            {
+                direct_shortest_path(*facade, raw_route.segment_end_coordinates, raw_route);
+            }
         }
     }
     else
     {
+        util::for_each_pair(snapped_phantoms, build_phantom_pairs);
         shortest_path(*facade,
                       raw_route.segment_end_coordinates,
                       route_parameters.continue_straight,

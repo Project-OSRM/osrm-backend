@@ -1,3 +1,8 @@
+# 5.6.0
+  - Changes from 5.5.0
+    - Navigation:
+      - we now allow routing between different small components, as long as a path exists between the vertices (no need for strongly connected components)
+
 # 5.5.0
   - Changes from 5.4.0
     - API:
