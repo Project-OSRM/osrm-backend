@@ -460,6 +460,9 @@ else()
 
   find_package(Boost 1.54 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
   add_dependency_includes(${Boost_INCLUDE_DIRS})
+  if(WIN32 AND Boost_VERSION VERSION_LESS 106200)
+    message(FATAL_ERROR "Building with MSVC needs Boost 1.62 with CXX11_CONSTEXPR support")
+  endif()
 
   find_package(TBB REQUIRED)
   add_dependency_includes(${TBB_INCLUDE_DIR})
