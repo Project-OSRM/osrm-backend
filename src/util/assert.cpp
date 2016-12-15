@@ -1,5 +1,10 @@
 #include <boost/assert.hpp>
 
+#ifdef OSRM_HAS_STACKTRACE
+// From vendored third_party/stacktrace for now; will be included in Boost in the future
+#include <boost/stacktrace.hpp>
+#endif
+
 #include <exception>
 #include <iostream>
 
@@ -10,7 +15,14 @@ void assertion_failed_msg_helper(
     char const *expr, char const *msg, char const *function, char const *file, long line)
 {
     std::cerr << "[assert] " << file << ":" << line << "\nin: " << function << ": " << expr << "\n"
-              << msg;
+              << msg
+#ifdef OSRM_HAS_STACKTRACE
+              << "\nBacktrace:\n"
+              << boost::stacktrace::stacktrace() << "\n";
+#else
+              << "\n";
+#endif
+
     std::terminate();
 }
 }

@@ -24,6 +24,7 @@ option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_LTO "Use LTO if available" ON)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
+option(ENABLE_STACKTRACE "Enable verbose stacktraces for assertions and crashes, requires libdl" OFF)
 
 if(ENABLE_MASON)
   # versions in use
@@ -525,6 +526,22 @@ else()
 
 endif()
 
+if(ENABLE_STACKTRACE)
+  if(WIN32)
+    # For Windows support we have to write a signal handler (see util/stacktrace.hpp) and link with DbgHelp
+    message(FATAL_ERROR "Building with stacktrace support is not implemented on Windows")
+  endif()
+
+  if (Boost_VERSION VERSION_LESS 105600)
+    message(FATAL_ERROR "Building with stacktrace support requires Boost 1.56 or newer")
+  endif()
+
+  add_definitions(-DOSRM_HAS_STACKTRACE)
+  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stacktrace/include)
+  set(MAYBE_STACKTRACE_LIBRARIES -ldl)
+  message(STATUS "Enabling stacktraces for assertions and crashes")
+endif()
+
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU"))
   find_program(CCACHE_FOUND ccache)
@@ -593,7 +610,8 @@ set(EXTRACTOR_LIBRARIES
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -601,26 +619,30 @@ set(CONTRACTOR_LIBRARIES
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(ENGINE_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
-    ${ZLIB_LIBRARY})
+    ${ZLIB_LIBRARY}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(STORAGE_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(UTIL_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 # Libraries
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
@@ -629,7 +651,7 @@ target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 if(BUILD_COMPONENTS)
   if(GDAL_FOUND)
-    add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
+    add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL> ${MAYBE_STACKTRACE_LIBRARIES})
     target_link_libraries(osrm-components ${TBB_LIBRARIES})
     include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
     target_link_libraries(osrm-components ${GDAL_LIBRARIES} ${BOOST_BASE_LIBRARIES})
@@ -641,14 +663,14 @@ endif()
 
 if(BUILD_TOOLS)
   message(STATUS "Activating OSRM internal tools")
-  add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
+  add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL> ${MAYBE_STACKTRACE_LIBRARIES})
   target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES})
-  add_executable(osrm-unlock-all src/tools/unlock_all_mutexes.cpp $<TARGET_OBJECTS:UTIL>)
+  add_executable(osrm-unlock-all src/tools/unlock_all_mutexes.cpp $<TARGET_OBJECTS:UTIL> ${MAYBE_STACKTRACE_LIBRARIES})
   target_link_libraries(osrm-unlock-all ${BOOST_BASE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   if(UNIX AND NOT APPLE)
     target_link_libraries(osrm-unlock-all rt)
   endif()
-  add_executable(osrm-springclean src/tools/springclean.cpp $<TARGET_OBJECTS:UTIL>)
+  add_executable(osrm-springclean src/tools/springclean.cpp $<TARGET_OBJECTS:UTIL> ${MAYBE_STACKTRACE_LIBRARIES})
   target_link_libraries(osrm-springclean ${BOOST_BASE_LIBRARIES})
 
   install(TARGETS osrm-io-benchmark DESTINATION bin)

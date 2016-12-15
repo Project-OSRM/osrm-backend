@@ -21,6 +21,9 @@ MASON_TAG=v0.1.1
 SOL_REPO="https://github.com/ThePhD/sol2.git"
 SOL_TAG=v2.15.4
 
+STACKTRACE_REPO="https://github.com/apolukhin/stacktrace.git"
+STACKTRACE_TAG="3439bcef48e2476621f6db58767bef040f5395d3"
+
 VARIANT_LATEST=$(curl https://api.github.com/repos/mapbox/variant/releases/latest | jq ".tag_name")
 OSMIUM_LATEST=$(curl https://api.github.com/repos/osmcode/libosmium/releases/latest | jq ".tag_name")
 MASON_LATEST=$(curl https://api.github.com/repos/mapbox/mason/releases/latest | jq ".tag_name")
@@ -30,6 +33,7 @@ echo "Latest osmium release is $OSMIUM_LATEST, pulling in \"$OSMIUM_TAG\""
 echo "Latest variant release is $VARIANT_LATEST, pulling in \"$VARIANT_TAG\""
 echo "Latest mason release is $MASON_LATEST, pulling in \"$MASON_TAG\""
 echo "Latest sol2 release is $SOL_LATEST, pulling in \"$SOL_TAG\""
+echo "Latest stacktrace release is on master, pulling in \"$STACKTRACE_TAG\""
 
 read -p "Looks good? (Y/n) " ok
 
@@ -39,4 +43,5 @@ then
   git subtree pull -P third_party/variant/ $VARIANT_REPO $VARIANT_TAG --squash
   git subtree pull -P third_party/mason/ $MASON_REPO $MASON_TAG --squash
   git subtree pull -P third_party/sol2/sol2/ $SOL_REPO $SOL_TAG --squash
+  git subtree pull -P third_party/stacktrace/ $STACKTRACE_REPO $STACKTRACE_TAG --squash
 fi
