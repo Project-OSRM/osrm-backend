@@ -1,0 +1,4 @@
+language: generic
+
+script:
+- echo "nothing to do since travis cannot compile something as large as llvm"

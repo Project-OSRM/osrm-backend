@@ -1,0 +1,24 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+    - os: linux
+      compiler: clang
+      env: CXX=clang++-3.5 CC=clang-3.5
+      sudo: false
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+           - llvm-toolchain-precise-3.5
+          packages:
+           - clang-3.5
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

@@ -1,0 +1,141 @@
+diff --git a/apps/GNUmakefile b/apps/GNUmakefile
+index a87cd0f..931a988 100644
+--- a/apps/GNUmakefile
++++ b/apps/GNUmakefile
+@@ -79,103 +79,103 @@ gdalbuildvrt_lib.$(OBJ_EXT): gdalbuildvrt_lib.cpp
+ 	$(CXX) -c $(GDAL_INCLUDE) $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+ 
+ gdalinfo$(EXE):	gdalinfo_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) $(CONFIG_LIB_UTILS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) $(CONFIG_LIB_UTILS) -o $@ $(LNK_FLAGS)
+ 
+ gdalserver$(EXE):	gdalserver.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdal_translate$(EXE):	gdal_translate_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdaladdo$(EXE):	gdaladdo.$(OBJ_EXT)  $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalwarp$(EXE): gdalwarp_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdal_contour$(EXE):	gdal_contour.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ nearblack$(EXE):	nearblack_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalmanage$(EXE):	gdalmanage.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdal_rasterize$(EXE):	gdal_rasterize_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdaltindex$(EXE):	gdaltindex.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalbuildvrt$(EXE):	gdalbuildvrt_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ multireadtest$(EXE):	multireadtest.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ dumpoverviews$(EXE):	dumpoverviews.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalenhance$(EXE):	gdalenhance.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdaldem$(EXE): gdaldem_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdal_grid$(EXE):	gdal_grid_bin.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalwarpsimple$(EXE): gdalwarpsimple.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdaltransform$(EXE): gdaltransform.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdallocationinfo$(EXE): gdallocationinfo.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalsrsinfo$(EXE):	gdalsrsinfo.$(OBJ_EXT)  $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalflattenmask$(EXE): gdalflattenmask.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdaltorture$(EXE): gdaltorture.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdal2ogr$(EXE):	gdal2ogr.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ ogrinfo$(EXE):	ogrinfo.$(OBJ_EXT)  $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $<  $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $<  $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ ogrlineref$(EXE):	ogrlineref.$(OBJ_EXT)  $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $<  $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $<  $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ ogr2ogr$(EXE):	ogr2ogr_bin.$(OBJ_EXT)  $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ testepsg$(EXE):	testepsg.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ ogrtindex$(EXE):	ogrtindex.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ test_ogrsf$(EXE):	test_ogrsf.$(OBJ_EXT)  $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gdalasyncread$(EXE):	gdalasyncread.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ testreprojmulti$(EXE):	testreprojmulti.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gnmmanage$(EXE):	gnmmanage.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ gnmanalyse$(EXE):	gnmanalyse.$(OBJ_EXT) $(DEP_LIBS)
+-	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
++	$(LD) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@ $(LNK_FLAGS)
+ 
+ clean:
+ 	$(RM) *.o $(BIN_LIST) core gdal-config gdal-config-inst

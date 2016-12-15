@@ -1,0 +1,23 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode7.3
+      compiler: clang
+    - os: linux
+      compiler: gcc
+      env: CXX=gcc++-5 CC=gcc-5
+      sudo: false
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - g++-5
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

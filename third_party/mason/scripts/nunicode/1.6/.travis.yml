@@ -1,0 +1,34 @@
+language: cpp
+
+matrix:
+  include:
+    - os: osx
+      compiler: clang
+    - os: linux
+      compiler: clang
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v5
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v7
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v8
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86-64
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips-64
+
+before_install:
+- "if [[ `lsb_release -r` =~ '12.04' ]]; then sudo add-apt-repository --yes ppa:kubuntu-ppa/backports ; fi"
+- "if [[ ${TRAVIS_OS_NAME:-linux} = 'linux' ]]; then sudo apt-get update -y ; fi"
+- "if [[ ${TRAVIS_OS_NAME:-linux} = 'linux' ]]; then sudo apt-get -y install cmake ; fi"
+
+script:
+- if [[ $(uname -s) == 'Darwin' ]]; then brew install cmake; fi
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

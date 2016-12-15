@@ -1,0 +1,15 @@
+Index: configure.ac
+===================================================================
+--- configure.ac	(revision 29411)
++++ configure.ac	(working copy)
+@@ -29,10 +29,6 @@
+ dnl Find C++ compiler
+ AC_PROG_CXX
+ AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
+-if test "$HAVE_CXX" = "no" 
+-then
+-  AC_MSG_ERROR([Could not find a c++ compiler]);
+-fi
+ 
+ dnl AX_CFLAGS_WARN_ALL
+ dnl AX_CXXFLAGS_WARN_ALL

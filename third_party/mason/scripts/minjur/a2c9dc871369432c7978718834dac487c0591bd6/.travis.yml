@@ -1,0 +1,21 @@
+language: cpp
+
+sudo: false
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode6
+      compiler: clang
+    - os: osx
+      osx_image: xcode7
+      compiler: clang
+    - os: linux
+      compiler: clang
+
+script:
+- if [[ $(uname -s) == 'Darwin' ]]; then brew install cmake; fi
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

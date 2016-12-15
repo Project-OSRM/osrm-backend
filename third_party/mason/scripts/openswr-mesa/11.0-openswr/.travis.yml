@@ -1,0 +1,24 @@
+sudo: required
+
+dist: trusty
+
+language: cpp
+
+os:
+  - linux
+
+before_install:
+- "if [[ `lsb_release -r` =~ '14.04' ]]; then sudo apt-get install -y software-properties-common; fi"
+- sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test
+- sudo apt-get update -y
+- sudo apt-get install -y gcc-4.9 g++-4.9 automake pkg-config libtool
+- export CXX="g++-4.9"
+- export CC="gcc-4.9"
+- sudo apt-get install -y flex bison python-pip libdrm-dev x11proto-gl-dev x11proto-dri2-dev x11proto-dri3-dev x11proto-present-dev libx11-xcb-dev libxext-dev libxdamage-dev libxfixes-dev libxcb-glx0-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxcb-sync-dev libxshmfence-dev libudev-dev libexpat1-dev libva-dev gettext libnuma-dev llvm-3.6 mesa-utils
+- sudo -H pip install mako
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

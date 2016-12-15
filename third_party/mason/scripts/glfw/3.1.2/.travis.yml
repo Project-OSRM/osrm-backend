@@ -1,0 +1,19 @@
+language: cpp
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode7
+    - os: linux
+
+before_install:
+- "if [[ `lsb_release -r` =~ '12.04' ]]; then sudo add-apt-repository --yes ppa:kubuntu-ppa/backports ; fi"
+- "if [[ ${TRAVIS_OS_NAME:-linux} = 'linux' ]]; then sudo apt-get update -y ; fi"
+- "if [[ ${TRAVIS_OS_NAME:-linux} = 'linux' ]]; then sudo apt-get -y install cmake libxi-dev libglu1-mesa-dev x11proto-randr-dev x11proto-xext-dev libxrandr-dev x11proto-xf86vidmode-dev libxxf86vm-dev libxcursor-dev libxinerama-dev ; fi"
+
+script:
+- if [[ $(uname -s) == 'Darwin' ]]; then brew install cmake; fi
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

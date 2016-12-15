@@ -1,0 +1,25 @@
+language: generic
+
+matrix:
+  include:
+    - os: linux
+      sudo: true
+      env: CXX=g++-5 CC=gcc-5
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - g++-5
+           - libstdc++6
+           - libstdc++-5-dev
+
+install:
+- sudo apt-get install -y libpthread-stubs0-dev xserver-xorg-dev x11proto-xinerama-dev libx11-xcb-dev libxcb-glx0-dev libxrender-dev libdrm-dev llvm-3.4 mesa-utils
+- sudo apt-get build-dep -y libgl1-mesa-dri libxcb-glx0-dev
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}
