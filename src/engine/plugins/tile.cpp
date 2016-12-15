@@ -3,6 +3,7 @@
 #include "engine/plugins/plugin_base.hpp"
 
 #include "util/coordinate_calculation.hpp"
+#include "util/string_view.hpp"
 #include "util/vector_tile.hpp"
 #include "util/web_mercator.hpp"
 
@@ -287,8 +288,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     std::unordered_map<int, std::size_t> line_int_offsets;
 
     // Same idea for street names - one lookup table for names for all features
-    std::vector<std::string> names;
-    std::unordered_map<std::string, std::size_t> name_offsets;
+    std::vector<util::StringView> names;
+    std::unordered_map<util::StringView, std::size_t> name_offsets;
 
     // And again for integer values used by points.
     std::vector<int> used_point_ints;
@@ -714,14 +715,15 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         reverse_datasource_vector[reverse_datasource_vector.size() -
                                                   edge.fwd_segment_position - 1];
 
-                    std::string name = facade->GetNameForID(edge.name_id);
+                    auto name = facade->GetNameForID(edge.name_id);
+
                     const auto name_offset = [&name, &names, &name_offsets]() {
                         auto iter = name_offsets.find(name);
                         if (iter == name_offsets.end())
                         {
                             auto offset = names.size();
                             name_offsets[name] = offset;
-                            names.push_back(std::move(name));
+                            names.push_back(name);
                             return offset;
                         }
                         return iter->second;
@@ -873,7 +875,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                                                     util::vector_tile::VARIANT_TAG);
                 // Attribute value 1 == string type
                 values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING,
-                                         facade->GetDatasourceName(i));
+                                         facade->GetDatasourceName(i).to_string());
             }
             for (auto value : used_line_ints)
             {
@@ -892,7 +894,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                 protozero::pbf_writer values_writer(line_layer_writer,
                                                     util::vector_tile::VARIANT_TAG);
                 // Attribute value 1 == string type
-                values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING, name);
+                values_writer.add_string(
+                    util::vector_tile::VARIANT_TYPE_STRING, name.data(), name.size());
             }
         }
 

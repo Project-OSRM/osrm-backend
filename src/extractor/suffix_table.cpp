@@ -1,6 +1,8 @@
 #include "extractor/suffix_table.hpp"
-
 #include "extractor/scripting_environment.hpp"
+
+#include <algorithm>
+#include <iterator>
 
 #include <boost/algorithm/string.hpp>
 
@@ -11,13 +13,22 @@ namespace extractor
 
 SuffixTable::SuffixTable(ScriptingEnvironment &scripting_environment)
 {
-    std::vector<std::string> suffixes_vector = scripting_environment.GetNameSuffixList();
-    for (auto &suffix : suffixes_vector)
+    suffixes = scripting_environment.GetNameSuffixList();
+
+    for (auto &suffix : suffixes)
         boost::algorithm::to_lower(suffix);
-    suffix_set.insert(std::begin(suffixes_vector), std::end(suffixes_vector));
+
+    auto into = std::inserter(suffix_set, end(suffix_set));
+    auto to_view = [](const auto &s) { return util::StringView{s}; };
+    std::transform(begin(suffixes), end(suffixes), into, to_view);
 }
 
 bool SuffixTable::isSuffix(const std::string &possible_suffix) const
+{
+    return isSuffix(util::StringView{possible_suffix});
+}
+
+bool SuffixTable::isSuffix(util::StringView possible_suffix) const
 {
     return suffix_set.count(possible_suffix) > 0;
 }

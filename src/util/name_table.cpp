@@ -1,9 +1,10 @@
 #include "util/name_table.hpp"
+#include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/log.hpp"
 
 #include <algorithm>
-#include <fstream>
+#include <iterator>
 #include <limits>
 
 #include <boost/filesystem/fstream.hpp>
@@ -18,11 +19,9 @@ NameTable::NameTable(const std::string &filename)
     storage::io::FileReader name_stream_file_reader(filename,
                                                     storage::io::FileReader::HasNoFingerprint);
 
-    // name_stream >> m_name_table;
-
     m_name_table.ReadARangeTable(name_stream_file_reader);
 
-    unsigned number_of_chars = name_stream_file_reader.ReadElementCount32();
+    const auto number_of_chars = name_stream_file_reader.ReadElementCount32();
 
     m_names_char_list.resize(number_of_chars + 1); //+1 gives sentinel element
     m_names_char_list.back() = 0;
@@ -37,58 +36,59 @@ NameTable::NameTable(const std::string &filename)
     }
 }
 
-std::string NameTable::GetNameForID(const unsigned name_id) const
+StringView NameTable::GetNameForID(const NameID id) const
 {
-    if (std::numeric_limits<unsigned>::max() == name_id)
+    if (std::numeric_limits<NameID>::max() == id)
     {
-        return "";
+        return {};
     }
-    auto range = m_name_table.GetRange(name_id);
 
-    std::string result;
-    result.reserve(range.size());
-    if (range.begin() != range.end())
+    auto range = m_name_table.GetRange(id);
+
+    if (range.begin() == range.end())
     {
-        result.resize(range.back() - range.front() + 1);
-        std::copy(m_names_char_list.begin() + range.front(),
-                  m_names_char_list.begin() + range.back() + 1,
-                  result.begin());
+        return {};
     }
-    return result;
+
+    auto first = begin(m_names_char_list) + range.front();
+    auto last = begin(m_names_char_list) + range.back() + 1;
+    const std::size_t len = last - first;
+
+    return StringView{&*first, len};
 }
 
-std::string NameTable::GetRefForID(const unsigned name_id) const
+StringView NameTable::GetRefForID(const NameID id) const
 {
-    // Way string data is stored in blocks based on `name_id` as follows:
+    // Way string data is stored in blocks based on `id` as follows:
     //
     // | name | destination | pronunciation | ref |
     //                                      ^     ^
     //                                      [range)
-    //                                       ^ name_id + 3
+    //                                       ^ id + 3
     //
-    // `name_id + offset` gives us the range of chars.
+    // `id + offset` gives us the range of chars.
     //
     // Offset 0 is name, 1 is destination, 2 is pronunciation, 3 is ref.
     // See datafacades and extractor callbacks for details.
     const constexpr auto OFFSET_REF = 3u;
-    return GetNameForID(name_id + OFFSET_REF);
+    return GetNameForID(id + OFFSET_REF);
 }
 
-std::string NameTable::GetPronunciationForID(const unsigned name_id) const
+StringView NameTable::GetPronunciationForID(const NameID id) const
 {
-    // Way string data is stored in blocks based on `name_id` as follows:
+    // Way string data is stored in blocks based on `id` as follows:
     //
     // | name | destination | pronunciation | ref |
     //                      ^               ^
     //                      [range)
-    //                       ^ name_id + 2
+    //                       ^ id + 2
     //
-    // `name_id + offset` gives us the range of chars.
+    // `id + offset` gives us the range of chars.
     //
     // Offset 0 is name, 1 is destination, 2 is pronunciation, 3 is ref.
     // See datafacades and extractor callbacks for details.
     const constexpr auto OFFSET_PRONUNCIATION = 2u;
-    return GetNameForID(name_id + OFFSET_PRONUNCIATION);
+    return GetNameForID(id + OFFSET_PRONUNCIATION);
 }
 
 } // namespace util

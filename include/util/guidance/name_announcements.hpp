@@ -159,13 +159,14 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
     if (from_name_id == to_name_id)
         return false;
     else
-        return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
-                                     name_table.GetRefForID(from_name_id),
-                                     name_table.GetPronunciationForID(from_name_id),
-                                     name_table.GetNameForID(to_name_id),
-                                     name_table.GetRefForID(to_name_id),
-                                     name_table.GetPronunciationForID(to_name_id),
+        return requiresNameAnnounced(name_table.GetNameForID(from_name_id).to_string(),
+                                     name_table.GetRefForID(from_name_id).to_string(),
+                                     name_table.GetPronunciationForID(from_name_id).to_string(),
+                                     name_table.GetNameForID(to_name_id).to_string(),
+                                     name_table.GetRefForID(to_name_id).to_string(),
+                                     name_table.GetPronunciationForID(to_name_id).to_string(),
                                      suffix_table);
+    // FIXME: converts StringViews to strings since the name change heuristics mutates in place
 }
 
 inline bool requiresNameAnnounced(const NameID from_name_id,
@@ -175,12 +176,13 @@ inline bool requiresNameAnnounced(const NameID from_name_id,
     if (from_name_id == to_name_id)
         return false;
     else
-        return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
-                                     name_table.GetRefForID(from_name_id),
-                                     name_table.GetPronunciationForID(from_name_id),
-                                     name_table.GetNameForID(to_name_id),
-                                     name_table.GetRefForID(to_name_id),
-                                     name_table.GetPronunciationForID(to_name_id));
+        return requiresNameAnnounced(name_table.GetNameForID(from_name_id).to_string(),
+                                     name_table.GetRefForID(from_name_id).to_string(),
+                                     name_table.GetPronunciationForID(from_name_id).to_string(),
+                                     name_table.GetNameForID(to_name_id).to_string(),
+                                     name_table.GetRefForID(to_name_id).to_string(),
+                                     name_table.GetPronunciationForID(to_name_id).to_string());
+    // FIXME: converts StringViews to strings since the name change heuristics mutates in place
 }
 
 } // namespace guidance

@@ -51,12 +51,13 @@ class BaseAPI
         if (parameters.generate_hints)
         {
             return json::makeWaypoint(phantom.location,
-                                      facade.GetNameForID(phantom.name_id),
+                                      facade.GetNameForID(phantom.name_id).to_string(),
                                       Hint{phantom, facade.GetCheckSum()});
         }
         else
         {
-            return json::makeWaypoint(phantom.location, facade.GetNameForID(phantom.name_id));
+            return json::makeWaypoint(phantom.location,
+                                      facade.GetNameForID(phantom.name_id).to_string());
         }
     }
 

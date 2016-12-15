@@ -3,6 +3,8 @@
 
 #include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
+#include "util/string_view.hpp"
+#include "util/typedefs.hpp"
 
 #include <string>
 
@@ -28,9 +30,9 @@ class NameTable
     // The following functions are a subset of what is available.
     // See the data facades for they provide full access to this serialized string data.
     // (at time of writing this: get{Name,Ref,Pronunciation,Destinations}ForID(name_id);)
-    std::string GetNameForID(const unsigned name_id) const;
-    std::string GetRefForID(const unsigned name_id) const;
-    std::string GetPronunciationForID(const unsigned name_id) const;
+    util::StringView GetNameForID(const NameID id) const;
+    util::StringView GetRefForID(const NameID id) const;
+    util::StringView GetPronunciationForID(const NameID id) const;
 };
 } // namespace util
 } // namespace osrm
