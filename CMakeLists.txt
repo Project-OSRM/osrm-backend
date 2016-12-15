@@ -24,6 +24,7 @@ option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_LTO "Use LTO if available" ON)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
+option(ENABLE_STACKTRACE "Enable verbose stacktraces for assertions and crashes, requires libdl" ON)
 
 if(ENABLE_MASON)
   # versions in use
@@ -105,6 +106,7 @@ endif()
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stacktrace/include)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/variant/include)
 
 add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
@@ -164,6 +166,13 @@ if(ENABLE_GOLD_LINKER)
         message(WARNING "GNU gold linker isn't available.")
         set(ENABLE_GOLD_LINKER OFF)
     endif()
+endif()
+
+if(ENABLE_STACKTRACE)
+  # For Windows support we have to write a signal handler (see util/stacktrace.hpp) and link with DbgHelp
+  add_definitions(-DOSRM_HAS_STACKTRACE)
+  set(MAYBE_STACKTRACE_LIBRARIES -ldl)
+  message(STATUS "Enabling stacktraces for assertions and crashes")
 endif()
 
 # Explicitly set the build type to Release if no other type is specified
@@ -593,7 +602,8 @@ set(EXTRACTOR_LIBRARIES
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -601,26 +611,30 @@ set(CONTRACTOR_LIBRARIES
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(ENGINE_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
-    ${ZLIB_LIBRARY})
+    ${ZLIB_LIBRARY}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(STORAGE_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 set(UTIL_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
-    ${MAYBE_COVERAGE_LIBRARIES})
+    ${MAYBE_COVERAGE_LIBRARIES}
+    ${MAYBE_STACKTRACE_LIBRARIES})
 # Libraries
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
