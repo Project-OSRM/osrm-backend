@@ -9,7 +9,7 @@
 #include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "util/exception.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 #include "util/v8_util.hpp"
 
@@ -547,16 +547,6 @@ v8::Local<v8::Function> V8ScriptingContext::WrapResultWay()
                      Class::Unwrap(info).roundabout = value->ToBoolean()->Value();
                  });
 
-    obj.property("isAccessRestricted",
-                 [](v8::Local<v8::String>, const v8::PropertyCallbackInfo<v8::Value> &info) {
-                     info.GetReturnValue().Set(Class::Unwrap(info).is_access_restricted);
-                 },
-                 [](v8::Local<v8::String>,
-                    v8::Local<v8::Value> value,
-                    const v8::PropertyCallbackInfo<void> &info) {
-                     Class::Unwrap(info).is_access_restricted = value->ToBoolean()->Value();
-                 });
-
     obj.property("isStartpoint",
                  [](v8::Local<v8::String>, const v8::PropertyCallbackInfo<v8::Value> &info) {
                      info.GetReturnValue().Set(Class::Unwrap(info).is_startpoint);
@@ -614,7 +604,7 @@ std::vector<std::string> V8ScriptingContext::GetExceptions()
         }
         else
         {
-            util::SimpleLogger().Write() << "getExceptions() should return an array of exceptions";
+            util::Log() << "getExceptions() should return an array of exceptions";
         }
     }
 
@@ -641,8 +631,7 @@ std::vector<std::string> V8ScriptingContext::GetNameSuffixList()
         }
         else
         {
-            util::SimpleLogger().Write()
-                << "getNameSuffixList() should return an array of exceptions";
+            util::Log() << "getNameSuffixList() should return an array of exceptions";
         }
     }
 
@@ -669,8 +658,7 @@ std::vector<std::string> V8ScriptingContext::GetRestrictions()
         }
         else
         {
-            util::SimpleLogger().Write()
-                << "GetRestrictions() should return an array of exceptions";
+            util::Log() << "GetRestrictions() should return an array of exceptions";
         }
     }
     return restrictions;
@@ -771,7 +759,7 @@ V8ScriptingEnvironment::V8ScriptingEnvironment(const char *argv0, const std::str
     v8::V8::InitializePlatform(platform);
     v8::V8::Initialize();
 
-    util::SimpleLogger().Write() << "Using script " << file_name;
+    util::Log() << "Using script " << file_name;
 }
 
 V8ScriptingEnvironment::~V8ScriptingEnvironment()
