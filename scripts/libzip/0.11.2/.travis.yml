@@ -1,0 +1,26 @@
+language: cpp
+sudo: false
+
+os:
+  - linux
+  matrix:
+   - MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v5
+   - MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v7
+   - MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v8
+   - MASON_PLATFORM=android MASON_ANDROID_ABI=x86
+   - MASON_PLATFORM=android MASON_ANDROID_ABI=x86-64
+   - MASON_PLATFORM=android MASON_ANDROID_ABI=mips
+   - MASON_PLATFORM=android MASON_ANDROID_ABI=mips-64
+   - env: MASON_PLATFORM=linux
+     addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - libstdc++-5-dev
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

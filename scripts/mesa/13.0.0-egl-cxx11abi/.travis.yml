@@ -1,0 +1,25 @@
+language: generic
+
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+      env: CXX=g++-5 CC=gcc-5
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - g++-5
+           - libstdc++6
+           - libstdc++-5-dev
+           - mesa-utils
+           - llvm-3.8-dev
+           - libllvm3.8v4
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

@@ -1,0 +1,46 @@
+language: cpp
+
+sudo: false
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=ios
+      compiler: clang
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=osx
+      compiler: clang
+    - os: linux
+      env: MASON_PLATFORM=linux
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-5-dev' ]
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v5
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v7
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=arm-v8
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=x86-64
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ABI=mips-64
+
+before_install:
+
+install:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+before_script:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}
+
+script:
+- ./mason remove ${MASON_NAME} ${MASON_VERSION}
+- ./mason install ${MASON_NAME} ${MASON_VERSION}

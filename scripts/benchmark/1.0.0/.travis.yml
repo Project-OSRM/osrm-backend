@@ -1,0 +1,45 @@
+language: cpp
+
+sudo: false
+
+matrix:
+  exclude:
+    - os: linux
+  include:
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=ios
+      compiler: clang
+    - os: osx
+      osx_image: xcode7
+      env: MASON_PLATFORM=osx
+      compiler: clang
+    - os: linux
+      env: MASON_PLATFORM=linux
+      compiler: clang
+
+addons:
+  apt:
+    sources:
+     - ubuntu-toolchain-r-test
+     - llvm-toolchain-precise-3.7
+     - george-edison55-precise-backports
+    packages:
+     - clang-3.7
+     - cmake
+     - cmake-data
+
+cache: apt
+
+
+before_install:
+- if [[ ${MASON_PLATFORM} == "osx" || ${MASON_PLATFORM} == "ios" ]]; then brew install cmake ; fi
+
+before_script:
+ - if [[ ${MASON_PLATFORM} == "linux" && ${CXX} == "clang++" ]]; then export CXX="clang++-3.7" CC="clang-3.7" ; fi
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

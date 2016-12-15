@@ -1,0 +1,23 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8
+      compiler: clang
+    - os: linux
+      sudo: false
+
+install:
+- |
+  if [[ ${MASON_PLATFORM:-unset} == 'unset' ]] || [[ ${MASON_PLATFORM} == 'osx' ]] || [[ ${MASON_PLATFORM} == 'linux' ]]; then
+    echo "Installing clang for OSX/Linux via 'install' target"
+    source utils/toolchain.sh
+    which ${CC}
+    ${CC} -v
+    which ${CXX}
+    ${CXX} -v
+  fi
+
+script:
+- ./test/all.sh

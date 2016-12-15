@@ -1,0 +1,20 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8
+      compiler: clang
+    - os: linux
+      sudo: false
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - libstdc++-5-dev
+           - bison
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

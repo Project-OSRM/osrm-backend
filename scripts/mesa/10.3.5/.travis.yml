@@ -1,0 +1,22 @@
+language: cpp
+
+os:
+  - linux
+
+before_install:
+- "if [[ `lsb_release -r` =~ '12.04' ]]; then sudo add-apt-repository --yes ppa:ubuntu-toolchain-r/test ; fi"
+- sudo apt-get update -y
+- sudo apt-get -y install gcc-4.8 g++-4.8 automake pkg-config libtool
+- export CXX="g++-4.8"
+- export CC="gcc-4.8"
+- sudo apt-get install -y libpthread-stubs0-dev xserver-xorg-dev x11proto-xinerama-dev libx11-xcb-dev libxcb-glx0-dev libxrender-dev llvm-3.4 mesa-utils
+- sudo apt-get build-dep -y libgl1-mesa-dri libxcb-glx0-dev
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}
+
+
+

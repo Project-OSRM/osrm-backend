@@ -1,0 +1,23 @@
+language: cpp
+
+sudo: false
+
+matrix:
+  include:
+    - os: osx
+      compiler: clang
+    - os: linux
+      compiler: clang
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ARCH=arm
+    - os: linux
+      env: MASON_PLATFORM=android MASON_ANDROID_ARCH=x86
+
+before_install:
+- if [[ $(uname -s) == 'Darwin' ]]; then brew rm freetype || true; fi
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}
