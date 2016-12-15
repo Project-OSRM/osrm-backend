@@ -421,7 +421,6 @@ if(ENABLE_MASON)
   mason_use(v8 VERSION ${MASON_V8_VERSION})
   add_dependency_includes(${MASON_PACKAGE_v8_INCLUDE_DIRS})
   set(V8_LIBRARIES ${MASON_PACKAGE_v8_STATIC_LIBS})
-  message(STATUS "V8_LIBRARIES ${V8_LIBRARIES}")
 
   if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
     message(FATAL_ERROR "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
@@ -466,9 +465,6 @@ else()
   if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
   endif()
-
-  find_package(V8 REQUIRED)
-  add_dependency_includes(${V8_INCLUDE_DIR})
 
   find_package(V8 REQUIRED)
   add_dependency_includes(${V8_INCLUDE_DIR})
