@@ -58,5 +58,5 @@ endif()
 if (NOT V8_FOUND)
     if (V8_FIND_REQUIRED)
         message(FATAL_ERROR "Could NOT find v8 library and headers")
-    endif (V8_FIND_REQUIRED)
-endif
+    endif()
+endif()
