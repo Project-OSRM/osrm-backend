@@ -1,5 +1,7 @@
 # 5.5.1
   - Changes from 5.5.0
+    - API:
+      - Adds `generate_hints=true` (`true` by default) which lets user disable `Hint` generating in the response. Use if you don't need `Hint`s!
     - Bugfixes
       - Fix #3418 and ensure we only return bearings in the range 0-359 in API responses
       - Fixed a bug that could lead to emitting false instructions for staying on a roundabout

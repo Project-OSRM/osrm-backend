@@ -24,11 +24,12 @@ To pass parameters to each location some options support an array like encoding:
 
 **Request options**
 
-| Option     | Values                                                 | Description                                                                                           |
-|------------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-|bearings    |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in clockwise direction. |
-|radiuses    |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                           |
-|hints       |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
+| Option         | Values                                                 | Description                                                                                           |
+|----------------|--------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+|bearings        |`{bearing};{bearing}[;{bearing} ...]`                   |Limits the search to segments with given bearing in degrees towards true north in clockwise direction. |
+|radiuses        |`{radius};{radius}[;{radius} ...]`                      |Limits the search to given radius in meters.                                                           |
+|generate\_hints |`true` (default), `false`                               |Adds a Hint to the response which can be used in subsequent requests, see `hints` parameter.           |
+|hints           |`{hint};{hint}[;{hint} ...]`                            |Hint from previous request to derive position in street network.                                       |
 
 Where the elements follow the following format:
 

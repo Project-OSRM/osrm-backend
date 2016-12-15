@@ -49,6 +49,8 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
                       29UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&hints=;;; ;"),
                       32UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?generate_hints=notboolean"),
+                      23UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&geometries=foo"),
                       34UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?overview=false&overview=foo"),
@@ -296,6 +298,19 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_10.radiuses, result_10->radiuses);
     CHECK_EQUAL_RANGE(reference_10.coordinates, result_10->coordinates);
     CHECK_EQUAL_RANGE(reference_10.hints, result_10->hints);
+
+    // Do not generate Hints when they are explicitely disabled
+    auto result_11 = parseParameters<RouteParameters>("1,2;3,4?generate_hints=false");
+    BOOST_CHECK(result_11);
+    BOOST_CHECK_EQUAL(result_11->generate_hints, false);
+
+    auto result_12 = parseParameters<RouteParameters>("1,2;3,4?generate_hints=true");
+    BOOST_CHECK(result_12);
+    BOOST_CHECK_EQUAL(result_12->generate_hints, true);
+
+    auto result_13 = parseParameters<RouteParameters>("1,2;3,4");
+    BOOST_CHECK(result_13);
+    BOOST_CHECK_EQUAL(result_13->generate_hints, true);
 }
 
 BOOST_AUTO_TEST_CASE(valid_table_urls)

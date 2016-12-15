@@ -288,11 +288,17 @@ util::json::Object makeRoute(const guidance::Route &route,
     return json_route;
 }
 
-util::json::Object makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint)
+util::json::Object makeWaypoint(const util::Coordinate location, std::string name)
 {
     util::json::Object waypoint;
     waypoint.values["location"] = detail::coordinateToLonLat(location);
     waypoint.values["name"] = std::move(name);
+    return waypoint;
+}
+
+util::json::Object makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint)
+{
+    auto waypoint = makeWaypoint(location, name);
     waypoint.values["hint"] = hint.ToBase64();
     return waypoint;
 }

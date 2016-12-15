@@ -89,6 +89,10 @@ util::json::Object makeRoute(const guidance::Route &route,
                              util::json::Array legs,
                              boost::optional<util::json::Value> geometry);
 
+// Creates a Waypoint without Hint, see the Hint overload below
+util::json::Object makeWaypoint(const util::Coordinate location, std::string name);
+
+// Creates a Waypoint with Hint, see the overload above when Hint is not needed
 util::json::Object
 makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint);
 

@@ -66,6 +66,9 @@ struct BaseParameters
     std::vector<boost::optional<double>> radiuses;
     std::vector<boost::optional<Bearing>> bearings;
 
+    // Adds hints to response which can be included in subsequent requests, see `hints` above.
+    bool generate_hints = true;
+
     // FIXME add validation for invalid bearing values
     bool IsValid() const
     {
