@@ -1,3 +1,8 @@
+# 5.5.1
+  - Changes from 5.5.0
+    - Bugfixes
+      - Fixes #3455 where a deadlock could occur if re-loading new data under heavy load with multiple consumers osrm-datastore
+
 # 5.5.0
   - Changes from 5.4.0
     - API:
