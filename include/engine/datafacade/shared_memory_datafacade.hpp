@@ -38,29 +38,33 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
     // used anymore.  We crash hard here if something goes wrong (noexcept).
     virtual ~SharedMemoryDataFacade() noexcept
     {
+        // Now check if this is still the newest dataset
+        boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
+            current_regions_lock(shared_barriers->current_regions_mutex,
+                                 boost::interprocess::defer_lock);
+
         boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> exclusive_lock(
             data_region == storage::DATA_1 ? shared_barriers->regions_1_mutex
                                            : shared_barriers->regions_2_mutex,
             boost::interprocess::defer_lock);
 
         // if this returns false this is still in use
-        if (exclusive_lock.try_lock())
+        if (current_regions_lock.try_lock() && exclusive_lock.try_lock())
         {
             if (storage::SharedMemory::RegionExists(data_region))
             {
                 BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
 
-                // Now check if this is still the newest dataset
-                const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
-                    lock(shared_barriers->current_regions_mutex);
-
                 auto shared_regions = storage::makeSharedMemory(storage::CURRENT_REGIONS);
                 const auto current_timestamp =
                     static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
 
-                if (current_timestamp->timestamp == shared_timestamp)
+                // check if the memory region referenced by this facade needs cleanup
+                if (current_timestamp->data == data_region)
                 {
-                    util::Log(logDEBUG) << "Retaining data with shared timestamp " << shared_timestamp;
+                    BOOST_ASSERT(current_timestamp->layout == layout_region);
+                    util::Log(logDEBUG) << "Retaining data with shared timestamp "
+                                        << shared_timestamp;
                 }
                 else
                 {
