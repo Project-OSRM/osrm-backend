@@ -19,7 +19,7 @@ MASON_REPO="https://github.com/mapbox/mason.git"
 MASON_TAG=v0.3.0
 
 SOL_REPO="https://github.com/ThePhD/sol2.git"
-SOL_TAG=v2.15.4
+SOL_TAG=v2.15.5
 
 VARIANT_LATEST=$(curl "https://api.github.com/repos/mapbox/variant/releases/latest" | jq ".tag_name")
 OSMIUM_LATEST=$(curl "https://api.github.com/repos/osmcode/libosmium/releases/latest" | jq ".tag_name")
