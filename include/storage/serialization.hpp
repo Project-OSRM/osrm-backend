@@ -40,13 +40,6 @@ struct HSGRHeader
 // file and returns them in a HSGRHeader struct
 inline HSGRHeader readHSGRHeader(io::FileReader &input_file)
 {
-    const util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
-    const auto fingerprint_loaded = input_file.ReadOne<util::FingerPrint>();
-    if (!fingerprint_loaded.TestGraphUtil(fingerprint_valid))
-    {
-        util::Log(logWARNING) << ".hsgr was prepared with different build.\n"
-                                 "Reprocess to get rid of this warning.";
-    }
 
     HSGRHeader header;
     input_file.ReadInto(header.checksum);

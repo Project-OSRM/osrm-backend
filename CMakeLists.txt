@@ -107,13 +107,6 @@ include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/variant/include)
 
-add_custom_target(FingerPrintConfigure ALL ${CMAKE_COMMAND}
-  "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}"
-  "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
-  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FingerPrint-Config.cmake"
-  COMMENT "Configuring revision fingerprint"
-  VERBATIM)
-
 set(BOOST_COMPONENTS date_time chrono filesystem iostreams program_options regex system thread unit_test_framework)
 
 configure_file(
@@ -134,7 +127,6 @@ add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
 add_library(SERVER OBJECT ${ServerGlob})
 
-add_dependencies(UTIL FingerPrintConfigure)
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(osrm-extract src/tools/extract.cpp)

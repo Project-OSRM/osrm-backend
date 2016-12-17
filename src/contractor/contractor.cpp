@@ -584,8 +584,25 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     const EdgeBasedGraphHeader graph_header =
         *(reinterpret_cast<const EdgeBasedGraphHeader *>(edge_based_graph_region.get_address()));
 
-    const util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
-    graph_header.fingerprint.TestContractor(fingerprint_valid);
+    const util::FingerPrint expected_fingerprint = util::FingerPrint::GetValid();
+    if (!graph_header.fingerprint.IsValid())
+    {
+        util::Log(logERROR) << edge_based_graph_filename << " does not have a valid fingerprint";
+        throw util::exception("Invalid fingerprint");
+    }
+
+    if (!expected_fingerprint.IsDataCompatible(graph_header.fingerprint))
+    {
+        util::Log(logERROR) << edge_based_graph_filename
+                            << " is not compatible with this version of OSRM.";
+        util::Log(logERROR) << "It was prepared with OSRM "
+                            << graph_header.fingerprint.GetMajorVersion() << "."
+                            << graph_header.fingerprint.GetMinorVersion() << "."
+                            << graph_header.fingerprint.GetPatchVersion() << " but you are running "
+                            << OSRM_VERSION;
+        util::Log(logERROR) << "Data is only compatible between minor releases.";
+        throw util::exception("Incompatible file version" + SOURCE_REF);
+    }
 
     edge_based_edge_list.resize(graph_header.number_of_edges);
     util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";

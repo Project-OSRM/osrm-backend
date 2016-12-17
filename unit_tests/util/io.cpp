@@ -2,6 +2,7 @@
 #include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/typedefs.hpp"
+#include "util/version.hpp"
 
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
@@ -14,6 +15,8 @@ const static std::string IO_TMP_FILE = "test_io.tmp";
 const static std::string IO_NONEXISTENT_FILE = "non_existent_test_io.tmp";
 const static std::string IO_TOO_SMALL_FILE = "file_too_small_test_io.tmp";
 const static std::string IO_CORRUPT_FINGERPRINT_FILE = "corrupt_fingerprint_file_test_io.tmp";
+const static std::string IO_INCOMPATIBLE_FINGERPRINT_FILE =
+    "incompatible_fingerprint_file_test_io.tmp";
 const static std::string IO_TEXT_FILE = "plain_text_file.tmp";
 
 BOOST_AUTO_TEST_SUITE(osrm_io)
@@ -57,16 +60,18 @@ BOOST_AUTO_TEST_CASE(file_too_small)
 
         osrm::util::serializeVector(IO_TOO_SMALL_FILE, v);
 
-        std::ofstream f(IO_TOO_SMALL_FILE);
-        f.seekp(0, std::ios_base::beg);
-        std::uint64_t garbage = 0xDEADBEEFCAFEFACE;
-        f.write(reinterpret_cast<char *>(&garbage), sizeof(garbage));
+        std::fstream f(IO_TOO_SMALL_FILE);
+        f.seekp(sizeof(osrm::util::FingerPrint), std::ios_base::beg);
+        std::uint64_t badcount = 100;
+        f.write(reinterpret_cast<char *>(&badcount), sizeof(badcount));
     }
 
     try
     {
         osrm::storage::io::FileReader infile(IO_TOO_SMALL_FILE,
                                              osrm::storage::io::FileReader::VerifyFingerprint);
+        std::vector<int> buffer;
+        infile.DeserializeVector(buffer);
         BOOST_REQUIRE_MESSAGE(false, "Should not get here");
     }
     catch (const osrm::util::exception &e)
@@ -100,6 +105,33 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
     catch (const osrm::util::exception &e)
     {
         const std::string expected("Fingerprint mismatch in corrupt_fingerprint_file_test_io.tmp");
+        const std::string got(e.what());
+        BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
+{
+    {
+        std::vector<int> v(153);
+        std::iota(begin(v), end(v), 0);
+        osrm::util::serializeVector(IO_INCOMPATIBLE_FINGERPRINT_FILE, v);
+
+        std::fstream f(IO_INCOMPATIBLE_FINGERPRINT_FILE);
+        f.seekp(5, std::ios_base::beg); // Seek past `OSRN` and Major version byte
+        std::uint8_t incompatibleminor = static_cast<std::uint8_t>(OSRM_VERSION_MAJOR) + 1;
+        f.write(reinterpret_cast<char *>(&incompatibleminor), sizeof(incompatibleminor));
+    }
+
+    try
+    {
+        osrm::storage::io::FileReader infile(IO_INCOMPATIBLE_FINGERPRINT_FILE,
+                                             osrm::storage::io::FileReader::VerifyFingerprint);
+        BOOST_REQUIRE_MESSAGE(false, "Should not get here");
+    }
+    catch (const osrm::util::exception &e)
+    {
+        const std::string expected("Fingerprint mismatch in " + IO_INCOMPATIBLE_FINGERPRINT_FILE);
         const std::string got(e.what());
         BOOST_REQUIRE(std::equal(expected.begin(), expected.end(), got.begin()));
     }

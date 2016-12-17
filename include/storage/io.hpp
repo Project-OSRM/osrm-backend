@@ -5,6 +5,7 @@
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/log.hpp"
+#include "util/version.hpp"
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/iostreams/seek.hpp>
@@ -117,12 +118,31 @@ class FileReader
 
     bool ReadAndCheckFingerprint()
     {
-        auto fingerprint = ReadOne<util::FingerPrint>();
-        const auto valid = util::FingerPrint::GetValid();
-        // compare the compilation state stored in the fingerprint
-        return valid.IsMagicNumberOK(fingerprint) && valid.TestContractor(fingerprint) &&
-               valid.TestGraphUtil(fingerprint) && valid.TestRTree(fingerprint) &&
-               valid.TestQueryObjects(fingerprint);
+        auto loaded_fingerprint = ReadOne<util::FingerPrint>();
+        const auto expected_fingerprint = util::FingerPrint::GetValid();
+
+        if (!loaded_fingerprint.IsValid())
+        {
+            util::Log(logERROR) << "Fingerprint magic number or checksum is invalid in "
+                                << filepath.string();
+            return false;
+        }
+
+        if (!expected_fingerprint.IsDataCompatible(loaded_fingerprint))
+        {
+            util::Log(logERROR) << filepath.string()
+                                << " is not compatible with this version of OSRM";
+
+            util::Log(logERROR) << "It was prepared with OSRM "
+                                << loaded_fingerprint.GetMajorVersion() << "."
+                                << loaded_fingerprint.GetMinorVersion() << "."
+                                << loaded_fingerprint.GetPatchVersion() << " but you are running "
+                                << OSRM_VERSION;
+            util::Log(logERROR) << "Data is only compatible between minor releases.";
+            return false;
+        }
+
+        return true;
     }
 
     std::size_t Size()
