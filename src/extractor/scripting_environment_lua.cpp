@@ -74,8 +74,6 @@ template <class T> double lonToDouble(T const &object)
     return static_cast<double>(util::toFloating(object.lon));
 }
 
-auto get_nodes_for_way(const osmium::Way &way) -> decltype(way.nodes()) { return way.nodes(); }
-
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(const std::string &file_name)
     : file_name(file_name)
 {
@@ -184,13 +182,14 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                  "valid",
                                                  &osmium::Location::valid);
 
-    context.state.new_usertype<osmium::Way>("Way",
-                                            "get_value_by_key",
-                                            &get_value_by_key<osmium::Way>,
-                                            "id",
-                                            &osmium::Way::id,
-                                            "get_nodes",
-                                            &get_nodes_for_way);
+    context.state.new_usertype<osmium::Way>(
+        "Way",
+        "get_value_by_key",
+        &get_value_by_key<osmium::Way>,
+        "id",
+        &osmium::Way::id,
+        "get_nodes",
+        [](const osmium::Way &way) { return sol::as_table(way.nodes()); });
 
     context.state.new_usertype<osmium::Node>("Node",
                                              "location",
@@ -257,8 +256,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "backward_mode",
         sol::property(&ExtractionWay::get_backward_mode, &ExtractionWay::set_backward_mode));
 
-    context.state.new_usertype<osmium::WayNodeList>("WayNodeList");
-
     // Keep in mind .location is undefined since we're not using libosmium's location cache
     context.state.new_usertype<osmium::NodeRef>("NodeRef", "id", &osmium::NodeRef::ref);
 
@@ -308,12 +305,12 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
     context.has_segment_function = segment_function.valid();
     auto maybe_version = context.state.get<sol::optional<int>>("api_version");
     if (maybe_version)
-     {
-         context.api_version = *maybe_version;
-     }
+    {
+        context.api_version = *maybe_version;
+    }
 
     if (context.api_version < SUPPORTED_MIN_API_VERSION ||
-        context.api_version > SUPPORTED_MAX_API_VERSION )
+        context.api_version > SUPPORTED_MAX_API_VERSION)
     {
         throw util::exception("Invalid profile API version " + std::to_string(context.api_version) +
                               " only versions from " + std::to_string(SUPPORTED_MIN_API_VERSION) +
