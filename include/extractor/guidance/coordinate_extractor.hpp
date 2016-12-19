@@ -28,7 +28,8 @@ class CoordinateExtractor
     /* Find a interpolated coordinate a long the compressed geometries. The desired coordinate
      * should be in a certain distance. This method is dedicated to find representative coordinates
      * at turns.
-     * Since we are computing the length of the segment anyhow, we also return it.
+     * Note: The segment between intersection and turn coordinate can be zero, if the OSM modelling
+     * is unfortunate. See https://github.com/Project-OSRM/osrm-backend/issues/3470
      */
     OSRM_ATTR_WARN_UNUSED
     util::Coordinate GetCoordinateAlongRoad(const NodeID intersection_node,

@@ -1314,3 +1314,29 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route              | intersections                                |
             | a,g       | ab,bcdefgh,bcdefgh | true:90;true:45 false:180 false:270;true:180 |
+
+    #https://github.com/Project-OSRM/osrm-backend/pull/3469#issuecomment-270806580
+    Scenario: Oszillating Lower Priority Road
+		#Given the node map
+	#		"""
+	#		a -db    c
+    #           f
+    #   	"""
+        Given the node locations
+            | node | lat                | lon                | #          |
+            | a    | 1.0                | 1.0                |            |
+            | b    | 1.0000179813587253 | 1.0                |            |
+            | c    | 1.0000204580571323 | 1.0                |            |
+            | d    | 1.0000179813587253 | 1.0                | same as b  |
+            | f    | 1.0000179813587253 | 1.0000179813587253 |            |
+
+        And the ways
+            | nodes | oneway | lanes | highway |
+            | ab    | yes    | 1     | primary |
+            | bf    | yes    | 1     | primary |
+            | bcd   | yes    | 1     | service |
+
+        # we don't care for turn instructions, this is a coordinate extraction bug check
+        When I route I should get
+            | waypoints | route |
+            | a,d       | ab,ab |

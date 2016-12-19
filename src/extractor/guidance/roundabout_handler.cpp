@@ -204,6 +204,20 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
 
                 result.push_back(
                     util::coordinate_calculation::bearing(src_coordinate, next_coordinate));
+
+                // OSM data sometimes contains duplicated nodes with identical coordinates, or
+                // because of coordinate precision rounding, end up at the same coordinate.
+                // It's impossible to calculate a bearing between these, so we log a warning
+                // that the data should be checked.
+                // The bearing calculation should return 0 in these cases, which may not be correct,
+                // but is at least not random.
+                if (src_coordinate == next_coordinate)
+                {
+                    util::Log(logDEBUG) << "Zero length segment at " << next_coordinate
+                                        << " could cause invalid roundabout exit bearings";
+                    BOOST_ASSERT(std::abs(result.back()) <= 0.1);
+                }
+
                 break;
             }
         }

@@ -300,12 +300,18 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
         //
         //                    Sliproad           Not a Sliproad
         {
-            const auto &extractor = intersection_generator.GetCoordinateExtractor();
+            const auto &coordinate_extractor = intersection_generator.GetCoordinateExtractor();
 
             const NodeID start = intersection_node_id; // b
             const EdgeID edge = sliproad_edge;         // bd
 
-            const auto coords = extractor.GetForwardCoordinatesAlongRoad(start, edge);
+            const auto coords = coordinate_extractor.GetForwardCoordinatesAlongRoad(start, edge);
+
+            // due to filtering of duplicated coordinates, we can end up with empty segments.
+            // this can only happen as long as
+            // https://github.com/Project-OSRM/osrm-backend/issues/3470 persists
+            if (coords.size() < 2)
+                continue;
             BOOST_ASSERT(coords.size() >= 2);
 
             // Now keep start and end coordinate fix and check for curvature
@@ -543,14 +549,15 @@ bool SliproadHandler::nextIntersectionIsTooFarAway(const NodeID start, const Edg
     BOOST_ASSERT(start != SPECIAL_NODEID);
     BOOST_ASSERT(onto != SPECIAL_EDGEID);
 
-    const auto &extractor = intersection_generator.GetCoordinateExtractor();
+    const auto &coordinate_extractor = intersection_generator.GetCoordinateExtractor();
 
     // Base max distance threshold on the current road class we're on
     const auto &data = node_based_graph.GetEdgeData(onto);
     const auto threshold = scaledThresholdByRoadClass(MAX_SLIPROAD_THRESHOLD, // <- scales down
                                                       data.road_classification);
 
-    DistanceToNextIntersectionAccumulator accumulator{extractor, node_based_graph, threshold};
+    DistanceToNextIntersectionAccumulator accumulator{
+        coordinate_extractor, node_based_graph, threshold};
     const SkipTrafficSignalBarrierRoadSelector selector{};
 
     (void)graph_walker.TraverseRoad(start, onto, accumulator, selector);
