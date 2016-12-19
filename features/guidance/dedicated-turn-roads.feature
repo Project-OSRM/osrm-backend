@@ -9,7 +9,7 @@ Feature: Slipways and Dedicated Turn Lanes
         Given the node map
             """
                     e
-            a b-----c d
+            a b-----c-d
                `--h |
                    ||
                   1||
@@ -72,8 +72,10 @@ Feature: Slipways and Dedicated Turn Lanes
         Given the node map
             """
                     e
-            a-b----]c[-d
-               `--h |
+                    |
+                    …
+            a-b-----c--d
+               `--h …
                    \|
                     |
                     |
@@ -101,8 +103,10 @@ Feature: Slipways and Dedicated Turn Lanes
         Given the node map
             """
                     e
-            a-b----]c[d
-               `--h |
+                    |
+                    …
+            a-b-----c-d
+               `--h …
                    \|
                     |
                     |
@@ -125,7 +129,7 @@ Feature: Slipways and Dedicated Turn Lanes
     Scenario: Inner city expressway with on road
         Given the node map
             """
-            a b-------c g
+            a b-------c-g
                  `--f |
                      \|
                       |
