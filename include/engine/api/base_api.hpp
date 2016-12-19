@@ -44,7 +44,8 @@ class BaseAPI
         return waypoints;
     }
 
-  protected:
+    // FIXME: gcc 4.9 does not like MakeWaypoints to be protected
+    // protected:
     util::json::Object MakeWaypoint(const PhantomNode &phantom) const
     {
         if (parameters.generate_hints)
