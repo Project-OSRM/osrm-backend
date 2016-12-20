@@ -1375,3 +1375,28 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | turns         | route                      |
             | a,d       | depart,arrive | Stralauer Str,Holzmarktstr |
+
+    #http://www.openstreetmap.org/#map=19/49.48761/8.47618
+    @todo @3365
+    Scenario: Turning Road - Segregated
+        Given the node map
+            """
+                    f   d
+                    |   |
+            a - - - b - c
+                    |   |
+                    |   |
+                    g   e
+            """
+        And the ways
+            | nodes | name   | ref  | oneway |
+            | ab    | Goethe | B 38 | yes    |
+            | bc    |        | B 38 | yes    |
+            | ec    | Fried  |      | yes    |
+            | cd    | Fried  | B 38 | yes    |
+            | fbg   | Fried  |      | yes    |
+
+        When I route I should get
+            | waypoints | route              | turns                       |
+            | a,d       | Goethe,Fried,Fried | depart,continue left,arrive |
+            | a,g       | Goethe,Fried,Fried | depart,turn right,arrive    |
