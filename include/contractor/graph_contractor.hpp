@@ -302,16 +302,16 @@ class GraphContractor
 
             util::UnbufferedLog log;
             log << "initializing elimination PQ ...";
-            tbb::parallel_for(
-                tbb::blocked_range<NodeID>(0, number_of_nodes, PQGrainSize),
-                [this, &node_priorities, &node_depth, &thread_data_list](
-                    const tbb::blocked_range<NodeID> &range) {
-                    ContractorThreadData *data = thread_data_list.GetThreadData();
-                    for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                    {
-                        node_priorities[x] = this->EvaluateNodePriority(data, node_depth[x], x);
-                    }
-                });
+            tbb::parallel_for(tbb::blocked_range<NodeID>(0, number_of_nodes, PQGrainSize),
+                              [this, &node_priorities, &node_depth, &thread_data_list](
+                                  const tbb::blocked_range<NodeID> &range) {
+                                  ContractorThreadData *data = thread_data_list.GetThreadData();
+                                  for (auto x = range.begin(), end = range.end(); x != end; ++x)
+                                  {
+                                      node_priorities[x] =
+                                          this->EvaluateNodePriority(data, node_depth[x], x);
+                                  }
+                              });
             log << "ok";
         }
         BOOST_ASSERT(node_priorities.size() == number_of_nodes);
@@ -552,8 +552,7 @@ class GraphContractor
                     [this, &node_priorities, &remaining_nodes, &node_depth, &thread_data_list](
                         const tbb::blocked_range<NodeID> &range) {
                         ContractorThreadData *data = thread_data_list.GetThreadData();
-                        for (auto position = range.begin(), end = range.end();
-                             position != end;
+                        for (auto position = range.begin(), end = range.end(); position != end;
                              ++position)
                         {
                             NodeID x = remaining_nodes[position].id;

@@ -130,8 +130,7 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
     // fallback, mostly necessary for dead ends
     if (intersection_node == to_node)
     {
-        const auto result = ExtractCoordinateAtLength(
-            skipping_inaccuracies_distance, coordinates);
+        const auto result = ExtractCoordinateAtLength(skipping_inaccuracies_distance, coordinates);
         BOOST_ASSERT(is_valid_result(result));
         return result;
     }

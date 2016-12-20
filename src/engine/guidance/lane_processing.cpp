@@ -78,8 +78,8 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // where lanes in the turn fan in but for example the overall lanes at that location
             // fan out, we would have to know the asymmetric mapping of lanes. This is currently
             // not possible at the moment. In the following we implement a heuristic instead.
-            const LaneID current_num_lanes_right_of_turn = current.numLanesToTheRight();
-            const LaneID current_num_lanes_left_of_turn = current.numLanesToTheLeft();
+            const LaneID current_num_lanes_right_of_turn = current.NumLanesToTheRight();
+            const LaneID current_num_lanes_left_of_turn = current.NumLanesToTheLeft();
 
             const LaneID num_shared_lanes = std::min(current_lanes.lanes_in_turn,   //
                                                      previous_lanes.lanes_in_turn); //
@@ -166,7 +166,7 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // step as invalid, scheduled for later removal.
             if (collapsable(previous, current))
             {
-                previous = elongate(previous, current);
+                previous.ElongateBy(current);
                 current.maneuver.instruction = TurnInstruction::NO_TURN();
             }
         });

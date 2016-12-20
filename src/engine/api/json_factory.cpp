@@ -60,7 +60,7 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
             maneuver.instruction.direction_modifier != DirectionModifier::UTurn);
 }
 
-inline bool hasValidLanes(const guidance::Intersection &intersection)
+inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection)
 {
     return intersection.lanes.lanes_in_turn > 0;
 }
@@ -72,7 +72,7 @@ std::string instructionTypeToString(const TurnType::Enum type)
     return turn_type_names[static_cast<std::size_t>(type)];
 }
 
-util::json::Array lanesFromIntersection(const guidance::Intersection &intersection)
+util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection &intersection)
 {
     BOOST_ASSERT(intersection.lanes.lanes_in_turn >= 1);
     util::json::Array result;
@@ -200,7 +200,7 @@ util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
     return step_maneuver;
 }
 
-util::json::Object makeIntersection(const guidance::Intersection &intersection)
+util::json::Object makeIntersection(const guidance::IntermediateIntersection &intersection)
 {
     util::json::Object result;
     util::json::Array bearings;
@@ -226,9 +226,9 @@ util::json::Object makeIntersection(const guidance::Intersection &intersection)
     result.values["location"] = detail::coordinateToLonLat(intersection.location);
     result.values["bearings"] = bearings;
     result.values["entry"] = entry;
-    if (intersection.in != guidance::Intersection::NO_INDEX)
+    if (intersection.in != guidance::IntermediateIntersection::NO_INDEX)
         result.values["in"] = intersection.in;
-    if (intersection.out != guidance::Intersection::NO_INDEX)
+    if (intersection.out != guidance::IntermediateIntersection::NO_INDEX)
         result.values["out"] = intersection.out;
 
     if (detail::hasValidLanes(intersection))
