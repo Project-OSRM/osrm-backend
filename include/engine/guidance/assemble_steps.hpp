@@ -70,13 +70,13 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                           WaypointType::Depart,
                           0};
 
-    Intersection intersection{source_node.location,
-                              std::vector<short>({bearings.second}),
-                              std::vector<bool>({true}),
-                              Intersection::NO_INDEX,
-                              0,
-                              util::guidance::LaneTuple(),
-                              {}};
+    IntermediateIntersection intersection{source_node.location,
+                                          std::vector<short>({bearings.second}),
+                                          std::vector<bool>({true}),
+                                          IntermediateIntersection::NO_INDEX,
+                                          0,
+                                          util::guidance::LaneTuple(),
+                                          {}};
 
     if (leg_data.size() > 0)
     {
@@ -218,7 +218,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                     std::vector<short>({static_cast<short>(util::reverseBearing(bearings.first))}),
                     std::vector<bool>({true}),
                     0,
-                    Intersection::NO_INDEX,
+                    IntermediateIntersection::NO_INDEX,
                     util::guidance::LaneTuple(),
                     {}};
 

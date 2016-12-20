@@ -50,18 +50,6 @@ inline bool hasManeuver(const RouteStep &first, const RouteStep &second)
             second.maneuver.instruction.type != TurnType::NoTurn);
 }
 
-// forward all signage/name data from one step to another.
-// When we collapse a step, we might have to transfer the name, pronunciation and similar tags.
-inline void forwardStepSignage(RouteStep &destination, const RouteStep &origin)
-{
-    destination.name_id = origin.name_id;
-    destination.name = origin.name;
-    destination.pronunciation = origin.pronunciation;
-    destination.destinations = origin.destinations;
-    destination.destinations = origin.destinations;
-    destination.ref = origin.ref;
-}
-
 inline bool choiceless(const RouteStep &step, const RouteStep &previous)
 {
     // if the next turn is choiceless, we consider longer turn roads collapsable than usually
@@ -90,9 +78,6 @@ bool isCollapsableInstruction(const TurnInstruction instruction)
 
 bool compatible(const RouteStep &lhs, const RouteStep &rhs) { return lhs.mode == rhs.mode; }
 
-// invalidate a step and set its content to nothing
-void invalidateStep(RouteStep &step) { step = getInvalidRouteStep(); }
-
 // Checks if name change happens the user wants to know about.
 // Treats e.g. "Name (Ref)" -> "Name" changes still as same name.
 bool isNoticeableNameChange(const RouteStep &lhs, const RouteStep &rhs)
@@ -113,32 +98,6 @@ double nameSegmentLength(std::size_t at, const std::vector<RouteStep> &steps)
         result += steps[at].distance;
     }
     return result;
-}
-
-OSRM_ATTR_WARN_UNUSED
-RouteStep forwardInto(RouteStep destination, const RouteStep &source)
-{
-    // Merge a turn into a silent turn
-    // Overwrites turn instruction and increases exit NR
-    destination.duration += source.duration;
-    destination.distance += source.distance;
-    destination.maneuver.exit = source.maneuver.exit;
-    if (destination.geometry_begin < source.geometry_begin)
-    {
-        destination.intersections.insert(destination.intersections.end(),
-                                         source.intersections.begin(),
-                                         source.intersections.end());
-    }
-    else
-    {
-        destination.intersections.insert(destination.intersections.begin(),
-                                         source.intersections.begin(),
-                                         source.intersections.end());
-    }
-
-    destination.geometry_begin = std::min(destination.geometry_begin, source.geometry_begin);
-    destination.geometry_end = std::max(destination.geometry_end, source.geometry_end);
-    return destination;
 }
 
 void fixFinalRoundabout(std::vector<RouteStep> &steps)
@@ -173,9 +132,9 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
             // TODO this operates on the data that is in the instructions.
             // We are missing out on the final segment after the last stay-on-roundabout
             // instruction though. it is not contained somewhere until now
-            steps[propagation_index - 1] =
-                forwardInto(std::move(steps[propagation_index - 1]), propagation_step);
-            invalidateStep(propagation_step);
+            steps[propagation_index - 1].ElongateBy(propagation_step);
+            steps[propagation_index - 1].maneuver.exit = propagation_step.maneuver.exit;
+            propagation_step.Invalidate();
         }
     }
 }
@@ -240,7 +199,7 @@ void closeOffRoundabout(const bool on_roundabout,
                      steps[1].maneuver.instruction.type == TurnType::UseLane);
         steps[0].geometry_end = 1;
         steps[1].geometry_begin = 0;
-        steps[1] = forwardInto(steps[1], steps[0]);
+        steps[1].AddInFront(steps[0]);
         steps[1].intersections.erase(steps[1].intersections.begin()); // otherwise we copy the
                                                                       // source
         if (leavesRoundabout(steps[1].maneuver.instruction))
@@ -282,7 +241,8 @@ void closeOffRoundabout(const bool on_roundabout,
              --propagation_index)
         {
             auto &propagation_step = steps[propagation_index];
-            propagation_step = forwardInto(propagation_step, steps[propagation_index + 1]);
+            propagation_step.ElongateBy(steps[propagation_index + 1]);
+            propagation_step.maneuver.exit = steps[propagation_index + 1].maneuver.exit;
             if (entersRoundabout(propagation_step.maneuver.instruction))
             {
                 const auto entry_intersection = propagation_step.intersections.front();
@@ -309,13 +269,13 @@ void closeOffRoundabout(const bool on_roundabout,
                         getTurnDirection(angle);
                 }
 
-                forwardStepSignage(propagation_step, destination_copy);
-                invalidateStep(steps[propagation_index + 1]);
+                propagation_step.AdaptStepSignage(destination_copy);
+                steps[propagation_index + 1].Invalidate();
                 break;
             }
             else
             {
-                invalidateStep(steps[propagation_index + 1]);
+                steps[propagation_index + 1].Invalidate();
             }
         }
         // remove exit
@@ -445,19 +405,18 @@ void collapseUTurn(std::vector<RouteStep> &steps,
 
     if (direct_u_turn || u_turn_with_name_change)
     {
-        steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
-        invalidateStep(steps[step_index]);
+        steps[one_back_index].ElongateBy(steps[step_index]);
+        steps[step_index].Invalidate();
         if (u_turn_with_name_change)
         {
             BOOST_ASSERT_MSG(compatible(steps[one_back_index], steps[next_step_index]),
                              "Compatibility should be transitive");
-            steps[one_back_index] =
-                elongate(std::move(steps[one_back_index]), steps[next_step_index]);
-            invalidateStep(steps[next_step_index]); // will be skipped due to the
-                                                    // continue statement at the
-                                                    // beginning of this function
+            steps[one_back_index].ElongateBy(steps[next_step_index]);
+            steps[next_step_index].Invalidate(); // will be skipped due to the
+                                                 // continue statement at the
+                                                 // beginning of this function
         }
-        forwardStepSignage(steps[one_back_index], steps[two_back_index]);
+        steps[one_back_index].AdaptStepSignage(steps[two_back_index]);
         steps[one_back_index].maneuver.instruction.type = TurnType::Continue;
         steps[one_back_index].maneuver.instruction.direction_modifier = DirectionModifier::UTurn;
     }
@@ -685,15 +644,15 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             }
         }
 
-        steps[two_back_index] = elongate(std::move(steps[two_back_index]), one_back_step);
+        steps[two_back_index].ElongateBy(one_back_step);
         // If the previous instruction asked to continue, the name change will have to
         // be changed into a turn
-        invalidateStep(steps[one_back_index]);
+        steps[one_back_index].Invalidate();
     }
     // very short segment after turn, turn location remains at one_back_step
     else if (isDelayedTurn(one_back_step, current_step)) // checks for compatibility
     {
-        steps[one_back_index] = elongate(std::move(steps[one_back_index]), steps[step_index]);
+        steps[one_back_index].ElongateBy(steps[step_index]);
         // TODO check for lanes (https://github.com/Project-OSRM/osrm-backend/issues/2553)
         if (TurnType::Continue == one_back_step.maneuver.instruction.type &&
             isNoticeableNameChange(steps[two_back_index], current_step))
@@ -723,7 +682,7 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
                 steps[one_back_index].maneuver.instruction.direction_modifier =
                     DirectionModifier::UTurn;
             }
-            forwardStepSignage(steps[one_back_index], current_step);
+            steps[one_back_index].AdaptStepSignage(current_step);
         }
         else if (TurnType::NewName == one_back_step.maneuver.instruction.type ||
                  (TurnType::NewName == current_step.maneuver.instruction.type &&
@@ -749,30 +708,29 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 
         steps[one_back_index].name = current_step.name;
         steps[one_back_index].name_id = current_step.name_id;
-        invalidateStep(steps[step_index]);
+        steps[step_index].Invalidate();
     }
     else if (TurnType::Suppressed == current_step.maneuver.instruction.type &&
              !isNoticeableNameChange(one_back_step, current_step) &&
              compatible(one_back_step, current_step))
     {
-        steps[one_back_index] = elongate(std::move(steps[one_back_index]), current_step);
+        steps[one_back_index].ElongateBy(current_step);
         const auto angle = findTotalTurnAngle(one_back_step, current_step);
         steps[one_back_index].maneuver.instruction.direction_modifier = getTurnDirection(angle);
-
-        invalidateStep(steps[step_index]);
+        steps[step_index].Invalidate();
     }
     else if (TurnType::Turn == one_back_step.maneuver.instruction.type &&
              TurnType::OnRamp == current_step.maneuver.instruction.type &&
              compatible(one_back_step, current_step))
     {
         // turning onto a ramp makes the first turn into a ramp
-        steps[one_back_index] = elongate(std::move(steps[one_back_index]), current_step);
+        steps[one_back_index].ElongateBy(current_step);
         steps[one_back_index].maneuver.instruction.type = TurnType::OnRamp;
         const auto angle = findTotalTurnAngle(one_back_step, current_step);
         steps[one_back_index].maneuver.instruction.direction_modifier = getTurnDirection(angle);
 
-        forwardStepSignage(steps[one_back_index], current_step);
-        invalidateStep(steps[step_index]);
+        steps[one_back_index].AdaptStepSignage(current_step);
+        steps[step_index].Invalidate();
     }
 }
 
@@ -862,43 +820,6 @@ bool collapsable(const RouteStep &step, const RouteStep &next)
         return true;
 
     return false;
-}
-
-// elongate a step by another. the data is added either at the front, or the back
-OSRM_ATTR_WARN_UNUSED
-RouteStep elongate(RouteStep step, const RouteStep &by_step)
-{
-    BOOST_ASSERT(step.mode == by_step.mode);
-
-    step.duration += by_step.duration;
-    step.distance += by_step.distance;
-    BOOST_ASSERT(step.mode == by_step.mode);
-
-    // by_step comes after step -> we append at the end
-    if (step.geometry_end == by_step.geometry_begin + 1)
-    {
-        step.geometry_end = by_step.geometry_end;
-
-        // if we elongate in the back, we only need to copy the intersections to the beginning.
-        // the bearings remain the same, as the location of the turn doesn't change
-        step.intersections.insert(
-            step.intersections.end(), by_step.intersections.begin(), by_step.intersections.end());
-    }
-    // by_step comes before step -> we append at the front
-    else
-    {
-        BOOST_ASSERT(step.maneuver.waypoint_type == WaypointType::None &&
-                     by_step.maneuver.waypoint_type == WaypointType::None);
-        BOOST_ASSERT(by_step.geometry_end == step.geometry_begin + 1);
-        step.geometry_begin = by_step.geometry_begin;
-
-        // elongating in the front changes the location of the maneuver
-        step.maneuver = by_step.maneuver;
-
-        step.intersections.insert(
-            step.intersections.begin(), by_step.intersections.begin(), by_step.intersections.end());
-    }
-    return step;
 }
 
 // Post processing can invalidate some instructions. For example StayOnRoundabout
@@ -1081,9 +1002,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             {
                 // Traffic light on the sliproad, the road itself will be handled in the next
                 // iteration, when one-back-index again points to the sliproad.
-                steps[one_back_index] =
-                    elongate(std::move(steps[one_back_index]), steps[step_index]);
-                invalidateStep(steps[step_index]);
+                steps[one_back_index].ElongateBy(steps[step_index]);
+                steps[step_index].Invalidate();
             }
             else
             {
@@ -1110,10 +1030,9 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     else
                         steps[one_back_index].maneuver.instruction.type = TurnType::Turn;
 
-                    steps[one_back_index] =
-                        elongate(std::move(steps[one_back_index]), steps[step_index]);
+                    steps[one_back_index].ElongateBy(steps[step_index]);
 
-                    forwardStepSignage(steps[one_back_index], steps[step_index]);
+                    steps[one_back_index].AdaptStepSignage(steps[step_index]);
                     // the turn lanes for this turn are on the sliproad itself, so we have to
                     // remember  them
                     steps[one_back_index].intersections.front().lanes =
@@ -1124,7 +1043,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     const auto angle = findTotalTurnAngle(one_back_step, current_step);
                     steps[one_back_index].maneuver.instruction.direction_modifier =
                         getTurnDirection(angle);
-                    invalidateStep(steps[step_index]);
+                    steps[step_index].Invalidate();
                 }
                 else
                 {
@@ -1146,9 +1065,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
 
             for (std::size_t index = last_available_name_index + 1; index <= step_index; ++index)
             {
-                steps[last_available_name_index] =
-                    elongate(std::move(steps[last_available_name_index]), steps[index]);
-                invalidateStep(steps[index]);
+                steps[last_available_name_index].ElongateBy(steps[index]);
+                steps[index].Invalidate();
             }
         }
         // If we look at two consecutive name changes, we can check for a name oscillation.
@@ -1166,11 +1084,11 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             {
                 if (compatible(one_back_step, steps[two_back_index]))
                 {
-                    steps[two_back_index] =
-                        elongate(elongate(std::move(steps[two_back_index]), steps[one_back_index]),
-                                 steps[step_index]);
-                    invalidateStep(steps[one_back_index]);
-                    invalidateStep(steps[step_index]);
+                    steps[two_back_index]
+                        .ElongateBy(steps[one_back_index])
+                        .ElongateBy(steps[step_index]);
+                    steps[one_back_index].Invalidate();
+                    steps[step_index].Invalidate();
                 }
                 // TODO discuss: we could think about changing the new-name to a pure notification
                 // about mode changes
@@ -1180,15 +1098,13 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
             {
                 if (compatible(steps[two_back_index], steps[one_back_index]))
                 {
-                    steps[two_back_index] =
-                        elongate(std::move(steps[two_back_index]), steps[one_back_index]);
-                    invalidateStep(steps[one_back_index]);
+                    steps[two_back_index].ElongateBy(steps[one_back_index]);
+                    steps[one_back_index].Invalidate();
                     if (nameSegmentLength(step_index, steps) < name_segment_cutoff_length &&
                         compatible(steps[two_back_index], steps[step_index]))
                     {
-                        steps[two_back_index] =
-                            elongate(std::move(steps[two_back_index]), steps[step_index]);
-                        invalidateStep(steps[step_index]);
+                        steps[two_back_index].ElongateBy(steps[step_index]);
+                        steps[step_index].Invalidate();
                     }
                 }
             }
@@ -1203,11 +1119,11 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
                     // change,
                     // we don't wan't to collapse the initial intersection.
                     // a - b ---BRIDGE -- c
-                    steps[one_back_index] =
-                        elongate(std::move(steps[one_back_index]),
-                                 elongate(std::move(steps[step_index]), steps[next_step_index]));
-                    invalidateStep(steps[step_index]);
-                    invalidateStep(steps[next_step_index]);
+                    steps[one_back_index]
+                        .ElongateBy(steps[step_index])
+                        .ElongateBy(steps[next_step_index]);
+                    steps[step_index].Invalidate();
+                    steps[next_step_index].Invalidate();
                 }
             }
             else if (choiceless(current_step, one_back_step) ||
@@ -1350,7 +1266,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
             designated_depart.intersections.front().lane_description.clear();
             first_intersection.bearings = {first_intersection.bearings[first_intersection.out]};
             first_intersection.entry = {true};
-            first_intersection.in = Intersection::NO_INDEX;
+            first_intersection.in = IntermediateIntersection::NO_INDEX;
             first_intersection.out = 0;
 
             // finally remove the initial (now duplicated move)
@@ -1423,7 +1339,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         auto &last_intersection = next_to_last_step.intersections.back();
         last_intersection.bearings = {last_intersection.bearings[last_intersection.in]};
         last_intersection.entry = {true};
-        last_intersection.out = Intersection::NO_INDEX;
+        last_intersection.out = IntermediateIntersection::NO_INDEX;
         last_intersection.in = 0;
         steps.pop_back();
 
@@ -1433,7 +1349,7 @@ void trimShortSegments(std::vector<RouteStep> &steps, LegGeometry &geometry)
         // as the segment before it.  Thus, we have to copy the names
         // and travel modes from the new next_to_last step.
         auto &new_next_to_last = *(steps.end() - 2);
-        forwardStepSignage(next_to_last_step, new_next_to_last);
+        next_to_last_step.AdaptStepSignage(new_next_to_last);
         next_to_last_step.mode = new_next_to_last.mode;
         // the geometry indices of the last step are already correct;
     }
@@ -1560,10 +1476,8 @@ std::vector<RouteStep> buildIntersections(std::vector<RouteStep> steps)
             BOOST_ASSERT(compatible(steps[last_valid_instruction], step));
             // count intersections. We cannot use exit, since intersections can follow directly
             // after a roundabout
-            steps[last_valid_instruction] =
-                elongate(std::move(steps[last_valid_instruction]), step);
-            step.maneuver.instruction = TurnInstruction::NO_TURN();
-            invalidateStep(steps[step_index]);
+            steps[last_valid_instruction].ElongateBy(step);
+            steps[step_index].Invalidate();
         }
         else if (!isSilent(instruction))
         {
@@ -1604,13 +1518,13 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
         // the lane description is given left to right, lanes are counted from the right.
         // Therefore we access the lane description using the reverse iterator
 
-        auto right_most_lanes = step.lanesToTheRight();
+        auto right_most_lanes = step.LanesToTheRight();
         if (!right_most_lanes.empty() && containsTag(right_most_lanes.front(),
                                                      (extractor::guidance::TurnLaneType::straight |
                                                       extractor::guidance::TurnLaneType::none)))
             return false;
 
-        auto left_most_lanes = step.lanesToTheLeft();
+        auto left_most_lanes = step.LanesToTheLeft();
         if (!left_most_lanes.empty() && containsTag(left_most_lanes.back(),
                                                     (extractor::guidance::TurnLaneType::straight |
                                                      extractor::guidance::TurnLaneType::none)))
@@ -1627,8 +1541,8 @@ std::vector<RouteStep> collapseUseLane(std::vector<RouteStep> steps)
             const auto previous = getPreviousIndex(step_index, steps);
             if (compatible(steps[previous], step))
             {
-                steps[previous] = elongate(std::move(steps[previous]), steps[step_index]);
-                invalidateStep(steps[step_index]);
+                steps[previous].ElongateBy(steps[step_index]);
+                steps[step_index].Invalidate();
             }
         }
     }

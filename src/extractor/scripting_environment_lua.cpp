@@ -10,8 +10,8 @@
 #include "extractor/restriction_parser.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
-#include "util/lua_util.hpp"
 #include "util/log.hpp"
+#include "util/lua_util.hpp"
 #include "util/typedefs.hpp"
 
 #include <osmium/osm.hpp>
@@ -51,7 +51,7 @@ auto get_value_by_key(T const &object, const char *key) -> decltype(object.get_v
 }
 
 template <class T, class D>
-const char* get_value_by_key(T const &object, const char *key, D const default_value)
+const char *get_value_by_key(T const &object, const char *key, D const default_value)
 {
     auto v = get_value_by_key(object, key);
     if (v && *v)
@@ -176,8 +176,13 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         static_cast<void (std::vector<std::string>::*)(const std::string &)>(
             &std::vector<std::string>::push_back));
 
-    context.state.new_usertype<osmium::Location>(
-        "Location", "lat", &osmium::Location::lat, "lon", &osmium::Location::lon, "valid", &osmium::Location::valid);
+    context.state.new_usertype<osmium::Location>("Location",
+                                                 "lat",
+                                                 &osmium::Location::lat,
+                                                 "lon",
+                                                 &osmium::Location::lon,
+                                                 "valid",
+                                                 &osmium::Location::valid);
 
     context.state.new_usertype<osmium::Way>("Way",
                                             "get_value_by_key",
@@ -272,12 +277,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                    "lat",
                                                    &latToDouble<ExternalMemoryNode>);
 
-    context.state.new_usertype<util::Coordinate>(
-        "Coordinate",
-        "lon",
-        sol::property(&lonToDouble<util::Coordinate>),
-        "lat",
-        sol::property(&latToDouble<util::Coordinate>));
+    context.state.new_usertype<util::Coordinate>("Coordinate",
+                                                 "lon",
+                                                 sol::property(&lonToDouble<util::Coordinate>),
+                                                 "lat",
+                                                 sol::property(&latToDouble<util::Coordinate>));
 
     context.state.new_usertype<RasterDatum>(
         "RasterDatum", "datum", &RasterDatum::datum, "invalid_data", &RasterDatum::get_invalid);

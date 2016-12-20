@@ -30,10 +30,6 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps);
 // maneuvers that can, in some form, be seen as one. Lookahead of one step.
 bool collapsable(const RouteStep &step, const RouteStep &next);
 
-// Elongate a step by another. the data is added either at the front, or the back
-OSRM_ATTR_WARN_UNUSED
-RouteStep elongate(RouteStep step, const RouteStep &by_step);
-
 // trim initial/final segment of very short length.
 // This function uses in/out parameter passing to modify both steps and geometry in place.
 // We use this method since both steps and geometry are closely coupled logically but
