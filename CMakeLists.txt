@@ -625,6 +625,14 @@ if(BUILD_TOOLS)
   target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES})
 
   install(TARGETS osrm-io-benchmark DESTINATION bin)
+
+  find_package(Shapefile) # package libshp-dev
+  if(Shapefile_FOUND)
+    add_executable(osrm-extract-conditionals src/tools/extract-conditionals.cpp $<TARGET_OBJECTS:UTIL>)
+    target_include_directories(osrm-extract-conditionals PRIVATE ${LIBSHAPEFILE_INCLUDE_DIR})
+    target_link_libraries(osrm-extract-conditionals ${OSMIUM_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${LIBSHAPEFILE_LIBRARY})
+    install(TARGETS osrm-extract-conditionals DESTINATION bin)
+  endif()
 endif()
 
 if (ENABLE_ASSERTIONS)

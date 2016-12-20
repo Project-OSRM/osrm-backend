@@ -374,15 +374,16 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
             ;
 
         // Selectors
-        selector_sequence = (wide_range_selectors(_a) || small_range_selectors(_a))[_val = _a];
+        selector_sequence = (wide_range_selectors(_a) >> small_range_selectors(_a))[_val = _a];
 
         wide_range_selectors
-            = (monthday_selector(_r1)
-               || year_selector(_r1)
-               || week_selector(_r1) // TODO week_selector
-              ) >> -lit(':');
+            = (-monthday_selector(_r1)
+               >> -year_selector(_r1)
+               >> -week_selector(_r1) // TODO week_selector
+              ) >> -lit(':')
+            ;
 
-        small_range_selectors = (weekday_selector(_r1) >> (&~lit(',') | eoi)) || time_selector(_r1);
+        small_range_selectors = -(weekday_selector(_r1) >> (&~lit(',') | eoi)) >> -time_selector(_r1);
 
         // Time selector
         time_selector = (timespan % ',')[ph::bind(&OpeningHours::times, _r1) = _1];
@@ -458,7 +459,7 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
         date_offset = (plus_or_minus >> wday) | day_offset;
 
         date_from
-            = ((-year[_a = _1] >> (month[_b = _1] || (daynum[_c = _1] >> (&~lit(':') | eoi))))
+            = ((-year[_a = _1] >> ((month[_b = _1] >> -daynum[_c = _1]) | daynum[_c = _1]))
                | variable_date)
             [_val = ph::construct<OpeningHours::Monthday>(_a, _b, _c)]
             ;
@@ -504,7 +505,10 @@ struct opening_hours_grammar : qi::grammar<Iterator, Skipper, std::vector<Openin
             ("Sa", 6)
             ;
 
-        daynum = uint2_p[_pass = bind([](unsigned x) { return 01 <= x && x <= 31; }, _1), _val = _1];
+        daynum
+            = uint2_p[_pass = bind([](unsigned x) { return 01 <= x && x <= 31; }, _1), _val = _1]
+            >> (&~lit(':') | eoi)
+            ;
 
         weeknum = uint2_p[_pass = bind([](unsigned x) { return 01 <= x && x <= 53; }, _1), _val = _1];
 
