@@ -15,6 +15,9 @@ namespace extractor
 namespace guidance
 {
 
+// Suppresses instructions for certain modes.
+// Think: ferry route. This handler suppresses all instructions while on the ferry route.
+// We don't want to announce "Turn Right", "Turn Left" while on ferries, as one example.
 class SuppressModeHandler final : public IntersectionHandler
 {
   public:
@@ -26,15 +29,13 @@ class SuppressModeHandler final : public IntersectionHandler
 
     ~SuppressModeHandler() override final = default;
 
-    bool canProcess(const NodeID /*nid*/,
+    bool canProcess(const NodeID nid,
                     const EdgeID via_eid,
                     const Intersection &intersection) const override final;
 
     Intersection operator()(const NodeID nid,
                             const EdgeID via_eid,
                             Intersection intersection) const override final;
-
-    using SuppressModeListT = std::array<osrm::extractor::TravelMode, 2>;
 };
 
 } // namespace osrm
