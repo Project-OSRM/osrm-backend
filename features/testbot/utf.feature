@@ -3,6 +3,7 @@ Feature: Handling of UTF characters
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 1000 meters
 
     Scenario: Streetnames with UTF characters
         Given the node map

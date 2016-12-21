@@ -21,20 +21,22 @@ Feature: Slipways and Dedicated Turn Lanes
 
         And the ways
             | nodes | highway    | name   | oneway |
-            | abc   | trunk      | first  |        |
+            | ab    | trunk      | first  |        |
+            | bc    | trunk      | first  |        |
             | cd    | trunk      | first  |        |
             | bhf   | trunk_link |        | yes    |
-            | cfg   | primary    | second | yes    |
-            | ec    | primary    | second |        |
+            | cf    | primary    | second | yes    |
+            | fg    | primary    | second | yes    |
+            | ec    | primary    | second | no     |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | abc      | cfg    | c        | no_right_turn |
+            | restriction | bc       | cf     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route               | turns                    |
-            | a,g       | first,second,second | depart,turn right,arrive |
-            | a,1       | first,,             | depart,turn right,arrive |
+            | waypoints | route               | turns                    | locations |
+            | a,g       | first,second,second | depart,turn right,arrive | a,b,g     |
+            | a,1       | first,,             | depart,turn right,arrive | a,b,_     |
 
     Scenario: Turn Instead of Ramp
         Given the node map
@@ -117,20 +119,22 @@ Feature: Slipways and Dedicated Turn Lanes
 
         And the ways
             | nodes | highway    | name   | maxspeed | oneway |
-            | abc   | trunk      | first  | 70       |        |
+            | ab    | trunk      | first  | 70       |        |
+            | bc    | trunk      | first  | 70       |        |
             | cd    | trunk      | first  | 2        |        |
             | bhf   | trunk_link |        | 2        | yes    |
-            | cfg   | primary    | second | 50       | yes    |
-            | ec    | primary    | second | 50       |        |
+            | cf    | primary    | second | 50       | yes    |
+            | fg    | primary    | second | 50       | yes    |
+            | ec    | primary    | second | 50       | yes    |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | abc      | cfg    | c        | no_right_turn |
+            | restriction | bc       | cf     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route               | turns                    |
-            | a,g       | first,second,second | depart,turn right,arrive |
-            | a,1       | first,,             | depart,turn right,arrive |
+            | waypoints | route               | turns                    | locations |
+            | a,g       | first,second,second | depart,turn right,arrive | a,b,g     |
+            | a,1       | first,,             | depart,turn right,arrive | a,b,_     |
 
 
     Scenario: Turn Instead of Ramp
@@ -161,8 +165,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | efg   | primary       | second |
 
        When I route I should get
-            | waypoints | route                | turns                                      |
-            | a,g       | first,,second,second | depart,off ramp right,turn straight,arrive |
+            | waypoints | route                | turns                                      | locations |
+            | a,g       | first,,second,second | depart,off ramp right,turn straight,arrive | a,b,f,g   |
 
     Scenario: Turn Instead of Ramp
         Given the node map
@@ -188,8 +192,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | efg   | primary       | second |
 
         When I route I should get
-            | waypoints | route                | turns                                      |
-            | a,g       | first,,second,second | depart,off ramp right,turn straight,arrive |
+            | waypoints | route                | turns                                      | locations |
+            | a,g       | first,,second,second | depart,off ramp right,turn straight,arrive | a,b,f,g   |
 
     Scenario: Inner city expressway with on road
         Given the node map
@@ -208,18 +212,20 @@ Feature: Slipways and Dedicated Turn Lanes
 
         And the ways
             | nodes | highway      | name  | oneway |
-            | abc   | primary      | road  |        |
+            | ab    | primary      | road  |        |
+            | bc    | primary      | road  |        |
             | cg    | primary      | road  |        |
             | bfd   | trunk_link   |       | yes    |
-            | cde   | trunk        | trunk | yes    |
+            | cd    | trunk        | trunk | yes    |
+            | de    | trunk        | trunk | yes    |
 
         And the relations
             | type        | way:from | way:to | node:via | restriction   |
-            | restriction | abc      | cde    | c        | no_right_turn |
+            | restriction | bc       | cd     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route                | turns                    |
-            | a,e       | road,trunk,trunk     | depart,turn right,arrive |
+            | waypoints | route                | turns                    | locations |
+            | a,e       | road,trunk,trunk     | depart,turn right,arrive | a,b,e     |
 
 
     Scenario: Slipway Round U-Turn
@@ -242,8 +248,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | def   | primary      | road | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                        |
-            | a,f       | road,road,road | depart,continue uturn,arrive |
+            | waypoints | route          | turns                        | locations |
+            | a,f       | road,road,road | depart,continue uturn,arrive | a,b,f     |
 
     Scenario: Slipway Steep U-Turn
         Given the node map
@@ -264,8 +270,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | def   | primary      | road | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                        |
-            | a,f       | road,road,road | depart,continue uturn,arrive |
+            | waypoints | route          | turns                        | locations |
+            | a,f       | road,road,road | depart,continue uturn,arrive | a,b,f     |
 
     Scenario: Schwarzwaldstrasse Autobahn
         Given the node map
@@ -309,21 +315,21 @@ Feature: Slipways and Dedicated Turn Lanes
             | qe    | secondary_link | Ettlinger Allee    |      | yes    |
 
         When I route I should get
-            | waypoints | route                                              | turns                    | ref        |
-            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive | L561,L561, |
+            | waypoints | route                                              | turns                    | ref        | locations |
+            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive | L561,L561, | a,b,o     |
 
     Scenario: Traffic Lights everywhere
         #http://map.project-osrm.org/?z=18&center=48.995336%2C8.383813&loc=48.995467%2C8.384548&loc=48.995115%2C8.382761&hl=en&alt=0
         Given the node map
             """
-            a     k l     j
-                      d b c i
-
+            a - - k-l-.   j
+                    ''d'b-c-i
+                       \  |
                         e g
-
-                        1
+                         \|
+                        1\|
                           h
-
+                          |
                           f
             """
 
@@ -340,11 +346,11 @@ Feature: Slipways and Dedicated Turn Lanes
             | jcghf  | primary        | Brauerstrasse | yes    |
 
         When I route I should get
-            | waypoints | route                                    | turns                           |
-            | a,i       | Ebertstrasse,Ebertstrasse                | depart,arrive                   |
-            | a,l       | Ebertstrasse,Ebertstrasse                | depart,arrive                   |
-            | a,f       | Ebertstrasse,Brauerstrasse,Brauerstrasse | depart,turn right,arrive        |
-            | a,1       | Ebertstrasse,,                           | depart,turn slight right,arrive |
+            | waypoints | route                                    | turns                           | locations |
+            | a,i       | Ebertstrasse,Ebertstrasse                | depart,arrive                   | a,i       |
+            | a,l       | Ebertstrasse,Ebertstrasse                | depart,arrive                   | a,l       |
+            | a,f       | Ebertstrasse,Brauerstrasse,Brauerstrasse | depart,turn right,arrive        | a,k,f     |
+            | a,1       | Ebertstrasse,,                           | depart,turn slight right,arrive | a,k,_     |
 
     #2839
     Scenario: Self-Loop
@@ -355,7 +361,7 @@ Feature: Slipways and Dedicated Turn Lanes
                                                   m                  \
                                                  /                    i
                                                 /                      \
-                                                |                       \ 
+                                                |                       \
                                                 |                       h
                                                 |                       |
                                                 n                       |
@@ -390,7 +396,7 @@ Feature: Slipways and Dedicated Turn Lanes
                                                   m                  \
                                                  /                    i
                                                 /                      \
-                                                |                       \ 
+                                                |                       \
                                                 |                       h
                                                 |                       |
                                                 n                       |
@@ -457,10 +463,10 @@ Feature: Slipways and Dedicated Turn Lanes
             | g    | traffic_signals |
 
         When I route I should get
-            | waypoints | route                                   | turns                              | #                                    |
-            | a,d       | new york,new york                       | depart,arrive                      | this is the sinatra route            |
-            | a,j       | new york,1st street,1st street          | depart,turn left,arrive            |                                      |
-            | a,1       | new york,m street,1st street,1st street | depart,turn right,turn left,arrive | this can false be seen as a sliproad |
+            | waypoints | route                                   | turns                              | locations | #                                     |
+            | a,d       | new york,new york                       | depart,arrive                      | a,d       | this is the sinatra route             |
+            | a,j       | new york,1st street,1st street          | depart,turn left,arrive            | a,c,j     |                                       |
+            | a,1       | new york,m street,1st street,1st street | depart,turn right,turn left,arrive | a,b,g,_   | this can falsly be seen as a sliproad |
 
     # Merging into degree two loop on dedicated turn detection / 2927
     Scenario: Turn Instead of Ramp
@@ -475,7 +481,7 @@ Feature: Slipways and Dedicated Turn Lanes
             |       |
             |       |
             |       |
-             \     / 
+             \     /
               \   /
                \ /
                 b
@@ -497,8 +503,8 @@ Feature: Slipways and Dedicated Turn Lanes
 
         # We don't actually care about routes here, this is all about endless loops in turn discovery
         When I route I should get
-            | waypoints | route          | turns                          |
-            | a,i       | road,road,road | depart,fork slight left,arrive |
+            | waypoints | route          |
+            | a,i       | road,road,road |
 
 
     # The following tests are current false positives / false negatives #3199
@@ -528,9 +534,9 @@ Feature: Slipways and Dedicated Turn Lanes
             | hid    | residential | Waldkauzsteig     |
 
        When I route I should get
-            | waypoints | route                                        | turns                   |
-            | a,d       | Nachtigallensteig,Kiebitzsteig,Kiebitzsteig  | depart,turn left,arrive |
-            | a,h       | Nachtigallensteig,Nachtigallensteig          | depart,arrive           |
+            | waypoints | route                                        | turns                   | locations |
+            | a,d       | Nachtigallensteig,Kiebitzsteig,Kiebitzsteig  | depart,turn left,arrive | a,b,d     |
+            | a,h       | Nachtigallensteig,Nachtigallensteig          | depart,arrive           | a,h       |
 
 
     @sliproads
@@ -554,8 +560,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | aeg   | primary | aeg   | yes    |
 
        When I route I should get
-            | waypoints | route              | turns                               |
-            | s,f       | sabc,aeg,dbef,dbef | depart,turn right,turn right,arrive |
+            | waypoints | route              | turns                               | locations |
+            | s,f       | sabc,aeg,dbef,dbef | depart,turn right,turn right,arrive | s,a,e,f   |
 
     @sliproads
     Scenario: Through Street, not a Sliproad although obvious
@@ -578,8 +584,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | aeg   | primary | aeg   | yes    |
 
        When I route I should get
-            | waypoints | route              | turns                               |
-            | s,f       | sabc,aeg,dbef,dbef | depart,turn right,turn right,arrive |
+            | waypoints | route              | turns                               | locations |
+            | s,f       | sabc,aeg,dbef,dbef | depart,turn right,turn right,arrive | s,a,e,f   |
 
     @sliproads
     Scenario: Sliproad target turn is restricted
@@ -614,9 +620,9 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | ae       | ef     | e        | no_right_turn |
 
        When I route I should get
-            | waypoints | route          | turns                    |
-            | s,f       | sabc,dbef,dbef | depart,turn right,arrive |
-            | s,g       | sabc,aeg,aeg   | depart,turn right,arrive |
+            | waypoints | route          | turns                    | locations |
+            | s,f       | sabc,dbef,dbef | depart,turn right,arrive | s,b,f     |
+            | s,g       | sabc,aeg,aeg   | depart,turn right,arrive | s,a,g     |
 
     @sliproads
     Scenario: Not a Sliproad, road not continuing straight
@@ -636,9 +642,9 @@ Feature: Slipways and Dedicated Turn Lanes
             | aeg   | primary | aeg   | yes    |
 
        When I route I should get
-            | waypoints | route        | turns                    |
-            | s,c       | sabc,sabc    | depart,arrive            |
-            | s,g       | sabc,aeg,aeg | depart,turn right,arrive |
+            | waypoints | route        | turns                    | locations |
+            | s,c       | sabc,sabc    | depart,arrive            | s,c       |
+            | s,g       | sabc,aeg,aeg | depart,turn right,arrive | s,a,g     |
 
     @sliproads
     Scenario: Intersection too far away with Traffic Light shortly after initial split
@@ -671,8 +677,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | ae    | primary | ae   | yes    |
 
        When I route I should get
-            | waypoints | route             | turns                                      |
-            | s,f       | sabc,ae,dbef,dbef | depart,turn slight right,turn right,arrive |
+            | waypoints | route             | turns                                      | locations |
+            | s,f       | sabc,ae,dbef,dbef | depart,turn slight right,turn right,arrive | s,a,e,f   |
 
     @sliproads
     Scenario: Traffic Signal on Sliproad
@@ -704,8 +710,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | ate   | primary | ate   | yes    |
 
        When I route I should get
-            | waypoints | route      | turns                    |
-            | s,f       | sabc,ef,ef | depart,turn right,arrive |
+            | waypoints | route      | turns                    | locations |
+            | s,f       | sabc,ef,ef | depart,turn right,arrive | s,a,f     |
 
     @sliproads
     Scenario: Sliproad tagged as link
@@ -732,8 +738,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | ae    | motorway_link | ae    | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                    |
-            | s,f       | sabc,dbef,dbef | depart,turn right,arrive |
+            | waypoints | route          | turns                    | locations |
+            | s,f       | sabc,dbef,dbef | depart,turn right,arrive | s,a,f     |
 
     @sliproads
     Scenario: Sliproad with same-ish names
@@ -759,8 +765,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | af    | primary | sliproad |       | yes    |
 
        When I route I should get
-            | waypoints | route                  | turns                    |
-            | s,t       | main,crossing,crossing | depart,turn right,arrive |
+            | waypoints | route                  | turns                    | locations |
+            | s,t       | main,crossing,crossing | depart,turn right,arrive | s,a,t     |
 
     @sliproads
     Scenario: Not a Sliproad, name mismatch
@@ -788,8 +794,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | af    | primary | sliproad | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                    |
-            | s,t       | main,away,away | depart,turn right,arrive |
+            | waypoints | route          | turns                    | locations |
+            | s,t       | main,away,away | depart,turn right,arrive | s,a,t     |
 
     @sliproads
     Scenario: Not a Sliproad, low road priority
@@ -818,8 +824,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | af    | service | sliproad | 30 km/h  | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                    |
-            | s,t       | main,away,away | depart,turn right,arrive |
+            | waypoints | route          | turns                    | locations |
+            | s,t       | main,away,away | depart,turn right,arrive | s,a,t     |
 
     @sliproads
     Scenario: Not a Sliproad, more than three roads at target intersection
@@ -848,8 +854,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | af    | primary | sliproad | yes    |
 
        When I route I should get
-            | waypoints | route                         | turns                              |
-            | s,g       | main,sliproad,another,another | depart,turn right,turn left,arrive |
+            | waypoints | route                         | turns                              | locations |
+            | s,g       | main,sliproad,another,another | depart,turn right,turn left,arrive | s,a,f,g   |
 
     @sliproads:
     Scenario: Throughabout-Sliproad

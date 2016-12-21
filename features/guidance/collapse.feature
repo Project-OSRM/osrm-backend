@@ -32,23 +32,23 @@ Feature: Collapse
             | gb    | primary | first  | yes    |
 
        When I route I should get
-            | waypoints | route                | turns                        |
-            | a,l       | first,second,second  | depart,turn right,arrive     |
-            | a,d       | first,first          | depart,arrive                |
-            | a,j       | first,second,second  | depart,turn left,arrive      |
-            | a,h       | first,first,first    | depart,continue uturn,arrive |
-            | e,j       | first,second,second  | depart,turn right,arrive     |
-            | e,h       | first,first          | depart,arrive                |
-            | e,l       | first,second,second  | depart,turn left,arrive      |
-            | e,d       | first,first,first    | depart,continue uturn,arrive |
-            | k,h       | second,first,first   | depart,turn right,arrive     |
-            | k,l       | second,second        | depart,arrive                |
-            | k,d       | second,first,first   | depart,turn left,arrive      |
-            | k,j       | second,second,second | depart,continue uturn,arrive |
-            | i,d       | second,first,first   | depart,turn right,arrive     |
-            | i,j       | second,second        | depart,arrive                |
-            | i,h       | second,first,first   | depart,turn left,arrive      |
-            | i,l       | second,second,second | depart,continue uturn,arrive |
+            | waypoints | route                | turns                        | locations |
+            | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
+            | a,d       | first,first          | depart,arrive                | a,d       |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
+            | e,h       | first,first          | depart,arrive                | e,h       |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
+            | k,l       | second,second        | depart,arrive                | k,l       |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
+            | i,j       | second,second        | depart,arrive                | i,j       |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
 
     Scenario: Segregated Intersection, Cross Belonging to Correct Street
         Given the node map
@@ -77,23 +77,23 @@ Feature: Collapse
             | gb    | primary | second | yes    |
 
        When I route I should get
-            | waypoints | route                | turns                        |
-            | a,l       | first,second,second  | depart,turn right,arrive     |
-            | a,d       | first,first          | depart,arrive                |
-            | a,j       | first,second,second  | depart,turn left,arrive      |
-            | a,h       | first,first,first    | depart,continue uturn,arrive |
-            | e,j       | first,second,second  | depart,turn right,arrive     |
-            | e,h       | first,first          | depart,arrive                |
-            | e,l       | first,second,second  | depart,turn left,arrive      |
-            | e,d       | first,first,first    | depart,continue uturn,arrive |
-            | k,h       | second,first,first   | depart,turn right,arrive     |
-            | k,l       | second,second        | depart,arrive                |
-            | k,d       | second,first,first   | depart,turn left,arrive      |
-            | k,j       | second,second,second | depart,continue uturn,arrive |
-            | i,d       | second,first,first   | depart,turn right,arrive     |
-            | i,j       | second,second        | depart,arrive                |
-            | i,h       | second,first,first   | depart,turn left,arrive      |
-            | i,l       | second,second,second | depart,continue uturn,arrive |
+            | waypoints | route                | turns                        | locations |
+            | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
+            | a,d       | first,first          | depart,arrive                | a,d       |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
+            | e,h       | first,first          | depart,arrive                | e,h       |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
+            | k,l       | second,second        | depart,arrive                | k,l       |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
+            | i,j       | second,second        | depart,arrive                | i,j       |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets
         Given the node map
@@ -122,23 +122,23 @@ Feature: Collapse
             | gb    | primary | first  | yes    |
 
        When I route I should get
-            | waypoints | route                | turns                        |
-            | a,l       | first,second,second  | depart,turn right,arrive     |
-            | a,d       | first,first          | depart,arrive                |
-            | a,j       | first,second,second  | depart,turn left,arrive      |
-            | a,h       | first,first,first    | depart,continue uturn,arrive |
-            | e,j       | first,second,second  | depart,turn right,arrive     |
-            | e,h       | first,first          | depart,arrive                |
-            | e,l       | first,second,second  | depart,turn left,arrive      |
-            | e,d       | first,first,first    | depart,continue uturn,arrive |
-            | k,h       | second,first,first   | depart,turn right,arrive     |
-            | k,l       | second,second        | depart,arrive                |
-            | k,d       | second,first,first   | depart,turn left,arrive      |
-            | k,j       | second,second,second | depart,continue uturn,arrive |
-            | i,d       | second,first,first   | depart,turn right,arrive     |
-            | i,j       | second,second        | depart,arrive                |
-            | i,h       | second,first,first   | depart,turn left,arrive      |
-            | i,l       | second,second,second | depart,continue uturn,arrive |
+            | waypoints | route                | turns                        | locations |
+            | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
+            | a,d       | first,first          | depart,arrive                | a,d       |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
+            | e,h       | first,first          | depart,arrive                | e,h       |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
+            | k,l       | second,second        | depart,arrive                | k,l       |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
+            | i,j       | second,second        | depart,arrive                | i,j       |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads
         Given the node map
@@ -172,23 +172,23 @@ Feature: Collapse
             | liejk | primary | second | yes    | 5     |
 
        When I route I should get
-            | waypoints | route                | turns                        |
-            | a,h       | first,second,second  | depart,turn right,arrive     |
-            | a,c       | first,first          | depart,arrive                |
-            | a,j       | first,second,second  | depart,turn left,arrive      |
-            | a,f       | first,first,first    | depart,continue uturn,arrive |
-            | d,j       | first,second,second  | depart,turn right,arrive     |
-            | d,f       | first,first          | depart,arrive                |
-            | d,h       | first,second,second  | depart,turn left,arrive      |
-            | d,c       | first,first,first    | depart,continue uturn,arrive |
-            | g,c       | second,first,first   | depart,turn right,arrive     |
-            | g,j       | second,second        | depart,arrive                |
-            | g,f       | second,first,first   | depart,turn left,arrive      |
-            | g,h       | second,second,second | depart,continue uturn,arrive |
-            | i,f       | second,first,first   | depart,turn right,arrive     |
-            | i,h       | second,second        | depart,arrive                |
-            | i,c       | second,first,first   | depart,turn left,arrive      |
-            | i,j       | second,second,second | depart,continue uturn,arrive |
+            | waypoints | route                | turns                        | locations |
+            | a,h       | first,second,second  | depart,turn right,arrive     | a,b,h     |
+            | a,c       | first,first          | depart,arrive                | a,c       |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,f       | first,first,first    | depart,continue uturn,arrive | a,b,f     |
+            | d,j       | first,second,second  | depart,turn right,arrive     | d,e,j     |
+            | d,f       | first,first          | depart,arrive                | d,f       |
+            | d,h       | first,second,second  | depart,turn left,arrive      | d,e,h     |
+            | d,c       | first,first,first    | depart,continue uturn,arrive | d,e,c     |
+            | g,c       | second,first,first   | depart,turn right,arrive     | g,b,c     |
+            | g,j       | second,second        | depart,arrive                | g,j       |
+            | g,f       | second,first,first   | depart,turn left,arrive      | g,e,f     |
+            | g,h       | second,second,second | depart,continue uturn,arrive | g,b,h     |
+            | i,f       | second,first,first   | depart,turn right,arrive     | i,e,f     |
+            | i,h       | second,second        | depart,arrive                | i,h       |
+            | i,c       | second,first,first   | depart,turn left,arrive      | i,b,c     |
+            | i,j       | second,second,second | depart,continue uturn,arrive | i,e,j     |
 
     Scenario: Partly Segregated Intersection, Two Segregated Roads, Intersection belongs to Second
         Given the node map
@@ -226,23 +226,23 @@ Feature: Collapse
             | liejk | primary | second | yes    | 5     |
 
        When I route I should get
-            | waypoints | route                | turns                        |
-            | a,h       | first,second,second  | depart,turn right,arrive     |
-            | a,c       | first,first          | depart,arrive                |
-            | a,j       | first,second,second  | depart,turn left,arrive      |
-            | a,f       | first,first,first    | depart,continue uturn,arrive |
-            | d,j       | first,second,second  | depart,turn right,arrive     |
-            | d,f       | first,first          | depart,arrive                |
-            | d,h       | first,second,second  | depart,turn left,arrive      |
-            | d,c       | first,first,first    | depart,continue uturn,arrive |
-            | g,c       | second,first,first   | depart,turn right,arrive     |
-            | g,j       | second,second        | depart,arrive                |
-            | g,f       | second,first,first   | depart,turn left,arrive      |
-            | g,h       | second,second,second | depart,continue uturn,arrive |
-            | i,f       | second,first,first   | depart,turn right,arrive     |
-            | i,h       | second,second        | depart,arrive                |
-            | i,c       | second,first,first   | depart,turn left,arrive      |
-            | i,j       | second,second,second | depart,continue uturn,arrive |
+            | waypoints | route                | turns                        | locations |
+            | a,h       | first,second,second  | depart,turn right,arrive     | a,b,h     |
+            | a,c       | first,first          | depart,arrive                | a,c       |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,b,j     |
+            | a,f       | first,first,first    | depart,continue uturn,arrive | a,b,f     |
+            | d,j       | first,second,second  | depart,turn right,arrive     | d,e,j     |
+            | d,f       | first,first          | depart,arrive                | d,f       |
+            | d,h       | first,second,second  | depart,turn left,arrive      | d,e,h     |
+            | d,c       | first,first,first    | depart,continue uturn,arrive | d,e,c     |
+            | g,c       | second,first,first   | depart,turn right,arrive     | g,b,c     |
+            | g,j       | second,second        | depart,arrive                | g,j       |
+            | g,f       | second,first,first   | depart,turn left,arrive      | g,e,f     |
+            | g,h       | second,second,second | depart,continue uturn,arrive | g,b,h     |
+            | i,f       | second,first,first   | depart,turn right,arrive     | i,e,f     |
+            | i,h       | second,second        | depart,arrive                | i,h       |
+            | i,c       | second,first,first   | depart,turn left,arrive      | i,b,c     |
+            | i,j       | second,second,second | depart,continue uturn,arrive | i,e,j     |
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets - Slight Angles
         Given the node map
@@ -271,23 +271,23 @@ Feature: Collapse
             | gb    | primary | first  | yes    |
 
        When I route I should get
-            | waypoints | route                | turns                        |
-            | a,l       | first,second,second  | depart,turn right,arrive     |
-            | a,d       | first,first          | depart,arrive                |
-            | a,j       | first,second,second  | depart,turn left,arrive      |
-            | a,h       | first,first,first    | depart,continue uturn,arrive |
-            | e,j       | first,second,second  | depart,turn right,arrive     |
-            | e,h       | first,first          | depart,arrive                |
-            | e,l       | first,second,second  | depart,turn left,arrive      |
-            | e,d       | first,first,first    | depart,continue uturn,arrive |
-            | k,h       | second,first,first   | depart,turn right,arrive     |
-            | k,l       | second,second        | depart,arrive                |
-            | k,d       | second,first,first   | depart,turn left,arrive      |
-            | k,j       | second,second,second | depart,continue uturn,arrive |
-            | i,d       | second,first,first   | depart,turn right,arrive     |
-            | i,j       | second,second        | depart,arrive                |
-            | i,h       | second,first,first   | depart,turn left,arrive      |
-            | i,l       | second,second,second | depart,continue uturn,arrive |
+            | waypoints | route                | turns                        | locations |
+            | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
+            | a,d       | first,first          | depart,arrive                | a,d       |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
+            | e,h       | first,first          | depart,arrive                | e,h       |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
+            | k,l       | second,second        | depart,arrive                | k,l       |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
+            | i,j       | second,second        | depart,arrive                | i,j       |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
 
     Scenario: Segregated Intersection, Cross Belonging to Mixed Streets - Slight Angles (2)
         Given the node map
@@ -316,23 +316,23 @@ Feature: Collapse
             | gb    | primary | first  | yes    |
 
        When I route I should get
-            | waypoints | route                | turns                        |
-            | a,l       | first,second,second  | depart,turn right,arrive     |
-            | a,d       | first,first          | depart,arrive                |
-            | a,j       | first,second,second  | depart,turn left,arrive      |
-            | a,h       | first,first,first    | depart,continue uturn,arrive |
-            | e,j       | first,second,second  | depart,turn right,arrive     |
-            | e,h       | first,first          | depart,arrive                |
-            | e,l       | first,second,second  | depart,turn left,arrive      |
-            | e,d       | first,first,first    | depart,continue uturn,arrive |
-            | k,h       | second,first,first   | depart,turn right,arrive     |
-            | k,l       | second,second        | depart,arrive                |
-            | k,d       | second,first,first   | depart,turn left,arrive      |
-            | k,j       | second,second,second | depart,continue uturn,arrive |
-            | i,d       | second,first,first   | depart,turn right,arrive     |
-            | i,j       | second,second        | depart,arrive                |
-            | i,h       | second,first,first   | depart,turn left,arrive      |
-            | i,l       | second,second,second | depart,continue uturn,arrive |
+            | waypoints | route                | turns                        | locations |
+            | a,l       | first,second,second  | depart,turn right,arrive     | a,b,l     |
+            | a,d       | first,first          | depart,arrive                | a,d       |
+            | a,j       | first,second,second  | depart,turn left,arrive      | a,c,j     |
+            | a,h       | first,first,first    | depart,continue uturn,arrive | a,c,h     |
+            | e,j       | first,second,second  | depart,turn right,arrive     | e,f,j     |
+            | e,h       | first,first          | depart,arrive                | e,h       |
+            | e,l       | first,second,second  | depart,turn left,arrive      | e,g,l     |
+            | e,d       | first,first,first    | depart,continue uturn,arrive | e,g,d     |
+            | k,h       | second,first,first   | depart,turn right,arrive     | k,g,h     |
+            | k,l       | second,second        | depart,arrive                | k,l       |
+            | k,d       | second,first,first   | depart,turn left,arrive      | k,b,d     |
+            | k,j       | second,second,second | depart,continue uturn,arrive | k,b,j     |
+            | i,d       | second,first,first   | depart,turn right,arrive     | i,c,d     |
+            | i,j       | second,second        | depart,arrive                | i,j       |
+            | i,h       | second,first,first   | depart,turn left,arrive      | i,f,h     |
+            | i,l       | second,second,second | depart,continue uturn,arrive | i,f,l     |
 
     Scenario: Entering a segregated road
         Given the node map
@@ -353,20 +353,20 @@ Feature: Collapse
             | ge    | primary | second | no     |
 
         When I route I should get
-            | waypoints | route               | turns                          |
-            | d,c       | first,first,first   | depart,continue uturn,arrive   |
-            | a,f       | first,first,first   | depart,continue uturn,arrive   |
-            | a,g       | first,second,second | depart,turn left,arrive        |
-            | d,g       | first,second,second | depart,turn right,arrive       |
-            | g,f       | second,first,first  | depart,turn right,arrive       |
-            | g,c       | second,first,first  | depart,end of road left,arrive |
+            | waypoints | route               | turns                          | locations |
+            | d,c       | first,first,first   | depart,continue uturn,arrive   | d,e,c     |
+            | a,f       | first,first,first   | depart,continue uturn,arrive   | a,b,f     |
+            | a,g       | first,second,second | depart,turn left,arrive        | a,b,g     |
+            | d,g       | first,second,second | depart,turn right,arrive       | d,e,g     |
+            | g,f       | second,first,first  | depart,turn right,arrive       | g,e,f     |
+            | g,c       | second,first,first  | depart,end of road left,arrive | g,b,c     |
 
     Scenario: Do not collapse turning roads
         Given the node map
             """
                 e
-                c   d
-            a   b f
+                c---d
+            a---b-f
             """
 
         And the ways
@@ -378,10 +378,10 @@ Feature: Collapse
             | bf    | primary | third  | yes    |
 
         When I route I should get
-            | waypoints | route                   | turns                                      |
-            | a,d       | first,first,first,first | depart,continue left,continue right,arrive |
-            | a,e       | first,second,second     | depart,turn left,arrive                    |
-            | a,f       | first,third,third       | depart,turn straight,arrive                |
+            | waypoints | route                   | turns                                      | locations |
+            | a,d       | first,first,first,first | depart,continue left,continue right,arrive | a,b,c,d   |
+            | a,e       | first,second,second     | depart,turn left,arrive                    | a,b,e     |
+            | a,f       | first,third,third       | depart,turn straight,arrive                | a,b,f     |
 
      Scenario: Bridge on unnamed road
         Given the node map
@@ -403,8 +403,8 @@ Feature: Collapse
         Given the node map
             """
                       f
-            i h     g e
-            a b     c d
+            i-h-----g-e
+            a-b-----c-d
             """
 
         And the ways
@@ -419,8 +419,8 @@ Feature: Collapse
             | hi    | primary | yes    | to_bridge   |
 
         When I route I should get
-            | waypoints | route                             | turns                   |
-            | a,f       | to_bridge,target_road,target_road | depart,turn left,arrive |
+            | waypoints | route                             | turns                   | locations |
+            | a,f       | to_bridge,target_road,target_road | depart,turn left,arrive | a,d,f     |
 
     Scenario: Pankenbruecke
         Given the node map
@@ -440,6 +440,7 @@ Feature: Collapse
              |
              g
             """
+
         And the ways
             | nodes | highway | name    | oneway | lanes |
             | kabhj | primary | inroad  | yes    | 4     |
@@ -449,17 +450,17 @@ Feature: Collapse
             | fi    | primary | cross   | no     |       |
 
        When I route I should get
-            | waypoints | route                  | turns                           |
-            | a,g       | inroad,outroad,outroad | depart,new name straight,arrive |
-            | a,i       | inroad,cross,cross     | depart,turn left,arrive         |
+            | waypoints | route                  | turns                           | locations |
+            | a,g       | inroad,outroad,outroad | depart,new name straight,arrive | a,d,g     |
+            | a,i       | inroad,cross,cross     | depart,turn left,arrive         | a,f,i     |
 
      Scenario: Close Turns - Don't Collapse
         Given the node map
             """
               g d
-
-            e b c f
-
+              | |
+            e-b-c-f
+              | |
               a h
             """
 
@@ -472,10 +473,10 @@ Feature: Collapse
             | ch    | primary | reverse  |
 
         When I route I should get
-            | waypoints | route                    | turns                               |
-            | a,d       | in,cross,out,out         | depart,turn right,turn left,arrive  |
-            | a,h       | in,cross,reverse,reverse | depart,turn right,turn right,arrive |
-            | g,d       | straight,cross,out,out   | depart,turn left,turn left,arrive   |
+            | waypoints | route                    | turns                               | locations |
+            | a,d       | in,cross,out,out         | depart,turn right,turn left,arrive  | a,b,c,d   |
+            | a,h       | in,cross,reverse,reverse | depart,turn right,turn right,arrive | a,b,c,h   |
+            | g,d       | straight,cross,out,out   | depart,turn left,turn left,arrive   | g,b,c,d   |
 
      Scenario: No Name During Turns
         Given the node map
@@ -569,15 +570,15 @@ Feature: Collapse
         Given the node map
             """
             h
-            a
-
-                g
+            a .
+              ..
+               .g
                 b f
-                  c
-
-
-                        e
-                        d
+                | c .
+                | | . ,
+                | |  . .
+                | |   . e
+                | |     d
                 j i
             """
 
@@ -589,27 +590,27 @@ Feature: Collapse
             | gbj   | secondary | out  | yes    |
 
         When I route I should get
-            | waypoints | route        | turns                           |
-            | i,h       | in,road,road | depart,turn left,arrive         |
-            | a,d       | road,road    | depart,arrive                   |
-            | a,j       | road,out,out | depart,turn slight right,arrive |
+            | waypoints | route        | turns                           | locations |
+            | i,h       | in,road,road | depart,turn left,arrive         | i,f,h     |
+            | a,d       | road,road    | depart,arrive                   | a,d       |
+            | a,j       | road,out,out | depart,turn slight right,arrive | a,b,j     |
 
     Scenario: Segregated Intersection into Very Slight Turn
         Given the node map
             """
             h
-            a
-
-
-                g
-                b
-                  f
-                  c
-
-
-
-                        e
-                        d
+            a.
+             .,
+              ..
+               .g
+                b.
+                | f
+                | c .
+                | |. .
+                | | . .
+                | |  . .
+                | |   . e
+                | |     d
                 j i
             """
 
@@ -621,17 +622,17 @@ Feature: Collapse
             | gbj   | secondary | out  | yes    |
 
         When I route I should get
-            | waypoints | route        | turns                           |
-            | i,h       | in,road,road | depart,turn slight left,arrive  |
-            | a,d       | road,road    | depart,arrive                   |
-            | a,j       | road,out,out | depart,turn slight right,arrive |
+            | waypoints | route        | turns                           | locations |
+            | i,h       | in,road,road | depart,turn slight left,arrive  | i,f,h     |
+            | a,d       | road,road    | depart,arrive                   | a,d       |
+            | a,j       | road,out,out | depart,turn slight right,arrive | a,b,j     |
 
     Scenario: Don't collapse everything to u-turn / too wide
         Given the node map
             """
-            a   b   e
-
-            d   c   f
+            a---b---e
+                |
+            d---c---f
             """
 
         And the ways
@@ -641,18 +642,18 @@ Feature: Collapse
             | cf    | secondary | bottom |
 
         When I route I should get
-            | waypoints | turns                                   | route               |
-            | a,d       | depart,continue right,turn right,arrive | road,road,road,road |
-            | d,a       | depart,continue left,turn left,arrive   | road,road,road,road |
+            | waypoints | turns                                   | route               | locations |
+            | a,d       | depart,continue right,turn right,arrive | road,road,road,road | a,b,c,d   |
+            | d,a       | depart,continue left,turn left,arrive   | road,road,road,road | d,c,b,a   |
 
     Scenario: Forking before a turn
         Given the node map
             """
                   g
-
-                  c
-            a   b d e
-
+                  |
+                 .c
+            a---b-d-e
+                  |
                   f
             """
 
@@ -672,18 +673,18 @@ Feature: Collapse
             | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-          | waypoints | route            | turns                   |
-          | a,g       | road,cross,cross | depart,turn left,arrive |
-          | a,e       | road,road        | depart,arrive           |
+          | waypoints | route            | turns                   | locations |
+          | a,g       | road,cross,cross | depart,turn left,arrive | a,b,g     |
+          | a,e       | road,road        | depart,arrive           | a,e       |
 
     Scenario: Forking before a turn (narrow)
         Given the node map
             """
                   g
-
-                  c
-            a b   d e
-
+                  |
+                ..c
+            a-b---d-e
+                  |
                   f
             """
 
@@ -703,9 +704,9 @@ Feature: Collapse
             | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-            | waypoints | route            | turns                   |
-            | a,g       | road,cross,cross | depart,turn left,arrive |
-            | a,e       | road,road        | depart,arrive           |
+            | waypoints | route            | turns                   | locations |
+            | a,g       | road,cross,cross | depart,turn left,arrive | a,b,g     |
+            | a,e       | road,road        | depart,arrive           | a,e       |
 
     Scenario: Forking before a turn (forky)
         Given the node map
@@ -737,10 +738,10 @@ Feature: Collapse
             | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-            | waypoints | route                 | turns                                      |
-            | a,g       | road,cross,cross      | depart,fork left,arrive                    |
-            | a,e       | road,road,road        | depart,fork slight right,arrive            |
-            | a,f       | road,road,cross,cross | depart,fork slight right,turn right,arrive |
+            | waypoints | route                 | turns                                      | locations |
+            | a,g       | road,cross,cross      | depart,fork left,arrive                    | a,b,g     |
+            | a,e       | road,road,road        | depart,fork slight right,arrive            | a,b,e     |
+            | a,f       | road,road,cross,cross | depart,fork slight right,turn right,arrive | a,b,d,f   |
 
     Scenario: On-Off on Highway
         Given the node map
@@ -757,11 +758,11 @@ Feature: Collapse
             | ce    | off  | motorway_link | yes    |
 
         When I route I should get
-            | waypoints | route          | turns                                           |
-            | a,d       | Hwy,Hwy        | depart,arrive                                   |
-            | f,d       | on,Hwy,Hwy     | depart,merge slight right,arrive                |
-            | f,e       | on,Hwy,off,off | depart,merge slight right,off ramp right,arrive |
-            | a,e       | Hwy,off,off    | depart,off ramp right,arrive                    |
+            | waypoints | route          | turns                                           | locations |
+            | a,d       | Hwy,Hwy        | depart,arrive                                   | a,d       |
+            | f,d       | on,Hwy,Hwy     | depart,merge slight right,arrive                | f,b,d     |
+            | f,e       | on,Hwy,off,off | depart,merge slight right,off ramp right,arrive | f,b,c,e   |
+            | a,e       | Hwy,off,off    | depart,off ramp right,arrive                    | a,c,e     |
 
     @negative @straight
     Scenario: Don't collapse going straight if actual turn
@@ -808,8 +809,8 @@ Feature: Collapse
             | ge    | primary | second | no     |
 
         When I route I should get
-            | waypoints | route               | turns                          |
-            | d,c       | first,first,first   | depart,continue uturn,arrive   |
+            | waypoints | route               | turns                          | locations |
+            | d,c       | first,first,first   | depart,continue uturn,arrive   | d,e,c     |
 
     Scenario: Entering a segregated road slight turn
         Given the node map
@@ -830,8 +831,8 @@ Feature: Collapse
             | ge    | primary | second | no     |
 
         When I route I should get
-            | waypoints | route               | turns                          |
-            | d,c       | first,first,first   | depart,continue uturn,arrive   |
+            | waypoints | route               | turns                          | locations |
+            | d,c       | first,first,first   | depart,continue uturn,arrive   | d,e,c     |
 
     Scenario: Do not collapse UseLane step when lanes change
         Given the node map
@@ -855,8 +856,8 @@ Feature: Collapse
             | di    |                                        | off  |
 
        When I route I should get
-            | waypoints | route          | turns                           |
-            | a,e       | main,main,main | depart,use lane straight,arrive |
+            | waypoints | route          | turns                           | locations |
+            | a,e       | main,main,main | depart,use lane straight,arrive | a,b,e     |
 
     Scenario: But _do_ collapse UseLane step when lanes stay the same
         Given the node map
@@ -912,10 +913,10 @@ Feature: Collapse
         Given the node map
             """
                         i
-            j e         d c h
-
-
-            k g         a b f
+            j e ~ ~ ~ ~ d c h
+                          |
+                          |
+            k g ~ ~ ~ ~ a b f
             """
 
         And the ways
@@ -930,8 +931,8 @@ Feature: Collapse
             | ej    | primary |       | off   | yes    |
 
         When I route I should get
-            | waypoints | route                            | turns                                                                                                        |
-            | k,j       | on,ferry,road,road,ferry,off,off | depart,notification straight,notification straight,continue uturn,turn straight,notification straight,arrive |
+            | waypoints | route                            | turns                                                                                                        | locations       |
+            | k,j       | on,ferry,road,road,ferry,off,off | depart,notification straight,notification straight,continue uturn,turn straight,notification straight,arrive | k,g,a,b,c,d,e,j |
 
     # http://www.openstreetmap.org/#map=19/37.78090/-122.41251
     Scenario: U-Turn onto unnamed-road
@@ -954,8 +955,8 @@ Feature: Collapse
             | ef    | secondary |                | down  | yes    |
 
         When I route I should get
-            | waypoints | route     | turns                                     |
-            | a,1       | up,turn,, | depart,turn right,turn sharp right,arrive |
+            | waypoints | route     | turns                                     | locations |
+            | a,1       | up,turn,, | depart,turn right,turn sharp right,arrive | a,b,e,f,_ |
 
     #http://www.openstreetmap.org/#map=19/52.48778/13.30024
     Scenario: Hohenzollerdammbrücke

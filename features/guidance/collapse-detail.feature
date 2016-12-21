@@ -9,10 +9,10 @@ Feature: Collapse
     Scenario: Collapse U-Turn Triangle Intersection
         Given the node map
             """
-            g   f   e   d
-
-
-            a     b     c
+            g---f---e---d
+                \   /
+                 \ /
+            a-----b-----c
             """
 
         And the ways
@@ -23,19 +23,19 @@ Feature: Collapse
             | be    | primary_link |      | yes    |
 
        When I route I should get
-            | waypoints | route          | turns                        |
-            | a,g       | road,road,road | depart,continue uturn,arrive |
-            | d,c       | road,road,road | depart,continue uturn,arrive |
+            | waypoints | route          | turns                        | locations |
+            | a,g       | road,road,road | depart,continue uturn,arrive | a,b,g     |
+            | d,c       | road,road,road | depart,continue uturn,arrive | d,f,c     |
 
     @reverse @traffic-signals
     Scenario: Collapse U-Turn Triangle Intersection
         Given the node map
             """
-            g   f   j   e   d
-
+            g---f---j---e---d
+                 \     /
                   h   i
-
-            a       b       c
+                   \ /
+            a-------b-------c
             """
 
         And the ways
@@ -52,9 +52,9 @@ Feature: Collapse
             | i    | traffic_signals |
 
        When I route I should get
-            | waypoints | route          | turns                        |
-            | a,g       | road,road,road | depart,continue uturn,arrive |
-            | d,c       | road,road,road | depart,continue uturn,arrive |
+            | waypoints | route          | turns                        | locations |
+            | a,g       | road,road,road | depart,continue uturn,arrive | a,b,g     |
+            | d,c       | road,road,road | depart,continue uturn,arrive | d,f,b     |
 
     Scenario: Forking before a turn (forky)
         Given the node map
@@ -85,8 +85,8 @@ Feature: Collapse
             | restriction | bc       | dc     | c        | no_right_turn |
 
         When I route I should get
-            | waypoints | route                 | turns                                          |
-            | a,g       | road,cross,cross      | depart,turn left,arrive                        |
-            | a,e       | road,road,road        | depart,continue right,arrive                   |
+            | waypoints | route                 | turns                                          | locations |
+            | a,g       | road,cross,cross      | depart,turn left,arrive                        | a,b,g     |
+            | a,e       | road,road,road        | depart,continue right,arrive                   | a,b,e     |
             # We should discuss whether the next item should be collapsed to depart,turn right,arrive.
-            | a,f       | road,road,cross,cross | depart,continue slight right,turn right,arrive |
+            | a,f       | road,road,cross,cross | depart,continue slight right,turn right,arrive | a,b,d,f   |
