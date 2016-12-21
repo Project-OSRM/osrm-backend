@@ -22,11 +22,6 @@ namespace engine
 // This class monitors the shared memory region that contains the pointers to
 // the data and layout regions that should be used. This region is updated
 // once a new dataset arrives.
-//
-// TODO: This also needs a shared memory reader lock with other clients and
-// possibly osrm-datastore since updating the CURRENT_REGIONS data is not atomic.
-// Currently we enfore this by waiting that all queries have finished before
-// osrm-datastore writes to this section.
 class DataWatchdog
 {
   public:
@@ -57,7 +52,9 @@ class DataWatchdog
         const auto shared_timestamp =
             static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
 
-        const auto get_locked_facade = [this, shared_timestamp]() {
+
+        const auto get_locked_facade = [this, shared_timestamp](
+            const std::shared_ptr<datafacade::SharedMemoryDataFacade> &facade) {
             if (current_timestamp.region == storage::REGION_1)
             {
                 return std::make_pair(RegionsLock(shared_barriers->region_1_mutex), facade);
@@ -76,8 +73,11 @@ class DataWatchdog
 
             if (shared_timestamp->timestamp == current_timestamp.timestamp)
             {
-                BOOST_ASSERT(shared_timestamp->region == current_timestamp.region);
-                return get_locked_facade();
+                if (auto facade = cached_facade.lock())
+                {
+                    BOOST_ASSERT(shared_timestamp->region == current_timestamp.region);
+                    return get_locked_facade(facade);
+                }
             }
         }
 
@@ -89,20 +89,25 @@ class DataWatchdog
         // in that case we don't modify anything
         if (shared_timestamp->timestamp == current_timestamp.timestamp)
         {
-            BOOST_ASSERT(shared_timestamp->region == current_timestamp.region);
-
-            return get_locked_facade();
+            if (auto facade = cached_facade.lock())
+            {
+                BOOST_ASSERT(shared_timestamp->region == current_timestamp.region);
+                return get_locked_facade(facade);
+            }
         }
 
         // this thread has won and can update the data
         boost::upgrade_to_unique_lock<boost::upgrade_mutex> unique_facade_lock(facade_lock);
 
         current_timestamp = *shared_timestamp;
-        facade = std::make_shared<datafacade::SharedMemoryDataFacade>(shared_barriers,
-                                                                      current_timestamp.region,
-                                                                      current_timestamp.timestamp);
 
-        return get_locked_facade();
+        auto new_facade =
+            std::make_shared<datafacade::SharedMemoryDataFacade>(shared_barriers,
+                                                                 current_timestamp.region,
+                                                                 current_timestamp.timestamp);
+        cached_facade = new_facade;
+
+        return get_locked_facade(new_facade);
     }
 
   private:
@@ -114,7 +119,7 @@ class DataWatchdog
     std::unique_ptr<storage::SharedMemory> shared_regions;
 
     mutable boost::shared_mutex facade_mutex;
-    std::shared_ptr<datafacade::SharedMemoryDataFacade> facade;
+    std::weak_ptr<datafacade::SharedMemoryDataFacade> cached_facade;
     storage::SharedDataTimestamp current_timestamp;
 };
 }
