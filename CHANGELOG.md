@@ -1,3 +1,8 @@
+# 5.5.2
+  - Changes from 5.5.1
+    - Bugfixes
+      - Fix #3475 removed an invalid `exit` field from the `arrive` maneuver
+
 # 5.5.1
   - Changes from 5.5.0
     - API:

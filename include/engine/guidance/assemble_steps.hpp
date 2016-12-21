@@ -259,6 +259,8 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     BOOST_ASSERT(steps.back().intersections.front().lanes.first_lane_from_the_right ==
                  INVALID_LANEID);
     BOOST_ASSERT(steps.back().intersections.front().lane_description.empty());
+    // depart and arrive need to be trivial
+    BOOST_ASSERT(steps.front().maneuver.exit == 0 && steps.back().maneuver.exit == 0);
     return steps;
 }
 

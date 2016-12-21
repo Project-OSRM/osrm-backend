@@ -147,10 +147,9 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
          --propagation_index)
     {
         auto &propagation_step = steps[propagation_index];
+        propagation_step.maneuver.exit = 0;
         if (entersRoundabout(propagation_step.maneuver.instruction))
         {
-            propagation_step.maneuver.exit = 0;
-
             // remember the current name as rotary name in tha case we end in a rotary
             if (propagation_step.maneuver.instruction.type == TurnType::EnterRotary ||
                 propagation_step.maneuver.instruction.type == TurnType::EnterRotaryAtExit)
@@ -158,12 +157,13 @@ void fixFinalRoundabout(std::vector<RouteStep> &steps)
                 propagation_step.rotary_name = propagation_step.name;
                 propagation_step.rotary_pronunciation = propagation_step.pronunciation;
             }
-
             else if (propagation_step.maneuver.instruction.type ==
                          TurnType::EnterRoundaboutIntersection ||
                      propagation_step.maneuver.instruction.type ==
                          TurnType::EnterRoundaboutIntersectionAtExit)
+            {
                 propagation_step.maneuver.instruction.type = TurnType::EnterRoundabout;
+            }
 
             return;
         }
