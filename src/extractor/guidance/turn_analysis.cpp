@@ -1,6 +1,6 @@
+#include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/road_classification.hpp"
-#include "extractor/guidance/turn_analysis.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -111,7 +111,10 @@ Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersecti
                                             {TurnType::Invalid, DirectionModifier::UTurn},
                                             INVALID_LANE_DATAID);
                    });
-    // Suppress turns on ways between mode types that do not need guidance
+
+    // Suppress turns on ways between mode types that do not need guidance, think ferry routes.
+    // This handler has to come first and when it triggers we're done with the intersection: there's
+    // nothing left to be done once we suppressed instructions on such routes. Exit early.
     if (suppress_mode_handler.canProcess(
             node_prior_to_intersection, entering_via_edge, intersection))
     {
