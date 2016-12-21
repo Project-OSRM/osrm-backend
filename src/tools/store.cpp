@@ -1,3 +1,4 @@
+#include "storage/shared_barriers.hpp"
 #include "storage/storage.hpp"
 #include "util/exception.hpp"
 #include "util/log.hpp"
@@ -6,6 +7,9 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+
+#include <csignal>
+#include <cstdlib>
 
 using namespace osrm;
 
@@ -87,8 +91,20 @@ bool generateDataStoreOptions(const int argc,
     return true;
 }
 
+[[ noreturn ]] void CleanupSharedBarriers(int signum)
+{ // Here the lock state of named mutexes is unknown, make a hard cleanup
+    osrm::storage::SharedBarriers::resetCurrentRegions();
+    std::_Exit(128 + signum);
+}
+
 int main(const int argc, const char *argv[]) try
 {
+    int signals[] = {SIGTERM, SIGSEGV, SIGINT, SIGILL, SIGABRT, SIGFPE};
+    for (auto sig : signals)
+    {
+        std::signal(sig, CleanupSharedBarriers);
+    }
+
     util::LogPolicy::GetInstance().Unmute();
 
     boost::filesystem::path base_path;
