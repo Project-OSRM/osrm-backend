@@ -1,3 +1,7 @@
+# 5.5.2
+  - Changes from 5.5.1
+    - Revert smarter map-matching search radius.  The increased radius causes performance degredation when map-matching against non-car road networks with more edges.
+
 # 5.5.1
   - Changes from 5.5.0
     - Bugfixes
