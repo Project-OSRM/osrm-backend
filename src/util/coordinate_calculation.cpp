@@ -21,10 +21,15 @@ namespace coordinate_calculation
 // Does not project the coordinates!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs)
 {
-    const std::uint64_t dx = static_cast<std::int32_t>(lhs.lon - rhs.lon);
-    const std::uint64_t dy = static_cast<std::int32_t>(lhs.lat - rhs.lat);
+    std::int64_t d_lon = static_cast<std::int32_t>(lhs.lon - rhs.lon);
+    std::int64_t d_lat = static_cast<std::int32_t>(lhs.lat - rhs.lat);
 
-    return dx * dx + dy * dy;
+    std::int64_t sq_lon = d_lon * d_lon;
+    std::int64_t sq_lat = d_lat * d_lat;
+
+    std::uint64_t result = static_cast<std::uint64_t>(sq_lon + sq_lat);
+
+    return result;
 }
 
 double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)

@@ -311,4 +311,18 @@ BOOST_AUTO_TEST_CASE(circleCenter)
     BOOST_CHECK(!result);
 }
 
+// For overflow issue #3483, introduced in 68ee4eab61548. Run with -fsanitize=integer.
+BOOST_AUTO_TEST_CASE(squaredEuclideanDistance)
+{
+    // Overflow happens when left hand side values are smaller than right hand side values,
+    // then `lhs - rhs` will be negative but stored in a uint64_t (wraps around).
+
+    Coordinate lhs(FloatLongitude{-180}, FloatLatitude{-90});
+    Coordinate rhs(FloatLongitude{180}, FloatLatitude{90});
+
+    const auto result = coordinate_calculation::squaredEuclideanDistance(lhs, rhs);
+
+    BOOST_CHECK_EQUAL(result, 162000000000000000ull);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
