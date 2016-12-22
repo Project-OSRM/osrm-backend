@@ -99,7 +99,23 @@ class DataWatchdog
         // this thread has won and can update the data
         boost::upgrade_to_unique_lock<boost::upgrade_mutex> unique_facade_lock(facade_lock);
 
-        current_timestamp = *shared_timestamp;
+        // if two threads try to enter this critical section one will loose
+        // and will find an up-to-date instance of the shared data facade
+        if (shared_timestamp->timestamp == current_timestamp.timestamp)
+        {
+            // if the thread that updated the facade finishes the query before
+            // we can aquire our handle here, we need to regenerate
+            if (auto facade = cached_facade.lock())
+            {
+                BOOST_ASSERT(shared_timestamp->region == current_timestamp.region);
+
+                return get_locked_facade(facade);
+            }
+        }
+        else
+        {
+            current_timestamp = *shared_timestamp;
+        }
 
         auto new_facade =
             std::make_shared<datafacade::SharedMemoryDataFacade>(shared_barriers,
