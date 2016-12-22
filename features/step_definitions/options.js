@@ -70,8 +70,9 @@ module.exports = function () {
         assert.ok(this.stdout.indexOf(str) > -1);
     });
 
-    this.Then(/^stderr should contain "(.*?)"$/, (str) => {
-        assert.ok(this.stderr.indexOf(str) > -1);
+    this.Then(/^stderr should( not)? contain "(.*?)"$/, (not, str) => {
+        const contains = this.stderr.indexOf(str) > -1;
+        assert.ok(typeof not === 'undefined' ? contains : !contains);
     });
 
     this.Then(/^stdout should contain \/(.*)\/$/, (regexStr) => {
