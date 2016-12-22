@@ -32,15 +32,15 @@ class DataWatchdog
   public:
     DataWatchdog()
         : shared_barriers{std::make_shared<storage::SharedBarriers>()},
-          shared_regions(storage::makeSharedMemory(storage::CURRENT_REGIONS)),
-          current_timestamp{storage::LAYOUT_NONE, storage::DATA_NONE, 0}
+          shared_regions(storage::makeSharedMemory(storage::CURRENT_REGION)),
+          current_timestamp{storage::REGION_NONE, 0}
     {
     }
 
     // Tries to connect to the shared memory containing the regions table
     static bool TryConnect()
     {
-        return storage::SharedMemory::RegionExists(storage::CURRENT_REGIONS);
+        return storage::SharedMemory::RegionExists(storage::CURRENT_REGION);
     }
 
     using RegionsLock =
@@ -52,22 +52,20 @@ class DataWatchdog
     LockAndFacade GetDataFacade()
     {
         const boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex> lock(
-            shared_barriers->current_regions_mutex);
+            shared_barriers->current_region_mutex);
 
         const auto shared_timestamp =
             static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
 
         const auto get_locked_facade = [this, shared_timestamp]() {
-            if (current_timestamp.data == storage::DATA_1)
+            if (current_timestamp.region == storage::REGION_1)
             {
-                BOOST_ASSERT(current_timestamp.layout == storage::LAYOUT_1);
-                return std::make_pair(RegionsLock(shared_barriers->regions_1_mutex), facade);
+                return std::make_pair(RegionsLock(shared_barriers->region_1_mutex), facade);
             }
             else
             {
-                BOOST_ASSERT(current_timestamp.layout == storage::LAYOUT_2);
-                BOOST_ASSERT(current_timestamp.data == storage::DATA_2);
-                return std::make_pair(RegionsLock(shared_barriers->regions_2_mutex), facade);
+                BOOST_ASSERT(current_timestamp.region == storage::REGION_2);
+                return std::make_pair(RegionsLock(shared_barriers->region_2_mutex), facade);
             }
         };
 
@@ -78,8 +76,7 @@ class DataWatchdog
 
             if (shared_timestamp->timestamp == current_timestamp.timestamp)
             {
-                BOOST_ASSERT(shared_timestamp->layout == current_timestamp.layout);
-                BOOST_ASSERT(shared_timestamp->data == current_timestamp.data);
+                BOOST_ASSERT(shared_timestamp->region == current_timestamp.region);
                 return get_locked_facade();
             }
         }
@@ -89,11 +86,10 @@ class DataWatchdog
         boost::upgrade_lock<boost::shared_mutex> facade_lock(facade_mutex);
 
         // we might get overtaken before we actually do the writing
-        // in that case we don't modify anthing
+        // in that case we don't modify anything
         if (shared_timestamp->timestamp == current_timestamp.timestamp)
         {
-            BOOST_ASSERT(shared_timestamp->layout == current_timestamp.layout);
-            BOOST_ASSERT(shared_timestamp->data == current_timestamp.data);
+            BOOST_ASSERT(shared_timestamp->region == current_timestamp.region);
 
             return get_locked_facade();
         }
@@ -103,8 +99,7 @@ class DataWatchdog
 
         current_timestamp = *shared_timestamp;
         facade = std::make_shared<datafacade::SharedMemoryDataFacade>(shared_barriers,
-                                                                      current_timestamp.layout,
-                                                                      current_timestamp.data,
+                                                                      current_timestamp.region,
                                                                       current_timestamp.timestamp);
 
         return get_locked_facade();

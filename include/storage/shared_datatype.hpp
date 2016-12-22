@@ -192,19 +192,15 @@ struct DataLayout
 
 enum SharedDataType
 {
-    CURRENT_REGIONS,
-    LAYOUT_1,
-    DATA_1,
-    LAYOUT_2,
-    DATA_2,
-    LAYOUT_NONE,
-    DATA_NONE
+    CURRENT_REGION,
+    REGION_1,
+    REGION_2,
+    REGION_NONE
 };
 
 struct SharedDataTimestamp
 {
-    SharedDataType layout;
-    SharedDataType data;
+    SharedDataType region;
     unsigned timestamp;
 };
 
@@ -212,20 +208,14 @@ inline std::string regionToString(const SharedDataType region)
 {
     switch (region)
     {
-    case CURRENT_REGIONS:
-        return "CURRENT_REGIONS";
-    case LAYOUT_1:
-        return "LAYOUT_1";
-    case DATA_1:
-        return "DATA_1";
-    case LAYOUT_2:
-        return "LAYOUT_2";
-    case DATA_2:
-        return "DATA_2";
-    case LAYOUT_NONE:
-        return "LAYOUT_NONE";
-    case DATA_NONE:
-        return "DATA_NONE";
+    case CURRENT_REGION:
+        return "CURRENT_REGION";
+    case REGION_1:
+        return "REGION_1";
+    case REGION_2:
+        return "REGION_2";
+    case REGION_NONE:
+        return "REGION_NONE";
     default:
         return "INVALID_REGION";
     }

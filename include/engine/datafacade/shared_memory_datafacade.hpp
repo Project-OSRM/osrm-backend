@@ -24,10 +24,8 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
 {
 
   protected:
-    std::unique_ptr<storage::SharedMemory> m_layout_memory;
     std::unique_ptr<storage::SharedMemory> m_large_memory;
     std::shared_ptr<storage::SharedBarriers> shared_barriers;
-    storage::SharedDataType layout_region;
     storage::SharedDataType data_region;
     unsigned shared_timestamp;
 
@@ -40,12 +38,12 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
     {
         // Now check if this is still the newest dataset
         boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
-            current_regions_lock(shared_barriers->current_regions_mutex,
+            current_regions_lock(shared_barriers->current_region_mutex,
                                  boost::interprocess::defer_lock);
 
         boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> exclusive_lock(
-            data_region == storage::DATA_1 ? shared_barriers->regions_1_mutex
-                                           : shared_barriers->regions_2_mutex,
+            data_region == storage::REGION_1 ? shared_barriers->region_1_mutex
+                                             : shared_barriers->region_2_mutex,
             boost::interprocess::defer_lock);
 
         // if this returns false this is still in use
@@ -53,45 +51,36 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
         {
             if (storage::SharedMemory::RegionExists(data_region))
             {
-                BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
-
-                auto shared_regions = storage::makeSharedMemory(storage::CURRENT_REGIONS);
+                auto shared_region = storage::makeSharedMemory(storage::CURRENT_REGION);
                 const auto current_timestamp =
-                    static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
+                    static_cast<const storage::SharedDataTimestamp *>(shared_region->Ptr());
 
                 // check if the memory region referenced by this facade needs cleanup
-                if (current_timestamp->data == data_region)
+                if (current_timestamp->region == data_region)
                 {
-                    BOOST_ASSERT(current_timestamp->layout == layout_region);
                     util::Log(logDEBUG) << "Retaining data with shared timestamp "
                                         << shared_timestamp;
                 }
                 else
                 {
                     storage::SharedMemory::Remove(data_region);
-                    storage::SharedMemory::Remove(layout_region);
                 }
             }
         }
     }
 
     SharedMemoryDataFacade(const std::shared_ptr<storage::SharedBarriers> &shared_barriers_,
-                           storage::SharedDataType layout_region_,
                            storage::SharedDataType data_region_,
                            unsigned shared_timestamp_)
-        : shared_barriers(shared_barriers_), layout_region(layout_region_),
-          data_region(data_region_), shared_timestamp(shared_timestamp_)
+        : shared_barriers(shared_barriers_), data_region(data_region_), shared_timestamp(shared_timestamp_)
     {
         util::Log(logDEBUG) << "Loading new data with shared timestamp " << shared_timestamp;
-
-        BOOST_ASSERT(storage::SharedMemory::RegionExists(layout_region));
-        m_layout_memory = storage::makeSharedMemory(layout_region);
 
         BOOST_ASSERT(storage::SharedMemory::RegionExists(data_region));
         m_large_memory = storage::makeSharedMemory(data_region);
 
-        InitializeInternalPointers(*reinterpret_cast<storage::DataLayout *>(m_layout_memory->Ptr()),
-                                   reinterpret_cast<char *>(m_large_memory->Ptr()));
+        InitializeInternalPointers(*reinterpret_cast<storage::DataLayout *>(m_large_memory->Ptr()),
+                                   reinterpret_cast<char *>(m_large_memory->Ptr()) + sizeof(storage::DataLayout));
     }
 };
 }
