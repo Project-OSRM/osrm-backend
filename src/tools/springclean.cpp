@@ -19,20 +19,14 @@ void deleteRegion(const SharedDataType region)
         const std::string name = [&] {
             switch (region)
             {
-            case CURRENT_REGIONS:
+            case CURRENT_REGION:
                 return "CURRENT_REGIONS";
-            case LAYOUT_1:
-                return "LAYOUT_1";
-            case DATA_1:
-                return "DATA_1";
-            case LAYOUT_2:
-                return "LAYOUT_2";
-            case DATA_2:
-                return "DATA_2";
-            case LAYOUT_NONE:
-                return "LAYOUT_NONE";
-            default: // DATA_NONE:
-                return "DATA_NONE";
+            case REGION_1:
+                return "REGION_1";
+            case REGION_2:
+                return "REGION_2";
+            default: // REGION_NONE:
+                return "REGION_NONE";
             }
         }();
 
@@ -44,11 +38,9 @@ void deleteRegion(const SharedDataType region)
 void springclean()
 {
     util::Log() << "spring-cleaning all shared memory regions";
-    deleteRegion(DATA_1);
-    deleteRegion(LAYOUT_1);
-    deleteRegion(DATA_2);
-    deleteRegion(LAYOUT_2);
-    deleteRegion(CURRENT_REGIONS);
+    deleteRegion(REGION_1);
+    deleteRegion(REGION_2);
+    deleteRegion(CURRENT_REGION);
 }
 }
 }

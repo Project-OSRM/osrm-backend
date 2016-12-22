@@ -58,38 +58,31 @@ Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
 struct RegionsLayout
 {
-    SharedDataType current_layout_region;
     SharedDataType current_data_region;
-    boost::interprocess::named_sharable_mutex &current_regions_mutex;
-    SharedDataType old_layout_region;
+    boost::interprocess::named_sharable_mutex &current_region_mutex;
     SharedDataType old_data_region;
-    boost::interprocess::named_sharable_mutex &old_regions_mutex;
+    boost::interprocess::named_sharable_mutex &old_region_mutex;
 };
 
 RegionsLayout getRegionsLayout(SharedBarriers &barriers)
 {
-    if (SharedMemory::RegionExists(CURRENT_REGIONS))
+    if (SharedMemory::RegionExists(CURRENT_REGION))
     {
-        auto shared_regions = makeSharedMemory(CURRENT_REGIONS);
+        auto shared_region = makeSharedMemory(CURRENT_REGION);
         const auto shared_timestamp =
-            static_cast<const SharedDataTimestamp *>(shared_regions->Ptr());
-        if (shared_timestamp->data == DATA_1)
+            static_cast<const SharedDataTimestamp *>(shared_region->Ptr());
+        if (shared_timestamp->region == REGION_1)
         {
-            BOOST_ASSERT(shared_timestamp->layout == LAYOUT_1);
-            return RegionsLayout{LAYOUT_1,
-                                 DATA_1,
-                                 barriers.regions_1_mutex,
-                                 LAYOUT_2,
-                                 DATA_2,
-                                 barriers.regions_2_mutex};
+            return RegionsLayout{REGION_1,
+                                 barriers.region_1_mutex,
+                                 REGION_2,
+                                 barriers.region_2_mutex};
         }
 
-        BOOST_ASSERT(shared_timestamp->data == DATA_2);
-        BOOST_ASSERT(shared_timestamp->layout == LAYOUT_2);
+        BOOST_ASSERT(shared_timestamp->region == REGION_2);
     }
 
-    return RegionsLayout{
-        LAYOUT_2, DATA_2, barriers.regions_2_mutex, LAYOUT_1, DATA_1, barriers.regions_1_mutex};
+    return RegionsLayout{REGION_2, barriers.region_2_mutex, REGION_1, barriers.region_1_mutex};
 }
 
 Storage::ReturnCode Storage::Run(int max_wait)
@@ -101,10 +94,10 @@ Storage::ReturnCode Storage::Run(int max_wait)
     SharedBarriers barriers;
 
     boost::interprocess::upgradable_lock<boost::interprocess::named_upgradable_mutex>
-        current_regions_lock(barriers.current_regions_mutex, boost::interprocess::defer_lock);
+        current_region_lock(barriers.current_region_mutex, boost::interprocess::defer_lock);
     try
     {
-        if (!current_regions_lock.try_lock())
+        if (!current_region_lock.try_lock())
         {
             util::Log(logWARNING) << "A data update is in progress";
             return ReturnCode::Error;
@@ -113,7 +106,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // hard unlock in case of any exception.
     catch (boost::interprocess::lock_exception &ex)
     {
-        barriers.current_regions_mutex.unlock_upgradable();
+        barriers.current_region_mutex.unlock_upgradable();
         // make sure we exit here because this is bad
         throw;
     }
@@ -128,7 +121,6 @@ Storage::ReturnCode Storage::Run(int max_wait)
 #endif
 
     auto regions_layout = getRegionsLayout(barriers);
-    const SharedDataType layout_region = regions_layout.old_layout_region;
     const SharedDataType data_region = regions_layout.old_data_region;
 
     if (max_wait > 0)
@@ -142,7 +134,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     }
 
     boost::interprocess::scoped_lock<boost::interprocess::named_sharable_mutex> regions_lock(
-        regions_layout.old_regions_mutex, boost::interprocess::defer_lock);
+        regions_layout.old_region_mutex, boost::interprocess::defer_lock);
 
     if (max_wait > 0)
     {
@@ -152,16 +144,14 @@ Storage::ReturnCode Storage::Run(int max_wait)
             util::Log(logWARNING) << "Queries did not finish in " << max_wait
                                   << " seconds. Claiming the lock by force.";
             // WARNING: if queries are still using the old dataset they might crash
-            if (regions_layout.old_layout_region == LAYOUT_1)
+            if (regions_layout.old_data_region == REGION_1)
             {
-                BOOST_ASSERT(regions_layout.old_data_region == DATA_1);
-                barriers.resetRegions1();
+                barriers.resetRegion1();
             }
             else
             {
-                BOOST_ASSERT(regions_layout.old_layout_region == LAYOUT_2);
-                BOOST_ASSERT(regions_layout.old_data_region == DATA_2);
-                barriers.resetRegions2();
+                BOOST_ASSERT(regions_layout.old_data_region == REGION_2);
+                barriers.resetRegion2();
             }
 
             return ReturnCode::Retry;
@@ -174,70 +164,64 @@ Storage::ReturnCode Storage::Run(int max_wait)
     util::Log() << "Ok.";
 
     // since we can't change the size of a shared memory regions we delete and reallocate
-    if (SharedMemory::RegionExists(layout_region) && !SharedMemory::Remove(layout_region))
-    {
-        throw util::exception("Could not remove shared memory region " +
-                              regionToString(layout_region) + SOURCE_REF);
-    }
     if (SharedMemory::RegionExists(data_region) && !SharedMemory::Remove(data_region))
     {
         throw util::exception("Could not remove shared memory region " +
                               regionToString(data_region) + SOURCE_REF);
     }
 
-    // Allocate a memory layout in shared memory
-    auto layout_memory = makeSharedMemory(layout_region, sizeof(DataLayout), true);
-    auto shared_layout_ptr = new (layout_memory->Ptr()) DataLayout();
+    // Populate a memory layout into stack memory
+    DataLayout layout;
+    PopulateLayout(layout);
 
-    PopulateLayout(*shared_layout_ptr);
+    // Allocate shared memory block
+    auto regions_size = sizeof(layout) + layout.GetSizeOfLayout();
+    util::Log() << "allocating shared memory of " << regions_size << " bytes";
+    auto shared_memory = makeSharedMemory(data_region, regions_size, true);
 
-    // allocate shared memory block
-    util::Log() << "allocating shared memory of " << shared_layout_ptr->GetSizeOfLayout()
-                << " bytes";
-    auto shared_memory = makeSharedMemory(data_region, shared_layout_ptr->GetSizeOfLayout(), true);
+    // Copy memory layout to shared memory and populate data
     char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
+    memcpy(shared_memory_ptr, &layout, sizeof(layout));
+    PopulateData(layout, shared_memory_ptr + sizeof(layout));
 
-    PopulateData(*shared_layout_ptr, shared_memory_ptr);
-
-    auto data_type_memory = makeSharedMemory(CURRENT_REGIONS, sizeof(SharedDataTimestamp), true);
+    auto data_type_memory = makeSharedMemory(CURRENT_REGION, sizeof(SharedDataTimestamp), true);
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
     {
 
         boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>
-            current_regions_exclusive_lock;
+            current_region_exclusive_lock;
 
         if (max_wait > 0)
         {
             util::Log() << "Waiting for " << max_wait << " seconds to write new dataset timestamp";
             auto end_time = boost::posix_time::microsec_clock::universal_time() +
                             boost::posix_time::seconds(max_wait);
-            current_regions_exclusive_lock =
+            current_region_exclusive_lock =
                 boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>(
-                    std::move(current_regions_lock), end_time);
+                    std::move(current_region_lock), end_time);
 
-            if (!current_regions_exclusive_lock.owns())
+            if (!current_region_exclusive_lock.owns())
             {
                 util::Log(logWARNING) << "Aquiring the lock timed out after " << max_wait
                                       << " seconds. Claiming the lock by force.";
-                current_regions_lock.unlock();
-                current_regions_lock.release();
-                storage::SharedBarriers::resetCurrentRegions();
+                current_region_lock.unlock();
+                current_region_lock.release();
+                storage::SharedBarriers::resetCurrentRegion();
                 return ReturnCode::Retry;
             }
         }
         else
         {
             util::Log() << "Waiting to write new dataset timestamp";
-            current_regions_exclusive_lock =
+            current_region_exclusive_lock =
                 boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>(
-                    std::move(current_regions_lock));
+                    std::move(current_region_lock));
         }
 
         util::Log() << "Ok.";
-        data_timestamp_ptr->layout = layout_region;
-        data_timestamp_ptr->data = data_region;
+        data_timestamp_ptr->region = data_region;
         data_timestamp_ptr->timestamp += 1;
     }
     util::Log() << "All data loaded.";

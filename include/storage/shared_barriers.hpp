@@ -13,22 +13,22 @@ struct SharedBarriers
 {
 
     SharedBarriers()
-        : current_regions_mutex(boost::interprocess::open_or_create, "current_regions"),
-          regions_1_mutex(boost::interprocess::open_or_create, "regions_1"),
-          regions_2_mutex(boost::interprocess::open_or_create, "regions_2")
+        : current_region_mutex(boost::interprocess::open_or_create, "current_region"),
+          region_1_mutex(boost::interprocess::open_or_create, "region_1"),
+          region_2_mutex(boost::interprocess::open_or_create, "region_2")
     {
     }
 
-    static void resetCurrentRegions()
+    static void resetCurrentRegion()
     {
-        boost::interprocess::named_sharable_mutex::remove("current_regions");
+        boost::interprocess::named_sharable_mutex::remove("current_region");
     }
-    static void resetRegions1() { boost::interprocess::named_sharable_mutex::remove("regions_1"); }
-    static void resetRegions2() { boost::interprocess::named_sharable_mutex::remove("regions_2"); }
+    static void resetRegion1() { boost::interprocess::named_sharable_mutex::remove("region_1"); }
+    static void resetRegion2() { boost::interprocess::named_sharable_mutex::remove("region_2"); }
 
-    boost::interprocess::named_upgradable_mutex current_regions_mutex;
-    boost::interprocess::named_sharable_mutex regions_1_mutex;
-    boost::interprocess::named_sharable_mutex regions_2_mutex;
+    boost::interprocess::named_upgradable_mutex current_region_mutex;
+    boost::interprocess::named_sharable_mutex region_1_mutex;
+    boost::interprocess::named_sharable_mutex region_2_mutex;
 };
 }
 }
