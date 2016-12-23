@@ -53,6 +53,10 @@ struct V8ScriptingContext final
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> &resulting_nodes,
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> &resulting_ways,
         tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> &resulting_restrictions);
+    void ProcessSegment(const osrm::util::Coordinate &source,
+                        const osrm::util::Coordinate &target,
+                        double distance,
+                        InternalExtractorEdge::WeightData &weight);
     int32_t GetTurnPenalty(const double angle);
 
     static void DurationIsValid(const v8::FunctionCallbackInfo<v8::Value>& info);
@@ -75,11 +79,14 @@ struct V8ScriptingContext final
     v8::Persistent<v8::Function> process_node;
     v8::Persistent<v8::Function> process_way;
     v8::Persistent<v8::Function> get_turn_penalty;
+    v8::Persistent<v8::Function> process_segment;
 
     v8::Persistent<v8::Function> osmium_node;
     v8::Persistent<v8::Function> result_node;
     v8::Persistent<v8::Function> osmium_way;
     v8::Persistent<v8::Function> result_way;
+    v8::Persistent<v8::Function> weight_data;
+    v8::Persistent<v8::Function> coordinate;
 
     v8::Local<v8::Function> WrapProfileProperties();
     v8::Local<v8::Function> WrapConsole();
@@ -87,6 +94,8 @@ struct V8ScriptingContext final
     v8::Local<v8::Function> WrapResultNode();
     v8::Local<v8::Function> WrapOsmiumWay();
     v8::Local<v8::Function> WrapResultWay();
+    v8::Local<v8::Function> WrapWeightData();
+    v8::Local<v8::Function> WrapCoordinate();
 
     bool has_turn_penalty_function;
     bool has_node_function;
@@ -184,6 +193,13 @@ V8ScriptingContext::V8ScriptingContext(const std::string &file_name)
             has_way_function = true;
         }
 
+        auto process_segment_local = env.get(context->Global(), "processSegment");
+        if (!process_segment_local.IsEmpty() && process_segment_local->IsFunction())
+        {
+            process_segment.Reset(isolate.get(), process_segment_local.As<v8::Function>());
+            has_segment_function = true;
+        }
+
         auto get_turn_penalty_local = env.get(context->Global(), "getTurnPenalty");
         if (!get_turn_penalty_local.IsEmpty() && get_turn_penalty_local->IsFunction())
         {
@@ -196,6 +212,8 @@ V8ScriptingContext::V8ScriptingContext(const std::string &file_name)
     result_node.Reset(isolate.get(), WrapResultNode());
     osmium_way.Reset(isolate.get(), WrapOsmiumWay());
     result_way.Reset(isolate.get(), WrapResultWay());
+    weight_data.Reset(isolate.get(), WrapWeightData());
+    coordinate.Reset(isolate.get(), WrapCoordinate());
 }
 
 template <typename I>
@@ -584,6 +602,41 @@ v8::Local<v8::Function> V8ScriptingContext::WrapResultWay()
     return obj.get();
 }
 
+v8::Local<v8::Function> V8ScriptingContext::WrapWeightData()
+{
+    util::V8Object obj(env, "WeightData");
+    using Class = util::V8Class<InternalExtractorEdge::WeightData>;
+
+    obj.property("speed",
+                 [](v8::Local<v8::String>, const v8::PropertyCallbackInfo<v8::Value> &info) {
+                     info.GetReturnValue().Set(Class::Unwrap(info).speed);
+                 },
+                 [](v8::Local<v8::String>,
+                    v8::Local<v8::Value> value,
+                    const v8::PropertyCallbackInfo<void> &info) {
+                     Class::Unwrap(info).speed = value->ToNumber()->Value();
+                 });
+
+    return obj.get();
+}
+
+v8::Local<v8::Function> V8ScriptingContext::WrapCoordinate()
+{
+    util::V8Object obj(env, "Coordinate");
+    using Class = util::V8Class<util::Coordinate>;
+
+    obj.property("lon",
+                 [](v8::Local<v8::String>, const v8::PropertyCallbackInfo<v8::Value> &info) {
+                     info.GetReturnValue().Set(static_cast<double>(util::toFloating(Class::Unwrap(info).lon)));
+                 });
+    obj.property("lat",
+                 [](v8::Local<v8::String>, const v8::PropertyCallbackInfo<v8::Value> &info) {
+                     info.GetReturnValue().Set(static_cast<double>(util::toFloating(Class::Unwrap(info).lat)));
+                 });
+
+    return obj.get();
+}
+
 std::vector<std::string> V8ScriptingContext::GetExceptions()
 {
     v8::HandleScope scope(isolate.get());
@@ -730,6 +783,32 @@ void V8ScriptingContext::ProcessElements(
     }
 }
 
+void V8ScriptingContext::ProcessSegment(const osrm::util::Coordinate &source,
+                                        const osrm::util::Coordinate &target,
+                                        double distance,
+                                        InternalExtractorEdge::WeightData &weight)
+{
+    v8::HandleScope scope(isolate.get());
+
+    if (has_segment_function)
+    {
+        v8::Local<v8::Function> weight_data_fn = weight_data.Get(isolate.get());
+        v8::Local<v8::Object> weight_data = weight_data_fn->NewInstance();
+        weight_data->SetInternalField(0, v8::External::New(isolate.get(), &weight));
+
+        v8::Local<v8::Function> coordinate_fn = coordinate.Get(isolate.get());
+        v8::Local<v8::Object> source_local = coordinate_fn->NewInstance();
+        v8::Local<v8::Object> target_local = coordinate_fn->NewInstance();
+        source_local->SetInternalField(0, v8::External::New(isolate.get(), &const_cast<osrm::util::Coordinate&>(source)));
+        target_local->SetInternalField(0, v8::External::New(isolate.get(), &const_cast<osrm::util::Coordinate&>(target)));
+
+        constexpr const int argc = 4;
+        v8::Local<v8::Value> argv[argc] = {source_local, target_local, v8::Uint32::New(isolate.get(), distance), weight_data};
+        v8::Local<v8::Function> process_segment_fn = process_segment.Get(isolate.get());
+        process_segment_fn->Call(context->Global(), argc, argv);
+    }
+}
+
 int32_t V8ScriptingContext::GetTurnPenalty(const double angle)
 {
     if (has_turn_penalty_function) {
@@ -839,10 +918,7 @@ void V8ScriptingEnvironment::ProcessSegment(const osrm::util::Coordinate &source
                                             double distance,
                                             InternalExtractorEdge::WeightData &weight)
 {
-    auto &context = GetV8Context();
-    if (context.has_segment_function)
-    {
-    }
+    GetV8Context().ProcessSegment(source, target, distance, weight);
 }
 }
 }
