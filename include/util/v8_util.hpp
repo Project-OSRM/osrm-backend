@@ -1,5 +1,6 @@
 #ifndef V8_UTIL_HPP
 #define V8_UTIL_HPP
+#ifdef ENABLE_V8
 
 #include <libplatform/libplatform.h>
 #include <v8.h>
@@ -182,4 +183,5 @@ template <typename T> struct V8Class
 }
 }
 
+#endif
 #endif // V8_UTIL_HPP
