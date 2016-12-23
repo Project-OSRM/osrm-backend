@@ -1,3 +1,4 @@
+#ifdef ENABLE_V8
 #include "extractor/scripting_environment_v8.hpp"
 
 #include "extractor/external_memory_node.hpp"
@@ -922,3 +923,5 @@ void V8ScriptingEnvironment::ProcessSegment(const osrm::util::Coordinate &source
 }
 }
 }
+
+#endif

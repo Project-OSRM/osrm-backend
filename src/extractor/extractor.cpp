@@ -7,6 +7,8 @@
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
+#include "extractor/scripting_environment_lua.hpp"
+#include "extractor/scripting_environment_v8.hpp"
 
 #include "extractor/raster_source.hpp"
 #include "storage/io.hpp"
@@ -109,10 +111,27 @@ transformTurnLaneMapIntoArrays(const guidance::LaneDescriptionMap &turn_lane_map
  * graph
  *
  */
-int Extractor::run(ScriptingEnvironment &scripting_environment)
+int Extractor::run(const char* argv0)
 {
     util::LogPolicy::GetInstance().Unmute();
     TIMER_START(extracting);
+
+    auto scripting_environment = [argv0](const boost::filesystem::path &profile) -> std::unique_ptr<ScriptingEnvironment> {
+        if (profile.extension() == ".js")
+        {
+#ifdef ENABLE_V8
+            return std::make_unique<V8ScriptingEnvironment>(argv0, profile.string().c_str());
+#else
+            (void)argv0;
+            throw util::exception("OSRM was compiled without javascript profile support." +
+                                  SOURCE_REF);
+#endif
+        }
+        else
+        {
+            return std::make_unique<Sol2ScriptingEnvironment>(profile.string().c_str());
+        }
+    }(config.profile_path);
 
     const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
     const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
@@ -145,7 +164,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         TIMER_START(parsing);
 
         // setup raster sources
-        scripting_environment.SetupSources();
+        scripting_environment->SetupSources();
 
         std::string generator = header.get("generator");
         if (generator.empty())
@@ -171,7 +190,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
         // setup restriction parser
-        const RestrictionParser restriction_parser(scripting_environment);
+        const RestrictionParser restriction_parser(*scripting_environment);
 
         while (const osmium::memory::Buffer buffer = reader.read())
         {
@@ -187,7 +206,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
             resulting_ways.clear();
             resulting_restrictions.clear();
 
-            scripting_environment.ProcessElements(osm_elements,
+            scripting_environment->ProcessElements(osm_elements,
                                                   restriction_parser,
                                                   resulting_nodes,
                                                   resulting_ways,
@@ -230,13 +249,13 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                   SOURCE_REF);
         }
 
-        extraction_containers.PrepareData(scripting_environment,
+        extraction_containers.PrepareData(*scripting_environment,
                                           config.output_file_name,
                                           config.restriction_file_name,
                                           config.names_file_name);
 
         WriteProfileProperties(config.profile_properties_output_path,
-                               scripting_environment.GetProfileProperties());
+                               scripting_environment->GetProfileProperties());
 
         TIMER_STOP(extracting);
         util::Log() << "extraction finished after " << TIMER_SEC(extracting) << "s";
@@ -256,7 +275,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         std::vector<EdgeWeight> edge_based_node_weights;
         std::vector<QueryNode> internal_to_external_node_map;
 
-        auto graph_size = BuildEdgeExpandedGraph(scripting_environment,
+        auto graph_size = BuildEdgeExpandedGraph(*scripting_environment,
                                                  internal_to_external_node_map,
                                                  edge_based_node_list,
                                                  node_is_startpoint,

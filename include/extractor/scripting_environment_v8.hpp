@@ -1,5 +1,6 @@
 #ifndef SCRIPTING_ENVIRONMENT_V8_HPP
 #define SCRIPTING_ENVIRONMENT_V8_HPP
+#ifdef ENABLE_V8
 
 #include "extractor/scripting_environment.hpp"
 
@@ -62,4 +63,5 @@ class V8ScriptingEnvironment final : public ScriptingEnvironment
 }
 }
 
+#endif
 #endif /* SCRIPTING_ENVIRONMENT_V8_HPP */

@@ -420,7 +420,8 @@ if(ENABLE_MASON)
 
   mason_use(v8 VERSION ${MASON_V8_VERSION})
   add_dependency_includes(${MASON_PACKAGE_v8_INCLUDE_DIRS})
-  set(V8_LIBRARIES ${MASON_PACKAGE_v8_STATIC_LIBS})
+  set(MAYBE_V8_LIBRARIES ${MASON_PACKAGE_v8_STATIC_LIBS})
+  add_definitions(-DENABLE_V8)
 
   if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
     message(FATAL_ERROR "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
@@ -466,8 +467,16 @@ else()
     set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
   endif()
 
-  find_package(V8 REQUIRED)
-  add_dependency_includes(${V8_INCLUDE_DIR})
+  set(MAYBE_V8_LIBRARIES "")
+  find_package(V8)
+  if (V8_FOUND)
+    message(STATUS "Using V8 ${V8_VERSION_STRNG}")
+    add_dependency_includes(${V8_INCLUDE_DIR})
+    set(MAYBE_V8_LIBRARIES "${V8_LIBRARIES}")
+    add_definitions(-DENABLE_V8)
+  else()
+    message(STATUS "V8 not found, disabling.")
+  endif()
 
   find_package(EXPAT REQUIRED)
   add_dependency_includes(${EXPAT_INCLUDE_DIRS})
@@ -588,7 +597,7 @@ set(EXTRACTOR_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}
     ${USED_LUA_LIBRARIES}
-    ${V8_LIBRARIES}
+    ${MAYBE_V8_LIBRARIES}
     ${MAYBE_DL_LIBRARY}
     ${OSMIUM_LIBRARIES}
     ${STXXL_LIBRARY}

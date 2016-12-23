@@ -1,7 +1,5 @@
 #include "extractor/extractor.hpp"
 #include "extractor/extractor_config.hpp"
-#include "extractor/scripting_environment_lua.hpp"
-#include "extractor/scripting_environment_v8.hpp"
 #include "util/log.hpp"
 #include "util/version.hpp"
 
@@ -159,19 +157,7 @@ int main(int argc, char *argv[]) try
     }
 
     // setup scripting environment
-    int exitcode = -1;
-    if (extractor_config.profile_path.extension() == ".js")
-    {
-         extractor::V8ScriptingEnvironment scripting_environment(
-            argv[0], extractor_config.profile_path.string().c_str());
-         exitcode = extractor::Extractor(extractor_config).run(scripting_environment);
-    }
-    else
-    {
-        extractor::Sol2ScriptingEnvironment scripting_environment(
-            extractor_config.profile_path.string().c_str());
-        exitcode = extractor::Extractor(extractor_config).run(scripting_environment);
-    }
+    int exitcode = extractor::Extractor(extractor_config).run(argv[0]);
 
     util::DumpMemoryStats();
 
