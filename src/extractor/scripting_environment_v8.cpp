@@ -59,6 +59,7 @@ struct V8ScriptingContext final
                         double distance,
                         InternalExtractorEdge::WeightData &weight);
     int32_t GetTurnPenalty(const double angle);
+    void SetupSources();
 
     static void DurationIsValid(const v8::FunctionCallbackInfo<v8::Value>& info);
     static void ParseDuration(const v8::FunctionCallbackInfo<v8::Value>& info);
@@ -80,6 +81,7 @@ struct V8ScriptingContext final
     v8::Persistent<v8::Function> process_node;
     v8::Persistent<v8::Function> process_way;
     v8::Persistent<v8::Function> get_turn_penalty;
+    v8::Persistent<v8::Function> setup_sources;
     v8::Persistent<v8::Function> process_segment;
 
     v8::Persistent<v8::Function> osmium_node;
@@ -99,6 +101,7 @@ struct V8ScriptingContext final
     v8::Local<v8::Function> WrapCoordinate();
 
     bool has_turn_penalty_function;
+    bool has_setup_sources_function;
     bool has_node_function;
     bool has_way_function;
     bool has_segment_function;
@@ -206,6 +209,13 @@ V8ScriptingContext::V8ScriptingContext(const std::string &file_name)
         {
             get_turn_penalty.Reset(isolate.get(), get_turn_penalty_local.As<v8::Function>());
             has_turn_penalty_function = true;
+        }
+
+        auto setup_sources_local = env.get(context->Global(), "setupSources");
+        if (!setup_sources_local.IsEmpty() && setup_sources_local->IsFunction())
+        {
+            setup_sources.Reset(isolate.get(), setup_sources_local.As<v8::Function>());
+            has_setup_sources_function = true;
         }
     }
 
@@ -827,6 +837,19 @@ int32_t V8ScriptingContext::GetTurnPenalty(const double angle)
     return 0;
 }
 
+void V8ScriptingContext::SetupSources()
+{
+    if (has_setup_sources_function) {
+        v8::HandleScope scope(env.isolate);
+
+        v8::Local<v8::Function> callback = setup_sources.Get(env.isolate);
+        if (!callback.IsEmpty())
+        {
+            callback->Call(context->Global(), 0, nullptr);
+        }
+    }
+}
+
 V8ScriptingContext::~V8ScriptingContext() {}
 
 V8ScriptingEnvironment::V8ScriptingEnvironment(const char *argv0, const std::string &file_name)
@@ -907,7 +930,7 @@ std::vector<std::string> V8ScriptingEnvironment::GetExceptions()
     return GetV8Context().GetExceptions();
 }
 
-void V8ScriptingEnvironment::SetupSources() { auto &context = GetV8Context(); }
+void V8ScriptingEnvironment::SetupSources() { GetV8Context().SetupSources(); }
 
 int32_t V8ScriptingEnvironment::GetTurnPenalty(const double angle)
 {
