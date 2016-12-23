@@ -1,7 +1,9 @@
-# 5.5.2
-  - Changes from 5.5.1
+# 5.6.0
+  - Changes from 5.5
     - Bugfixes
       - Fix #3475 removed an invalid `exit` field from the `arrive` maneuver
+    - Guidance
+      - No longer emitting turns on ferries, if a ferry should use multiple docking locations
 
 # 5.5.1
   - Changes from 5.5.0

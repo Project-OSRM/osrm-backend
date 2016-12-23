@@ -57,7 +57,8 @@ operator()(const NodeID, const EdgeID, Intersection intersection) const
 
     std::for_each(first, last, [&](auto &road) {
         const auto modifier = road.instruction.direction_modifier;
-        const auto type = TurnType::Suppressed;
+        // use NoTurn, to not even have it as an IntermediateIntersection
+        const auto type = TurnType::NoTurn;
 
         road.instruction = {type, modifier};
     });

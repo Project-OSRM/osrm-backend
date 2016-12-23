@@ -1,6 +1,5 @@
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/constants.hpp"
-#include "extractor/travel_mode.hpp"
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/name_announcements.hpp"
