@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef TRAVEL_MODE_HPP
 #define TRAVEL_MODE_HPP
 
-#include <array>
-
 namespace osrm
 {
 namespace extractor
