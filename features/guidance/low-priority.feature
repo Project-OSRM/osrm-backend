@@ -2,7 +2,7 @@
 Feature: Exceptions for routing onto low-priority roads
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 10 meters
 
     Scenario: Straight onto low-priority: same name

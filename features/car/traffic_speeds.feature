@@ -23,7 +23,7 @@ Feature: Traffic - speeds
             | eb    | primary |
             | df    | primary |
             | fb    | primary |
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
         Given the speed file
@@ -67,7 +67,7 @@ Feature: Traffic - speeds
             | eb    | primary |
             | df    | primary |
             | fb    | primary |
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
         Given the speed file
@@ -110,7 +110,7 @@ Feature: Traffic - speeds
             | eb    | primary |
             | df    | primary |
             | fb    | primary |
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given the extract extra arguments "--generate-edge-lookup"
         Given the speed file
         """

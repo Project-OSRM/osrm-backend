@@ -2,7 +2,7 @@
 Feature: Simple Turns
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 5 meters
 
     Scenario: Turning into splitting road

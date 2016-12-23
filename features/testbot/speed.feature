@@ -2,7 +2,7 @@
 Feature: Testbot - speeds
 
     Background: Use specific speeds
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Testbot - Speed on roads
         Then routability should be

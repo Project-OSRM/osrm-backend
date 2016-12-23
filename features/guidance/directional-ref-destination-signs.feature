@@ -2,7 +2,7 @@
 Feature: Destination Signs
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - route name assembly with destination signs accounting for directional:ref tags
         Given the node map

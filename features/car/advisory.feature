@@ -3,7 +3,7 @@ Feature: Car - Max speed restrictions
 OSRM will use 4/5 of the projected free-flow speed.
 
     Background: Use specific speeds
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 1000 meters
 
     Scenario: Car - Advisory speed overwrites maxspeed

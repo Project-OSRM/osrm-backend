@@ -2,7 +2,7 @@
 Feature: Bike - Max speed restrictions
 
     Background: Use specific speeds
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
         And a grid size of 1000 meters
 
     Scenario: Bicycle - Respect maxspeeds when lower that way type speed

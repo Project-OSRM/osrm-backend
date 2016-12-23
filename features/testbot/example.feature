@@ -4,7 +4,7 @@ Feature: Testbot - Walkthrough
 # https://github.com/DennisOSRM/Project-OSRM/wiki/Processing-Flow
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Testbot - Processing Flow
         Given the node map

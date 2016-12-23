@@ -2,7 +2,7 @@
 Feature: Bike - Squares and other areas
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     @square
     Scenario: Bike - Route along edge of a squares

@@ -2,7 +2,7 @@
 Feature: New-Name Instructions
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 100 meters
 
     Scenario: Undisturbed name Change

@@ -4,7 +4,7 @@ Feature: Car - Speed on links
 # speed of a way and it's corresponding link type.
 
     Background: Use specific speeds
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 1000 meters
 
     Scenario: Car - Use motorway_link when reasonable

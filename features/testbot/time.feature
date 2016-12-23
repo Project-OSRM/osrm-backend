@@ -6,7 +6,7 @@ Feature: Estimation of travel time
 # Tertiary road:    12km/h = 12000m/3600s = 100m/30s
 
     Background: Use specific speeds
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Basic travel time, 10m scale
         Given a grid size of 10 meters

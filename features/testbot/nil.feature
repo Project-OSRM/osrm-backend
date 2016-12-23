@@ -1,7 +1,7 @@
 @routing @testbot @nil
 Feature: Testbot - Check assigning nil values
     Scenario: Assign nil values to all way strings
-        Given the profile file "testbot" extended with
+        Given the profile file "testbot.lua" extended with
         """
         function way_function (way, result)
             result.name = "name"

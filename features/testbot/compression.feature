@@ -2,7 +2,7 @@
 Feature: Geometry Compression
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Compressed segments have correct order
         Given the node map

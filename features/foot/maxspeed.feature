@@ -2,7 +2,7 @@
 Feature: Foot - Ignore max speed restrictions
 
 Background: Use specific speeds
-    Given the profile "foot"
+    Given the profile "foot.lua"
 
     Scenario: Foot - Ignore maxspeed
         Then routability should be

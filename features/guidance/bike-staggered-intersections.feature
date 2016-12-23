@@ -2,7 +2,7 @@
 Feature: Staggered Intersections
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
         Given a grid size of 1 meters
         # Note the one meter grid size: staggered intersections make zig-zags of a couple of meters only
 

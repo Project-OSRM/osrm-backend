@@ -2,7 +2,7 @@
 Feature: General Post-Processing related features
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 10 meters
 
     # this testcase used to crash geometry generation (at that time handled during intersection generation)

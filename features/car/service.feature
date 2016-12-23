@@ -2,7 +2,7 @@
 Feature: Car - Surfaces
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Surface should reduce speed
         Then routability should be

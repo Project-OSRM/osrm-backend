@@ -2,7 +2,7 @@
 Feature: Routing close to the [0,0] origin
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: East-west oneways close to the origin
         Given the node locations

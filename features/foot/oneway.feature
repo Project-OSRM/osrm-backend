@@ -3,7 +3,7 @@ Feature: Foot - Oneway streets
 # Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - Walking should not be affected by oneways
         Then routability should be

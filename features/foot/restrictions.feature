@@ -3,7 +3,7 @@ Feature: Foot - Turn restrictions
 # Ignore turn restrictions on foot.
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     @no_turning
     Scenario: Foot - No left turn

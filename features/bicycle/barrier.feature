@@ -2,7 +2,7 @@
 Feature: Barriers
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - Barriers
         Then routability should be

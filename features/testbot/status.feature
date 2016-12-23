@@ -2,7 +2,7 @@
 Feature: Status messages
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Route found
         Given the node map

@@ -2,7 +2,7 @@
 Feature: Rotary
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
         Given a grid size of 30 meters
 
     Scenario: Enter and Exit

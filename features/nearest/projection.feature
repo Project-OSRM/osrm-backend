@@ -2,7 +2,7 @@
 Feature: Locating Nearest node on a Way - basic projection onto way
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Nearest - easy-west way
         Given the node map

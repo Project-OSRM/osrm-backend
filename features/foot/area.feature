@@ -2,7 +2,7 @@
 Feature: Foot - Squares and other areas
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     @square
     Scenario: Foot - Route along edge of a squares

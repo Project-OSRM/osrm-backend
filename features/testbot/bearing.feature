@@ -2,7 +2,7 @@
 Feature: Compass bearing
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Bearing when going northwest
         Given the node map

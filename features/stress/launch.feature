@@ -2,7 +2,7 @@
 Feature: Stress testing
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Stress - 10km star, request 1 route
     #osrm-routed hangs very often

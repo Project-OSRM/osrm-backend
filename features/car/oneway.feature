@@ -3,7 +3,7 @@ Feature: Car - Oneway streets
 # Handle oneways streets, as defined at http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Simple oneway
         Then routability should be

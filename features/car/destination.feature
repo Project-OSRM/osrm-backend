@@ -2,7 +2,7 @@
 Feature: Car - Destination only, no passing through
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Destination only street
         Given the node map

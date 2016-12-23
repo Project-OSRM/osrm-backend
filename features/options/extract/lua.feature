@@ -12,7 +12,7 @@ Feature: osrm-extract lua ways:get_nodes()
         And the data has been saved to disk
 
     Scenario: osrm-extract - Passing base file
-        Given the profile file "testbot" extended with
+        Given the profile file "testbot.lua" extended with
         """
         function way_function(way, result)
           for _, node in ipairs(way:get_nodes()) do

@@ -1,7 +1,7 @@
 @routing @car @mode
 Feature: Car - Mode flag
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Mode when using a ferry
         Given the node map

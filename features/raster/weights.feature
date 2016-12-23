@@ -31,7 +31,7 @@ Feature: Raster - weights
         And the data has been saved to disk
 
     Scenario: Weighting not based on raster sources
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         When I run "osrm-extract {osm_file} -p {profile_file}"
         And I run "osrm-contract {processed_file}"
         And I route I should get
@@ -43,7 +43,7 @@ Feature: Raster - weights
             | d    | c  | dc,dc    | 36 km/h |
 
     Scenario: Weighting based on raster sources
-        Given the profile "rasterbot"
+        Given the profile "rasterbot.lua"
         When I run "osrm-extract {osm_file} -p {profile_file}"
         Then stdout should contain "evaluating segment"
         And I run "osrm-contract {processed_file}"
@@ -61,7 +61,7 @@ Feature: Raster - weights
             | d    | b  | de,eb,eb | 10 km/h |
 
     Scenario: Weighting based on raster sources
-        Given the profile "rasterbotinterp"
+        Given the profile "rasterbotinterp.lua"
         When I run "osrm-extract {osm_file} -p {profile_file}"
         Then stdout should contain "evaluating segment"
         And I run "osrm-contract {processed_file}"

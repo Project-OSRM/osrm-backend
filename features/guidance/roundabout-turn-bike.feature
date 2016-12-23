@@ -2,7 +2,7 @@
 Feature: Basic Roundabout
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
         Given a grid size of 10 meters
 
     Scenario: Enter and Exit

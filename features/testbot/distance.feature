@@ -2,7 +2,7 @@
 Feature: Distance calculation
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: 100m distance
         Given a grid size of 100 meters

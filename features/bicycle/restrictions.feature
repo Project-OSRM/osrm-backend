@@ -4,7 +4,7 @@ Feature: Bike - Turn restrictions
 # Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     @no_turning
     Scenario: Bike - No left turn

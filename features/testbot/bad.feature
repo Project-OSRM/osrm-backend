@@ -2,7 +2,7 @@
 Feature: Handle bad data in a graceful manner
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Empty dataset
         Given the node map

@@ -2,7 +2,7 @@
 Feature: Bike - Accessability of different way types
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
         Given the shortcuts
             | key  | value        |
             | bike | 15 km/h ~20% |

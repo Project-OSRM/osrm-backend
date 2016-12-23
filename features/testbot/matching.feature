@@ -2,7 +2,7 @@
 Feature: Basic Map Matching
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given a grid size of 10 meters
         Given the extract extra arguments "--generate-edge-lookup"
         Given the query options

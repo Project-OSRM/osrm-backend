@@ -2,7 +2,7 @@
 Feature: Bearing parameter
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         And a grid size of 10 meters
 
     Scenario: Testbot - Intial bearing in simple case

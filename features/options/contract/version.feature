@@ -5,7 +5,7 @@ Feature: osrm-contract command line options: version
 # -128-NOTFOUND     # if you build from a shallow clone (used on Travis)
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: osrm-contract - Version, short
         When I run "osrm-contract --v"

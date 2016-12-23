@@ -2,7 +2,7 @@
 Feature: Foot - Handle ferry routes
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - Ferry route
         Given the node map

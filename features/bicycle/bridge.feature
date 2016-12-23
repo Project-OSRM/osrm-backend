@@ -2,7 +2,7 @@
 Feature: Bicycle - Handle cycling
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bicycle - Use a ferry route
         Given the node map

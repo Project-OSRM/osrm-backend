@@ -2,7 +2,7 @@
 Feature: Basic Routing
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 500 meters
 
     @smallest

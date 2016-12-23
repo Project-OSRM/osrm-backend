@@ -3,10 +3,10 @@ Feature: Basic Roundabout
 
     Background:
         Given a grid size of 10 meters
-        Given the profile file
+        Given the lua profile file
            """
            require 'car'
-            properties.left_hand_driving = true
+           properties.left_hand_driving = true
            """
 
     Scenario: Roundabout exit counting for left sided driving

@@ -2,7 +2,7 @@
 Feature: Car - Max speed restrictions
 
     Background: Use specific speeds
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Testbot - Respect maxspeeds when lower that way type speed
         Then routability should be

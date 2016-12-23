@@ -28,7 +28,7 @@ module.exports = function () {
         }
 
         this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: stxxl_config}, process.env);
-        this.DEFAULT_PROFILE = 'bicycle';
+        this.DEFAULT_PROFILE = 'bicycle.lua';
         this.DEFAULT_INPUT_FORMAT = 'osm';
         this.DEFAULT_LOAD_METHOD = 'datastore';
         this.DEFAULT_ORIGIN = [1,1];

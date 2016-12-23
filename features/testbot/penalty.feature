@@ -3,7 +3,7 @@ Feature: Penalties
 # Testbot uses a signal penalty of 7s.
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Traffic signals should incur a delay, without changing distance
         Given the node map

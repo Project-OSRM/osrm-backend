@@ -2,7 +2,7 @@
 Feature: Bike - Mode flag
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
         Given a grid size of 5 meters
 
     Scenario: Bike Sliproad

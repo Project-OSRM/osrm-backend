@@ -11,7 +11,7 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
             | nodes | highway     |
             | ab    | residential |
             | ac    | primary     |
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given the speed file
         """
         1,2,100

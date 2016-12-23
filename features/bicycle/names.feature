@@ -2,7 +2,7 @@
 Feature: Bike - Street names in instructions
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - A named street
         Given the node map

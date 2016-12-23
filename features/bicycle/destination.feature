@@ -2,7 +2,7 @@
 Feature: Bike - Destination only, no passing through
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - Destination only street
         Given the node map

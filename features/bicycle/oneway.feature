@@ -4,7 +4,7 @@ Feature: Bike - Oneway streets
 # Usually we can push bikes against oneways, but we use foot=no to prevent this in these tests
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - Simple oneway
         Then routability should be

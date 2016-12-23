@@ -2,7 +2,7 @@
 Feature: Alternative route
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         And a grid size of 200 meters
 
         And the node map
