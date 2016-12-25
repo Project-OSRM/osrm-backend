@@ -52,12 +52,9 @@ class SharedMemory
     template <typename IdentifierT>
     SharedMemory(const boost::filesystem::path &lock_file,
                  const IdentifierT id,
-                 const uint64_t size = 0,
-                 bool read_write = false)
+                 const uint64_t size = 0)
         : key(lock_file.string().c_str(), id)
     {
-        const auto access =
-            read_write ? boost::interprocess::read_write : boost::interprocess::read_only;
         // open only
         if (0 == size)
         {
@@ -65,7 +62,7 @@ class SharedMemory
 
             util::Log(logDEBUG) << "opening " << shm.get_shmid() << " from id " << id;
 
-            region = boost::interprocess::mapped_region(shm, access);
+            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_only);
         }
         // open or create
         else
@@ -83,7 +80,7 @@ class SharedMemory
                 }
             }
 #endif
-            region = boost::interprocess::mapped_region(shm, access);
+            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
         }
     }
 
@@ -232,7 +229,7 @@ class SharedMemory
 
 template <typename IdentifierT, typename LockFileT = OSRMLockFile>
 std::unique_ptr<SharedMemory>
-makeSharedMemory(const IdentifierT &id, const uint64_t size = 0, bool read_write = false)
+makeSharedMemory(const IdentifierT &id, const uint64_t size = 0)
 {
     try
     {
@@ -248,7 +245,7 @@ makeSharedMemory(const IdentifierT &id, const uint64_t size = 0, bool read_write
                 boost::filesystem::ofstream ofs(lock_file());
             }
         }
-        return std::make_unique<SharedMemory>(lock_file(), id, size, read_write);
+        return std::make_unique<SharedMemory>(lock_file(), id, size);
     }
     catch (const boost::interprocess::interprocess_exception &e)
     {
