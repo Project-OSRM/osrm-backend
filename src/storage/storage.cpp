@@ -175,14 +175,14 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // Allocate shared memory block
     auto regions_size = sizeof(layout) + layout.GetSizeOfLayout();
     util::Log() << "allocating shared memory of " << regions_size << " bytes";
-    auto shared_memory = makeSharedMemory(data_region, regions_size, true);
+    auto shared_memory = makeSharedMemory(data_region, regions_size);
 
     // Copy memory layout to shared memory and populate data
     char *shared_memory_ptr = static_cast<char *>(shared_memory->Ptr());
     memcpy(shared_memory_ptr, &layout, sizeof(layout));
     PopulateData(layout, shared_memory_ptr + sizeof(layout));
 
-    auto data_type_memory = makeSharedMemory(CURRENT_REGION, sizeof(SharedDataTimestamp), true);
+    auto data_type_memory = makeSharedMemory(CURRENT_REGION, sizeof(SharedDataTimestamp));
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
