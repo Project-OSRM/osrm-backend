@@ -239,11 +239,12 @@ module.exports = function () {
     });
 
     this.Given(/^the profile file(?: "([^"]*)" extended with)?$/, (profile, data, callback) => {
-        let text = 'package.path = "' + this.PROFILES_PATH + '/?.lua;" .. package.path\n';
+        const lua_profiles_path = this.PROFILES_PATH.split(path.sep).join('/');
+        let text = 'package.path = "' + lua_profiles_path + '/?.lua;" .. package.path\n';
         if (profile == null) {
             text += data + '\n';
         } else {
-            text += 'local f = assert(io.open("' + this.PROFILES_PATH + '/' + profile + '.lua", "r"))\n';
+            text += 'local f = assert(io.open("' + lua_profiles_path + '/' + profile + '.lua", "r"))\n';
             text += 'local m = assert(loadstring(f:read("*all") .. [[\n' + data + '\n]]))\n';
             text += 'f:close()\n';
             text += 'm()\n';

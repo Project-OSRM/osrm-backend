@@ -25,7 +25,7 @@
   },
   "scripts": {
     "lint": "eslint -c ./.eslintrc features/step_definitions/ features/support/",
-    "test": "npm run lint && ./node_modules/cucumber/bin/cucumber.js features/ -p verify",
+    "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify",
     "clean-test": "rm -rf test/cache",
     "cucumber": "./node_modules/cucumber/bin/cucumber.js",
     "build-api-docs": "./scripts/build_api_docs.sh"
