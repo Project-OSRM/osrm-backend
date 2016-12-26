@@ -32,9 +32,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/exceptions.hpp>
 #include <boost/interprocess/sync/named_sharable_mutex.hpp>
-#include <boost/interprocess/sync/named_upgradable_mutex.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/interprocess/sync/upgradable_lock.hpp>
 
 #include <cstdint>
 
@@ -93,7 +92,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
 
     SharedBarriers barriers;
 
-    boost::interprocess::upgradable_lock<boost::interprocess::named_upgradable_mutex>
+    boost::interprocess::scoped_lock<boost::interprocess::named_mutex>
         current_region_lock(barriers.current_region_mutex, boost::interprocess::defer_lock);
     try
     {
@@ -106,7 +105,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
     // hard unlock in case of any exception.
     catch (boost::interprocess::lock_exception &ex)
     {
-        barriers.current_region_mutex.unlock_upgradable();
+        barriers.current_region_mutex.unlock();
         // make sure we exit here because this is bad
         throw;
     }
@@ -188,42 +187,14 @@ Storage::ReturnCode Storage::Run(int max_wait)
     SharedDataTimestamp *data_timestamp_ptr =
         static_cast<SharedDataTimestamp *>(data_type_memory->Ptr());
 
-    {
+    auto new_timestamp = data_timestamp_ptr->timestamp + 1;
+    util::Log() << "Updating newest dataset to " << new_timestamp << " in region " << data_region;
+    data_timestamp_ptr->region = data_region;
+    data_timestamp_ptr->timestamp = new_timestamp;
 
-        boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>
-            current_region_exclusive_lock;
-
-        if (max_wait > 0)
-        {
-            util::Log() << "Waiting for " << max_wait << " seconds to write new dataset timestamp";
-            auto end_time = boost::posix_time::microsec_clock::universal_time() +
-                            boost::posix_time::seconds(max_wait);
-            current_region_exclusive_lock =
-                boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>(
-                    std::move(current_region_lock), end_time);
-
-            if (!current_region_exclusive_lock.owns())
-            {
-                util::Log(logWARNING) << "Aquiring the lock timed out after " << max_wait
-                                      << " seconds. Claiming the lock by force.";
-                current_region_lock.unlock();
-                current_region_lock.release();
-                storage::SharedBarriers::resetCurrentRegion();
-                return ReturnCode::Retry;
-            }
-        }
-        else
-        {
-            util::Log() << "Waiting to write new dataset timestamp";
-            current_region_exclusive_lock =
-                boost::interprocess::scoped_lock<boost::interprocess::named_upgradable_mutex>(
-                    std::move(current_region_lock));
-        }
-
-        util::Log() << "Ok.";
-        data_timestamp_ptr->region = data_region;
-        data_timestamp_ptr->timestamp += 1;
-    }
+    util::UnbufferedLog() << "Notifying readers...";
+    barriers.new_dataset_condition.notify_all();
+    util::Log() << " ok.";
     util::Log() << "All data loaded.";
 
     return ReturnCode::Ok;
