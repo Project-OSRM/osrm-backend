@@ -50,7 +50,7 @@ class Engine final
     Status Tile(const api::TileParameters &parameters, std::string &result) const;
 
   private:
-    std::unique_ptr<storage::SharedBarriers> lock;
+    //std::unique_ptr<storage::SharedBarriers> lock;
     std::unique_ptr<DataWatchdog> watchdog;
 
     const plugins::ViaRoutePlugin route_plugin;

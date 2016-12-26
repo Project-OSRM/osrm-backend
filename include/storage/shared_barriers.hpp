@@ -1,8 +1,8 @@
 #ifndef SHARED_BARRIERS_HPP
 #define SHARED_BARRIERS_HPP
 
-#include <boost/interprocess/sync/named_sharable_mutex.hpp>
-#include <boost/interprocess/sync/named_upgradable_mutex.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
 
 namespace osrm
 {
@@ -13,22 +13,19 @@ struct SharedBarriers
 {
 
     SharedBarriers()
-        : current_region_mutex(boost::interprocess::open_or_create, "current_region"),
-          region_1_mutex(boost::interprocess::open_or_create, "region_1"),
-          region_2_mutex(boost::interprocess::open_or_create, "region_2")
+        : region_mutex(boost::interprocess::open_or_create, "osrm-region")
+        , region_condition(boost::interprocess::open_or_create, "osrm-region-cv")
     {
     }
 
-    static void resetCurrentRegion()
+    static void remove()
     {
-        boost::interprocess::named_sharable_mutex::remove("current_region");
+        boost::interprocess::named_mutex::remove("osrm-region");
+        boost::interprocess::named_condition::remove("osrm-region-cv");
     }
-    static void resetRegion1() { boost::interprocess::named_sharable_mutex::remove("region_1"); }
-    static void resetRegion2() { boost::interprocess::named_sharable_mutex::remove("region_2"); }
 
-    boost::interprocess::named_upgradable_mutex current_region_mutex;
-    boost::interprocess::named_sharable_mutex region_1_mutex;
-    boost::interprocess::named_sharable_mutex region_2_mutex;
+    boost::interprocess::named_mutex region_mutex;
+    boost::interprocess::named_condition region_condition;
 };
 }
 }

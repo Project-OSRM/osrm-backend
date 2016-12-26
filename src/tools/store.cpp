@@ -16,20 +16,15 @@ using namespace osrm;
 // generate boost::program_options object for the routing part
 bool generateDataStoreOptions(const int argc,
                               const char *argv[],
-                              boost::filesystem::path &base_path,
-                              int &max_wait)
+                              boost::filesystem::path &base_path)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message");
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")("remove-locks,r", "Remove locks");
 
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "max-wait",
-        boost::program_options::value<int>(&max_wait)->default_value(-1),
-        "Maximum number of seconds to wait on requests that use the old dataset.");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -86,6 +81,13 @@ bool generateDataStoreOptions(const int argc,
         return false;
     }
 
+    if (option_variables.count("remove-locks"))
+    {
+        osrm::storage::SharedBarriers::remove();
+        boost::interprocess::named_mutex::remove("osrm-datastore");
+        return false;
+    }
+
     boost::program_options::notify(option_variables);
 
     return true;
@@ -93,7 +95,7 @@ bool generateDataStoreOptions(const int argc,
 
 [[noreturn]] void CleanupSharedBarriers(int signum)
 { // Here the lock state of named mutexes is unknown, make a hard cleanup
-    osrm::storage::SharedBarriers::resetCurrentRegion();
+    osrm::storage::SharedBarriers::remove();
     std::_Exit(128 + signum);
 }
 
@@ -108,8 +110,7 @@ int main(const int argc, const char *argv[]) try
     util::LogPolicy::GetInstance().Unmute();
 
     boost::filesystem::path base_path;
-    int max_wait = -1;
-    if (!generateDataStoreOptions(argc, argv, base_path, max_wait))
+    if (!generateDataStoreOptions(argc, argv, base_path))
     {
         return EXIT_SUCCESS;
     }
@@ -121,29 +122,7 @@ int main(const int argc, const char *argv[]) try
     }
     storage::Storage storage(std::move(config));
 
-    // We will attempt to load this dataset to memory several times if we encounter
-    // an error we can recover from. This is needed when we need to clear mutexes
-    // that have been left dangling by other processes.
-    const constexpr unsigned MAX_RETRIES = 3;
-    unsigned retry_counter = 0;
-    storage::Storage::ReturnCode code = storage::Storage::ReturnCode::Retry;
-    while (code == storage::Storage::ReturnCode::Retry && retry_counter < MAX_RETRIES)
-    {
-        if (retry_counter > 0)
-        {
-            util::Log(logWARNING) << "Try number " << (retry_counter + 1)
-                                  << " to load the dataset.";
-        }
-        code = storage.Run(max_wait);
-        retry_counter++;
-    }
-
-    if (code == storage::Storage::ReturnCode::Ok)
-    {
-        return EXIT_SUCCESS;
-    }
-
-    return EXIT_FAILURE;
+    return storage.Run();
 }
 catch (const std::bad_alloc &e)
 {
