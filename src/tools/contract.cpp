@@ -1,6 +1,5 @@
 #include "contractor/contractor.hpp"
 #include "contractor/contractor_config.hpp"
-#include "util/exception.hpp"
 #include "util/log.hpp"
 #include "util/version.hpp"
 
@@ -178,5 +177,10 @@ catch (const std::bad_alloc &e)
 {
     util::Log(logERROR) << "[exception] " << e.what();
     util::Log(logERROR) << "Please provide more memory or consider using a larger swapfile";
+    return EXIT_FAILURE;
+}
+catch (const std::exception& e)
+{
+    std::cerr << "[exception] " << e.what();
     return EXIT_FAILURE;
 }

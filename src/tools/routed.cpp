@@ -19,6 +19,7 @@
 #include <signal.h>
 
 #include <chrono>
+#include <exception>
 #include <future>
 #include <iostream>
 #include <memory>
@@ -370,5 +371,10 @@ catch (const std::bad_alloc &e)
 {
     util::Log(logWARNING) << "[exception] " << e.what();
     util::Log(logWARNING) << "Please provide more memory or consider using a larger swapfile";
+    return EXIT_FAILURE;
+}
+catch (const std::exception& e)
+{
+    std::cerr << "[exception] " << e.what();
     return EXIT_FAILURE;
 }
