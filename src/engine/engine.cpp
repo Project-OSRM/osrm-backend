@@ -35,9 +35,9 @@ RunQuery(const std::unique_ptr<osrm::engine::DataWatchdog> &watchdog,
     if (watchdog)
     {
         BOOST_ASSERT(!facade);
-        auto lock_and_facade = watchdog->GetDataFacade();
+        auto facade = watchdog->GetDataFacade();
 
-        return plugin.HandleRequest(lock_and_facade.second, parameters, result);
+        return plugin.HandleRequest(facade, parameters, result);
     }
 
     BOOST_ASSERT(facade);
@@ -53,9 +53,7 @@ namespace engine
 {
 
 Engine::Engine(const EngineConfig &config)
-    : lock(config.use_shared_memory ? std::make_unique<storage::SharedBarriers>()
-                                    : std::unique_ptr<storage::SharedBarriers>()),
-      route_plugin(config.max_locations_viaroute),       //
+    : route_plugin(config.max_locations_viaroute),       //
       table_plugin(config.max_locations_distance_table), //
       nearest_plugin(config.max_results_nearest),        //
       trip_plugin(config.max_locations_trip),            //

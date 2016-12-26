@@ -19,7 +19,6 @@
 #include <sys/shm.h>
 #endif
 
-// #include <cstring>
 #include <cstdint>
 
 #include <algorithm>
@@ -150,25 +149,23 @@ class SharedMemory
 
     SharedMemory(const boost::filesystem::path &lock_file,
                  const int id,
-                 const uint64_t size = 0,
-                 bool read_write = false)
+                 const uint64_t size = 0)
     {
         sprintf(key, "%s.%d", "osrm.lock", id);
-        auto access = read_write ? boost::interprocess::read_write : boost::interprocess::read_only;
         if (0 == size)
         { // read_only
             shm = boost::interprocess::shared_memory_object(
                 boost::interprocess::open_only,
                 key,
-                read_write ? boost::interprocess::read_write : boost::interprocess::read_only);
-            region = boost::interprocess::mapped_region(shm, access);
+                boost::interprocess::read_only);
+            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_only);
         }
         else
         { // writeable pointer
             shm = boost::interprocess::shared_memory_object(
                 boost::interprocess::open_or_create, key, boost::interprocess::read_write);
             shm.truncate(size);
-            region = boost::interprocess::mapped_region(shm, access);
+            region = boost::interprocess::mapped_region(shm, boost::interprocess::read_write);
 
             util::Log(logDEBUG) << "writeable memory allocated " << size << " bytes";
         }
