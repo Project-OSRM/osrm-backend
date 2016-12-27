@@ -99,6 +99,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
             if (err) return callback(err);
             if (!this.osrmIsRunning()) this.launch(callback);
             else {
+                // some osrm-routed output prior this line can appear in the prevoius log file
                 this.scope.setupOutputLog(this.child, fs.createWriteStream(this.scope.scenarioLogFile, {'flags': 'a'}));
                 callback();
             }
@@ -108,7 +109,10 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
     loadData (callback) {
         this.scope.runBin('osrm-datastore', this.inputFile, this.scope.environment, (err) => {
             if (err) return callback(new Error('*** osrm-datastore exited with ' + err.code + ': ' + err));
-            callback();
+            // in case of false positive results with a dummy 1ms delay an stdout monitor
+            // this.child.stdout.on('data', facade_monitor) must be added and wait for
+            // "updated facade to region" in stdout
+            setTimeout(callback, 1);
         });
     }
 

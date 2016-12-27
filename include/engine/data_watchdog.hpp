@@ -65,10 +65,10 @@ class DataWatchdog
         {
             if (timestamp != current->timestamp)
             {
-                util::Log() << "updating facade to region " << storage::regionToString(current->region)
-                            << " with timestamp " << current->timestamp;
                 facade = std::make_shared<datafacade::SharedMemoryDataFacade>(current->region);
                 timestamp = current->timestamp;
+                util::Log() << "updated facade to region " << storage::regionToString(current->region)
+                            << " with timestamp " << current->timestamp;
             }
 
             barrier.region_condition.wait(current_region_lock);

@@ -100,6 +100,8 @@ int Storage::Run()
             storage::SharedMemory::Remove(next_region);
         }
 
+        util::Log() << "Loading data into " << regionToString(next_region) << " timestamp " << next_timestamp;
+
         // Populate a memory layout into stack memory
         DataLayout layout;
         PopulateLayout(layout);
