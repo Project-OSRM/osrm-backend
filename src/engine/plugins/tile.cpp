@@ -370,7 +370,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     // as the sort condition
     std::sort(sorted_edge_indexes.begin(),
               sorted_edge_indexes.end(),
-              [edges](const std::size_t &left, const std::size_t &right) -> bool {
+              [&edges](const std::size_t &left, const std::size_t &right) -> bool {
                   return (edges[left].u != edges[right].u) ? edges[left].u < edges[right].u
                                                            : edges[left].v < edges[right].v;
               });
