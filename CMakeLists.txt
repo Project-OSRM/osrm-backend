@@ -76,6 +76,7 @@ endfunction(add_dependency_defines)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
+include(GNUInstallDirs)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -689,8 +690,8 @@ install(TARGETS osrm_store DESTINATION lib)
 # Setup exporting variables for pkgconfig and subproject
 #
 
-if(BUILD_DEBIAN_PACKAGE)
-  include(CPackDebianConfig)
+if(BUILD_PACKAGE)
+  include(CPackConfig)
   include(CPack)
 endif()
 
@@ -728,7 +729,7 @@ JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 JOIN("${ENGINE_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in libosrm.pc @ONLY)
-install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION lib/pkgconfig)
+install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 # uninstall target
 configure_file(
