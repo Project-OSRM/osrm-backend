@@ -2,6 +2,8 @@
   - Changes from 5.5
     - Bugfixes
       - Fix #3475 removed an invalid `exit` field from the `arrive` maneuver
+    - Infrastructure
+      - Support building rpm packages.
     - Guidance
       - No longer emitting turns on ferries, if a ferry should use multiple docking locations
     - Profiles
