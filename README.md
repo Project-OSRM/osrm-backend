@@ -1,64 +1,87 @@
-## About
+## Open Source Routing Machine
 
-The Open Source Routing Machine is a high performance routing engine written in C++11 designed to run on OpenStreetMap data.
+| Linux / macOS | Windows | Code Coverage |
+| ------------- | ------- | ------------- |
+| [![Travis](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) | [![AppVeyor](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) | [![Codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
 
-## Current build status
+High performance routing engine written in C++14 designed to run on OpenStreetMap data.
 
-| build config | status |
-|:-------------|:-------|
-| Linux        | [![Build Status](https://travis-ci.org/Project-OSRM/osrm-backend.png?branch=master)](https://travis-ci.org/Project-OSRM/osrm-backend) |
-| Windows      | [![Build status](https://ci.appveyor.com/api/projects/status/4iuo3s9gxprmcjjh)](https://ci.appveyor.com/project/DennisOSRM/osrm-backend) |
-| Coverage     | [![codecov](https://codecov.io/gh/Project-OSRM/osrm-backend/branch/master/graph/badge.svg)](https://codecov.io/gh/Project-OSRM/osrm-backend) |
+The following services are available via HTTP API, C++ library interface and NodeJs wrapper:
+- Nearest - Snaps coordinates to the street network and returns the nearest matches
+- Route - Finds the fastest route between coordinates
+- Table - Computes the duration of the fastest route between all pairs of supplied coordinates
+- Match - Snaps noisy GPS traces to the road network in the most plausible way
+- Trip - Solves the Traveling Salesman Problem using a greedy heuristic
+- Tile - Generates Mapbox Vector Tiles with internal routing metadata
+
+To quickly try OSRM use our [demo server](http://map.project-osrm.org) which comes with both the backend and a frontend on top.
+
+Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
+- [node-osrm](https://github.com/Project-OSRM/node-osrm) - Production-ready NodeJs bindings for the routing engine
+- [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
+- [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
 
 ## Contact
 
-- IRC: server `irc.oftc.net`, channel: `#osrm` (see: `https://www.oftc.net`, and for a webchat: `https://webchat.oftc.net`)
+- IRC: `irc.oftc.net`, channel: `#osrm` ([Webchat](https://webchat.oftc.net))
 - Mailinglist: `https://lists.openstreetmap.org/listinfo/osrm-talk`
 
-## Building
+## Quick Start
 
-For instructions on how to [build](https://github.com/Project-OSRM/osrm-backend/wiki/Building-OSRM) and [run OSRM](https://github.com/Project-OSRM/osrm-backend/wiki/Running-OSRM), please consult [the Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
+The following targets Ubuntu 16.04.
+For instructions how to build on different distributions, macOS or Windows see our [Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
 
-To quickly try OSRM use our [free and daily updated online service](http://map.project-osrm.org)
+#### Install dependencies
+
+```bash
+sudo apt install build-essential git cmake pkg-config \
+libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
+libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
+```
+
+#### Compile and install OSRM binaries:
+
+```bash
+mkdir -p build
+cd build
+cmake ..
+cmake --build .
+sudo cmake --build . --target install
+```
+
+#### Grab a `.osm.pbf` extract from [Geofabrik](http://download.geofabrik.de/index.html) or [Mapzen's Metro Extracts](https://mapzen.com/data/metro-extracts/)
+
+```bash
+wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+```
+
+#### Pre-process the extract and start the HTTP server
+
+```
+osrm-extract berlin-latest.osm.pbf -p profiles/car.lua
+osrm-contract berlin-latest.osrm
+osrm-routed berlin-latest.osrm
+```
+
+#### Running Queries
+
+```
+curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true
+```
 
 ## Documentation
 
 ### Full documentation
 
+- [Hosted documentation](http://project-osrm.org)
 - [osrm-routed HTTP API documentation](docs/http.md)
 - [libosrm API documentation](docs/libosrm.md)
 
-### Quick start
-
-Building OSRM assuming all dependencies are installed:
-
-```
-mkdir -p build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build .
-sudo cmake --build . --target install
-```
-
-Loading preparing a dataset and starting the server:
-
-```
-osrm-extract data.osm.pbf -p profiles/car.lua
-osrm-contract data.osrm
-osrm-routed data.osrm
-```
-
-Running a query on your local server:
-
-```
-curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true&alternatives=true
-```
 
 ### Running a request against the Demo Server
 
-First read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy).
-
-Then run simple query with instructions and alternatives on Berlin:
+Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy).
+Simple query with instructions and alternatives on Berlin:
 
 ```
 curl https://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true&alternatives=true
@@ -86,4 +109,3 @@ When using the code in a (scientific) publication, please cite
  address = {New York, NY, USA},
 }
 ```
-
