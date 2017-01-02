@@ -4,6 +4,8 @@
       - Fix #3475 removed an invalid `exit` field from the `arrive` maneuver
     - Guidance
       - No longer emitting turns on ferries, if a ferry should use multiple docking locations
+    - Profiles
+      - Removed the `./profile.lua -> ./profiles/car.lua` symlink. Use specific profiles from the `profiles` directory.
 
 # 5.5.1
   - Changes from 5.5.0
