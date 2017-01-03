@@ -72,7 +72,8 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
     SharedMemoryDataFacade(const std::shared_ptr<storage::SharedBarriers> &shared_barriers_,
                            storage::SharedDataType data_region_,
                            unsigned shared_timestamp_)
-        : shared_barriers(shared_barriers_), data_region(data_region_), shared_timestamp(shared_timestamp_)
+        : shared_barriers(shared_barriers_), data_region(data_region_),
+          shared_timestamp(shared_timestamp_)
     {
         util::Log(logDEBUG) << "Loading new data with shared timestamp " << shared_timestamp;
 
@@ -80,7 +81,8 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
         m_large_memory = storage::makeSharedMemory(data_region);
 
         InitializeInternalPointers(*reinterpret_cast<storage::DataLayout *>(m_large_memory->Ptr()),
-                                   reinterpret_cast<char *>(m_large_memory->Ptr()) + sizeof(storage::DataLayout));
+                                   reinterpret_cast<char *>(m_large_memory->Ptr()) +
+                                       sizeof(storage::DataLayout));
     }
 };
 }
