@@ -4,6 +4,7 @@
 #include "extractor/guidance/turn_instruction.hpp"
 #include "engine/guidance/post_processing.hpp"
 
+#include <algorithm>
 #include <iterator>
 #include <unordered_set>
 #include <utility>
@@ -27,9 +28,26 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
 {
     // Lane anticipation works on contiguous ranges of quick steps that have lane information
     const auto is_quick_has_lanes = [&](const RouteStep &step) {
-        const auto is_quick = step.duration < min_duration_needed_for_lane_change;
         const auto has_lanes = step.intersections.front().lanes.lanes_in_turn > 0;
-        return has_lanes && is_quick;
+
+        if (!has_lanes)
+            return false;
+
+        // The more unused lanes to the left and right of the turn there are, the higher
+        // the chance the user is driving on one of those and has to cross lanes.
+        // Scale threshold for these cases to be adaptive to the situation's complexity.
+        //
+        // Note: what we could do instead: do Lane Anticipation on all step pairs and then scale
+        // the threshold based on the lanes we're constraining the user to. Would need a re-write
+        // since at the moment we first group-by and only then do Lane Anticipation selectively.
+        //
+        // We do not have a source-target lane mapping, assume worst case for lanes to cross.
+        const auto to_cross = std::max(step.NumLanesToTheRight(), step.NumLanesToTheLeft());
+        const auto scale = 1 + to_cross;
+        const auto threshold = scale * min_duration_needed_for_lane_change;
+
+        const auto is_quick = step.duration < threshold;
+        return is_quick;
     };
 
     using StepIter = decltype(steps)::iterator;
