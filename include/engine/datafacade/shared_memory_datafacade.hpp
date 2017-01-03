@@ -37,7 +37,7 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
     virtual ~SharedMemoryDataFacade() noexcept
     {
         // Now check if this is still the newest dataset
-        boost::interprocess::sharable_lock<boost::interprocess::named_upgradable_mutex>
+        boost::interprocess::scoped_lock<boost::interprocess::named_mutex>
             current_regions_lock(shared_barriers->current_region_mutex,
                                  boost::interprocess::defer_lock);
 
