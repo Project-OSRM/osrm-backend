@@ -27,6 +27,7 @@ env:
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
    - CCACHE_VERSION=3.3.1
    - CMAKE_VERSION=3.6.2
+   - MASON="$(pwd)/third_party/mason/mason"
 
 matrix:
   fast_finish: true
@@ -49,7 +50,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Debug' RUN_CLANG_FORMAT=ON BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
+      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Debug' BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
 
     - os: osx
       osx_image: xcode8.2
@@ -64,7 +65,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Release' ENABLE_MASON=ON
+      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON
 
     - os: linux
       compiler: "gcc-6-release"
@@ -122,6 +123,10 @@ before_install:
       export JOBS=$((`nproc` + 1))
     fi
   - |
+    if [ -n "${RUN_CLANG_FORMAT}" ]; then
+      ${MASON} install clang-format 3.8.0 && PATH=$(${MASON} prefix clang-format 3.8.0)/bin:${PATH} ./scripts/format.sh
+    fi
+  - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       export JOBS=$((`sysctl -n hw.ncpu` + 1))
       sudo mdutil -i off /
@@ -130,22 +135,18 @@ before_install:
   - source ./scripts/install_node.sh 4
   - npm install -g "npm@>=3" # Upgrade to npm >v2 to reduce size of downloaded dependencies
   - npm install
-  - ./third_party/mason/mason install ccache ${CCACHE_VERSION}
-  - export PATH=$(./third_party/mason/mason prefix ccache ${CCACHE_VERSION})/bin:${PATH}
-  - ./third_party/mason/mason install cmake ${CMAKE_VERSION}
-  - export PATH=$(./third_party/mason/mason prefix cmake ${CMAKE_VERSION})/bin:${PATH}
+  - ${MASON} install ccache ${CCACHE_VERSION} && export PATH=$(${MASON} prefix ccache ${CCACHE_VERSION})/bin:${PATH}
+  - ${MASON} install cmake ${CMAKE_VERSION} && export PATH=$(${MASON} prefix cmake ${CMAKE_VERSION})/bin:${PATH}
   - |
     if [[ ! -z ${CLANG_VERSION} ]]; then
       export CCOMPILER='clang'
       export CXXCOMPILER='clang++'
-      ./third_party/mason/mason install clang++ ${CLANG_VERSION}
-      export PATH=$(./third_party/mason/mason prefix clang++ ${CLANG_VERSION})/bin:${PATH}
+      ${MASON} install clang++ ${CLANG_VERSION} && export PATH=$(${MASON} prefix clang++ ${CLANG_VERSION})/bin:${PATH}
       # we only enable lto for release builds
       # and therefore don't need to us ld.gold or llvm tools for linking
       # for debug builds
       if [[ ${BUILD_TYPE} == 'Release' ]]; then
-        ./third_party/mason/mason install binutils 2.27
-        export PATH=$(./third_party/mason/mason prefix binutils 2.27)/bin:${PATH}
+        ${MASON} install binutils 2.27 && export PATH=$(${MASON} prefix binutils 2.27)/bin:${PATH}
       fi
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
@@ -195,10 +196,6 @@ script:
   - npm test
 
 after_success:
-  - |
-    if [ -n "${RUN_CLANG_FORMAT}" ]; then
-      ./scripts/format.sh # we don't want to fail just yet
-    fi
   - |
     if [ -n "${ENABLE_COVERAGE}" ]; then
       bash <(curl -s https://codecov.io/bash)
