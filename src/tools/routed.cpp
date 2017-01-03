@@ -10,10 +10,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#ifdef __linux__
-#include <sys/mman.h>
-#endif
-
 #include <cstdlib>
 
 #include <signal.h>
@@ -269,25 +265,6 @@ int main(int argc, const char *argv[]) try
         return EXIT_FAILURE;
     }
 
-#ifdef __linux__
-    struct MemoryLocker final
-    {
-        explicit MemoryLocker(bool should_lock) : should_lock(should_lock)
-        {
-            if (should_lock && -1 == mlockall(MCL_CURRENT | MCL_FUTURE))
-            {
-                could_lock = false;
-                util::Log(logWARNING) << "memory could not be locked to RAM";
-            }
-        }
-        ~MemoryLocker()
-        {
-            if (should_lock && could_lock)
-                (void)munlockall();
-        }
-        bool should_lock = false, could_lock = true;
-    } memory_locker(config.use_shared_memory);
-#endif
     util::Log() << "starting up engines, " << OSRM_VERSION;
 
     if (config.use_shared_memory)
@@ -373,7 +350,7 @@ catch (const std::bad_alloc &e)
     util::Log(logWARNING) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }
-catch (const std::exception& e)
+catch (const std::exception &e)
 {
     std::cerr << "[exception] " << e.what();
     return EXIT_FAILURE;
