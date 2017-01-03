@@ -312,7 +312,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
      */
     const auto prune = [](auto &data_vector) {
         BOOST_ASSERT(data_vector.size() >= 3);
-        //erase the first third of the vector
+        // erase the first third of the vector
         data_vector.erase(data_vector.begin(), data_vector.begin() + data_vector.size() / 3);
     };
 

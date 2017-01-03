@@ -373,7 +373,7 @@ catch (const std::bad_alloc &e)
     util::Log(logWARNING) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }
-catch (const std::exception& e)
+catch (const std::exception &e)
 {
     std::cerr << "[exception] " << e.what();
     return EXIT_FAILURE;

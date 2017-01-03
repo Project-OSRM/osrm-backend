@@ -13,10 +13,10 @@
 namespace osrm
 {
 
-//FWD declarations
+// FWD declarations
 namespace util
 {
-    class NameTable;
+class NameTable;
 } // namespace util
 
 namespace extractor
@@ -29,7 +29,6 @@ namespace guidance
 {
 class IntersectionGenerator;
 class CoordinateExtractor;
-
 
 class MergableRoadDetector
 {

@@ -73,10 +73,8 @@ RegionsLayout getRegionsLayout(SharedBarriers &barriers)
             static_cast<const SharedDataTimestamp *>(shared_region->Ptr());
         if (shared_timestamp->region == REGION_1)
         {
-            return RegionsLayout{REGION_1,
-                                 barriers.region_1_mutex,
-                                 REGION_2,
-                                 barriers.region_2_mutex};
+            return RegionsLayout{
+                REGION_1, barriers.region_1_mutex, REGION_2, barriers.region_2_mutex};
         }
 
         BOOST_ASSERT(shared_timestamp->region == REGION_2);

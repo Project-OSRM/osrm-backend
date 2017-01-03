@@ -14,9 +14,9 @@
 
 #include "extractor/guidance/turn_instruction.hpp"
 
-#include <boost/range/algorithm/min_element.hpp>
-#include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/count_if.hpp>
+#include <boost/range/algorithm/find_if.hpp>
+#include <boost/range/algorithm/min_element.hpp>
 
 namespace osrm
 {
@@ -133,8 +133,7 @@ template <typename Self> struct EnableShapeOps
     // search a given eid in the intersection
     auto FindEid(const EdgeID eid) const
     {
-        return boost::range::find_if(
-            *self(), [eid](const auto &road) { return road.eid == eid; });
+        return boost::range::find_if(*self(), [eid](const auto &road) { return road.eid == eid; });
     }
 
     // find the maximum value based on a conversion operator
@@ -247,8 +246,8 @@ template <typename Self> struct EnableIntersectionOps
     auto findClosestTurn(const double angle, const UnaryPredicate filter) const
     {
         BOOST_ASSERT(!self()->empty());
-        const auto candidate = boost::range::min_element(
-            *self(), [angle, &filter](const auto &lhs, const auto &rhs) {
+        const auto candidate =
+            boost::range::min_element(*self(), [angle, &filter](const auto &lhs, const auto &rhs) {
                 const auto filtered_lhs = filter(lhs), filtered_rhs = filter(rhs);
                 const auto deviation_lhs = util::angularDeviation(lhs.angle, angle),
                            deviation_rhs = util::angularDeviation(rhs.angle, angle);

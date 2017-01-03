@@ -1,5 +1,5 @@
-#include "extractor/guidance/constants.hpp"
 #include "extractor/guidance/turn_handler.hpp"
+#include "extractor/guidance/constants.hpp"
 
 #include "util/bearing.hpp"
 #include "util/guidance/name_announcements.hpp"

@@ -52,7 +52,6 @@ class DataWatchdog
         const auto shared_timestamp =
             static_cast<const storage::SharedDataTimestamp *>(shared_regions->Ptr());
 
-
         const auto get_locked_facade = [this, shared_timestamp](
             const std::shared_ptr<datafacade::SharedMemoryDataFacade> &facade) {
             if (current_timestamp.region == storage::REGION_1)
@@ -117,10 +116,8 @@ class DataWatchdog
             current_timestamp = *shared_timestamp;
         }
 
-        auto new_facade =
-            std::make_shared<datafacade::SharedMemoryDataFacade>(shared_barriers,
-                                                                 current_timestamp.region,
-                                                                 current_timestamp.timestamp);
+        auto new_facade = std::make_shared<datafacade::SharedMemoryDataFacade>(
+            shared_barriers, current_timestamp.region, current_timestamp.timestamp);
         cached_facade = new_facade;
 
         return get_locked_facade(new_facade);

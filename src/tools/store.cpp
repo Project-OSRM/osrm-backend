@@ -91,7 +91,7 @@ bool generateDataStoreOptions(const int argc,
     return true;
 }
 
-[[ noreturn ]] void CleanupSharedBarriers(int signum)
+[[noreturn]] void CleanupSharedBarriers(int signum)
 { // Here the lock state of named mutexes is unknown, make a hard cleanup
     osrm::storage::SharedBarriers::resetCurrentRegion();
     std::_Exit(128 + signum);
