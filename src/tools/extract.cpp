@@ -50,7 +50,12 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
             ->default_value(1000),
         "Number of nodes required before a strongly-connected-componennt is considered big "
-        "(affects nearest neighbor snapping)");
+        "(affects nearest neighbor snapping)")(
+        "with-osm-metadata",
+        boost::program_options::value<bool>(&extractor_config.use_metadata)
+            ->implicit_value(true)
+            ->default_value(false),
+        "Use metada during osm parsing (This can affect the extraction performance).");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user

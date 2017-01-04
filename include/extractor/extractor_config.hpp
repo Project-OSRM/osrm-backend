@@ -102,6 +102,8 @@ struct ExtractorConfig
     bool generate_edge_lookup;
     std::string edge_penalty_path;
     std::string edge_segment_lookup_path;
+
+    bool use_metadata;
 };
 }
 }
