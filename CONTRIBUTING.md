@@ -7,6 +7,28 @@ You can add a :+1: emoji to the issue if you want to express interest in this.
 # Developer
 
 We use `clang-format` version `3.8` to consistently format the code base. There is a helper script under `scripts/format.sh`.
+The format is automatically checked by the `mason-linux-release` job of a Travis CI build.
+To save development time a local hook `.git/hooks/pre-push`
+```
+#!/bin/sh
+
+remote="$1"
+if [ x"$remote" = xorigin  ] ; then
+    if [ $(git rev-parse --abbrev-ref HEAD) = master ] ; then
+        echo "Rejected push to $remote/master" ; exit 1
+    fi
+
+    ./scripts/format.sh
+    if [ $? -ne 0 ] ; then
+        echo "Unstaged format changes" ; exit 1
+    fi
+fi
+```
+could check code format, modify a local repository and reject push due to unstaged formatting changes.
+Also `pre-push` hook  rejects direct pushes to `origin/master`.
+
+⚠️ `scripts/format.sh` checks all local files that match `*.cpp` or `*.hpp` patterns.
+
 
 In general changes that affect the API and/or increase the memory consumption need to be discussed first.
 Often we don't include changes that would increase the memory consumption a lot if they are not generally usable (e.g. elevation data is a good example).
