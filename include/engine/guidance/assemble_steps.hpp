@@ -145,6 +145,16 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                     path_point.lane_data.second != INVALID_LANE_DESCRIPTIONID
                         ? facade.GetTurnDescription(path_point.lane_data.second)
                         : extractor::guidance::TurnLaneDescription();
+
+                // Lanes in turn are bound by total number of lanes at the location
+                BOOST_ASSERT(intersection.lanes.lanes_in_turn <=
+                             intersection.lane_description.size());
+                // No lanes at location and no turn lane or lanes at location and lanes in turn
+                BOOST_ASSERT((intersection.lane_description.empty() &&
+                              intersection.lanes.lanes_in_turn == 0) ||
+                             (!intersection.lane_description.empty() &&
+                              intersection.lanes.lanes_in_turn != 0));
+
                 std::copy(bearing_data.begin(),
                           bearing_data.end(),
                           std::back_inserter(intersection.bearings));

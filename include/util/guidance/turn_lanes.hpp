@@ -69,7 +69,7 @@ class LaneTuple
     bool operator!=(const LaneTuple other) const;
 
     LaneID lanes_in_turn;
-    LaneID first_lane_from_the_right;
+    LaneID first_lane_from_the_right; // is INVALID_LANEID when no lanes present
 
     friend std::size_t hash_value(const LaneTuple &tup)
     {
