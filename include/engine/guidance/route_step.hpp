@@ -90,12 +90,19 @@ struct RouteStep
     // copy all strings from origin into the step, apart from rotary names
     RouteStep &AdaptStepSignage(const RouteStep &origin);
 
-    LaneID NumLanesToTheRight() const;
+    // Lane utilities for the step's turn.
+    // A step may have lanes left or right of the turn: think left turn with lanes going straight.
+    // Note: Lanes for intersections along the way are available via intersections[n].lanes.
 
+    bool HasLanesAtTurn() const;
+
+    LaneID NumLanesInTurn() const;
+    LaneID NumLanesInTotal() const;
+
+    LaneID NumLanesToTheRight() const;
     LaneID NumLanesToTheLeft() const;
 
     auto LanesToTheLeft() const;
-
     auto LanesToTheRight() const;
 };
 
@@ -172,16 +179,32 @@ inline RouteStep &RouteStep::AdaptStepSignage(const RouteStep &origin)
     return *this;
 }
 
+inline bool RouteStep::HasLanesAtTurn() const { return NumLanesInTotal() != 0; }
+
+inline LaneID RouteStep::NumLanesInTurn() const
+{
+    return intersections.front().lanes.lanes_in_turn;
+}
+
+inline LaneID RouteStep::NumLanesInTotal() const
+{
+    return intersections.front().lane_description.size();
+}
+
 inline LaneID RouteStep::NumLanesToTheRight() const
 {
+    if (!HasLanesAtTurn())
+        return 0;
+
     return intersections.front().lanes.first_lane_from_the_right;
 }
 
 inline LaneID RouteStep::NumLanesToTheLeft() const
 {
-    LaneID const total = intersections.front().lane_description.size();
-    return total - (intersections.front().lanes.lanes_in_turn +
-                    intersections.front().lanes.first_lane_from_the_right);
+    if (!HasLanesAtTurn())
+        return 0;
+
+    return NumLanesInTotal() - (NumLanesInTurn() + NumLanesToTheRight());
 }
 
 inline auto RouteStep::LanesToTheLeft() const
