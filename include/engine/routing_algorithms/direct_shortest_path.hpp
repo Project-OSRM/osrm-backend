@@ -24,10 +24,9 @@ namespace routing_algorithms
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
 template <class DataFacadeT>
-class DirectShortestPathRouting final
-    : public BasicRoutingInterface<DataFacadeT, DirectShortestPathRouting<DataFacadeT>>
+class DirectShortestPathRouting final : public BasicRoutingInterface<DataFacadeT>
 {
-    using super = BasicRoutingInterface<DataFacadeT, DirectShortestPathRouting<DataFacadeT>>;
+    using super = BasicRoutingInterface<DataFacadeT>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 

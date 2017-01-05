@@ -29,7 +29,7 @@ namespace engine
 namespace routing_algorithms
 {
 
-template <class DataFacadeT, class Derived> class BasicRoutingInterface
+template <class DataFacadeT> class BasicRoutingInterface
 {
   private:
     using EdgeData = typename DataFacadeT::EdgeData;

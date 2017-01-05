@@ -20,10 +20,9 @@ namespace routing_algorithms
 {
 
 template <class DataFacadeT>
-class ManyToManyRouting final
-    : public BasicRoutingInterface<DataFacadeT, ManyToManyRouting<DataFacadeT>>
+class ManyToManyRouting final : public BasicRoutingInterface<DataFacadeT>
 {
-    using super = BasicRoutingInterface<DataFacadeT, ManyToManyRouting<DataFacadeT>>;
+    using super = BasicRoutingInterface<DataFacadeT>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
 
