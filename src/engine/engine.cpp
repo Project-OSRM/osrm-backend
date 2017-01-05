@@ -27,22 +27,22 @@ namespace
 template <typename ParameterT, typename PluginT, typename ResultT>
 osrm::engine::Status
 RunQuery(const std::unique_ptr<osrm::engine::DataWatchdog> &watchdog,
-         const std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &facade,
+         const std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &immutable_facade,
          const ParameterT &parameters,
          PluginT &plugin,
          ResultT &result)
 {
     if (watchdog)
     {
-        BOOST_ASSERT(!facade);
+        BOOST_ASSERT(!immutable_facade);
         auto facade = watchdog->GetDataFacade();
 
         return plugin.HandleRequest(facade, parameters, result);
     }
 
-    BOOST_ASSERT(facade);
+    BOOST_ASSERT(immutable_facade);
 
-    return plugin.HandleRequest(facade, parameters, result);
+    return plugin.HandleRequest(immutable_facade, parameters, result);
 }
 
 } // anon. ns
