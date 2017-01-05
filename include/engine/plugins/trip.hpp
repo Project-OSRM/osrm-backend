@@ -30,11 +30,11 @@ class TripPlugin final : public BasePlugin
 {
   private:
     mutable SearchEngineData heaps;
-    mutable routing_algorithms::ShortestPathRouting<datafacade::BaseDataFacade> shortest_path;
-    mutable routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> duration_table;
+    mutable routing_algorithms::ShortestPathRouting shortest_path;
+    mutable routing_algorithms::ManyToManyRouting duration_table;
     const int max_locations_trip;
 
-    InternalRouteResult ComputeRoute(const datafacade::BaseDataFacade &facade,
+    InternalRouteResult ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                      const std::vector<PhantomNode> &phantom_node_list,
                                      const std::vector<NodeID> &trip) const;
 

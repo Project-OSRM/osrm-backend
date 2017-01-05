@@ -26,7 +26,7 @@ class TablePlugin final : public BasePlugin
 
   private:
     mutable SearchEngineData heaps;
-    mutable routing_algorithms::ManyToManyRouting<datafacade::BaseDataFacade> distance_table;
+    mutable routing_algorithms::ManyToManyRouting distance_table;
     const int max_locations_distance_table;
 };
 }
