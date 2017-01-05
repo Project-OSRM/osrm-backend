@@ -114,9 +114,10 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     return SCC_Component(std::move(components), std::move(range));
 }
 
-InternalRouteResult TripPlugin::ComputeRoute(const datafacade::BaseDataFacade &facade,
-                                             const std::vector<PhantomNode> &snapped_phantoms,
-                                             const std::vector<NodeID> &trip) const
+InternalRouteResult
+TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+                         const std::vector<PhantomNode> &snapped_phantoms,
+                         const std::vector<NodeID> &trip) const
 {
     InternalRouteResult min_route;
     // given he final trip, compute total duration and return the route and location permutation
@@ -175,7 +176,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
 
     // compute the duration table of all phantom nodes
     const auto result_table = util::DistTableWrapper<EdgeWeight>(
-        duration_table(*facade, snapped_phantoms, {}, {}), number_of_locations);
+        duration_table(facade, snapped_phantoms, {}, {}), number_of_locations);
 
     if (result_table.size() == 0)
     {
@@ -233,7 +234,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     routes.reserve(trips.size());
     for (const auto &trip : trips)
     {
-        routes.push_back(ComputeRoute(*facade, snapped_phantoms, trip));
+        routes.push_back(ComputeRoute(facade, snapped_phantoms, trip));
     }
 
     api::TripAPI trip_api{*facade, parameters};
