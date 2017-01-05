@@ -26,10 +26,9 @@ const double VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
 const double VIAPATH_GAMMA = 0.75;   // alternative shares at most 75% with the shortest.
 
 template <class DataFacadeT>
-class AlternativeRouting final
-    : private BasicRoutingInterface<DataFacadeT, AlternativeRouting<DataFacadeT>>
+class AlternativeRouting final : private BasicRoutingInterface<DataFacadeT>
 {
-    using super = BasicRoutingInterface<DataFacadeT, AlternativeRouting<DataFacadeT>>;
+    using super = BasicRoutingInterface<DataFacadeT>;
     using EdgeData = typename DataFacadeT::EdgeData;
     using QueryHeap = SearchEngineData::QueryHeap;
     using SearchSpaceEdge = std::pair<NodeID, NodeID>;

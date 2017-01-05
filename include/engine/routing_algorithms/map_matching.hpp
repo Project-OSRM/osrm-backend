@@ -37,10 +37,9 @@ static const constexpr double MATCHING_BETA = 10;
 constexpr static const double MAX_DISTANCE_DELTA = 2000.;
 
 // implements a hidden markov model map matching algorithm
-template <class DataFacadeT>
-class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>
+template <class DataFacadeT> class MapMatching final : public BasicRoutingInterface<DataFacadeT>
 {
-    using super = BasicRoutingInterface<DataFacadeT, MapMatching<DataFacadeT>>;
+    using super = BasicRoutingInterface<DataFacadeT>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
     map_matching::EmissionLogProbability default_emission_log_probability;

@@ -19,10 +19,9 @@ namespace routing_algorithms
 {
 
 template <class DataFacadeT>
-class ShortestPathRouting final
-    : public BasicRoutingInterface<DataFacadeT, ShortestPathRouting<DataFacadeT>>
+class ShortestPathRouting final : public BasicRoutingInterface<DataFacadeT>
 {
-    using super = BasicRoutingInterface<DataFacadeT, ShortestPathRouting<DataFacadeT>>;
+    using super = BasicRoutingInterface<DataFacadeT>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
     const static constexpr bool DO_NOT_FORCE_LOOP = false;
