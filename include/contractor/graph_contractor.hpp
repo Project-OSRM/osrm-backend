@@ -254,6 +254,85 @@ class GraphContractor
         util::Log() << "contractor finished initalization";
     }
 
+    /* Flush all data from the contraction to disc and reorder stuff for better locality */
+    void FlushDataAndRebuildContractorGraph(ThreadDataContainer &thread_data_list,
+                                            std::vector<RemainingNodeData> &remaining_nodes,
+                                            std::vector<float> &node_priorities)
+    {
+        util::DeallocatingVector<ContractorEdge> new_edge_set; // this one is not explicitely
+                                                               // cleared since it goes out of
+                                                               // scope anywa
+        // Delete old heap data to free memory that we need for the coming operations
+        thread_data_list.data.clear();
+        // Create new priority array
+        std::vector<float> new_node_priority(remaining_nodes.size());
+        std::vector<EdgeWeight> new_node_weights(remaining_nodes.size());
+        // this map gives the old IDs from the new ones, necessary to get a consistent graph
+        // at the end of contraction
+        orig_node_id_from_new_node_id_map.resize(remaining_nodes.size());
+        // this map gives the new IDs from the old ones, necessary to remap targets from the
+        // remaining graph
+        const auto number_of_nodes = contractor_graph->GetNumberOfNodes();
+        std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, SPECIAL_NODEID);
+        for (const auto new_node_id : util::irange<std::size_t>(0UL, remaining_nodes.size()))
+        {
+            auto &node = remaining_nodes[new_node_id];
+            BOOST_ASSERT(node_priorities.size() > node.id);
+            new_node_priority[new_node_id] = node_priorities[node.id];
+            BOOST_ASSERT(node_weights.size() > node.id);
+            new_node_weights[new_node_id] = node_weights[node.id];
+        }
+        // build forward and backward renumbering map and remap ids in remaining_nodes
+        for (const auto new_node_id : util::irange<std::size_t>(0UL, remaining_nodes.size()))
+        {
+            auto &node = remaining_nodes[new_node_id];
+            // create renumbering maps in both directions
+            orig_node_id_from_new_node_id_map[new_node_id] = node.id;
+            new_node_id_from_orig_id_map[node.id] = new_node_id;
+            node.id = new_node_id;
+        }
+        // walk over all nodes
+        for (const auto source : util::irange<NodeID>(0UL, contractor_graph->GetNumberOfNodes()))
+        {
+            for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
+            {
+                ContractorGraph::EdgeData &data = contractor_graph->GetEdgeData(current_edge);
+                const NodeID target = contractor_graph->GetTarget(current_edge);
+                if (SPECIAL_NODEID == new_node_id_from_orig_id_map[source])
+                {
+                    external_edge_list.push_back({source, target, data});
+                }
+                else
+                {
+                    // node is not yet contracted.
+                    // add (renumbered) outgoing edges to new util::DynamicGraph.
+                    ContractorEdge new_edge = {new_node_id_from_orig_id_map[source],
+                                               new_node_id_from_orig_id_map[target],
+                                               data};
+                    new_edge.data.is_original_via_node_ID = true;
+                    BOOST_ASSERT_MSG(SPECIAL_NODEID != new_node_id_from_orig_id_map[source],
+                                     "new source id not resolveable");
+                    BOOST_ASSERT_MSG(SPECIAL_NODEID != new_node_id_from_orig_id_map[target],
+                                     "new target id not resolveable");
+                    new_edge_set.push_back(new_edge);
+                }
+            }
+        }
+        // Replace old priorities array by new one
+        node_priorities.swap(new_node_priority);
+        // Delete old node_priorities vector
+        node_weights.swap(new_node_weights);
+        // old Graph is removed
+        contractor_graph.reset();
+        // create new graph
+        tbb::parallel_sort(new_edge_set.begin(), new_edge_set.end());
+        contractor_graph = std::make_shared<ContractorGraph>(remaining_nodes.size(), new_edge_set);
+        new_edge_set.clear();
+        // INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
+        // reinitialize heaps and ThreadData objects with appropriate size
+        thread_data_list.number_of_nodes = contractor_graph->GetNumberOfNodes();
+    }
+
     void Run(double core_factor = 1.0)
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
@@ -329,103 +408,12 @@ class GraphContractor
             if (!flushed_contractor && (number_of_contracted_nodes >
                                         static_cast<NodeID>(number_of_nodes * 0.65 * core_factor)))
             {
-                util::DeallocatingVector<ContractorEdge>
-                    new_edge_set; // this one is not explicitely
-                                  // cleared since it goes out of
-                                  // scope anywa
                 log << " [flush " << number_of_contracted_nodes << " nodes] ";
 
-                // Delete old heap data to free memory that we need for the coming operations
-                thread_data_list.data.clear();
+                FlushDataAndRebuildContractorGraph(
+                    thread_data_list, remaining_nodes, node_priorities);
 
-                // Create new priority array
-                std::vector<float> new_node_priority(remaining_nodes.size());
-                std::vector<EdgeWeight> new_node_weights(remaining_nodes.size());
-                // this map gives the old IDs from the new ones, necessary to get a consistent graph
-                // at the end of contraction
-                orig_node_id_from_new_node_id_map.resize(remaining_nodes.size());
-                // this map gives the new IDs from the old ones, necessary to remap targets from the
-                // remaining graph
-                std::vector<NodeID> new_node_id_from_orig_id_map(number_of_nodes, SPECIAL_NODEID);
-
-                for (const auto new_node_id :
-                     util::irange<std::size_t>(0UL, remaining_nodes.size()))
-                {
-                    auto &node = remaining_nodes[new_node_id];
-                    BOOST_ASSERT(node_priorities.size() > node.id);
-                    new_node_priority[new_node_id] = node_priorities[node.id];
-                    BOOST_ASSERT(node_weights.size() > node.id);
-                    new_node_weights[new_node_id] = node_weights[node.id];
-                }
-
-                // build forward and backward renumbering map and remap ids in remaining_nodes
-                for (const auto new_node_id :
-                     util::irange<std::size_t>(0UL, remaining_nodes.size()))
-                {
-                    auto &node = remaining_nodes[new_node_id];
-                    // create renumbering maps in both directions
-                    orig_node_id_from_new_node_id_map[new_node_id] = node.id;
-                    new_node_id_from_orig_id_map[node.id] = new_node_id;
-                    node.id = new_node_id;
-                }
-                // walk over all nodes
-                for (const auto source :
-                     util::irange<NodeID>(0UL, contractor_graph->GetNumberOfNodes()))
-                {
-                    for (auto current_edge : contractor_graph->GetAdjacentEdgeRange(source))
-                    {
-                        ContractorGraph::EdgeData &data =
-                            contractor_graph->GetEdgeData(current_edge);
-                        const NodeID target = contractor_graph->GetTarget(current_edge);
-                        if (SPECIAL_NODEID == new_node_id_from_orig_id_map[source])
-                        {
-                            external_edge_list.push_back({source, target, data});
-                        }
-                        else
-                        {
-                            // node is not yet contracted.
-                            // add (renumbered) outgoing edges to new util::DynamicGraph.
-                            ContractorEdge new_edge = {new_node_id_from_orig_id_map[source],
-                                                       new_node_id_from_orig_id_map[target],
-                                                       data};
-
-                            new_edge.data.is_original_via_node_ID = true;
-                            BOOST_ASSERT_MSG(SPECIAL_NODEID != new_node_id_from_orig_id_map[source],
-                                             "new source id not resolveable");
-                            BOOST_ASSERT_MSG(SPECIAL_NODEID != new_node_id_from_orig_id_map[target],
-                                             "new target id not resolveable");
-                            new_edge_set.push_back(new_edge);
-                        }
-                    }
-                }
-
-                // Delete map from old NodeIDs to new ones.
-                new_node_id_from_orig_id_map.clear();
-                new_node_id_from_orig_id_map.shrink_to_fit();
-
-                // Replace old priorities array by new one
-                node_priorities.swap(new_node_priority);
-                // Delete old node_priorities vector
-                // Due to the scope, these should get cleared automatically? @daniel-j-h do you
-                // agree?
-                new_node_priority.clear();
-                new_node_priority.shrink_to_fit();
-
-                node_weights.swap(new_node_weights);
-                // old Graph is removed
-                contractor_graph.reset();
-
-                // create new graph
-                tbb::parallel_sort(new_edge_set.begin(), new_edge_set.end());
-                contractor_graph =
-                    std::make_shared<ContractorGraph>(remaining_nodes.size(), new_edge_set);
-
-                new_edge_set.clear();
                 flushed_contractor = true;
-
-                // INFO: MAKE SURE THIS IS THE LAST OPERATION OF THE FLUSH!
-                // reinitialize heaps and ThreadData objects with appropriate size
-                thread_data_list.number_of_nodes = contractor_graph->GetNumberOfNodes();
             }
 
             tbb::parallel_for(
