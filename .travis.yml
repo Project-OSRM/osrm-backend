@@ -45,12 +45,12 @@ matrix:
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON BUILD_COMPONENTS=ON
 
     - os: linux
-      compiler: "clang-3.8-debug"
+      compiler: "clang-3.9-debug"
       addons: &clang38
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Debug' BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
+      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Debug' BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
 
     - os: osx
       osx_image: xcode8.2
@@ -65,7 +65,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='3.8.1' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON
+      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON
 
     - os: linux
       compiler: "gcc-6-release"
@@ -124,7 +124,7 @@ before_install:
     fi
   - |
     if [ -n "${RUN_CLANG_FORMAT}" ]; then
-      ${MASON} install clang-format 3.8.0 && PATH=$(${MASON} prefix clang-format 3.8.0)/bin:${PATH} ./scripts/format.sh
+      ${MASON} install clang-format 3.8.1 && PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh
     fi
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
