@@ -1,7 +1,6 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
-#include "storage/shared_barriers.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
@@ -23,7 +22,6 @@
 #include "util/json_container.hpp"
 
 #include <memory>
-#include <mutex>
 #include <string>
 
 namespace osrm
@@ -50,7 +48,6 @@ class Engine final
     Status Tile(const api::TileParameters &parameters, std::string &result) const;
 
   private:
-    //std::unique_ptr<storage::SharedBarriers> lock;
     std::unique_ptr<DataWatchdog> watchdog;
 
     const plugins::ViaRoutePlugin route_plugin;
