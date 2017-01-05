@@ -75,6 +75,7 @@ template <typename Integer> class range
     Integer front() const noexcept { return *iter; }
     Integer back() const noexcept { return *last - 1; }
     std::size_t size() const noexcept { return static_cast<std::size_t>(last - iter); }
+    bool empty() const noexcept { return size() == 0; }
 
   private:
     iterator iter;
