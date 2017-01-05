@@ -6,6 +6,8 @@
       - No longer emitting turns on ferries, if a ferry should use multiple docking locations
     - Profiles
       - Removed the `./profile.lua -> ./profiles/car.lua` symlink. Use specific profiles from the `profiles` directory.
+    - Infrastructure
+      - Disabled link-time optimized (LTO) builds by default. Enable by passing `-DENABLE_LTO=ON` to `cmake` if you need the performance and know what you are doing.
 
 # 5.5.1
   - Changes from 5.5.0
