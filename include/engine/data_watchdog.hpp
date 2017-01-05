@@ -26,10 +26,20 @@ namespace engine
 class DataWatchdog
 {
   public:
-    DataWatchdog()
-        : active(true)
-        , timestamp(0)
+    DataWatchdog() : active(true), timestamp(0)
     {
+        // create the initial facade before launching the watchdog thread
+        {
+            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> current_region_lock(
+                barrier.region_mutex);
+
+            auto shared_memory = makeSharedMemory(storage::CURRENT_REGION);
+            auto current = static_cast<storage::SharedDataTimestamp *>(shared_memory->Ptr());
+
+            facade = std::make_shared<datafacade::SharedMemoryDataFacade>(current->region);
+            timestamp = current->timestamp;
+        }
+
         watcher = std::thread(&DataWatchdog::Run, this);
     }
 
@@ -46,35 +56,33 @@ class DataWatchdog
         return storage::SharedMemory::RegionExists(storage::CURRENT_REGION);
     }
 
-    auto GetDataFacade() const
-    {
-        return facade;
-    }
+    auto GetDataFacade() const { return facade; }
 
   private:
-
     void Run()
     {
-        boost::interprocess::scoped_lock<boost::interprocess::named_mutex>
-            current_region_lock(barrier.region_mutex);
-
         auto shared_memory = makeSharedMemory(storage::CURRENT_REGION);
         auto current = static_cast<storage::SharedDataTimestamp *>(shared_memory->Ptr());
 
         while (active)
         {
+            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> current_region_lock(
+                barrier.region_mutex);
+
+            while (active && timestamp == current->timestamp)
+            {
+                barrier.region_condition.wait(current_region_lock);
+            }
+
             if (timestamp != current->timestamp)
             {
                 facade = std::make_shared<datafacade::SharedMemoryDataFacade>(current->region);
                 timestamp = current->timestamp;
-                util::Log() << "updated facade to region " << storage::regionToString(current->region)
-                            << " with timestamp " << current->timestamp;
+                util::Log() << "updated facade to region "
+                            << storage::regionToString(current->region) << " with timestamp "
+                            << current->timestamp;
             }
-
-            barrier.region_condition.wait(current_region_lock);
         }
-
-        facade.reset();
 
         util::Log() << "DataWatchdog thread stopped";
     }

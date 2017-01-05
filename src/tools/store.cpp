@@ -16,15 +16,21 @@ using namespace osrm;
 // generate boost::program_options object for the routing part
 bool generateDataStoreOptions(const int argc,
                               const char *argv[],
-                              boost::filesystem::path &base_path)
+                              boost::filesystem::path &base_path,
+                              int &max_wait)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")("remove-locks,r", "Remove locks");
+    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
+        "remove-locks,r", "Remove locks");
 
     // declare a group of options that will be allowed both on command line
     // as well as in a config file
     boost::program_options::options_description config_options("Configuration");
+    config_options.add_options()("max-wait",
+                                 boost::program_options::value<int>(&max_wait)->default_value(-1),
+                                 "Maximum number of seconds to wait on a running data update "
+                                 "before aquiring the lock by force.");
 
     // hidden options, will be allowed on command line but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -110,7 +116,8 @@ int main(const int argc, const char *argv[]) try
     util::LogPolicy::GetInstance().Unmute();
 
     boost::filesystem::path base_path;
-    if (!generateDataStoreOptions(argc, argv, base_path))
+    int max_wait = -1;
+    if (!generateDataStoreOptions(argc, argv, base_path, max_wait))
     {
         return EXIT_SUCCESS;
     }
@@ -122,7 +129,7 @@ int main(const int argc, const char *argv[]) try
     }
     storage::Storage storage(std::move(config));
 
-    return storage.Run();
+    return storage.Run(max_wait);
 }
 catch (const std::bad_alloc &e)
 {

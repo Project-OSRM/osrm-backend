@@ -1,5 +1,5 @@
-#include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/coordinate.hpp"
 #include "util/trigonometry_table.hpp"
 #include "util/web_mercator.hpp"
 

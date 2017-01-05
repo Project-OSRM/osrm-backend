@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "storage/shared_datatype.hpp"
 #include "storage/storage_config.hpp"
 
-#include <boost/interprocess/sync/named_mutex.hpp>
 #include <boost/filesystem/path.hpp>
 
 #include <string>
@@ -45,14 +44,13 @@ class Storage
   public:
     Storage(StorageConfig config);
 
-    int Run();
+    int Run(int max_wait);
 
     void PopulateLayout(DataLayout &layout);
     void PopulateData(const DataLayout &layout, char *memory_ptr);
 
   private:
     StorageConfig config;
-    boost::interprocess::named_mutex datastore_mutex;
 };
 }
 }

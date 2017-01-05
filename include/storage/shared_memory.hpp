@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <thread>
 
 namespace osrm
 {
@@ -106,6 +107,20 @@ class SharedMemory
         return Remove(key);
     }
 
+    void WaitForDetach()
+    {
+        auto shmid = shm.get_shmid();
+        ::shmid_ds xsi_ds;
+        do
+        {
+            int ret = ::shmctl(shmid, IPC_STAT, &xsi_ds);
+            (void)ret; // no unused warning
+            BOOST_ASSERT(ret >= 0);
+
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+        } while (xsi_ds.shm_nattch > 1);
+    }
+
   private:
     static bool RegionExists(const boost::interprocess::xsi_key &key)
     {
@@ -147,17 +162,13 @@ class SharedMemory
   public:
     void *Ptr() const { return region.get_address(); }
 
-    SharedMemory(const boost::filesystem::path &lock_file,
-                 const int id,
-                 const uint64_t size = 0)
+    SharedMemory(const boost::filesystem::path &lock_file, const int id, const uint64_t size = 0)
     {
         sprintf(key, "%s.%d", "osrm.lock", id);
         if (0 == size)
         { // read_only
             shm = boost::interprocess::shared_memory_object(
-                boost::interprocess::open_only,
-                key,
-                boost::interprocess::read_only);
+                boost::interprocess::open_only, key, boost::interprocess::read_only);
             region = boost::interprocess::mapped_region(shm, boost::interprocess::read_only);
         }
         else
@@ -225,8 +236,7 @@ class SharedMemory
 #endif
 
 template <typename IdentifierT, typename LockFileT = OSRMLockFile>
-std::unique_ptr<SharedMemory>
-makeSharedMemory(const IdentifierT &id, const uint64_t size = 0)
+std::unique_ptr<SharedMemory> makeSharedMemory(const IdentifierT &id, const uint64_t size = 0)
 {
     try
     {
