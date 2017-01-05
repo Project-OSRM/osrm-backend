@@ -30,9 +30,7 @@ class SharedMemoryDataFacade : public ContiguousInternalMemoryDataFacadeBase
     SharedMemoryDataFacade() {}
 
   public:
-
-    SharedMemoryDataFacade(storage::SharedDataType data_region)
-        : data_region(data_region)
+    SharedMemoryDataFacade(storage::SharedDataType data_region) : data_region(data_region)
     {
         util::Log(logDEBUG) << "Loading new data for region " << regionToString(data_region);
 

@@ -10,9 +10,9 @@
       - Removed the `./profile.lua -> ./profiles/car.lua` symlink. Use specific profiles from the `profiles` directory.
     - Infrastructure
       - Disabled link-time optimized (LTO) builds by default. Enable by passing `-DENABLE_LTO=ON` to `cmake` if you need the performance and know what you are doing.
-    - File handling
       - Datafile versioning is now based on OSRM semver values, rather than source code checksums.
         Datafiles are compatible between patch levels, but incompatible between minor version or higher bumps.
+      - libOSRM now creates an own watcher thread then used in shared memory mode to listen for data updates
 
 # 5.5.1
   - Changes from 5.5.0

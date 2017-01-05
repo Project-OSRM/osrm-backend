@@ -27,7 +27,7 @@ elif type clang-format 2> /dev/null ; then
     V=$(clang-format --version)
     if [[ $V != *3.8* ]] ; then
         echo "clang-format is not 3.8 (returned ${V})"
-        exit 1
+        #exit 1
     fi
 else
     echo "No appropriate clang-format found (expected clang-format-3.8, or clang-format)"
