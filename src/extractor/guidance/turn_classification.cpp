@@ -11,19 +11,6 @@ namespace extractor
 namespace guidance
 {
 
-struct TurnPossibility
-{
-    TurnPossibility(bool entry_allowed, double bearing)
-        : entry_allowed(entry_allowed), bearing(std::move(bearing))
-    {
-    }
-
-    TurnPossibility() : entry_allowed(false), bearing(0) {}
-
-    bool entry_allowed;
-    double bearing;
-};
-
 std::pair<util::guidance::EntryClass, util::guidance::BearingClass>
 classifyIntersection(Intersection intersection)
 {
