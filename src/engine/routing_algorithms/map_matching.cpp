@@ -300,6 +300,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
         {
             ++sub_matching_begin;
         }
+        const auto sub_matching_last_timestamp = parent_timestamp_index;
 
         // matchings that only consist of one candidate are invalid
         if (parent_timestamp_index - sub_matching_begin + 1 < 2)
@@ -319,12 +320,8 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
         std::deque<std::pair<std::size_t, std::size_t>> reconstructed_indices;
         while (parent_timestamp_index > sub_matching_begin)
         {
-            if (model.breakage[parent_timestamp_index])
-            {
-                continue;
-            }
-
             reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
+            model.viterbi_reachable[parent_timestamp_index][parent_candidate_index] = true;
             const auto &next = model.parents[parent_timestamp_index][parent_candidate_index];
             // make sure we can never get stuck in this loop
             if (parent_timestamp_index == next.first)
@@ -335,10 +332,32 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
             parent_candidate_index = next.second;
         }
         reconstructed_indices.emplace_front(parent_timestamp_index, parent_candidate_index);
+        model.viterbi_reachable[parent_timestamp_index][parent_candidate_index] = true;
         if (reconstructed_indices.size() < 2)
         {
             sub_matching_begin = sub_matching_end;
             continue;
+        }
+
+        // fill viterbi reachability matrix
+        for (const auto s_last :
+             util::irange<std::size_t>(0UL, model.viterbi[sub_matching_last_timestamp].size()))
+        {
+            parent_timestamp_index = sub_matching_last_timestamp;
+            parent_candidate_index = s_last;
+            while (parent_timestamp_index > sub_matching_begin)
+            {
+                if (model.viterbi_reachable[parent_timestamp_index][parent_candidate_index] ||
+                    model.pruned[parent_timestamp_index][parent_candidate_index])
+                {
+                    break;
+                }
+                model.viterbi_reachable[parent_timestamp_index][parent_candidate_index] = true;
+                const auto &next = model.parents[parent_timestamp_index][parent_candidate_index];
+                parent_timestamp_index = next.first;
+                parent_candidate_index = next.second;
+            }
+            model.viterbi_reachable[parent_timestamp_index][parent_candidate_index] = true;
         }
 
         auto matching_distance = 0.0;
@@ -352,6 +371,10 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
 
             matching.indices.push_back(timestamp_index);
             matching.nodes.push_back(candidates_list[timestamp_index][location_index].phantom_node);
+            matching.alternatives_count.push_back(
+                std::accumulate(model.viterbi_reachable[timestamp_index].begin(),
+                                model.viterbi_reachable[timestamp_index].end(),
+                                0));
             matching_distance += model.path_distances[timestamp_index][location_index];
         }
         util::for_each_pair(

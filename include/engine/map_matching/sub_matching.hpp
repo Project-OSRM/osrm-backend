@@ -16,6 +16,7 @@ struct SubMatching
 {
     std::vector<PhantomNode> nodes;
     std::vector<unsigned> indices;
+    std::vector<unsigned> alternatives_count;
     double confidence;
 };
 }

@@ -101,6 +101,9 @@ class MatchAPI final : public RouteAPI
             auto waypoint = BaseAPI::MakeWaypoint(phantom);
             waypoint.values["matchings_index"] = matching_index.sub_matching_index;
             waypoint.values["waypoint_index"] = matching_index.point_index;
+            waypoint.values["alternatives_count"] =
+                sub_matchings[matching_index.sub_matching_index]
+                    .alternatives_count[matching_index.point_index];
             waypoints.values.push_back(std::move(waypoint));
         }
 

@@ -51,6 +51,7 @@ struct TransitionLogProbability
 template <class CandidateLists> struct HiddenMarkovModel
 {
     std::vector<std::vector<double>> viterbi;
+    std::vector<std::vector<bool>> viterbi_reachable;
     std::vector<std::vector<std::pair<unsigned, unsigned>>> parents;
     std::vector<std::vector<float>> path_distances;
     std::vector<std::vector<bool>> pruned;
@@ -65,6 +66,7 @@ template <class CandidateLists> struct HiddenMarkovModel
           emission_log_probabilities(emission_log_probabilities)
     {
         viterbi.resize(candidates_list.size());
+        viterbi_reachable.resize(candidates_list.size());
         parents.resize(candidates_list.size());
         path_distances.resize(candidates_list.size());
         pruned.resize(candidates_list.size());
@@ -76,6 +78,7 @@ template <class CandidateLists> struct HiddenMarkovModel
             if (num_candidates > 0)
             {
                 viterbi[i].resize(num_candidates);
+                viterbi_reachable[i].resize(num_candidates);
                 parents[i].resize(num_candidates);
                 path_distances[i].resize(num_candidates);
                 pruned[i].resize(num_candidates);
@@ -93,6 +96,7 @@ template <class CandidateLists> struct HiddenMarkovModel
         for (const auto t : util::irange(initial_timestamp, viterbi.size()))
         {
             std::fill(viterbi[t].begin(), viterbi[t].end(), IMPOSSIBLE_LOG_PROB);
+            std::fill(viterbi_reachable[t].begin(), viterbi_reachable[t].end(), false);
             std::fill(parents[t].begin(), parents[t].end(), std::make_pair(0u, 0u));
             std::fill(path_distances[t].begin(), path_distances[t].end(), 0);
             std::fill(pruned[t].begin(), pruned[t].end(), true);
