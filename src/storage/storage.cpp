@@ -102,7 +102,7 @@ Storage::ReturnCode Storage::Run(int max_wait)
         }
     }
     // hard unlock in case of any exception.
-    catch (boost::interprocess::lock_exception &ex)
+    catch (boost::interprocess::lock_exception &)
     {
         barriers.current_region_mutex.unlock_upgradable();
         // make sure we exit here because this is bad

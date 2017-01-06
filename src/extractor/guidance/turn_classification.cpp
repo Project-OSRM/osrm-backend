@@ -32,7 +32,7 @@ classifyIntersection(Intersection intersection)
 
         DiscreteBearing last_discrete_bearing = util::guidance::BearingClass::getDiscreteBearing(
             std::round(intersection.back().bearing));
-        for (const auto road : intersection)
+        for (const auto &road : intersection)
         {
             const DiscreteBearing discrete_bearing =
                 util::guidance::BearingClass::getDiscreteBearing(std::round(road.bearing));
