@@ -145,7 +145,7 @@ class FileReader
                 result.push_back(thisline);
             }
         }
-        catch (const std::ios_base::failure &e)
+        catch (const std::ios_base::failure &)
         {
             // EOF is OK here, everything else, re-throw
             if (!input_stream.eof())

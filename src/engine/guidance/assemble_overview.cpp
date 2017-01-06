@@ -1,6 +1,3 @@
-#ifndef ENGINE_GUIDANCE_ASSEMBLE_OVERVIEW_HPP
-#define ENGINE_GUIDANCE_ASSEMBLE_OVERVIEW_HPP
-
 #include "engine/douglas_peucker.hpp"
 #include "engine/guidance/leg_geometry.hpp"
 #include "util/viewport.hpp"
@@ -30,7 +27,7 @@ unsigned calculateOverviewZoomLevel(const std::vector<LegGeometry> &leg_geometri
 
     for (const auto &leg_geometry : leg_geometries)
     {
-        for (const auto coord : leg_geometry.locations)
+        for (const auto &coord : leg_geometry.locations)
         {
             south_west.lon = std::min(south_west.lon, coord.lon);
             south_west.lat = std::min(south_west.lat, coord.lat);
@@ -96,5 +93,3 @@ std::vector<util::Coordinate> assembleOverview(const std::vector<LegGeometry> &l
 } // namespace guidance
 } // namespace engine
 } // namespace osrm
-
-#endif

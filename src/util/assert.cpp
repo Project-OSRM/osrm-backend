@@ -6,7 +6,7 @@
 namespace
 {
 // We hard-abort on assertion violations.
-void assertion_failed_msg_helper(
+[[noreturn]] void assertion_failed_msg_helper(
     char const *expr, char const *msg, char const *function, char const *file, long line)
 {
     std::cerr << "[assert] " << file << ":" << line << "\nin: " << function << ": " << expr << "\n"

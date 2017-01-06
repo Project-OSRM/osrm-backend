@@ -396,7 +396,7 @@ class MapMatching final : public BasicRoutingInterface<DataFacadeT, MapMatching<
             auto trace_distance = 0.0;
             matching.nodes.reserve(reconstructed_indices.size());
             matching.indices.reserve(reconstructed_indices.size());
-            for (const auto idx : reconstructed_indices)
+            for (const auto &idx : reconstructed_indices)
             {
                 const auto timestamp_index = idx.first;
                 const auto location_index = idx.second;

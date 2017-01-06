@@ -68,7 +68,7 @@ struct TileParameters final
         const auto valid_z = z < 20 && z >= 12;
 
         return valid_x && valid_y && valid_z;
-    };
+    }
 };
 }
 }
