@@ -290,7 +290,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
 
         const auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
@@ -437,7 +437,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load the HSGR file
     {
-        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::HasNoFingerprint);
+        io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
         auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
         unsigned *checksum_ptr =
             layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
