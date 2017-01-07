@@ -145,6 +145,11 @@ double bearing(const Coordinate first_coordinate, const Coordinate second_coordi
     {
         result -= 360.0;
     }
+    // If someone gives us two identical coordinates, then the concept of a bearing
+    // makes no sense.  However, because it sometimes happens, we'll at least
+    // return a consistent value of 0 so that the behaviour isn't random.
+    BOOST_ASSERT(first_coordinate != second_coordinate || result == 0.);
+
     return result;
 }
 
