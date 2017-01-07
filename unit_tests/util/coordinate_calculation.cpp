@@ -311,4 +311,15 @@ BOOST_AUTO_TEST_CASE(circleCenter)
     BOOST_CHECK(!result);
 }
 
+BOOST_AUTO_TEST_CASE(consistent_invalid_bearing_result)
+{
+    const auto pos1 = Coordinate(util::FloatLongitude{0.}, util::FloatLatitude{0.});
+    const auto pos2 = Coordinate(util::FloatLongitude{5.}, util::FloatLatitude{5.});
+    const auto pos3 = Coordinate(util::FloatLongitude{-5.}, util::FloatLatitude{-5.});
+
+    BOOST_CHECK_EQUAL(0., util::coordinate_calculation::bearing(pos1, pos1));
+    BOOST_CHECK_EQUAL(0., util::coordinate_calculation::bearing(pos2, pos2));
+    BOOST_CHECK_EQUAL(0., util::coordinate_calculation::bearing(pos3, pos3));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

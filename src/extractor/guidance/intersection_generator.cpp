@@ -2,8 +2,10 @@
 
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/log.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <functional> // mem_fn
 #include <limits>
 #include <numeric>
@@ -100,6 +102,19 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
 
         bearing =
             util::coordinate_calculation::bearing(turn_coordinate, coordinate_along_edge_leaving);
+
+        // OSM data sometimes contains duplicated nodes with identical coordinates, or
+        // because of coordinate precision rounding, end up at the same coordinate.
+        // It's impossible to calculate a bearing between these, so we log a warning
+        // that the data should be checked.
+        // The bearing calculation should return 0 in these cases, which may not be correct,
+        // but is at least not random.
+        if (turn_coordinate == coordinate_along_edge_leaving)
+        {
+            util::Log(logDEBUG) << "Zero length segment at " << coordinate_along_edge_leaving
+                                << " could cause invalid intersection exit bearing.";
+            BOOST_ASSERT(std::abs(bearing) <= 0.1);
+        }
 
         intersection.push_back({edge_connected_to_intersection, bearing, segment_length});
     }
