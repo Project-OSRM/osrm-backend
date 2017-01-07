@@ -45,7 +45,7 @@ class IntersectionHandler
     virtual bool
     canProcess(const NodeID nid, const EdgeID via_eid, const Intersection &intersection) const = 0;
 
-    // process the intersection
+    // handle and process the intersection
     virtual Intersection
     operator()(const NodeID nid, const EdgeID via_eid, Intersection intersection) const = 0;
 

@@ -42,6 +42,8 @@ IntersectionHandler::IntersectionHandler(const util::NodeBasedDynamicGraph &node
 {
 }
 
+// Inspects an intersection and a turn from via_edge onto road from the possible basic turn types
+// (OnRamp, Continue, Turn) find the suitable turn type
 TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
                                                       const ConnectedRoad &road) const
 {
@@ -254,9 +256,13 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
     else
     {
         if (low_priority_left && !low_priority_right)
+        {
             left.instruction = {TurnType::Turn, DirectionModifier::SlightLeft};
+        }
         else
+        {
             left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
+        }
     }
 
     // right side of fork
@@ -265,9 +271,13 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
     else
     {
         if (low_priority_right && !low_priority_left)
+        {
             right.instruction = {TurnType::Turn, DirectionModifier::SlightRight};
+        }
         else
+        {
             right.instruction = {TurnType::Fork, DirectionModifier::SlightRight};
+        }
     }
 }
 

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "util/bearing.hpp"
+#include "util/log.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp" // EdgeID
 
@@ -26,6 +27,8 @@ namespace guidance
 {
 
 // the shape of an intersection only knows about edge IDs and bearings
+// `bearing`    is the direction in clockwise angle from true north after taking the turn:
+//              0 = heading north, 90 = east, 180 = south, 270 = west
 struct IntersectionShapeData
 {
     EdgeID eid;
@@ -180,6 +183,12 @@ template <typename Self> struct EnableIntersectionOps
         auto comp = makeCompareAngularDeviation(angle);
         return boost::range::min_element(*self(), comp);
     }
+    // returns a non-const_interator
+    auto findClosestTurn(double angle)
+    {
+        auto comp = makeCompareAngularDeviation(angle);
+        return std::min_element(self()->begin(), self()->end(), comp);
+    }
 
     /* Check validity of the intersection object. We assume a few basic properties every set of
      * connected roads should follow throughout guidance pre-processing. This utility function
@@ -259,6 +268,18 @@ template <typename Self> struct EnableIntersectionOps
         return filter(*candidate) ? self()->end() : candidate;
     }
 
+    // check if all roads between begin and end allow entry
+    template <typename InputIt>
+    bool hasAllValidEntries(const InputIt begin, const InputIt end) const
+    {
+        static_assert(
+            std::is_base_of<std::input_iterator_tag,
+                            typename std::iterator_traits<InputIt>::iterator_category>::value,
+            "hasAllValidEntries() only accepts input iterators");
+        return std::all_of(
+            begin, end, [](const IntersectionViewData &road) { return road.entry_allowed; });
+    }
+
   private:
     auto self() { return static_cast<Self *>(this); }
     auto self() const { return static_cast<const Self *>(this); }
@@ -271,6 +292,30 @@ struct IntersectionView final : std::vector<IntersectionViewData>,      //
     using Base = std::vector<IntersectionViewData>;
 };
 
+// `Intersection` is a relative view of an intersection by an incoming edge.
+// `Intersection` are streets at an intersection ordered from from sharp right counter-clockwise to
+// sharp left where `intersection[0]` is _always_ a u-turn
+
+// An intersection is an ordered list of connected roads ordered from from sharp right
+// counter-clockwise to sharp left where `intersection[0]` is always a u-turn
+//
+//                                           |
+//                                           |
+//                                     (intersec[3])
+//                                           |
+//                                           |
+//                                           |
+//  nid ---(via_eid/intersec[0])--- nbg.GetTarget(via)  ---(intersec[2])---
+//                                           |
+//                                           |
+//                                           |
+//                                     (intersec[1])
+//                                           |
+//                                           |
+//
+// intersec := intersection
+// nbh := node_based_graph
+//
 struct Intersection final : std::vector<ConnectedRoad>,         //
                             EnableShapeOps<Intersection>,       //
                             EnableIntersectionOps<Intersection> //

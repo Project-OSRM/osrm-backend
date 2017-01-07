@@ -3,6 +3,8 @@
 #include <limits>
 #include <string>
 
+#include <boost/range/adaptors.hpp>
+
 using osrm::util::angularDeviation;
 
 namespace osrm
