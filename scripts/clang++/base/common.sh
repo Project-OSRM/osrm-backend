@@ -27,8 +27,12 @@ function mason_build {
 
     # if custom libc++ was built
     if [[ $(uname -s) == 'Linux' ]]; then
-        cp -r "${CLANG_PREFIX}/include/c++" "${MASON_PREFIX}/include/"
         cp -r ${CLANG_PREFIX}/lib/libc++* "${MASON_PREFIX}/lib/"
+    fi
+
+    # copy c++ headers (on osx these are a symlink to the system headers)
+    if [[ -d "${CLANG_PREFIX}/include/c++" ]]; then
+        cp -r "${CLANG_PREFIX}/include/c++" "${MASON_PREFIX}/include/"
     fi
 
     # copy libs

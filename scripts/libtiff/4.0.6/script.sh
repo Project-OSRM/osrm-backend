@@ -19,9 +19,11 @@ function mason_load_source {
 
 function mason_prepare_compile {
     cd $(dirname ${MASON_ROOT})
-    ${MASON_DIR}/mason install jpeg_turbo 1.4.2
-    MASON_JPEG=$(${MASON_DIR}/mason prefix jpeg_turbo 1.4.2)
-    SYSTEM_ZLIB="/usr"
+    ${MASON_DIR}/mason install jpeg_turbo 1.5.0
+    MASON_JPEG=$(${MASON_DIR}/mason prefix jpeg_turbo 1.5.0)
+    # depends on sudo apt-get install zlib1g-dev
+    ${MASON_DIR}/mason install zlib system
+    MASON_ZLIB=$(${MASON_DIR}/mason prefix zlib system)
 }
 
 
@@ -35,8 +37,8 @@ function mason_compile {
     --enable-chunky-strip-read \
     --with-jpeg-include-dir=${MASON_JPEG}/include \
     --with-jpeg-lib-dir=${MASON_JPEG}/lib \
-    --with-zlib-include-dir=${SYSTEM_ZLIB}/include \
-    --with-zlib-lib-dir=${SYSTEM_ZLIB}/lib \
+    --with-zlib-include-dir=${MASON_ZLIB}/include \
+    --with-zlib-lib-dir=${MASON_ZLIB}/lib \
     --disable-lzma --disable-jbig --disable-mdi \
     --without-x
 
