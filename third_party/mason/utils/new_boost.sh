@@ -1,8 +1,8 @@
 set -eu
 set -o pipefail
 
-LAST_VERSION="1.61.0"
-NEW_VERSION="1.62.0"
+LAST_VERSION="1.62.0"
+NEW_VERSION="1.63.0"
 
 : ' 
 
@@ -47,8 +47,8 @@ for lib in $(find scripts/ -maxdepth 1 -type dir -name 'boost_lib*' -print); do
 done
 
 ./mason trigger boost ${NEW_VERSION}
+# TODO: this is rate limited so it needs to be run over many hours to avoid travis blocking
 for lib in $(find scripts/ -maxdepth 1 -type dir -name 'boost_lib*' -print); do
-    echo "running ./mason build $(basename $lib) ${NEW_VERSION}"
-    ./mason trigger $(basename $lib) ${NEW_VERSION}
+    echo ./mason trigger $(basename $lib) ${NEW_VERSION}
 done
 

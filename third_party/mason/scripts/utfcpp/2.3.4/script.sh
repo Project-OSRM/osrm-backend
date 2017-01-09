@@ -22,4 +22,16 @@ function mason_compile {
     cp source/utf8.h ${MASON_PREFIX}/include/
 }
 
+function mason_cflags {
+    echo -I${MASON_PREFIX}/include
+}
+
+function mason_ldflags {
+    :
+}
+
+function mason_static_libs {
+    :
+}
+
 mason_run "$@"
