@@ -1,6 +1,7 @@
 #ifndef CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP
 #define CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP
 
+#include "engine/datafacade/algorithm_datafacade.hpp"
 #include "engine/datafacade/contiguous_block_allocator.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 
@@ -13,6 +14,7 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_lanes.hpp"
 
+#include "engine/algorithm.hpp"
 #include "engine/geospatial_query.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
@@ -44,6 +46,124 @@ namespace engine
 namespace datafacade
 {
 
+template <typename AlgorithmT> class ContiguousInternalMemoryAlgorithmDataFacade;
+
+template <>
+class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
+    : public datafacade::AlgorithmDataFacade<algorithm::CH>
+{
+  private:
+    using QueryGraph = util::StaticGraph<EdgeData, true>;
+    using GraphNode = QueryGraph::NodeArrayEntry;
+    using GraphEdge = QueryGraph::EdgeArrayEntry;
+
+    std::unique_ptr<QueryGraph> m_query_graph;
+    util::ShM<bool, true>::vector m_is_core_node;
+
+    // allocator that keeps the allocation data
+    std::shared_ptr<ContiguousBlockAllocator> allocator;
+
+    void InitializeGraphPointer(storage::DataLayout &data_layout, char *memory_block)
+    {
+        auto graph_nodes_ptr = data_layout.GetBlockPtr<GraphNode>(
+            memory_block, storage::DataLayout::CH_GRAPH_NODE_LIST);
+
+        auto graph_edges_ptr = data_layout.GetBlockPtr<GraphEdge>(
+            memory_block, storage::DataLayout::CH_GRAPH_EDGE_LIST);
+
+        util::ShM<GraphNode, true>::vector node_list(
+            graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
+        util::ShM<GraphEdge, true>::vector edge_list(
+            graph_edges_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
+        m_query_graph.reset(new QueryGraph(node_list, edge_list));
+    }
+
+    void InitializeCoreInformationPointer(storage::DataLayout &data_layout, char *memory_block)
+    {
+        auto core_marker_ptr =
+            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CH_CORE_MARKER);
+        util::ShM<bool, true>::vector is_core_node(
+            core_marker_ptr, data_layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
+        m_is_core_node = std::move(is_core_node);
+    }
+
+  public:
+    ContiguousInternalMemoryAlgorithmDataFacade(
+        std::shared_ptr<ContiguousBlockAllocator> allocator_)
+        : allocator(std::move(allocator_))
+    {
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+    }
+
+    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        InitializeGraphPointer(data_layout, memory_block);
+        InitializeCoreInformationPointer(data_layout, memory_block);
+    }
+
+    bool IsCoreNode(const NodeID id) const override final
+    {
+        if (m_is_core_node.size() > 0)
+        {
+            return m_is_core_node.at(id);
+        }
+
+        return false;
+    }
+
+    std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
+
+    // search graph access
+    unsigned GetNumberOfNodes() const override final { return m_query_graph->GetNumberOfNodes(); }
+
+    unsigned GetNumberOfEdges() const override final { return m_query_graph->GetNumberOfEdges(); }
+
+    unsigned GetOutDegree(const NodeID n) const override final
+    {
+        return m_query_graph->GetOutDegree(n);
+    }
+
+    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
+
+    EdgeData &GetEdgeData(const EdgeID e) const override final
+    {
+        return m_query_graph->GetEdgeData(e);
+    }
+
+    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph->BeginEdges(n); }
+
+    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph->EndEdges(n); }
+
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
+    {
+        return m_query_graph->GetAdjacentEdgeRange(node);
+    }
+
+    // searches for a specific edge
+    EdgeID FindEdge(const NodeID from, const NodeID to) const override final
+    {
+        return m_query_graph->FindEdge(from, to);
+    }
+
+    EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const override final
+    {
+        return m_query_graph->FindEdgeInEitherDirection(from, to);
+    }
+
+    EdgeID
+    FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const override final
+    {
+        return m_query_graph->FindEdgeIndicateIfReverse(from, to, result);
+    }
+
+    EdgeID FindSmallestEdge(const NodeID from,
+                            const NodeID to,
+                            std::function<bool(EdgeData)> filter) const override final
+    {
+        return m_query_graph->FindSmallestEdge(from, to, filter);
+    }
+};
+
 /**
  * This base class implements the Datafacade interface for accessing
  * data that's stored in a single large block of memory (RAM).
@@ -51,13 +171,10 @@ namespace datafacade
  * In this case "internal memory" refers to RAM - as opposed to "external memory",
  * which usually refers to disk.
  */
-class ContiguousInternalMemoryDataFacade : public BaseDataFacade
+class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 {
   private:
     using super = BaseDataFacade;
-    using QueryGraph = util::StaticGraph<EdgeData, true>;
-    using GraphNode = QueryGraph::NodeArrayEntry;
-    using GraphEdge = QueryGraph::EdgeArrayEntry;
     using IndexBlock = util::RangeTable<16, true>::BlockT;
     using RTreeLeaf = super::RTreeLeaf;
     using SharedRTree =
@@ -65,11 +182,10 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
-    unsigned m_check_sum;
-    std::unique_ptr<QueryGraph> m_query_graph;
     std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
 
+    unsigned m_check_sum;
     util::ShM<util::Coordinate, true>::vector m_coordinate_list;
     util::PackedVector<OSMNodeID, true> m_osmnodeid_list;
     util::ShM<GeometryID, true>::vector m_via_geometry_list;
@@ -118,14 +234,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
     util::ShM<DiscreteBearing, true>::vector m_bearing_values_table;
 
     // allocator that keeps the allocation data
-    std::unique_ptr<ContiguousBlockAllocator> allocator;
-
-    void InitializeChecksumPointer(storage::DataLayout &data_layout, char *memory_block)
-    {
-        m_check_sum =
-            *data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::HSGR_CHECKSUM);
-        util::Log() << "set checksum: " << m_check_sum;
-    }
+    std::shared_ptr<ContiguousBlockAllocator> allocator;
 
     void InitializeProfilePropertiesPointer(storage::DataLayout &data_layout, char *memory_block)
     {
@@ -141,6 +250,13 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         std::copy(timestamp_ptr,
                   timestamp_ptr + data_layout.GetBlockSize(storage::DataLayout::TIMESTAMP),
                   m_timestamp.begin());
+    }
+
+    void InitializeChecksumPointer(storage::DataLayout &data_layout, char *memory_block)
+    {
+        m_check_sum =
+            *data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::HSGR_CHECKSUM);
+        util::Log() << "set checksum: " << m_check_sum;
     }
 
     void InitializeRTreePointers(storage::DataLayout &data_layout, char *memory_block)
@@ -166,21 +282,6 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
                             m_coordinate_list));
         m_geospatial_query.reset(
             new SharedGeospatialQuery(*m_static_rtree, m_coordinate_list, *this));
-    }
-
-    void InitializeGraphPointer(storage::DataLayout &data_layout, char *memory_block)
-    {
-        auto graph_nodes_ptr =
-            data_layout.GetBlockPtr<GraphNode>(memory_block, storage::DataLayout::GRAPH_NODE_LIST);
-
-        auto graph_edges_ptr =
-            data_layout.GetBlockPtr<GraphEdge>(memory_block, storage::DataLayout::GRAPH_EDGE_LIST);
-
-        util::ShM<GraphNode, true>::vector node_list(
-            graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::GRAPH_NODE_LIST]);
-        util::ShM<GraphEdge, true>::vector edge_list(
-            graph_edges_ptr, data_layout.num_entries[storage::DataLayout::GRAPH_EDGE_LIST]);
-        m_query_graph.reset(new QueryGraph(node_list, edge_list));
     }
 
     void InitializeNodeAndEdgeInformationPointers(storage::DataLayout &data_layout,
@@ -288,15 +389,6 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector masks(
             masks_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
         m_lane_description_masks = std::move(masks);
-    }
-
-    void InitializeCoreInformationPointer(storage::DataLayout &data_layout, char *memory_block)
-    {
-        auto core_marker_ptr =
-            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CORE_MARKER);
-        util::ShM<bool, true>::vector is_core_node(
-            core_marker_ptr, data_layout.num_entries[storage::DataLayout::CORE_MARKER]);
-        m_is_core_node = std::move(is_core_node);
     }
 
     void InitializeTurnPenalties(storage::DataLayout &data_layout, char *memory_block)
@@ -428,7 +520,6 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
 
     void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
     {
-        InitializeGraphPointer(data_layout, memory_block);
         InitializeChecksumPointer(data_layout, memory_block);
         InitializeNodeAndEdgeInformationPointers(data_layout, memory_block);
         InitializeTurnPenalties(data_layout, memory_block);
@@ -437,7 +528,6 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         InitializeViaNodeListPointer(data_layout, memory_block);
         InitializeNamePointers(data_layout, memory_block);
         InitializeTurnLaneDescriptionsPointers(data_layout, memory_block);
-        InitializeCoreInformationPointer(data_layout, memory_block);
         InitializeProfilePropertiesPointer(data_layout, memory_block);
         InitializeRTreePointers(data_layout, memory_block);
         InitializeIntersectionClassPointers(data_layout, memory_block);
@@ -446,60 +536,10 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
   public:
     // allows switching between process_memory/shared_memory datafacade, based on the type of
     // allocator
-    ContiguousInternalMemoryDataFacade(std::unique_ptr<ContiguousBlockAllocator> allocator_)
+    ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_)
         : allocator(std::move(allocator_))
     {
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
-    }
-
-    // search graph access
-    unsigned GetNumberOfNodes() const override final { return m_query_graph->GetNumberOfNodes(); }
-
-    unsigned GetNumberOfEdges() const override final { return m_query_graph->GetNumberOfEdges(); }
-
-    unsigned GetOutDegree(const NodeID n) const override final
-    {
-        return m_query_graph->GetOutDegree(n);
-    }
-
-    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
-
-    EdgeData &GetEdgeData(const EdgeID e) const override final
-    {
-        return m_query_graph->GetEdgeData(e);
-    }
-
-    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph->BeginEdges(n); }
-
-    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph->EndEdges(n); }
-
-    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
-    {
-        return m_query_graph->GetAdjacentEdgeRange(node);
-    }
-
-    // searches for a specific edge
-    EdgeID FindEdge(const NodeID from, const NodeID to) const override final
-    {
-        return m_query_graph->FindEdge(from, to);
-    }
-
-    EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const override final
-    {
-        return m_query_graph->FindEdgeInEitherDirection(from, to);
-    }
-
-    EdgeID
-    FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const override final
-    {
-        return m_query_graph->FindEdgeIndicateIfReverse(from, to, result);
-    }
-
-    EdgeID FindSmallestEdge(const NodeID from,
-                            const NodeID to,
-                            std::function<bool(EdgeData)> filter) const override final
-    {
-        return m_query_graph->FindSmallestEdge(from, to, filter);
     }
 
     // node and edge information access
@@ -825,18 +865,6 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         return m_name_table.GetDestinationsForID(id);
     }
 
-    bool IsCoreNode(const NodeID id) const override final
-    {
-        if (m_is_core_node.size() > 0)
-        {
-            return m_is_core_node.at(id);
-        }
-
-        return false;
-    }
-
-    virtual std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
-
     // Returns the data source ids that were used to supply the edge
     // weights.
     virtual std::vector<DatasourceID>
@@ -1004,6 +1032,22 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
                 m_lane_description_masks.begin() + m_lane_description_offsets[lane_description_id],
                 m_lane_description_masks.begin() +
                     m_lane_description_offsets[lane_description_id + 1]);
+    }
+};
+
+template <typename AlgorithmT> class ContiguousInternalMemoryDataFacade;
+
+template <>
+class ContiguousInternalMemoryDataFacade<algorithm::CH>
+    : public ContiguousInternalMemoryDataFacadeBase,
+      public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
+{
+  public:
+    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
+        : ContiguousInternalMemoryDataFacadeBase(allocator),
+          ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>(allocator)
+
+    {
     }
 };
 }

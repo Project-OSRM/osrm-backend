@@ -36,47 +36,19 @@ namespace datafacade
 {
 
 using StringView = util::StringView;
-using EdgeRange = util::range<EdgeID>;
 
 class BaseDataFacade
 {
   public:
-    using EdgeData = contractor::QueryEdge::EdgeData;
     using RTreeLeaf = extractor::EdgeBasedNode;
     BaseDataFacade() {}
     virtual ~BaseDataFacade() {}
 
-    // search graph access
-    virtual unsigned GetNumberOfNodes() const = 0;
-
-    virtual unsigned GetNumberOfEdges() const = 0;
-
-    virtual unsigned GetOutDegree(const NodeID n) const = 0;
-
-    virtual NodeID GetTarget(const EdgeID e) const = 0;
-
-    virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
-
-    virtual EdgeID BeginEdges(const NodeID n) const = 0;
-
-    virtual EdgeID EndEdges(const NodeID n) const = 0;
-
-    virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
-
-    // searches for a specific edge
-    virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;
-
-    virtual EdgeID FindEdgeInEitherDirection(const NodeID from, const NodeID to) const = 0;
-
-    virtual EdgeID
-    FindEdgeIndicateIfReverse(const NodeID from, const NodeID to, bool &result) const = 0;
-
-    virtual EdgeID FindSmallestEdge(const NodeID from,
-                                    const NodeID to,
-                                    const std::function<bool(EdgeData)> filter) const = 0;
+    virtual unsigned GetCheckSum() const = 0;
 
     // node and edge information access
     virtual util::Coordinate GetCoordinateOfNode(const NodeID id) const = 0;
+
     virtual OSMNodeID GetOSMNodeIDOfNode(const NodeID id) const = 0;
 
     virtual GeometryID GetGeometryIndexForEdgeID(const EdgeID id) const = 0;
@@ -163,10 +135,6 @@ class BaseDataFacade
     virtual extractor::guidance::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;
 
-    virtual unsigned GetCheckSum() const = 0;
-
-    virtual bool IsCoreNode(const NodeID id) const = 0;
-
     virtual NameID GetNameIndexFromEdgeID(const EdgeID id) const = 0;
 
     virtual StringView GetNameForID(const NameID id) const = 0;
@@ -176,8 +144,6 @@ class BaseDataFacade
     virtual StringView GetPronunciationForID(const NameID id) const = 0;
 
     virtual StringView GetDestinationsForID(const NameID id) const = 0;
-
-    virtual std::size_t GetCoreSize() const = 0;
 
     virtual std::string GetTimestamp() const = 0;
 

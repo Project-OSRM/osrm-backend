@@ -1,4 +1,5 @@
 #include "osrm/osrm.hpp"
+#include "engine/algorithm.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
@@ -15,7 +16,10 @@ namespace osrm
 
 // Pimpl idiom
 
-OSRM::OSRM(engine::EngineConfig &config) : engine_(std::make_unique<engine::Engine>(config)) {}
+OSRM::OSRM(engine::EngineConfig &config)
+    : engine_(std::make_unique<engine::Engine<engine::algorithm::CH>>(config))
+{
+}
 OSRM::~OSRM() = default;
 OSRM::OSRM(OSRM &&) noexcept = default;
 OSRM &OSRM::operator=(OSRM &&) noexcept = default;

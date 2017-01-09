@@ -3,6 +3,8 @@
 
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
+
+#include "engine/algorithm.hpp"
 #include "engine/search_engine_data.hpp"
 #include "util/integer_range.hpp"
 
@@ -27,9 +29,12 @@ const double constexpr VIAPATH_ALPHA = 0.10;
 const double constexpr VIAPATH_EPSILON = 0.15; // alternative at most 15% longer
 const double constexpr VIAPATH_GAMMA = 0.75;   // alternative shares at most 75% with the shortest.
 
-class AlternativeRouting final : private BasicRoutingInterface
+template <typename AlgorithmT> class AlternativeRouting;
+
+template <> class AlternativeRouting<algorithm::CH> final : private BasicRouting<algorithm::CH>
 {
-    using super = BasicRoutingInterface;
+    using super = BasicRouting<algorithm::CH>;
+    using FacadeT = datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>;
     using QueryHeap = SearchEngineData::QueryHeap;
     using SearchSpaceEdge = std::pair<NodeID, NodeID>;
 
@@ -59,7 +64,7 @@ class AlternativeRouting final : private BasicRoutingInterface
 
     virtual ~AlternativeRouting() {}
 
-    void operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void operator()(const FacadeT &facade,
                     const PhantomNodes &phantom_node_pair,
                     InternalRouteResult &raw_route_data);
 
@@ -77,17 +82,16 @@ class AlternativeRouting final : private BasicRoutingInterface
     // compute and unpack <s,..,v> and <v,..,t> by exploring search spaces
     // from v and intersecting against queues. only half-searches have to be
     // done at this stage
-    void
-    ComputeLengthAndSharingOfViaPath(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
-                                     const NodeID via_node,
-                                     int *real_length_of_via_path,
-                                     int *sharing_of_via_path,
-                                     const std::vector<NodeID> &packed_shortest_path,
-                                     const EdgeWeight min_edge_offset);
+    void ComputeLengthAndSharingOfViaPath(const FacadeT &facade,
+                                          const NodeID via_node,
+                                          int *real_length_of_via_path,
+                                          int *sharing_of_via_path,
+                                          const std::vector<NodeID> &packed_shortest_path,
+                                          const EdgeWeight min_edge_offset);
 
     // todo: reorder parameters
     template <bool is_forward_directed>
-    void AlternativeRoutingStep(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void AlternativeRoutingStep(const FacadeT &facade,
                                 QueryHeap &heap1,
                                 QueryHeap &heap2,
                                 NodeID *middle_node,
@@ -150,14 +154,14 @@ class AlternativeRouting final : private BasicRoutingInterface
             }
         }
 
-        for (auto edge : facade->GetAdjacentEdgeRange(node))
+        for (auto edge : facade.GetAdjacentEdgeRange(node))
         {
-            const EdgeData &data = facade->GetEdgeData(edge);
+            const auto &data = facade.GetEdgeData(edge);
             const bool edge_is_forward_directed =
                 (is_forward_directed ? data.forward : data.backward);
             if (edge_is_forward_directed)
             {
-                const NodeID to = facade->GetTarget(edge);
+                const NodeID to = facade.GetTarget(edge);
                 const EdgeWeight edge_weight = data.weight;
 
                 BOOST_ASSERT(edge_weight > 0);
@@ -181,7 +185,7 @@ class AlternativeRouting final : private BasicRoutingInterface
     }
 
     // conduct T-Test
-    bool ViaNodeCandidatePassesTTest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    bool ViaNodeCandidatePassesTTest(const FacadeT &facade,
                                      QueryHeap &existing_forward_heap,
                                      QueryHeap &existing_reverse_heap,
                                      QueryHeap &new_forward_heap,

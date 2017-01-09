@@ -3,6 +3,7 @@
 
 #include "engine/api/match_parameters.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/routing_algorithms.hpp"
 
 #include "engine/map_matching/bayes_classifier.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
@@ -24,23 +25,19 @@ class MatchPlugin : public BasePlugin
     using SubMatching = map_matching::SubMatching;
     using SubMatchingList = routing_algorithms::SubMatchingList;
     using CandidateLists = routing_algorithms::CandidateLists;
-    static const constexpr double DEFAULT_GPS_PRECISION = 5;
     static const constexpr double RADIUS_MULTIPLIER = 3;
 
     MatchPlugin(const int max_locations_map_matching)
-        : map_matching(heaps, DEFAULT_GPS_PRECISION), shortest_path(heaps),
-          max_locations_map_matching(max_locations_map_matching)
+        : max_locations_map_matching(max_locations_map_matching)
     {
     }
 
-    Status HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                         const RoutingAlgorithmsInterface &algorithms,
                          const api::MatchParameters &parameters,
                          util::json::Object &json_result) const;
 
   private:
-    mutable SearchEngineData heaps;
-    mutable routing_algorithms::MapMatching map_matching;
-    mutable routing_algorithms::ShortestPathRouting shortest_path;
     const int max_locations_map_matching;
 };
 }

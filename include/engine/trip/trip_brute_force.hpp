@@ -23,10 +23,10 @@ namespace trip
 {
 
 // computes the distance of a given permutation
-EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
-                          const std::vector<NodeID> &location_order,
-                          const EdgeWeight min_route_dist,
-                          const std::size_t number_of_locations)
+inline EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
+                                 const std::vector<NodeID> &location_order,
+                                 const EdgeWeight min_route_dist,
+                                 const std::size_t number_of_locations)
 {
     EdgeWeight route_dist = 0;
     std::size_t current_index = 0;
@@ -59,8 +59,8 @@ EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
 }
 
 // computes the route by computing all permutations and selecting the shortest
-std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
-                                   const util::DistTableWrapper<EdgeWeight> &dist_table)
+inline std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
+                                          const util::DistTableWrapper<EdgeWeight> &dist_table)
 {
     // set initial order in which nodes are visited to 0, 1, 2, 3, ...
     std::vector<NodeID> node_order(number_of_locations);

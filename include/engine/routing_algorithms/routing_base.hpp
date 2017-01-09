@@ -2,10 +2,13 @@
 #define ROUTING_BASE_HPP
 
 #include "extractor/guidance/turn_instruction.hpp"
-#include "engine/datafacade/datafacade_base.hpp"
+
+#include "engine/algorithm.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/edge_unpacker.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/search_engine_data.hpp"
+
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/typedefs.hpp"
@@ -32,10 +35,15 @@ namespace engine
 namespace routing_algorithms
 {
 
-class BasicRoutingInterface
+template <typename AlgorithmT> class BasicRouting;
+
+// TODO: There is no reason these functions are contained in a class other then for namespace
+// purposes. This should be a namespace with free functions.
+template <> class BasicRouting<algorithm::CH>
 {
   protected:
-    using EdgeData = datafacade::BaseDataFacade::EdgeData;
+    using FacadeT = datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>;
+    using EdgeData = typename FacadeT::EdgeData;
 
   public:
     /*
@@ -67,7 +75,7 @@ class BasicRoutingInterface
     Since we are dealing with a graph that contains _negative_ edges,
     we need to add an offset to the termination criterion.
     */
-    void RoutingStep(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void RoutingStep(const FacadeT &facade,
                      SearchEngineData::QueryHeap &forward_heap,
                      SearchEngineData::QueryHeap &reverse_heap,
                      NodeID &middle_node_id,
@@ -78,17 +86,15 @@ class BasicRoutingInterface
                      const bool force_loop_forward,
                      const bool force_loop_reverse) const;
 
-    template <bool UseDuration>
-    EdgeWeight GetLoopWeight(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
-                             NodeID node) const
+    template <bool UseDuration> EdgeWeight GetLoopWeight(const FacadeT &facade, NodeID node) const
     {
         EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
-        for (auto edge : facade->GetAdjacentEdgeRange(node))
+        for (auto edge : facade.GetAdjacentEdgeRange(node))
         {
-            const auto &data = facade->GetEdgeData(edge);
+            const auto &data = facade.GetEdgeData(edge);
             if (data.forward)
             {
-                const NodeID to = facade->GetTarget(edge);
+                const NodeID to = facade.GetTarget(edge);
                 if (to == node)
                 {
                     const auto value = UseDuration ? data.duration : data.weight;
@@ -100,7 +106,7 @@ class BasicRoutingInterface
     }
 
     template <typename RandomIter>
-    void UnpackPath(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void UnpackPath(const FacadeT &facade,
                     RandomIter packed_path_begin,
                     RandomIter packed_path_end,
                     const PhantomNodes &phantom_node_pair,
@@ -120,7 +126,7 @@ class BasicRoutingInterface
             *std::prev(packed_path_end) == phantom_node_pair.target_phantom.reverse_segment_id.id);
 
         UnpackCHPath(
-            *facade,
+            facade,
             packed_path_begin,
             packed_path_end,
             [this,
@@ -132,14 +138,14 @@ class BasicRoutingInterface
                                            const EdgeData &edge_data) {
 
                 BOOST_ASSERT_MSG(!edge_data.shortcut, "original edge flagged as shortcut");
-                const auto name_index = facade->GetNameIndexFromEdgeID(edge_data.id);
-                const auto turn_instruction = facade->GetTurnInstructionForEdgeID(edge_data.id);
+                const auto name_index = facade.GetNameIndexFromEdgeID(edge_data.id);
+                const auto turn_instruction = facade.GetTurnInstructionForEdgeID(edge_data.id);
                 const extractor::TravelMode travel_mode =
                     (unpacked_path.empty() && start_traversed_in_reverse)
                         ? phantom_node_pair.source_phantom.backward_travel_mode
-                        : facade->GetTravelModeForEdgeID(edge_data.id);
+                        : facade.GetTravelModeForEdgeID(edge_data.id);
 
-                const auto geometry_index = facade->GetGeometryIndexForEdgeID(edge_data.id);
+                const auto geometry_index = facade.GetGeometryIndexForEdgeID(edge_data.id);
                 std::vector<NodeID> id_vector;
 
                 std::vector<EdgeWeight> weight_vector;
@@ -147,19 +153,17 @@ class BasicRoutingInterface
                 std::vector<DatasourceID> datasource_vector;
                 if (geometry_index.forward)
                 {
-                    id_vector = facade->GetUncompressedForwardGeometry(geometry_index.id);
-                    weight_vector = facade->GetUncompressedForwardWeights(geometry_index.id);
-                    duration_vector = facade->GetUncompressedForwardDurations(geometry_index.id);
-                    datasource_vector =
-                        facade->GetUncompressedForwardDatasources(geometry_index.id);
+                    id_vector = facade.GetUncompressedForwardGeometry(geometry_index.id);
+                    weight_vector = facade.GetUncompressedForwardWeights(geometry_index.id);
+                    duration_vector = facade.GetUncompressedForwardDurations(geometry_index.id);
+                    datasource_vector = facade.GetUncompressedForwardDatasources(geometry_index.id);
                 }
                 else
                 {
-                    id_vector = facade->GetUncompressedReverseGeometry(geometry_index.id);
-                    weight_vector = facade->GetUncompressedReverseWeights(geometry_index.id);
-                    duration_vector = facade->GetUncompressedReverseDurations(geometry_index.id);
-                    datasource_vector =
-                        facade->GetUncompressedReverseDatasources(geometry_index.id);
+                    id_vector = facade.GetUncompressedReverseGeometry(geometry_index.id);
+                    weight_vector = facade.GetUncompressedReverseWeights(geometry_index.id);
+                    duration_vector = facade.GetUncompressedReverseDurations(geometry_index.id);
+                    datasource_vector = facade.GetUncompressedReverseDatasources(geometry_index.id);
                 }
                 BOOST_ASSERT(id_vector.size() > 0);
                 BOOST_ASSERT(datasource_vector.size() > 0);
@@ -194,17 +198,17 @@ class BasicRoutingInterface
                                  util::guidance::TurnBearing(0)});
                 }
                 BOOST_ASSERT(unpacked_path.size() > 0);
-                if (facade->hasLaneData(edge_data.id))
-                    unpacked_path.back().lane_data = facade->GetLaneData(edge_data.id);
+                if (facade.hasLaneData(edge_data.id))
+                    unpacked_path.back().lane_data = facade.GetLaneData(edge_data.id);
 
-                unpacked_path.back().entry_classid = facade->GetEntryClassID(edge_data.id);
+                unpacked_path.back().entry_classid = facade.GetEntryClassID(edge_data.id);
                 unpacked_path.back().turn_instruction = turn_instruction;
                 unpacked_path.back().duration_until_turn +=
-                    facade->GetDurationPenaltyForEdgeID(edge_data.id);
+                    facade.GetDurationPenaltyForEdgeID(edge_data.id);
                 unpacked_path.back().weight_until_turn +=
-                    facade->GetWeightPenaltyForEdgeID(edge_data.id);
-                unpacked_path.back().pre_turn_bearing = facade->PreTurnBearing(edge_data.id);
-                unpacked_path.back().post_turn_bearing = facade->PostTurnBearing(edge_data.id);
+                    facade.GetWeightPenaltyForEdgeID(edge_data.id);
+                unpacked_path.back().pre_turn_bearing = facade.PreTurnBearing(edge_data.id);
+                unpacked_path.back().post_turn_bearing = facade.PostTurnBearing(edge_data.id);
             });
 
         std::size_t start_index = 0, end_index = 0;
@@ -218,16 +222,16 @@ class BasicRoutingInterface
 
         if (target_traversed_in_reverse)
         {
-            id_vector = facade->GetUncompressedReverseGeometry(
+            id_vector = facade.GetUncompressedReverseGeometry(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
-            weight_vector = facade->GetUncompressedReverseWeights(
+            weight_vector = facade.GetUncompressedReverseWeights(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
-            duration_vector = facade->GetUncompressedReverseDurations(
+            duration_vector = facade.GetUncompressedReverseDurations(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
-            datasource_vector = facade->GetUncompressedReverseDatasources(
+            datasource_vector = facade.GetUncompressedReverseDatasources(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
             if (is_local_path)
@@ -246,16 +250,16 @@ class BasicRoutingInterface
             }
             end_index = phantom_node_pair.target_phantom.fwd_segment_position;
 
-            id_vector = facade->GetUncompressedForwardGeometry(
+            id_vector = facade.GetUncompressedForwardGeometry(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
-            weight_vector = facade->GetUncompressedForwardWeights(
+            weight_vector = facade.GetUncompressedForwardWeights(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
-            duration_vector = facade->GetUncompressedForwardDurations(
+            duration_vector = facade.GetUncompressedForwardDurations(
                 phantom_node_pair.target_phantom.packed_geometry_id);
 
-            datasource_vector = facade->GetUncompressedForwardDatasources(
+            datasource_vector = facade.GetUncompressedForwardDatasources(
                 phantom_node_pair.target_phantom.packed_geometry_id);
         }
 
@@ -339,7 +343,7 @@ class BasicRoutingInterface
      * @param to the node the CH edge finishes at
      * @param unpacked_path the sequence of original NodeIDs that make up the expanded CH edge
      */
-    void UnpackEdge(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void UnpackEdge(const FacadeT &facade,
                     const NodeID from,
                     const NodeID to,
                     std::vector<NodeID> &unpacked_path) const;
@@ -365,7 +369,7 @@ class BasicRoutingInterface
     // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
     // requires
     // a force loop, if the heaps have been initialized with positive offsets.
-    void Search(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void Search(const FacadeT &facade,
                 SearchEngineData::QueryHeap &forward_heap,
                 SearchEngineData::QueryHeap &reverse_heap,
                 std::int32_t &weight,
@@ -383,7 +387,7 @@ class BasicRoutingInterface
     // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
     // requires
     // a force loop, if the heaps have been initialized with positive offsets.
-    void SearchWithCore(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void SearchWithCore(const FacadeT &facade,
                         SearchEngineData::QueryHeap &forward_heap,
                         SearchEngineData::QueryHeap &reverse_heap,
                         SearchEngineData::QueryHeap &forward_core_heap,
@@ -400,7 +404,7 @@ class BasicRoutingInterface
     bool NeedsLoopBackwards(const PhantomNode &source_phantom,
                             const PhantomNode &target_phantom) const;
 
-    double GetPathDistance(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    double GetPathDistance(const FacadeT &facade,
                            const std::vector<NodeID> &packed_path,
                            const PhantomNode &source_phantom,
                            const PhantomNode &target_phantom) const;
@@ -408,20 +412,19 @@ class BasicRoutingInterface
     // Requires the heaps for be empty
     // If heaps should be adjusted to be initialized outside of this function,
     // the addition of force_loop parameters might be required
-    double
-    GetNetworkDistanceWithCore(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
-                               SearchEngineData::QueryHeap &forward_heap,
-                               SearchEngineData::QueryHeap &reverse_heap,
-                               SearchEngineData::QueryHeap &forward_core_heap,
-                               SearchEngineData::QueryHeap &reverse_core_heap,
-                               const PhantomNode &source_phantom,
-                               const PhantomNode &target_phantom,
-                               int duration_upper_bound = INVALID_EDGE_WEIGHT) const;
+    double GetNetworkDistanceWithCore(const FacadeT &facade,
+                                      SearchEngineData::QueryHeap &forward_heap,
+                                      SearchEngineData::QueryHeap &reverse_heap,
+                                      SearchEngineData::QueryHeap &forward_core_heap,
+                                      SearchEngineData::QueryHeap &reverse_core_heap,
+                                      const PhantomNode &source_phantom,
+                                      const PhantomNode &target_phantom,
+                                      int duration_upper_bound = INVALID_EDGE_WEIGHT) const;
 
     // Requires the heaps for be empty
     // If heaps should be adjusted to be initialized outside of this function,
     // the addition of force_loop parameters might be required
-    double GetNetworkDistance(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    double GetNetworkDistance(const FacadeT &facade,
                               SearchEngineData::QueryHeap &forward_heap,
                               SearchEngineData::QueryHeap &reverse_heap,
                               const PhantomNode &source_phantom,

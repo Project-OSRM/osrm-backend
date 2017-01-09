@@ -23,7 +23,7 @@ namespace trip
 // given a route and a new location, find the best place of insertion and
 // check the distance of roundtrip when the new location is additionally visited
 using NodeIDIter = std::vector<NodeID>::iterator;
-std::pair<EdgeWeight, NodeIDIter>
+inline std::pair<EdgeWeight, NodeIDIter>
 GetShortestRoundTrip(const NodeID new_loc,
                      const util::DistTableWrapper<EdgeWeight> &dist_table,
                      const std::size_t number_of_locations,
@@ -76,10 +76,10 @@ GetShortestRoundTrip(const NodeID new_loc,
 }
 
 // given two initial start nodes, find a roundtrip route using the farthest insertion algorithm
-std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
-                              const util::DistTableWrapper<EdgeWeight> &dist_table,
-                              const NodeID &start1,
-                              const NodeID &start2)
+inline std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
+                                     const util::DistTableWrapper<EdgeWeight> &dist_table,
+                                     const NodeID &start1,
+                                     const NodeID &start2)
 {
     BOOST_ASSERT_MSG(number_of_locations * number_of_locations == dist_table.size(),
                      "number_of_locations and dist_table size do not match");
@@ -134,8 +134,9 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
     return route;
 }
 
-std::vector<NodeID> FarthestInsertionTrip(const std::size_t number_of_locations,
-                                          const util::DistTableWrapper<EdgeWeight> &dist_table)
+inline std::vector<NodeID>
+FarthestInsertionTrip(const std::size_t number_of_locations,
+                      const util::DistTableWrapper<EdgeWeight> &dist_table)
 {
     //////////////////////////////////////////////////////////////////////////////////////////////////
     // START FARTHEST INSERTION HERE
