@@ -331,6 +331,11 @@
             "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
         },
         {
+            "key": "destination:street",
+            "object_types": [ "way" ],
+            "description": "Destination of road for navigation instructions, supplements name."
+        },
+        {
             "key": "destination:ref",
             "object_types": [ "way" ],
             "description": "Destination of road for navigation instructions, supplements name."
