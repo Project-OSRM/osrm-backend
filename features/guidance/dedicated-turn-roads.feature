@@ -875,20 +875,20 @@ Feature: Slipways and Dedicated Turn Lanes
             | ab    | through | trunk      | yes    |            |                      |
             | bx    | through | trunk      | yes    |            |                      |
             | ac    | round   | primary    | yes    | roundabout |                      |
-			| cdy   | round   | primary    | yes    | roundabout |                      |
+            | cdy   | round   | primary    | yes    | roundabout |                      |
             | yb    | round   | primary    | yes    | roundabout |                      |
             | be    | round   | primary    | yes    | roundabout |                      |
             | ea    | round   | primary    | yes    | roundabout |                      |
             | et    | out     | primary    | yes    |            | the extraterrestrial |
             | sc    |         | trunk_link | yes    |            |                      |
-			| yx	| right   | trunk_link | yes    |			 |						|
+            | yx    | right   | trunk_link | yes    |            |                      |
 
-		And the relations
+        And the relations
             | type        | way:from | way:to | node:via | restriction   |
             | restriction | sa       | ab     | a        | only_straight |
             | restriction | ab       | bx     | b        | only_straight |
             | restriction | yb       | be     | b        | only_straight |
 
         When I route I should get
-            | waypoints | route | turns | locations |
-            | z,t       | through,out,out | depart,roundabout-exit-2,arrive | |
+            | waypoints | route            | turns                                            | locations |
+            | z,t       | through,,out,out | depart,off ramp slight right,round-exit-3,arrive | z,s,c,t   |
