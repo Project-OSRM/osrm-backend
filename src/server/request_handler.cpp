@@ -25,6 +25,7 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <thread>
 
 namespace osrm
 {
@@ -46,13 +47,16 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
         return;
     }
 
+    const auto tid = std::this_thread::get_id();
+
     // parse command
     try
     {
         TIMER_START(request_duration);
         std::string request_string;
         util::URIDecode(current_request.uri, request_string);
-        util::Log(logDEBUG) << "req: " << request_string;
+
+        util::Log(logDEBUG) << "[req][" << tid << "] " << request_string;
 
         auto api_iterator = request_string.begin();
         auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
@@ -158,7 +162,7 @@ void RequestHandler::HandleRequest(const http::request &current_request, http::r
     catch (const std::exception &e)
     {
         current_reply = http::reply::stock_reply(http::reply::internal_server_error);
-        util::Log(logWARNING) << "[server error] code: " << e.what()
+        util::Log(logWARNING) << "[server error][" << tid << "] code: " << e.what()
                               << ", uri: " << current_request.uri;
     }
 }
