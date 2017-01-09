@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <iostream>
+#include <thread>
 
 namespace
 {
@@ -9,7 +10,10 @@ namespace
 [[noreturn]] void assertion_failed_msg_helper(
     char const *expr, char const *msg, char const *function, char const *file, long line)
 {
-    std::cerr << "[assert] " << file << ":" << line << "\nin: " << function << ": " << expr << "\n"
+    const auto tid = std::this_thread::get_id();
+
+    std::cerr << "[assert][" << tid << "] " << file << ":" << line << "\nin: " << function << ": "
+              << expr << "\n"
               << msg;
     std::terminate();
 }
