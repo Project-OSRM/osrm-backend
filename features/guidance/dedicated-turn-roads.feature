@@ -36,6 +36,71 @@ Feature: Slipways and Dedicated Turn Lanes
             | a,g       | first,second,second | depart,turn right,arrive |
             | a,1       | first,,             | depart,turn right,arrive |
 
+    Scenario: Turn Instead of Ramp
+        Given the node map
+            """
+                    e
+            a b-----c-d
+               `--h |
+                   ||
+                  1||
+                   ||
+                   `f
+                    |
+                    g
+            """
+
+        And the ways
+            | nodes | highway    | name   | oneway | route |
+            | abc   | trunk      | first  | yes    |       |
+            | cd    | trunk      | first  | yes    |       |
+            | bhf   | trunk_link |        | yes    | ferry |
+            | cfg   | primary    | second | yes    |       |
+            | ec    | primary    | second | yes    |       |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | abc      | cfg    | c        | no_right_turn |
+
+       When I route I should get
+            | waypoints | route                | turns                                  |
+            | a,g       | first,,second,second | depart,turn right,turn straight,arrive |
+
+    Scenario: Turning Sliproad onto a ferry
+        Given the node map
+            """
+                    e
+            a b-----c-d
+               `--h |
+                   ||
+                  1||
+                   ||
+                   `f
+                    |
+                    g
+                    |
+                    i
+            """
+
+        And the ways
+            | nodes | highway    | name   | oneway | route |
+            | abc   | trunk      | first  |        |       |
+            | cd    | trunk      | first  |        |       |
+            | bhf   | trunk_link |        | yes    |       |
+            | cf    | primary    | second | yes    |       |
+            | fg    | primary    | second | yes    | ferry |
+            | ec    | primary    | second | yes    |       |
+            | gi    | primary    | second | yes    |       |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | abc      | cf     | c        | no_right_turn |
+
+       When I route I should get
+            | waypoints | route                       | turns                                                        |
+            | a,i       | first,,second,second,second | depart,turn right,turn straight,notification straight,arrive |
+            | a,1       | first,,                     | depart,turn right,arrive                                     |
+
     Scenario: Turn Instead of Ramp - Max-Speed
         Given the node map
             """
@@ -785,3 +850,45 @@ Feature: Slipways and Dedicated Turn Lanes
        When I route I should get
             | waypoints | route                         | turns                              |
             | s,g       | main,sliproad,another,another | depart,turn right,turn left,arrive |
+
+    @sliproads:
+    Scenario: Throughabout-Sliproad
+        Given the node map
+            """
+                             t
+                             |
+                         - - e - -
+                       /           \
+                     |               |
+                     |               |
+            z - s -  a - - - - - - - b - - -x
+                   ' c               y
+                     |               |
+                       \           /
+                         - -d - -
+            """
+
+        And the ways
+            | nodes | name    | highway    | oneway | junction   | #                    |
+            | zs    | through | trunk      | yes    |            |                      |
+            | sa    | through | trunk      | yes    |            |                      |
+            | ab    | through | trunk      | yes    |            |                      |
+            | bx    | through | trunk      | yes    |            |                      |
+            | ac    | round   | primary    | yes    | roundabout |                      |
+			| cdy   | round   | primary    | yes    | roundabout |                      |
+            | yb    | round   | primary    | yes    | roundabout |                      |
+            | be    | round   | primary    | yes    | roundabout |                      |
+            | ea    | round   | primary    | yes    | roundabout |                      |
+            | et    | out     | primary    | yes    |            | the extraterrestrial |
+            | sc    |         | trunk_link | yes    |            |                      |
+			| yx	| right   | trunk_link | yes    |			 |						|
+
+		And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | sa       | ab     | a        | only_straight |
+            | restriction | ab       | bx     | b        | only_straight |
+            | restriction | yb       | be     | b        | only_straight |
+
+        When I route I should get
+            | waypoints | route | turns | locations |
+            | z,t       | through,out,out | depart,roundabout-exit-2,arrive | |
