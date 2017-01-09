@@ -271,7 +271,8 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             continue;
         }
 
-        // The turn off of the Sliproad has to be obvious and a narrow turn
+        // The turn off of the Sliproad has to be obvious and a narrow turn and must not be a
+        // roundabout
         {
             const auto index = findObviousTurn(sliproad_edge, target_intersection);
 
@@ -285,6 +286,13 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             const auto is_narrow_turn = angle_deviation <= 2 * NARROW_TURN_ANGLE;
 
             if (!is_narrow_turn)
+            {
+                continue;
+            }
+
+            const auto &onto_data = node_based_graph.GetEdgeData(onto.eid);
+
+            if (onto_data.roundabout)
             {
                 continue;
             }
