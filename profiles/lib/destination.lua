@@ -18,10 +18,11 @@ end
 function Destination.get_destination(way, is_forward)
   ref  = Destination.get_directional_tag(way, is_forward, 'destination:ref')
   dest = Destination.get_directional_tag(way, is_forward, 'destination')
+  street = Destination.get_directional_tag(way, is_forward, 'destination:street')
   if ref and dest then
     return ref .. ': ' .. dest
   else
-    return ref or dest or ''
+    return ref or dest or street or ''
   end
 end
 
