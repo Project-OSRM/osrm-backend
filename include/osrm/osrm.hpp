@@ -131,7 +131,7 @@ class OSRM final
     Status Tile(const TileParameters &parameters, std::string &result) const;
 
   private:
-    std::unique_ptr<engine::Engine> engine_;
+    std::unique_ptr<engine::EngineInterface> engine_;
 };
 }
 

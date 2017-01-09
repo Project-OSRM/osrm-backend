@@ -1,13 +1,11 @@
 #ifndef SHORTEST_PATH_HPP
 #define SHORTEST_PATH_HPP
 
-#include "util/typedefs.hpp"
-
+#include "engine/algorithm.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
-
-#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/search_engine_data.hpp"
 #include "util/integer_range.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -20,9 +18,12 @@ namespace engine
 namespace routing_algorithms
 {
 
-class ShortestPathRouting final : public BasicRoutingInterface
+template <typename AlgorithmT> class ShortestPathRouting;
+
+template <> class ShortestPathRouting<algorithm::CH> final : public BasicRouting<algorithm::CH>
 {
-    using super = BasicRoutingInterface;
+    using super = BasicRouting<algorithm::CH>;
+    using FacadeT = datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
     const static constexpr bool DO_NOT_FORCE_LOOP = false;
@@ -37,7 +38,7 @@ class ShortestPathRouting final : public BasicRoutingInterface
 
     // allows a uturn at the target_phantom
     // searches source forward/reverse -> target forward/reverse
-    void SearchWithUTurn(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void SearchWithUTurn(const FacadeT &facade,
                          QueryHeap &forward_heap,
                          QueryHeap &reverse_heap,
                          QueryHeap &forward_core_heap,
@@ -56,7 +57,7 @@ class ShortestPathRouting final : public BasicRoutingInterface
     // searches shortest path between:
     // source forward/reverse -> target forward
     // source forward/reverse -> target reverse
-    void Search(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void Search(const FacadeT &facade,
                 QueryHeap &forward_heap,
                 QueryHeap &reverse_heap,
                 QueryHeap &forward_core_heap,
@@ -74,14 +75,14 @@ class ShortestPathRouting final : public BasicRoutingInterface
                 std::vector<NodeID> &leg_packed_path_forward,
                 std::vector<NodeID> &leg_packed_path_reverse) const;
 
-    void UnpackLegs(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void UnpackLegs(const FacadeT &facade,
                     const std::vector<PhantomNodes> &phantom_nodes_vector,
                     const std::vector<NodeID> &total_packed_path,
                     const std::vector<std::size_t> &packed_leg_begin,
                     const int shortest_path_length,
                     InternalRouteResult &raw_route_data) const;
 
-    void operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    void operator()(const FacadeT &facade,
                     const std::vector<PhantomNodes> &phantom_nodes_vector,
                     const boost::optional<bool> continue_straight_at_waypoint,
                     InternalRouteResult &raw_route_data) const;

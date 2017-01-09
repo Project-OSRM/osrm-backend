@@ -7,8 +7,8 @@ namespace engine
 namespace routing_algorithms
 {
 
-std::vector<EdgeWeight> ManyToManyRouting::
-operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+std::vector<EdgeWeight> ManyToManyRouting<algorithm::CH>::
+operator()(const FacadeT &facade,
            const std::vector<PhantomNode> &phantom_nodes,
            const std::vector<std::size_t> &source_indices,
            const std::vector<std::size_t> &target_indices) const
@@ -22,7 +22,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
     std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
-    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade->GetNumberOfNodes());
+    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
 
     QueryHeap &query_heap = *(engine_working_data.many_to_many_heap);
 
@@ -122,8 +122,8 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     return durations_table;
 }
 
-void ManyToManyRouting::ForwardRoutingStep(
-    const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+void ManyToManyRouting<algorithm::CH>::ForwardRoutingStep(
+    const FacadeT &facade,
     const unsigned row_idx,
     const unsigned number_of_targets,
     QueryHeap &query_heap,
@@ -179,8 +179,8 @@ void ManyToManyRouting::ForwardRoutingStep(
     RelaxOutgoingEdges<true>(facade, node, source_weight, source_duration, query_heap);
 }
 
-void ManyToManyRouting::BackwardRoutingStep(
-    const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+void ManyToManyRouting<algorithm::CH>::BackwardRoutingStep(
+    const FacadeT &facade,
     const unsigned column_idx,
     QueryHeap &query_heap,
     SearchSpaceWithBuckets &search_space_with_buckets) const

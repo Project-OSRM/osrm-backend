@@ -108,7 +108,8 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
     }
 }
 
-Status MatchPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                                  const RoutingAlgorithmsInterface &algorithms,
                                   const api::MatchParameters &parameters,
                                   util::json::Object &json_result) const
 {
@@ -144,7 +145,7 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDa
     if (parameters.radiuses.empty())
     {
         search_radiuses.resize(parameters.coordinates.size(),
-                               DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER);
+                               routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER);
     }
     else
     {
@@ -159,13 +160,13 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDa
                            }
                            else
                            {
-                               return DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
+                               return routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER;
                            }
 
                        });
     }
 
-    auto candidates_lists = GetPhantomNodesInRange(*facade, parameters, search_radiuses);
+    auto candidates_lists = GetPhantomNodesInRange(facade, parameters, search_radiuses);
 
     filterCandidates(parameters.coordinates, candidates_lists);
     if (std::all_of(candidates_lists.begin(),
@@ -180,11 +181,8 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDa
     }
 
     // call the actual map matching
-    SubMatchingList sub_matchings = map_matching(facade,
-                                                 candidates_lists,
-                                                 parameters.coordinates,
-                                                 parameters.timestamps,
-                                                 parameters.radiuses);
+    SubMatchingList sub_matchings = algorithms.MapMatching(
+        candidates_lists, parameters.coordinates, parameters.timestamps, parameters.radiuses);
 
     if (sub_matchings.size() == 0)
     {
@@ -210,12 +208,12 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDa
         // force uturns to be on, since we split the phantom nodes anyway and only have
         // bi-directional
         // phantom nodes for possible uturns
-        shortest_path(
-            facade, sub_routes[index].segment_end_coordinates, {false}, sub_routes[index]);
+        algorithms.ShortestRouting(
+            sub_routes[index].segment_end_coordinates, {false}, sub_routes[index]);
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
 
-    api::MatchAPI match_api{*facade, parameters};
+    api::MatchAPI match_api{facade, parameters};
     match_api.MakeResponse(sub_matchings, sub_routes, json_result);
 
     return Status::Ok;

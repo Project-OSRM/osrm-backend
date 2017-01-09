@@ -32,8 +32,13 @@ namespace engine
 {
 namespace plugins
 {
+
+constexpr const static int MIN_ZOOM_FOR_TURNS = 15;
+
 namespace
 {
+
+using RTreeLeaf = datafacade::BaseDataFacade::RTreeLeaf;
 // TODO: Port all this encoding logic to https://github.com/mapbox/vector-tile, which wasn't
 // available when this code was originally written.
 
@@ -72,32 +77,11 @@ struct point_type_i final
     const std::int64_t y;
 };
 
-// Used to accumulate all the information we want in the tile about
-// a turn.
-struct TurnData final
-{
-    TurnData(const util::Coordinate coordinate_,
-             const std::size_t _in,
-             const std::size_t _out,
-             const std::size_t _weight)
-        : coordinate(std::move(coordinate_)), in_angle_offset(_in), turn_angle_offset(_out),
-          weight_offset(_weight)
-    {
-    }
-
-    const util::Coordinate coordinate;
-    const std::size_t in_angle_offset;
-    const std::size_t turn_angle_offset;
-    const std::size_t weight_offset;
-};
-
 using FixedPoint = Point<std::int32_t>;
 using FloatPoint = Point<double>;
 
 using FixedLine = std::vector<FixedPoint>;
 using FloatLine = std::vector<FloatPoint>;
-
-constexpr const static int MIN_ZOOM_FOR_TURNS = 15;
 
 // We use boost::geometry to clip lines/points that are outside or cross the boundary
 // of the tile we're rendering.  We need these types defined to use boosts clipping
@@ -247,33 +231,58 @@ FixedPoint coordinatesToTilePoint(const util::Coordinate point, const BBox &tile
     return FixedPoint{px, py};
 }
 
-} // namespace
-
-Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
-                                 const api::TileParameters &parameters,
-                                 std::string &pbf_buffer) const
+std::vector<RTreeLeaf> getEdges(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                                unsigned x,
+                                unsigned y,
+                                unsigned z)
 {
-    BOOST_ASSERT(parameters.IsValid());
-
     double min_lon, min_lat, max_lon, max_lat;
 
     // Convert the z,x,y mercator tile coordinates into WGS84 lon/lat values
     //
-    util::web_mercator::xyzToWGS84(parameters.x,
-                                   parameters.y,
-                                   parameters.z,
-                                   min_lon,
-                                   min_lat,
-                                   max_lon,
-                                   max_lat,
-                                   util::web_mercator::TILE_SIZE * 0.10);
+    util::web_mercator::xyzToWGS84(
+        x, y, z, min_lon, min_lat, max_lon, max_lat, util::web_mercator::TILE_SIZE * 0.10);
 
     util::Coordinate southwest{util::FloatLongitude{min_lon}, util::FloatLatitude{min_lat}};
     util::Coordinate northeast{util::FloatLongitude{max_lon}, util::FloatLatitude{max_lat}};
 
     // Fetch all the segments that are in our bounding box.
     // This hits the OSRM StaticRTree
-    const auto edges = facade->GetEdgesInBox(southwest, northeast);
+    return facade.GetEdgesInBox(southwest, northeast);
+}
+
+std::vector<std::size_t> getEdgeIndex(const std::vector<RTreeLeaf> &edges)
+{
+    // In order to ensure consistent tile encoding, we need to process
+    // all edges in the same order.  Differences in OSX/Linux/Windows
+    // sorting methods mean that GetEdgesInBox doesn't return the same
+    // ordered array on all platforms.
+    // GetEdgesInBox is marked `const`, so we can't sort the array itself,
+    // instead we create an array of indexes and sort that instead.
+    std::vector<std::size_t> sorted_edge_indexes(edges.size(), 0);
+    std::iota(sorted_edge_indexes.begin(), sorted_edge_indexes.end(), 0); // fill with 1,2,3,...N
+
+    // Now, sort that array based on the edges list, using the u/v node IDs
+    // as the sort condition
+    std::sort(sorted_edge_indexes.begin(),
+              sorted_edge_indexes.end(),
+              [&edges](const std::size_t &left, const std::size_t &right) -> bool {
+                  return (edges[left].u != edges[right].u) ? edges[left].u < edges[right].u
+                                                           : edges[left].v < edges[right].v;
+              });
+
+    return sorted_edge_indexes;
+}
+
+void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                      unsigned x,
+                      unsigned y,
+                      unsigned z,
+                      const std::vector<RTreeLeaf> &edges,
+                      const std::vector<std::size_t> &sorted_edge_indexes,
+                      const std::vector<routing_algorithms::TurnData> &all_turn_data,
+                      std::string &pbf_buffer)
+{
 
     // Vector tiles encode properties as references to a common lookup table.
     // When we add a property to a "feature", we actually attach the index of the value
@@ -302,7 +311,6 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     std::uint8_t max_datasource_id = 0;
 
     // This is where we accumulate information on turns
-    std::vector<TurnData> all_turn_data;
 
     // Helper function for adding a new value to the line_ints lookup table.  Returns
     // the index of the value in the table, adding the value if it doesn't already
@@ -358,260 +366,6 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
         return offset;
     };
 
-    // In order to ensure consistent tile encoding, we need to process
-    // all edges in the same order.  Differences in OSX/Linux/Windows
-    // sorting methods mean that GetEdgesInBox doesn't return the same
-    // ordered array on all platforms.
-    // GetEdgesInBox is marked `const`, so we can't sort the array itself,
-    // instead we create an array of indexes and sort that instead.
-    std::vector<std::size_t> sorted_edge_indexes(edges.size(), 0);
-    std::iota(sorted_edge_indexes.begin(), sorted_edge_indexes.end(), 0); // fill with 1,2,3,...N
-
-    // Now, sort that array based on the edges list, using the u/v node IDs
-    // as the sort condition
-    std::sort(sorted_edge_indexes.begin(),
-              sorted_edge_indexes.end(),
-              [&edges](const std::size_t &left, const std::size_t &right) -> bool {
-                  return (edges[left].u != edges[right].u) ? edges[left].u < edges[right].u
-                                                           : edges[left].v < edges[right].v;
-              });
-    // From here on, we'll iterate over the sorted_edge_indexes instead of `edges` directly.
-    // Note, that we do this because `
-
-    // If we're zooming into 16 or higher, include turn data.  Why?  Because turns make the map
-    // really cramped, so we don't bother including the data for tiles that span a large area.
-    if (parameters.z >= MIN_ZOOM_FOR_TURNS)
-    {
-        // Struct to hold info on all the EdgeBasedNodes that are visible in our tile
-        // When we create these, we insure that (source, target) and packed_geometry_id
-        // are all pointed in the same direction.
-        struct EdgeBasedNodeInfo
-        {
-            bool is_geometry_forward; // Is the geometry forward or reverse?
-            unsigned packed_geometry_id;
-        };
-        // Lookup table for edge-based-nodes
-        std::unordered_map<NodeID, EdgeBasedNodeInfo> edge_based_node_info;
-
-        struct SegmentData
-        {
-            NodeID target_node;
-            EdgeID edge_based_node_id;
-        };
-
-        std::unordered_map<NodeID, std::vector<SegmentData>> directed_graph;
-        // Reserve enough space for unique edge-based-nodes on every edge.
-        // Only a tile with all unique edges will use this much, but
-        // it saves us a bunch of re-allocations during iteration.
-        directed_graph.reserve(edges.size() * 2);
-
-        // Build an adjacency list for all the road segments visible in
-        // the tile
-        for (const auto &edge_index : sorted_edge_indexes)
-        {
-            const auto &edge = edges[edge_index];
-            if (edge.forward_segment_id.enabled)
-            {
-                // operator[] will construct an empty vector at [edge.u] if there is no value.
-                directed_graph[edge.u].push_back({edge.v, edge.forward_segment_id.id});
-                if (edge_based_node_info.count(edge.forward_segment_id.id) == 0)
-                {
-                    edge_based_node_info[edge.forward_segment_id.id] = {true,
-                                                                        edge.packed_geometry_id};
-                }
-                else
-                {
-                    BOOST_ASSERT(
-                        edge_based_node_info[edge.forward_segment_id.id].is_geometry_forward ==
-                        true);
-                    BOOST_ASSERT(
-                        edge_based_node_info[edge.forward_segment_id.id].packed_geometry_id ==
-                        edge.packed_geometry_id);
-                }
-            }
-            if (edge.reverse_segment_id.enabled)
-            {
-                directed_graph[edge.v].push_back({edge.u, edge.reverse_segment_id.id});
-                if (edge_based_node_info.count(edge.reverse_segment_id.id) == 0)
-                {
-                    edge_based_node_info[edge.reverse_segment_id.id] = {false,
-                                                                        edge.packed_geometry_id};
-                }
-                else
-                {
-                    BOOST_ASSERT(
-                        edge_based_node_info[edge.reverse_segment_id.id].is_geometry_forward ==
-                        false);
-                    BOOST_ASSERT(
-                        edge_based_node_info[edge.reverse_segment_id.id].packed_geometry_id ==
-                        edge.packed_geometry_id);
-                }
-            }
-        }
-
-        // Given a turn:
-        //     u---v
-        //         |
-        //         w
-        //  uv is the "approach"
-        //  vw is the "exit"
-        std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
-        std::vector<EdgeWeight> approach_weight_vector;
-
-        // Make sure we traverse the startnodes in a consistent order
-        // to ensure identical PBF encoding on all platforms.
-        std::vector<NodeID> sorted_startnodes;
-        sorted_startnodes.reserve(directed_graph.size());
-        for (const auto &startnode : directed_graph)
-            sorted_startnodes.push_back(startnode.first);
-        std::sort(sorted_startnodes.begin(), sorted_startnodes.end());
-
-        // Look at every node in the directed graph we created
-        for (const auto &startnode : sorted_startnodes)
-        {
-            const auto &nodedata = directed_graph[startnode];
-            // For all the outgoing edges from the node
-            for (const auto &approachedge : nodedata)
-            {
-                // If the target of this edge doesn't exist in our directed
-                // graph, it's probably outside the tile, so we can skip it
-                if (directed_graph.count(approachedge.target_node) == 0)
-                    continue;
-
-                // For each of the outgoing edges from our target coordinate
-                for (const auto &exit_edge : directed_graph[approachedge.target_node])
-                {
-                    // If the next edge has the same edge_based_node_id, then it's
-                    // not a turn, so skip it
-                    if (approachedge.edge_based_node_id == exit_edge.edge_based_node_id)
-                        continue;
-
-                    // Skip u-turns
-                    if (startnode == exit_edge.target_node)
-                        continue;
-
-                    // Find the connection between our source road and the target node
-                    // Since we only want to find direct edges, we cannot check shortcut edges here.
-                    // Otherwise we might find a forward edge even though a shorter backward edge
-                    // exists (due to oneways).
-                    //
-                    // a > - > - > - b
-                    // |             |
-                    // |------ c ----|
-                    //
-                    // would offer a backward edge at `b` to `a` (due to the oneway from a to b)
-                    // but could also offer a shortcut (b-c-a) from `b` to `a` which is longer.
-                    EdgeID smaller_edge_id =
-                        facade->FindSmallestEdge(approachedge.edge_based_node_id,
-                                                 exit_edge.edge_based_node_id,
-                                                 [](const contractor::QueryEdge::EdgeData &data) {
-                                                     return data.forward && !data.shortcut;
-                                                 });
-
-                    // Depending on how the graph is constructed, we might have to look for
-                    // a backwards edge instead.  They're equivalent, just one is available for
-                    // a forward routing search, and one is used for the backwards dijkstra
-                    // steps.  Their weight should be the same, we can use either one.
-                    // If we didn't find a forward edge, try for a backward one
-                    if (SPECIAL_EDGEID == smaller_edge_id)
-                    {
-                        smaller_edge_id = facade->FindSmallestEdge(
-                            exit_edge.edge_based_node_id,
-                            approachedge.edge_based_node_id,
-                            [](const contractor::QueryEdge::EdgeData &data) {
-                                return data.backward && !data.shortcut;
-                            });
-                    }
-
-                    // If no edge was found, it means that there's no connection between these
-                    // nodes, due to oneways or turn restrictions. Given the edge-based-nodes
-                    // that we're examining here, we *should* only find directly-connected
-                    // edges, not shortcuts
-                    if (smaller_edge_id != SPECIAL_EDGEID)
-                    {
-                        const auto &data = facade->GetEdgeData(smaller_edge_id);
-                        BOOST_ASSERT_MSG(!data.shortcut, "Connecting edge must not be a shortcut");
-
-                        // Now, calculate the sum of the weight of all the segments.
-                        if (edge_based_node_info[approachedge.edge_based_node_id]
-                                .is_geometry_forward)
-                        {
-                            approach_weight_vector = facade->GetUncompressedForwardWeights(
-                                edge_based_node_info[approachedge.edge_based_node_id]
-                                    .packed_geometry_id);
-                        }
-                        else
-                        {
-                            approach_weight_vector = facade->GetUncompressedReverseWeights(
-                                edge_based_node_info[approachedge.edge_based_node_id]
-                                    .packed_geometry_id);
-                        }
-                        const auto sum_node_weight = std::accumulate(approach_weight_vector.begin(),
-                                                                     approach_weight_vector.end(),
-                                                                     EdgeWeight{0});
-
-                        // The edge.weight is the whole edge weight, which includes the turn
-                        // cost.
-                        // The turn cost is the edge.weight minus the sum of the individual road
-                        // segment weights.  This might not be 100% accurate, because some
-                        // intersections include stop signs, traffic signals and other
-                        // penalties, but at this stage, we can't divide those out, so we just
-                        // treat the whole lot as the "turn cost" that we'll stick on the map.
-                        const auto turn_cost = data.weight - sum_node_weight;
-
-                        // Find the three nodes that make up the turn movement)
-                        const auto node_from = startnode;
-                        const auto node_via = approachedge.target_node;
-                        const auto node_to = exit_edge.target_node;
-
-                        const auto coord_from = facade->GetCoordinateOfNode(node_from);
-                        const auto coord_via = facade->GetCoordinateOfNode(node_via);
-                        const auto coord_to = facade->GetCoordinateOfNode(node_to);
-
-                        // Calculate the bearing that we approach the intersection at
-                        const auto angle_in = static_cast<int>(
-                            util::coordinate_calculation::bearing(coord_from, coord_via));
-
-                        // Add the angle to the values table for the vector tile, and get the
-                        // index
-                        // of that value in the table
-                        const auto angle_in_index = use_point_int_value(angle_in);
-
-                        // Calculate the bearing leading away from the intersection
-                        const auto exit_bearing = static_cast<int>(
-                            util::coordinate_calculation::bearing(coord_via, coord_to));
-
-                        // Figure out the angle of the turn
-                        auto turn_angle = exit_bearing - angle_in;
-                        while (turn_angle > 180)
-                        {
-                            turn_angle -= 360;
-                        }
-                        while (turn_angle < -180)
-                        {
-                            turn_angle += 360;
-                        }
-
-                        // Add the turn angle value to the value lookup table for the vector
-                        // tile.
-                        const auto turn_angle_index = use_point_int_value(turn_angle);
-                        // And, same for the actual turn cost value - it goes in the lookup
-                        // table,
-                        // not directly on the feature itself.
-                        const auto turn_cost_index = use_point_float_value(
-                            turn_cost / 10.0); // Note conversion to float here
-
-                        // Save everything we need to later add all the points to the tile.
-                        // We need the coordinate of the intersection, the angle in, the turn
-                        // angle and the turn cost.
-                        all_turn_data.emplace_back(
-                            coord_via, angle_in_index, turn_angle_index, turn_cost_index);
-                    }
-                }
-            }
-        }
-    }
-
     // Vector tiles encode feature properties as indexes into a lookup table.  So, we need
     // to "pre-loop" over all the edges to create the lookup tables.  Once we have those, we
     // can then encode the features, and we'll know the indexes that feature properties
@@ -621,9 +375,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
         const auto &edge = edges[edge_index];
 
         const auto forward_datasource_vector =
-            facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+            facade.GetUncompressedForwardDatasources(edge.packed_geometry_id);
         const auto reverse_datasource_vector =
-            facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
+            facade.GetUncompressedReverseDatasources(edge.packed_geometry_id);
 
         BOOST_ASSERT(edge.fwd_segment_position < forward_datasource_vector.size());
         const auto forward_datasource = forward_datasource_vector[edge.fwd_segment_position];
@@ -639,13 +393,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
 
     // Convert tile coordinates into mercator coordinates
     double min_mercator_lon, min_mercator_lat, max_mercator_lon, max_mercator_lat;
-    util::web_mercator::xyzToMercator(parameters.x,
-                                      parameters.y,
-                                      parameters.z,
-                                      min_mercator_lon,
-                                      min_mercator_lat,
-                                      max_mercator_lon,
-                                      max_mercator_lat);
+    util::web_mercator::xyzToMercator(
+        x, y, z, min_mercator_lon, min_mercator_lat, max_mercator_lon, max_mercator_lat);
     const BBox tile_bbox{min_mercator_lon, min_mercator_lat, max_mercator_lon, max_mercator_lat};
 
     // Protobuf serializes blocks when objects go out of scope, hence
@@ -673,9 +422,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
             {
                 const auto &edge = edges[edge_index];
                 const auto forward_weight_vector =
-                    facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+                    facade.GetUncompressedForwardWeights(edge.packed_geometry_id);
                 const auto reverse_weight_vector =
-                    facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    facade.GetUncompressedReverseWeights(edge.packed_geometry_id);
                 const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
                 const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
                                                                   edge.fwd_segment_position - 1];
@@ -691,20 +440,20 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                 {
                     const auto &edge = edges[edge_index];
                     // Get coordinates for start/end nodes of segment (NodeIDs u and v)
-                    const auto a = facade->GetCoordinateOfNode(edge.u);
-                    const auto b = facade->GetCoordinateOfNode(edge.v);
+                    const auto a = facade.GetCoordinateOfNode(edge.u);
+                    const auto b = facade.GetCoordinateOfNode(edge.v);
                     // Calculate the length in meters
                     const double length =
                         osrm::util::coordinate_calculation::haversineDistance(a, b);
 
                     const auto forward_weight_vector =
-                        facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
+                        facade.GetUncompressedForwardWeights(edge.packed_geometry_id);
                     const auto reverse_weight_vector =
-                        facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                        facade.GetUncompressedReverseWeights(edge.packed_geometry_id);
                     const auto forward_datasource_vector =
-                        facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
+                        facade.GetUncompressedForwardDatasources(edge.packed_geometry_id);
                     const auto reverse_datasource_vector =
-                        facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
+                        facade.GetUncompressedReverseDatasources(edge.packed_geometry_id);
                     const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
                     const auto reverse_weight =
                         reverse_weight_vector[reverse_weight_vector.size() -
@@ -715,7 +464,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         reverse_datasource_vector[reverse_datasource_vector.size() -
                                                   edge.fwd_segment_position - 1];
 
-                    auto name = facade->GetNameForID(edge.name_id);
+                    auto name = facade.GetNameForID(edge.name_id);
 
                     const auto name_offset = [&name, &names, &name_offsets]() {
                         auto iter = name_offsets.find(name);
@@ -875,7 +624,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                                                     util::vector_tile::VARIANT_TAG);
                 // Attribute value 1 == string type
                 values_writer.add_string(util::vector_tile::VARIANT_TYPE_STRING,
-                                         facade->GetDatasourceName(i).to_string());
+                                         facade.GetDatasourceName(i).to_string());
             }
             for (auto value : used_line_ints)
             {
@@ -918,8 +667,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                 int id = 1;
 
                 // Helper function to encode a new point feature on a vector tile.
-                const auto encode_tile_point = [&point_layer_writer, &used_point_ints, &id](
-                    const FixedPoint &tile_point, const TurnData &point_turn_data) {
+                const auto encode_tile_point = [&](
+                    const FixedPoint &tile_point,
+                    const routing_algorithms::TurnData &point_turn_data) {
                     protozero::pbf_writer feature_writer(point_layer_writer,
                                                          util::vector_tile::FEATURE_TAG);
                     // Field 3 is the "geometry type" field.  Value 1 is "point"
@@ -928,17 +678,23 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         util::vector_tile::GEOMETRY_TYPE_POINT);                // geometry type
                     feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
                     {
+                        const auto in_angle_offset = use_point_int_value(point_turn_data.in_angle);
+                        const auto turn_angle_offset =
+                            use_point_int_value(point_turn_data.turn_angle);
+                        const auto weight_offset = use_point_float_value(
+                            point_turn_data.weight / 10.0); // Note conversion to float here
+
                         // Write out the 3 properties we want on the feature.  These
                         // refer to indexes in the properties lookup table, which we
                         // add to the tile after we add all features.
                         protozero::packed_field_uint32 field(
                             feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
                         field.add_element(0); // "bearing_in" tag key offset
-                        field.add_element(point_turn_data.in_angle_offset);
+                        field.add_element(in_angle_offset);
                         field.add_element(1); // "turn_angle" tag key offset
-                        field.add_element(point_turn_data.turn_angle_offset);
+                        field.add_element(turn_angle_offset);
                         field.add_element(2); // "cost" tag key offset
-                        field.add_element(used_point_ints.size() + point_turn_data.weight_offset);
+                        field.add_element(used_point_ints.size() + weight_offset);
                     }
                     {
                         // Add the geometry as the last field in this feature
@@ -983,6 +739,31 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     }
     // protozero serializes data during object destructors, so once the scope closes,
     // our result buffer will have all the tile data encoded into it.
+}
+}
+
+Status TilePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                                 const RoutingAlgorithmsInterface &algorithms,
+                                 const api::TileParameters &parameters,
+                                 std::string &pbf_buffer) const
+{
+    BOOST_ASSERT(parameters.IsValid());
+
+    auto edges = getEdges(facade, parameters.x, parameters.y, parameters.y);
+
+    auto edge_index = getEdgeIndex(edges);
+
+    std::vector<routing_algorithms::TurnData> turns;
+
+    // If we're zooming into 16 or higher, include turn data.  Why?  Because turns make the map
+    // really cramped, so we don't bother including the data for tiles that span a large area.
+    if (parameters.z >= MIN_ZOOM_FOR_TURNS)
+    {
+        turns = algorithms.TileTurns(edges, edge_index);
+    }
+
+    encodeVectorTile(
+        facade, parameters.x, parameters.y, parameters.y, edges, edge_index, turns, pbf_buffer);
 
     return Status::Ok;
 }

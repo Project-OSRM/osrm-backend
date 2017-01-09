@@ -2,7 +2,9 @@
 #define NEAREST_HPP
 
 #include "engine/api/nearest_parameters.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/plugins/plugin_base.hpp"
+#include "engine/routing_algorithms.hpp"
 #include "osrm/json_container.hpp"
 
 namespace osrm
@@ -17,7 +19,8 @@ class NearestPlugin final : public BasePlugin
   public:
     explicit NearestPlugin(const int max_results);
 
-    Status HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                         const RoutingAlgorithmsInterface &algorithms,
                          const api::NearestParameters &params,
                          util::json::Object &result) const;
 

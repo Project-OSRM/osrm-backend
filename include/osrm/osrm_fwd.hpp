@@ -54,7 +54,7 @@ struct MatchParameters;
 struct TileParameters;
 } // ns api
 
-class Engine;
+class EngineInterface;
 struct EngineConfig;
 } // ns engine
 } // ns osrm

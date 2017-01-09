@@ -6,6 +6,8 @@
 #include "contractor/query_edge.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "engine/algorithm.hpp"
+#include "engine/datafacade/algorithm_datafacade.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -17,47 +19,11 @@ namespace osrm
 namespace test
 {
 
-class MockDataFacade final : public engine::datafacade::BaseDataFacade
+class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 {
     using StringView = util::StringView;
 
-  private:
-    EdgeData foo;
-
   public:
-    unsigned GetNumberOfNodes() const override { return 0; }
-    unsigned GetNumberOfEdges() const override { return 0; }
-    unsigned GetOutDegree(const NodeID /* n */) const override { return 0; }
-    NodeID GetTarget(const EdgeID /* e */) const override { return SPECIAL_NODEID; }
-    const EdgeData &GetEdgeData(const EdgeID /* e */) const override { return foo; }
-    EdgeID BeginEdges(const NodeID /* n */) const override { return SPECIAL_EDGEID; }
-    EdgeID EndEdges(const NodeID /* n */) const override { return SPECIAL_EDGEID; }
-    osrm::engine::datafacade::EdgeRange GetAdjacentEdgeRange(const NodeID /* node */) const override
-    {
-        return util::irange(static_cast<EdgeID>(0), static_cast<EdgeID>(0));
-    }
-    EdgeID FindEdge(const NodeID /* from */, const NodeID /* to */) const override
-    {
-        return SPECIAL_EDGEID;
-    }
-    EdgeID FindEdgeInEitherDirection(const NodeID /* from */, const NodeID /* to */) const override
-    {
-        return SPECIAL_EDGEID;
-    }
-
-    EdgeID FindSmallestEdge(const NodeID /* from */,
-                            const NodeID /* to */,
-                            std::function<bool(EdgeData)> /* filter */) const override
-    {
-        return SPECIAL_EDGEID;
-    }
-
-    EdgeID FindEdgeIndicateIfReverse(const NodeID /* from */,
-                                     const NodeID /* to */,
-                                     bool & /* result */) const override
-    {
-        return SPECIAL_EDGEID;
-    }
     util::Coordinate GetCoordinateOfNode(const NodeID /* id */) const override
     {
         return {util::FixedLongitude{0}, util::FixedLatitude{0}};
@@ -211,7 +177,6 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     }
 
     unsigned GetCheckSum() const override { return 0; }
-    bool IsCoreNode(const NodeID /* id */) const override { return false; }
 
     NameID GetNameIndexFromEdgeID(const EdgeID /* id */) const override { return 0; }
 
@@ -220,7 +185,6 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     StringView GetPronunciationForID(const NameID) const override final { return {}; }
     StringView GetDestinationsForID(const NameID) const override final { return {}; }
 
-    std::size_t GetCoreSize() const override { return 0; }
     std::string GetTimestamp() const override { return ""; }
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }
@@ -270,6 +234,59 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
         return result;
     }
 };
+
+template <typename AlgorithmT> class MockAlgorithmDataFacade;
+
+template <>
+class MockAlgorithmDataFacade<engine::algorithm::CH>
+    : public engine::datafacade::AlgorithmDataFacade<engine::algorithm::CH>
+{
+  private:
+    EdgeData foo;
+
+  public:
+    unsigned GetNumberOfNodes() const override { return 0; }
+    unsigned GetNumberOfEdges() const override { return 0; }
+    unsigned GetOutDegree(const NodeID /* n */) const override { return 0; }
+    NodeID GetTarget(const EdgeID /* e */) const override { return SPECIAL_NODEID; }
+    const EdgeData &GetEdgeData(const EdgeID /* e */) const override { return foo; }
+    EdgeID BeginEdges(const NodeID /* n */) const override { return SPECIAL_EDGEID; }
+    EdgeID EndEdges(const NodeID /* n */) const override { return SPECIAL_EDGEID; }
+    osrm::engine::datafacade::EdgeRange GetAdjacentEdgeRange(const NodeID /* node */) const override
+    {
+        return util::irange(static_cast<EdgeID>(0), static_cast<EdgeID>(0));
+    }
+    EdgeID FindEdge(const NodeID /* from */, const NodeID /* to */) const override
+    {
+        return SPECIAL_EDGEID;
+    }
+    EdgeID FindEdgeInEitherDirection(const NodeID /* from */, const NodeID /* to */) const override
+    {
+        return SPECIAL_EDGEID;
+    }
+
+    EdgeID FindSmallestEdge(const NodeID /* from */,
+                            const NodeID /* to */,
+                            std::function<bool(EdgeData)> /* filter */) const override
+    {
+        return SPECIAL_EDGEID;
+    }
+
+    EdgeID FindEdgeIndicateIfReverse(const NodeID /* from */,
+                                     const NodeID /* to */,
+                                     bool & /* result */) const override
+    {
+        return SPECIAL_EDGEID;
+    }
+    bool IsCoreNode(const NodeID /* id */) const override { return false; }
+    std::size_t GetCoreSize() const override { return 0; }
+};
+
+template <typename AlgorithmT>
+class MockDataFacade final : public MockBaseDataFacade, public MockAlgorithmDataFacade<AlgorithmT>
+{
+};
+
 } // ns test
 } // ns osrm
 

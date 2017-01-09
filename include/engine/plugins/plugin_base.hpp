@@ -273,14 +273,15 @@ class BasePlugin
             }
 
             // we didn't find a fitting node, return error
-            if (!phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()))
+            if (!phantom_node_pairs[i].first.IsValid())
             {
-                // TODO document why?
+                // This ensures the list of phantom nodes only consists of valid nodes.
+                // We can use this on the call-site to detect an error.
                 phantom_node_pairs.pop_back();
                 break;
             }
-            BOOST_ASSERT(phantom_node_pairs[i].first.IsValid(facade.GetNumberOfNodes()));
-            BOOST_ASSERT(phantom_node_pairs[i].second.IsValid(facade.GetNumberOfNodes()));
+            BOOST_ASSERT(phantom_node_pairs[i].first.IsValid());
+            BOOST_ASSERT(phantom_node_pairs[i].second.IsValid());
         }
         return phantom_node_pairs;
     }

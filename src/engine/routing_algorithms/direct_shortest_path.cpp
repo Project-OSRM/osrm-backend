@@ -13,8 +13,8 @@ namespace routing_algorithms
 /// by the previous route.
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
-void DirectShortestPathRouting::
-operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+void DirectShortestPathRouting<algorithm::CH>::
+operator()(const FacadeT &facade,
            const std::vector<PhantomNodes> &phantom_nodes_vector,
            InternalRouteResult &raw_route_data) const
 {
@@ -26,7 +26,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     const auto &source_phantom = phantom_node_pair.source_phantom;
     const auto &target_phantom = phantom_node_pair.target_phantom;
 
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade->GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
     QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
     forward_heap.Clear();
@@ -68,9 +68,9 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     const bool constexpr DO_NOT_FORCE_LOOPS =
         false; // prevents forcing of loops, since offsets are set correctly
 
-    if (facade->GetCoreSize() > 0)
+    if (facade.GetCoreSize() > 0)
     {
-        engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade->GetNumberOfNodes());
+        engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
         QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
         QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
         forward_core_heap.Clear();

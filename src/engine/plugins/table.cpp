@@ -24,11 +24,12 @@ namespace plugins
 {
 
 TablePlugin::TablePlugin(const int max_locations_distance_table)
-    : distance_table(heaps), max_locations_distance_table(max_locations_distance_table)
+    : max_locations_distance_table(max_locations_distance_table)
 {
 }
 
-Status TablePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+Status TablePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                                  const RoutingAlgorithmsInterface &algorithms,
                                   const api::TableParameters &params,
                                   util::json::Object &result) const
 {
@@ -59,16 +60,16 @@ Status TablePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDa
         return Error("TooBig", "Too many table coordinates", result);
     }
 
-    auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(*facade, params));
+    auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(facade, params));
     auto result_table =
-        distance_table(facade, snapped_phantoms, params.sources, params.destinations);
+        algorithms.ManyToManyRouting(snapped_phantoms, params.sources, params.destinations);
 
     if (result_table.empty())
     {
         return Error("NoTable", "No table found", result);
     }
 
-    api::TableAPI table_api{*facade, params};
+    api::TableAPI table_api{facade, params};
     table_api.MakeResponse(result_table, snapped_phantoms, result);
 
     return Status::Ok;

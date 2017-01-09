@@ -19,8 +19,10 @@ bool Hint::IsValid(const util::Coordinate new_input_coordinates,
 {
     auto is_same_input_coordinate = new_input_coordinates.lon == phantom.input_location.lon &&
                                     new_input_coordinates.lat == phantom.input_location.lat;
-    return is_same_input_coordinate && phantom.IsValid(facade.GetNumberOfNodes()) &&
-           facade.GetCheckSum() == data_checksum;
+    // FIXME this does not use the number of nodes to validate the phantom because
+    // GetNumberOfNodes()
+    // depends on the graph which is algorithm dependent
+    return is_same_input_coordinate && phantom.IsValid() && facade.GetCheckSum() == data_checksum;
 }
 
 std::string Hint::ToBase64() const

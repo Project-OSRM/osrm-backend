@@ -240,9 +240,9 @@ void Storage::PopulateLayout(DataLayout &layout)
 
         const auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
-        layout.SetBlockSize<QueryGraph::NodeArrayEntry>(DataLayout::GRAPH_NODE_LIST,
+        layout.SetBlockSize<QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST,
                                                         hsgr_header.number_of_nodes);
-        layout.SetBlockSize<QueryGraph::EdgeArrayEntry>(DataLayout::GRAPH_EDGE_LIST,
+        layout.SetBlockSize<QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
                                                         hsgr_header.number_of_edges);
     }
 
@@ -271,7 +271,7 @@ void Storage::PopulateLayout(DataLayout &layout)
     {
         io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
         const auto number_of_core_markers = core_marker_file.ReadElementCount32();
-        layout.SetBlockSize<unsigned>(DataLayout::CORE_MARKER, number_of_core_markers);
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, number_of_core_markers);
     }
 
     // load turn weight penalties
@@ -412,12 +412,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         // load the nodes of the search graph
         QueryGraph::NodeArrayEntry *graph_node_list_ptr =
             layout.GetBlockPtr<QueryGraph::NodeArrayEntry, true>(memory_ptr,
-                                                                 DataLayout::GRAPH_NODE_LIST);
+                                                                 DataLayout::CH_GRAPH_NODE_LIST);
 
         // load the edges of the search graph
         QueryGraph::EdgeArrayEntry *graph_edge_list_ptr =
             layout.GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(memory_ptr,
-                                                                 DataLayout::GRAPH_EDGE_LIST);
+                                                                 DataLayout::CH_GRAPH_EDGE_LIST);
 
         serialization::readHSGR(hsgr_file,
                                 graph_node_list_ptr,
@@ -723,7 +723,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         core_marker_file.ReadInto(unpacked_core_markers.data(), number_of_core_markers);
 
         const auto core_marker_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::CORE_MARKER);
+            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::CH_CORE_MARKER);
 
         for (auto i = 0u; i < number_of_core_markers; ++i)
         {

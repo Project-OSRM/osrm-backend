@@ -1,9 +1,9 @@
 #ifndef MAP_MATCHING_HPP
 #define MAP_MATCHING_HPP
 
-#include "engine/datafacade/datafacade_base.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 
+#include "engine/algorithm.hpp"
 #include "engine/map_matching/hidden_markov_model.hpp"
 #include "engine/map_matching/matching_confidence.hpp"
 #include "engine/map_matching/sub_matching.hpp"
@@ -37,11 +37,15 @@ using SubMatchingList = std::vector<map_matching::SubMatching>;
 constexpr static const unsigned MAX_BROKEN_STATES = 10;
 static const constexpr double MATCHING_BETA = 10;
 constexpr static const double MAX_DISTANCE_DELTA = 2000.;
+static const constexpr double DEFAULT_GPS_PRECISION = 5;
+
+template <typename AlgorithmT> class MapMatching;
 
 // implements a hidden markov model map matching algorithm
-class MapMatching final : public BasicRoutingInterface
+template <> class MapMatching<algorithm::CH> final : public BasicRouting<algorithm::CH>
 {
-    using super = BasicRoutingInterface;
+    using super = BasicRouting<algorithm::CH>;
+    using FacadeT = datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>;
     using QueryHeap = SearchEngineData::QueryHeap;
     SearchEngineData &engine_working_data;
     map_matching::EmissionLogProbability default_emission_log_probability;
@@ -52,15 +56,15 @@ class MapMatching final : public BasicRoutingInterface
     unsigned GetMedianSampleTime(const std::vector<unsigned> &timestamps) const;
 
   public:
-    MapMatching(SearchEngineData &engine_working_data, const double default_gps_precision)
+    MapMatching(SearchEngineData &engine_working_data)
         : engine_working_data(engine_working_data),
-          default_emission_log_probability(default_gps_precision),
+          default_emission_log_probability(DEFAULT_GPS_PRECISION),
           transition_log_probability(MATCHING_BETA)
     {
     }
 
     SubMatchingList
-    operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    operator()(const FacadeT &facade,
                const CandidateLists &candidates_list,
                const std::vector<util::Coordinate> &trace_coordinates,
                const std::vector<unsigned> &trace_timestamps,

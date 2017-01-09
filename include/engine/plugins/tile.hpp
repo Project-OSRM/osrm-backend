@@ -3,10 +3,10 @@
 
 #include "engine/api/tile_parameters.hpp"
 #include "engine/plugins/plugin_base.hpp"
-#include "engine/routing_algorithms/routing_base.hpp"
-#include "engine/routing_algorithms/shortest_path.hpp"
+#include "engine/routing_algorithms.hpp"
 
-#include <string>
+#include <utility>
+#include <vector>
 
 /*
  * This plugin generates Mapbox Vector tiles that show the internal
@@ -26,7 +26,8 @@ namespace plugins
 class TilePlugin final : public BasePlugin
 {
   public:
-    Status HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+    Status HandleRequest(const datafacade::ContiguousInternalMemoryDataFacadeBase &facade,
+                         const RoutingAlgorithmsInterface &algorithms,
                          const api::TileParameters &parameters,
                          std::string &pbf_buffer) const;
 };
