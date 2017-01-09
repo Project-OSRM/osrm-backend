@@ -44,6 +44,7 @@ function mason_compile {
     cd build
     CMAKE_PREFIX_PATH=${MASON_ROOT}/.link \
     cmake \
+        -DCMAKE_BUILD_TYPE=Release \
         -DOSMIUM_INCLUDE_DIR=${OSMIUM_INCLUDE_DIR} \
         ..
     make

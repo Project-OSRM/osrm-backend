@@ -101,7 +101,7 @@ function mason_compile {
     #              -Dtarget_arch=x64 \
     #              -S.x64.release  -Dv8_enable_backtrace=1 -Dwerror='' -Darm_fpu=default -Darm_float_abi=default \
     #              -Dv8_no_strict_aliasing=1 -Dv8_enable_i18n_support=0
-    make x64.release library=static werror=no snapshot=on strictaliasing=off i18nsupport=off -j${MASON_CONCURRENCY}
+    GYPFLAGS=-Dmac_deployment_target=10.8 make x64.release library=static werror=no snapshot=on  strictaliasing=off i18nsupport=off -j${MASON_CONCURRENCY}
     mkdir -p ${MASON_PREFIX}/include
     mkdir -p ${MASON_PREFIX}/lib
     cp -r include/* ${MASON_PREFIX}/include/
@@ -110,6 +110,7 @@ function mason_compile {
     else
       cp out/x64.release/obj.target/tools/gyp/lib*.a ${MASON_PREFIX}/lib/
     fi
+    strip -S ${MASON_PREFIX}/lib/*
 }
 
 function mason_cflags {

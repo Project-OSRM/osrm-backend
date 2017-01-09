@@ -14,7 +14,7 @@ fi
 
 VAL=$(./mason --version)
 assertEqual "$?" "0" "able to run ./mason --version"
-assertEqual "0.3.0" "$VAL" "got correct result of ./mason --version"
+assertEqual "0.4.0" "$VAL" "got correct result of ./mason --version"
 
 
 exit $CODE

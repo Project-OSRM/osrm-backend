@@ -10,8 +10,10 @@ function mason_build {
 
     # copy share
     mkdir -p "${MASON_PREFIX}/share"
-    cp -r "${CLANG_PREFIX}/share/${MASON_NAME}" "${MASON_PREFIX}/share/"
-
+    # directory only present with llvm >= 3.9
+    if [[ -d "{CLANG_PREFIX}/share/${MASON_NAME}" ]]; then
+        cp -r "${CLANG_PREFIX}/share/${MASON_NAME}" "${MASON_PREFIX}/share/"
+    fi
 }
 
 function mason_cflags {
