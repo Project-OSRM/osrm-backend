@@ -85,9 +85,9 @@ struct Turn final
         : from(from), via(via), to(to)
     {
     }
-    Turn(const OSMNodeID from, const OSMNodeID via, const OSMNodeID to)
-        : from(static_cast<std::uint64_t>(from)), via(static_cast<std::uint64_t>(via)),
-          to(static_cast<std::uint64_t>(to))
+    Turn(const osrm::extractor::lookup::PenaltyBlock &turn)
+        : from(static_cast<std::uint64_t>(turn.from_id)),
+          via(static_cast<std::uint64_t>(turn.via_id)), to(static_cast<std::uint64_t>(turn.to_id))
     {
     }
     bool operator<(const Turn &rhs) const
@@ -139,8 +139,8 @@ template <typename Key, typename Value> struct CSVFilesParser
     using KeyRule = qi::rule<Iterator, Key()>;
     using ValueRule = qi::rule<Iterator, Value()>;
 
-    CSVFilesParser(const KeyRule &key_rule, const ValueRule &value_rule)
-        : key_rule(key_rule), value_rule(value_rule)
+    CSVFilesParser(std::size_t start_index, const KeyRule &key_rule, const ValueRule &value_rule)
+        : start_index(start_index), key_rule(key_rule), value_rule(value_rule)
     {
     }
 
@@ -154,8 +154,7 @@ template <typename Key, typename Value> struct CSVFilesParser
             tbb::parallel_for(std::size_t{0},
                               csv_filenames.size(),
                               [&](const std::size_t idx) {
-                                  // id starts at one, 0 means we assigned the weight from profile
-                                  auto local = ParseCSVFile(csv_filenames[idx], idx + 1);
+                                  auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
 
                                   { // Merge local CSV results into a flat global vector
                                       tbb::spin_mutex::scoped_lock _{mutex};
@@ -209,6 +208,7 @@ template <typename Key, typename Value> struct CSVFilesParser
         boost::spirit::istream_iterator sfirst(input_stream), slast;
         Iterator first(sfirst), last(slast);
 
+        BOOST_ASSERT(file_id <= std::numeric_limits<decltype(Value::source)>::max());
         ValueRule value_source =
             value_rule[qi::_val = qi::_1, boost::phoenix::bind(&Value::source, qi::_val) = file_id];
         qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
@@ -228,8 +228,9 @@ template <typename Key, typename Value> struct CSVFilesParser
         return std::move(result);
     }
 
-    KeyRule key_rule;
-    ValueRule value_rule;
+    const std::size_t start_index;
+    const KeyRule key_rule;
+    const ValueRule value_rule;
 };
 
 // Returns duration in deci-seconds
@@ -469,9 +470,10 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
     util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
     auto segment_speed_lookup = CSVFilesParser<Segment, SpeedSource>(
-        qi::ulong_long >> ',' >> qi::ulong_long, qi::uint_)(segment_speed_filenames);
+        1, qi::ulong_long >> ',' >> qi::ulong_long, qi::uint_)(segment_speed_filenames);
 
     auto turn_penalty_lookup = CSVFilesParser<Turn, PenaltySource>(
+        1 + segment_speed_filenames.size(),
         qi::ulong_long >> ',' >> qi::ulong_long >> ',' >> qi::ulong_long,
         qi::double_)(turn_penalty_filenames);
 
@@ -567,70 +569,55 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
             for (size_t i = 0; i < current_node.object_count; i++)
             {
                 const auto &leaf_object = current_node.objects[i];
-                extractor::QueryNode *u;
-                extractor::QueryNode *v;
 
-                const unsigned forward_begin = geometry_indices.at(leaf_object.packed_geometry_id);
-                const auto current_fwd_weight =
-                    geometry_fwd_weight_list[forward_begin + leaf_object.fwd_segment_position];
+                const auto forward_begin = geometry_indices.at(leaf_object.packed_geometry_id);
+                const auto u_index = forward_begin + leaf_object.fwd_segment_position;
+                const auto v_index = forward_begin + leaf_object.fwd_segment_position + 1;
 
-                u = &(internal_to_external_node_map
-                          [geometry_node_list[forward_begin + leaf_object.fwd_segment_position]]);
-                v = &(
-                    internal_to_external_node_map
-                        [geometry_node_list[forward_begin + leaf_object.fwd_segment_position + 1]]);
+                const extractor::QueryNode &u =
+                    internal_to_external_node_map[geometry_node_list[u_index]];
+                const extractor::QueryNode &v =
+                    internal_to_external_node_map[geometry_node_list[v_index]];
 
                 const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                    util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
+                    util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat});
 
-                if (auto value = segment_speed_lookup({u->node_id, v->node_id}))
+                auto fwd_source = LUA_SOURCE, rev_source = LUA_SOURCE;
+                if (auto value = segment_speed_lookup({u.node_id, v.node_id}))
                 {
+                    const auto current_fwd_weight = geometry_fwd_weight_list[u_index];
                     const auto new_segment_weight = GetNewWeight(*value,
                                                                  segment_length,
                                                                  segment_speed_filenames,
                                                                  current_fwd_weight,
                                                                  log_edge_updates_factor,
-                                                                 u->node_id,
-                                                                 v->node_id);
+                                                                 u.node_id,
+                                                                 v.node_id);
 
-                    geometry_fwd_weight_list[forward_begin + 1 + leaf_object.fwd_segment_position] =
-                        new_segment_weight;
-                    geometry_datasource[forward_begin + 1 + leaf_object.fwd_segment_position] =
-                        value->source;
-
-                    // count statistics for logging
-                    counters[value->source] += 1;
-                }
-                else
-                {
-                    // count statistics for logging
-                    counters[LUA_SOURCE] += 1;
+                    geometry_fwd_weight_list[v_index] = new_segment_weight;
+                    geometry_datasource[v_index] = value->source;
+                    fwd_source = value->source;
                 }
 
-                const auto current_rev_weight =
-                    geometry_rev_weight_list[forward_begin + leaf_object.fwd_segment_position];
-
-                if (auto value = segment_speed_lookup({v->node_id, u->node_id}))
+                if (auto value = segment_speed_lookup({v.node_id, u.node_id}))
                 {
+                    const auto current_rev_weight = geometry_rev_weight_list[u_index];
                     const auto new_segment_weight = GetNewWeight(*value,
                                                                  segment_length,
                                                                  segment_speed_filenames,
                                                                  current_rev_weight,
                                                                  log_edge_updates_factor,
-                                                                 v->node_id,
-                                                                 u->node_id);
-                    geometry_rev_weight_list[forward_begin + leaf_object.fwd_segment_position] =
-                        new_segment_weight;
-                    geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
-                        value->source;
+                                                                 v.node_id,
+                                                                 u.node_id);
 
-                    // count statistics for logging
-                    counters[value->source] += 1;
+                    geometry_rev_weight_list[u_index] = new_segment_weight;
+                    geometry_datasource[u_index] = value->source;
+                    rev_source = value->source;
                 }
-                else
-                {
-                    counters[LUA_SOURCE] += 1;
-                }
+
+                // count statistics for logging
+                counters[fwd_source] += 1;
+                counters[rev_source] += 1;
             }
         }); // parallel_for_each
 
@@ -713,126 +700,100 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
             throw util::exception(message + SOURCE_REF);
         }
         datasource_stream << "lua profile" << std::endl;
+
+        // Only write the filename, without path or extension.
+        // This prevents information leakage, and keeps names short
+        // for rendering in the debug tiles.
         for (auto const &name : segment_speed_filenames)
         {
-            // Only write the filename, without path or extension.
-            // This prevents information leakage, and keeps names short
-            // for rendering in the debug tiles.
-            const boost::filesystem::path p(name);
-            datasource_stream << p.stem().string() << std::endl;
+            datasource_stream << boost::filesystem::path(name).stem().string() << std::endl;
         }
     };
 
     tbb::parallel_invoke(maybe_save_geometries, save_datasource_indexes, save_datastore_names);
 
-    auto penaltyblock = reinterpret_cast<const extractor::lookup::PenaltyBlock *>(
+    auto turn_penalty_blocks_ptr = reinterpret_cast<const extractor::lookup::PenaltyBlock *>(
         edge_penalty_region.get_address());
-    BOOST_ASSERT(is_aligned<extractor::lookup::PenaltyBlock>(penaltyblock));
+    BOOST_ASSERT(is_aligned<extractor::lookup::PenaltyBlock>(turn_penalty_blocks_ptr));
 
     auto edge_based_edge_ptr = reinterpret_cast<extractor::EdgeBasedEdge *>(
         reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
         sizeof(EdgeBasedGraphHeader));
     BOOST_ASSERT(is_aligned<extractor::EdgeBasedEdge>(edge_based_edge_ptr));
 
-    const auto edge_based_edge_last = reinterpret_cast<extractor::EdgeBasedEdge *>(
-        reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
-        sizeof(EdgeBasedGraphHeader) +
-        sizeof(extractor::EdgeBasedEdge) * graph_header.number_of_edges);
-
     auto edge_segment_byte_ptr = reinterpret_cast<const char *>(edge_segment_region.get_address());
 
-    while (edge_based_edge_ptr != edge_based_edge_last)
+    for (std::uint64_t edge_index = 0; edge_index < graph_header.number_of_edges; ++edge_index)
     {
         // Make a copy of the data from the memory map
-        extractor::EdgeBasedEdge inbuffer = *edge_based_edge_ptr;
-        edge_based_edge_ptr++;
+        extractor::EdgeBasedEdge inbuffer = edge_based_edge_ptr[edge_index];
 
         if (update_edge_weights || update_turn_penalties)
         {
-            bool skip_this_edge = false;
+            using extractor::lookup::SegmentHeaderBlock;
+            using extractor::lookup::SegmentBlock;
 
-            auto header = reinterpret_cast<const extractor::lookup::SegmentHeaderBlock *>(
-                edge_segment_byte_ptr);
-            BOOST_ASSERT(is_aligned<extractor::lookup::SegmentHeaderBlock>(header));
-            edge_segment_byte_ptr += sizeof(extractor::lookup::SegmentHeaderBlock);
+            auto header = reinterpret_cast<const SegmentHeaderBlock *>(edge_segment_byte_ptr);
+            BOOST_ASSERT(is_aligned<SegmentHeaderBlock>(header));
+            edge_segment_byte_ptr += sizeof(SegmentHeaderBlock);
 
-            auto previous_osm_node_id = header->previous_osm_node_id;
+            auto first = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
+            BOOST_ASSERT(is_aligned<SegmentBlock>(first));
+            edge_segment_byte_ptr += sizeof(SegmentBlock) * (header->num_osm_nodes - 1);
+            auto last = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
+
+            // Find a segment with zero speed and simultaneously compute the new edge weight
             EdgeWeight new_weight = 0;
-            int compressed_edge_nodes = static_cast<int>(header->num_osm_nodes);
-
-            auto segmentblocks =
-                reinterpret_cast<const extractor::lookup::SegmentBlock *>(edge_segment_byte_ptr);
-            BOOST_ASSERT(is_aligned<extractor::lookup::SegmentBlock>(segmentblocks));
-            edge_segment_byte_ptr +=
-                sizeof(extractor::lookup::SegmentBlock) * (header->num_osm_nodes - 1);
-
-            const auto num_segments = header->num_osm_nodes - 1;
-            for (auto i : util::irange<std::size_t>(0, num_segments))
-            {
-                if (auto value = segment_speed_lookup(
-                        {previous_osm_node_id, segmentblocks[i].this_osm_node_id}))
-                {
-                    if (value->speed > 0)
-                    {
-                        const auto new_segment_weight =
-                            ConvertToDuration(segmentblocks[i].segment_length, value->speed);
-                        new_weight += new_segment_weight;
-                    }
-                    else
+            auto osm_node_id = header->previous_osm_node_id;
+            bool skip_edge =
+                std::find_if(first, last, [&](const auto &segment) {
+                    auto segment_weight = segment.segment_weight;
+                    if (auto value = segment_speed_lookup({osm_node_id, segment.this_osm_node_id}))
                     {
                         // If we hit a 0-speed edge, then it's effectively not traversible.
-                        // We don't want to include it in the edge_based_edge_list, so
-                        // we set a flag and `continue` the parent loop as soon as we can.
-                        // This would be a perfect place to use `goto`, but Patrick vetoed it.
-                        skip_this_edge = true;
-                        break;
+                        // We don't want to include it in the edge_based_edge_list.
+                        if (value->speed == 0)
+                            return true;
+
+                        segment_weight = ConvertToDuration(segment.segment_length, value->speed);
                     }
-                }
-                else
-                {
-                    // If no lookup found, use the original weight value for this segment
-                    new_weight += segmentblocks[i].segment_weight;
-                }
 
-                previous_osm_node_id = segmentblocks[i].this_osm_node_id;
-            }
+                    // Update the edge weight and the next OSM node ID
+                    osm_node_id = segment.this_osm_node_id;
+                    new_weight += segment_weight;
+                    return false;
+                }) != last;
 
-            // Update the node-weight cache.  This is the weight of the edge-based-node only,
-            // it doesn't include the turn.  We may visit the same node multiple times, but
+            // Update the node-weight cache. This is the weight of the edge-based-node only,
+            // it doesn't include the turn. We may visit the same node multiple times, but
             // we should always assign the same value here.
             node_weights[inbuffer.source] = new_weight;
 
             // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
             // effectively removes it from the routing network.
-            if (skip_this_edge)
-            {
-                penaltyblock++;
+            if (skip_edge)
                 continue;
-            }
 
-            if (auto value = turn_penalty_lookup(
-                    {penaltyblock->from_id, penaltyblock->via_id, penaltyblock->to_id}))
+            // Get the turn penalty and update to the new value if required
+            const auto &turn_block = turn_penalty_blocks_ptr[edge_index];
+            EdgeWeight new_turn_penalty = turn_block.fixed_penalty;
+            if (auto value = turn_penalty_lookup(turn_block))
             {
-                int new_turn_weight = static_cast<int>(value->penalty * 10);
+                new_turn_penalty = static_cast<EdgeWeight>(value->penalty * 10);
 
-                if (new_turn_weight + new_weight < compressed_edge_nodes)
+                if (new_weight + new_turn_penalty < static_cast<EdgeWeight>(header->num_osm_nodes))
                 {
-                    util::Log(logWARNING) << "turn penalty " << value->penalty << " for turn "
-                                          << penaltyblock->from_id << ", " << penaltyblock->via_id
-                                          << ", " << penaltyblock->to_id
-                                          << " is too negative: clamping turn weight to "
-                                          << compressed_edge_nodes;
+                    util::Log(logWARNING)
+                        << "turn penalty " << value->penalty << " for turn " << turn_block.from_id
+                        << "," << turn_block.via_id << "," << turn_block.to_id
+                        << " is too negative: clamping turn weight to " << header->num_osm_nodes;
+
+                    new_turn_penalty = header->num_osm_nodes - new_weight;
                 }
-
-                inbuffer.weight = std::max(new_turn_weight + new_weight, compressed_edge_nodes);
-            }
-            else
-            {
-                inbuffer.weight = penaltyblock->fixed_penalty + new_weight;
             }
 
-            // Increment the pointer
-            penaltyblock++;
+            // Update edge weight
+            inbuffer.weight = new_weight + new_turn_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
