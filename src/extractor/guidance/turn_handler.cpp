@@ -650,8 +650,14 @@ boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
         const bool only_valid_entries =
             intersection.hasAllValidEntries(fork->right, fork->left + 1);
 
+        const auto has_compatible_modes =
+            std::all_of(fork->right, fork->left + 1, [&](const auto &road) {
+                return node_based_graph.GetEdgeData(road.eid).travel_mode ==
+                       node_based_graph.GetEdgeData(via_edge).travel_mode;
+            });
+
         if (separated_at_left_side && separated_at_right_side && !has_obvious &&
-            has_compatible_classes && only_valid_entries)
+            has_compatible_classes && only_valid_entries && has_compatible_modes)
         {
             return fork;
         }

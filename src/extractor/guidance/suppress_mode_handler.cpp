@@ -39,7 +39,7 @@ bool SuppressModeHandler::canProcess(const NodeID,
     const auto in_mode = node_based_graph.GetEdgeData(via_eid).travel_mode;
     const auto suppress_in_mode = std::find(begin(suppressed), end(suppressed), in_mode);
 
-    const auto first = begin(intersection) + 1;
+    const auto first = begin(intersection);
     const auto last = end(intersection);
 
     const auto all_share_mode = std::all_of(first, last, [this, &in_mode](const auto &road) {
