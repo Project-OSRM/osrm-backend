@@ -427,12 +427,24 @@ util::Coordinate CoordinateExtractor::ExtractRepresentativeCoordinate(
         }
     }
 
-    // We use the locations on the regression line to offset the regression line onto the
-    // intersection.
     const auto result =
         ExtractCoordinateAtLength(LOOKAHEAD_DISTANCE_WITHOUT_LANES, coordinates, segment_distances);
-    BOOST_ASSERT(not_same_as_start(result));
-    return result;
+    // there are cases that loop back to the original node (e.g. a tiny circle travelling on steps).
+    // To compensate for these, we check if we got back to the start and, if so, return the first
+    // valid result
+    if (not_same_as_start(result))
+    {
+        return result;
+    }
+    else
+    {
+        const auto result_itr =
+            std::find_if(coordinates.begin(), coordinates.end(), not_same_as_start);
+        if (result_itr != coordinates.end())
+            return *result_itr;
+        else
+            return result;
+    }
 }
 
 util::Coordinate

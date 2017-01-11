@@ -1286,3 +1286,34 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route |
             | a,d       | ab,ab |
+
+    Scenario: Sharp Turn Onto A Bridge
+        Given the node map
+            """
+              e
+              |
+              |
+              |
+              |
+              |
+              |
+              |
+              |
+              |
+              |
+              |
+              |
+              |
+            g a - - -b
+              f    /
+              d -c
+            """
+
+        And the ways
+            | nodes | oneway | lanes |
+            | gaf   | yes    | 1     |
+            | abcde | yes    | 1     |
+
+        When I route I should get
+            | waypoints | route       |
+            | g,e       | abcde,abcde |
