@@ -32,7 +32,7 @@ bool StorageConfig::IsValid() const
                                                       core_data_path,
                                                       geometries_path,
                                                       timestamp_path,
-                                                      datasource_indexes_path,
+                                                      datasource_names_path,
                                                       datasource_indexes_path,
                                                       names_data_path,
                                                       properties_path,
