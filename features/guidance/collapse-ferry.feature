@@ -119,3 +119,25 @@ Feature: Collapse
         When I route I should get
             | waypoints | route                                   | turns                                                  |
             | g,e       | land-bottom,ferry,land-right,land-right | depart,notification straight,notification right,arrive |
+
+    @negative
+    Scenario: Don't Detect Suppressed/Obvious Forks on Ferries
+    Given the node map
+        """
+                           . . . . . . . . .d
+        a - b ~ ~ ~ ~ ~ c <
+                           ' ' ' ' ' ' ' ' 'e
+        """
+
+        And the ways
+            | nodes | highway | route | name          |
+            | ab    | primary |       | cursed-island |
+            | bc    |         | ferry | beagle        |
+            | cd    | service |       | forker        |
+            | ce    | primary |       | screw-me-not  |
+
+        #the turns here could be better, but intersection classification shows you if you go left or right. But we cannot fork here
+        When I route I should get
+            | waypoints | route                                          | turns                                             |
+            | a,d       | cursed-island,beagle,forker,forker             | depart,notification straight,turn straight,arrive |
+            | a,e       | cursed-island,beagle,screw-me-not,screw-me-not | depart,notification straight,turn straight,arrive |
