@@ -356,8 +356,8 @@ class DeallocatingVector
 
     ElementT &back() const
     {
-        const std::size_t _bucket = current_size / ELEMENTS_PER_BLOCK;
-        const std::size_t _index = current_size % ELEMENTS_PER_BLOCK;
+        const std::size_t _bucket = (current_size - 1) / ELEMENTS_PER_BLOCK;
+        const std::size_t _index = (current_size - 1) % ELEMENTS_PER_BLOCK;
         return (bucket_list[_bucket][_index]);
     }
 
