@@ -336,15 +336,15 @@ class GraphContractor
     void Run(double core_factor = 1.0)
     {
         // for the preperation we can use a big grain size, which is much faster (probably cache)
-        const constexpr size_t InitGrainSize = 100000;
-        const constexpr size_t PQGrainSize = 100000;
+        constexpr size_t InitGrainSize = 100000;
+        constexpr size_t PQGrainSize = 100000;
         // auto_partitioner will automatically increase the blocksize if we have
         // a lot of data. It is *important* for the last loop iterations
         // (which have a very small dataset) that it is devisible.
-        const constexpr size_t IndependentGrainSize = 1;
-        const constexpr size_t ContractGrainSize = 1;
-        const constexpr size_t NeighboursGrainSize = 1;
-        const constexpr size_t DeleteGrainSize = 1;
+        constexpr size_t IndependentGrainSize = 1;
+        constexpr size_t ContractGrainSize = 1;
+        constexpr size_t NeighboursGrainSize = 1;
+        constexpr size_t DeleteGrainSize = 1;
 
         const NodeID number_of_nodes = contractor_graph->GetNumberOfNodes();
 
@@ -770,11 +770,11 @@ class GraphContractor
         ContractorHeap &heap = data->heap;
         std::size_t inserted_edges_size = data->inserted_edges.size();
         std::vector<ContractorEdge> &inserted_edges = data->inserted_edges;
-        const constexpr bool SHORTCUT_ARC = true;
-        const constexpr bool FORWARD_DIRECTION_ENABLED = true;
-        const constexpr bool FORWARD_DIRECTION_DISABLED = false;
-        const constexpr bool REVERSE_DIRECTION_ENABLED = true;
-        const constexpr bool REVERSE_DIRECTION_DISABLED = false;
+        constexpr bool SHORTCUT_ARC = true;
+        constexpr bool FORWARD_DIRECTION_ENABLED = true;
+        constexpr bool FORWARD_DIRECTION_DISABLED = false;
+        constexpr bool REVERSE_DIRECTION_ENABLED = true;
+        constexpr bool REVERSE_DIRECTION_DISABLED = false;
 
         for (auto in_edge : contractor_graph->GetAdjacentEdgeRange(node))
         {
@@ -867,12 +867,12 @@ class GraphContractor
 
             if (RUNSIMULATION)
             {
-                const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
+                constexpr int SIMULATION_SEARCH_SPACE_SIZE = 1000;
                 Dijkstra(max_weight, number_of_targets, SIMULATION_SEARCH_SPACE_SIZE, *data, node);
             }
             else
             {
-                const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
+                constexpr int FULL_SEARCH_SPACE_SIZE = 2000;
                 Dijkstra(max_weight, number_of_targets, FULL_SEARCH_SPACE_SIZE, *data, node);
             }
             for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
