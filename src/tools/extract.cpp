@@ -35,7 +35,7 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
     config_options.add_options()(
         "profile,p",
         boost::program_options::value<boost::filesystem::path>(&extractor_config.profile_path)
-            ->default_value("profile.lua"),
+            ->default_value("profiles/car.lua"),
         "Path to LUA routing profile")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
