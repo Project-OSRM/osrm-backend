@@ -47,7 +47,7 @@ class GraphContractor
                            bool shortcut,
                            bool forward,
                            bool backward)
-            : weight(weight), id(id), originalEdges(std::min((unsigned)1 << 28, original_edges)),
+            : weight(weight), id(id), originalEdges(std::min((1u << 28) - 1u, original_edges)),
               shortcut(shortcut), forward(forward), backward(backward),
               is_original_via_node_ID(false)
         {
