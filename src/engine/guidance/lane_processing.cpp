@@ -42,7 +42,19 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
         // since at the moment we first group-by and only then do Lane Anticipation selectively.
         //
         // We do not have a source-target lane mapping, assume worst case for lanes to cross.
-        const auto to_cross = std::max(step.NumLanesToTheRight(), step.NumLanesToTheLeft());
+
+        // The following two lambda functions are backported from
+        // https://github.com/Project-OSRM/osrm-backend/pull/3474
+        const auto NumLanesToTheRight = [](const RouteStep &step) -> LaneID {
+            return step.intersections.front().lanes.first_lane_from_the_right;
+        };
+        const auto NumLanesToTheLeft = [](const RouteStep &step) -> LaneID {
+            LaneID const total = step.intersections.front().lane_description.size();
+            return total - (step.intersections.front().lanes.lanes_in_turn +
+                            step.intersections.front().lanes.first_lane_from_the_right);
+        };
+
+        const auto to_cross = std::max(NumLanesToTheRight(step), NumLanesToTheLeft(step));
         const auto scale = 1 + to_cross;
         const auto threshold = scale * min_duration_needed_for_lane_change;
 
