@@ -90,7 +90,6 @@ bool generateDataStoreOptions(const int argc,
     if (option_variables.count("remove-locks"))
     {
         osrm::storage::SharedBarriers::remove();
-        boost::interprocess::named_mutex::remove("osrm-datastore");
         return false;
     }
 
