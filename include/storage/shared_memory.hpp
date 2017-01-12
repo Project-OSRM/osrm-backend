@@ -205,6 +205,13 @@ class SharedMemory
         return Remove(k);
     }
 
+    void WaitForDetach()
+    {
+        // FIXME this needs an implementation for Windows
+        util::Log(logWARNING)
+            << "Shared memory support for Windows does not wait for clients to dettach.";
+    }
+
   private:
     static void build_key(int id, char *key) { sprintf(key, "%s.%d", "osrm.lock", id); }
 
