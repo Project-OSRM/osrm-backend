@@ -59,7 +59,7 @@ class Engine final
 
     // note in case of shared memory this will be empty, since the watchdog
     // will provide us with the up-to-date facade
-    std::shared_ptr<datafacade::BaseDataFacade> immutable_data_facade;
+    std::shared_ptr<const datafacade::BaseDataFacade> immutable_data_facade;
 };
 }
 }

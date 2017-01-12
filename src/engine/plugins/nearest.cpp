@@ -19,7 +19,7 @@ namespace plugins
 
 NearestPlugin::NearestPlugin(const int max_results_) : max_results{max_results_} {}
 
-Status NearestPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+Status NearestPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                     const api::NearestParameters &params,
                                     util::json::Object &json_result) const
 {
