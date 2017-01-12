@@ -368,10 +368,13 @@ function way_function (way, result)
   -- cycleways
   if cycleway and cycleway_tags[cycleway] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   elseif cycleway_left and cycleway_tags[cycleway_left] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   elseif cycleway_right and cycleway_tags[cycleway_right] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   end
 
   -- dismount
