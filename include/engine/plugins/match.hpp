@@ -33,7 +33,7 @@ class MatchPlugin : public BasePlugin
     {
     }
 
-    Status HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+    Status HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                          const api::MatchParameters &parameters,
                          util::json::Object &json_result) const;
 

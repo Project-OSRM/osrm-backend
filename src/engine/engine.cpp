@@ -27,7 +27,7 @@ namespace
 template <typename ParameterT, typename PluginT, typename ResultT>
 osrm::engine::Status
 RunQuery(const std::unique_ptr<osrm::engine::DataWatchdog> &watchdog,
-         const std::shared_ptr<osrm::engine::datafacade::BaseDataFacade> &immutable_facade,
+         const std::shared_ptr<const osrm::engine::datafacade::BaseDataFacade> &immutable_facade,
          const ParameterT &parameters,
          PluginT &plugin,
          ResultT &result)
@@ -81,7 +81,7 @@ Engine::Engine(const EngineConfig &config)
             throw util::exception("Invalid file paths given!" + SOURCE_REF);
         }
         immutable_data_facade =
-            std::make_shared<datafacade::ProcessMemoryDataFacade>(config.storage_config);
+            std::make_shared<const datafacade::ProcessMemoryDataFacade>(config.storage_config);
     }
 }
 

@@ -141,7 +141,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const datafacade::BaseDataFacade &f
     return min_route;
 }
 
-Status TripPlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
+Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                  const api::TripParameters &parameters,
                                  util::json::Object &json_result) const
 {
