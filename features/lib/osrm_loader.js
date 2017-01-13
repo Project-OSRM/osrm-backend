@@ -36,9 +36,8 @@ class OSRMBaseLoader{
 
     osrmDown (callback) {
         if (this.osrmIsRunning()) {
-            this.child.on('exit', (code, signal) => {callback();});
-            this.child.down = true;
-            this.child.kill();
+            this.child.on('exit', (code, signal) => { callback();});
+            this.child.kill('SIGINT');
         } else callback();
     }
 
@@ -79,7 +78,7 @@ class OSRMDirectLoader extends OSRMBaseLoader {
         if (this.osrmIsRunning()) return callback(new Error("osrm-routed already running!"));
 
         this.child = this.scope.runBin('osrm-routed', util.format("%s -p %d", this.inputFile, this.scope.OSRM_PORT), this.scope.environment, (err) => {
-          if (err && !this.child.down) {
+          if (err && err.signal !== 'SIGINT') {
               throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
           }
         });
@@ -116,7 +115,7 @@ class OSRMDatastoreLoader extends OSRMBaseLoader {
         if (this.osrmIsRunning()) return callback();
 
         this.child = this.scope.runBin('osrm-routed', util.format('--shared-memory=1 -p %d', this.scope.OSRM_PORT), this.scope.environment, (err) => {
-            if (err && !this.child.down) {
+            if (err && err.signal !== 'SIGINT') {
                 throw new Error(util.format('osrm-routed %s: %s', errorReason(err), err.cmd));
             }
         });
