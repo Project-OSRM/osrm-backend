@@ -4,6 +4,7 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <cstddef>
 #include <limits>
 #include <map>
 #include <type_traits>
@@ -18,7 +19,7 @@ namespace util
 template <typename NodeID, typename Key> class ArrayStorage
 {
   public:
-    explicit ArrayStorage(size_t size) : positions(size, 0) {}
+    explicit ArrayStorage(std::size_t size) : positions(size, 0) {}
 
     ~ArrayStorage() {}
 
@@ -35,7 +36,7 @@ template <typename NodeID, typename Key> class ArrayStorage
 template <typename NodeID, typename Key> class MapStorage
 {
   public:
-    explicit MapStorage(size_t) {}
+    explicit MapStorage(std::size_t) {}
 
     Key &operator[](NodeID node) { return nodes[node]; }
 
@@ -58,7 +59,7 @@ template <typename NodeID, typename Key> class MapStorage
 template <typename NodeID, typename Key> class UnorderedMapStorage
 {
   public:
-    explicit UnorderedMapStorage(size_t) { nodes.rehash(1000); }
+    explicit UnorderedMapStorage(std::size_t) { nodes.rehash(1000); }
 
     Key &operator[](const NodeID node) { return nodes[node]; }
 
@@ -99,7 +100,7 @@ class BinaryHeap
     using WeightType = Weight;
     using DataType = Data;
 
-    explicit BinaryHeap(size_t maxID) : node_index(maxID) { Clear(); }
+    explicit BinaryHeap(std::size_t maxID) : node_index(maxID) { Clear(); }
 
     void Clear()
     {
