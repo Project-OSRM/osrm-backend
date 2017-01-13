@@ -27,10 +27,11 @@ module.exports = function () {
             return callback(new Error('*** '+stxxl_config+ 'does not exist'));
         }
 
+        this.PLATFORM_WINDOWS = process.platform.match(/^win.*/);
         this.DEFAULT_ENVIRONMENT = Object.assign({STXXLCFG: stxxl_config}, process.env);
         this.DEFAULT_PROFILE = 'bicycle';
         this.DEFAULT_INPUT_FORMAT = 'osm';
-        this.DEFAULT_LOAD_METHOD = 'datastore';
+        this.DEFAULT_LOAD_METHOD = this.PLATFORM_WINDOWS ? 'directly' : 'datastore';
         this.DEFAULT_ORIGIN = [1,1];
         this.OSM_USER = 'osrm';
         this.OSM_GENERATOR = 'osrm-test';
@@ -42,7 +43,7 @@ module.exports = function () {
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;
 
-        if (process.platform.match(/^win.*/)) {
+        if (this.PLATFORM_WINDOWS) {
             this.TERMSIGNAL = 9;
             this.EXE = '.exe';
         } else {
