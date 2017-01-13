@@ -208,8 +208,9 @@ class SharedMemory
     void WaitForDetach()
     {
         // FIXME this needs an implementation for Windows
-        util::Log(logWARNING)
-            << "Shared memory support for Windows does not wait for clients to dettach.";
+        util::Log(logWARNING) << "Shared memory support for Windows does not wait for clients to "
+                                 "dettach. Going to sleep for 50ms.";
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 
   private:
