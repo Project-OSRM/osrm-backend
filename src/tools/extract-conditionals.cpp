@@ -1,5 +1,6 @@
 #include "util/conditional_restrictions.hpp"
 #include "util/exception.hpp"
+#include "util/for_each_pair.hpp"
 #include "util/log.hpp"
 #include "util/opening_hours.hpp"
 #include "util/version.hpp"
@@ -92,6 +93,8 @@ auto ParseGlobalArguments(int argc, char *argv[])
                      "Supported commands are:\n\n"
                      "   cond-dump      Save conditional restrictions in CSV format\n"
                      "   cond-check     Check conditional restrictions and save in CSV format\n"
+                     "   speed-dump     Save conditional speed limits in CSV format\n"
+                     "   speed-check    Check conditional speed limits and save in CSV format\n"
                   << "\n"
                   << global_options;
         std::exit(EXIT_SUCCESS);
@@ -100,14 +103,15 @@ auto ParseGlobalArguments(int argc, char *argv[])
     return command_options;
 }
 
-void ParseRestrictionsDumpArguments(const char *executable,
-                                    const std::vector<std::string> &arguments,
-                                    std::string &osm_filename,
-                                    std::string &csv_filename)
+void ParseDumpCommandArguments(const char *executable,
+                               const char *command_name,
+                               const std::vector<std::string> &arguments,
+                               std::string &osm_filename,
+                               std::string &csv_filename)
 {
     namespace po = boost::program_options;
 
-    po::options_description options("cond-dump");
+    po::options_description options(command_name);
     options.add_options()("help,h", "Show this help message")(
         "input,i",
         po::value<std::string>(&osm_filename),
@@ -124,25 +128,26 @@ void ParseRestrictionsDumpArguments(const char *executable,
 
     if (vm.count("help"))
     {
-        std::cout << boost::filesystem::path(executable).filename().string()
-                  << " cond-dump [<args>]\n\n"
+        std::cout << boost::filesystem::path(executable).filename().string() << " " << command_name
+                  << " [<args>]\n\n"
                   << options;
         std::exit(EXIT_SUCCESS);
     }
     po::notify(vm);
 }
 
-void ParseRestrictionsCheckArguments(const char *executable,
-                                     const std::vector<std::string> &arguments,
-                                     std::string &input_filename,
-                                     std::string &output_filename,
-                                     std::string &tz_filename,
-                                     std::time_t &utc_time,
-                                     std::int64_t &restriction_value)
+void ParseCheckCommandArguments(const char *executable,
+                                const char *command_name,
+                                const std::vector<std::string> &arguments,
+                                std::string &input_filename,
+                                std::string &output_filename,
+                                std::string &tz_filename,
+                                std::time_t &utc_time,
+                                std::int64_t &restriction_value)
 {
     namespace po = boost::program_options;
 
-    po::options_description options("cond-dump");
+    po::options_description options(command_name);
     options.add_options()("help,h", "Show this help message")(
         "input,i",
         po::value<std::string>(&input_filename),
@@ -168,8 +173,8 @@ void ParseRestrictionsCheckArguments(const char *executable,
 
     if (vm.count("help"))
     {
-        std::cout << boost::filesystem::path(executable).filename().string()
-                  << " cond-check [<args>]\n\n"
+        std::cout << boost::filesystem::path(executable).filename().string() << command_name
+                  << " [<args>]\n\n"
                   << options;
         std::exit(EXIT_SUCCESS);
     }
@@ -312,7 +317,7 @@ class ConditionalRestrictionsHandler : public osmium::handler::Handler
             via_adjacency.push_back({nodes.back().ref(), way.id(), nodes[nodes.size() - 2].ref()});
     }
 
-    template <typename Callback> void process_restrictions(Callback callback)
+    template <typename Callback> void process(Callback callback)
     {
         location_storage.sort();
         std::sort(via_adjacency.begin(), via_adjacency.end());
@@ -388,7 +393,7 @@ class ConditionalRestrictionsHandler : public osmium::handler::Handler
 int RestrictionsDumpCommand(const char *executable, const std::vector<std::string> &arguments)
 {
     std::string osm_filename, csv_filename;
-    ParseRestrictionsDumpArguments(executable, arguments, osm_filename, csv_filename);
+    ParseDumpCommandArguments(executable, "cond-dump", arguments, osm_filename, csv_filename);
 
     // Read OSM input file
     const osmium::io::File input_file(osm_filename);
@@ -420,15 +425,215 @@ int RestrictionsDumpCommand(const char *executable, const std::vector<std::strin
     std::ostream stream(buf);
 
     // Process collected restrictions and print CSV output
-    restrictions_handler.process_restrictions([&stream](const osmium::Location &location,
-                                                        osmium::object_id_type from,
-                                                        osmium::object_id_type via,
-                                                        osmium::object_id_type to,
-                                                        const std::string &tag,
-                                                        const std::string &value,
-                                                        const std::string &condition) {
+    restrictions_handler.process([&stream](const osmium::Location &location,
+                                           osmium::object_id_type from,
+                                           osmium::object_id_type via,
+                                           osmium::object_id_type to,
+                                           const std::string &tag,
+                                           const std::string &value,
+                                           const std::string &condition) {
         stream << from << "," << via << "," << to << "," << tag << "," << value << ",\""
                << condition << "\""
+               << "," << std::setprecision(6) << location.lon() << "," << std::setprecision(6)
+               << location.lat() << "\n";
+    });
+
+    return EXIT_SUCCESS;
+}
+
+// Data types and functions for conditional speed limits
+struct ConditionalSpeedLimit
+{
+    osmium::object_id_type from;
+    osmium::object_id_type to;
+    std::string tag;
+    int value;
+    std::string condition;
+};
+
+struct LocatedConditionalSpeedLimit
+{
+    osmium::Location location;
+    ConditionalSpeedLimit speed_limit;
+};
+
+BOOST_FUSION_ADAPT_ADT(LocatedConditionalSpeedLimit,
+                       (obj.speed_limit.from, obj.speed_limit.from = val)           //
+                       (obj.speed_limit.to, obj.speed_limit.to = val)               //
+                       (obj.speed_limit.tag, obj.speed_limit.tag = val)             //
+                       (obj.speed_limit.value, obj.speed_limit.value = val)         //
+                       (obj.speed_limit.condition, obj.speed_limit.condition = val) //
+                       (obj.location.lon(), obj.location.set_lon(val))              //
+                       (obj.location.lat(), obj.location.set_lat(val)))
+
+class ConditionalSpeedLimitsCollector : public osmium::handler::Handler
+{
+
+  public:
+    ConditionalSpeedLimitsCollector()
+    {
+        tag_filter.add(true, std::regex("^maxspeed.*:conditional$"));
+    }
+
+    void node(const osmium::Node &node)
+    {
+        const osmium::object_id_type id = node.id();
+        if (related_nodes.find(id) != related_nodes.end())
+        {
+            location_storage.set(static_cast<osmium::unsigned_object_id_type>(id), node.location());
+        }
+    }
+
+    void way(const osmium::Way &way)
+    {
+        const osmium::TagList &tags = way.tags();
+        typename decltype(tag_filter)::iterator first(tag_filter, tags.begin(), tags.end());
+        typename decltype(tag_filter)::iterator last(tag_filter, tags.end(), tags.end());
+        if (first == last)
+            return;
+
+        for (; first != last; ++first)
+        {
+            // Parse condition and add independent value/condition pairs
+            const auto &parsed = osrm::util::ParseConditionalRestrictions(first->value());
+
+            if (parsed.empty())
+            {
+                osrm::util::Log(logWARNING) << "Conditional speed limit parsing failed for \""
+                                            << first->value() << "\" on the way " << way.id();
+                continue;
+            }
+
+            // Collect node IDs for the second pass over nodes
+            std::transform(way.nodes().begin(),
+                           way.nodes().end(),
+                           std::inserter(related_nodes, related_nodes.end()),
+                           [](const auto &node_ref) { return node_ref.ref(); });
+
+            // Collect speed limits
+            for (auto &speed_limit : parsed)
+            {
+                // Convert value to an integer
+                int speed_limit_value;
+                {
+                    namespace qi = boost::spirit::qi;
+                    std::string::const_iterator first(speed_limit.value.begin()),
+                        last(speed_limit.value.end());
+                    if (!qi::parse(first, last, qi::int_, speed_limit_value) || first != last)
+                    {
+                        osrm::util::Log(logWARNING)
+                            << "Conditional speed limit has non-integer value \""
+                            << speed_limit.value << "\" on the way " << way.id();
+                        continue;
+                    }
+                }
+
+                std::string key = first->key();
+                const bool is_forward = key.find(":forward:") != std::string::npos;
+                const bool is_backward = key.find(":backward:") != std::string::npos;
+                const bool is_direction_defined = is_forward || is_backward;
+
+                if (is_forward || !is_direction_defined)
+                {
+                    osrm::util::for_each_pair(way.nodes().cbegin(),
+                                              way.nodes().cend(),
+                                              [&](const auto &from, const auto &to) {
+                                                  speed_limits.push_back(
+                                                      ConditionalSpeedLimit{from.ref(),
+                                                                            to.ref(),
+                                                                            key,
+                                                                            speed_limit_value,
+                                                                            speed_limit.condition});
+                                              });
+                }
+
+                if (is_backward || !is_direction_defined)
+                {
+                    osrm::util::for_each_pair(way.nodes().cbegin(),
+                                              way.nodes().cend(),
+                                              [&](const auto &to, const auto &from) {
+                                                  speed_limits.push_back(
+                                                      ConditionalSpeedLimit{from.ref(),
+                                                                            to.ref(),
+                                                                            key,
+                                                                            speed_limit_value,
+                                                                            speed_limit.condition});
+                                              });
+                }
+            }
+        }
+    }
+
+    template <typename Callback> void process(Callback callback)
+    {
+        location_storage.sort();
+
+        for (auto &speed_limit : speed_limits)
+        {
+            const auto &location_from = location_storage.get(
+                static_cast<osmium::unsigned_object_id_type>(speed_limit.from));
+            const auto &location_to =
+                location_storage.get(static_cast<osmium::unsigned_object_id_type>(speed_limit.to));
+            osmium::Location location{(location_from.lon() + location_to.lon()) / 2,
+                                      (location_from.lat() + location_to.lat()) / 2};
+
+            callback(location,
+                     speed_limit.from,
+                     speed_limit.to,
+                     speed_limit.tag,
+                     speed_limit.value,
+                     speed_limit.condition);
+        }
+    }
+
+  private:
+    using index_type =
+        osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
+
+    osmium::tags::Filter<std::regex> tag_filter;
+    std::unordered_set<osmium::object_id_type> related_nodes;
+    std::vector<ConditionalSpeedLimit> speed_limits;
+    index_type location_storage;
+};
+
+int SpeedLimitsDumpCommand(const char *executable, const std::vector<std::string> &arguments)
+{
+    std::string osm_filename, csv_filename;
+    ParseDumpCommandArguments(executable, "speed-dump", arguments, osm_filename, csv_filename);
+
+    // Read OSM input file
+    const osmium::io::File input_file(osm_filename);
+
+    // Read ways
+    ConditionalSpeedLimitsCollector speed_limits_collector;
+    osmium::io::Reader reader1(input_file, osmium::io::read_meta::no, osmium::osm_entity_bits::way);
+    osmium::apply(reader1, speed_limits_collector);
+    reader1.close();
+
+    // Handle nodes and ways in relations
+    osmium::io::Reader reader2(
+        input_file, osmium::io::read_meta::no, osmium::osm_entity_bits::node);
+    osmium::apply(reader2, speed_limits_collector);
+    reader2.close();
+
+    // Prepare output stream
+    std::streambuf *buf = std::cout.rdbuf();
+    std::ofstream of;
+    if (!csv_filename.empty())
+    {
+        of.open(csv_filename, std::ios::binary);
+        buf = of.rdbuf();
+    }
+    std::ostream stream(buf);
+
+    // Process collected restrictions and print CSV output
+    speed_limits_collector.process([&stream](const osmium::Location &location,
+                                             osmium::object_id_type from,
+                                             osmium::object_id_type to,
+                                             const std::string &tag,
+                                             int value,
+                                             const std::string &condition) {
+        stream << from << "," << to << "," << tag << "," << value << ",\"" << condition << "\""
                << "," << std::setprecision(6) << location.lon() << "," << std::setprecision(6)
                << location.lat() << "\n";
     });
@@ -555,13 +760,14 @@ int RestrictionsCheckCommand(const char *executable, const std::vector<std::stri
     std::string tz_filename = "tz_world";
     std::time_t utc_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::int64_t restriction_value = 32000;
-    ParseRestrictionsCheckArguments(executable,
-                                    arguments,
-                                    input_filename,
-                                    output_filename,
-                                    tz_filename,
-                                    utc_time,
-                                    restriction_value);
+    ParseCheckCommandArguments(executable,
+                               "cond-check",
+                               arguments,
+                               input_filename,
+                               output_filename,
+                               tz_filename,
+                               utc_time,
+                               restriction_value);
 
     // Prepare input stream
     std::streambuf *input_buffer = std::cin.rdbuf();
@@ -644,6 +850,101 @@ int RestrictionsCheckCommand(const char *executable, const std::vector<std::stri
     return EXIT_SUCCESS;
 }
 
+int SpeedLimitsCheckCommand(const char *executable, const std::vector<std::string> &arguments)
+{
+    std::string input_filename, output_filename;
+    std::string tz_filename = "tz_world";
+    std::time_t utc_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::int64_t speed_limit_value = 0;
+    ParseCheckCommandArguments(executable,
+                               "cond-check",
+                               arguments,
+                               input_filename,
+                               output_filename,
+                               tz_filename,
+                               utc_time,
+                               speed_limit_value);
+
+    // Prepare input stream
+    std::streambuf *input_buffer = std::cin.rdbuf();
+    std::ifstream input_file;
+    if (!input_filename.empty())
+    {
+        input_file.open(input_filename, std::ios::binary);
+        input_buffer = input_file.rdbuf();
+    }
+    std::istream input_stream(input_buffer);
+    input_stream.unsetf(std::ios::skipws);
+
+    boost::spirit::istream_iterator sfirst(input_stream);
+    boost::spirit::istream_iterator slast;
+
+    boost::spirit::line_pos_iterator<boost::spirit::istream_iterator> first(sfirst);
+    boost::spirit::line_pos_iterator<boost::spirit::istream_iterator> last(slast);
+
+    // Parse CSV file
+    namespace qi = boost::spirit::qi;
+
+    std::vector<LocatedConditionalSpeedLimit> speed_limits;
+    qi::rule<decltype(first), LocatedConditionalSpeedLimit()> csv_line =
+        qi::ulong_long >> ',' >> qi::ulong_long >> ',' >> qi::as_string[+(~qi::lit(','))] >> ',' >>
+        qi::int_ >> ',' >> '"' >> qi::as_string[qi::no_skip[*(~qi::lit('"'))]] >> '"' >> ',' >>
+        qi::double_ >> ',' >> qi::double_;
+    const auto ok = qi::phrase_parse(first, last, *(csv_line), qi::space, speed_limits);
+
+    if (!ok || first != last)
+    {
+        osrm::util::Log(logERROR) << input_filename << ":" << first.position() << ": parsing error";
+        return EXIT_FAILURE;
+    }
+
+    // Load R-tree with local times
+    auto get_local_time = LoadLocalTimesRTree(tz_filename, utc_time);
+
+    // Prepare output stream
+    std::streambuf *output_buffer = std::cout.rdbuf();
+    std::ofstream output_file;
+    if (!output_filename.empty())
+    {
+        output_file.open(output_filename, std::ios::binary);
+        output_buffer = output_file.rdbuf();
+    }
+    std::ostream output_stream(output_buffer);
+
+    // For each conditional restriction if condition is active than print a line
+    for (auto &value : speed_limits)
+    {
+        const auto &location = value.location;
+        const auto &speed_limit = value.speed_limit;
+
+        // Get local time of the restriction
+        const auto &local_time = get_local_time(point_t{location.lon(), location.lat()});
+
+        // TODO: check speed limit type [:<transportation mode>][:<direction>]
+        // http://wiki.openstreetmap.org/wiki/Conditional_restrictions#Tagging
+
+        // TODO: parsing will fail for combined conditions, e.g. Sa-Su AND weight>7
+        // http://wiki.openstreetmap.org/wiki/Conditional_restrictions#Combined_conditions:_AND
+
+        const auto &opening_hours = osrm::util::ParseOpeningHours(speed_limit.condition);
+
+        if (opening_hours.empty())
+        {
+            osrm::util::Log(logWARNING) << "Condition parsing failed for \""
+                                        << speed_limit.condition << "\" on the segment "
+                                        << speed_limit.from << " -> " << speed_limit.to;
+            continue;
+        }
+
+        if (osrm::util::CheckOpeningHours(opening_hours, local_time))
+        {
+            output_stream << speed_limit.from << "," << speed_limit.to << "," << speed_limit.value
+                          << "\n";
+        }
+    }
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[]) try
 {
     osrm::util::LogPolicy::GetInstance().Unmute();
@@ -654,7 +955,9 @@ int main(int argc, char *argv[]) try
 
     std::unordered_map<std::string, int (*)(const char *, const std::vector<std::string> &)>
         commands = {{"cond-dump", &RestrictionsDumpCommand},
-                    {"cond-check", &RestrictionsCheckCommand}};
+                    {"cond-check", &RestrictionsCheckCommand},
+                    {"speed-dump", &SpeedLimitsDumpCommand},
+                    {"speed-check", &SpeedLimitsCheckCommand}};
 
     auto command = commands.find(arguments.front());
     if (command == commands.end())
