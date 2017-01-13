@@ -111,10 +111,35 @@ class SharedMemory
     {
         auto shmid = shm.get_shmid();
         ::shmid_ds xsi_ds;
+        const auto errorToMessage = [](int error) -> std::string {
+            switch (error)
+            {
+            case EPERM:
+                return "EPERM";
+                break;
+            case EACCES:
+                return "ACCESS";
+                break;
+            case EINVAL:
+                return "EINVAL";
+                break;
+            case EFAULT:
+                return "EFAULT";
+                break;
+            default:
+                return "Unknown Error " + std::to_string(error);
+                break;
+            }
+        };
+
         do
         {
             int ret = ::shmctl(shmid, IPC_STAT, &xsi_ds);
-            (void)ret; // no unused warning
+            if (ret < 0)
+            {
+                throw util::exception("shmctl encountered an error: " + errorToMessage(ret) +
+                                      SOURCE_REF);
+            }
             BOOST_ASSERT(ret >= 0);
 
             std::this_thread::sleep_for(std::chrono::microseconds(100));
