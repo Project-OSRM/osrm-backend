@@ -107,6 +107,7 @@ class SharedMemory
         return Remove(key);
     }
 
+#ifdef __linux__
     void WaitForDetach()
     {
         auto shmid = shm.get_shmid();
@@ -134,10 +135,12 @@ class SharedMemory
 
         do
         {
+            // On OSX this returns EINVAL for whatever reason, hence we need to disable it
             int ret = ::shmctl(shmid, IPC_STAT, &xsi_ds);
             if (ret < 0)
             {
-                throw util::exception("shmctl encountered an error: " + errorToMessage(ret) +
+                auto error_code = errno;
+                throw util::exception("shmctl encountered an error: " + errorToMessage(error_code) +
                                       SOURCE_REF);
             }
             BOOST_ASSERT(ret >= 0);
@@ -145,6 +148,15 @@ class SharedMemory
             std::this_thread::sleep_for(std::chrono::microseconds(100));
         } while (xsi_ds.shm_nattch > 1);
     }
+#else
+    void WaitForDetach()
+    {
+        util::Log(logWARNING)
+            << "Shared memory support for non-Linux systems does not wait for clients to "
+               "dettach. Going to sleep for 50ms.";
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+#endif
 
   private:
     static bool RegionExists(const boost::interprocess::xsi_key &key)
