@@ -78,6 +78,18 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes)
     swap(nodes, m_edge_based_node_list);
 }
 
+void EdgeBasedGraphFactory::GetRoadSegments(std::vector<RoadSegment> &segments)
+{
+    using std::swap;
+    swap(segments, m_road_segments);
+}
+
+void EdgeBasedGraphFactory::GetNodePairs(std::vector<std::pair<NodeID, NodeID>> &nodepairs)
+{
+    using std::swap;
+    swap(nodepairs, m_road_segments_nodes);
+}
+
 void EdgeBasedGraphFactory::GetStartPointMarkers(std::vector<bool> &node_is_startpoint)
 {
     using std::swap; // Koenig swap
@@ -143,6 +155,16 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         return SegmentID{edge_based_node_id, true};
     };
 
+    // build edges
+    m_edge_based_node_list.emplace_back(edge_id_to_segment_id(forward_data.edge_id),
+                                        edge_id_to_segment_id(reverse_data.edge_id),
+                                        forward_data.name_id,
+                                        packed_geometry_id,
+                                        false,
+                                        INVALID_COMPONENTID,
+                                        forward_data.travel_mode,
+                                        reverse_data.travel_mode);
+
     // traverse arrays
     for (const auto i : util::irange(std::size_t{0}, segment_count))
     {
@@ -153,18 +175,10 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
         const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
-        // build edges
-        m_edge_based_node_list.emplace_back(edge_id_to_segment_id(forward_data.edge_id),
-                                            edge_id_to_segment_id(reverse_data.edge_id),
-                                            current_edge_source_coordinate_id,
-                                            current_edge_target_coordinate_id,
-                                            forward_data.name_id,
-                                            packed_geometry_id,
-                                            false,
-                                            INVALID_COMPONENTID,
-                                            i,
-                                            forward_data.travel_mode,
-                                            reverse_data.travel_mode);
+        m_road_segments.emplace_back(m_edge_based_node_list.size() - 1,
+                                     i,
+                                     current_edge_source_coordinate_id,
+                                     current_edge_target_coordinate_id);
 
         m_edge_based_node_is_startpoint.push_back(forward_data.startpoint ||
                                                   reverse_data.startpoint);

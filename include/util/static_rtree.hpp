@@ -166,6 +166,7 @@ class StaticRTree
     template <typename CoordinateT>
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
+                         const std::vector<std::pair<NodeID, NodeID>> &nodepairs,
                          const std::string &tree_node_filename,
                          const std::string &leaf_node_filename,
                          const std::vector<CoordinateT> &coordinate_list)
@@ -177,7 +178,7 @@ class StaticRTree
         // generate auxiliary vector of hilbert-values
         tbb::parallel_for(
             tbb::blocked_range<uint64_t>(0, element_count),
-            [&input_data_vector, &input_wrapper_vector, this](
+            [&input_data_vector, &input_wrapper_vector, &nodepairs, this](
                 const tbb::blocked_range<uint64_t> &range) {
                 for (uint64_t element_counter = range.begin(), end = range.end();
                      element_counter != end;
@@ -193,7 +194,8 @@ class StaticRTree
                     BOOST_ASSERT(current_element.v < m_coordinate_list.size());
 
                     Coordinate current_centroid = coordinate_calculation::centroid(
-                        m_coordinate_list[current_element.u], m_coordinate_list[current_element.v]);
+                        m_coordinate_list[nodepairs[element_counter].first],
+                        m_coordinate_list[nodepairs[element_counter].second]);
                     current_centroid.lat = FixedLatitude{static_cast<std::int32_t>(
                         COORDINATE_PRECISION *
                         web_mercator::latToY(toFloating(current_centroid.lat)))};
@@ -231,10 +233,10 @@ class StaticRTree
                     current_leaf.object_count += 1;
                     current_leaf.objects[object_index] = object;
 
-                    Coordinate projected_u{
-                        web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.u]})};
-                    Coordinate projected_v{
-                        web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.v]})};
+                    Coordinate projected_u{web_mercator::fromWGS84(
+                        Coordinate{m_coordinate_list[nodepairs[input_object_index].first]})};
+                    Coordinate projected_v{web_mercator::fromWGS84(
+                        Coordinate{m_coordinate_list[nodepairs[input_object_index].second]})};
 
                     BOOST_ASSERT(std::abs(toFloating(projected_u.lon).operator double()) <= 180.);
                     BOOST_ASSERT(std::abs(toFloating(projected_u.lat).operator double()) <= 180.);
@@ -414,22 +416,25 @@ class StaticRTree
                 {
                     const auto &current_edge = current_leaf_node.objects[i];
 
-                    // we don't need to project the coordinates here,
-                    // because we use the unprojected rectangle to test against
-                    const Rectangle bbox{std::min(m_coordinate_list[current_edge.u].lon,
-                                                  m_coordinate_list[current_edge.v].lon),
-                                         std::max(m_coordinate_list[current_edge.u].lon,
-                                                  m_coordinate_list[current_edge.v].lon),
-                                         std::min(m_coordinate_list[current_edge.u].lat,
-                                                  m_coordinate_list[current_edge.v].lat),
-                                         std::max(m_coordinate_list[current_edge.u].lat,
-                                                  m_coordinate_list[current_edge.v].lat)};
+                    /*
+                                        // we don't need to project the coordinates here,
+                                        // because we use the unprojected rectangle to test against
+                                        const Rectangle
+                       bbox{std::min(m_coordinate_list[current_edge.u].lon,
+                                                                      m_coordinate_list[current_edge.v].lon),
+                                                             std::max(m_coordinate_list[current_edge.u].lon,
+                                                                      m_coordinate_list[current_edge.v].lon),
+                                                             std::min(m_coordinate_list[current_edge.u].lat,
+                                                                      m_coordinate_list[current_edge.v].lat),
+                                                             std::max(m_coordinate_list[current_edge.u].lat,
+                                                                      m_coordinate_list[current_edge.v].lat)};
 
-                    // use the _unprojected_ input rectangle here
-                    if (bbox.Intersects(search_rectangle))
-                    {
-                        results.push_back(current_edge);
-                    }
+                                        // use the _unprojected_ input rectangle here
+                                        if (bbox.Intersects(search_rectangle))
+                                        {
+                                            results.push_back(current_edge);
+                                        }
+                                        */
                 }
             }
             else
@@ -521,8 +526,11 @@ class StaticRTree
                 {
                     continue;
                 }
+                // TODO: Fix these flags!!!!!!!!!!!!!!!!!!!!!!
+                /*
                 edge_data.forward_segment_id.enabled &= use_segment.first;
                 edge_data.reverse_segment_id.enabled &= use_segment.second;
+                */
 
                 // store phantom node in result vector
                 results.push_back(std::move(edge_data));
@@ -544,6 +552,7 @@ class StaticRTree
         // current object represents a block on disk
         for (const auto i : irange(0u, current_leaf_node.object_count))
         {
+            /*
             const auto &current_edge = current_leaf_node.objects[i];
             const auto projected_u = web_mercator::fromWGS84(m_coordinate_list[current_edge.u]);
             const auto projected_v = web_mercator::fromWGS84(m_coordinate_list[current_edge.v]);
@@ -559,6 +568,7 @@ class StaticRTree
             BOOST_ASSERT(0. <= squared_distance);
             traversal_queue.push(
                 QueryCandidate{squared_distance, leaf_id, i, Coordinate{projected_nearest}});
+                */
         }
     }
 

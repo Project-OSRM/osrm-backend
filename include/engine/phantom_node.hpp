@@ -116,6 +116,7 @@ struct PhantomNode
 
     template <class OtherT>
     explicit PhantomNode(const OtherT &other,
+                         unsigned short fwd_segment_position_,
                          int forward_weight_,
                          int forward_offset_,
                          int reverse_weight_,
@@ -128,7 +129,7 @@ struct PhantomNode
           forward_offset{forward_offset_}, reverse_offset{reverse_offset_},
           packed_geometry_id{other.packed_geometry_id},
           component{other.component.id, other.component.is_tiny}, location{location_},
-          input_location{input_location_}, fwd_segment_position{other.fwd_segment_position},
+          input_location{input_location_}, fwd_segment_position{fwd_segment_position_},
           forward_travel_mode{other.forward_travel_mode},
           backward_travel_mode{other.backward_travel_mode}
     {

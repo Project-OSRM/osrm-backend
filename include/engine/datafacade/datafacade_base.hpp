@@ -40,7 +40,7 @@ class BaseDataFacade
 {
   public:
     using EdgeData = contractor::QueryEdge::EdgeData;
-    using RTreeLeaf = extractor::EdgeBasedNode;
+    using RTreeLeaf = extractor::RoadSegment;
     BaseDataFacade() {}
     virtual ~BaseDataFacade() {}
 
@@ -54,6 +54,8 @@ class BaseDataFacade
     virtual NodeID GetTarget(const EdgeID e) const = 0;
 
     virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
+
+    virtual const extractor::EdgeBasedNode &GetNodeData(const NodeID n) const = 0;
 
     virtual EdgeID BeginEdges(const NodeID n) const = 0;
 
@@ -82,6 +84,10 @@ class BaseDataFacade
     virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const = 0;
 
     virtual std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID id) const = 0;
+
+    virtual std::pair<NodeID, NodeID>
+    GetForwardSegmentNodes(const EdgeID packed_geometry_id,
+                           const unsigned forward_offset) const = 0;
 
     // Gets the weight values for each segment in an uncompressed geometry.
     // Should always be 1 shorter than GetUncompressedGeometry

@@ -252,6 +252,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
                                  const api::TileParameters &parameters,
                                  std::string &pbf_buffer) const
 {
+    /*
     BOOST_ASSERT(parameters.IsValid());
 
     double min_lon, min_lat, max_lon, max_lat;
@@ -980,6 +981,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacad
     }
     // protozero serializes data during object destructors, so once the scope closes,
     // our result buffer will have all the tile data encoded into it.
+    */
 
     return Status::Ok;
 }

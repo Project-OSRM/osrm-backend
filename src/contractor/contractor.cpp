@@ -5,6 +5,9 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/node_based_edge.hpp"
+#include "extractor/edge_based_node.hpp"
+
+#include "engine/datafacade/datafacade_base.hpp"
 
 #include "storage/io.hpp"
 #include "util/exception.hpp"
@@ -676,6 +679,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
 
     if (update_edge_weights || update_turn_penalties)
     {
+        // TODO: Populate this!
+        std::vector<extractor::EdgeBasedNode> edge_based_nodes;
         // Here, we have to update the compressed geometry weights
         // First, we need the external-to-internal node lookup table
 
@@ -690,7 +695,7 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
         // Now, we iterate over all the segments stored in the StaticRTree, updating
         // the packed geometry weights in the `.geometries` file (note: we do not
         // update the RTree itself, we just use the leaf nodes to iterate over all segments)
-        using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
+        using LeafNode = util::StaticRTree<engine::datafacade::BaseDataFacade::RTreeLeaf>::LeafNode;
 
         using boost::interprocess::mapped_region;
 
@@ -718,8 +723,8 @@ EdgeID Contractor::LoadEdgeExpandedGraph(
                 extractor::QueryNode *u;
                 extractor::QueryNode *v;
 
-                const unsigned forward_begin =
-                    m_geometry_indices.at(leaf_object.packed_geometry_id);
+                const unsigned forward_begin = m_geometry_indices.at(
+                    edge_based_nodes[leaf_object.edge_based_node_id].packed_geometry_id);
                 const auto current_fwd_weight =
                     m_geometry_fwd_weight_list[forward_begin + leaf_object.fwd_segment_position];
 

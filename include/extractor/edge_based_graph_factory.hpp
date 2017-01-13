@@ -104,6 +104,8 @@ class EdgeBasedGraphFactory
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
     void GetEdgeBasedNodes(std::vector<EdgeBasedNode> &nodes);
+    void GetRoadSegments(std::vector<RoadSegment> &segments);
+    void GetNodePairs(std::vector<std::pair<NodeID, NodeID>> &nodepairs);
     void GetStartPointMarkers(std::vector<bool> &node_is_startpoint);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
 
@@ -138,6 +140,8 @@ class EdgeBasedGraphFactory
     std::vector<EdgeWeight> m_edge_based_node_weights;
 
     //! list of edge based nodes (compressed segments)
+    std::vector<RoadSegment> m_road_segments;
+    std::vector<std::pair<NodeID, NodeID>> m_road_segments_nodes;
     std::vector<EdgeBasedNode> m_edge_based_node_list;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
     EdgeID m_max_edge_id;

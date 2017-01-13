@@ -97,6 +97,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::ShM<std::size_t, true>::vector m_datasource_name_lengths;
     util::ShM<util::guidance::LaneTupleIdPair, true>::vector m_lane_tupel_id_pairs;
 
+    util::ShM<extractor::EdgeBasedNode, true>::vector m_edge_based_node_list;
+
     std::unique_ptr<SharedRTree> m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     boost::filesystem::path file_index_path;
@@ -473,6 +475,22 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     OSMNodeID GetOSMNodeIDOfNode(const unsigned id) const override final
     {
         return m_osmnodeid_list.at(id);
+    }
+
+    virtual const extractor::EdgeBasedNode &GetNodeData(const NodeID n) const override final
+    {
+        // TODO: return the correct node;
+        return m_edge_based_node_list[n];
+    }
+
+    virtual std::pair<NodeID, NodeID>
+    GetForwardSegmentNodes(const EdgeID packed_geometry_id,
+                           const unsigned forward_offset) const override final
+    {
+        const unsigned begin = m_geometry_indices.at(packed_geometry_id);
+        const unsigned end = m_geometry_indices.at(packed_geometry_id + 1);
+
+        return std::make_pair(begin + forward_offset, begin + forward_offset + 1);
     }
 
     virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
