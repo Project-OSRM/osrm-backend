@@ -1,6 +1,7 @@
 #include "contractor/contractor.hpp"
 #include "contractor/crc32_processor.hpp"
 #include "contractor/graph_contractor.hpp"
+#include "contractor/graph_contractor_adaptors.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
@@ -307,7 +308,7 @@ int Contractor::Run()
 
     util::Log() << "Loading edge-expanded graph representation";
 
-    util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
+    std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
     EdgeID max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
                                                edge_based_edge_list,
@@ -334,12 +335,16 @@ int Contractor::Run()
     }
 
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
-    ContractGraph(max_edge_id,
-                  edge_based_edge_list,
-                  contracted_edge_list,
-                  std::move(node_weights),
-                  is_core_node,
-                  node_levels);
+    { // own scope to not keep the contractor around
+        GraphContractor graph_contractor(max_edge_id + 1,
+                                         adaptToContractorInput(std::move(edge_based_edge_list)),
+                                         std::move(node_levels),
+                                         std::move(node_weights));
+        graph_contractor.Run(config.core_factor);
+        graph_contractor.GetEdges(contracted_edge_list);
+        graph_contractor.GetCoreMarker(is_core_node);
+        graph_contractor.GetNodeLevels(node_levels);
+    }
     TIMER_STOP(contraction);
 
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
@@ -367,21 +372,20 @@ int Contractor::Run()
     return 0;
 }
 
-// Utilities for LoadEdgeExpandedGraph to restore my sanity
-EdgeID Contractor::LoadEdgeExpandedGraph(
-    std::string const &edge_based_graph_filename,
-    util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-    std::vector<EdgeWeight> &node_weights,
-    const std::string &edge_segment_lookup_filename,
-    const std::string &edge_penalty_filename,
-    const std::vector<std::string> &segment_speed_filenames,
-    const std::vector<std::string> &turn_penalty_filenames,
-    const std::string &nodes_filename,
-    const std::string &geometry_filename,
-    const std::string &datasource_names_filename,
-    const std::string &datasource_indexes_filename,
-    const std::string &rtree_leaf_filename,
-    const double log_edge_updates_factor)
+EdgeID
+Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
+                                  std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+                                  std::vector<EdgeWeight> &node_weights,
+                                  const std::string &edge_segment_lookup_filename,
+                                  const std::string &edge_penalty_filename,
+                                  const std::vector<std::string> &segment_speed_filenames,
+                                  const std::vector<std::string> &turn_penalty_filenames,
+                                  const std::string &nodes_filename,
+                                  const std::string &geometry_filename,
+                                  const std::string &datasource_names_filename,
+                                  const std::string &datasource_indexes_filename,
+                                  const std::string &rtree_leaf_filename,
+                                  const double log_edge_updates_factor)
 {
     if (segment_speed_filenames.size() > 255 || turn_penalty_filenames.size() > 255)
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
@@ -957,26 +961,5 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     return number_of_used_edges;
 }
 
-/**
- \brief Build contracted graph.
- */
-void Contractor::ContractGraph(
-    const EdgeID max_edge_id,
-    util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-    util::DeallocatingVector<QueryEdge> &contracted_edge_list,
-    std::vector<EdgeWeight> &&node_weights,
-    std::vector<bool> &is_core_node,
-    std::vector<float> &inout_node_levels) const
-{
-    std::vector<float> node_levels;
-    node_levels.swap(inout_node_levels);
-
-    GraphContractor graph_contractor(
-        max_edge_id + 1, edge_based_edge_list, std::move(node_levels), std::move(node_weights));
-    graph_contractor.Run(config.core_factor);
-    graph_contractor.GetEdges(contracted_edge_list);
-    graph_contractor.GetCoreMarker(is_core_node);
-    graph_contractor.GetNodeLevels(inout_node_levels);
-}
-}
-}
+} // namespace contractor
+} // namespace osrm
