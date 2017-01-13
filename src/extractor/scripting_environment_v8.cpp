@@ -78,6 +78,7 @@ struct V8ScriptingContext final
 
     v8::Persistent<v8::Function> get_exceptions;
     v8::Persistent<v8::Function> get_name_suffix_list;
+    v8::Persistent<v8::Function> get_restrictions;
     v8::Persistent<v8::Function> process_node;
     v8::Persistent<v8::Function> process_way;
     v8::Persistent<v8::Function> get_turn_penalty;
@@ -181,6 +182,12 @@ V8ScriptingContext::V8ScriptingContext(const std::string &file_name)
         {
             get_name_suffix_list.Reset(isolate.get(),
                                        get_name_suffix_list_local.As<v8::Function>());
+        }
+
+        auto get_restrictions_local = env.get(context->Global(), "getRestrictions");
+        if (!get_restrictions_local.IsEmpty() && get_restrictions_local->IsFunction())
+        {
+            get_restrictions.Reset(isolate.get(), get_restrictions_local.As<v8::Function>());
         }
 
         auto process_node_local = env.get(context->Global(), "processNode");
@@ -707,7 +714,7 @@ std::vector<std::string> V8ScriptingContext::GetRestrictions()
     v8::HandleScope scope(isolate.get());
     std::vector<std::string> restrictions;
 
-    v8::Local<v8::Function> callback = get_name_suffix_list.Get(isolate.get());
+    v8::Local<v8::Function> callback = get_restrictions.Get(isolate.get());
     if (!callback.IsEmpty())
     {
         auto retval = callback->Call(context->Global(), 0, {});
