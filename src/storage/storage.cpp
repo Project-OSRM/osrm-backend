@@ -66,7 +66,7 @@ int Storage::Run(int max_wait)
         boost::filesystem::ofstream ofs(lock_path);
     }
 
-    boost::interprocess::file_lock file_lock(lock_path.c_str());
+    boost::interprocess::file_lock file_lock(lock_path.string().c_str());
     boost::interprocess::scoped_lock<boost::interprocess::file_lock> datastore_lock(
         file_lock, boost::interprocess::defer_lock);
 
