@@ -49,10 +49,21 @@ class TurnHandler : public IntersectionHandler
   private:
     struct Fork
     {
-        const Intersection::iterator right;
-        const Intersection::iterator left;
+        const Intersection::iterator intersection_base;
+        const Intersection::iterator begin;
+        const Intersection::iterator end;
         const std::size_t size;
-        Fork(const Intersection::iterator right, const Intersection::iterator left);
+        Fork(const Intersection::iterator intersection_base,
+             const Intersection::iterator begin,
+             const Intersection::iterator end);
+        ConnectedRoad &getRight() const;
+        ConnectedRoad &getLeft() const;
+        ConnectedRoad &getMiddle() const;
+        ConnectedRoad &getRight();
+        ConnectedRoad &getLeft();
+        ConnectedRoad &getMiddle();
+        std::size_t getRightIndex() const;
+        std::size_t getLeftIndex() const;
     };
 
     bool isObviousOfTwo(const EdgeID via_edge,
