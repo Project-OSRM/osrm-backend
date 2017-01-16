@@ -4,6 +4,7 @@
       - PR #3504 - debug tiles were very slow to generate due to unnecessarily copying data in a hot loop.
       - PR #3556 - fix an assertion in the walking profile triggered by tight spiral stairwells
       - PR #3469 - don't assert when identical coordinates are supplied to some calculations - OSM data contains these, we shouldn't crash.
+      - PR #3515 - adjusted number of `nodes` in `annotation`
     - Enhancements:
       - backported 6ea9f9fdf19 - when anticipating upcoming lanes, consider how many lanes need to be crossed to get there.
       - when using osrm-datastore, it will attempt to clean up locks if it crashes.
@@ -396,5 +397,3 @@
         - `properties.use_turn_restrictions`
         - `properties.u_turn_penalty`
         - `properties.allow_u_turn_at_via`
-
-
