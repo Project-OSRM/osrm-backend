@@ -2,6 +2,7 @@
   - Changes from 5.5
     - Bugfixes
       - Fix #3475 removed an invalid `exit` field from the `arrive` maneuver
+      - Fix #3515 adjusted number of `nodes` in `annotation`
     - Infrastructure
       - Support building rpm packages.
     - Guidance
@@ -401,5 +402,3 @@
         - `properties.use_turn_restrictions`
         - `properties.u_turn_penalty`
         - `properties.allow_u_turn_at_via`
-
-
