@@ -1,8 +1,7 @@
 #include "extractor/tarjan_scc.hpp"
+#include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/dynamic_graph.hpp"
-#include "util/exception.hpp"
-#include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/graph_loader.hpp"
 #include "util/log.hpp"
@@ -12,18 +11,15 @@
 #include <boost/filesystem.hpp>
 #include <boost/function_output_iterator.hpp>
 
-#if defined(__APPLE__) || defined(_WIN32)
-#include <gdal.h>
-#include <ogrsf_frmts.h>
-#else
-#include <gdal/gdal.h>
-#include <gdal/ogrsf_frmts.h>
-#endif
+#include <tbb/parallel_sort.h>
 
-#include "osrm/coordinate.hpp"
+#include <cstdint>
+#include <cstdlib>
 
+#include <algorithm>
 #include <fstream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -35,21 +31,18 @@ namespace tools
 struct TarjanEdgeData
 {
     TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
-    TarjanEdgeData(unsigned distance, unsigned name_id) : distance(distance), name_id(name_id) {}
-    unsigned distance;
-    unsigned name_id;
+
+    TarjanEdgeData(std::uint32_t distance, std::uint32_t name_id)
+        : distance(distance), name_id(name_id)
+    {
+    }
+
+    std::uint32_t distance;
+    std::uint32_t name_id;
 };
 
 using TarjanGraph = util::StaticGraph<TarjanEdgeData>;
 using TarjanEdge = TarjanGraph::InputEdge;
-
-void deleteFileIfExists(const std::string &file_name)
-{
-    if (boost::filesystem::exists(file_name))
-    {
-        boost::filesystem::remove(file_name);
-    }
-}
 
 std::size_t loadGraph(const std::string &path,
                       std::vector<extractor::QueryNode> &coordinate_list,
@@ -57,16 +50,15 @@ std::size_t loadGraph(const std::string &path,
 {
     storage::io::FileReader file_reader(path, storage::io::FileReader::VerifyFingerprint);
 
-    // load graph data
     std::vector<extractor::NodeBasedEdge> edge_list;
 
     auto nop = boost::make_function_output_iterator([](auto) {});
 
-    auto number_of_nodes = util::loadNodesFromFile(file_reader, nop, nop, coordinate_list);
+    const auto number_of_nodes = util::loadNodesFromFile(file_reader, nop, nop, coordinate_list);
 
     util::loadEdgesFromFile(file_reader, edge_list);
 
-    // Building an node-based graph
+    // Building a node-based graph
     for (const auto &input_edge : edge_list)
     {
         if (input_edge.source == input_edge.target)
@@ -81,6 +73,7 @@ std::size_t loadGraph(const std::string &path,
                                          (std::max)(input_edge.weight, 1),
                                          input_edge.name_id);
         }
+
         if (input_edge.backward)
         {
             graph_edge_list.emplace_back(input_edge.target,
@@ -92,135 +85,130 @@ std::size_t loadGraph(const std::string &path,
 
     return number_of_nodes;
 }
+
+struct FeatureWriter
+{
+    FeatureWriter(std::ostream &out_) : out(out_)
+    {
+        out << "{\"type\":\"FeatureCollection\",\"features\":[";
+    }
+
+    void
+    AddLine(const extractor::QueryNode from, const extractor::QueryNode to, const std::string &type)
+    {
+        const auto from_lon = static_cast<double>(util::toFloating(from.lon));
+        const auto from_lat = static_cast<double>(util::toFloating(from.lat));
+        const auto to_lon = static_cast<double>(util::toFloating(to.lon));
+        const auto to_lat = static_cast<double>(util::toFloating(to.lat));
+
+        static bool first = true;
+
+        if (!first)
+        {
+            out << ",";
+        }
+
+        out << "{\"type\":\"Feature\",\"properties\":{\"from\":" << from.node_id << ","
+            << "\"to\":" << to.node_id << ",\"type\":\"" << type
+            << "\"},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[" << from_lon << ","
+            << from_lat << "],[" << to_lon << "," << to_lat << "]]}}";
+
+        first = false;
+    }
+
+    ~FeatureWriter() { out << "]}" << std::flush; }
+
+    std::ostream &out;
+};
+
+//
 }
 }
 
 int main(int argc, char *argv[])
 {
-    std::vector<osrm::extractor::QueryNode> coordinate_list;
-    osrm::util::LogPolicy::GetInstance().Unmute();
+    using namespace osrm;
 
-    // enable logging
-    if (argc < 2)
+    std::vector<extractor::QueryNode> coordinate_list;
+    util::LogPolicy::GetInstance().Unmute();
+
+    if (argc < 3)
     {
-        osrm::util::Log(logWARNING) << "usage:\n" << argv[0] << " <osrm>";
+        util::Log(logWARNING) << "Usage: " << argv[0] << " map.osrm components.geojson";
         return EXIT_FAILURE;
     }
 
-    std::vector<osrm::tools::TarjanEdge> graph_edge_list;
-    auto number_of_nodes =
-        osrm::tools::loadGraph(std::string(argv[1]), coordinate_list, graph_edge_list);
+    const std::string inpath{argv[1]};
+    const std::string outpath{argv[2]};
+
+    if (boost::filesystem::exists(outpath))
+    {
+        util::Log(logWARNING) << "Components file " << outpath << " already exists";
+        return EXIT_FAILURE;
+    }
+
+    std::ofstream outfile{outpath};
+
+    if (!outfile)
+    {
+        util::Log(logWARNING) << "Unable to open components file " << outpath << " for writing";
+        return EXIT_FAILURE;
+    }
+
+    std::vector<tools::TarjanEdge> graph_edge_list;
+    auto number_of_nodes = tools::loadGraph(inpath, coordinate_list, graph_edge_list);
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
+
     const auto graph = std::make_shared<osrm::tools::TarjanGraph>(number_of_nodes, graph_edge_list);
     graph_edge_list.clear();
     graph_edge_list.shrink_to_fit();
 
-    osrm::util::Log() << "Starting SCC graph traversal";
+    util::Log() << "Starting SCC graph traversal";
 
-    auto tarjan = std::make_unique<osrm::extractor::TarjanSCC<osrm::tools::TarjanGraph>>(graph);
-    tarjan->Run();
-    osrm::util::Log() << "identified: " << tarjan->GetNumberOfComponents() << " many components";
-    osrm::util::Log() << "identified " << tarjan->GetSizeOneCount() << " size 1 SCCs";
+    extractor::TarjanSCC<tools::TarjanGraph> tarjan{graph};
+    tarjan.Run();
 
-    // output
-    TIMER_START(SCC_RUN_SETUP);
+    util::Log() << "Identified: " << tarjan.GetNumberOfComponents() << " components";
+    util::Log() << "Identified " << tarjan.GetSizeOneCount() << " size one components";
 
-    // remove files from previous run if exist
-    osrm::tools::deleteFileIfExists("component.dbf");
-    osrm::tools::deleteFileIfExists("component.shx");
-    osrm::tools::deleteFileIfExists("component.shp");
+    std::uint64_t total_network_length = 0;
 
-    OGRRegisterAll();
+    tools::FeatureWriter writer{outfile};
 
-    const char *psz_driver_name = "ESRI Shapefile";
-    auto *po_driver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName(psz_driver_name);
-    if (nullptr == po_driver)
+    for (const NodeID source : osrm::util::irange(0u, graph->GetNumberOfNodes()))
     {
-        throw osrm::util::exception("ESRI Shapefile driver not available" + SOURCE_REF);
-    }
-    auto *po_datasource = po_driver->CreateDataSource("component.shp", nullptr);
-
-    if (nullptr == po_datasource)
-    {
-        throw osrm::util::exception("Creation of output file failed" + SOURCE_REF);
-    }
-
-    auto *po_srs = new OGRSpatialReference();
-    po_srs->importFromEPSG(4326);
-
-    auto *po_layer = po_datasource->CreateLayer("component", po_srs, wkbLineString, nullptr);
-
-    if (nullptr == po_layer)
-    {
-        throw osrm::util::exception("Layer creation failed." + SOURCE_REF);
-    }
-    TIMER_STOP(SCC_RUN_SETUP);
-    osrm::util::Log() << "shapefile setup took " << TIMER_MSEC(SCC_RUN_SETUP) / 1000. << "s";
-
-    TIMER_START(SCC_OUTPUT);
-    uint64_t total_network_length = 0;
-    {
-        osrm::util::UnbufferedLog log;
-        log << "Constructing geometry ";
-        osrm::util::Percent percentage(log, graph->GetNumberOfNodes());
-        for (const NodeID source : osrm::util::irange(0u, graph->GetNumberOfNodes()))
+        for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
         {
-            percentage.PrintIncrement();
-            for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
+            const auto target = graph->GetTarget(current_edge);
+
+            if (source < target || SPECIAL_EDGEID == graph->FindEdge(target, source))
             {
-                const auto target = graph->GetTarget(current_edge);
+                BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
+                BOOST_ASSERT(source != SPECIAL_NODEID);
+                BOOST_ASSERT(target != SPECIAL_NODEID);
 
-                if (source < target || SPECIAL_EDGEID == graph->FindEdge(target, source))
+                total_network_length += 100 * util::coordinate_calculation::greatCircleDistance(
+                                                  coordinate_list[source], coordinate_list[target]);
+
+                auto source_component_id = tarjan.GetComponentID(source);
+                auto target_component_id = tarjan.GetComponentID(target);
+
+                auto source_component_size = tarjan.GetComponentSize(source_component_id);
+                auto target_component_size = tarjan.GetComponentSize(target_component_id);
+
+                const auto smallest = std::min(source_component_size, target_component_size);
+
+                if (smallest < 1000)
                 {
-                    total_network_length +=
-                        100 * osrm::util::coordinate_calculation::greatCircleDistance(
-                                  coordinate_list[source], coordinate_list[target]);
+                    auto same_component = source_component_id == target_component_id;
+                    std::string type = same_component ? "inner" : "border";
 
-                    BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
-                    BOOST_ASSERT(source != SPECIAL_NODEID);
-                    BOOST_ASSERT(target != SPECIAL_NODEID);
-
-                    const unsigned size_of_containing_component =
-                        std::min(tarjan->GetComponentSize(tarjan->GetComponentID(source)),
-                                 tarjan->GetComponentSize(tarjan->GetComponentID(target)));
-
-                    // edges that end on bollard nodes may actually be in two distinct components
-                    if (size_of_containing_component < 1000)
-                    {
-                        OGRLineString line_string;
-                        line_string.addPoint(static_cast<double>(osrm::util::toFloating(
-                                                 coordinate_list[source].lon)),
-                                             static_cast<double>(osrm::util::toFloating(
-                                                 coordinate_list[source].lat)));
-                        line_string.addPoint(static_cast<double>(osrm::util::toFloating(
-                                                 coordinate_list[target].lon)),
-                                             static_cast<double>(osrm::util::toFloating(
-                                                 coordinate_list[target].lat)));
-
-                        OGRFeature *po_feature =
-                            OGRFeature::CreateFeature(po_layer->GetLayerDefn());
-
-                        po_feature->SetGeometry(&line_string);
-                        if (OGRERR_NONE != po_layer->CreateFeature(po_feature))
-                        {
-                            throw osrm::util::exception("Failed to create feature in shapefile." +
-                                                        SOURCE_REF);
-                        }
-                        OGRFeature::DestroyFeature(po_feature);
-                    }
+                    writer.AddLine(coordinate_list[source], coordinate_list[target], type);
                 }
             }
         }
     }
-    OGRSpatialReference::DestroySpatialReference(po_srs);
-    OGRDataSource::DestroyDataSource(po_datasource);
-    TIMER_STOP(SCC_OUTPUT);
-    osrm::util::Log() << "generating output took: " << TIMER_MSEC(SCC_OUTPUT) / 1000. << "s";
 
-    osrm::util::Log() << "total network distance: "
-                      << static_cast<uint64_t>(total_network_length / 100 / 1000.) << " km";
-
-    osrm::util::Log() << "finished component analysis";
-    return EXIT_SUCCESS;
+    util::Log() << "Total network distance: " << (total_network_length / 100 / 1000) << " km";
 }

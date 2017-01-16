@@ -435,10 +435,6 @@ if(ENABLE_MASON)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
-  if(BUILD_COMPONENTS)
-    message(FATAL_ERROR "BUILD_COMPONENTS is not supported with ENABLE_MASON")
-  endif()
-
   # current mason packages target -D_GLIBCXX_USE_CXX11_ABI=0
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
 
@@ -468,10 +464,6 @@ else()
 
   find_package(BZip2 REQUIRED)
   add_dependency_includes(${BZIP2_INCLUDE_DIR})
-
-  if(BUILD_COMPONENTS)
-    find_package(GDAL)
-  endif()
 
   FIND_PACKAGE(Lua 5.2 EXACT)
   IF (LUA_FOUND)
@@ -622,15 +614,9 @@ target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 if(BUILD_COMPONENTS)
-  if(GDAL_FOUND)
-    add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
-    target_link_libraries(osrm-components ${TBB_LIBRARIES})
-    include_directories(SYSTEM ${GDAL_INCLUDE_DIR})
-    target_link_libraries(osrm-components ${GDAL_LIBRARIES} ${BOOST_BASE_LIBRARIES})
-    install(TARGETS osrm-components DESTINATION bin)
-  else()
-    message(WARNING "libgdal and/or development headers not found")
-  endif()
+  add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
+  target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES})
+  install(TARGETS osrm-components DESTINATION bin)
 endif()
 
 if(BUILD_TOOLS)
