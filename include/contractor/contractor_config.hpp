@@ -39,7 +39,7 @@ namespace contractor
 
 struct ContractorConfig
 {
-    ContractorConfig() : requested_num_threads(0) {}
+    ContractorConfig() : requested_num_threads(0), weight_multiplier(10.) {}
 
     // Infer the output names from the path of the .osrm file
     void UseDefaultOutputNames()
@@ -57,6 +57,7 @@ struct ContractorConfig
         rtree_leaf_path = osrm_input_path.string() + ".fileIndex";
         datasource_names_path = osrm_input_path.string() + ".datasource_names";
         datasource_indexes_path = osrm_input_path.string() + ".datasource_indexes";
+        profile_properties_path = osrm_input_path.string() + ".properties";
     }
 
     boost::filesystem::path config_file_path;
@@ -78,6 +79,7 @@ struct ContractorConfig
 
     unsigned requested_num_threads;
     double log_edge_updates_factor;
+    double weight_multiplier;
 
     // A percentage of vertices that will be contracted for the hierarchy.
     // Offers a trade-off between preprocessing and query time.
@@ -89,6 +91,7 @@ struct ContractorConfig
     std::vector<std::string> turn_penalty_lookup_paths;
     std::string datasource_indexes_path;
     std::string datasource_names_path;
+    std::string profile_properties_path;
 };
 }
 }

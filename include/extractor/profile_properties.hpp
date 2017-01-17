@@ -67,6 +67,8 @@ struct ProfileProperties
         return std::string(weight_name);
     }
 
+    double GetWeightMultiplier() const { return std::pow(10., weight_precision); }
+
     //! penalty to cross a traffic light in deci-seconds
     std::int32_t traffic_signal_penalty;
     //! penalty to do a uturn in deci-seconds

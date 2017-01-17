@@ -371,7 +371,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     std::vector<TurnPenalty> turn_duration_penalties;
 
     const auto weight_multiplier =
-        std::pow(10, scripting_environment.GetProfileProperties().weight_precision);
+        scripting_environment.GetProfileProperties().GetWeightMultiplier();
 
     {
         util::UnbufferedLog log;

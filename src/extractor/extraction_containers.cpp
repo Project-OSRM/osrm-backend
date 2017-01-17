@@ -392,7 +392,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         const auto all_nodes_list_end_ = all_nodes_list.end();
 
         const auto weight_multiplier =
-            std::pow(10, scripting_environment.GetProfileProperties().weight_precision);
+            scripting_environment.GetProfileProperties().GetWeightMultiplier();
 
         while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
         {

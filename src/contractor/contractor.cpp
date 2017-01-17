@@ -74,9 +74,9 @@ struct Segment final
 
 struct SpeedSource final
 {
-    SpeedSource() : speed(0), weight(INVALID_EDGE_WEIGHT) {}
+    SpeedSource() : speed(0), weight(std::numeric_limits<double>::quiet_NaN()) {}
     unsigned speed;
-    EdgeWeight weight;
+    double weight;
     std::uint8_t source;
 };
 
@@ -245,41 +245,42 @@ template <typename Key, typename Value> struct CSVFilesParser
 // Returns duration in deci-seconds
 inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_kmh)
 {
-    BOOST_ASSERT(speed_in_kmh > 0);
+    if (speed_in_kmh <= 0.)
+        return INVALID_EDGE_WEIGHT;
+
     const double speed_in_ms = speed_in_kmh / 3.6;
     const double duration = distance_in_meters / speed_in_ms;
     return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10.)));
 }
 
 // Returns updated edge weight
-void GetNewWeight(const SpeedSource &value,
+void GetNewWeight(const ContractorConfig &config,
+                  const SpeedSource &value,
                   const double &segment_length,
-                  const std::vector<std::string> &segment_speed_filenames,
                   const EdgeWeight current_duration,
-                  const double log_edge_updates_factor,
                   const OSMNodeID from,
                   const OSMNodeID to,
                   EdgeWeight &new_segment_weight,
                   EdgeWeight &new_segment_duration)
 {
     // Update the edge duration as distance/speed
-    new_segment_duration =
-        (value.speed > 0) ? ConvertToDuration(segment_length, value.speed) : INVALID_EDGE_WEIGHT;
+    new_segment_duration = ConvertToDuration(segment_length, value.speed);
 
     // Update the edge weight or fallback to the new edge duration
-    new_segment_weight =
-        (value.weight == INVALID_EDGE_WEIGHT) ? new_segment_duration : value.weight;
+    new_segment_weight = std::isfinite(value.weight)
+                             ? std::round(value.weight * config.weight_multiplier)
+                             : new_segment_duration;
 
     // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a warning
     // if the new duration exceeds a heuristic of what a reasonable duration update is
-    if (log_edge_updates_factor > 0 && current_duration != 0)
+    if (config.log_edge_updates_factor > 0 && current_duration != 0)
     {
-        if (current_duration >= (new_segment_duration * log_edge_updates_factor))
+        if (current_duration >= (new_segment_duration * config.log_edge_updates_factor))
         {
             auto new_secs = new_segment_duration / 10.;
             auto old_secs = current_duration / 10.;
             auto approx_original_speed = (segment_length / old_secs) * 3.6;
-            auto speed_file = segment_speed_filenames.at(value.source - 1);
+            auto speed_file = config.segment_speed_lookup_paths.at(value.source - 1);
             util::Log(logWARNING) << "[weight updates] Edge weight update from " << old_secs
                                   << "s to " << new_secs << "s  New speed: " << value.speed
                                   << " kph"
@@ -315,21 +316,7 @@ int Contractor::Run()
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
-    EdgeID max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
-                                               edge_based_edge_list,
-                                               node_weights,
-                                               config.edge_segment_lookup_path,
-                                               config.turn_weight_penalties_path,
-                                               config.turn_duration_penalties_path,
-                                               config.turn_penalties_index_path,
-                                               config.segment_speed_lookup_paths,
-                                               config.turn_penalty_lookup_paths,
-                                               config.node_based_graph_path,
-                                               config.geometry_path,
-                                               config.datasource_names_path,
-                                               config.datasource_indexes_path,
-                                               config.rtree_leaf_path,
-                                               config.log_edge_updates_factor);
+    EdgeID max_edge_id = LoadEdgeExpandedGraph(config, edge_based_edge_list, node_weights);
 
     // Contracting the edge-expanded graph
 
@@ -380,27 +367,15 @@ int Contractor::Run()
 }
 
 EdgeID
-Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
+Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
                                   std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                  std::vector<EdgeWeight> &node_weights,
-                                  const std::string &edge_segment_lookup_filename,
-                                  const std::string &turn_weight_penalties_filename,
-                                  const std::string &turn_duration_penalties_filename,
-                                  const std::string &turn_penalties_index_filename,
-                                  const std::vector<std::string> &segment_speed_filenames,
-                                  const std::vector<std::string> &turn_penalty_filenames,
-                                  const std::string &nodes_filename,
-                                  const std::string &geometry_filename,
-                                  const std::string &datasource_names_filename,
-                                  const std::string &datasource_indexes_filename,
-                                  const std::string &rtree_leaf_filename,
-                                  const double log_edge_updates_factor)
+                                  std::vector<EdgeWeight> &node_weights)
 {
-    if (segment_speed_filenames.size() > 255 || turn_penalty_filenames.size() > 255)
+    if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
                               SOURCE_REF);
 
-    util::Log() << "Opening " << edge_based_graph_filename;
+    util::Log() << "Opening " << config.edge_based_graph_path;
 
     auto mmap_file = [](const std::string &filename, boost::interprocess::mode_t mode) {
         using boost::interprocess::file_mapping;
@@ -421,15 +396,15 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
     };
 
     const auto edge_based_graph_region =
-        mmap_file(edge_based_graph_filename, boost::interprocess::read_only);
+        mmap_file(config.edge_based_graph_path, boost::interprocess::read_only);
 
-    const bool update_edge_weights = !segment_speed_filenames.empty();
-    const bool update_turn_penalties = !turn_penalty_filenames.empty();
+    const bool update_edge_weights = !config.segment_speed_lookup_paths.empty();
+    const bool update_turn_penalties = !config.turn_penalty_lookup_paths.empty();
 
     const auto turn_penalties_index_region = [&] {
         if (update_edge_weights || update_turn_penalties)
         {
-            return mmap_file(turn_penalties_index_filename, boost::interprocess::read_only);
+            return mmap_file(config.turn_penalties_index_path, boost::interprocess::read_only);
         }
         return boost::interprocess::mapped_region();
     }();
@@ -437,7 +412,7 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
     const auto edge_segment_region = [&] {
         if (update_edge_weights || update_turn_penalties)
         {
-            return mmap_file(edge_segment_lookup_filename, boost::interprocess::read_only);
+            return mmap_file(config.edge_segment_lookup_path, boost::interprocess::read_only);
         }
         return boost::interprocess::mapped_region();
     }();
@@ -462,13 +437,13 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
     const util::FingerPrint expected_fingerprint = util::FingerPrint::GetValid();
     if (!graph_header.fingerprint.IsValid())
     {
-        util::Log(logERROR) << edge_based_graph_filename << " does not have a valid fingerprint";
+        util::Log(logERROR) << config.edge_based_graph_path << " does not have a valid fingerprint";
         throw util::exception("Invalid fingerprint");
     }
 
     if (!expected_fingerprint.IsDataCompatible(graph_header.fingerprint))
     {
-        util::Log(logERROR) << edge_based_graph_filename
+        util::Log(logERROR) << config.edge_based_graph_path
                             << " is not compatible with this version of OSRM.";
         util::Log(logERROR) << "It was prepared with OSRM "
                             << graph_header.fingerprint.GetMajorVersion() << "."
@@ -483,13 +458,13 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
     util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
     auto segment_speed_lookup = CSVFilesParser<Segment, SpeedSource>(
-        1, qi::ulong_long >> ',' >> qi::ulong_long, qi::uint_ >> -(',' >> qi::uint_))(
-        segment_speed_filenames);
+        1, qi::ulong_long >> ',' >> qi::ulong_long, qi::uint_ >> -(',' >> qi::double_))(
+        config.segment_speed_lookup_paths);
 
     auto turn_penalty_lookup = CSVFilesParser<Turn, PenaltySource>(
-        1 + segment_speed_filenames.size(),
+        1 + config.segment_speed_lookup_paths.size(),
         qi::ulong_long >> ',' >> qi::ulong_long >> ',' >> qi::ulong_long,
-        qi::double_ >> -(',' >> qi::double_))(turn_penalty_filenames);
+        qi::double_ >> -(',' >> qi::double_))(config.turn_penalty_lookup_paths);
 
     // If we update the edge weights, this file will hold the datasource information for each
     // segment; the other files will also be conditionally filled concurrently if we make an update
@@ -507,18 +482,17 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
         if (!update_edge_weights)
             return;
 
-        storage::io::FileReader nodes_file(nodes_filename,
+        storage::io::FileReader nodes_file(config.node_based_graph_path,
                                            storage::io::FileReader::HasNoFingerprint);
 
         nodes_file.DeserializeVector(internal_to_external_node_map);
-
     };
 
     const auto maybe_load_geometries = [&] {
         if (!update_edge_weights)
             return;
 
-        storage::io::FileReader geometry_file(geometry_filename,
+        storage::io::FileReader geometry_file(config.geometry_path,
                                               storage::io::FileReader::HasNoFingerprint);
         const auto number_of_indices = geometry_file.ReadElementCount32();
         geometry_indices.resize(number_of_indices);
@@ -570,7 +544,7 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
 
         using boost::interprocess::mapped_region;
 
-        auto region = mmap_file(rtree_leaf_filename.c_str(), boost::interprocess::read_only);
+        auto region = mmap_file(config.rtree_leaf_path.c_str(), boost::interprocess::read_only);
         region.advise(mapped_region::advice_willneed);
         BOOST_ASSERT(is_aligned<LeafNode>(region.get_address()));
 
@@ -581,7 +555,7 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
         // vector to count used speeds for logging
         // size offset by one since index 0 is used for speeds not from external file
         using counters_type = std::vector<std::size_t>;
-        std::size_t num_counters = segment_speed_filenames.size() + 1;
+        std::size_t num_counters = config.segment_speed_lookup_paths.size() + 1;
         tbb::enumerable_thread_specific<counters_type> segment_speeds_counters(
             counters_type(num_counters, 0));
         const constexpr auto LUA_SOURCE = 0;
@@ -608,11 +582,10 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
                 if (auto value = segment_speed_lookup({u.node_id, v.node_id}))
                 {
                     EdgeWeight new_segment_weight, new_segment_duration;
-                    GetNewWeight(*value,
+                    GetNewWeight(config,
+                                 *value,
                                  segment_length,
-                                 segment_speed_filenames,
                                  geometry_fwd_duration_list[u_index],
-                                 log_edge_updates_factor,
                                  u.node_id,
                                  v.node_id,
                                  new_segment_weight,
@@ -627,11 +600,10 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
                 if (auto value = segment_speed_lookup({v.node_id, u.node_id}))
                 {
                     EdgeWeight new_segment_weight, new_segment_duration;
-                    GetNewWeight(*value,
+                    GetNewWeight(config,
+                                 *value,
                                  segment_length,
-                                 segment_speed_filenames,
                                  geometry_rev_duration_list[u_index],
-                                 log_edge_updates_factor,
                                  v.node_id,
                                  u.node_id,
                                  new_segment_weight,
@@ -670,7 +642,7 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
                 // segments_speeds_counters has 0 as LUA, segment_speed_filenames not, thus we need
                 // to susbstract 1 to avoid off-by-one error
                 util::Log() << "Used " << merged_counters[i] << " speeds from "
-                            << segment_speed_filenames[i - 1];
+                            << config.segment_speed_lookup_paths[i - 1];
             }
         }
     }
@@ -680,10 +652,10 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
             return;
 
         // Now save out the updated compressed geometries
-        std::ofstream geometry_stream(geometry_filename, std::ios::binary);
+        std::ofstream geometry_stream(config.geometry_path, std::ios::binary);
         if (!geometry_stream)
         {
-            const std::string message{"Failed to open " + geometry_filename + " for writing"};
+            const std::string message{"Failed to open " + config.geometry_path + " for writing"};
             throw util::exception(message + SOURCE_REF);
         }
         const unsigned number_of_indices = geometry_indices.size();
@@ -706,10 +678,10 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
     };
 
     const auto save_datasource_indexes = [&] {
-        std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
+        std::ofstream datasource_stream(config.datasource_indexes_path, std::ios::binary);
         if (!datasource_stream)
         {
-            const std::string message{"Failed to open " + datasource_indexes_filename +
+            const std::string message{"Failed to open " + config.datasource_indexes_path +
                                       " for writing"};
             throw util::exception(message + SOURCE_REF);
         }
@@ -724,10 +696,10 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
     };
 
     const auto save_datastore_names = [&] {
-        std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
+        std::ofstream datasource_stream(config.datasource_names_path, std::ios::binary);
         if (!datasource_stream)
         {
-            const std::string message{"Failed to open " + datasource_names_filename +
+            const std::string message{"Failed to open " + config.datasource_names_path +
                                       " for writing"};
             throw util::exception(message + SOURCE_REF);
         }
@@ -736,7 +708,7 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
         // Only write the filename, without path or extension.
         // This prevents information leakage, and keeps names short
         // for rendering in the debug tiles.
-        for (auto const &name : segment_speed_filenames)
+        for (auto const &name : config.segment_speed_lookup_paths)
         {
             datasource_stream << boost::filesystem::path(name).stem().string() << std::endl;
         }
@@ -751,7 +723,7 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
         if (!update_edge_weights && !update_turn_penalties)
             return;
         using storage::io::FileReader;
-        FileReader file(turn_weight_penalties_filename, FileReader::HasNoFingerprint);
+        FileReader file(config.turn_weight_penalties_path, FileReader::HasNoFingerprint);
         file.DeserializeVector(turn_weight_penalties);
     };
 
@@ -759,7 +731,7 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
         if (!update_turn_penalties)
             return;
         using storage::io::FileReader;
-        FileReader file(turn_duration_penalties_filename, FileReader::HasNoFingerprint);
+        FileReader file(config.turn_duration_penalties_path, FileReader::HasNoFingerprint);
         file.DeserializeVector(turn_duration_penalties);
     };
 
@@ -818,9 +790,9 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
                             return true;
 
                         segment_weight =
-                            value->weight == INVALID_EDGE_WEIGHT
-                                ? ConvertToDuration(segment.segment_length, value->speed)
-                                : value->weight;
+                            std::isfinite(value->weight)
+                                ? std::round(value->weight * config.weight_multiplier)
+                                : ConvertToDuration(segment.segment_length, value->speed);
                     }
 
                     // Update the edge weight and the next OSM node ID
@@ -846,10 +818,10 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
             {
                 auto turn_duration_penalty =
                     boost::numeric_cast<TurnPenalty>(std::round(value->duration * 10.));
-                turn_weight_penalty =
-                    std::isfinite(value->weight)
-                        ? boost::numeric_cast<TurnPenalty>(std::round(value->weight * 10))
-                        : turn_duration_penalty;
+                turn_weight_penalty = std::isfinite(value->weight)
+                                          ? boost::numeric_cast<TurnPenalty>(std::round(
+                                                value->weight * config.weight_multiplier))
+                                          : turn_duration_penalty;
 
                 const auto weight_min_value = static_cast<EdgeWeight>(header->num_osm_nodes);
                 if (turn_weight_penalty + new_weight < weight_min_value)
@@ -891,8 +863,8 @@ Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
         };
 
         tbb::parallel_invoke(
-            [&] { save_penalties(turn_weight_penalties_filename, turn_weight_penalties); },
-            [&] { save_penalties(turn_duration_penalties_filename, turn_duration_penalties); });
+            [&] { save_penalties(config.turn_weight_penalties_path, turn_weight_penalties); },
+            [&] { save_penalties(config.turn_duration_penalties_path, turn_duration_penalties); });
     }
 
     util::Log() << "Done reading edges";

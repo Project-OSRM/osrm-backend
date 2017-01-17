@@ -996,6 +996,11 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         return m_profile_properties->weight_precision;
     }
 
+    double GetWeightMultiplier() const override final
+    {
+        return m_profile_properties->GetWeightMultiplier();
+    }
+
     BearingClassID GetBearingClassID(const NodeID id) const override final
     {
         return m_bearing_class_id_table.at(id);
