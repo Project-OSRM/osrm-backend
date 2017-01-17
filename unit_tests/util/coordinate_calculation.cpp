@@ -3,6 +3,7 @@
 
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/web_mercator.hpp"
 
 #include <osrm/coordinate.hpp>
 
@@ -384,6 +385,24 @@ BOOST_AUTO_TEST_CASE(consistent_invalid_bearing_result)
     BOOST_CHECK_EQUAL(0., util::coordinate_calculation::bearing(pos1, pos1));
     BOOST_CHECK_EQUAL(0., util::coordinate_calculation::bearing(pos2, pos2));
     BOOST_CHECK_EQUAL(0., util::coordinate_calculation::bearing(pos3, pos3));
+}
+
+// Regression test for bug captured in #3516
+BOOST_AUTO_TEST_CASE(regression_test_3516)
+{
+    Coordinate u(FloatLongitude{-73.989687}, FloatLatitude{40.752288});
+    Coordinate v(FloatLongitude{-73.990134}, FloatLatitude{40.751658});
+    Coordinate q(FloatLongitude{-73.99039}, FloatLatitude{40.75171});
+
+    BOOST_CHECK_EQUAL(Coordinate{web_mercator::toWGS84(web_mercator::fromWGS84(u))}, u);
+    BOOST_CHECK_EQUAL(Coordinate{web_mercator::toWGS84(web_mercator::fromWGS84(v))}, v);
+
+    double ratio;
+    Coordinate nearest_location;
+    coordinate_calculation::perpendicularDistance(u, v, q, nearest_location, ratio);
+
+    BOOST_CHECK_EQUAL(ratio, 1.);
+    BOOST_CHECK_EQUAL(nearest_location, v);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
