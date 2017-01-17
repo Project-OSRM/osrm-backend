@@ -35,3 +35,12 @@ Feature: Car - speeds
             | primary        |             | roundabout | 52 km/h |         | implied oneway |
             | primary        | alternating | roundabout | 20 km/h |         | implied oneway |
             | primary        | reversible  | roundabout |         |         | unroutable     |
+
+    Scenario: Car - Check roundoff errors
+        Then routability should be
+
+            | highway | maxspeed | forw    | backw    |
+            | primary |          | 52 km/h | 52 km/h  |
+            | primary | 60       | 47 km/h | 47 km/h  |
+            | primary | 60       | 47 km/h | 47 km/h  |
+            | primary | 60       | 47 km/h | 47 km/h  |
