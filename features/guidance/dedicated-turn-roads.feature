@@ -892,3 +892,40 @@ Feature: Slipways and Dedicated Turn Lanes
         When I route I should get
             | waypoints | route            | turns                                            | locations |
             | z,t       | through,,out,out | depart,off ramp slight right,round-exit-3,arrive | z,s,c,t   |
+
+    Scenario: Sliproad before a roundabout
+        Given the node map
+            """
+                      e
+            a - b - - c - d
+                    'f|l'
+                      m
+                      g
+                      |
+                     .h-_
+                k - i    |
+                     '.j.'
+
+            """
+
+        And the ways
+            | nodes | junction   | oneway | highway   | name |
+            | ab    |            | yes    | primary   | road |
+            | bc    |            | yes    | primary   | road |
+            | cd    |            | yes    | primary   | road |
+            | ec    |            | yes    | secondary |      |
+            | cm    |            | yes    | secondary |      |
+            | mg    |            | yes    | primary   |      |
+            | gh    |            | no     | primary   |      |
+            | hijh  | roundabout | yes    | primary   |      |
+            | ik    |            | yes    | primary   |      |
+            | bfm   |            | yes    | primary   |      |
+            | gld   |            | yes    | primary   |      |
+
+		And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | bc       | cd     | c        | only_straight |
+
+        When I route I should get
+            | waypoints | route     | turns                                                     | locations |
+            | a,k       | road,,,   | depart,continue right,roundabout turn right exit-1,arrive | a,b,h,k   |

@@ -998,7 +998,8 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         if (one_back_step.maneuver.instruction.type == TurnType::Sliproad)
         {
             if (current_step.maneuver.instruction.type == TurnType::Suppressed &&
-                compatible(one_back_step, current_step))
+                compatible(one_back_step, current_step) && current_step.intersections.size() == 1 &&
+                current_step.intersections.front().entry.size() == 2)
             {
                 // Traffic light on the sliproad, the road itself will be handled in the next
                 // iteration, when one-back-index again points to the sliproad.
