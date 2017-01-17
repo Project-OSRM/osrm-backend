@@ -140,8 +140,9 @@ IntersectionGenerator::ComputeIntersectionShape(const NodeID node_at_center_of_i
             }
             return util::bearing::reverse(intersection.begin()->bearing);
         }();
-        std::sort(
-            intersection.begin(), intersection.end(), makeCompareShapeDataByBearing(base_bearing));
+        std::sort(intersection.begin(),
+                  intersection.end(),
+                  makeCompareShapeDataAngleToBearing(base_bearing));
     }
     return intersection;
 }
