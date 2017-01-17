@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(circleCenter)
 
     auto result = coordinate_calculation::circleCenter(a, b, c);
     BOOST_CHECK(result);
-    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude{-100.000833}, FloatLatitude{10.000833}));
+    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude{-100.0008333}, FloatLatitude{10.0008333}));
 
     // Co-linear longitude
     a = Coordinate(FloatLongitude{-100.}, FloatLatitude{10.});
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(circleCenter)
     c = Coordinate(FloatLongitude{-112.096419}, FloatLatitude{41.147259});
     result = coordinate_calculation::circleCenter(a, b, c);
     BOOST_CHECK(result);
-    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude{-112.09642}, FloatLatitude{41.14707}));
+    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude{-112.09642}, FloatLatitude{41.1470705}));
 
     // Co-linear latitude, variation
     a = Coordinate(FloatLongitude{-112.096234}, FloatLatitude{41.147101});
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(circleCenter)
     c = Coordinate(FloatLongitude{-112.096419}, FloatLatitude{41.147259});
     result = coordinate_calculation::circleCenter(a, b, c);
     BOOST_CHECK(result);
-    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude{-112.096512}, FloatLatitude{41.146962}));
+    BOOST_CHECK_EQUAL(*result, Coordinate(FloatLongitude{-112.0965125}, FloatLatitude{41.1469622}));
 
     // Co-linear latitude, impossible to calculate
     a = Coordinate(FloatLongitude{-112.096234}, FloatLatitude{41.147259});

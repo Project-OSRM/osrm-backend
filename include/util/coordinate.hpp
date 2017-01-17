@@ -60,7 +60,8 @@ OSRM_STRONG_TYPEDEF(double, FloatLongitude)
 inline FixedLatitude toFixed(const FloatLatitude floating)
 {
     const auto latitude = static_cast<double>(floating);
-    const auto fixed = boost::numeric_cast<std::int32_t>(latitude * COORDINATE_PRECISION);
+    const auto fixed =
+        boost::numeric_cast<std::int32_t>(std::round(latitude * COORDINATE_PRECISION));
     return FixedLatitude{fixed};
 }
 
@@ -74,7 +75,8 @@ inline FixedLatitude toFixed(const FloatLatitude floating)
 inline FixedLongitude toFixed(const FloatLongitude floating)
 {
     const auto longitude = static_cast<double>(floating);
-    const auto fixed = boost::numeric_cast<std::int32_t>(longitude * COORDINATE_PRECISION);
+    const auto fixed =
+        boost::numeric_cast<std::int32_t>(std::round(longitude * COORDINATE_PRECISION));
     return FixedLongitude{fixed};
 }
 

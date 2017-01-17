@@ -1358,7 +1358,7 @@ Feature: Simple Turns
               |
               |
               |
-            g a - - -b
+             ga - - -b
               f    /
               d -c
             """

@@ -105,7 +105,7 @@ Feature: Staggered Intersections
                 j
             a b c
                 d
-                e  f g
+                e  f  g
                 h
             """
 

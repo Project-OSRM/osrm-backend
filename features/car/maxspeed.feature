@@ -55,8 +55,8 @@ OSRM will use 4/5 of the projected free-flow speed.
             | highway | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
             | primary |          |                  |                   | 52 km/h | 52 km/h |
             | primary | 60       |                  |                   | 48 km/h | 48 km/h |
-            | primary |          | 60               |                   | 48 km/h | 48 km/h +- 5 |
-            | primary |          |                  | 60                | 52 km/h | 52 km/h +- 5 |
+            | primary |          | 60               |                   | 48 km/h | 52 km/h |
+            | primary |          |                  | 60                | 52 km/h | 48 km/h |
             | primary | 15       | 60               |                   | 48 km/h | 12 km/h |
             | primary | 15       |                  | 60                | 12 km/h | 48 km/h |
             | primary | 15       | 30               | 60                | 24 km/h | 48 km/h |
@@ -91,11 +91,11 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |          |       |                  | 60                | 52 km/h | 47 km/h |
             | primary |          |   3   |                  | 60                | 32 km/h | 29 km/h |
             | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h |
-            | primary | 15       |   3   | 60               |                   | 29 km/h |  7 km/h |
+            | primary | 15       |   3   | 60               |                   | 30 km/h |  7 km/h |
             | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h |
             | primary | 15       |   3   |                  | 60                |  7 km/h | 29 km/h |
             | primary | 15       |       | 30               | 60                | 23 km/h | 47 km/h |
-            | primary | 15       |   3   | 30               | 60                | 14 km/h | 29 km/h |
+            | primary | 15       |   3   | 30               | 60                | 15 km/h | 29 km/h |
 
     Scenario: Car - Single lane streets be ignored or incur a penalty
         Then routability should be
@@ -110,11 +110,11 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |          |       |                  | 60                | 52 km/h | 47 km/h |
             | primary |          |   1   |                  | 60                | 32 km/h | 29 km/h |
             | primary | 15       |       | 60               |                   | 47 km/h | 11 km/h |
-            | primary | 15       |   1   | 60               |                   | 29 km/h |  7 km/h |
+            | primary | 15       |   1   | 60               |                   | 30 km/h |  7 km/h |
             | primary | 15       |       |                  | 60                | 12 km/h | 47 km/h |
             | primary | 15       |   1   |                  | 60                |  7 km/h | 29 km/h |
             | primary | 15       |       | 30               | 60                | 23 km/h | 47 km/h |
-            | primary | 15       |   1   | 30               | 60                | 14 km/h | 29 km/h |
+            | primary | 15       |   1   | 30               | 60                | 15 km/h | 29 km/h |
 
     Scenario: Car - Single lane streets only incure a penalty for two-way streets
         Then routability should be
@@ -131,6 +131,5 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary | 30       |                  |                   | -1     |         | 23 km/h |
             | primary |          | 30               |                   | -1     |         | 52 km/h |
             | primary |          |                  | 30                | -1     |         | 23 km/h |
-            | primary | 20       | 30               |                   | -1     |         | 16 km/h |
+            | primary | 20       | 30               |                   | -1     |         | 15 km/h |
             | primary | 20       |                  | 30                | -1     |         | 23 km/h |
-

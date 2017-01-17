@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_EQUAL(result.size(), 114098);
+    BOOST_CHECK_EQUAL(result.size(), 114033);
 
     protozero::pbf_reader tile_message(result);
     tile_message.next();
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     }
     std::sort(actual_turn_penalties.begin(), actual_turn_penalties.end());
     const std::vector<float> expected_turn_penalties = {
-        0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.3f, 1.8f, 5.4f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
+        0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
     BOOST_CHECK(actual_turn_penalties == expected_turn_penalties);
 
     // Verify the expected turn angles
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     }
     std::sort(actual_turn_angles.begin(), actual_turn_angles.end());
     const std::vector<std::int64_t> expected_turn_angles = {
-        -123, -120, -118, -64, -57, -29, -28, -3, -2, 2, 3, 28, 29, 57, 64, 118, 120, 123};
+        -122, -120, -117, -65, -57, -30, -28, -3, -2, 2, 3, 28, 30, 57, 65, 117, 120, 122};
     BOOST_CHECK(actual_turn_angles == expected_turn_angles);
 
     // Verify the expected bearings
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     }
     std::sort(actual_turn_bearings.begin(), actual_turn_bearings.end());
     const std::vector<std::int64_t> expected_turn_bearings = {
-        49, 49, 106, 106, 169, 169, 171, 171, 229, 229, 258, 258, 287, 287, 349, 349, 352, 352};
+        49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 352, 352};
     BOOST_CHECK(actual_turn_bearings == expected_turn_bearings);
 }
 

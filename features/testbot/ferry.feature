@@ -164,8 +164,8 @@ Feature: Testbot - Handle ferry routes
             | xa    | primary |       |          |
             | yg    | primary |       |          |
             | xy    | primary |       |          |
-            | abcd  |         | ferry | 0:01     |
-            | defg  |         | ferry | 0:01     |
+            | abcd  |         | ferry | 0:02     |
+            | defg  |         | ferry | 0:02     |
 
         When I route I should get
             | from | to | route       | time      |
@@ -187,8 +187,8 @@ Feature: Testbot - Handle ferry routes
 
         When I route I should get
             | from | to | route           | time       |
-            | a    | g  | abcdefg,abcdefg | 23400s +-2 |
-            | g    | a  | abcdefg,abcdefg | 23400s +-2 |
+            | a    | g  | abcdefg,abcdefg | 23400s +-3 |
+            | g    | a  | abcdefg,abcdefg | 23400s +-3 |
 
     @todo
     Scenario: Testbot - Ferry duration formats

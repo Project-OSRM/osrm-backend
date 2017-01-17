@@ -64,6 +64,6 @@ Feature: Bike - Handle ferry routes
             | abcd  |         | ferry | yes     | 1:00     |
 
         When I route I should get
-            | from | to | route | time       |
-            | a    | d  | abcd,abcd  | 3600s +-10 |
-            | d    | a  | abcd,abcd  | 3600s +-10 |
+            | from | to | route     | time  |
+            | a    | d  | abcd,abcd | 3600s |
+            | d    | a  | abcd,abcd | 3600s |
