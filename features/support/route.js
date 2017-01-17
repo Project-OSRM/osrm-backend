@@ -180,6 +180,11 @@ module.exports = function () {
         return merged;
     };
 
+    this.alternativesList = (instructions) => {
+        // alternatives_count come from tracepoints list
+        return instructions.tracepoints.map(t => t.alternatives_count.toString()).join(',');
+    };
+
     this.lanesList = (instructions) => {
         return this.extractInstructionList(instructions, instruction => {
             if( 'lanes' in instruction.intersections[0] )

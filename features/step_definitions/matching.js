@@ -39,7 +39,8 @@ module.exports = function () {
                         duration = '',
                         annotation = '',
                         geometry = '',
-                        OSMIDs = '';
+                        OSMIDs = '',
+                        alternatives = '';
 
 
                     if (res.statusCode === 200) {
@@ -95,6 +96,10 @@ module.exports = function () {
                             if (json.matchings.length != 1) throw new Error('*** Checking geometry only supported for matchings with one subtrace');
                             geometry = json.matchings[0].geometry;
                         }
+
+                        if (headers.has('alternatives')) {
+                            alternatives = this.alternativesList(json);
+                        }
                     }
 
                     if (headers.has('turns')) {
@@ -137,6 +142,9 @@ module.exports = function () {
                         got['OSM IDs'] = OSMIDs;
                     }
 
+                    if (headers.has('alternatives')) {
+                        got['alternatives'] = alternatives;
+                    }
                     var ok = true;
                     var encodedResult = '',
                         extendedTarget = '';

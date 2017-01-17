@@ -263,6 +263,22 @@ Feature: Basic Map Matching
             | trace | matchings | geometry                                |
             | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |
 
+    Scenario: Testbot - Matching alternatives count test
+        Given the node map
+            """
+            a b c d e f
+                  g h i
+            """
+
+        And the ways
+            | nodes  | oneway |
+            | abcdef | yes    |
+            | dghi   | yes    |
+
+        When I match I should get
+            | trace  | matchings | alternatives         |
+            | abcdef | abcde     | 1,1,1,1,2,2          |
+
     Scenario: Testbot - Speed greater than speed threshhold
         Given a grid size of 10 meters
         Given the query options
