@@ -41,7 +41,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                             const bool source_traversed_in_reverse,
                                             const bool target_traversed_in_reverse)
 {
-    const double weight_multiplier = std::pow(10., facade.GetWeightPrecision());
+    const double weight_multiplier = facade.GetWeightMultiplier();
 
     const double constexpr ZERO_DURATION = 0., ZERO_DISTANCE = 0., ZERO_WEIGHT = 0;
     const constexpr char *NO_ROTARY_NAME = "";

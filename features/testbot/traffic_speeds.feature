@@ -51,12 +51,12 @@ Feature: Traffic - speeds
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
         Given the speed file
         """
-        1,2,1,200207
-        2,1,1,200207
-        2,3,27,7415
-        3,2,27,7415
-        1,4,27,12757
-        4,1,27,12757
+        1,2,1,20020.7
+        2,1,1,20020.7
+        2,3,27,741.5
+        3,2,27,741.5
+        1,4,27,1275.7
+        4,1,27,1275.7
         """
         And I route I should get
           | from | to | route       | speed   | weights              |
@@ -70,25 +70,33 @@ Feature: Traffic - speeds
 
 
     Scenario: Weighting based on speed file weights, ETA based on file durations
-        Given the contract extra arguments "--segment-speed-file {speeds_file}"
+        Given the profile file "testbot" extended with
+        """
+        api_version = 1
+        properties.traffic_signal_penalty = 0
+        properties.u_turn_penalty = 0
+        properties.weight_precision = 3
+        """
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
         Given the speed file
         """
-        1,2,1,200207
-        2,1,1,200207
-        2,3,27,7415
-        3,2,27,7415
-        1,4,1,344450
-        4,1,1,344450
+        1,2,1,20020.789
+        2,1,1,20020.123
+        2,3,27,741.56789
+        3,2,27,741.3
+        1,4,1,34445.12
+        4,1,1,34445.3
         """
         And I route I should get
-          | from | to | route       | speed   | weights               |
-          | a    | b  | ab,ab       | 1 km/h  | 20020.7,0             |
-          | a    | c  | ab,bc,bc    | 2 km/h  | 20020.7,741.5,0       |
-          | b    | c  | bc,bc       | 27 km/h | 741.5,0               |
-          | a    | d  | ab,eb,de,de | 2 km/h  | 20020.7,378.2,400.4,0 |
-          | d    | c  | dc,dc       | 36 km/h | 956.8,0               |
-          | g    | b  | ab,ab       | 1 km/h  | 10010.4,0             |
-          | a    | g  | ab,ab       | 1 km/h  | 10010.3,0             |
+          | from | to | route       | speed   | weights                     |
+          | a    | b  | ab,ab       | 1 km/h  | 20020.789,0                 |
+          | a    | c  | ab,bc,bc    | 2 km/h  | 20020.789,741.568,0         |
+          | b    | c  | bc,bc       | 27 km/h | 741.568,0                   |
+          | a    | d  | ab,eb,de,de | 2 km/h  | 20020.789,378.169,400.415,0 |
+          | d    | c  | dc,dc       | 36 km/h | 956.805,0                   |
+          | g    | b  | ab,ab       | 1 km/h  | 10010.392,0                 |
+          | a    | g  | ab,ab       | 1 km/h  | 10010.397,0                 |
+          | g    | a  | ab,ab       | 1 km/h  | 10010.064,0                 |
 
 
     Scenario: Speeds that isolate a single node (a)
