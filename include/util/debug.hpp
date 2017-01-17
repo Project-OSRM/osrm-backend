@@ -29,6 +29,7 @@ inline void print(const engine::guidance::RouteStep &step)
               << " "
               << " Duration: " << step.duration << " Distance: " << step.distance
               << " Geometry: " << step.geometry_begin << " " << step.geometry_end
+              << " Exit: " << step.maneuver.exit << " Mode: " << (int)step.mode
               << "\n\tIntersections: " << step.intersections.size() << " [";
 
     for (const auto &intersection : step.intersections)

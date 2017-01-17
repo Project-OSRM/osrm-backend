@@ -566,6 +566,12 @@ std::pair<std::size_t, std::size_t> TurnHandler::findFork(const EdgeID via_edge,
             return true;
         }();
 
+        const auto has_compatible_modes = std::all_of(
+            intersection.begin() + right, intersection.begin() + left + 1, [&](const auto &road) {
+                return node_based_graph.GetEdgeData(road.eid).travel_mode ==
+                       node_based_graph.GetEdgeData(via_edge).travel_mode;
+            });
+
         // check if all entries in the fork range allow entry
         const bool only_valid_entries = [&]() {
             BOOST_ASSERT(right <= left && left < intersection.size());
@@ -585,7 +591,8 @@ std::pair<std::size_t, std::size_t> TurnHandler::findFork(const EdgeID via_edge,
 
         // TODO check whether 2*NARROW_TURN is too large
         if (valid_indices && separated_at_left_side && separated_at_right_side &&
-            not_more_than_three && !has_obvious && has_compatible_classes && only_valid_entries)
+            not_more_than_three && !has_obvious && has_compatible_classes && only_valid_entries &&
+            has_compatible_modes)
             return std::make_pair(right, left);
     }
     return std::make_pair(std::size_t{0}, std::size_t{0});

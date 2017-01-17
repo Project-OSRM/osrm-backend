@@ -167,6 +167,14 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
         node_based_graph.GetEdgeData(left.eid).road_classification.IsLowPriorityRoadClass();
     const bool low_priority_right =
         node_based_graph.GetEdgeData(right.eid).road_classification.IsLowPriorityRoadClass();
+    const auto same_mode_left =
+        in_data.travel_mode == node_based_graph.GetEdgeData(left.eid).travel_mode;
+    const auto same_mode_right =
+        in_data.travel_mode == node_based_graph.GetEdgeData(right.eid).travel_mode;
+    const auto suppressed_left_type =
+        same_mode_left ? TurnType::Suppressed : TurnType::Notification;
+    const auto suppressed_right_type =
+        same_mode_right ? TurnType::Suppressed : TurnType::Notification;
     if ((angularDeviation(left.angle, STRAIGHT_ANGLE) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION &&
          angularDeviation(right.angle, STRAIGHT_ANGLE) > FUZZY_ANGLE_DIFFERENCE))
     {
@@ -198,7 +206,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
         }
         else
         {
-            left.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+            left.instruction = {suppressed_left_type, DirectionModifier::Straight};
             right.instruction = {findBasicTurnType(via_edge, right),
                                  DirectionModifier::SlightRight};
         }
@@ -237,7 +245,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
             }
             else
             {
-                right.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+                right.instruction = {suppressed_right_type, DirectionModifier::Straight};
                 left.instruction = {findBasicTurnType(via_edge, left),
                                     DirectionModifier::SlightLeft};
             }
@@ -245,7 +253,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
     }
     // left side of fork
     if (low_priority_right && !low_priority_left)
-        left.instruction = {TurnType::Suppressed, DirectionModifier::SlightLeft};
+        left.instruction = {suppressed_left_type, DirectionModifier::SlightLeft};
     else
     {
         if (low_priority_left && !low_priority_right)
@@ -256,7 +264,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
 
     // right side of fork
     if (low_priority_left && !low_priority_right)
-        right.instruction = {TurnType::Suppressed, DirectionModifier::SlightLeft};
+        right.instruction = {suppressed_right_type, DirectionModifier::SlightLeft};
     else
     {
         if (low_priority_right && !low_priority_left)
@@ -272,6 +280,12 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
                                      ConnectedRoad &right) const
 {
     // TODO handle low priority road classes in a reasonable way
+    const auto suppressed_type = [&](const ConnectedRoad &road) {
+        const auto in_mode = node_based_graph.GetEdgeData(via_edge).travel_mode;
+        const auto out_mode = node_based_graph.GetEdgeData(road.eid).travel_mode;
+        return in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification;
+    };
+
     if (left.entry_allowed && center.entry_allowed && right.entry_allowed)
     {
         left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
@@ -285,7 +299,7 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
             }
             else
             {
-                center.instruction = {TurnType::Suppressed, DirectionModifier::Straight};
+                center.instruction = {suppressed_type(center), DirectionModifier::Straight};
             }
         }
         else
