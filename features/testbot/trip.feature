@@ -141,9 +141,9 @@ Feature: Basic trip planning
             | da    |
 
         When I plan a trip I should get
-            | waypoints | trips  | durations | geometry                                                                   |
-            | a,b,c,d   | abcda  | 7.6       | 1,1,1.000089,1,1,0.99991,1.000089,1,1,1,1.000089,0.99991,1,1               |
-            | d,b,c,a   | dbcad  | 7.6       | 1.000089,0.99991,1,1,1.000089,1,1,0.99991,1.000089,1,1,1,1.000089,0.99991  |
+            | waypoints | trips  | durations | geometry                                                               |
+            | a,b,c,d   | abcda  | 7.6       | 1,1,1.00009,1,1,0.99991,1.00009,1,1,1,1.00009,0.99991,1,1              |
+            | d,b,c,a   | dbcad  | 7.6       | 1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1,1,1.00009,0.99991  |
 
     Scenario: Testbot - Trip with geometry details of polyline
         Given the query options
@@ -185,6 +185,6 @@ Feature: Basic trip planning
             | da    |
 
         When I plan a trip I should get
-            | waypoints | trips  | durations | geometry                                                                   |
-            | a,b,c,d   | abcda  | 7.6       | 1,1,1,1.000089,0.99991,1,1,1.000089,1,1,0.99991,1.000089,1,1               |
-            | d,b,c,a   | dbcad  | 7.6       | 0.99991,1.000089,1,1,1,1.000089,0.99991,1,1,1.000089,1,1,0.99991,1.000089  |
+            | waypoints | trips | durations | geometry                                                              |
+            | a,b,c,d   | abcda |       7.6 | 1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1             |
+            | d,b,c,a   | dbcad |       7.6 | 0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009 |

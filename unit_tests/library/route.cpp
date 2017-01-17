@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     for (auto &itr : result.values["waypoints"].get<json::Array>().values)
         itr.get<json::Object>().values["hint"] = "";
 
-    const auto location = json::Array{{{7.437070}, {43.749247}}};
+    const auto location = json::Array{{{7.437070}, {43.749248}}};
 
     json::Object reference{
         {{"code", "Ok"},

@@ -141,15 +141,15 @@ Feature: Basic Map Matching
         And the contract extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
-            | trace | matchings | annotation                                                                                     |
-            | abeh  | abeh      | 1:9.897633:1,0:0:0,1:10.008842:0,1:10.008842:0,1:10.008842:0,0:0:0,2:20.017685:0,1:10.008842:0 |
-            | abci  | abci      | 1:9.897633:1,0:0:0,1:10.008842:0,0:0.111209:0,1:10.010367:0                                    |
+            | trace | matchings | annotation                                                                                      |
+            | abeh  | abeh      | 1:10.008842:1,0:0:0,1:10.008842:0,1:10.008842:0,1:10.008842:0,0:0:0,2:19.906475:0,1:10.008842:0 |
+            | abci  | abci      | 1:10.008842:1,0:0:0,1:10.008842:0,0:0:0,1:10.010367:0                                           |
 
         # The following is the same as the above, but separated for readability (line length)
         When I match I should get
             | trace | matchings | OSM IDs               |
             | abeh  | abeh      | 1,2,3,2,3,4,5,4,5,6,7 |
-            | abci  | abci      | 1,2,3,2,3,8,3,8       |
+            | abci  | abci      | 1,2,3,2,3,2,3,8       |
 
     Scenario: Testbot - Regression test for #3037
         Given the query options
@@ -174,8 +174,8 @@ Feature: Basic Map Matching
             | fb    | yes    |
 
         When I match I should get
-            | trace | matchings | geometry                                         |
-            | efbc  | efbc      | 1,0.99964,1.000359,0.99964,1.000359,1,1.000718,1 |
+            | trace | matchings | geometry                                      |
+            | efbc  | efbc      | 1,0.99964,1.00036,0.99964,1.00036,1,1.000719,1 |
 
     Scenario: Testbot - Geometry details using geojson
         Given the query options
@@ -194,8 +194,8 @@ Feature: Basic Map Matching
             | bd    | no     |
 
         When I match I should get
-            | trace | matchings | geometry                                   |
-            | abd   | abd       | 1,1,1.000089,1,1.000089,1,1.000089,0.99991 |
+            | trace | matchings | geometry                                |
+            | abd   | abd       | 1,1,1.00009,1,1.00009,1,1.00009,0.99991 |
 
     Scenario: Testbot - Geometry details using polyline
         Given the query options
@@ -234,8 +234,8 @@ Feature: Basic Map Matching
             | bd    | no     |
 
         When I match I should get
-            | trace | matchings | geometry                                   |
-            | abd   | abd       | 1,1,1,1.000089,1,1.000089,0.99991,1.000089 |
+            | trace | matchings | geometry                                |
+            | abd   | abd       | 1,1,1,1.00009,1,1.00009,0.99991,1.00009 |
 
     Scenario: Testbot - Speed greater than speed threshhold
         Given a grid size of 10 meters
