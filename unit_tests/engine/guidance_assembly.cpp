@@ -10,14 +10,6 @@
 
 BOOST_AUTO_TEST_SUITE(guidance_assembly)
 
-BOOST_AUTO_TEST_CASE(rfc4648_test_vectors)
-{
-    using namespace osrm::engine::guidance;
-    using namespace osrm::engine;
-
-    // TODO(daniel-j-h):
-}
-
 BOOST_AUTO_TEST_CASE(trim_short_segments)
 {
     using namespace osrm::extractor::guidance;
