@@ -497,7 +497,7 @@ else()
     ENDIF()
   ENDIF()
 
-  set(USED_LUA_LIBRARIES ${LUA_LIBRARY})
+  set(USED_LUA_LIBRARIES ${LUA_LIBRARIES})
   add_dependency_includes(${LUA_INCLUDE_DIR})
 
   # add a target to generate API documentation with Doxygen
@@ -776,4 +776,3 @@ foreach(header ${headers_to_check})
 endforeach()
 add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
 set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
-

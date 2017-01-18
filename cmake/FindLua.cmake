@@ -172,12 +172,18 @@ if (LUA_LIBRARY)
     if (UNIX AND NOT APPLE AND NOT BEOS)
         find_library(LUA_MATH_LIBRARY m)
         set(LUA_LIBRARIES "${LUA_LIBRARY};${LUA_MATH_LIBRARY}")
+
+        # include dl library for statically-linked Lua library
+        get_filename_component(LUA_LIB_EXT ${LUA_LIBRARY} EXT)
+        if(LUA_LIB_EXT STREQUAL CMAKE_STATIC_LIBRARY_SUFFIX)
+          list(APPEND LUA_LIBRARIES ${CMAKE_DL_LIBS})
+        endif()
+
     # For Windows and Mac, don't need to explicitly include the math library
     else ()
         set(LUA_LIBRARIES "${LUA_LIBRARY}")
     endif ()
 endif ()
-
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LUA_FOUND to TRUE if
 # all listed variables are TRUE

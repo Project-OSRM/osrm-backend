@@ -245,8 +245,9 @@ module.exports = function () {
             text += data + '\n';
         } else {
             text += 'local f = assert(io.open("' + lua_profiles_path + '/' + profile + '.lua", "r"))\n';
-            text += 'local m = assert(loadstring(f:read("*all") .. [[\n' + data + '\n]]))\n';
+            text += 'local s = f:read("*all") .. [[\n' + data + '\n]]\n';
             text += 'f:close()\n';
+            text += 'local m = assert(loadstring and loadstring(s) or load(s))\n';
             text += 'm()\n';
         }
         this.profileFile = this.profileCacheFile;
