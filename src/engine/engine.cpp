@@ -3,8 +3,8 @@
 #include "engine/engine_config.hpp"
 #include "engine/status.hpp"
 
-#include "engine/datafacade/process_memory_datafacade.hpp"
-#include "engine/datafacade/shared_memory_datafacade.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+#include "engine/datafacade/process_memory_allocator.hpp"
 
 #include "storage/shared_barriers.hpp"
 #include "util/log.hpp"
@@ -80,8 +80,11 @@ Engine::Engine(const EngineConfig &config)
         {
             throw util::exception("Invalid file paths given!" + SOURCE_REF);
         }
+        auto allocator =
+            std::make_unique<datafacade::ProcessMemoryAllocator>(config.storage_config);
         immutable_data_facade =
-            std::make_shared<const datafacade::ProcessMemoryDataFacade>(config.storage_config);
+            std::make_shared<const datafacade::ContiguousInternalMemoryDataFacade>(
+                std::move(allocator));
     }
 }
 

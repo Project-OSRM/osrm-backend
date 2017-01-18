@@ -1,6 +1,7 @@
 #ifndef CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP
 #define CONTIGUOUS_INTERNALMEM_DATAFACADE_HPP
 
+#include "engine/datafacade/contiguous_block_allocator.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
@@ -52,7 +53,7 @@ namespace datafacade
  * In this case "internal memory" refers to RAM - as opposed to "external memory",
  * which usually refers to disk.
  */
-class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
+class ContiguousInternalMemoryDataFacade : public BaseDataFacade
 {
   private:
     using super = BaseDataFacade;
@@ -114,6 +115,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     // at an intersection
     std::shared_ptr<util::RangeTable<16, true>> m_bearing_ranges_table;
     util::ShM<DiscreteBearing, true>::vector m_bearing_values_table;
+
+    // allocator that keeps the allocation data
+    std::unique_ptr<ContiguousBlockAllocator> allocator;
 
     void InitializeChecksumPointer(storage::DataLayout &data_layout, char *memory_block)
     {
@@ -397,7 +401,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_entry_class_table = std::move(entry_class_table);
     }
 
-  public:
     void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
     {
         InitializeGraphPointer(data_layout, memory_block);
@@ -412,6 +415,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         InitializeProfilePropertiesPointer(data_layout, memory_block);
         InitializeRTreePointers(data_layout, memory_block);
         InitializeIntersectionClassPointers(data_layout, memory_block);
+    }
+
+  public:
+    // allows switching between process_memory/shared_memory datafacade, based on the type of
+    // allocator
+    ContiguousInternalMemoryDataFacade(std::unique_ptr<ContiguousBlockAllocator> allocator_)
+        : allocator(std::move(allocator_))
+    {
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
     }
 
     // search graph access

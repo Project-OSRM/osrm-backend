@@ -1,7 +1,8 @@
 #ifndef OSRM_ENGINE_DATA_WATCHDOG_HPP
 #define OSRM_ENGINE_DATA_WATCHDOG_HPP
 
-#include "engine/datafacade/shared_memory_datafacade.hpp"
+#include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
+#include "engine/datafacade/shared_memory_allocator.hpp"
 
 #include "storage/shared_barriers.hpp"
 #include "storage/shared_datatype.hpp"
@@ -36,7 +37,8 @@ class DataWatchdog
             auto shared_memory = makeSharedMemory(storage::CURRENT_REGION);
             auto current = static_cast<storage::SharedDataTimestamp *>(shared_memory->Ptr());
 
-            facade = std::make_shared<datafacade::SharedMemoryDataFacade>(current->region);
+            facade = std::make_shared<datafacade::ContiguousInternalMemoryDataFacade>(
+                std::make_unique<datafacade::SharedMemoryAllocator>(current->region));
             timestamp = current->timestamp;
         }
 
@@ -76,7 +78,8 @@ class DataWatchdog
 
             if (timestamp != current->timestamp)
             {
-                facade = std::make_shared<datafacade::SharedMemoryDataFacade>(current->region);
+                facade = std::make_shared<datafacade::ContiguousInternalMemoryDataFacade>(
+                    std::make_unique<datafacade::SharedMemoryAllocator>(current->region));
                 timestamp = current->timestamp;
                 util::Log() << "updated facade to region "
                             << storage::regionToString(current->region) << " with timestamp "
@@ -91,7 +94,7 @@ class DataWatchdog
     std::thread watcher;
     bool active;
     unsigned timestamp;
-    std::shared_ptr<datafacade::SharedMemoryDataFacade> facade;
+    std::shared_ptr<datafacade::ContiguousInternalMemoryDataFacade> facade;
 };
 }
 }
