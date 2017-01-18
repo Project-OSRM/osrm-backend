@@ -8,6 +8,7 @@
 #include "engine/api/tile_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
 #include "engine/data_watchdog.hpp"
+#include "engine/datafacade/contiguous_block_allocator.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/engine_config.hpp"
 #include "engine/plugins/match.hpp"
