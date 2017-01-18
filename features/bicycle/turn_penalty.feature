@@ -2,7 +2,7 @@
 Feature: Turn Penalties
 
     Background:
-        Given the profile "turnbot"
+        Given the profile "turnbot.lua"
 
     Scenario: Bike - turns should incur a delay that depend on the angle
 

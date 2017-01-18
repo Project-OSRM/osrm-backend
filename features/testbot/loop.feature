@@ -2,7 +2,7 @@
 Feature: Avoid weird loops caused by rounding errors
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Weird sidestreet loops
         Given the node map

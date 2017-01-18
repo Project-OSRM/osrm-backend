@@ -2,7 +2,7 @@
 Feature: Choosing fastest route
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Pick the geometrically shortest route, way types being equal
         Given the node map

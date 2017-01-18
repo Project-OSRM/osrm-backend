@@ -4,7 +4,7 @@ Feature: Bike - Stop areas for public transport
 # http://wiki.openstreetmap.org/wiki/Tag:public_transport%3Dstop_area
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - Platforms tagged using public_transport
         Then routability should be

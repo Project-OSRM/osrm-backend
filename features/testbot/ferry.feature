@@ -2,7 +2,7 @@
 Feature: Testbot - Handle ferry routes
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Testbot - Ferry duration, single node
         Given the node map

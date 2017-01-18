@@ -2,7 +2,7 @@
 Feature: Barriers
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - Barriers
         Then routability should be

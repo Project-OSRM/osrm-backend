@@ -4,7 +4,7 @@ Feature: Ways of loading data
 # it easier to check that the test framework behaves as expected.
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Load data with datastore - ab
         Given data is loaded with datastore

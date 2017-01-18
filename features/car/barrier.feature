@@ -2,7 +2,7 @@
 Feature: Car - Barriers
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Barriers
         Then routability should be

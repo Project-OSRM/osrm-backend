@@ -2,7 +2,7 @@
 Feature: Suppress New Names on dedicated Suffices
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 2000 meters
 
     Scenario: Suffix To Suffix

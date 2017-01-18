@@ -9,7 +9,7 @@ var OSM = require('../lib/osm');
 module.exports = function () {
     this.Given(/^the profile "([^"]*)"$/, (profile, callback) => {
         this.profile = profile;
-        this.profileFile = path.join(this.PROFILES_PATH, this.profile + '.lua');
+        this.profileFile = path.join(this.PROFILES_PATH, this.profile);
         callback();
     });
 
@@ -238,17 +238,22 @@ module.exports = function () {
         fs.writeFile(this.penaltiesCacheFile, data, callback);
     });
 
-    this.Given(/^the profile file(?: "([^"]*)" extended with)?$/, (profile, data, callback) => {
+    this.Given(/^the lua profile file$/, (data, callback) => {
         const lua_profiles_path = this.PROFILES_PATH.split(path.sep).join('/');
         let text = 'package.path = "' + lua_profiles_path + '/?.lua;" .. package.path\n';
-        if (profile == null) {
-            text += data + '\n';
-        } else {
-            text += 'local f = assert(io.open("' + lua_profiles_path + '/' + profile + '.lua", "r"))\n';
-            text += 'local m = assert(loadstring(f:read("*all") .. [[\n' + data + '\n]]))\n';
-            text += 'f:close()\n';
-            text += 'm()\n';
-        }
+        text += data + '\n';
+        this.profileFile = this.profileCacheFile;
+        // TODO: Don't overwrite if it exists
+        fs.writeFile(this.profileCacheFile, text, callback);
+    });
+
+    this.Given(/^the profile file "([^"\.]*.lua)" extended with$/, (profile_file, data, callback) => {
+        const lua_profiles_path = this.PROFILES_PATH.split(path.sep).join('/');
+        let text = 'package.path = "' + lua_profiles_path + '/?.lua;" .. package.path\n';
+        text += 'local f = assert(io.open("' + lua_profiles_path + '/' + profile_file + '", "r"))\n';
+        text += 'local m = assert(loadstring(f:read("*all") .. [[\n' + data + '\n]]))\n';
+        text += 'f:close()\n';
+        text += 'm()\n';
         this.profileFile = this.profileCacheFile;
         // TODO: Don't overwrite if it exists
         fs.writeFile(this.profileCacheFile, text, callback);

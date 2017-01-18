@@ -1,7 +1,7 @@
 @prepare @options @files
 Feature: osrm-contract command line options: files
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         And the node map
             """
             a b

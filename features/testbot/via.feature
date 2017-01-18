@@ -2,7 +2,7 @@
 Feature: Via points
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Simple via point
         Given the node map
@@ -217,7 +217,7 @@ Feature: Via points
 
     # See issue #1896
     Scenario: Via point at a dead end with barrier
-        Given the profile "car"
+        Given the profile "car.lua"
         Given the node map
             """
             a b c

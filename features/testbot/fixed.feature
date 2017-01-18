@@ -2,7 +2,7 @@
 Feature: Fixed bugs, kept to check for regressions
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     @726
     Scenario: Weird looping, manual input

@@ -2,7 +2,7 @@
 Feature: Turn Lane Guidance
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 20 meters
 
     @anticipate
@@ -582,7 +582,7 @@ Feature: Turn Lane Guidance
 
     @anticipate
     Scenario: No Lanes for Roundabouts, see #2626
-        Given the profile file "car" extended with
+        Given the profile file "car.lua" extended with
         """
         properties.left_hand_driving = true
         """

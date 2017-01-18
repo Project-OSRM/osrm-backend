@@ -2,7 +2,7 @@
 Feature: Basic trip planning
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given a grid size of 10 meters
 
     Scenario: Testbot - Trip planning with less than 10 nodes

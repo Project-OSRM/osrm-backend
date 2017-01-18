@@ -2,7 +2,7 @@
 Feature: Retrieve geometry
 
     Background: Use some profile
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
 
     @geometry

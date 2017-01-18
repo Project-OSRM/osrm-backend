@@ -2,7 +2,7 @@
 Feature: Alternative route
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Alternative Loop Paths
         Given the node map

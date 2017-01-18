@@ -5,7 +5,7 @@ Feature: osrm-extract command line options: version
 # -128-NOTFOUND     # if you build from a shallow clone (used on Travis)
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
     
     Scenario: osrm-extract - Version, short
         When I run "osrm-extract --v"

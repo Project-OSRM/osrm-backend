@@ -2,7 +2,7 @@
 Feature: Snap start/end point to the nearest way
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Snap to nearest protruding oneway
         Given the node map

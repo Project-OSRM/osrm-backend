@@ -2,7 +2,7 @@
 Feature: Bike - Accessability of different way types
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - Routability of way types
     # Bikes are allowed on footways etc because you can pull your bike at a lower speed.

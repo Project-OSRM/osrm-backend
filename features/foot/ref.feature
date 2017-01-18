@@ -2,7 +2,7 @@
 Feature: Foot - Way ref
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - Way with both name and ref
         Given the node map

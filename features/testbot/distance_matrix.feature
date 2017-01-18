@@ -5,7 +5,7 @@ Feature: Basic Distance Matrix
 # the number of meters as long as the way type is the default 'primary'
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Testbot - Travel time matrix of minimal network
         Given the node map

@@ -2,7 +2,7 @@
 Feature: Foot - Street names in instructions
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - A named street
         Given the node map

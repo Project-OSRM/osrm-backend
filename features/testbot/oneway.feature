@@ -2,7 +2,7 @@
 Feature: Testbot - oneways
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given a grid size of 250 meters
 
     Scenario: Routing on a oneway roundabout

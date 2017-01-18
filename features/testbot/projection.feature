@@ -9,7 +9,7 @@ Feature: Projection to nearest point on road
     #   |   | b |   |   (this is sketch only, real data is in the table below)
     #   | a |   | d |
 
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given the node locations
             | node | lat      | lon     |
             | a    | 80.00000 | 0.00000 |

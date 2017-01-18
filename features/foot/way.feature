@@ -2,7 +2,7 @@
 Feature: Foot - Accessability of different way types
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - Basic access
         Then routability should be

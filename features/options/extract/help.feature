@@ -2,7 +2,7 @@
 Feature: osrm-extract command line options: help
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: osrm-extract - Help should be shown when no options are passed
         When I run "osrm-extract"

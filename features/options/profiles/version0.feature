@@ -4,7 +4,7 @@ Feature: Profile API version 0
         Given a grid size of 100 meters
 
     Scenario: Not-defined API version
-        Given the profile file
+        Given the lua profile file
           """
 function way_function(way, result)
   result.forward_mode = mode.driving
@@ -25,7 +25,7 @@ end
         And stderr should not contain "Invalid profile API version"
 
     Scenario: Out-bound API version
-        Given the profile file
+        Given the lua profile file
           """
 api_version = 1
           """
@@ -44,7 +44,7 @@ api_version = 1
 
 
     Scenario: Basic profile function calls and property values
-        Given the profile file
+        Given the lua profile file
            """
 api_version = 0
 

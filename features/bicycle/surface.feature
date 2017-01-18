@@ -2,7 +2,7 @@
 Feature: Bike - Surfaces
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bicycle - Slow surfaces
         Then routability should be

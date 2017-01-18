@@ -2,7 +2,7 @@
 Feature: Handling of UTF characters
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Streetnames with UTF characters
         Given the node map

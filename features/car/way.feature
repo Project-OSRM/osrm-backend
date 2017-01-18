@@ -2,7 +2,7 @@
 Feature: Car - Accessability of different way types
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Basic access
         Then routability should be

@@ -2,7 +2,7 @@
 Feature: Locating Nearest node on a Way - pick closest way
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Nearest - two ways crossing
         Given the node map

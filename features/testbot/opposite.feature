@@ -2,7 +2,7 @@
 Feature: Separate settings for forward/backward direction
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Testbot - Going against the flow
         Given the node map

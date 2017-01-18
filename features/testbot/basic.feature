@@ -2,7 +2,7 @@
 Feature: Basic Routing
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     @smallest
     Scenario: A single way with two nodes

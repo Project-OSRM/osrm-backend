@@ -2,7 +2,7 @@
 Feature: End Of Road Instructions
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 10 meters
 
     Scenario: End of Road with through street

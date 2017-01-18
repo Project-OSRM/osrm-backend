@@ -2,7 +2,7 @@
 Feature: Temporary tests related to osrm-datastore
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Scenario ab
         Given the node map

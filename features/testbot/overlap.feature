@@ -2,7 +2,7 @@
 Feature: Testbot - overlapping ways
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Testbot - multiple way between same nodes 
     Note that cb is connecting the same two nodes as bc

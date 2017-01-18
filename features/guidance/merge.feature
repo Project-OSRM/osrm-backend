@@ -2,7 +2,7 @@
 Feature: Merging
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         And a grid size of 10 meters
 
     @merge

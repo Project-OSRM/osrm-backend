@@ -3,7 +3,7 @@ Feature: Foot - Access tags on ways
 # Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - Access tag hierarchy on ways
         Then routability should be

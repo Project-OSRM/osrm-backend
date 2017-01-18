@@ -2,7 +2,7 @@
 Feature: Foot - Surfaces
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     Scenario: Foot - Slow surfaces
         Then routability should be

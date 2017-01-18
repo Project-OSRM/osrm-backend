@@ -2,7 +2,7 @@
 Feature: osrm-contract command line options: invalid options
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         And the node map
             """
             a b

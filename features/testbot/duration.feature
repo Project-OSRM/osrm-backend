@@ -2,7 +2,7 @@
 Feature: Durations
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Duration of ways
         Given the node map

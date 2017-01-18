@@ -1,6 +1,5 @@
 #include "extractor/extractor.hpp"
 #include "extractor/extractor_config.hpp"
-#include "extractor/scripting_environment_lua.hpp"
 #include "util/log.hpp"
 #include "util/version.hpp"
 
@@ -36,7 +35,7 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
         "profile,p",
         boost::program_options::value<boost::filesystem::path>(&extractor_config.profile_path)
             ->default_value("profiles/car.lua"),
-        "Path to LUA routing profile")(
+        "Path to Lua or Javascript routing profile")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
             ->default_value(tbb::task_scheduler_init::default_num_threads()),
@@ -158,9 +157,7 @@ int main(int argc, char *argv[]) try
     }
 
     // setup scripting environment
-    extractor::Sol2ScriptingEnvironment scripting_environment(
-        extractor_config.profile_path.string().c_str());
-    auto exitcode = extractor::Extractor(extractor_config).run(scripting_environment);
+    int exitcode = extractor::Extractor(extractor_config).run(argv[0]);
 
     util::DumpMemoryStats();
 

@@ -2,7 +2,7 @@
 Feature: Collapse
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 20 meters
 
     Scenario: Segregated Intersection, Cross Belonging to Single Street

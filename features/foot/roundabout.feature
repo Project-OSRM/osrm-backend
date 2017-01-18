@@ -2,7 +2,7 @@
 Feature: Roundabout Instructions
 
     Background:
-        Given the profile "foot"
+        Given the profile "foot.lua"
 
     @todo
     Scenario: Foot - Roundabout instructions

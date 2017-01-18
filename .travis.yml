@@ -107,15 +107,6 @@ matrix:
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON BUILD_COMPONENTS=ON
 
-      # Disabled because CI slowness
-      #- os: linux
-      #- compiler: clang
-      #- addons: &clang38
-      #-   apt:
-      #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
-      #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
-
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - |

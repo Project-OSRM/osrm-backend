@@ -1,7 +1,7 @@
 @routing @car @bridge @tunnel @guidance
 Feature: Car - Guidance - Bridges and Tunnels
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         And a grid size of 100 meters
 
     Scenario: Simple Bridge

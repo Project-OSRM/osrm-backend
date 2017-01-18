@@ -2,7 +2,7 @@
 Feature: osrm-extract command line options: invalid options
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: osrm-extract - Non-existing option
         When I try to run "osrm-extract --fly-me-to-the-moon"

@@ -13,7 +13,7 @@ Feature: osrm-routed command line options: files
 # It probably needs to be rewritten to first quit osrm-routed.
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         And the node map
             """
             a b

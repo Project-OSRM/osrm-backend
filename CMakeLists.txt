@@ -34,6 +34,7 @@ if(ENABLE_MASON)
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_BZIP2_VERSION "1.0.6")
   set(MASON_TBB_VERSION "43_20150316")
+  set(MASON_V8_VERSION "5.1.281.47")
 
   message(STATUS "Enabling mason")
 
@@ -131,7 +132,7 @@ add_library(SERVER OBJECT ${ServerGlob})
 
 set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
-add_executable(osrm-extract src/tools/extract.cpp)
+add_executable(osrm-extract src/tools/extract.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
@@ -363,6 +364,7 @@ endif()
 
 if(UNIX AND NOT APPLE)
   set(MAYBE_RT_LIBRARY -lrt)
+  set(MAYBE_DL_LIBRARY -ldl)
 endif()
 
 # Disallow deprecated protozero APIs
@@ -416,6 +418,11 @@ if(ENABLE_MASON)
   add_dependency_includes(${MASON_PACKAGE_tbb_INCLUDE_DIRS})
   set(TBB_LIBRARIES ${MASON_PACKAGE_tbb_LDFLAGS})
 
+  mason_use(v8 VERSION ${MASON_V8_VERSION})
+  add_dependency_includes(${MASON_PACKAGE_v8_INCLUDE_DIRS})
+  set(MAYBE_V8_LIBRARIES ${MASON_PACKAGE_v8_STATIC_LIBS})
+  add_definitions(-DENABLE_V8)
+
   if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
     message(FATAL_ERROR "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
   endif()
@@ -458,6 +465,17 @@ else()
   add_dependency_includes(${TBB_INCLUDE_DIR})
   if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
+  endif()
+
+  set(MAYBE_V8_LIBRARIES "")
+  find_package(V8)
+  if (V8_FOUND)
+    message(STATUS "Using V8 ${V8_VERSION_STRNG}")
+    add_dependency_includes(${V8_INCLUDE_DIR})
+    set(MAYBE_V8_LIBRARIES "${V8_LIBRARIES}")
+    add_definitions(-DENABLE_V8)
+  else()
+    message(STATUS "V8 not found, disabling.")
   endif()
 
   find_package(EXPAT REQUIRED)
@@ -539,10 +557,6 @@ if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_dependency_defines(-DBOOST_TEST_DYN_LINK)
 endif()
 
-if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
-  add_dependency_defines(-DBOOST_TEST_DYN_LINK)
-endif()
-
 add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
 add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
 add_dependency_defines(-DBOOST_FILESYSTEM_NO_DEPRECATED)
@@ -583,6 +597,8 @@ set(EXTRACTOR_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXPAT_LIBRARIES}
     ${USED_LUA_LIBRARIES}
+    ${MAYBE_V8_LIBRARIES}
+    ${MAYBE_DL_LIBRARY}
     ${OSMIUM_LIBRARIES}
     ${STXXL_LIBRARY}
     ${TBB_LIBRARIES}
@@ -618,6 +634,7 @@ set(UTIL_LIBRARIES
 # Libraries
 target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
+target_link_libraries(osrm-extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 

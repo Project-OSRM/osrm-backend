@@ -3,7 +3,7 @@ Feature: Car - Restricted access
 # Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Access tag hierarchy on ways
         Then routability should be

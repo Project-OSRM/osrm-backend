@@ -3,7 +3,7 @@ Feature: Bike - Access tags on ways
 # Reference: http://wiki.openstreetmap.org/wiki/Key:access
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - Access tag hierarchy on ways
         Then routability should be

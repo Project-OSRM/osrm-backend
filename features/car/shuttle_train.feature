@@ -2,7 +2,7 @@
 Feature: Car - Handle ferryshuttle train routes
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
 
     Scenario: Car - Use a ferry route
         Given the node map

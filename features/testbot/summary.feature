@@ -2,7 +2,7 @@
 Feature: Basic Routing
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given a grid size of 200 meters
 
     @smallest

@@ -2,7 +2,7 @@
 Feature: Turn Location Feature
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 10 meters
 
     Scenario: Simple feature to test turn locations

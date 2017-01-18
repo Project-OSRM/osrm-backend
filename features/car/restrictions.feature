@@ -4,7 +4,7 @@ Feature: Car - Turn restrictions
 # Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
 
     Background: Use car routing
-        Given the profile "car"
+        Given the profile "car.lua"
         Given a grid size of 200 meters
 
     @no_turning

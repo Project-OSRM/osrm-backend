@@ -2,7 +2,7 @@
 Feature: Car - speeds
 
     Background:
-        Given the profile "car"
+        Given the profile "car.lua"
         And a grid size of 1000 meters
 
     Scenario: Car - speed of various way types

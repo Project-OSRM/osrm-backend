@@ -2,14 +2,14 @@
 Feature: Testbot - side bias
 
     Background:
-        Given the profile file
+        Given the lua profile file
         """
         require 'testbot'
         properties.left_hand_driving = true
         """
 
     Scenario: Left hand bias
-        Given the profile file "testbot" extended with
+        Given the profile file "testbot.lua" extended with
         """
         properties.left_hand_driving = true
         function turn_function (angle)
@@ -35,7 +35,7 @@ Feature: Testbot - side bias
             | d    | c  | bd,bc,bc | 100s +-1   |
 
     Scenario: Right hand bias
-        Given the profile file "testbot" extended with
+        Given the profile file "testbot.lua" extended with
         """
         properties.left_hand_driving = false
         function turn_function (angle)

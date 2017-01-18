@@ -2,7 +2,7 @@
 Feature: Bike - Mode flag
 
 	Background:
-		Given the profile "bicycle"
+		Given the profile "bicycle.lua"
 
     Scenario: Bike - Mode when using a ferry
     	Given the node map

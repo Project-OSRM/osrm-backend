@@ -5,7 +5,7 @@ Feature: Setting impedance and speed separately
 # Note: With the default grid size of 100m, the diagonals has a length if 141.42m
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
 
     Scenario: Use impedance to pick route, even when longer/slower
         Given the node map

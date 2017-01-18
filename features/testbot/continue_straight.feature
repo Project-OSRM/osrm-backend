@@ -2,7 +2,7 @@
 Feature: U-turns at via points
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given a grid size of 250 meters
 
     Scenario: Continue straight at waypoints enabled by default

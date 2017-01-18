@@ -2,7 +2,7 @@
 Feature: Bike - Way ref
 
     Background:
-        Given the profile "bicycle"
+        Given the profile "bicycle.lua"
 
     Scenario: Bike - Way with both name and ref
         Given the node map

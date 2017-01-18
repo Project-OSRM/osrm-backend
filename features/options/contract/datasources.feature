@@ -4,7 +4,7 @@ Feature: osrm-contract command line options: datasources
 # {processed_file} => path to .osrm file
 
     Background:
-        Given the profile "testbot"
+        Given the profile "testbot.lua"
         Given the extract extra arguments "--generate-edge-lookup"
         And the node map
             """
