@@ -369,8 +369,10 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         // Find the node-based-edge that this belongs to, and directly
         // calculate the forward_weight, forward_offset, reverse_weight, reverse_offset
 
-        EdgeWeight forward_offset = 0, forward_weight = 0, forward_duration = 0;
-        EdgeWeight reverse_offset = 0, reverse_weight = 0, reverse_duration = 0;
+        EdgeWeight forward_weight_offset = 0, forward_weight = 0;
+        EdgeWeight reverse_weight_offset = 0, reverse_weight = 0;
+        EdgeWeight forward_duration_offset = 0, forward_duration = 0;
+        EdgeWeight reverse_duration_offset = 0, reverse_duration = 0;
 
         const std::vector<EdgeWeight> forward_weight_vector =
             datafacade.GetUncompressedForwardWeights(data.packed_geometry_id);
@@ -383,7 +385,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         for (std::size_t i = 0; i < data.fwd_segment_position; i++)
         {
-            forward_offset += forward_weight_vector[i];
+            forward_weight_offset += forward_weight_vector[i];
+            forward_duration_offset += forward_duration_vector[i];
         }
         forward_weight = forward_weight_vector[data.fwd_segment_position];
         forward_duration = forward_duration_vector[data.fwd_segment_position];
@@ -393,7 +396,8 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         for (std::size_t i = 0; i < reverse_weight_vector.size() - data.fwd_segment_position - 1;
              i++)
         {
-            reverse_offset += reverse_weight_vector[i];
+            reverse_weight_offset += reverse_weight_vector[i];
+            reverse_duration_offset += reverse_duration_vector[i];
         }
         reverse_weight =
             reverse_weight_vector[reverse_weight_vector.size() - data.fwd_segment_position - 1];
@@ -415,10 +419,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         auto transformed = PhantomNodeWithDistance{PhantomNode{data,
                                                                forward_weight,
                                                                reverse_weight,
+                                                               forward_weight_offset,
+                                                               reverse_weight_offset,
                                                                forward_duration,
                                                                reverse_duration,
-                                                               forward_offset,
-                                                               reverse_offset,
+                                                               forward_duration_offset,
+                                                               reverse_duration_offset,
                                                                point_on_segment,
                                                                input_coordinate},
                                                    current_perpendicular_distance};

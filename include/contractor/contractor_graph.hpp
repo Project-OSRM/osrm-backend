@@ -12,21 +12,24 @@ namespace contractor
 struct ContractorEdgeData
 {
     ContractorEdgeData()
-        : weight(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
+        : weight(0), duration(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
           is_original_via_node_ID(false)
     {
     }
     ContractorEdgeData(EdgeWeight weight,
+                       EdgeWeight duration,
                        unsigned original_edges,
                        unsigned id,
                        bool shortcut,
                        bool forward,
                        bool backward)
-        : weight(weight), id(id), originalEdges(std::min((unsigned)1 << 28, original_edges)),
-          shortcut(shortcut), forward(forward), backward(backward), is_original_via_node_ID(false)
+        : weight(weight), duration(duration), id(id),
+          originalEdges(std::min((unsigned)1 << 28, original_edges)), shortcut(shortcut),
+          forward(forward), backward(backward), is_original_via_node_ID(false)
     {
     }
     EdgeWeight weight;
+    EdgeWeight duration;
     unsigned id;
     unsigned originalEdges : 28;
     bool shortcut : 1;

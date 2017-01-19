@@ -113,7 +113,7 @@ class TableAPI final : public BaseAPI
                            row_end_iterator,
                            json_row.values.begin(),
                            [](const EdgeWeight duration) {
-                               if (duration == INVALID_EDGE_WEIGHT)
+                               if (duration == MAXIMAL_EDGE_DURATION)
                                {
                                    return util::json::Value(util::json::Null());
                                }

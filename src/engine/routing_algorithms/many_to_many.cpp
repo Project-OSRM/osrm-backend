@@ -18,11 +18,13 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     const auto number_of_targets =
         target_indices.empty() ? phantom_nodes.size() : target_indices.size();
     const auto number_of_entries = number_of_sources * number_of_targets;
-    std::vector<EdgeWeight> result_table(number_of_entries, std::numeric_limits<EdgeWeight>::max());
 
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade->GetNumberOfNodes());
+    std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
+    std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
-    QueryHeap &query_heap = *(engine_working_data.forward_heap_1);
+    engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade->GetNumberOfNodes());
+
+    QueryHeap &query_heap = *(engine_working_data.many_to_many_heap);
 
     SearchSpaceWithBuckets search_space_with_buckets;
 
@@ -35,13 +37,13 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
         {
             query_heap.Insert(phantom.forward_segment_id.id,
                               phantom.GetForwardWeightPlusOffset(),
-                              phantom.forward_segment_id.id);
+                              {phantom.forward_segment_id.id, phantom.GetForwardDuration()});
         }
         if (phantom.reverse_segment_id.enabled)
         {
             query_heap.Insert(phantom.reverse_segment_id.id,
                               phantom.GetReverseWeightPlusOffset(),
-                              phantom.reverse_segment_id.id);
+                              {phantom.reverse_segment_id.id, phantom.GetReverseDuration()});
         }
 
         // explore search space
@@ -62,13 +64,13 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
         {
             query_heap.Insert(phantom.forward_segment_id.id,
                               -phantom.GetForwardWeightPlusOffset(),
-                              phantom.forward_segment_id.id);
+                              {phantom.forward_segment_id.id, -phantom.GetForwardDuration()});
         }
         if (phantom.reverse_segment_id.enabled)
         {
             query_heap.Insert(phantom.reverse_segment_id.id,
                               -phantom.GetReverseWeightPlusOffset(),
-                              phantom.reverse_segment_id.id);
+                              {phantom.reverse_segment_id.id, -phantom.GetReverseDuration()});
         }
 
         // explore search space
@@ -79,7 +81,8 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                number_of_targets,
                                query_heap,
                                search_space_with_buckets,
-                               result_table);
+                               weights_table,
+                               durations_table);
         }
         ++row_idx;
     };
@@ -116,7 +119,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
         }
     }
 
-    return result_table;
+    return durations_table;
 }
 
 void ManyToManyRouting::ForwardRoutingStep(
@@ -125,10 +128,12 @@ void ManyToManyRouting::ForwardRoutingStep(
     const unsigned number_of_targets,
     QueryHeap &query_heap,
     const SearchSpaceWithBuckets &search_space_with_buckets,
-    std::vector<EdgeWeight> &result_table) const
+    std::vector<EdgeWeight> &weights_table,
+    std::vector<EdgeWeight> &durations_table) const
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight source_weight = query_heap.GetKey(node);
+    const EdgeWeight source_duration = query_heap.GetData(node).duration;
 
     // check if each encountered node has an entry
     const auto bucket_iterator = search_space_with_buckets.find(node);
@@ -141,21 +146,29 @@ void ManyToManyRouting::ForwardRoutingStep(
             // get target id from bucket entry
             const unsigned column_idx = current_bucket.target_id;
             const EdgeWeight target_weight = current_bucket.weight;
-            auto &current_weight = result_table[row_idx * number_of_targets + column_idx];
+            const EdgeWeight target_duration = current_bucket.duration;
+
+            auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
+            auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
+
             // check if new weight is better
             const EdgeWeight new_weight = source_weight + target_weight;
             if (new_weight < 0)
             {
-                const EdgeWeight loop_weight = super::GetLoopWeight(facade, node);
+                const EdgeWeight loop_weight = super::GetLoopWeight<false>(facade, node);
                 const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT && new_weight_with_loop >= 0)
                 {
                     current_weight = std::min(current_weight, new_weight_with_loop);
+                    current_duration = std::min(current_duration,
+                                                source_duration + target_duration +
+                                                    super::GetLoopWeight<true>(facade, node));
                 }
             }
             else if (new_weight < current_weight)
             {
-                result_table[row_idx * number_of_targets + column_idx] = new_weight;
+                current_weight = new_weight;
+                current_duration = source_duration + target_duration;
             }
         }
     }
@@ -163,7 +176,7 @@ void ManyToManyRouting::ForwardRoutingStep(
     {
         return;
     }
-    RelaxOutgoingEdges<true>(facade, node, source_weight, query_heap);
+    RelaxOutgoingEdges<true>(facade, node, source_weight, source_duration, query_heap);
 }
 
 void ManyToManyRouting::BackwardRoutingStep(
@@ -174,16 +187,17 @@ void ManyToManyRouting::BackwardRoutingStep(
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight target_weight = query_heap.GetKey(node);
+    const EdgeWeight target_duration = query_heap.GetData(node).duration;
 
     // store settled nodes in search space bucket
-    search_space_with_buckets[node].emplace_back(column_idx, target_weight);
+    search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);
 
     if (StallAtNode<false>(facade, node, target_weight, query_heap))
     {
         return;
     }
 
-    RelaxOutgoingEdges<false>(facade, node, target_weight, query_heap);
+    RelaxOutgoingEdges<false>(facade, node, target_weight, target_duration, query_heap);
 }
 
 } // namespace routing_algorithms

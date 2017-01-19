@@ -16,6 +16,7 @@
 #include <cstdint>
 
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <numeric>
@@ -77,8 +78,26 @@ class BasicRoutingInterface
                      const bool force_loop_forward,
                      const bool force_loop_reverse) const;
 
+    template <bool UseDuration>
     EdgeWeight GetLoopWeight(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
-                             NodeID node) const;
+                             NodeID node) const
+    {
+        EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
+        for (auto edge : facade->GetAdjacentEdgeRange(node))
+        {
+            const auto &data = facade->GetEdgeData(edge);
+            if (data.forward)
+            {
+                const NodeID to = facade->GetTarget(edge);
+                if (to == node)
+                {
+                    const auto value = UseDuration ? data.duration : data.weight;
+                    loop_weight = std::min(loop_weight, value);
+                }
+            }
+        }
+        return loop_weight;
+    }
 
     template <typename RandomIter>
     void UnpackPath(const std::shared_ptr<const datafacade::BaseDataFacade> facade,

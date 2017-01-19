@@ -134,6 +134,7 @@ class GraphContractor
                     BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.source, "Source id invalid");
                     BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
                     new_edge.data.weight = data.weight;
+                    new_edge.data.duration = data.duration;
                     new_edge.data.shortcut = data.shortcut;
                     if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
@@ -241,6 +242,7 @@ class GraphContractor
                             inserted_edges.emplace_back(source,
                                                         target,
                                                         path_weight,
+                                                        in_data.duration + out_data.duration,
                                                         out_data.originalEdges +
                                                             in_data.originalEdges,
                                                         node,
@@ -251,6 +253,7 @@ class GraphContractor
                             inserted_edges.emplace_back(target,
                                                         source,
                                                         path_weight,
+                                                        in_data.duration + out_data.duration,
                                                         out_data.originalEdges +
                                                             in_data.originalEdges,
                                                         node,
@@ -294,6 +297,7 @@ class GraphContractor
                 const NodeID target = contractor_graph->GetTarget(out_edge);
                 if (target == node)
                     continue;
+
                 const EdgeWeight path_weight = in_data.weight + out_data.weight;
                 const EdgeWeight weight = dijkstra.GetKey(target);
                 if (path_weight < weight)
@@ -310,6 +314,7 @@ class GraphContractor
                         inserted_edges.emplace_back(source,
                                                     target,
                                                     path_weight,
+                                                    in_data.duration + out_data.duration,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
@@ -319,6 +324,7 @@ class GraphContractor
                         inserted_edges.emplace_back(target,
                                                     source,
                                                     path_weight,
+                                                    in_data.duration + out_data.duration,
                                                     out_data.originalEdges + in_data.originalEdges,
                                                     node,
                                                     SHORTCUT_ARC,
