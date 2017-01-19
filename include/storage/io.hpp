@@ -61,6 +61,22 @@ class FileReader
         }
     }
 
+    std::size_t GetSize()
+    {
+        const boost::filesystem::ifstream::pos_type positon = input_stream.tellg();
+        input_stream.seekg(0, std::ios::end);
+        const boost::filesystem::ifstream::pos_type file_size = input_stream.tellg();
+
+        if (file_size == boost::filesystem::ifstream::pos_type(-1))
+        {
+            throw util::exception("File size for " + filepath.string() + " failed " + SOURCE_REF);
+        }
+
+        // restore the current position
+        input_stream.seekg(positon, std::ios::beg);
+        return file_size;
+    }
+
     /* Read count objects of type T into pointer dest */
     template <typename T> void ReadInto(T *dest, const std::size_t count)
     {

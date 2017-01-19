@@ -18,6 +18,7 @@
 #include "util/exception_utils.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/log.hpp"
+#include "util/name_table.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/rectangle.hpp"
@@ -79,7 +80,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
     util::ShM<extractor::TravelMode, true>::vector m_travel_mode_list;
     util::ShM<util::guidance::TurnBearing, true>::vector m_pre_turn_bearing;
     util::ShM<util::guidance::TurnBearing, true>::vector m_post_turn_bearing;
-    util::ShM<char, true>::vector m_names_char_list;
+    util::NameTable m_names_table;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
     util::ShM<unsigned, true>::vector m_geometry_indices;
     util::ShM<NodeID, true>::vector m_geometry_node_list;
@@ -103,7 +104,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     boost::filesystem::path file_index_path;
 
-    std::shared_ptr<util::RangeTable<16, true>> m_name_table;
+    util::NameTable m_name_table;
     // bearing classes by node based node
     util::ShM<BearingClassID, true>::vector m_bearing_class_id_table;
     // entry class IDs
@@ -267,23 +268,10 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
 
     void InitializeNamePointers(storage::DataLayout &data_layout, char *memory_block)
     {
-        auto offsets_ptr =
-            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::NAME_OFFSETS);
-        auto blocks_ptr =
-            data_layout.GetBlockPtr<IndexBlock>(memory_block, storage::DataLayout::NAME_BLOCKS);
-        util::ShM<unsigned, true>::vector name_offsets(
-            offsets_ptr, data_layout.num_entries[storage::DataLayout::NAME_OFFSETS]);
-        util::ShM<IndexBlock, true>::vector name_blocks(
-            blocks_ptr, data_layout.num_entries[storage::DataLayout::NAME_BLOCKS]);
-
-        auto names_list_ptr =
-            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::NAME_CHAR_LIST);
-        util::ShM<char, true>::vector names_char_list(
-            names_list_ptr, data_layout.num_entries[storage::DataLayout::NAME_CHAR_LIST]);
-        m_name_table = std::make_unique<util::RangeTable<16, true>>(
-            name_offsets, name_blocks, static_cast<unsigned>(names_char_list.size()));
-
-        m_names_char_list = std::move(names_char_list);
+        auto name_data_ptr =
+            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::NAME_CHAR_DATA);
+        const auto name_data_size = data_layout.num_entries[storage::DataLayout::NAME_CHAR_DATA];
+        m_name_table.reset(name_data_ptr, name_data_ptr + name_data_size);
     }
 
     void InitializeTurnLaneDescriptionsPointers(storage::DataLayout &data_layout,
@@ -823,52 +811,22 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
 
     StringView GetNameForID(const NameID id) const override final
     {
-        if (std::numeric_limits<NameID>::max() == id)
-        {
-            return "";
-        }
-
-        auto range = m_name_table->GetRange(id);
-
-        if (range.begin() == range.end())
-        {
-            return "";
-        }
-
-        auto first = m_names_char_list.begin() + range.front();
-        auto last = m_names_char_list.begin() + range.back() + 1u;
-        // These iterators are useless: they're InputIterators onto a contiguous block of memory.
-        // Deref to get to the first element, then Addressof to get the memory address of the it.
-        const std::size_t len = &*last - &*first;
-
-        return StringView{&*first, len};
+        return m_name_table.GetNameForID(id);
     }
 
     StringView GetRefForID(const NameID id) const override final
     {
-        // We store the ref after the name, destination and pronunciation of a street.
-        // We do this to get around the street length limit of 255 which would hit
-        // if we concatenate these. Order (see extractor_callbacks):
-        // name (0), destination (1), pronunciation (2), ref (3)
-        return GetNameForID(id + 3);
+        return m_name_table.GetRefForID(id);
     }
 
     StringView GetPronunciationForID(const NameID id) const override final
     {
-        // We store the pronunciation after the name and destination of a street.
-        // We do this to get around the street length limit of 255 which would hit
-        // if we concatenate these. Order (see extractor_callbacks):
-        // name (0), destination (1), pronunciation (2), ref (3)
-        return GetNameForID(id + 2);
+        return m_name_table.GetPronunciationForID(id);
     }
 
     StringView GetDestinationsForID(const NameID id) const override final
     {
-        // We store the destination after the name of a street.
-        // We do this to get around the street length limit of 255 which would hit
-        // if we concatenate these. Order (see extractor_callbacks):
-        // name (0), destination (1), pronunciation (2), ref (3)
-        return GetNameForID(id + 1);
+        return m_name_table.GetDestinationsForID(id);
     }
 
     bool IsCoreNode(const NodeID id) const override final

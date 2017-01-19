@@ -18,9 +18,7 @@ namespace storage
 // Added at the start and end of each block as sanity check
 const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
 
-const constexpr char *block_id_to_name[] = {"NAME_OFFSETS",
-                                            "NAME_BLOCKS",
-                                            "NAME_CHAR_LIST",
+const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "NAME_ID_LIST",
                                             "VIA_NODE_LIST",
                                             "GRAPH_NODE_LIST",
@@ -64,9 +62,7 @@ struct DataLayout
 {
     enum BlockID
     {
-        NAME_OFFSETS = 0,
-        NAME_BLOCKS,
-        NAME_CHAR_LIST,
+        NAME_CHAR_DATA = 0,
         NAME_ID_LIST,
         VIA_NODE_LIST,
         GRAPH_NODE_LIST,

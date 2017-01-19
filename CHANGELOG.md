@@ -4,6 +4,7 @@
       - Fix #3475 removed an invalid `exit` field from the `arrive` maneuver
       - Fix #3515 adjusted number of `nodes` in `annotation`
       - Fix #3605 Fixed a bug that could lead to turns at the end of the road to be suppressed
+      - Fix #2844 handle up to 16777215 code units in OSM names
     - Infrastructure
       - Support building rpm packages.
     - Guidance

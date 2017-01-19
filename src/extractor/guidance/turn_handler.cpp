@@ -574,7 +574,7 @@ TurnHandler::findForkCandidatesByGeometry(Intersection &intersection) const
         //
         //
         //           left             left
-        //            /                 \
+        //            /                 \ 
         //           /____ right         \ ______ right
         //          |                     |
         //          |                     |
