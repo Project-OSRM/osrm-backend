@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(rfc4648_test_vectors)
 
 BOOST_AUTO_TEST_CASE(trim_short_segments)
 {
-    //using namespace osrm::extractor::guidance;
+    using namespace osrm::extractor::guidance;
     using namespace osrm::engine::guidance;
     using namespace osrm::engine;
     using namespace osrm::util;
