@@ -21,6 +21,7 @@ struct EdgeBasedEdge
                   const NodeID target,
                   const NodeID edge_id,
                   const EdgeWeight weight,
+                  const EdgeWeight duration,
                   const bool forward,
                   const bool backward);
 
@@ -29,11 +30,12 @@ struct EdgeBasedEdge
     NodeID source;
     NodeID target;
     NodeID edge_id;
-    EdgeWeight weight : 30;
+    EdgeWeight weight;
+    EdgeWeight duration : 30;
     std::uint32_t forward : 1;
     std::uint32_t backward : 1;
 };
-static_assert(sizeof(extractor::EdgeBasedEdge) == 16,
+static_assert(sizeof(extractor::EdgeBasedEdge) == 20,
               "Size of extractor::EdgeBasedEdge type is "
               "bigger than expected. This will influence "
               "memory consumption.");
@@ -41,14 +43,7 @@ static_assert(sizeof(extractor::EdgeBasedEdge) == 16,
 // Impl.
 
 inline EdgeBasedEdge::EdgeBasedEdge()
-    : source(0), target(0), edge_id(0), weight(0), forward(false), backward(false)
-{
-}
-
-template <class EdgeT>
-inline EdgeBasedEdge::EdgeBasedEdge(const EdgeT &other)
-    : source(other.source), target(other.target), edge_id(other.data.via),
-      weight(other.data.distance), forward(other.data.forward), backward(other.data.backward)
+    : source(0), target(0), edge_id(0), weight(0), duration(0), forward(false), backward(false)
 {
 }
 
@@ -56,10 +51,11 @@ inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const NodeID target,
                                     const NodeID edge_id,
                                     const EdgeWeight weight,
+                                    const EdgeWeight duration,
                                     const bool forward,
                                     const bool backward)
-    : source(source), target(target), edge_id(edge_id), weight(weight), forward(forward),
-      backward(backward)
+    : source(source), target(target), edge_id(edge_id), weight(weight), duration(duration),
+      forward(forward), backward(backward)
 {
 }
 

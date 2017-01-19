@@ -778,6 +778,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
             // Find a segment with zero speed and simultaneously compute the new edge weight
             EdgeWeight new_weight = 0;
+            // TODO MKR add new_duration if needed
             auto osm_node_id = header->previous_osm_node_id;
             bool skip_edge =
                 std::find_if(first, last, [&](const auto &segment) {
@@ -789,6 +790,9 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
                         if (value->speed == 0)
                             return true;
 
+                        // TODO MKR add new_duration = ConvertToDuration(segment.segment_length,
+                        // value->speed) if needed
+
                         segment_weight =
                             std::isfinite(value->weight)
                                 ? std::round(value->weight * config.weight_multiplier)
@@ -798,6 +802,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
                     // Update the edge weight and the next OSM node ID
                     osm_node_id = segment.this_osm_node_id;
                     new_weight += segment_weight;
+                    // TODO MKR new_duration += segment_duration;
                     return false;
                 }) != last;
 
@@ -844,6 +849,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
             // Update edge weight
             inbuffer.weight = new_weight + turn_weight_penalty;
+            // TODO MKR inbuffer.duration = new_duration + turn_duration_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));

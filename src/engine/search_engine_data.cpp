@@ -13,6 +13,7 @@ SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_2;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_2;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
+SearchEngineData::ManyToManyHeapPtr SearchEngineData::many_to_many_heap;
 
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
 {
@@ -74,6 +75,18 @@ void SearchEngineData::InitializeOrClearThirdThreadLocalStorage(const unsigned n
     else
     {
         reverse_heap_3.reset(new QueryHeap(number_of_nodes));
+    }
+}
+
+void SearchEngineData::InitializeOrClearManyToManyThreadLocalStorage(const unsigned number_of_nodes)
+{
+    if (many_to_many_heap.get())
+    {
+        many_to_many_heap->Clear();
+    }
+    else
+    {
+        many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes));
     }
 }
 }

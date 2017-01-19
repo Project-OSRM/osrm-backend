@@ -127,26 +127,6 @@ void BasicRoutingInterface::RoutingStep(
     }
 }
 
-EdgeWeight
-BasicRoutingInterface::GetLoopWeight(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
-                                     NodeID node) const
-{
-    EdgeWeight loop_weight = INVALID_EDGE_WEIGHT;
-    for (auto edge : facade->GetAdjacentEdgeRange(node))
-    {
-        const auto &data = facade->GetEdgeData(edge);
-        if (data.forward)
-        {
-            const NodeID to = facade->GetTarget(edge);
-            if (to == node)
-            {
-                loop_weight = std::min(loop_weight, data.weight);
-            }
-        }
-    }
-    return loop_weight;
-}
-
 /**
  * Unpacks a single edge (NodeID->NodeID) from the CH graph down to it's original non-shortcut
  * route.

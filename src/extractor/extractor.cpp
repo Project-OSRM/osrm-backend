@@ -324,6 +324,7 @@ void Extractor::FindComponents(unsigned max_edge_id,
 {
     struct UncontractedEdgeData
     {
+        EdgeWeight duration;
     };
     struct InputEdge
     {
@@ -353,12 +354,12 @@ void Extractor::FindComponents(unsigned max_edge_id,
         BOOST_ASSERT(edge.target <= max_edge_id);
         if (edge.forward)
         {
-            edges.push_back({edge.source, edge.target, {}});
+            edges.push_back({edge.source, edge.target, {edge.duration}});
         }
 
         if (edge.backward)
         {
-            edges.push_back({edge.target, edge.source, {}});
+            edges.push_back({edge.target, edge.source, {edge.duration}});
         }
     }
 
