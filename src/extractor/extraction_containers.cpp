@@ -3,13 +3,13 @@
 #include "extractor/extraction_way.hpp"
 
 #include "util/coordinate_calculation.hpp"
-#include "util/range_table.hpp"
 
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
 #include "util/log.hpp"
+#include "util/name_table.hpp"
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
@@ -176,43 +176,10 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     util::UnbufferedLog log;
     log << "writing street name index ... ";
     TIMER_START(write_index);
-    boost::filesystem::ofstream file_stream(file_name, std::ios::binary);
+    boost::filesystem::ofstream file(file_name, std::ios::binary);
 
-    // transforms in-place name offsets to name lengths
-    BOOST_ASSERT(!name_offsets.empty());
-    for (auto curr = name_offsets.begin(), next = name_offsets.begin() + 1;
-         next != name_offsets.end();
-         ++curr, ++next)
-    {
-        *curr = *next - *curr;
-    }
-
-    // removes the total length sentinel
-    unsigned total_length = name_offsets.back();
-    name_offsets.pop_back();
-
-    // builds and writes the index
-    util::RangeTable<> index_range(name_offsets);
-    file_stream << index_range;
-
-    file_stream.write((char *)&total_length, sizeof(unsigned));
-
-    // write all chars consecutively
-    char write_buffer[WRITE_BLOCK_BUFFER_SIZE];
-    unsigned buffer_len = 0;
-
-    for (const auto c : name_char_data)
-    {
-        write_buffer[buffer_len++] = c;
-
-        if (buffer_len >= WRITE_BLOCK_BUFFER_SIZE)
-        {
-            file_stream.write(write_buffer, WRITE_BLOCK_BUFFER_SIZE);
-            buffer_len = 0;
-        }
-    }
-
-    file_stream.write(write_buffer, buffer_len);
+    const util::NameTable::IndexedData indexed_data;
+    indexed_data.write(file, name_offsets.begin(), name_offsets.end(), name_char_data.begin());
 
     TIMER_STOP(write_index);
     log << "ok, after " << TIMER_SEC(write_index) << "s";

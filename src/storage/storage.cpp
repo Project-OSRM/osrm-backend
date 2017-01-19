@@ -194,19 +194,10 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        // collect number of elements to store in shared memory object
         util::Log() << "load names from: " << config.names_data_path;
         // number of entries in name index
         io::FileReader name_file(config.names_data_path, io::FileReader::HasNoFingerprint);
-
-        const auto name_blocks = name_file.ReadElementCount32();
-        layout.SetBlockSize<unsigned>(DataLayout::NAME_OFFSETS, name_blocks);
-        layout.SetBlockSize<typename util::RangeTable<16, true>::BlockT>(DataLayout::NAME_BLOCKS,
-                                                                         name_blocks);
-        BOOST_ASSERT_MSG(0 != name_blocks, "name file broken");
-
-        const auto number_of_chars = name_file.ReadElementCount32();
-        layout.SetBlockSize<char>(DataLayout::NAME_CHAR_LIST, number_of_chars);
+        layout.SetBlockSize<char>(DataLayout::NAME_CHAR_DATA, name_file.GetSize());
     }
 
     {
@@ -451,35 +442,13 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // Name data
     {
         io::FileReader name_file(config.names_data_path, io::FileReader::HasNoFingerprint);
-        const auto name_blocks_count = name_file.ReadElementCount32();
-        name_file.Skip<std::uint32_t>(1); // name_char_list_count
+        std::size_t name_file_size = name_file.GetSize();
 
-        BOOST_ASSERT(name_blocks_count * sizeof(unsigned) ==
-                     layout.GetBlockSize(DataLayout::NAME_OFFSETS));
-        BOOST_ASSERT(name_blocks_count * sizeof(typename util::RangeTable<16, true>::BlockT) ==
-                     layout.GetBlockSize(DataLayout::NAME_BLOCKS));
-
-        // Loading street names
-        const auto name_offsets_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::NAME_OFFSETS);
-        name_file.ReadInto(name_offsets_ptr, name_blocks_count);
-
-        const auto name_blocks_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::NAME_BLOCKS);
-        name_file.ReadInto(reinterpret_cast<char *>(name_blocks_ptr),
-                           layout.GetBlockSize(DataLayout::NAME_BLOCKS));
-
-        // The file format contains the element count a second time.  Don't know why,
-        // but we need to read it here to progress the file pointer to the correct spot
-        const auto temp_count = name_file.ReadElementCount32();
-
+        BOOST_ASSERT(name_file_size == layout.GetBlockSize(DataLayout::NAME_CHAR_DATA));
         const auto name_char_ptr =
-            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::NAME_CHAR_LIST);
+            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::NAME_CHAR_DATA);
 
-        BOOST_ASSERT_MSG(temp_count == layout.GetBlockSize(DataLayout::NAME_CHAR_LIST),
-                         "Name file corrupted!");
-
-        name_file.ReadInto(name_char_ptr, temp_count);
+        name_file.ReadInto<char>(name_char_ptr, name_file_size);
     }
 
     // Turn lane data

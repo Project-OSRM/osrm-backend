@@ -269,40 +269,34 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     const auto road_classification = parsed_way.road_classification;
 
-    const constexpr std::size_t MAX_STRING_LENGTH = 255u;
     // Get the unique identifier for the street name, destination, and ref
     const auto name_iterator = string_map.find(
         MapKey(parsed_way.name, parsed_way.destinations, parsed_way.ref, parsed_way.pronunciation));
-    auto name_id = EMPTY_NAMEID;
+    NameID name_id = EMPTY_NAMEID;
     if (string_map.end() == name_iterator)
     {
-        const auto name_length = std::min(MAX_STRING_LENGTH, parsed_way.name.size());
-        const auto destinations_length =
-            std::min(MAX_STRING_LENGTH, parsed_way.destinations.size());
-        const auto pronunciation_length =
-            std::min(MAX_STRING_LENGTH, parsed_way.pronunciation.size());
-        const auto ref_length = std::min(MAX_STRING_LENGTH, parsed_way.ref.size());
-
-        // name_offsets already has an offset of a new name, take the offset index as the name id
+        // name_offsets has a sentinel element with the total name data size
+        // take the sentinels index as the name id of the new name data pack
+        // (name [name_id], destination [+1], pronunciation [+2], ref [+3])
         name_id = external_memory.name_offsets.size() - 1;
 
-        std::copy(parsed_way.name.c_str(),
-                  parsed_way.name.c_str() + name_length,
+        std::copy(parsed_way.name.begin(),
+                  parsed_way.name.end(),
                   std::back_inserter(external_memory.name_char_data));
         external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        std::copy(parsed_way.destinations.c_str(),
-                  parsed_way.destinations.c_str() + destinations_length,
+        std::copy(parsed_way.destinations.begin(),
+                  parsed_way.destinations.end(),
                   std::back_inserter(external_memory.name_char_data));
         external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        std::copy(parsed_way.pronunciation.c_str(),
-                  parsed_way.pronunciation.c_str() + pronunciation_length,
+        std::copy(parsed_way.pronunciation.begin(),
+                  parsed_way.pronunciation.end(),
                   std::back_inserter(external_memory.name_char_data));
         external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
-        std::copy(parsed_way.ref.c_str(),
-                  parsed_way.ref.c_str() + ref_length,
+        std::copy(parsed_way.ref.begin(),
+                  parsed_way.ref.end(),
                   std::back_inserter(external_memory.name_char_data));
         external_memory.name_offsets.push_back(external_memory.name_char_data.size());
 
