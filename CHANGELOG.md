@@ -1,11 +1,18 @@
+# 5.5.4
+  - Changes from 5.5.3
+    - Bugfixes
+      - PR #3561 - added missing backwards speeds for cycleways in bicycle profile
+      - PR #3515 - adjusted number of `nodes` in `annotation`
+      - Ticket #3430 - Fix possible division by zero by clamping latitude to +/- 85.05
+      - PR #3555 - Fix an error that occurs when a road forks immediately after exiting a ferry
+      - PR #3575 - Don't emit invalid turn types for obvious turns at sliproads and roundabouts.
+
 # 5.5.3
   - Changes from 5.5.2
     - Bugfixes:
       - PR #3504 - debug tiles were very slow to generate due to unnecessarily copying data in a hot loop.
       - PR #3556 - fix an assertion in the walking profile triggered by tight spiral stairwells
       - PR #3469 - don't assert when identical coordinates are supplied to some calculations - OSM data contains these, we shouldn't crash.
-      - PR #3515 - adjusted number of `nodes` in `annotation`
-      - PR #3561 - added missing backwards speeds for cycleways in bicycle profile
     - Enhancements:
       - backported 6ea9f9fdf19 - when anticipating upcoming lanes, consider how many lanes need to be crossed to get there.
       - when using osrm-datastore, it will attempt to clean up locks if it crashes.
