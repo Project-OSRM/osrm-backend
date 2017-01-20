@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -67,7 +67,7 @@ namespace osmium {
         }
 
         inline size_t get_max_queue_size(const char* queue_name, size_t default_value) noexcept {
-            std::string name {"OSMIUM_MAX_"};
+            std::string name{"OSMIUM_MAX_"};
             name += queue_name;
             name += "_QUEUE_SIZE";
             const char* env = getenv(name.c_str());

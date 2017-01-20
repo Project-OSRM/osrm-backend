@@ -6,7 +6,7 @@
 #include <osmium/osm.hpp>
 
 TEST_CASE("create objects using builder") {
-    osmium::memory::Buffer buffer{1024*10};
+    osmium::memory::Buffer buffer{1024 * 10};
     std::string user;
 
     SECTION("complete node with tags") {
@@ -68,7 +68,7 @@ TEST_CASE("create objects using builder") {
             user = "123456789012345678";
         }
 
-        osmium::Location loc{1.2, 3.4};
+        const osmium::Location loc{1.2, 3.4};
 
         {
             osmium::builder::NodeBuilder builder{buffer};
@@ -272,8 +272,8 @@ TEST_CASE("create objects using builder") {
     }
 
     SECTION("complete changeset with tags") {
-        osmium::Location bl{-1.2, -3.4};
-        osmium::Location tr{1.2, 3.4};
+        const osmium::Location bl{-1.2, -3.4};
+        const osmium::Location tr{1.2, 3.4};
 
         SECTION("user length 0") {
             user = "";
@@ -365,7 +365,7 @@ TEST_CASE("create objects using builder") {
 }
 
 TEST_CASE("no call to set_user on node") {
-    osmium::memory::Buffer buffer{1024*10};
+    osmium::memory::Buffer buffer{1024 * 10};
 
     {
         osmium::builder::NodeBuilder builder{buffer};
@@ -377,7 +377,7 @@ TEST_CASE("no call to set_user on node") {
 }
 
 TEST_CASE("set_user with length on node") {
-    osmium::memory::Buffer buffer{1024*10};
+    osmium::memory::Buffer buffer{1024 * 10};
     std::string user = "userx";
 
     {
@@ -391,7 +391,7 @@ TEST_CASE("set_user with length on node") {
 }
 
 TEST_CASE("no call to set_user on way") {
-    osmium::memory::Buffer buffer{1024*10};
+    osmium::memory::Buffer buffer{1024 * 10};
 
     {
         osmium::builder::WayBuilder builder{buffer};
@@ -403,7 +403,7 @@ TEST_CASE("no call to set_user on way") {
 }
 
 TEST_CASE("set_user with length on way") {
-    osmium::memory::Buffer buffer{1024*10};
+    osmium::memory::Buffer buffer{1024 * 10};
     std::string user = "userx";
 
     {
@@ -417,7 +417,7 @@ TEST_CASE("set_user with length on way") {
 }
 
 TEST_CASE("no call to set_user on changeset") {
-    osmium::memory::Buffer buffer{1024*10};
+    osmium::memory::Buffer buffer{1024 * 10};
 
     {
         osmium::builder::ChangesetBuilder builder{buffer};
@@ -429,7 +429,7 @@ TEST_CASE("no call to set_user on changeset") {
 }
 
 TEST_CASE("set_user with length on changeset") {
-    osmium::memory::Buffer buffer{1024*10};
+    osmium::memory::Buffer buffer{1024 * 10};
     std::string user = "userx";
 
     {

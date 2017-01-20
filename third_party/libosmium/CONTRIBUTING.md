@@ -8,5 +8,5 @@ Some rules for contributing to this project:
 
 * We'd love for you to send pull requests for fixes you have made or new features
   you have added. Please read the [notes for developers](NOTES_FOR_DEVELOPERS.md)
-  beforehand which contain some coding guidelines.
+  beforehand which contains some coding guidelines.
 

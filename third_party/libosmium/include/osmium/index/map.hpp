@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -126,8 +126,25 @@ namespace osmium {
                 /// Set the field with id to value.
                 virtual void set(const TId id, const TValue value) = 0;
 
-                /// Retrieve value by id. Does not check for overflow or empty fields.
-                virtual const TValue get(const TId id) const = 0;
+                /**
+                 * Retrieve value by id.
+                 *
+                 * @param id The id to look for.
+                 * @returns Value.
+                 * @throws osmium::not_found if the id could not be found.
+                 */
+                virtual TValue get(const TId id) const = 0;
+
+                /**
+                 * Retrieve value by id.
+                 *
+                 * @param id The id to look for.
+                 * @returns Value or, if not found, the empty value as defined
+                 *          by osmium::index::empty_value<TValue>() which is
+                 *          usually the default constructed value of type
+                 *          TValue.
+                 */
+                virtual TValue get_noexcept(const TId id) const noexcept = 0;
 
                 /**
                  * Get the approximate number of items in the storage. The storage

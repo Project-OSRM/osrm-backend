@@ -18,6 +18,7 @@
   * osmium_read
   * osmium_count
   * osmium_debug
+  * osmium_amenity_list
 
   LICENSE
   The code in this example file is released into the Public Domain.

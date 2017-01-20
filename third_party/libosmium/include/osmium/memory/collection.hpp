@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,8 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <iterator>
 #include <iosfwd>
+#include <iterator>
 #include <type_traits>
 
 #include <osmium/memory/item.hpp>
@@ -126,6 +126,10 @@ namespace osmium {
             using size_type       = size_t;
 
             static constexpr osmium::item_type itemtype = TCollectionItemType;
+
+            constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+                return t == itemtype;
+            }
 
             Collection() :
                 Item(sizeof(Collection<TMember, TCollectionItemType>), TCollectionItemType) {

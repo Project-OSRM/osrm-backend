@@ -18,13 +18,6 @@ TEST_CASE("WKB geometry factory (byte-order-dependant), points") {
         REQUIRE(wkb == "01010000009A99999999990940CDCCCCCCCCCC1040");
     }
 
-    SECTION("point in web mercator") {
-        osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
-
-        const std::string wkb{factory.create_point(loc)};
-        REQUIRE(wkb == "010100000028706E7BF9BD1541B03E0D93E48F1C41");
-    }
-
     SECTION("point in ewkb") {
         osmium::geom::WKBFactory<> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
@@ -32,12 +25,21 @@ TEST_CASE("WKB geometry factory (byte-order-dependant), points") {
         REQUIRE(wkb == "0101000020E61000009A99999999990940CDCCCCCCCCCC1040");
     }
 
+#ifndef OSMIUM_USE_SLOW_MERCATOR_PROJECTION
+    SECTION("point in web mercator") {
+        osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::wkb, osmium::geom::out_type::hex};
+
+        const std::string wkb{factory.create_point(loc)};
+        REQUIRE(wkb == "010100000028706E7BF9BD1541D6A90093E48F1C41");
+    }
+
     SECTION("point in ewkb in web mercator") {
         osmium::geom::WKBFactory<osmium::geom::MercatorProjection> factory{osmium::geom::wkb_type::ewkb, osmium::geom::out_type::hex};
 
         const std::string wkb{factory.create_point(loc)};
-        REQUIRE(wkb == "0101000020110F000028706E7BF9BD1541B03E0D93E48F1C41");
+        REQUIRE(wkb == "0101000020110F000028706E7BF9BD1541D6A90093E48F1C41");
     }
+#endif
 
 }
 

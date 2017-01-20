@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cstring>
 #include <stdexcept>
 #include <tuple>
+#include <type_traits>
 
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
@@ -113,6 +114,13 @@ namespace osmium {
         }
 
     public:
+
+        constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            return t == osmium::item_type::node ||
+                   t == osmium::item_type::way ||
+                   t == osmium::item_type::relation ||
+                   t == osmium::item_type::area;
+        }
 
         /// Get ID of this object.
         object_id_type id() const noexcept {
@@ -383,20 +391,22 @@ namespace osmium {
         /**
          * Get a range of subitems of a specific type.
          *
-         * @tparam The type (must be derived from osmium::memory::Item.
+         * @tparam The type (must be derived from osmium::memory::Item).
          */
         template <typename T>
         osmium::memory::ItemIteratorRange<T> subitems() {
+            static_assert(std::is_base_of<osmium::memory::Item, T>::value, "T must be derived from osmium::memory::Item");
             return osmium::memory::ItemIteratorRange<T>{subitems_position(), next()};
         }
 
         /**
          * Get a range of subitems of a specific type.
          *
-         * @tparam The type (must be derived from osmium::memory::Item.
+         * @tparam The type (must be derived from osmium::memory::Item).
          */
         template <typename T>
         osmium::memory::ItemIteratorRange<const T> subitems() const {
+            static_assert(std::is_base_of<osmium::memory::Item, T>::value, "T must be derived from osmium::memory::Item");
             return osmium::memory::ItemIteratorRange<const T>{subitems_position(), next()};
         }
 

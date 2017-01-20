@@ -13,6 +13,51 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 
+## [2.11.0] - 2017-01-14
+
+### Added
+
+- New index::RelationsMap(Stash|Index) classes implementing an index for
+  looking up parent relation IDs given a member relation ID.
+- Add `get_noexcept()` method to all index maps. For cases where ids are
+  often not in the index using this can speed up a program considerably.
+- New non-const WayNodeList::operator[].
+- Default constructed "invalid" Coordinates.
+- Tile constructor from web mercator coordinates and some helper
+  functions for tile arithmetic.
+- Tag matcher matching keys using a regex.
+- New `envelope()` functions on `NodeRefList`, `Way`, and `Area` returning a
+  `Box` object with the geometric envelope of the object.
+- Add `amenity_list` example.
+
+### Changed
+
+- Replaced the implementation for the web mercator projection using the usual
+  tan-formula with a polynomial approximation which is much faster and good
+  enough for OSM data which only has ~1cm resolution anyway. See
+  https://github.com/osmcode/mercator-projection for all the details and
+  benchmarks. You can disable this by defining the macro
+  `OSMIUM_USE_SLOW_MERCATOR_PROJECTION` before including any of the Osmium
+  headers.
+- Removed the outdated `Makefile`. Always use CMake directly to build.
+- Refactoring of `osmium::apply()` removing the resursive templates for faster
+  compile times and allowing rvalue handlers.
+- Lots of code and test cleanups and more documentation.
+
+### Fixed
+
+- Handle endianess on FreeBSD properly.
+- Fixed doxygen config for reproducible builds.
+
+
+## [2.10.3] - 2016-11-20
+
+### Changed
+
+- Round out ObjectPointerCollection implementation and test it.
+- Updated embedded protozero to 1.4.5.
+
+
 ## [2.10.2] - 2016-11-16
 
 ### Changed
@@ -480,7 +525,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.10.2...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.10.3...HEAD
+[2.10.3]: https://github.com/osmcode/libosmium/compare/v2.10.2...v2.10.3
 [2.10.2]: https://github.com/osmcode/libosmium/compare/v2.10.1...v2.10.2
 [2.10.1]: https://github.com/osmcode/libosmium/compare/v2.10.0...v2.10.1
 [2.10.0]: https://github.com/osmcode/libosmium/compare/v2.9.0...v2.10.0

@@ -3,7 +3,7 @@
 #include <osmium/io/detail/string_table.hpp>
 
 TEST_CASE("String store") {
-    osmium::io::detail::StringStore ss(100);
+    osmium::io::detail::StringStore ss{100};
 
     SECTION("empty") {
         REQUIRE(ss.begin() == ss.end());

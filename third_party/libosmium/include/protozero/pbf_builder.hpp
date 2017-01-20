@@ -18,8 +18,8 @@ documentation.
 
 #include <type_traits>
 
-#include <protozero/types.hpp>
 #include <protozero/pbf_writer.hpp>
+#include <protozero/types.hpp>
 
 namespace protozero {
 
@@ -85,6 +85,11 @@ public:
 
     void add_bytes(T tag, const std::string& value) {
         pbf_writer::add_bytes(pbf_tag_type(tag), value);
+    }
+
+    template <typename... Ts>
+    void add_bytes_vectored(T tag, Ts&&... values) {
+        pbf_writer::add_bytes_vectored(pbf_tag_type(tag), std::forward<Ts>(values)...);
     }
 
     void add_string(T tag, const char* value, std::size_t size) {

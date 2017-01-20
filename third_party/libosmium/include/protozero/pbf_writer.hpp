@@ -226,8 +226,7 @@ public:
      */
     explicit pbf_writer(std::string& data) noexcept :
         m_data(&data),
-        m_parent_writer(nullptr),
-        m_pos(0) {
+        m_parent_writer(nullptr) {
     }
 
     /**
@@ -236,8 +235,7 @@ public:
      */
     pbf_writer() noexcept :
         m_data(nullptr),
-        m_parent_writer(nullptr),
-        m_pos(0) {
+        m_parent_writer(nullptr) {
     }
 
     /**
@@ -252,8 +250,7 @@ public:
      */
     pbf_writer(pbf_writer& parent_writer, pbf_tag_type tag, std::size_t size=0) :
         m_data(parent_writer.m_data),
-        m_parent_writer(&parent_writer),
-        m_pos(0) {
+        m_parent_writer(&parent_writer) {
         m_parent_writer->open_submessage(tag, size);
     }
 
@@ -502,6 +499,37 @@ public:
      */
     void add_bytes(pbf_tag_type tag, const std::string& value) {
         add_bytes(tag, value.data(), value.size());
+    }
+
+    /**
+     * Add "bytes" field to data using vectored input. All the data in the
+     * 2nd and further arguments is "concatenated" with only a single copy
+     * into the final buffer.
+     *
+     * This will work with objects of any type supporting the data() and
+     * size() methods like std::string or protozero::data_view.
+     *
+     * Example:
+     * @code
+     * std::string data1 = "abc";
+     * std::string data2 = "xyz";
+     * writer.add_bytes_vectored(1, data1, data2);
+     * @endcode
+     *
+     * @tparam Ts List of types supporting data() and size() methods.
+     * @param tag Tag (field number) of the field
+     * @param values List of objects of types Ts with data to be appended.
+     */
+    template <typename... Ts>
+    void add_bytes_vectored(pbf_tag_type tag, Ts&&... values) {
+        protozero_assert(m_pos == 0 && "you can't add fields to a parent pbf_writer if there is an existing pbf_writer for a submessage");
+        protozero_assert(m_data);
+        size_t sum_size = 0;
+        (void)std::initializer_list<size_t>{sum_size += values.size()...};
+        protozero_assert(sum_size <= std::numeric_limits<pbf_length_type>::max());
+        add_length_varint(tag, pbf_length_type(sum_size));
+        m_data->reserve(m_data->size() + sum_size);
+        (void)std::initializer_list<int>{(m_data->append(values.data(), values.size()), 0)...};
     }
 
     /**
@@ -814,6 +842,12 @@ namespace detail {
 
     public:
 
+        packed_field(const packed_field&) = delete;
+        packed_field& operator=(const packed_field&) = delete;
+
+        packed_field(packed_field&&) = default;
+        packed_field& operator=(packed_field&&) = default;
+
         packed_field(pbf_writer& parent_writer, pbf_tag_type tag) :
             m_writer(parent_writer, tag) {
         }
@@ -833,12 +867,14 @@ namespace detail {
 
     public:
 
-        packed_field_fixed(pbf_writer& parent_writer, pbf_tag_type tag) :
-            packed_field(parent_writer, tag) {
+        template <typename P>
+        packed_field_fixed(pbf_writer& parent_writer, P tag) :
+            packed_field(parent_writer, static_cast<pbf_tag_type>(tag)) {
         }
 
-        packed_field_fixed(pbf_writer& parent_writer, pbf_tag_type tag, std::size_t size) :
-            packed_field(parent_writer, tag, size * sizeof(T)) {
+        template <typename P>
+        packed_field_fixed(pbf_writer& parent_writer, P tag, std::size_t size) :
+            packed_field(parent_writer, static_cast<pbf_tag_type>(tag), size * sizeof(T)) {
         }
 
         void add_element(T value) {
@@ -852,8 +888,9 @@ namespace detail {
 
     public:
 
-        packed_field_varint(pbf_writer& parent_writer, pbf_tag_type tag) :
-            packed_field(parent_writer, tag) {
+        template <typename P>
+        packed_field_varint(pbf_writer& parent_writer, P tag) :
+            packed_field(parent_writer, static_cast<pbf_tag_type>(tag)) {
         }
 
         void add_element(T value) {
@@ -867,8 +904,9 @@ namespace detail {
 
     public:
 
-        packed_field_svarint(pbf_writer& parent_writer, pbf_tag_type tag) :
-            packed_field(parent_writer, tag) {
+        template <typename P>
+        packed_field_svarint(pbf_writer& parent_writer, P tag) :
+            packed_field(parent_writer, static_cast<pbf_tag_type>(tag)) {
         }
 
         void add_element(T value) {
