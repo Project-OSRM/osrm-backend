@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -41,6 +41,13 @@ DEALINGS IN THE SOFTWARE.
 namespace osmium {
 
     namespace tags {
+
+        template <>
+        struct match_key<std::regex> {
+            bool operator()(const std::regex& rule_key, const char* tag_key) {
+                return std::regex_match(tag_key, rule_key);
+            }
+        }; // struct match_key<std::regex>
 
         template <>
         struct match_value<std::regex> {

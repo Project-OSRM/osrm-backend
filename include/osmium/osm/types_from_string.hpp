@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -97,7 +97,7 @@ namespace osmium {
             }
             osmium::item_type t = osmium::char_to_item_type(*input);
             if (osmium::osm_entity_bits::from_item_type(t) & types) {
-                return std::make_pair(t, string_to_object_id(input+1));
+                return std::make_pair(t, string_to_object_id(input + 1));
             }
         }
         throw std::range_error(std::string("not a valid id: '") + input + "'");
@@ -105,7 +105,7 @@ namespace osmium {
 
     namespace detail {
 
-        inline unsigned long string_to_ulong(const char* input, const char *name) {
+        inline unsigned long string_to_ulong(const char* input, const char* name) {
             if (*input != '\0' && *input != '-' && !std::isspace(*input)) {
                 char* end;
                 auto value = std::strtoul(input, &end, 10);

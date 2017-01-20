@@ -10,7 +10,7 @@
 using namespace osmium::builder::attr;
 
 TEST_CASE("Build way") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     osmium::builder::add_way(buffer,
         _id(17),
@@ -50,7 +50,7 @@ TEST_CASE("Build way") {
 }
 
 TEST_CASE("build closed way") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     osmium::builder::add_way(buffer,
         _tag("highway", "residential"),
@@ -64,7 +64,7 @@ TEST_CASE("build closed way") {
 }
 
 TEST_CASE("build way with helpers") {
-    osmium::memory::Buffer buffer(10000);
+    osmium::memory::Buffer buffer{10000};
 
     {
         osmium::builder::WayBuilder builder(buffer);
@@ -90,6 +90,12 @@ TEST_CASE("build way with helpers") {
 
     REQUIRE(2 == way.nodes().size());
     REQUIRE(22 == way.nodes()[0].ref());
-    REQUIRE(4.1 == way.nodes()[1].location().lon());
+    REQUIRE(4.1 == Approx(way.nodes()[1].location().lon()));
+
+    osmium::Box envelope = way.envelope();
+    REQUIRE(envelope.bottom_left().lon() == Approx(3.5));
+    REQUIRE(envelope.bottom_left().lat() == Approx(2.2));
+    REQUIRE(envelope.top_right().lon() == Approx(4.1));
+    REQUIRE(envelope.top_right().lat() == Approx(4.7));
 }
 

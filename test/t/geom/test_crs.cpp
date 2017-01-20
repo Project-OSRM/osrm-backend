@@ -1,7 +1,5 @@
 #include "catch.hpp"
 
-#include <random>
-
 #include <osmium/geom/projection.hpp>
 
 TEST_CASE("CRS") {

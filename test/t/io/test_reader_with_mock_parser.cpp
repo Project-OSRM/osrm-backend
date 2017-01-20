@@ -34,7 +34,7 @@ public:
         osmium::thread::set_thread_name("_osmium_mock_in");
 
         if (m_fail_in == "header") {
-            throw std::runtime_error("error in header");
+            throw std::runtime_error{"error in header"};
         }
 
         set_header_value(osmium::io::Header{});
@@ -44,7 +44,7 @@ public:
         send_to_output_queue(std::move(buffer));
 
         if (m_fail_in == "read") {
-            throw std::runtime_error("error in read");
+            throw std::runtime_error{"error in read"};
         }
     }
 
@@ -65,7 +65,7 @@ TEST_CASE("Test Reader using MockParser") {
 
     SECTION("no failure") {
         fail_in = "";
-        osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
+        osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
         auto header = reader.header();
         REQUIRE(reader.read());
         REQUIRE(!reader.read());
@@ -76,7 +76,7 @@ TEST_CASE("Test Reader using MockParser") {
     SECTION("throw in header") {
         fail_in = "header";
         try {
-            osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
+            osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
             reader.header();
         } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error in header");
@@ -85,7 +85,7 @@ TEST_CASE("Test Reader using MockParser") {
 
     SECTION("throw in read") {
         fail_in = "read";
-        osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
+        osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
         reader.header();
         try {
             reader.read();
@@ -97,10 +97,10 @@ TEST_CASE("Test Reader using MockParser") {
 
     SECTION("throw in user code") {
         fail_in = "";
-        osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
+        osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
         reader.header();
         try {
-            throw std::runtime_error("error in user code");
+            throw std::runtime_error{"error in user code"};
         } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error in user code");
         }

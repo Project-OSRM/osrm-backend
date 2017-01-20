@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -65,37 +65,33 @@ namespace osmium {
      */
     namespace relations {
 
-        namespace detail {
-
-        } // namespace detail
-
         /**
-         * The Collector class collects members of a relation. This is a generic
-         * base class that can be used to assemble all kinds of relations. It has numerous
-         * hooks you can implement in derived classes to customize its behaviour.
+         * The Collector class collects members of a relation. This is a
+         * generic base class that can be used to assemble all kinds of
+         * relations. It has numerous hooks you can implement in derived
+         * classes to customize its behaviour.
          *
-         * The collector provides two handlers (HandlerPass1 and HandlerPass2) for a first
-         * and second pass through an input file, respectively. In the first pass all
-         * relations we are interested in are stored in RelationMeta objects in the
-         * m_relations vector. All members we are interested in are stored in MemberMeta
-         * objects in the m_member_meta vectors.
-         * The MemberMeta objects also store the information where the relations containing
-         * those members are to be found.
+         * The collector provides two handlers (HandlerPass1 and HandlerPass2)
+         * for a first and second pass through an input file, respectively. In
+         * the first pass all relations we are interested in are stored in
+         * RelationMeta objects in the m_relations vector. All members we are
+         * interested in are stored in MemberMeta objects in the m_member_meta
+         * vectors. The MemberMeta objects also store the information where the
+         * relations containing those members are to be found.
          *
-         * Later the m_member_meta vectors are sorted according to the
-         * member ids so that a binary search (with std::equal_range) can be used in the second
-         * pass to find the parent relations for each node, way, or relation coming along.
-         * The member objects are stored together with their relation and once a relation
-         * is complete the complete_relation() method is called which you must overwrite in
-         * a derived class of Collector.
+         * Later the m_member_meta vectors are sorted according to the member
+         * ids so that a binary search (with std::equal_range) can be used in
+         * the second pass to find the parent relations for each node, way, or
+         * relation coming along. The member objects are stored together with
+         * their relation and once a relation is complete the
+         * complete_relation() method is called which you must overwrite in a
+         * derived class of Collector.
          *
          * @tparam TCollector Derived class of this class.
-         *
          * @tparam TNodes Are we interested in member nodes?
-         *
          * @tparam TWays Are we interested in member ways?
-         *
          * @tparam TRelations Are we interested in member relations?
+         * @pre The Ids of all objects must be unique in the input data.
          */
         template <typename TCollector, bool TNodes, bool TWays, bool TRelations>
         class Collector {

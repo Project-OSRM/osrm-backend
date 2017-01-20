@@ -138,25 +138,6 @@ inline void swap(iterator_range<T>& lhs, iterator_range<T>& rhs) noexcept {
     lhs.swap(rhs);
 }
 
-#ifdef PROTOZERO_USE_BARE_POINTER_FOR_PACKED_FIXED
-
-template <typename T>
-using const_fixed_iterator = const T*;
-
-/**
- * Create iterator_range from char pointers to beginning and end of range.
- *
- * @param first Beginning of range.
- * @param last End of range.
- */
-template <typename T>
-inline iterator_range<const_fixed_iterator<T>> create_fixed_iterator_range(const char* first, const char* last) {
-    return iterator_range<const_fixed_iterator<T>>{reinterpret_cast<const T*>(first),
-                                                   reinterpret_cast<const T*>(last)};
-}
-
-#else
-
 /**
  * A forward iterator used for accessing packed repeated fields of fixed
  * length (fixed32, sfixed32, float, double).
@@ -225,20 +206,6 @@ public:
     }
 
 }; // class const_fixed_iterator
-
-/**
- * Create iterator_range from char pointers to beginning and end of range.
- *
- * @param first Beginning of range.
- * @param last End of range.
- */
-template <typename T>
-inline iterator_range<const_fixed_iterator<T>> create_fixed_iterator_range(const char* first, const char* last) {
-    return iterator_range<const_fixed_iterator<T>>{const_fixed_iterator<T>(first, last),
-                                                   const_fixed_iterator<T>(last, last)};
-}
-
-#endif
 
 /**
  * A forward iterator used for accessing packed repeated varint fields

@@ -24,21 +24,21 @@ public:
 
     void write_header(const osmium::io::Header&) final {
         if (m_fail_in == "header") {
-            throw std::logic_error("header");
+            throw std::logic_error{"header"};
         }
         send_to_output_queue(std::string{"header"});
     }
 
     void write_buffer(osmium::memory::Buffer&&) final {
         if (m_fail_in == "write") {
-            throw std::logic_error("write");
+            throw std::logic_error{"write"};
         }
         send_to_output_queue(std::string{"write"});
     }
 
     void write_end() final {
         if (m_fail_in == "write_end") {
-            throw std::logic_error("write_end");
+            throw std::logic_error{"write_end"};
         }
         send_to_output_queue(std::string{"end"});
     }
@@ -58,7 +58,7 @@ TEST_CASE("Test Writer with MockOutputFormat") {
     osmium::io::Header header;
     header.set("generator", "test_writer_with_mock_encoder.cpp");
 
-    osmium::io::Reader reader(with_data_dir("t/io/data.osm"));
+    osmium::io::Reader reader{with_data_dir("t/io/data.osm")};
     osmium::memory::Buffer buffer = reader.read();
     REQUIRE(buffer);
     REQUIRE(buffer.committed() > 0);

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,7 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cmath>
 #include <iosfwd>
+#include <limits>
 #include <string>
 
 #include <osmium/osm/location.hpp>
@@ -48,18 +50,71 @@ namespace osmium {
             double x;
             double y;
 
-            explicit Coordinates(double cx, double cy) noexcept : x(cx), y(cy) {
+            /**
+             * Default constructor creates invalid coordinates.
+             */
+            Coordinates() noexcept :
+                x(std::numeric_limits<double>::quiet_NaN()),
+                y(std::numeric_limits<double>::quiet_NaN()) {
             }
 
-            Coordinates(const osmium::Location& location) : x(location.lon()), y(location.lat()) {
+            /**
+             * Create Coordinates from doubles. If any of them is NaN, the
+             * coordinates are invalid.
+             */
+            explicit Coordinates(double cx, double cy) noexcept :
+                x(cx),
+                y(cy) {
             }
 
+            /**
+             * Create Coordinates from a Location. Will throw
+             * osmium::invalid_location if the location is not valid.
+             */
+            Coordinates(const osmium::Location& location) :
+                x(location.lon()),
+                y(location.lat()) {
+            }
+
+            /**
+             * Coordinates are invalid if they have been default constructed.
+             */
+            bool valid() const noexcept {
+                return !std::isnan(x) && !std::isnan(y);
+            }
+
+            /**
+             * Convert coordinates to text and append to given string. If the
+             * coordinate is invalid, the fixed string "invalid" will be
+             * added to the string.
+             *
+             * @param s String to append the coordinates to.
+             * @param infix Character to print between the two coordinates.
+             * @param precision Number of digits after the decimal point the
+             *        coordinate will be rounded to.
+             */
             void append_to_string(std::string& s, const char infix, int precision) const {
-                osmium::util::double2string(s, x, precision);
-                s += infix;
-                osmium::util::double2string(s, y, precision);
+                if (valid()) {
+                    osmium::util::double2string(s, x, precision);
+                    s += infix;
+                    osmium::util::double2string(s, y, precision);
+                } else {
+                    s.append("invalid");
+                }
             }
 
+            /**
+             * Convert coordinates to text and append to given string. If the
+             * coordinate is invalid, the fixed string "invalid" will be
+             * added to the string between the prefix and suffix characters.
+             *
+             * @param s String to append the coordinates to.
+             * @param prefix Character to print before the first coordinate.
+             * @param infix Character to print between the two coordinates.
+             * @param suffix Character to print after the second coordinate.
+             * @param precision Number of digits after the decimal point the
+             *        coordinate will be rounded to.
+             */
             void append_to_string(std::string& s, const char prefix, const char infix, const char suffix, int precision) const {
                 s += prefix;
                 append_to_string(s, infix, precision);
@@ -69,11 +124,18 @@ namespace osmium {
         }; // struct coordinates
 
         /**
-         * Compare whether two Coordinates are identical. Might not give the
-         * right result if the coordinates have been the result of some
+         * Check whether two Coordinates are equal. Invalid coordinates are
+         * equal to other invalid coordinates but not equal to any valid
+         * coordinates.
+         *
+         * Because this is comparing floating point values, it might not give
+         * the right result if the coordinates have been the result of some
          * calculation that introduced rounding errors.
          */
         inline bool operator==(const Coordinates& lhs, const Coordinates& rhs) noexcept {
+            if (!lhs.valid() && !rhs.valid()) {
+                return true;
+            }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
             return lhs.x == rhs.x && lhs.y == rhs.y;

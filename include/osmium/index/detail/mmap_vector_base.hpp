@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -103,22 +103,27 @@ namespace osmium {
                 return m_size == 0;
             }
 
-            const T* data() const {
+            const_pointer data() const {
                 return m_mapping.begin();
             }
 
-            T* data() {
+            pointer data() {
                 return m_mapping.begin();
             }
 
-            T& operator[](size_t n) {
+            const_reference operator[](size_t n) const {
                 assert(n < m_size);
                 return data()[n];
             }
 
-            T at(size_t n) const {
+            reference operator[](size_t n) {
+                assert(n < m_size);
+                return data()[n];
+            }
+
+            value_type at(size_t n) const {
                 if (n >= m_size) {
-                    throw std::out_of_range("out of range");
+                    throw std::out_of_range{"out of range"};
                 }
                 return data()[n];
             }
@@ -128,21 +133,21 @@ namespace osmium {
             }
 
             void shrink_to_fit() {
-                while (m_size > 0 && data()[m_size - 1] == osmium::index::empty_value<T>()) {
+                while (m_size > 0 && data()[m_size - 1] == osmium::index::empty_value<value_type>()) {
                     --m_size;
                 }
             }
 
-            void push_back(const T& value) {
-                resize(m_size+1);
-                data()[m_size-1] = value;
+            void push_back(const_reference value) {
+                resize(m_size + 1);
+                data()[m_size - 1] = value;
             }
 
             void reserve(size_t new_capacity) {
                 if (new_capacity > capacity()) {
                     const size_t old_capacity = capacity();
                     m_mapping.resize(new_capacity);
-                    std::fill(data() + old_capacity, data() + new_capacity, osmium::index::empty_value<T>());
+                    std::fill(data() + old_capacity, data() + new_capacity, osmium::index::empty_value<value_type>());
                 }
             }
 

@@ -35,17 +35,6 @@ documentation.
 # define PROTOZERO_BYTE_ORDER PROTOZERO_LITTLE_ENDIAN
 #endif
 
-// On some ARM machines and depending on compiler settings access to unaligned
-// floating point values will result in a SIGBUS. Do not use the bare pointers
-// in this case.
-#if PROTOZERO_BYTE_ORDER == PROTOZERO_LITTLE_ENDIAN
-# if !defined(__arm__) && !defined(_M_ARM)
-#  ifndef PROTOZERO_DO_NOT_USE_BARE_POINTER
-#   define PROTOZERO_USE_BARE_POINTER_FOR_PACKED_FIXED
-#  endif
-# endif
-#endif
-
 // Check whether __builtin_bswap is available
 #if defined(__GNUC__) || defined(__clang__)
 # define PROTOZERO_USE_BUILTIN_BSWAP

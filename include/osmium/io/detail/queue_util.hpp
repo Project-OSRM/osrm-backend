@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
 #include <exception>
 #include <future>
 #include <string>
@@ -132,6 +133,7 @@ namespace osmium {
                     if (!m_has_reached_end_of_data) {
                         std::future<T> data_future;
                         m_queue.wait_and_pop(data_future);
+                        assert(data_future.valid());
                         data = std::move(data_future.get());
                         if (at_end_of_data(data)) {
                             m_has_reached_end_of_data = true;

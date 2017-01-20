@@ -23,7 +23,7 @@ public:
         Decompressor(),
         m_fail_in(fail_in) {
         if (m_fail_in == "constructor") {
-            throw std::runtime_error("error constructor");
+            throw std::runtime_error{"error constructor"};
         }
     }
 
@@ -41,7 +41,7 @@ public:
 
         if (m_read_count == 1) {
             if (m_fail_in == "first read") {
-                throw std::runtime_error("error first read");
+                throw std::runtime_error{"error first read"};
             } else {
                 buffer += "<?xml version='1.0' encoding='UTF-8'?>\n<osm version='0.6' generator='testdata'>\n";
                 for (int i = 0; i < 1000; ++i) {
@@ -50,7 +50,7 @@ public:
             }
         } else if (m_read_count == 2) {
             if (m_fail_in == "second read") {
-                throw std::runtime_error("error second read");
+                throw std::runtime_error{"error second read"};
             } else {
                 for (int i = 1000; i < 2000; ++i) {
                     add_node(buffer, i);
@@ -65,7 +65,7 @@ public:
 
     void close() final {
         if (m_fail_in == "close") {
-            throw std::runtime_error("error close");
+            throw std::runtime_error{"error close"};
         }
     }
 
@@ -85,7 +85,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
         fail_in = "constructor";
 
         try {
-            osmium::io::Reader reader(with_data_dir("t/io/data.osm.gz"));
+            osmium::io::Reader reader{with_data_dir("t/io/data.osm.gz")};
             REQUIRE(false);
         } catch (const std::runtime_error& e) {
             REQUIRE(std::string{e.what()} == "error constructor");
@@ -96,7 +96,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
         fail_in = "first read";
 
         try {
-            osmium::io::Reader reader(with_data_dir("t/io/data.osm.gz"));
+            osmium::io::Reader reader{with_data_dir("t/io/data.osm.gz")};
             reader.read();
             REQUIRE(false);
         } catch (const std::runtime_error& e) {
@@ -108,7 +108,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
         fail_in = "second read";
 
         try {
-            osmium::io::Reader reader(with_data_dir("t/io/data.osm.gz"));
+            osmium::io::Reader reader{with_data_dir("t/io/data.osm.gz")};
             reader.read();
             reader.read();
             REQUIRE(false);
@@ -121,7 +121,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
         fail_in = "close";
 
         try {
-            osmium::io::Reader reader(with_data_dir("t/io/data.osm.gz"));
+            osmium::io::Reader reader{with_data_dir("t/io/data.osm.gz")};
             reader.read();
             reader.read();
             reader.read();
@@ -135,7 +135,7 @@ TEST_CASE("Test Reader using MockDecompressor") {
     SECTION("not failing") {
         fail_in = "not";
 
-        osmium::io::Reader reader(with_data_dir("t/io/data.osm.gz"));
+        osmium::io::Reader reader{with_data_dir("t/io/data.osm.gz")};
         reader.read();
         reader.close();
         REQUIRE(true);

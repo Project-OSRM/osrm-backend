@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -83,9 +83,9 @@ namespace osmium {
 
             osmium::unsigned_object_id_type m_last_id{0};
 
-            bool m_ignore_errors {false};
+            bool m_ignore_errors{false};
 
-            bool m_must_sort {false};
+            bool m_must_sort{false};
 
             // It is okay to have this static dummy instance, even when using several threads,
             // because it is read-only.

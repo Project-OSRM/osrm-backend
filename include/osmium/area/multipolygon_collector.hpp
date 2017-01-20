@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -69,6 +69,7 @@ namespace osmium {
          * class given as template argument.
          *
          * @tparam TAssembler Multipolygon Assembler class.
+         * @pre The Ids of all objects must be unique in the input data.
          */
         template <typename TAssembler>
         class MultipolygonCollector : public osmium::relations::Collector<MultipolygonCollector<TAssembler>, false, true, false> {
@@ -87,7 +88,7 @@ namespace osmium {
 
             void flush_output_buffer() {
                 if (this->callback()) {
-                    osmium::memory::Buffer buffer(initial_output_buffer_size);
+                    osmium::memory::Buffer buffer{initial_output_buffer_size};
                     using std::swap;
                     swap(buffer, m_output_buffer);
                     this->callback()(std::move(buffer));
@@ -195,7 +196,7 @@ namespace osmium {
             }
 
             osmium::memory::Buffer read() {
-                osmium::memory::Buffer buffer(initial_output_buffer_size, osmium::memory::Buffer::auto_grow::yes);
+                osmium::memory::Buffer buffer{initial_output_buffer_size, osmium::memory::Buffer::auto_grow::yes};
 
                 using std::swap;
                 swap(buffer, m_output_buffer);

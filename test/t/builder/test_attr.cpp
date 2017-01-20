@@ -17,7 +17,7 @@ TEST_CASE("create node using builders") {
 
     using namespace osmium::builder::attr;
 
-    osmium::memory::Buffer buffer(1024*10);
+    osmium::memory::Buffer buffer{1024 * 10};
 
     SECTION("add node with only id") {
         const auto pos = osmium::builder::add_node(buffer, _id(22));
@@ -35,11 +35,11 @@ TEST_CASE("create node using builders") {
     }
 
     SECTION("add node with complete info but no tags") {
-        const auto loc = osmium::Location(3.14, 1.59);
+        const osmium::Location loc{3.14, 1.59};
         const auto pos = osmium::builder::add_node(buffer,
             _id(1),
             _version(17),
-            _timestamp(osmium::Timestamp("2015-01-01T10:20:30Z")),
+            _timestamp(osmium::Timestamp{"2015-01-01T10:20:30Z"}),
             _cid(21),
             _uid(222),
             _location(loc),
@@ -78,7 +78,7 @@ TEST_CASE("create node using builders") {
     }
 
     SECTION("order of attributes doesn't matter") {
-        const auto loc = osmium::Location(3.14, 1.59);
+        const osmium::Location loc{3.14, 1.59};
         const auto pos = osmium::builder::add_node(buffer,
             _timestamp("2015-01-01T10:20:30Z"),
             _version(17),
@@ -224,7 +224,7 @@ TEST_CASE("create way using builders") {
 
     using namespace osmium::builder::attr;
 
-    osmium::memory::Buffer buffer(1024*10);
+    osmium::memory::Buffer buffer{1024 * 10};
 
     SECTION("add way without nodes") {
         const auto pos = osmium::builder::add_way(buffer,
@@ -259,7 +259,7 @@ TEST_CASE("create way with nodes") {
 
     using namespace osmium::builder::attr;
 
-    osmium::memory::Buffer wbuffer(1024*10);
+    osmium::memory::Buffer wbuffer{1024 * 10};
     osmium::builder::add_way(wbuffer,
         _id(1),
         _nodes({1, 2, 4, 8})
@@ -267,7 +267,7 @@ TEST_CASE("create way with nodes") {
 
     const osmium::NodeRefList& nodes = wbuffer.get<osmium::Way>(0).nodes();
 
-    osmium::memory::Buffer buffer(1024*10);
+    osmium::memory::Buffer buffer{1024 * 10};
 
     SECTION("add nodes using an OSM object id or NodeRef") {
         osmium::builder::add_way(buffer,
@@ -380,7 +380,7 @@ TEST_CASE("create relation using builders") {
 
     using namespace osmium::builder::attr;
 
-    osmium::memory::Buffer buffer(1024*10);
+    osmium::memory::Buffer buffer{1024 * 10};
 
     SECTION("create relation") {
         osmium::builder::attr::member_type m{osmium::item_type::way, 113, "inner"};
@@ -540,7 +540,7 @@ TEST_CASE("create area using builders") {
 
     using namespace osmium::builder::attr;
 
-    osmium::memory::Buffer buffer(1024*10);
+    osmium::memory::Buffer buffer{1024 * 10};
 
     SECTION("add area without rings") {
         const auto pos = osmium::builder::add_area(buffer,
