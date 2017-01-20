@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -182,6 +182,12 @@ namespace osmium {
         }
 
     public:
+
+        static constexpr osmium::item_type itemtype = osmium::item_type::changeset;
+
+        constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            return t == itemtype;
+        }
 
         // Dummy to avoid warning because of unused private fields. Do not use.
         int32_t do_not_use() const noexcept {

@@ -142,7 +142,7 @@ inline void skip_varint(const char** data, const char* end) {
  */
 template <typename T>
 inline int write_varint(T data, uint64_t value) {
-    int n=1;
+    int n = 1;
 
     while (value >= 0x80) {
         *data++ = char((value & 0x7f) | 0x80);
@@ -157,29 +157,29 @@ inline int write_varint(T data, uint64_t value) {
 /**
  * ZigZag encodes a 32 bit integer.
  */
-inline uint32_t encode_zigzag32(int32_t value) noexcept {
+inline constexpr uint32_t encode_zigzag32(int32_t value) noexcept {
     return (static_cast<uint32_t>(value) << 1) ^ (static_cast<uint32_t>(value >> 31));
 }
 
 /**
  * ZigZag encodes a 64 bit integer.
  */
-inline uint64_t encode_zigzag64(int64_t value) noexcept {
+inline constexpr uint64_t encode_zigzag64(int64_t value) noexcept {
     return (static_cast<uint64_t>(value) << 1) ^ (static_cast<uint64_t>(value >> 63));
 }
 
 /**
  * Decodes a 32 bit ZigZag-encoded integer.
  */
-inline int32_t decode_zigzag32(uint32_t value) noexcept {
-    return int32_t(value >> 1) ^ -int32_t(value & 1);
+inline constexpr int32_t decode_zigzag32(uint32_t value) noexcept {
+    return static_cast<int32_t>(value >> 1) ^ -static_cast<int32_t>(value & 1);
 }
 
 /**
  * Decodes a 64 bit ZigZag-encoded integer.
  */
-inline int64_t decode_zigzag64(uint64_t value) noexcept {
-    return int64_t(value >> 1) ^ -int64_t(value & 1);
+inline constexpr int64_t decode_zigzag64(uint64_t value) noexcept {
+    return static_cast<int64_t>(value >> 1) ^ -static_cast<int64_t>(value & 1);
 }
 
 } // end namespace protozero

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -47,13 +47,51 @@ namespace osmium {
         namespace detail {
 
             template <typename T>
-            inline T restrict_to_range(T value, T min, T max) {
-                if (value < min) return min;
-                if (value > max) return max;
-                return value;
+            inline constexpr const T& clamp(const T& value, const T& min, const T& max) {
+                return value < min ? min : (max < value ? max : value);
             }
 
         } // namespace detail
+
+        /**
+         * Returns the number of tiles (in each direction) for the given zoom
+         * level.
+         */
+        inline constexpr uint32_t num_tiles_in_zoom(uint32_t zoom) noexcept {
+            return 1u << zoom;
+        }
+
+        /**
+         * Returns the width or hight of a tile in web mercator coordinates for
+         * the given zoom level.
+         */
+        inline constexpr double tile_extent_in_zoom(uint32_t zoom) noexcept {
+            return detail::max_coordinate_epsg3857 * 2 / num_tiles_in_zoom(zoom);
+        }
+
+        /**
+         * Get the tile x number from an x coordinate in web mercator
+         * projection in the given zoom level. Tiles are numbered from left
+         * to right.
+         */
+        inline constexpr uint32_t mercx_to_tilex(uint32_t zoom, double x) noexcept {
+            return static_cast<uint32_t>(detail::clamp<int32_t>(
+                static_cast<int32_t>((x + detail::max_coordinate_epsg3857) / tile_extent_in_zoom(zoom)),
+                0, num_tiles_in_zoom(zoom) -1
+            ));
+        }
+
+        /**
+         * Get the tile y number from an y coordinate in web mercator
+         * projection in the given zoom level. Tiles are numbered from top
+         * to bottom.
+         */
+        inline constexpr uint32_t mercy_to_tiley(uint32_t zoom, double y) noexcept {
+            return static_cast<uint32_t>(detail::clamp<int32_t>(
+                static_cast<int32_t>((detail::max_coordinate_epsg3857 - y) / tile_extent_in_zoom(zoom)),
+                0, num_tiles_in_zoom(zoom) -1
+            ));
+        }
 
         /**
          * A tile in the usual Mercator projection.
@@ -77,10 +115,13 @@ namespace osmium {
              *
              * @pre @code zoom <= 30 && x < 2^zoom && y < 2^zoom @endcode
              */
-            explicit Tile(uint32_t zoom, uint32_t tx, uint32_t ty) noexcept : x(tx), y(ty), z(zoom) {
+            explicit Tile(uint32_t zoom, uint32_t tx, uint32_t ty) noexcept :
+                x(tx),
+                y(ty),
+                z(zoom) {
                 assert(zoom <= 30u);
-                assert(x < (1u << zoom));
-                assert(y < (1u << zoom));
+                assert(x < num_tiles_in_zoom(zoom));
+                assert(y < num_tiles_in_zoom(zoom));
             }
 
             /**
@@ -95,11 +136,24 @@ namespace osmium {
                 z(zoom) {
                 assert(zoom <= 30u);
                 assert(location.valid());
-                const osmium::geom::Coordinates c = lonlat_to_mercator(location);
-                const int32_t n = 1 << zoom;
-                const double scale = detail::max_coordinate_epsg3857 * 2 / n;
-                x = uint32_t(detail::restrict_to_range<int32_t>(int32_t((c.x + detail::max_coordinate_epsg3857) / scale), 0, n-1));
-                y = uint32_t(detail::restrict_to_range<int32_t>(int32_t((detail::max_coordinate_epsg3857 - c.y) / scale), 0, n-1));
+                const auto coordinates = lonlat_to_mercator(location);
+                x = mercx_to_tilex(zoom, coordinates.x);
+                y = mercy_to_tiley(zoom, coordinates.y);
+            }
+
+            /**
+             * Create a tile with the given zoom level that contains the given
+             * coordinates in Mercator projection.
+             *
+             * The values are not checked for validity.
+             *
+             * @pre @code coordinates.valid() && zoom <= 30 @endcode
+             */
+            explicit Tile(uint32_t zoom, const osmium::geom::Coordinates& coordinates) :
+                z(zoom) {
+                assert(zoom <= 30u);
+                x = mercx_to_tilex(zoom, coordinates.x);
+                y = mercy_to_tiley(zoom, coordinates.y);
             }
 
             /**
@@ -111,7 +165,7 @@ namespace osmium {
                 if (z > 30) {
                     return false;
                 }
-                const uint32_t max = 1 << z;
+                const auto max = num_tiles_in_zoom(z);
                 return x < max && y < max;
             }
 

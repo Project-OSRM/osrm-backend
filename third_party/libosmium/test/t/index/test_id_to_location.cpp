@@ -37,6 +37,11 @@ void test_func_all(TIndex& index) {
     REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
     REQUIRE_THROWS_WITH(index.get(0), "id 0 not found");
     REQUIRE_THROWS_WITH(index.get(1), "id 1 not found");
+
+    REQUIRE(index.get_noexcept(0) == osmium::Location{});
+    REQUIRE(index.get_noexcept(1) == osmium::Location{});
+    REQUIRE(index.get_noexcept(5) == osmium::Location{});
+    REQUIRE(index.get_noexcept(100) == osmium::Location{});
 }
 
 template <typename TIndex>
@@ -54,10 +59,18 @@ void test_func_real(TIndex& index) {
     REQUIRE(loc1 == index.get(id1));
     REQUIRE(loc2 == index.get(id2));
 
+    REQUIRE(loc1 == index.get_noexcept(id1));
+    REQUIRE(loc2 == index.get_noexcept(id2));
+
     REQUIRE_THROWS_AS(index.get(0), osmium::not_found);
     REQUIRE_THROWS_AS(index.get(1), osmium::not_found);
     REQUIRE_THROWS_AS(index.get(5), osmium::not_found);
     REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+
+    REQUIRE(index.get_noexcept(0) == osmium::Location{});
+    REQUIRE(index.get_noexcept(1) == osmium::Location{});
+    REQUIRE(index.get_noexcept(5) == osmium::Location{});
+    REQUIRE(index.get_noexcept(100) == osmium::Location{});
 
     index.clear();
 
@@ -68,6 +81,13 @@ void test_func_real(TIndex& index) {
     REQUIRE_THROWS_AS(index.get(1), osmium::not_found);
     REQUIRE_THROWS_AS(index.get(5), osmium::not_found);
     REQUIRE_THROWS_AS(index.get(100), osmium::not_found);
+
+    REQUIRE(index.get_noexcept(id1) == osmium::Location{});
+    REQUIRE(index.get_noexcept(id2) == osmium::Location{});
+    REQUIRE(index.get_noexcept(0) == osmium::Location{});
+    REQUIRE(index.get_noexcept(1) == osmium::Location{});
+    REQUIRE(index.get_noexcept(5) == osmium::Location{});
+    REQUIRE(index.get_noexcept(100) == osmium::Location{});
 }
 
 TEST_CASE("Map Id to location: Dummy") {

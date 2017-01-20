@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -53,9 +53,48 @@ namespace osmium {
                 return earth_radius_for_epsg3857 * deg_to_rad(lon);
             }
 
-            inline double lat_to_y(double lat) { // not constexpr because math functions aren't
+            inline double lat_to_y_with_tan(double lat) { // not constexpr because math functions aren't
                 return earth_radius_for_epsg3857 * std::log(std::tan(osmium::geom::PI/4 + deg_to_rad(lat)/2));
             }
+
+#ifdef OSMIUM_USE_SLOW_MERCATOR_PROJECTION
+            inline double lat_to_y(double lat) {
+                return lat_to_y_with_tan(lat);
+            }
+#else
+
+            // This is a much faster implementation than the canonical
+            // implementation using the tan() function. For details
+            // see https://github.com/osmcode/mercator-projection .
+            inline double lat_to_y(double lat) { // not constexpr because math functions aren't
+                if (lat < -78.0 || lat > 78.0) {
+                    return lat_to_y_with_tan(lat);
+                }
+
+                return earth_radius_for_epsg3857 *
+                    ((((((((((-3.1112583378460085319e-23  * lat +
+                               2.0465852743943268009e-19) * lat +
+                               6.4905282018672673884e-18) * lat +
+                              -1.9685447939983315591e-14) * lat +
+                              -2.2022588158115104182e-13) * lat +
+                               5.1617537365509453239e-10) * lat +
+                               2.5380136069803016519e-9)  * lat +
+                              -5.1448323697228488745e-6)  * lat +
+                              -9.4888671473357768301e-6)  * lat +
+                               1.7453292518154191887e-2)  * lat)
+                    /
+                    ((((((((((-1.9741136066814230637e-22  * lat +
+                              -1.258514031244679556e-20)  * lat +
+                               4.8141483273572351796e-17) * lat +
+                               8.6876090870176172185e-16) * lat +
+                              -2.3298743439377541768e-12) * lat +
+                              -1.9300094785736130185e-11) * lat +
+                               4.3251609106864178231e-8)  * lat +
+                               1.7301944508516974048e-7)  * lat +
+                              -3.4554675198786337842e-4)  * lat +
+                              -5.4367203601085991108e-4)  * lat + 1.0);
+            }
+#endif
 
             constexpr inline double x_to_lon(double x) {
                 return rad_to_deg(x) / earth_radius_for_epsg3857;
@@ -73,10 +112,20 @@ namespace osmium {
          */
         constexpr double MERCATOR_MAX_LAT = 85.0511288;
 
+        /**
+         * Convert the coordinates from WGS84 lon/lat to web mercator.
+         *
+         * @pre @code c.valid() @endcode
+         */
         inline Coordinates lonlat_to_mercator(const Coordinates& c) {
             return Coordinates(detail::lon_to_x(c.x), detail::lat_to_y(c.y));
         }
 
+        /**
+         * Convert the coordinates from web mercator to WGS84 lon/lat.
+         *
+         * @pre @code c.valid() @endcode
+         */
         inline Coordinates mercator_to_lonlat(const Coordinates& c) {
             return Coordinates(detail::x_to_lon(c.x), detail::y_to_lat(c.y));
         }

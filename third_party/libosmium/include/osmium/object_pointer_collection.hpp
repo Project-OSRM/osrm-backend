@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -61,20 +61,24 @@ namespace osmium {
      *   osmium::memory::Buffer buffer = reader.read();
      *   osmium::apply(buffer, objects);
      *
+     * It is not possible to remove pointers from the collection except by
+     * clearing the whole collection.
+     *
      */
     class ObjectPointerCollection : public osmium::handler::Handler {
 
-        std::vector<osmium::OSMObject*> m_objects;
+        std::vector<osmium::OSMObject*> m_objects{};
 
     public:
 
         using iterator       = boost::indirect_iterator<std::vector<osmium::OSMObject*>::iterator, osmium::OSMObject>;
         using const_iterator = boost::indirect_iterator<std::vector<osmium::OSMObject*>::const_iterator, const osmium::OSMObject>;
 
-        ObjectPointerCollection() noexcept :
-            m_objects() {
-        }
+        ObjectPointerCollection() = default;
 
+        /**
+         * Add a pointer to an object to the collection.
+         */
         void osm_object(osmium::OSMObject& object) {
             m_objects.push_back(&object);
         }
@@ -87,20 +91,35 @@ namespace osmium {
             std::sort(m_objects.begin(), m_objects.end(), std::forward<TCompare>(compare));
         }
 
+        /// Is the collection empty?
+        bool empty() const noexcept {
+            return m_objects.empty();
+        }
+
+        /// Return size of the collection.
+        size_t size() const noexcept {
+            return m_objects.size();
+        }
+
+        /// Clear the collection,
+        void clear() {
+            m_objects.clear();
+        }
+
         iterator begin() {
-            return iterator { m_objects.begin() };
+            return iterator{m_objects.begin()};
         }
 
         iterator end() {
-            return iterator { m_objects.end() };
+            return iterator{m_objects.end()};
         }
 
         const_iterator cbegin() const {
-            return const_iterator { m_objects.cbegin() };
+            return const_iterator{m_objects.cbegin()};
         }
 
         const_iterator cend() const {
-            return const_iterator { m_objects.cend() };
+            return const_iterator{m_objects.cend()};
         }
 
     }; // class ObjectPointerCollection

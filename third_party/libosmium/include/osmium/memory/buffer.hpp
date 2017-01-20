@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -116,7 +116,7 @@ namespace osmium {
 #ifndef NDEBUG
             uint8_t m_builder_count{0};
 #endif
-            auto_grow m_auto_grow {auto_grow::no};
+            auto_grow m_auto_grow{auto_grow::no};
             std::function<void(Buffer&)> m_full;
 
         public:

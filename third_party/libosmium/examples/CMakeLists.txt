@@ -9,6 +9,7 @@
 message(STATUS "Configuring examples")
 
 set(EXAMPLES
+    amenity_list
     area_test
     change_tags
     convert

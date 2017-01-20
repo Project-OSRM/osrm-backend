@@ -6,6 +6,14 @@
 
 #include "test_tile_data.hpp"
 
+TEST_CASE("Helper functions") {
+    REQUIRE(osmium::geom::num_tiles_in_zoom(0) == 1);
+    REQUIRE(osmium::geom::num_tiles_in_zoom(1) == 2);
+    REQUIRE(osmium::geom::num_tiles_in_zoom(12) == 4096);
+
+    REQUIRE(osmium::geom::tile_extent_in_zoom(1) == osmium::geom::detail::max_coordinate_epsg3857);
+}
+
 TEST_CASE("Tile from x0.0 y0.0 at zoom 0") {
     osmium::Location l{0.0, 0.0};
 
@@ -59,6 +67,14 @@ TEST_CASE("Tile from max values at zoom 4") {
 TEST_CASE("Tile from max values at zoom 30") {
     osmium::geom::Tile t{30u, (1u<<30) - 1, (1u<<30) - 1};
     REQUIRE(t.valid());
+}
+
+TEST_CASE("Tile from coordinates") {
+    osmium::geom::Coordinates c{9.99312, 53.55078};
+    osmium::geom::Tile t{12, osmium::geom::lonlat_to_mercator(c)};
+    REQUIRE(t.valid());
+    REQUIRE(t.x == 2161);
+    REQUIRE(t.y == 1323);
 }
 
 TEST_CASE("Tile equality") {

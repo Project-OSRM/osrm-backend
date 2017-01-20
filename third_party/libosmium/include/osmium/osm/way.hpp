@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <osmium/memory/collection.hpp>
 #include <osmium/memory/item.hpp>
+#include <osmium/osm/box.hpp>
 #include <osmium/osm/entity.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/node_ref.hpp>
@@ -57,6 +58,10 @@ namespace osmium {
 
         static constexpr osmium::item_type itemtype = osmium::item_type::way_node_list;
 
+        constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            return t == itemtype;
+        }
+
         WayNodeList():
             NodeRefList(itemtype) {
         }
@@ -75,6 +80,12 @@ namespace osmium {
         }
 
     public:
+
+        static constexpr osmium::item_type itemtype = osmium::item_type::way;
+
+        constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            return t == itemtype;
+        }
 
         WayNodeList& nodes() {
             return osmium::detail::subitem_of_type<WayNodeList>(begin(), end());
@@ -109,6 +120,16 @@ namespace osmium {
 
         bool ends_have_same_location() const {
             return nodes().ends_have_same_location();
+        }
+
+        /**
+         * Calculate the envelope of this way. If the locations of the nodes
+         * are not set, the resulting box will be invalid.
+         *
+         * Complexity: Linear in the number of nodes.
+         */
+        osmium::Box envelope() const noexcept {
+            return nodes().envelope();
         }
 
     }; // class Way

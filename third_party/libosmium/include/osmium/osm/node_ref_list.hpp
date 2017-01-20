@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iterator>
 
 #include <osmium/memory/item.hpp>
+#include <osmium/osm/box.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/node_ref.hpp>
@@ -101,6 +102,21 @@ namespace osmium {
         }
 
         /**
+         * Access specified element.
+         *
+         * Complexity: Constant.
+         *
+         * @pre @code n < size() @endcode
+         *
+         * @param n Get the n-th element of the collection.
+         */
+        NodeRef& operator[](size_type n) noexcept {
+            assert(n < size());
+            NodeRef* node_ref = &*(begin());
+            return node_ref[n];
+        }
+
+        /**
          * Access the first element.
          *
          * Complexity: Constant.
@@ -160,6 +176,20 @@ namespace osmium {
         bool ends_have_same_location() const {
             assert(front().location() && back().location());
             return front().location() == back().location();
+        }
+
+        /**
+         * Calculate the envelope of this node ref list. If the locations
+         * are not set, the resulting box will be invalid.
+         *
+         * Complexity: Linear in the number of elements.
+         */
+        osmium::Box envelope() const noexcept {
+            osmium::Box box;
+            for (const auto& node_ref : *this) {
+                box.extend(node_ref.location());
+            }
+            return box;
         }
 
         /// Returns an iterator to the beginning.

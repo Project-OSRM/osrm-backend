@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -74,7 +74,7 @@ namespace osmium {
             struct call_flush {
                 void operator()(THandlers& handlers) {
                     std::get<N>(handlers).flush();
-                    call_flush<N+1, SIZE, THandlers>()(handlers);
+                    call_flush<N + 1, SIZE, THandlers>()(handlers);
                 }
             }; // struct call_flush
 
@@ -107,7 +107,7 @@ namespace osmium {
                 call_relation<0, sizeof...(THandler), handlers_type>()(m_handlers, relation);
             }
 
-            void changeset( osmium::Changeset& changeset) {
+            void changeset(osmium::Changeset& changeset) {
                 call_changeset<0, sizeof...(THandler), handlers_type>()(m_handlers, changeset);
             }
 
