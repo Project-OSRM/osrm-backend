@@ -59,7 +59,6 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
     using IndexBlock = util::RangeTable<16, true>::BlockT;
-    using InputEdge = QueryGraph::InputEdge;
     using RTreeLeaf = super::RTreeLeaf;
     using SharedRTree =
         util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>;
