@@ -27,7 +27,7 @@ option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 
 if(ENABLE_MASON)
   # versions in use
-  set(MASON_BOOST_VERSION "1.61.0")
+  set(MASON_BOOST_VERSION "1.63.0")
   set(MASON_STXXL_VERSION "1.4.1")
   set(MASON_EXPAT_VERSION "2.2.0")
   set(MASON_LUA_VERSION "5.2.4")
