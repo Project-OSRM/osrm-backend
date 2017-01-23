@@ -36,8 +36,7 @@ template <typename EdgeDataT> struct EdgeArrayEntry
     EdgeDataT data;
 };
 
-template<typename EdgeDataT>
-class InputEdge
+template <typename EdgeDataT> class SortableEdgeWithData
 {
   public:
     NodeIterator source;
@@ -45,11 +44,11 @@ class InputEdge
     EdgeDataT data;
 
     template <typename... Ts>
-    InputEdge(NodeIterator source, NodeIterator target, Ts &&... data)
+    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
         : source(source), target(target), data(std::forward<Ts>(data)...)
     {
     }
-    bool operator<(const InputEdge &right) const
+    bool operator<(const SortableEdgeWithData &right) const
     {
         if (source != right.source)
         {
