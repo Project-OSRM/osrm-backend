@@ -42,7 +42,7 @@ struct TarjanEdgeData
 };
 
 using TarjanGraph = util::StaticGraph<TarjanEdgeData>;
-using TarjanEdge = TarjanGraph::InputEdge;
+using TarjanEdge = util::static_graph_details::SortableEdgeWithData<TarjanEdgeData>;
 
 std::size_t loadGraph(const std::string &path,
                       std::vector<extractor::QueryNode> &coordinate_list,
