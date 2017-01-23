@@ -94,3 +94,6 @@ node_modules
 /server.ini
 
 *.swp
+
+# local lua debugging file
+debug.lua
