@@ -21,7 +21,7 @@ struct TestData
 typedef StaticGraph<TestData> TestStaticGraph;
 typedef TestStaticGraph::NodeArrayEntry TestNodeArrayEntry;
 typedef TestStaticGraph::EdgeArrayEntry TestEdgeArrayEntry;
-typedef TestStaticGraph::InputEdge TestInputEdge;
+typedef static_graph_details::SortableEdgeWithData<TestData> TestInputEdge;
 
 constexpr unsigned TEST_NUM_NODES = 100;
 constexpr unsigned TEST_NUM_EDGES = 500;
