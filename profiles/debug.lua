@@ -43,14 +43,16 @@ mode = {
 
 -- input tags, normally extracted from OSM data
 local way = {
-  highway = 'primary',
-  name = 'Main Street',
+  --highway = 'footway',
+  amenity = 'parking',
+  name = 'Hyper Drive',
+  --foot = 'yes',
+  --oneway = 'yes',
   --access = 'no'
-  ["access:forward"] = 'no'
+  --["access:forward"] = 'no'
   --width = '3',
   --maxspeed = '30',
   --['maxspeed:advisory'] = '25',
-  --oneway = '-1',
   --service = 'alley',
   --['oneway:bicycle'] = 'yes',
   --junction = 'roundabout',
@@ -59,7 +61,6 @@ local way = {
   --duration = '00:01:00',
   --hov = 'designated',
   --hov:lanes:forward"] = 'designated',
-
   --destination = 'Berlin',
   --["destination:ref"] = 'Nuremberg',
   --["destination:ref:forward"] = 'Hamburg;Dresden',
@@ -133,7 +134,7 @@ local result = {
 }
 
 -- the profile we want to debug
-require("car")
+require("foot")
 
 -- call the way function
 way_function(way,result)
@@ -143,8 +144,7 @@ pprint(way)
 print("=>")
 pprint(result)
 print("\n")
-print("Tag fetches:")
-sorted_counts = get_keys_sorted_by_value(way._debug._counts, function(a, b) return a > b end)
-print_sorted(sorted_counts, way._debug._counts)
-
-print(way._debug._total, 'total')
+--print("Tag fetches:")
+--sorted_counts = get_keys_sorted_by_value(way._debug._counts, function(a, b) return a > b end)
+--print_sorted(sorted_counts, way._debug._counts)
+--print(way._debug._total, 'total')
