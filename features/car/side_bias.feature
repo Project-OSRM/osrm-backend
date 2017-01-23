@@ -12,7 +12,7 @@ Feature: Testbot - side bias
         Given the profile file "car" extended with
         """
         properties.left_hand_driving = true
-        turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
+        profile.turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
         """
         Given the node map
             """
@@ -35,7 +35,7 @@ Feature: Testbot - side bias
         Given the profile file "car" extended with
         """
         properties.left_hand_driving = false
-        turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
+        profile.turn_bias = properties.left_hand_driving and 1/1.075 or 1.075
         """
         And the node map
             """

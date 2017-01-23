@@ -20,6 +20,8 @@
       - `properties.uturn_penalty` is deprecated. Set it in the `turn_function`. The turn type is exposed as `ExtractionTurn::direction_modifier`.
       - `properties.traffic_light_penalty` is deprecated. Traffic light penalties now need to be set over in the turn function.
          Each turn with a traffic light is marked with `ExtractionTurn::has_traffic_light = true`.
+      - Renamed the helper file `profiles/lib/directional.lua` to `profiles/lib/tags.lua` since it now provides more general tags parsing utility functions.
+      - The car and foot profiles now depend on the helper file `profiles/lib/handlers.lua`.
     - Infrastructure
       - Disabled link-time optimized (LTO) builds by default. Enable by passing `-DENABLE_LTO=ON` to `cmake` if you need the performance and know what you are doing.
       - Datafile versioning is now based on OSRM semver values, rather than source code checksums.

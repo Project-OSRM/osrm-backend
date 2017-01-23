@@ -1,4 +1,6 @@
-local Directional = {}
+-- Helpers for searching and parsing tags
+
+local Tags = {}
 
 -- return [forward,backward] values for a specific tag.
 -- e.g. for maxspeed search forward:
@@ -8,7 +10,7 @@ local Directional = {}
 --   maxspeed:backward
 --   maxspeed
 
-function Directional.get_values_by_key(way,data,key)
+function Tags.get_forward_backward_by_key(way,data,key)
   local forward = way:get_value_by_key(key .. ':forward')
   local backward = way:get_value_by_key(key .. ':backward')
   
@@ -34,7 +36,7 @@ end
 --   advisory:backward
 --   advisory
 
-function Directional.get_values_by_set(way,data,keys)
+function Tags.get_forward_backward_by_set(way,data,keys)
   local forward, backward
   for i,key in ipairs(keys) do
     if not forward then
@@ -62,7 +64,7 @@ end
 -- oneway:motor_vehicle
 -- oneway:vehicle
 
-function Directional.get_value_by_prefixed_sequence(way,seq,prefix)
+function Tags.get_value_by_prefixed_sequence(way,seq,prefix)
   local v
   for i,key in ipairs(seq) do
     v = way:get_value_by_key(prefix .. ':' .. key)
@@ -78,7 +80,7 @@ end
 -- motor_vehicle:oneway
 -- vehicle:oneway
 
-function Directional.get_value_by_postfixed_sequence(way,seq,postfix)
+function Tags.get_value_by_postfixed_sequence(way,seq,postfix)
   local v
   for i,key in ipairs(seq) do
     v = way:get_value_by_key(key .. ':' .. postfix)
@@ -88,5 +90,35 @@ function Directional.get_value_by_postfixed_sequence(way,seq,postfix)
   end
 end
 
+-- check if key-value pairs are set in a way and return a 
+-- corresponding constant if it is. e.g. for this input:
+--
+-- local speeds = {
+--  highway = {
+--    residential = 20,
+--    primary = 40
+--  },
+--  amenity = {
+--    parking = 10
+--  }
+-- }
+--
+-- we would check whether the following key-value combinations
+-- are set, and return the corresponding constant:
+-- 
+-- highway = residential      => 20
+-- highway = primary          => 40
+-- amenity = parking          => 10
 
-return Directional
+function Tags.get_constant_by_key_value(way,lookup)
+  for key,set in pairs(lookup) do
+    local way_value = way:get_value_by_key(key)
+    for value,t in pairs(set) do
+      if way_value == value then
+        return key,value,t
+      end
+    end
+  end
+end
+
+return Tags
