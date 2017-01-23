@@ -1,11 +1,11 @@
 #ifndef OSRM_PARTITION_RECURSIVE_BISECTION_STATE_HPP_
 #define OSRM_PARTITION_RECURSIVE_BISECTION_STATE_HPP_
 
-#include <vector>
 #include <cstddef>
+#include <vector>
 
-#include "util/typedefs.hpp"
 #include "partition/bisection_graph.hpp"
+#include "util/typedefs.hpp"
 
 namespace osrm
 {
@@ -40,19 +40,32 @@ namespace partition
 // the result would be:
 // 
 // bisection-ids: [00,10,01,10,00,11,01,11,00,10]
+
 class RecursiveBisectionState
 {
   public:
     // the ID in the partition arr
     using BisectionID = std::uint32_t;
+    using IDIterator = std::vector<NodeID>::const_iterator;
 
     RecursiveBisectionState(const BisectionGraph &bisection_graph);
+    ~RecursiveBisectionState();
+
+    BisectionID GetBisectionID(const NodeID nid) const;
+
+    // returns the center of the bisection
+    IDIterator ApplyBisection(const IDIterator begin,
+                              const IDIterator end,
+                              const std::vector<bool> &partition);
+
+    const IDIterator Begin() const;
+    const IDIterator End() const;
+
   private:
     const BisectionGraph &bisection_graph;
 
     std::vector<NodeID> id_array;
     std::vector<BisectionID> bisection_ids;
-
 };
 
 } // namespace partition

@@ -4,6 +4,8 @@
 #include "partition/bisection_graph.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
+#include <cstddef>
+
 namespace osrm
 {
 namespace partition
@@ -12,10 +14,14 @@ namespace partition
 class RecursiveBisection
 {
   public:
-    RecursiveBisection(const BisectionGraph &bisection_graph);
+    RecursiveBisection(std::size_t maximum_cell_size,
+                       double balance,
+                       double boundary_factor,
+                       const BisectionGraph &bisection_graph);
 
   private:
     const BisectionGraph &bisection_graph;
+    RecursiveBisectionState internal_state;
 };
 
 } // namespace partition
