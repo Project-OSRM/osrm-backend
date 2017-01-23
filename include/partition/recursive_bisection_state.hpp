@@ -44,11 +44,12 @@ class RecursiveBisectionState
 {
   public:
     // the ID in the partition arr
-    std::uint32_t BisectionID;
+    using BisectionID = std::uint32_t;
 
-    using GraphType = util::static_graph<BisectionEdge>;
-
+    RecursiveBisectionState(const BisectionGraph &bisection_graph);
   private:
+    const BisectionGraph &bisection_graph;
+
     std::vector<NodeID> id_array;
     std::vector<BisectionID> bisection_ids;
 

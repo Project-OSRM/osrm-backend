@@ -1,5 +1,5 @@
-#ifndef OSRM_PARTITION_GRAPHVIEW_HPP_
-#define OSRM_PARTITION_GRAPHVIEW_HPP_
+#ifndef OSRM_BISECTION_GRAPH_HPP_
+#define OSRM_BISECTION_GRAPH_HPP_
 
 #include "util/coordinate.hpp"
 #include "util/static_graph.hpp"
@@ -19,16 +19,17 @@ struct BisectionNode
 {
     EdgeID first_edge;
     util::Coordinate cordinate;
-}
+};
 
 // The edge is used within a partition
 struct BisectionEdge
 {
     NodeID target;
-    std::int32_t capacity; // will be one, but we have the space...
+    std::int32_t data; // will be one, but we have the space...
 };
 
-using PartitionGraph = util::static_graph<BisectionEdge>;
+// workaround of how static graph assumes edges to be formatted :(
+using BisectionGraph = util::FlexibleStaticGraph<BisectionNode,BisectionEdge>;
 
 template <typename InputEdge>
 std::vector<BisectionEdge> adaptToBisectionEdge(std::vector<InputEdge> edges)
@@ -36,9 +37,12 @@ std::vector<BisectionEdge> adaptToBisectionEdge(std::vector<InputEdge> edges)
     std::vector<BisectionEdge> result;
 
     result.reserve(edges.size());
-    std::transform(edges.begin(), edges.end(), std::back_inserter(result), [](const auto &edge) {
-        return {edge.target, 1};
-    });
+    std::transform(edges.begin(),
+                   edges.end(),
+                   std::back_inserter(result),
+                   [](const auto &edge) -> BisectionEdge {
+                       return {edge.target, 1};
+                   });
 
     return result;
 }
@@ -46,4 +50,4 @@ std::vector<BisectionEdge> adaptToBisectionEdge(std::vector<InputEdge> edges)
 } // namespace partition
 } // namespace osrm
 
-#endif // OSRM_PARTITION_GRAPHVIEW_HPP_
+#endif // OSRM_BISECTION_GRAPH_HPP_
