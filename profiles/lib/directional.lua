@@ -56,4 +56,37 @@ function Directional.get_values_by_set(way,data,keys)
   return forward, backward
 end
 
+-- look through a sequence of keys combined with a prefix
+-- e.g. for the sequence [motorcar,motor_vehicle,vehicle] and the prefix 'oneway' search for:
+-- oneway:motorcar
+-- oneway:motor_vehicle
+-- oneway:vehicle
+
+function Directional.get_value_by_prefixed_sequence(way,seq,prefix)
+  local v
+  for i,key in ipairs(seq) do
+    v = way:get_value_by_key(prefix .. ':' .. key)
+    if v then
+      return v
+    end
+  end
+end
+
+-- look through a sequence of keys combined with a postfix
+-- e.g. for the sequence [motorcar,motor_vehicle,vehicle] and the postfix 'oneway' search for:
+-- motorcar:oneway
+-- motor_vehicle:oneway
+-- vehicle:oneway
+
+function Directional.get_value_by_postfixed_sequence(way,seq,postfix)
+  local v
+  for i,key in ipairs(seq) do
+    v = way:get_value_by_key(key .. ':' .. postfix)
+    if v then
+      return v
+    end
+  end
+end
+
+
 return Directional
