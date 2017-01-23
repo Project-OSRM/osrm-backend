@@ -36,6 +36,29 @@ template <typename EdgeDataT> struct EdgeArrayEntry
     EdgeDataT data;
 };
 
+template<typename EdgeDataT>
+class InputEdge
+{
+  public:
+    NodeIterator source;
+    NodeIterator target;
+    EdgeDataT data;
+
+    template <typename... Ts>
+    InputEdge(NodeIterator source, NodeIterator target, Ts &&... data)
+        : source(source), target(target), data(std::forward<Ts>(data)...)
+    {
+    }
+    bool operator<(const InputEdge &right) const
+    {
+        if (source != right.source)
+        {
+            return source < right.source;
+        }
+        return target < right.target;
+    }
+};
+
 } // namespace static_graph_details
 
 template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class FlexibleStaticGraph
@@ -88,7 +111,7 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
     }
 
     FlexibleStaticGraph(typename ShM<NodeT, UseSharedMemory>::vector &nodes,
-                typename ShM<EdgeT, UseSharedMemory>::vector &edges)
+                        typename ShM<EdgeT, UseSharedMemory>::vector &edges)
     {
         number_of_nodes = static_cast<decltype(number_of_nodes)>(nodes.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(edges.size());
