@@ -209,7 +209,7 @@ template <typename Key, typename Value> struct CSVFilesParser
         boost::spirit::istream_iterator sfirst(input_stream), slast;
         Iterator first(sfirst), last(slast);
 
-        BOOST_ASSERT(file_id <= std::numeric_limits<decltype(Value::source)>::max());
+        BOOST_ASSERT(file_id <= std::numeric_limits<std::uint8_t>::max());
         ValueRule value_source =
             value_rule[qi::_val = qi::_1, boost::phoenix::bind(&Value::source, qi::_val) = file_id];
         qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
