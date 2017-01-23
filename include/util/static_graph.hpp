@@ -18,54 +18,64 @@ namespace osrm
 namespace util
 {
 
-template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
+namespace static_graph_details
+{
+
+using NodeIterator = NodeID;
+using EdgeIterator = NodeID;
+
+struct NodeArrayEntry
+{
+    // index of the first edge
+    EdgeIterator first_edge;
+};
+
+template <typename EdgeDataT> struct EdgeArrayEntry
+{
+    NodeID target;
+    EdgeDataT data;
+};
+
+template <typename EdgeDataT> class SortableEdgeWithData
 {
   public:
-    using NodeIterator = NodeID;
-    using EdgeIterator = NodeID;
-    using EdgeData = EdgeDataT;
+    NodeIterator source;
+    NodeIterator target;
+    EdgeDataT data;
+
+    template <typename... Ts>
+    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
+        : source(source), target(target), data(std::forward<Ts>(data)...)
+    {
+    }
+    bool operator<(const SortableEdgeWithData &right) const
+    {
+        if (source != right.source)
+        {
+            return source < right.source;
+        }
+        return target < right.target;
+    }
+};
+
+} // namespace static_graph_details
+
+template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class FlexibleStaticGraph
+{
+  public:
+    using NodeIterator = static_graph_details::NodeIterator;
+    using EdgeIterator = static_graph_details::EdgeIterator;
+    using EdgeData = decltype(EdgeT::data);
     using EdgeRange = range<EdgeIterator>;
-
-    class InputEdge
-    {
-      public:
-        NodeIterator source;
-        NodeIterator target;
-        EdgeDataT data;
-
-        template <typename... Ts>
-        InputEdge(NodeIterator source, NodeIterator target, Ts &&... data)
-            : source(source), target(target), data(std::forward<Ts>(data)...)
-        {
-        }
-        bool operator<(const InputEdge &right) const
-        {
-            if (source != right.source)
-            {
-                return source < right.source;
-            }
-            return target < right.target;
-        }
-    };
-
-    struct NodeArrayEntry
-    {
-        // index of the first edge
-        EdgeIterator first_edge;
-    };
-
-    struct EdgeArrayEntry
-    {
-        NodeID target;
-        EdgeDataT data;
-    };
+    using NodeArrayEntry = NodeT;
+    using EdgeArrayEntry = EdgeT;
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const
     {
         return irange(BeginEdges(node), EndEdges(node));
     }
 
-    template <typename ContainerT> StaticGraph(const int nodes, const ContainerT &graph)
+    template <typename ContainerT> FlexibleStaticGraph(const int nodes, const ContainerT &graph)
     {
         BOOST_ASSERT(std::is_sorted(const_cast<ContainerT &>(graph).begin(),
                                     const_cast<ContainerT &>(graph).end()));
@@ -99,8 +109,8 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         }
     }
 
-    StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector &nodes,
-                typename ShM<EdgeArrayEntry, UseSharedMemory>::vector &edges)
+    FlexibleStaticGraph(typename ShM<NodeT, UseSharedMemory>::vector &nodes,
+                        typename ShM<EdgeT, UseSharedMemory>::vector &edges)
     {
         number_of_nodes = static_cast<decltype(number_of_nodes)>(nodes.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(edges.size());
@@ -121,9 +131,9 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         return NodeIterator(edge_array[e].target);
     }
 
-    EdgeDataT &GetEdgeData(const EdgeIterator e) { return edge_array[e].data; }
+    auto &GetEdgeData(const EdgeIterator e) { return edge_array[e].data; }
 
-    const EdgeDataT &GetEdgeData(const EdgeIterator e) const { return edge_array[e].data; }
+    const auto &GetEdgeData(const EdgeIterator e) const { return edge_array[e].data; }
 
     EdgeIterator BeginEdges(const NodeIterator n) const
     {
@@ -200,13 +210,21 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         return current_iterator;
     }
 
+    const NodeArrayEntry& GetNode(const NodeID nid) const { return node_array[nid]; }
+    const EdgeArrayEntry& GetEdge(const EdgeID eid) const { return edge_array[eid]; }
+
   private:
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
-    typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array;
-    typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array;
+    typename ShM<NodeT, UseSharedMemory>::vector node_array;
+    typename ShM<EdgeT, UseSharedMemory>::vector edge_array;
 };
+
+template <typename EdgeDataT, bool UseSharedMemory = false>
+using StaticGraph = FlexibleStaticGraph<static_graph_details::NodeArrayEntry,
+                                        static_graph_details::EdgeArrayEntry<EdgeDataT>,
+                                        UseSharedMemory>;
 }
 }
 
