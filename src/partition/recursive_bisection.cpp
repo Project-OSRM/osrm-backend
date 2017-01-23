@@ -19,6 +19,9 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     InertialFlow flow(view);
     const auto partition = flow.ComputePartition(balance, boundary_factor);
     const auto center = internal_state.ApplyBisection(view.Begin(), view.End(), partition);
+    {
+        auto state = internal_state;
+    }
 
     GraphView recursive_view_lhs(bisection_graph, internal_state, view.Begin(), center);
     InertialFlow flow_lhs(recursive_view_lhs);

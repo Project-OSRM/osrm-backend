@@ -13,7 +13,7 @@ std::vector<bool> InertialFlow::ComputePartition(const double balance, const dou
     std::size_t i = 0;
     for( auto itr = partition.begin(); itr != partition.end(); ++itr )
     {
-        *itr = (i++ % 2) == 0;
+        *itr = (i++ % 2) != 0;
     }
     return partition;
 }
