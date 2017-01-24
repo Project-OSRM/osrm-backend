@@ -9,7 +9,7 @@ namespace partition
 HasSamePartitionID::HasSamePartitionID(const RecursiveBisectionState::BisectionID bisection_id_,
                                        const BisectionGraph &bisection_graph_,
                                        const RecursiveBisectionState &recursive_bisection_state_)
-    : bisection_id(bisection_id), bisection_graph(bisection_graph_),
+    : bisection_id(bisection_id_), bisection_graph(bisection_graph_),
       recursive_bisection_state(recursive_bisection_state_)
 {
 }
