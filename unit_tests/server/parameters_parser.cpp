@@ -146,6 +146,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         engine::Hint::FromBase64("3gAAgP___"
                                  "39KAAAAHgAAACEAAAAAAAAAGAAAAE0BAABOAQAAGwAAAIAzcQBkUJsC1zNxAHBQmw"
                                  "IAAAEBl-Umfg==")};
+
     RouteParameters reference_4{false,
                                 false,
                                 false,
@@ -340,16 +341,19 @@ BOOST_AUTO_TEST_CASE(valid_match_urls)
     CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
+    CHECK_CHECK_EQUAL(reference_1.allow_uturn, result_1->allow_uturn);
 
     MatchParameters reference_2{};
     reference_2.coordinates = coords_1;
     reference_2.timestamps = {5, 6};
+    reference_2.allow_uturn = true;
     auto result_2 = parseParameters<MatchParameters>("1,2;3,4?timestamps=5;6");
     BOOST_CHECK(result_2);
     CHECK_EQUAL_RANGE(reference_2.timestamps, result_2->timestamps);
     CHECK_EQUAL_RANGE(reference_2.bearings, result_2->bearings);
     CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
+    CHECK_CHECK_EQUAL(reference_2.allow_uturn, result_2->allow_uturn);
 }
 
 BOOST_AUTO_TEST_CASE(valid_nearest_urls)
