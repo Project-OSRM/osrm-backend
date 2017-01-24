@@ -61,10 +61,10 @@ struct SegmentBlock
     OSMNodeID this_osm_node_id;
     double segment_length;
     EdgeWeight segment_weight;
-    // TODO MKR add duration if needed
+    EdgeWeight segment_duration;
 };
 #pragma pack(pop)
-static_assert(sizeof(SegmentBlock) == 20, "SegmentBlock is not packed correctly");
+static_assert(sizeof(SegmentBlock) == 24, "SegmentBlock is not packed correctly");
 
 #pragma pack(push, 1)
 struct TurnPenaltiesHeader

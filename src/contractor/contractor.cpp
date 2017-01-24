@@ -728,7 +728,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
     };
 
     const auto maybe_load_turn_duration_penalties = [&] {
-        if (!update_turn_penalties)
+        if (!update_edge_weights && !update_turn_penalties)
             return;
         using storage::io::FileReader;
         FileReader file(config.turn_duration_penalties_path, FileReader::HasNoFingerprint);
@@ -737,7 +737,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
     tbb::parallel_invoke(maybe_load_turn_weight_penalties, maybe_load_turn_duration_penalties);
 
-    if (update_turn_penalties && turn_duration_penalties.empty())
+    if ((update_edge_weights || update_turn_penalties) && turn_duration_penalties.empty())
     { // Copy-on-write for duration penalties as turn weight penalties
         turn_duration_penalties = turn_weight_penalties;
     }
@@ -778,11 +778,12 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
             // Find a segment with zero speed and simultaneously compute the new edge weight
             EdgeWeight new_weight = 0;
-            // TODO MKR add new_duration if needed
+            EdgeWeight new_duration = 0;
             auto osm_node_id = header->previous_osm_node_id;
             bool skip_edge =
                 std::find_if(first, last, [&](const auto &segment) {
                     auto segment_weight = segment.segment_weight;
+                    auto segment_duration = segment.segment_duration;
                     if (auto value = segment_speed_lookup({osm_node_id, segment.this_osm_node_id}))
                     {
                         // If we hit a 0-speed edge, then it's effectively not traversible.
@@ -790,19 +791,17 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
                         if (value->speed == 0)
                             return true;
 
-                        // TODO MKR add new_duration = ConvertToDuration(segment.segment_length,
-                        // value->speed) if needed
+                        segment_duration = ConvertToDuration(segment.segment_length, value->speed);
 
-                        segment_weight =
-                            std::isfinite(value->weight)
-                                ? std::round(value->weight * config.weight_multiplier)
-                                : ConvertToDuration(segment.segment_length, value->speed);
+                        segment_weight = std::isfinite(value->weight)
+                                             ? std::round(value->weight * config.weight_multiplier)
+                                             : segment_duration;
                     }
 
                     // Update the edge weight and the next OSM node ID
                     osm_node_id = segment.this_osm_node_id;
                     new_weight += segment_weight;
-                    // TODO MKR new_duration += segment_duration;
+                    new_duration += segment_duration;
                     return false;
                 }) != last;
 
@@ -819,9 +818,10 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
             // Get the turn penalty and update to the new value if required
             const auto &turn_index = turn_index_blocks[edge_index];
             auto turn_weight_penalty = turn_weight_penalties[edge_index];
+            auto turn_duration_penalty = turn_duration_penalties[edge_index];
             if (auto value = turn_penalty_lookup(turn_index))
             {
-                auto turn_duration_penalty =
+                turn_duration_penalty =
                     boost::numeric_cast<TurnPenalty>(std::round(value->duration * 10.));
                 turn_weight_penalty = std::isfinite(value->weight)
                                           ? boost::numeric_cast<TurnPenalty>(std::round(
@@ -849,7 +849,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
             // Update edge weight
             inbuffer.weight = new_weight + turn_weight_penalty;
-            // TODO MKR inbuffer.duration = new_duration + turn_duration_penalty;
+            inbuffer.duration = new_duration + turn_duration_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
