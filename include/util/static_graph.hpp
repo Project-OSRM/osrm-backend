@@ -210,6 +210,9 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
         return current_iterator;
     }
 
+    const NodeArrayEntry& GetNode(const NodeID nid) const { return node_array[nid]; }
+    const EdgeArrayEntry& GetEdge(const EdgeID eid) const { return edge_array[eid]; }
+
   private:
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
