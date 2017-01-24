@@ -157,7 +157,7 @@ Status MatchPlugin::HandleRequest(const api::MatchParameters &parameters,
 
     auto candidates_lists = GetPhantomNodesInRange(parameters, search_radiuses);
 
-    filterCandidates(parameters.coordinates, candidates_lists);
+    filterCandidates(parameters.coordinates, candidates_lists, parameters.allow_uturn);
     if (std::all_of(candidates_lists.begin(),
                     candidates_lists.end(),
                     [](const std::vector<PhantomNodeWithDistance> &candidates) {
