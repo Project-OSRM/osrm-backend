@@ -44,6 +44,7 @@ namespace api
  *
  * Holds member attributes:
  *  - timestamps: timestamp(s) for the corresponding input coordinate(s)
+ *  - allow_uturn: allow uturn in the match calculation
  *
  * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
@@ -61,12 +62,16 @@ struct MatchParameters : public RouteParameters
     }
 
     template <typename... Args>
-    MatchParameters(std::vector<unsigned> timestamps_, Args... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)}
+    MatchParameters(
+        std::vector<unsigned> timestamps_,
+        const boost::optional<bool> allow_uturn_,
+        Args... args_)
+        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_), allow_uturn{allow_uturn_}}
     {
     }
 
     std::vector<unsigned> timestamps;
+    boost::optional<bool> allow_uturn = true;
     bool IsValid() const
     {
         return RouteParameters::IsValid() &&
