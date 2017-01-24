@@ -141,3 +141,22 @@ Feature: Collapse
             | waypoints | route                                          | turns                                             |
             | a,d       | cursed-island,beagle,forker,forker             | depart,notification straight,turn straight,arrive |
             | a,e       | cursed-island,beagle,screw-me-not,screw-me-not | depart,notification straight,turn straight,arrive |
+
+    @uturn @dead-end @ferry @via
+    Scenario: U-Turn on a dead-end ferry
+        Given the node map
+            """
+            a - 1 - b ~ ~ ~ ~ ~ ~ ~ c
+            """
+
+        And the ways
+            | nodes | highway | route | name |
+            | ab    | primary |       | land |
+            | bc    |         | ferry | sea  |
+
+        # we actually cannot check the route here, since two possible routes are equally valid:
+        # (ab)(bcb1) and (abcb)(b1) are exactly the same. Luckily, we only want to check for
+        # not asserting here.
+        When I route I should get
+            | waypoints |
+            | a,b,1     |
