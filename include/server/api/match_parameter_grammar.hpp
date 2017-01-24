@@ -32,6 +32,11 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
             qi::lit("timestamps=") >
             (qi::uint_ %
              ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
+        
+        allow_uturn_rule =
+            qi::lit("allow_uturn=") >
+            (qi::uint_ %
+             ';')[ph::bind(&engine::api::MatchParameters::allow_uturn, qi::_r1) = qi::_1];
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
                     -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
@@ -40,6 +45,7 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
   private:
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> timestamps_rule;
+    qi::rule<Iterator, Signature> allow_uturn_rule;
 };
 }
 }
