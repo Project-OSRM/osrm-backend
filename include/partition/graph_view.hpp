@@ -27,9 +27,13 @@ struct HasSamePartitionID
 };
 
 // a wrapper around the EdgeIDs returned by the static graph to make them iterable
-class EdgeIDIterator
-    : public boost::iterator_facade<EdgeIDIterator, EdgeID const, boost::random_access_traversal_tag>
+class EdgeIDIterator : public boost::iterator_facade<EdgeIDIterator,
+                                                     EdgeID const,
+                                                     boost::random_access_traversal_tag>
 {
+    using Base =
+        boost::iterator_facade<EdgeIDIterator, EdgeID const, boost::random_access_traversal_tag>;
+
   public:
     EdgeIDIterator() : position(SPECIAL_EDGEID) {}
     explicit EdgeIDIterator(EdgeID position_) : position(position_) {}
@@ -37,11 +41,20 @@ class EdgeIDIterator
   private:
     friend class boost::iterator_core_access;
 
-    void increment() { position++; }
-    bool equal(const EdgeIDIterator &other) const { return position == other.position; }
-    const EdgeID &dereference() const { return position; }
+    // Implements the facade's core operations required for random access iterators:
+    // http://www.boost.org/doc/libs/1_63_0/libs/iterator/doc/iterator_facade.html#core-operations
 
-    EdgeID position;
+    void increment() { ++position; }
+    void decrement() { --position; }
+    void advance(difference_type offset) { position += offset; }
+    bool equal(const EdgeIDIterator &other) const { return position == other.position; }
+    const reference dereference() const { return position; }
+    difference_type distance_to(const EdgeIDIterator &other) const
+    {
+        return static_cast<difference_type>(other.position - position);
+    }
+
+    value_type position;
 };
 
 class GraphView
