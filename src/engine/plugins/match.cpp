@@ -26,13 +26,13 @@ namespace plugins
 
 // Filters PhantomNodes to obtain a set of viable candiates
 void filterCandidates(const std::vector<util::Coordinate> &coordinates,
-                      MatchPlugin::CandidateLists &candidates_lists)
+                      MatchPlugin::CandidateLists &candidates_lists, const bool &allow_uturn_parameter)
 {
     for (const auto current_coordinate : util::irange<std::size_t>(0, coordinates.size()))
     {
         bool allow_uturn = false;
 
-        if (coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
+        if (allow_uturn_parameter && coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
         {
             double turn_angle =
                 util::coordinate_calculation::computeAngle(coordinates[current_coordinate - 1],
@@ -44,6 +44,10 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
             {
                 allow_uturn = true;
             }
+        }
+        else
+        {
+          
         }
 
         auto &candidates = candidates_lists[current_coordinate];
