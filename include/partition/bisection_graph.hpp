@@ -53,6 +53,8 @@ std::vector<BisectionNode> computeNodes(const std::vector<util::Coordinate> coor
         [ edge_itr = edges.begin(), node_id = 0u, &edges ](
             const util::Coordinate coordinate) mutable->BisectionNode
     {
+        const auto edges_of_node = edge_itr;
+
         // count all edges with this source
         while (edge_itr != edges.end() && edge_itr->source == node_id)
             ++edge_itr;
@@ -60,7 +62,7 @@ std::vector<BisectionNode> computeNodes(const std::vector<util::Coordinate> coor
         // go to the next node
         ++node_id;
 
-        return {static_cast<std::size_t>(std::distance(edges.begin(), edge_itr)), coordinate};
+        return {static_cast<std::size_t>(std::distance(edges.begin(), edges_of_node)), coordinate};
     };
 
     std::transform(coordinates.begin(),
