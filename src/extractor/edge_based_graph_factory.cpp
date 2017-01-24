@@ -599,8 +599,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             const double segment_length =
                                 util::coordinate_calculation::greatCircleDistance(from, to);
 
-                            lookup::SegmentBlock nodeblock = {
-                                to.node_id, segment_length, target_node.weight};
+                            lookup::SegmentBlock nodeblock{to.node_id,
+                                                           segment_length,
+                                                           target_node.weight,
+                                                           target_node.duration};
 
                             edge_segment_file.write(reinterpret_cast<const char *>(&nodeblock),
                                                     sizeof(nodeblock));

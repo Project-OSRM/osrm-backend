@@ -260,3 +260,49 @@ Feature: Weight tests
             | e,a       | ,,    | 60m +-.1 | 0.211,2.22,0 | 10.1s,200s,0s  |
             | e,d       | ,,    | 40m +-.1 | 2.009,1.11,0 | 189.9s,100s,0s |
             | d,e       | ,,    | 40m +-.1 | 0.211,1.11,0 | 10.1s,100s,0s  |
+
+    Scenario: Step weights -- segment_function with speed and turn updates
+        Given the profile file "testbot" extended with
+        """
+        api_version = 1
+        properties.traffic_signal_penalty = 0
+        properties.u_turn_penalty = 0
+        properties.weight_name = 'steps'
+        function way_function(way, result)
+          result.forward_mode = mode.driving
+          result.backward_mode = mode.driving
+          result.weight = 42
+          result.duration = 3
+        end
+        function segment_function (segment)
+          segment.weight = 10
+          segment.duration = 11
+        end
+        """
+
+        And the node map
+            """
+            a---b---c---d
+                    .
+                    e
+            """
+        And the ways
+            | nodes |
+            | abcd  |
+            | ce    |
+        And the speed file
+            """
+            1,2,36,42
+            2,1,36,42
+            """
+        And the turn penalty file
+            """
+            2,3,5,25.5,16.7
+            """
+        And the contract extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
+
+        When I route I should get
+            | waypoints | route | distance | weights   | times        |
+            | a,d       | ,     | 59.9m    | 62,0      | 24s,0s       |
+            | a,e       | ,,    | 60.1m    | 68.7,10,0 | 38.5s,11s,0s |
+            | d,e       | ,,    | 39.9m    | 10,10,0   | 11s,11s,0s   |
