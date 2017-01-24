@@ -7,11 +7,15 @@
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <cstddef>
+
 namespace osrm
 {
 namespace partition
 {
 
+// Predicate for EdgeIDs checking their partition ids for equality.
+// Used in filter iterator below to discard edges in different partitions.
 struct HasSamePartitionID
 {
     HasSamePartitionID(const RecursiveBisectionState::BisectionID bisection_id,
@@ -26,14 +30,11 @@ struct HasSamePartitionID
     const RecursiveBisectionState &recursive_bisection_state;
 };
 
-// a wrapper around the EdgeIDs returned by the static graph to make them iterable
+// Random Access Iterator on top of contiguous integral EdgeIDs
 class EdgeIDIterator : public boost::iterator_facade<EdgeIDIterator,
                                                      EdgeID const,
                                                      boost::random_access_traversal_tag>
 {
-    using Base =
-        boost::iterator_facade<EdgeIDIterator, EdgeID const, boost::random_access_traversal_tag>;
-
   public:
     EdgeIDIterator() : position(SPECIAL_EDGEID) {}
     explicit EdgeIDIterator(EdgeID position_) : position(position_) {}
@@ -57,6 +58,8 @@ class EdgeIDIterator : public boost::iterator_facade<EdgeIDIterator,
     value_type position;
 };
 
+// Non-owning immutable sub-graph view into a base graph.
+// The part of the graph to select is determined by the recursive bisection state.
 class GraphView
 {
   public:
@@ -67,6 +70,7 @@ class GraphView
               const RecursiveBisectionState::IDIterator begin,
               const RecursiveBisectionState::IDIterator end);
 
+    // Number of nodes _in this sub-graph_.
     std::size_t NumberOfNodes() const;
 
     RecursiveBisectionState::IDIterator Begin() const;
