@@ -4,6 +4,7 @@
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
+#include "util/static_graph_traits.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -62,6 +63,11 @@ template <typename EdgeDataT> class SortableEdgeWithData
 
 template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class FlexibleStaticGraph
 {
+    static_assert(traits::HasFirstEdgeMember<NodeT>(),
+                  "Model for compatible Node type requires .first_edge member attribute");
+    static_assert(traits::HasDataAndTargetMember<EdgeT>(),
+                  "Model for compatible Edge type requires .data and .target member attribute");
+
   public:
     using NodeIterator = static_graph_details::NodeIterator;
     using EdgeIterator = static_graph_details::EdgeIterator;
@@ -210,8 +216,8 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
         return current_iterator;
     }
 
-    const NodeArrayEntry& GetNode(const NodeID nid) const { return node_array[nid]; }
-    const EdgeArrayEntry& GetEdge(const EdgeID eid) const { return edge_array[eid]; }
+    const NodeArrayEntry &GetNode(const NodeID nid) const { return node_array[nid]; }
+    const EdgeArrayEntry &GetEdge(const EdgeID eid) const { return edge_array[eid]; }
 
   private:
     NodeIterator number_of_nodes;
