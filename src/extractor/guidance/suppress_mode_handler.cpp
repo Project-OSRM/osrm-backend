@@ -52,7 +52,7 @@ bool SuppressModeHandler::canProcess(const NodeID,
 Intersection SuppressModeHandler::
 operator()(const NodeID, const EdgeID, Intersection intersection) const
 {
-    const auto first = begin(intersection) + 1;
+    const auto first = begin(intersection);
     const auto last = end(intersection);
 
     std::for_each(first, last, [&](auto &road) {
