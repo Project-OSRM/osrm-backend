@@ -4,8 +4,15 @@
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
+#include <boost/algorithm/string/replace.hpp>
+
+#include <algorithm>
+#include <cctype>
+#include <iterator>
 #include <limits>
 #include <string>
+
+#include "extractor/guidance/parsing_toolkit.hpp"
 
 namespace osrm
 {
@@ -98,7 +105,36 @@ inline unsigned parseDuration(const std::string &s)
 
     return !s.empty() && iter == s.end() ? duration : std::numeric_limits<unsigned>::max();
 }
+
+inline std::string
+trimLaneString(std::string lane_string, std::int32_t count_left, std::int32_t count_right)
+{
+    return guidance::trimLaneString(std::move(lane_string), count_left, count_right);
 }
+
+inline std::string applyAccessTokens(const std::string &lane_string,
+                                     const std::string &access_tokens)
+{
+    return guidance::applyAccessTokens(lane_string, access_tokens);
 }
+
+// Takes a string representing a list separated by delim and canonicalizes containing spaces.
+// Example: "aaa;bbb; ccc;  d;dd" => "aaa; bbb; ccc; d; dd"
+inline std::string canonicalizeStringList(std::string strlist, const std::string &delim)
+{
+    // expand space after delimiter: ";X" => "; X"
+    boost::replace_all(strlist, delim, delim + " ");
+
+    // collapse spaces; this is needed in case we expand "; X" => ";  X" above
+    // but also makes sense to do irregardless of the fact - canonicalizing strings.
+    const auto spaces = [](auto lhs, auto rhs) { return ::isspace(lhs) && ::isspace(rhs); };
+    auto it = std::unique(begin(strlist), end(strlist), spaces);
+    strlist.erase(it, end(strlist));
+
+    return strlist;
+}
+
+} // extractor
+} // osrm
 
 #endif // EXTRACTION_HELPER_FUNCTIONS_HPP

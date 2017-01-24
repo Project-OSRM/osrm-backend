@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -36,10 +36,15 @@ DEALINGS IN THE SOFTWARE.
 #include <memory>
 #include <utility>
 
-#include <osmium/fwd.hpp>
 #include <osmium/handler.hpp>
 
 namespace osmium {
+
+    class Node;
+    class Way;
+    class Relation;
+    class Area;
+    class Changeset;
 
     namespace handler {
 
@@ -99,7 +104,8 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
             }
 
             template <typename THandler>
-            void flush_dispatch(THandler&, long) {}
+            void flush_dispatch(THandler&, long) {
+            }
 
             template <typename THandler>
             class HandlerWrapper : public HandlerWrapperBase {
@@ -143,7 +149,7 @@ auto _name_##_dispatch(THandler& handler, const osmium::_type_& object, long) ->
 
         class DynamicHandler : public osmium::handler::Handler {
 
-            typedef std::unique_ptr<osmium::handler::detail::HandlerWrapperBase> impl_ptr;
+            using impl_ptr = std::unique_ptr<osmium::handler::detail::HandlerWrapperBase>;
             impl_ptr m_impl;
 
         public:

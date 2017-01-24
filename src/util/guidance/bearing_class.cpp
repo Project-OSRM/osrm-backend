@@ -1,6 +1,5 @@
 #include "util/guidance/bearing_class.hpp"
-#include "extractor/guidance/discrete_angle.hpp"
-#include "util/guidance/toolkit.hpp"
+#include "util/bearing.hpp"
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -11,6 +10,8 @@ namespace util
 {
 namespace guidance
 {
+
+BearingClass::BearingClass() { available_bearings.reserve(10); }
 
 bool BearingClass::operator==(const BearingClass &other) const
 {
@@ -55,7 +56,7 @@ DiscreteBearing BearingClass::getDiscreteBearing(const double bearing)
 {
     BOOST_ASSERT(0. <= bearing && bearing <= 360.);
     auto shifted_bearing = (bearing + 0.5 * discrete_step_size);
-    if (shifted_bearing > 360.)
+    if (shifted_bearing >= 360.)
         shifted_bearing -= 360;
     return static_cast<DiscreteBearing>(shifted_bearing / discrete_step_size);
 }

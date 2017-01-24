@@ -3,6 +3,8 @@
 
 #include "util/coordinate.hpp"
 
+#include <algorithm>
+#include <boost/assert.hpp>
 #include <string>
 #include <vector>
 
@@ -12,15 +14,46 @@ namespace engine
 {
 namespace detail
 {
-constexpr double POLYLINE_PRECISION = 1e5;
-constexpr double COORDINATE_TO_POLYLINE = POLYLINE_PRECISION / COORDINATE_PRECISION;
-constexpr double POLYLINE_TO_COORDINATE = COORDINATE_PRECISION / POLYLINE_PRECISION;
-}
+constexpr double POLYLINE_DECODING_PRECISION = 1e5;
+constexpr double POLYLINE_TO_COORDINATE = COORDINATE_PRECISION / POLYLINE_DECODING_PRECISION;
 
+std::string encode(std::vector<int> &numbers);
+}
 using CoordVectorForwardIter = std::vector<util::Coordinate>::const_iterator;
 // Encodes geometry into polyline format.
 // See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
-std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter end);
+
+template <unsigned POLYLINE_PRECISION = 100000>
+std::string encodePolyline(CoordVectorForwardIter begin, CoordVectorForwardIter end)
+{
+    double coordinate_to_polyline = POLYLINE_PRECISION / COORDINATE_PRECISION;
+    auto size = std::distance(begin, end);
+    if (size == 0)
+    {
+        return {};
+    }
+
+    std::vector<int> delta_numbers;
+    BOOST_ASSERT(size > 0);
+    delta_numbers.reserve((size - 1) * 2);
+    int current_lat = 0;
+    int current_lon = 0;
+    std::for_each(
+        begin,
+        end,
+        [&delta_numbers, &current_lat, &current_lon, coordinate_to_polyline](
+            const util::Coordinate loc) {
+            const int lat_diff =
+                std::round(static_cast<int>(loc.lat) * coordinate_to_polyline) - current_lat;
+            const int lon_diff =
+                std::round(static_cast<int>(loc.lon) * coordinate_to_polyline) - current_lon;
+            delta_numbers.emplace_back(lat_diff);
+            delta_numbers.emplace_back(lon_diff);
+            current_lat += lat_diff;
+            current_lon += lon_diff;
+        });
+    return detail::encode(delta_numbers);
+}
 
 // Decodes geometry from polyline format
 // See: https://developers.google.com/maps/documentation/utilities/polylinealgorithm

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <new>
@@ -46,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/memory/item.hpp>
 #include <osmium/osm/types.hpp>
 #include <osmium/util/cast.hpp>
+#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
@@ -54,6 +54,10 @@ namespace osmium {
      */
     namespace builder {
 
+        /**
+         * Parent class for individual builder classes. Instantiate one of
+         * its derived classes.
+         */
         class Builder {
 
             osmium::memory::Buffer& m_buffer;
@@ -72,20 +76,34 @@ namespace osmium {
                 m_buffer(buffer),
                 m_parent(parent),
                 m_item_offset(buffer.written()) {
-                m_buffer.reserve_space(size);
+                reserve_space(size);
                 assert(buffer.is_aligned());
                 if (m_parent) {
+                    assert(m_buffer.builder_count() == 1 && "Only one sub-builder can be open at any time.");
                     m_parent->add_size(size);
+                } else {
+                    assert(m_buffer.builder_count() == 0 && "Only one builder can be open at any time.");
                 }
+#ifndef NDEBUG
+                m_buffer.increment_builder_count();
+#endif
             }
 
+#ifdef NDEBUG
             ~Builder() = default;
+#else
+            ~Builder() noexcept {
+                m_buffer.decrement_builder_count();
+            }
+#endif
 
             osmium::memory::Item& item() const {
                 return *reinterpret_cast<osmium::memory::Item*>(m_buffer.data() + m_item_offset);
             }
 
-        public:
+            unsigned char* reserve_space(size_t size) {
+                return m_buffer.reserve_space(size);
+            }
 
             /**
              * Add padding to buffer (if needed) to align data properly.
@@ -101,9 +119,9 @@ namespace osmium {
              *
              */
             void add_padding(bool self = false) {
-                auto padding = osmium::memory::align_bytes - (size() % osmium::memory::align_bytes);
+                const auto padding = osmium::memory::align_bytes - (size() % osmium::memory::align_bytes);
                 if (padding != osmium::memory::align_bytes) {
-                    std::fill_n(m_buffer.reserve_space(padding), padding, 0);
+                    std::fill_n(reserve_space(padding), padding, 0);
                     if (self) {
                         add_size(padding);
                     } else if (m_parent) {
@@ -124,12 +142,6 @@ namespace osmium {
                 return item().byte_size();
             }
 
-            void add_item(const osmium::memory::Item* item) {
-                unsigned char* target = m_buffer.reserve_space(item->padded_size());
-                std::copy_n(reinterpret_cast<const unsigned char*>(item), item->padded_size(), target);
-                add_size(item->padded_size());
-            }
-
             /**
              * Reserve space for an object of class T in buffer and return
              * pointer to it.
@@ -137,7 +149,7 @@ namespace osmium {
             template <typename T>
             T* reserve_space_for() {
                 assert(m_buffer.is_aligned());
-                return reinterpret_cast<T*>(m_buffer.reserve_space(sizeof(T)));
+                return reinterpret_cast<T*>(reserve_space(sizeof(T)));
             }
 
             /**
@@ -150,7 +162,7 @@ namespace osmium {
              * @returns The number of bytes appended (length).
              */
             osmium::memory::item_size_type append(const char* data, const osmium::memory::item_size_type length) {
-                unsigned char* target = m_buffer.reserve_space(length);
+                unsigned char* target = reserve_space(length);
                 std::copy_n(reinterpret_cast<const unsigned char*>(data), length, target);
                 return length;
             }
@@ -171,64 +183,36 @@ namespace osmium {
              * @returns The number of bytes appended (always 1).
              */
             osmium::memory::item_size_type append_zero() {
-                *m_buffer.reserve_space(1) = '\0';
+                *reserve_space(1) = '\0';
                 return 1;
             }
+
+        public:
 
             /// Return the buffer this builder is using.
             osmium::memory::Buffer& buffer() noexcept {
                 return m_buffer;
             }
 
+            /**
+             * Add a subitem to the object being built. This can be something
+             * like a TagList or RelationMemberList.
+             */
+            void add_item(const osmium::memory::Item& item) {
+                m_buffer.add_item(item);
+                add_size(item.padded_size());
+            }
+
+            /**
+             * @deprecated Use the version of add_item() taking a
+             *             reference instead.
+             */
+            OSMIUM_DEPRECATED void add_item(const osmium::memory::Item* item) {
+                assert(item);
+                add_item(*item);
+            }
+
         }; // class Builder
-
-        template <typename TItem>
-        class ObjectBuilder : public Builder {
-
-            static_assert(std::is_base_of<osmium::memory::Item, TItem>::value, "ObjectBuilder can only build objects derived from osmium::memory::Item");
-
-        public:
-
-            explicit ObjectBuilder(osmium::memory::Buffer& buffer, Builder* parent = nullptr) :
-                Builder(buffer, parent, sizeof(TItem)) {
-                new (&item()) TItem();
-            }
-
-            TItem& object() noexcept {
-                return static_cast<TItem&>(item());
-            }
-
-            /**
-             * Add user name to buffer.
-             *
-             * @param user Pointer to user name.
-             * @param length Length of user name (without \0 termination).
-             */
-            void add_user(const char* user, const string_size_type length) {
-                object().set_user_size(length + 1);
-                add_size(append(user, length) + append_zero());
-                add_padding(true);
-            }
-
-            /**
-             * Add user name to buffer.
-             *
-             * @param user Pointer to \0-terminated user name.
-             */
-            void add_user(const char* user) {
-                add_user(user, static_cast_with_assert<string_size_type>(std::strlen(user)));
-            }
-
-            /**
-             * Add user name to buffer.
-             *
-             * @param user User name.
-             */
-            void add_user(const std::string& user) {
-                add_user(user.data(), static_cast_with_assert<string_size_type>(user.size()));
-            }
-
-        }; // class ObjectBuilder
 
     } // namespace builder
 

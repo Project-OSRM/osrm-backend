@@ -2,7 +2,8 @@ var util = require('util');
 
 module.exports = function () {
     this.When(/^I request nearest I should get$/, (table, callback) => {
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             var testRow = (row, ri, cb) => {
                 var inNode = this.findNodeByName(row.in);
                 if (!inNode) throw new Error(util.format('*** unknown in-node "%s"'), row.in);
@@ -21,23 +22,15 @@ module.exports = function () {
 
                         var got = { in: row.in, out: row.out };
 
-                        var ok = true;
-
                         Object.keys(row).forEach((key) => {
                             if (key === 'out') {
                                 if (this.FuzzyMatch.matchLocation(coord, outNode)) {
                                     got[key] = row[key];
                                 } else {
                                     row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
-                                    ok = false;
                                 }
                             }
                         });
-
-                        if (!ok) {
-                            var failed = { attempt: 'nearest', query: this.query, response: response };
-                            this.logFail(row, got, [failed]);
-                        }
 
                         cb(null, got);
                     }

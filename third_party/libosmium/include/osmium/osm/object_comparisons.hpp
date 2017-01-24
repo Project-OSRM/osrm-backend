@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,18 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
+#include <tuple>
+
 #include <osmium/osm/object.hpp>
+#include <osmium/osm/timestamp.hpp>
+#include <osmium/util/misc.hpp>
 
 namespace osmium {
 
     /**
-     * Function object class for comparing OSM objects for equality by type, id, and version.
+     * Function object class for comparing OSM objects for equality by type,
+     * id, and version.
      */
     struct object_equal_type_id_version {
 
@@ -46,15 +52,17 @@ namespace osmium {
             return lhs == rhs;
         }
 
+        /// @pre lhs and rhs must not be nullptr
         bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+            assert(lhs && rhs);
             return *lhs == *rhs;
         }
 
     }; // struct object_equal_type_id_version
 
     /**
-     * Function object class for comparing OSM objects for equality by type and id,
-     * ignoring the version.
+     * Function object class for comparing OSM objects for equality by type
+     * and id, ignoring the version.
      */
     struct object_equal_type_id {
 
@@ -63,14 +71,17 @@ namespace osmium {
                    lhs.id() == rhs.id();
         }
 
+        /// @pre lhs and rhs must not be nullptr
         bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+            assert(lhs && rhs);
             return operator()(*lhs, *rhs);
         }
 
     }; // struct object_equal_type_id
 
     /**
-     * Function object class for ordering OSM objects by type, id, and version.
+     * Function object class for ordering OSM objects by type, id, version,
+     * and timestamp.
      */
     struct object_order_type_id_version {
 
@@ -78,28 +89,31 @@ namespace osmium {
             return lhs < rhs;
         }
 
+        /// @pre lhs and rhs must not be nullptr
         bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+            assert(lhs && rhs);
             return *lhs < *rhs;
         }
 
     }; // struct object_order_type_id_version
 
     /**
-     * Function object class for ordering OSM objects by type, id, and reverse version,
-     * ie objects are ordered by type and id, but later versions of an object are
-     * ordered before earlier versions of the same object.
+     * Function object class for ordering OSM objects by type, id, and
+     * reverse version, timestamp. So objects are ordered by type and id, but
+     * later versions of an object are ordered before earlier versions of the
+     * same object. This is useful when the last version of an object needs
+     * to be used.
      */
     struct object_order_type_id_reverse_version {
 
         bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
-            if (lhs.type() != rhs.type()) {
-                return lhs.type() < rhs.type();
-            }
-            return (lhs.id() == rhs.id() && lhs.version() > rhs.version()) ||
-                   lhs.positive_id() < rhs.positive_id();
+            return const_tie(lhs.type(), lhs.id() < 0, lhs.positive_id(), rhs.version(), rhs.timestamp()) <
+                   const_tie(rhs.type(), rhs.id() < 0, rhs.positive_id(), lhs.version(), lhs.timestamp());
         }
 
+        /// @pre lhs and rhs must not be nullptr
         bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+            assert(lhs && rhs);
             return operator()(*lhs, *rhs);
         }
 

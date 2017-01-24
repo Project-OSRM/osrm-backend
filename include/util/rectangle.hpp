@@ -23,10 +23,10 @@ namespace util
 struct RectangleInt2D
 {
     RectangleInt2D()
-        : min_lon(std::numeric_limits<std::int32_t>::max()),
-          max_lon(std::numeric_limits<std::int32_t>::min()),
-          min_lat(std::numeric_limits<std::int32_t>::max()),
-          max_lat(std::numeric_limits<std::int32_t>::min())
+        : min_lon{std::numeric_limits<std::int32_t>::max()},
+          max_lon{std::numeric_limits<std::int32_t>::min()},
+          min_lat{std::numeric_limits<std::int32_t>::max()},
+          max_lat{std::numeric_limits<std::int32_t>::min()}
     {
     }
 
@@ -56,10 +56,10 @@ struct RectangleInt2D
         max_lon = std::max(max_lon, other.max_lon);
         min_lat = std::min(min_lat, other.min_lat);
         max_lat = std::max(max_lat, other.max_lat);
-        BOOST_ASSERT(min_lon != FixedLongitude(std::numeric_limits<std::int32_t>::min()));
-        BOOST_ASSERT(min_lat != FixedLatitude(std::numeric_limits<std::int32_t>::min()));
-        BOOST_ASSERT(max_lon != FixedLongitude(std::numeric_limits<std::int32_t>::min()));
-        BOOST_ASSERT(max_lat != FixedLatitude(std::numeric_limits<std::int32_t>::min()));
+        BOOST_ASSERT(min_lon != FixedLongitude{std::numeric_limits<std::int32_t>::min()});
+        BOOST_ASSERT(min_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()});
+        BOOST_ASSERT(max_lon != FixedLongitude{std::numeric_limits<std::int32_t>::min()});
+        BOOST_ASSERT(max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()});
     }
 
     Coordinate Centroid() const
@@ -67,8 +67,8 @@ struct RectangleInt2D
         Coordinate centroid;
         // The coordinates of the midpoints are given by:
         // x = (x1 + x2) /2 and y = (y1 + y2) /2.
-        centroid.lon = (min_lon + max_lon) / FixedLongitude(2);
-        centroid.lat = (min_lat + max_lat) / FixedLatitude(2);
+        centroid.lon = (min_lon + max_lon) / FixedLongitude{2};
+        centroid.lat = (min_lat + max_lat) / FixedLatitude{2};
         return centroid;
     }
 
@@ -169,10 +169,10 @@ struct RectangleInt2D
 
     bool IsValid() const
     {
-        return min_lon != FixedLongitude(std::numeric_limits<std::int32_t>::max()) &&
-               max_lon != FixedLongitude(std::numeric_limits<std::int32_t>::min()) &&
-               min_lat != FixedLatitude(std::numeric_limits<std::int32_t>::max()) &&
-               max_lat != FixedLatitude(std::numeric_limits<std::int32_t>::min());
+        return min_lon != FixedLongitude{std::numeric_limits<std::int32_t>::max()} &&
+               max_lon != FixedLongitude{std::numeric_limits<std::int32_t>::min()} &&
+               min_lat != FixedLatitude{std::numeric_limits<std::int32_t>::max()} &&
+               max_lat != FixedLatitude{std::numeric_limits<std::int32_t>::min()};
     }
 
     friend std::ostream &operator<<(std::ostream &out, const RectangleInt2D &rect);

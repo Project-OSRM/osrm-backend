@@ -5,6 +5,8 @@
 
 #include "util/typedefs.hpp"
 
+#include <cstdint>
+
 namespace osrm
 {
 namespace extractor
@@ -26,13 +28,13 @@ struct ExternalMemoryNode : QueryNode
     static ExternalMemoryNode min_value()
     {
         return ExternalMemoryNode(
-            util::FixedLongitude(0), util::FixedLatitude(0), MIN_OSM_NODEID, false, false);
+            util::FixedLongitude{0}, util::FixedLatitude{0}, MIN_OSM_NODEID, false, false);
     }
 
     static ExternalMemoryNode max_value()
     {
-        return ExternalMemoryNode(util::FixedLongitude(std::numeric_limits<int>::max()),
-                                  util::FixedLatitude(std::numeric_limits<int>::max()),
+        return ExternalMemoryNode(util::FixedLongitude{std::numeric_limits<std::int32_t>::max()},
+                                  util::FixedLatitude{std::numeric_limits<std::int32_t>::max()},
                                   MAX_OSM_NODEID,
                                   false,
                                   false);

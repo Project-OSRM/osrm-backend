@@ -73,6 +73,7 @@ struct ContractorConfig
     bool use_cached_priority;
 
     unsigned requested_num_threads;
+    double log_edge_updates_factor;
 
     // A percentage of vertices that will be contracted for the hierarchy.
     // Offers a trade-off between preprocessing and query time.

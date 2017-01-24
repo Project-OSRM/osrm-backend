@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,9 +42,9 @@ namespace osmium {
     namespace detail {
 
         template <typename TSubitem, typename TIter>
-        inline TSubitem& subitem_of_type(TIter it, TIter end) {
+        inline TSubitem& subitem_of_type(TIter it, const TIter& end) {
             for (; it != end; ++it) {
-                if (it->type() == TSubitem::itemtype) {
+                if (TSubitem::is_compatible_to(it->type())) {
                     return reinterpret_cast<TSubitem&>(*it);
                 }
             }
@@ -64,6 +64,14 @@ namespace osmium {
     class OSMEntity : public osmium::memory::Item {
 
     public:
+
+        constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            return t == osmium::item_type::node ||
+                   t == osmium::item_type::way ||
+                   t == osmium::item_type::relation ||
+                   t == osmium::item_type::area ||
+                   t == osmium::item_type::changeset;
+        }
 
         explicit OSMEntity(osmium::memory::item_size_type size, osmium::item_type type) :
             Item(size, type) {

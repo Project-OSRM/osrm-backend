@@ -40,11 +40,17 @@ util::json::Array coordinateToLonLat(const util::Coordinate coordinate);
 
 std::string modeToString(const extractor::TravelMode mode);
 
+/**
+ * Ensures that a bearing value is a whole number, and clamped to the range 0-359
+ */
+inline double roundAndClampBearing(double bearing) { return std::fmod(std::round(bearing), 360); }
+
 } // namespace detail
 
-template <typename ForwardIter> util::json::String makePolyline(ForwardIter begin, ForwardIter end)
+template <unsigned POLYLINE_PRECISION, typename ForwardIter>
+util::json::String makePolyline(ForwardIter begin, ForwardIter end)
 {
-    return {encodePolyline(begin, end)};
+    return {encodePolyline<POLYLINE_PRECISION>(begin, end)};
 }
 
 template <typename ForwardIter>
@@ -53,33 +59,40 @@ util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)
     auto num_coordinates = std::distance(begin, end);
     BOOST_ASSERT(num_coordinates != 0);
     util::json::Object geojson;
+    geojson.values["type"] = "LineString";
+    util::json::Array coordinates;
     if (num_coordinates > 1)
     {
-        geojson.values["type"] = "LineString";
-        util::json::Array coordinates;
-        std::transform(
-            begin, end, std::back_inserter(coordinates.values), &detail::coordinateToLonLat);
-        geojson.values["coordinates"] = std::move(coordinates);
+        coordinates.values.reserve(num_coordinates);
+        auto into = std::back_inserter(coordinates.values);
+        std::transform(begin, end, into, &detail::coordinateToLonLat);
     }
     else if (num_coordinates > 0)
     {
-        geojson.values["type"] = "Point";
-        util::json::Array coordinates;
-        coordinates.values.push_back(detail::coordinateToLonLat(*begin));
-        geojson.values["coordinates"] = std::move(coordinates);
+        // For a single location we create a [location, location] LineString
+        // instead of a single Point making the GeoJSON output consistent.
+        coordinates.values.reserve(2);
+        auto location = detail::coordinateToLonLat(*begin);
+        coordinates.values.push_back(location);
+        coordinates.values.push_back(location);
     }
+    geojson.values["coordinates"] = std::move(coordinates);
+
     return geojson;
 }
 
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver);
 
-util::json::Object makeRouteStep(guidance::RouteStep step,
-                                 boost::optional<util::json::Value> geometry);
+util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geometry);
 
 util::json::Object makeRoute(const guidance::Route &route,
                              util::json::Array legs,
                              boost::optional<util::json::Value> geometry);
 
+// Creates a Waypoint without Hint, see the Hint overload below
+util::json::Object makeWaypoint(const util::Coordinate location, std::string name);
+
+// Creates a Waypoint with Hint, see the overload above when Hint is not needed
 util::json::Object
 makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint);
 

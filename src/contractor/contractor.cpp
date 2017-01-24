@@ -1,15 +1,19 @@
 #include "contractor/contractor.hpp"
 #include "contractor/crc32_processor.hpp"
 #include "contractor/graph_contractor.hpp"
+#include "contractor/graph_contractor_adaptors.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/node_based_edge.hpp"
 
+#include "storage/io.hpp"
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/io.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/string_util.hpp"
@@ -19,9 +23,13 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/fusion/adapted/std_pair.hpp>
+#include <boost/fusion/include/adapt_adt.hpp>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/support_line_pos_iterator.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_unordered_map.h>
@@ -42,41 +50,239 @@
 #include <tuple>
 #include <vector>
 
-namespace std
+namespace
 {
-
-template <> struct hash<std::pair<OSMNodeID, OSMNodeID>>
+struct Segment final
 {
-    std::size_t operator()(const std::pair<OSMNodeID, OSMNodeID> &k) const noexcept
+    std::uint64_t from, to;
+    Segment() : from(0), to(0) {}
+    Segment(const std::uint64_t from, const std::uint64_t to) : from(from), to(to) {}
+    Segment(const OSMNodeID from, const OSMNodeID to)
+        : from(static_cast<std::uint64_t>(from)), to(static_cast<std::uint64_t>(to))
     {
-        return static_cast<uint64_t>(k.first) ^ (static_cast<uint64_t>(k.second) << 12);
+    }
+
+    bool operator<(const Segment &rhs) const
+    {
+        return std::tie(from, to) < std::tie(rhs.from, rhs.to);
+    }
+    bool operator==(const Segment &rhs) const
+    {
+        return std::tie(from, to) == std::tie(rhs.from, rhs.to);
     }
 };
 
-template <> struct hash<std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>>
+struct SpeedSource final
 {
-    std::size_t operator()(const std::tuple<OSMNodeID, OSMNodeID, OSMNodeID> &k) const noexcept
+    unsigned speed;
+    std::uint8_t source;
+};
+
+struct Turn final
+{
+    std::uint64_t from, via, to;
+    Turn() : from(0), via(0), to(0) {}
+    Turn(const std::uint64_t from, const std::uint64_t via, const std::uint64_t to)
+        : from(from), via(via), to(to)
     {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, static_cast<uint64_t>(std::get<0>(k)));
-        boost::hash_combine(seed, static_cast<uint64_t>(std::get<1>(k)));
-        boost::hash_combine(seed, static_cast<uint64_t>(std::get<2>(k)));
-        return seed;
+    }
+    Turn(const osrm::extractor::lookup::PenaltyBlock &turn)
+        : from(static_cast<std::uint64_t>(turn.from_id)),
+          via(static_cast<std::uint64_t>(turn.via_id)), to(static_cast<std::uint64_t>(turn.to_id))
+    {
+    }
+    bool operator<(const Turn &rhs) const
+    {
+        return std::tie(from, via, to) < std::tie(rhs.from, rhs.via, rhs.to);
+    }
+    bool operator==(const Turn &rhs) const
+    {
+        return std::tie(from, via, to) == std::tie(rhs.from, rhs.via, rhs.to);
     }
 };
+
+struct PenaltySource final
+{
+    double penalty;
+    std::uint8_t source;
+};
+
+template <typename T> inline bool is_aligned(const void *pointer)
+{
+    static_assert(sizeof(T) % alignof(T) == 0, "pointer can not be used as an array pointer");
+    return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
 }
+} // anon ns
+
+BOOST_FUSION_ADAPT_STRUCT(Segment, (decltype(Segment::from), from)(decltype(Segment::to), to))
+BOOST_FUSION_ADAPT_STRUCT(SpeedSource, (decltype(SpeedSource::speed), speed))
+BOOST_FUSION_ADAPT_STRUCT(Turn,
+                          (decltype(Turn::from), from)(decltype(Turn::via), via)(decltype(Turn::to),
+                                                                                 to))
+BOOST_FUSION_ADAPT_STRUCT(PenaltySource, (decltype(PenaltySource::penalty), penalty))
 
 namespace osrm
 {
 namespace contractor
 {
+namespace
+{
+namespace qi = boost::spirit::qi;
+}
+
+// Functor to parse a list of CSV files using "key,value,comment" grammar.
+// Key and Value structures must be a model of Random Access Sequence.
+// Also the Value structure must have source member that will be filled
+// with the corresponding file index in the CSV filenames vector.
+template <typename Key, typename Value> struct CSVFilesParser
+{
+    using Iterator = boost::spirit::line_pos_iterator<boost::spirit::istream_iterator>;
+    using KeyRule = qi::rule<Iterator, Key()>;
+    using ValueRule = qi::rule<Iterator, Value()>;
+
+    CSVFilesParser(std::size_t start_index, const KeyRule &key_rule, const ValueRule &value_rule)
+        : start_index(start_index), key_rule(key_rule), value_rule(value_rule)
+    {
+    }
+
+    // Operator returns a lambda function that maps input Key to boost::optional<Value>.
+    auto operator()(const std::vector<std::string> &csv_filenames) const
+    {
+        try
+        {
+            tbb::spin_mutex mutex;
+            std::vector<std::pair<Key, Value>> lookup;
+            tbb::parallel_for(std::size_t{0},
+                              csv_filenames.size(),
+                              [&](const std::size_t idx) {
+                                  auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
+
+                                  { // Merge local CSV results into a flat global vector
+                                      tbb::spin_mutex::scoped_lock _{mutex};
+                                      lookup.insert(end(lookup),
+                                                    std::make_move_iterator(begin(local)),
+                                                    std::make_move_iterator(end(local)));
+                                  }
+                              });
+
+            // With flattened map-ish view of all the files, make a stable sort on key and source
+            // and unique them on key to keep only the value with the largest file index
+            // and the largest line number in a file.
+            // The operands order is swapped to make descending ordering on (key, source)
+            std::stable_sort(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
+                return rhs.first < lhs.first ||
+                       (rhs.first == lhs.first && rhs.second.source < lhs.second.source);
+            });
+
+            // Unique only on key to take the source precedence into account and remove duplicates.
+            const auto it =
+                std::unique(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
+                    return lhs.first == rhs.first;
+                });
+            lookup.erase(it, end(lookup));
+
+            osrm::util::Log() << "In total loaded " << csv_filenames.size()
+                              << " file(s) with a total of " << lookup.size() << " unique values";
+
+            return [lookup](const Key &key) {
+                using Result = boost::optional<Value>;
+                const auto it = std::lower_bound(
+                    lookup.begin(), lookup.end(), key, [](const auto &lhs, const auto &rhs) {
+                        return rhs < lhs.first;
+                    });
+                return it != std::end(lookup) && !(it->first < key) ? Result(it->second) : Result();
+            };
+        }
+        catch (const tbb::captured_exception &e)
+        {
+            throw osrm::util::exception(e.what() + SOURCE_REF);
+        }
+    }
+
+  private:
+    // Parse a single CSV file and return result as a vector<Key, Value>
+    auto ParseCSVFile(const std::string &filename, std::size_t file_id) const
+    {
+        std::ifstream input_stream(filename, std::ios::binary);
+        input_stream.unsetf(std::ios::skipws);
+
+        boost::spirit::istream_iterator sfirst(input_stream), slast;
+        Iterator first(sfirst), last(slast);
+
+        BOOST_ASSERT(file_id <= std::numeric_limits<std::uint8_t>::max());
+        ValueRule value_source =
+            value_rule[qi::_val = qi::_1, boost::phoenix::bind(&Value::source, qi::_val) = file_id];
+        qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
+            (key_rule >> ',' >> value_source) >> -(',' >> *(qi::char_ - qi::eol));
+        std::vector<std::pair<Key, Value>> result;
+        const auto ok = qi::parse(first, last, (csv_line % qi::eol) >> *qi::eol, result);
+
+        if (!ok || first != last)
+        {
+            const auto message =
+                boost::format("CSV file %1% malformed on line %2%") % filename % first.position();
+            throw osrm::util::exception(message.str() + SOURCE_REF);
+        }
+
+        osrm::util::Log() << "Loaded " << filename << " with " << result.size() << "values";
+
+        return std::move(result);
+    }
+
+    const std::size_t start_index;
+    const KeyRule key_rule;
+    const ValueRule value_rule;
+};
+
+// Returns duration in deci-seconds
+inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_kmh)
+{
+    BOOST_ASSERT(speed_in_kmh > 0);
+    const double speed_in_ms = speed_in_kmh / 3.6;
+    const double duration = distance_in_meters / speed_in_ms;
+    return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10)));
+}
+
+// Returns updated edge weight
+EdgeWeight GetNewWeight(const SpeedSource &value,
+                        const double &segment_length,
+                        const std::vector<std::string> &segment_speed_filenames,
+                        const EdgeWeight old_weight,
+                        const double log_edge_updates_factor,
+                        const OSMNodeID &from,
+                        const OSMNodeID &to)
+{
+    const auto new_segment_weight =
+        (value.speed > 0) ? ConvertToDuration(segment_length, value.speed) : INVALID_EDGE_WEIGHT;
+    // the check here is enabled by the `--edge-weight-updates-over-factor` flag it logs
+    // a warning if the new weight exceeds a heuristic of what a reasonable weight update is
+    if (log_edge_updates_factor > 0 && old_weight != 0)
+    {
+        auto new_secs = new_segment_weight / 10.0;
+        auto old_secs = old_weight / 10.0;
+        auto approx_original_speed = (segment_length / old_secs) * 3.6;
+        if (old_weight >= (new_segment_weight * log_edge_updates_factor))
+        {
+            auto speed_file = segment_speed_filenames.at(value.source - 1);
+            util::Log(logWARNING) << "[weight updates] Edge weight update from " << old_secs
+                                  << "s to " << new_secs << "s  New speed: " << value.speed
+                                  << " kph"
+                                  << ". Old speed: " << approx_original_speed << " kph"
+                                  << ". Segment length: " << segment_length << " m"
+                                  << ". Segment: " << from << "," << to << " based on "
+                                  << speed_file;
+        }
+    }
+
+    return new_segment_weight;
+}
 
 int Contractor::Run()
 {
 #ifdef WIN32
 #pragma message("Memory consumption on Windows can be higher due to different bit packing")
 #else
-    static_assert(sizeof(extractor::NodeBasedEdge) == 20,
+    static_assert(sizeof(extractor::NodeBasedEdge) == 24,
                   "changing extractor::NodeBasedEdge type has influence on memory consumption!");
     static_assert(sizeof(extractor::EdgeBasedEdge) == 16,
                   "changing EdgeBasedEdge type has influence on memory consumption!");
@@ -84,26 +290,39 @@ int Contractor::Run()
 
     if (config.core_factor > 1.0 || config.core_factor < 0)
     {
-        throw util::exception("Core factor must be between 0.0 to 1.0 (inclusive)");
+        throw util::exception("Core factor must be between 0.0 to 1.0 (inclusive)" + SOURCE_REF);
     }
 
     TIMER_START(preparing);
 
-    util::SimpleLogger().Write() << "Loading edge-expanded graph representation";
+    util::Log() << "Reading node weights.";
+    std::vector<EdgeWeight> node_weights;
+    std::string node_file_name = config.osrm_input_path.string() + ".enw";
 
-    util::DeallocatingVector<extractor::EdgeBasedEdge> edge_based_edge_list;
+    {
+        storage::io::FileReader node_file(node_file_name,
+                                          storage::io::FileReader::VerifyFingerprint);
+        node_file.DeserializeVector(node_weights);
+    }
+    util::Log() << "Done reading node weights.";
 
-    std::size_t max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
-                                                    edge_based_edge_list,
-                                                    config.edge_segment_lookup_path,
-                                                    config.edge_penalty_path,
-                                                    config.segment_speed_lookup_paths,
-                                                    config.turn_penalty_lookup_paths,
-                                                    config.node_based_graph_path,
-                                                    config.geometry_path,
-                                                    config.datasource_names_path,
-                                                    config.datasource_indexes_path,
-                                                    config.rtree_leaf_path);
+    util::Log() << "Loading edge-expanded graph representation";
+
+    std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
+
+    EdgeID max_edge_id = LoadEdgeExpandedGraph(config.edge_based_graph_path,
+                                               edge_based_edge_list,
+                                               node_weights,
+                                               config.edge_segment_lookup_path,
+                                               config.edge_penalty_path,
+                                               config.segment_speed_lookup_paths,
+                                               config.turn_penalty_lookup_paths,
+                                               config.node_based_graph_path,
+                                               config.geometry_path,
+                                               config.datasource_names_path,
+                                               config.datasource_indexes_path,
+                                               config.rtree_leaf_path,
+                                               config.log_edge_updates_factor);
 
     // Contracting the edge-expanded graph
 
@@ -115,28 +334,20 @@ int Contractor::Run()
         ReadNodeLevels(node_levels);
     }
 
-    util::SimpleLogger().Write() << "Reading node weights.";
-    std::vector<EdgeWeight> node_weights;
-    std::string node_file_name = config.osrm_input_path.string() + ".enw";
-    if (util::deserializeVector(node_file_name, node_weights))
-    {
-        util::SimpleLogger().Write() << "Done reading node weights.";
-    }
-    else
-    {
-        throw util::exception("Failed reading node weights.");
-    }
-
     util::DeallocatingVector<QueryEdge> contracted_edge_list;
-    ContractGraph(max_edge_id,
-                  edge_based_edge_list,
-                  contracted_edge_list,
-                  std::move(node_weights),
-                  is_core_node,
-                  node_levels);
+    { // own scope to not keep the contractor around
+        GraphContractor graph_contractor(max_edge_id + 1,
+                                         adaptToContractorInput(std::move(edge_based_edge_list)),
+                                         std::move(node_levels),
+                                         std::move(node_weights));
+        graph_contractor.Run(config.core_factor);
+        graph_contractor.GetEdges(contracted_edge_list);
+        graph_contractor.GetCoreMarker(is_core_node);
+        graph_contractor.GetNodeLevels(node_levels);
+    }
     TIMER_STOP(contraction);
 
-    util::SimpleLogger().Write() << "Contraction took " << TIMER_SEC(contraction) << " sec";
+    util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
     std::size_t number_of_used_edges = WriteContractedGraph(max_edge_id, contracted_edge_list);
     WriteCoreNodeMarker(std::move(is_core_node));
@@ -147,342 +358,179 @@ int Contractor::Run()
 
     TIMER_STOP(preparing);
 
-    util::SimpleLogger().Write() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
-    util::SimpleLogger().Write() << "Contraction: " << ((max_edge_id + 1) / TIMER_SEC(contraction))
-                                 << " nodes/sec and "
-                                 << number_of_used_edges / TIMER_SEC(contraction) << " edges/sec";
+    const auto nodes_per_second =
+        static_cast<std::uint64_t>((max_edge_id + 1) / TIMER_SEC(contraction));
+    const auto edges_per_second =
+        static_cast<std::uint64_t>(number_of_used_edges / TIMER_SEC(contraction));
 
-    util::SimpleLogger().Write() << "finished preprocessing";
+    util::Log() << "Preprocessing : " << TIMER_SEC(preparing) << " seconds";
+    util::Log() << "Contraction: " << nodes_per_second << " nodes/sec and " << edges_per_second
+                << " edges/sec";
+
+    util::Log() << "finished preprocessing";
 
     return 0;
 }
 
-// Utilities for LoadEdgeExpandedGraph to restore my sanity
-namespace
-{
-
-struct Segment final
-{
-    OSMNodeID from, to;
-};
-
-struct SpeedSource final
-{
-    unsigned speed;
-    std::uint8_t source;
-};
-
-struct SegmentSpeedSource final
-{
-    Segment segment;
-    SpeedSource speed_source;
-};
-
-using SegmentSpeedSourceFlatMap = std::vector<SegmentSpeedSource>;
-
-// Binary Search over a flattened key,val Segment storage
-SegmentSpeedSourceFlatMap::iterator find(SegmentSpeedSourceFlatMap &map, const Segment &key)
-{
-    const auto last = end(map);
-
-    const auto by_segment = [](const SegmentSpeedSource &lhs, const SegmentSpeedSource &rhs) {
-        return std::tie(lhs.segment.from, lhs.segment.to) >
-               std::tie(rhs.segment.from, rhs.segment.to);
-    };
-
-    auto it = std::lower_bound(begin(map), last, SegmentSpeedSource{key, {0, 0}}, by_segment);
-
-    if (it != last && (std::tie(it->segment.from, it->segment.to) == std::tie(key.from, key.to)))
-        return it;
-
-    return last;
-}
-
-// Convenience aliases. TODO: make actual types at some point in time.
-// TODO: turn penalties need flat map + binary search optimization, take a look at segment speeds
-
-using Turn = std::tuple<OSMNodeID, OSMNodeID, OSMNodeID>;
-using TurnHasher = std::hash<Turn>;
-using PenaltySource = std::pair<double, std::uint8_t>;
-using TurnPenaltySourceMap = tbb::concurrent_unordered_map<Turn, PenaltySource, TurnHasher>;
-
-// Functions for parsing files and creating lookup tables
-
-SegmentSpeedSourceFlatMap
-parse_segment_lookup_from_csv_files(const std::vector<std::string> &segment_speed_filenames)
-{
-    // TODO: shares code with turn penalty lookup parse function
-
-    using Mutex = tbb::spin_mutex;
-
-    // Loaded and parsed in parallel, at the end we combine results in a flattened map-ish view
-    SegmentSpeedSourceFlatMap flatten;
-    Mutex flatten_mutex;
-
-    const auto parse_segment_speed_file = [&](const std::size_t idx) {
-        const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
-        const auto filename = segment_speed_filenames[idx];
-
-        std::ifstream segment_speed_file{filename, std::ios::binary};
-        if (!segment_speed_file)
-            throw util::exception{"Unable to open segment speed file " + filename};
-
-        SegmentSpeedSourceFlatMap local;
-
-        std::uint64_t from_node_id{};
-        std::uint64_t to_node_id{};
-        unsigned speed{};
-
-        for (std::string line; std::getline(segment_speed_file, line);)
-        {
-            using namespace boost::spirit::qi;
-
-            auto it = begin(line);
-            const auto last = end(line);
-
-            // The ulong_long -> uint64_t will likely break on 32bit platforms
-            const auto ok = parse(it,
-                                  last,                                              //
-                                  (ulong_long >> ',' >> ulong_long >> ',' >> uint_), //
-                                  from_node_id,
-                                  to_node_id,
-                                  speed); //
-
-            if (!ok || it != last)
-                throw util::exception{"Segment speed file " + filename + " malformed"};
-
-            SegmentSpeedSource val{
-                {static_cast<OSMNodeID>(from_node_id), static_cast<OSMNodeID>(to_node_id)},
-                {speed, static_cast<std::uint8_t>(file_id)}};
-
-            local.push_back(std::move(val));
-        }
-
-        util::SimpleLogger().Write() << "Loaded speed file " << filename << " with " << local.size()
-                                     << " speeds";
-
-        {
-            Mutex::scoped_lock _{flatten_mutex};
-
-            flatten.insert(end(flatten),
-                           std::make_move_iterator(begin(local)),
-                           std::make_move_iterator(end(local)));
-        }
-    };
-
-    tbb::parallel_for(std::size_t{0}, segment_speed_filenames.size(), parse_segment_speed_file);
-
-    // With flattened map-ish view of all the files, sort and unique them on from,to,source
-    // The greater '>' is used here since we want to give files later on higher precedence
-    const auto sort_by = [](const SegmentSpeedSource &lhs, const SegmentSpeedSource &rhs) {
-        return std::tie(lhs.segment.from, lhs.segment.to, lhs.speed_source.source) >
-               std::tie(rhs.segment.from, rhs.segment.to, rhs.speed_source.source);
-    };
-
-    std::stable_sort(begin(flatten), end(flatten), sort_by);
-
-    // Unique only on from,to to take the source precedence into account and remove duplicates
-    const auto unique_by = [](const SegmentSpeedSource &lhs, const SegmentSpeedSource &rhs) {
-        return std::tie(lhs.segment.from, lhs.segment.to) ==
-               std::tie(rhs.segment.from, rhs.segment.to);
-    };
-
-    const auto it = std::unique(begin(flatten), end(flatten), unique_by);
-
-    flatten.erase(it, end(flatten));
-
-    util::SimpleLogger().Write() << "In total loaded " << segment_speed_filenames.size()
-                                 << " speed file(s) with a total of " << flatten.size()
-                                 << " unique values";
-
-    return flatten;
-}
-
-TurnPenaltySourceMap
-parse_turn_penalty_lookup_from_csv_files(const std::vector<std::string> &turn_penalty_filenames)
-{
-    // TODO: shares code with turn penalty lookup parse function
-    TurnPenaltySourceMap map;
-
-    const auto parse_turn_penalty_file = [&](const std::size_t idx) {
-        const auto file_id = idx + 1; // starts at one, zero means we assigned the weight
-        const auto filename = turn_penalty_filenames[idx];
-
-        std::ifstream turn_penalty_file{filename, std::ios::binary};
-        if (!turn_penalty_file)
-            throw util::exception{"Unable to open turn penalty file " + filename};
-
-        std::uint64_t from_node_id{};
-        std::uint64_t via_node_id{};
-        std::uint64_t to_node_id{};
-        double penalty{};
-
-        for (std::string line; std::getline(turn_penalty_file, line);)
-        {
-            using namespace boost::spirit::qi;
-
-            auto it = begin(line);
-            const auto last = end(line);
-
-            // The ulong_long -> uint64_t will likely break on 32bit platforms
-            const auto ok =
-                parse(it,
-                      last,                                                                     //
-                      (ulong_long >> ',' >> ulong_long >> ',' >> ulong_long >> ',' >> double_), //
-                      from_node_id,
-                      via_node_id,
-                      to_node_id,
-                      penalty); //
-
-            if (!ok || it != last)
-                throw util::exception{"Turn penalty file " + filename + " malformed"};
-
-            map[std::make_tuple(
-                OSMNodeID(from_node_id), OSMNodeID(via_node_id), OSMNodeID(to_node_id))] =
-                std::make_pair(penalty, file_id);
-        }
-    };
-
-    tbb::parallel_for(std::size_t{0}, turn_penalty_filenames.size(), parse_turn_penalty_file);
-
-    return map;
-}
-} // anon ns
-
-std::size_t Contractor::LoadEdgeExpandedGraph(
-    std::string const &edge_based_graph_filename,
-    util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-    const std::string &edge_segment_lookup_filename,
-    const std::string &edge_penalty_filename,
-    const std::vector<std::string> &segment_speed_filenames,
-    const std::vector<std::string> &turn_penalty_filenames,
-    const std::string &nodes_filename,
-    const std::string &geometry_filename,
-    const std::string &datasource_names_filename,
-    const std::string &datasource_indexes_filename,
-    const std::string &rtree_leaf_filename)
+EdgeID
+Contractor::LoadEdgeExpandedGraph(std::string const &edge_based_graph_filename,
+                                  std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+                                  std::vector<EdgeWeight> &node_weights,
+                                  const std::string &edge_segment_lookup_filename,
+                                  const std::string &edge_penalty_filename,
+                                  const std::vector<std::string> &segment_speed_filenames,
+                                  const std::vector<std::string> &turn_penalty_filenames,
+                                  const std::string &nodes_filename,
+                                  const std::string &geometry_filename,
+                                  const std::string &datasource_names_filename,
+                                  const std::string &datasource_indexes_filename,
+                                  const std::string &rtree_leaf_filename,
+                                  const double log_edge_updates_factor)
 {
     if (segment_speed_filenames.size() > 255 || turn_penalty_filenames.size() > 255)
-        throw util::exception("Limit of 255 segment speed and turn penalty files each reached");
+        throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
+                              SOURCE_REF);
 
-    util::SimpleLogger().Write() << "Opening " << edge_based_graph_filename;
-    boost::filesystem::ifstream input_stream(edge_based_graph_filename, std::ios::binary);
-    if (!input_stream)
-        throw util::exception("Could not load edge based graph file");
+    util::Log() << "Opening " << edge_based_graph_filename;
+
+    auto mmap_file = [](const std::string &filename) {
+        using boost::interprocess::file_mapping;
+        using boost::interprocess::mapped_region;
+        using boost::interprocess::read_only;
+
+        try
+        {
+            const file_mapping mapping{filename.c_str(), read_only};
+            mapped_region region{mapping, read_only};
+            region.advise(mapped_region::advice_sequential);
+            return region;
+        }
+        catch (const std::exception &e)
+        {
+            util::Log(logERROR) << "Error while trying to mmap " + filename + ": " + e.what();
+            throw;
+        }
+    };
+
+    const auto edge_based_graph_region = mmap_file(edge_based_graph_filename);
 
     const bool update_edge_weights = !segment_speed_filenames.empty();
     const bool update_turn_penalties = !turn_penalty_filenames.empty();
 
-    boost::filesystem::ifstream edge_segment_input_stream;
-    boost::filesystem::ifstream edge_fixed_penalties_input_stream;
-
-    if (update_edge_weights || update_turn_penalties)
-    {
-        edge_segment_input_stream.open(edge_segment_lookup_filename, std::ios::binary);
-        edge_fixed_penalties_input_stream.open(edge_penalty_filename, std::ios::binary);
-        if (!edge_segment_input_stream || !edge_fixed_penalties_input_stream)
+    const auto edge_penalty_region = [&] {
+        if (update_edge_weights || update_turn_penalties)
         {
-            throw util::exception("Could not load .edge_segment_lookup or .edge_penalties, did you "
-                                  "run osrm-extract with '--generate-edge-lookup'?");
+            return mmap_file(edge_penalty_filename);
         }
+        return boost::interprocess::mapped_region();
+    }();
+
+    const auto edge_segment_region = [&] {
+        if (update_edge_weights || update_turn_penalties)
+        {
+            return mmap_file(edge_segment_lookup_filename);
+        }
+        return boost::interprocess::mapped_region();
+    }();
+
+// Set the struct packing to 1 byte word sizes.  This prevents any padding.  We only use
+// this struct once, so any alignment penalty is trivial.  If this is *not* done, then
+// the struct will be padded out by an extra 4 bytes, and sizeof() will mean we read
+// too much data from the original file.
+#pragma pack(push, r1, 1)
+    struct EdgeBasedGraphHeader
+    {
+        util::FingerPrint fingerprint;
+        std::uint64_t number_of_edges;
+        EdgeID max_edge_id;
+    };
+#pragma pack(pop, r1)
+
+    BOOST_ASSERT(is_aligned<EdgeBasedGraphHeader>(edge_based_graph_region.get_address()));
+    const EdgeBasedGraphHeader graph_header =
+        *(reinterpret_cast<const EdgeBasedGraphHeader *>(edge_based_graph_region.get_address()));
+
+    const util::FingerPrint expected_fingerprint = util::FingerPrint::GetValid();
+    if (!graph_header.fingerprint.IsValid())
+    {
+        util::Log(logERROR) << edge_based_graph_filename << " does not have a valid fingerprint";
+        throw util::exception("Invalid fingerprint");
     }
 
-    const util::FingerPrint fingerprint_valid = util::FingerPrint::GetValid();
-    util::FingerPrint fingerprint_loaded;
-    input_stream.read((char *)&fingerprint_loaded, sizeof(util::FingerPrint));
-    fingerprint_loaded.TestContractor(fingerprint_valid);
+    if (!expected_fingerprint.IsDataCompatible(graph_header.fingerprint))
+    {
+        util::Log(logERROR) << edge_based_graph_filename
+                            << " is not compatible with this version of OSRM.";
+        util::Log(logERROR) << "It was prepared with OSRM "
+                            << graph_header.fingerprint.GetMajorVersion() << "."
+                            << graph_header.fingerprint.GetMinorVersion() << "."
+                            << graph_header.fingerprint.GetPatchVersion() << " but you are running "
+                            << OSRM_VERSION;
+        util::Log(logERROR) << "Data is only compatible between minor releases.";
+        throw util::exception("Incompatible file version" + SOURCE_REF);
+    }
 
-    // TODO std::size_t can vary on systems. Our files are not transferable, but we might want to
-    // consider using a fixed size type for I/O
-    std::size_t number_of_edges = 0;
-    std::size_t max_edge_id = SPECIAL_EDGEID;
-    input_stream.read((char *)&number_of_edges, sizeof(std::size_t));
-    input_stream.read((char *)&max_edge_id, sizeof(std::size_t));
+    edge_based_edge_list.resize(graph_header.number_of_edges);
+    util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
-    edge_based_edge_list.resize(number_of_edges);
-    util::SimpleLogger().Write() << "Reading " << number_of_edges
-                                 << " edges from the edge based graph";
+    auto segment_speed_lookup = CSVFilesParser<Segment, SpeedSource>(
+        1, qi::ulong_long >> ',' >> qi::ulong_long, qi::uint_)(segment_speed_filenames);
 
-    SegmentSpeedSourceFlatMap segment_speed_lookup;
-    TurnPenaltySourceMap turn_penalty_lookup;
-
-    const auto parse_segment_speeds = [&] {
-        if (update_edge_weights)
-            segment_speed_lookup = parse_segment_lookup_from_csv_files(segment_speed_filenames);
-    };
-
-    const auto parse_turn_penalties = [&] {
-        if (update_turn_penalties)
-            turn_penalty_lookup = parse_turn_penalty_lookup_from_csv_files(turn_penalty_filenames);
-    };
+    auto turn_penalty_lookup = CSVFilesParser<Turn, PenaltySource>(
+        1 + segment_speed_filenames.size(),
+        qi::ulong_long >> ',' >> qi::ulong_long >> ',' >> qi::ulong_long,
+        qi::double_)(turn_penalty_filenames);
 
     // If we update the edge weights, this file will hold the datasource information for each
     // segment; the other files will also be conditionally filled concurrently if we make an update
-    std::vector<uint8_t> m_geometry_datasource;
+    std::vector<uint8_t> geometry_datasource;
 
     std::vector<extractor::QueryNode> internal_to_external_node_map;
-    std::vector<unsigned> m_geometry_indices;
-    std::vector<extractor::CompressedEdgeContainer::CompressedEdge> m_geometry_list;
+    std::vector<unsigned> geometry_indices;
+    std::vector<NodeID> geometry_node_list;
+    std::vector<EdgeWeight> geometry_fwd_weight_list;
+    std::vector<EdgeWeight> geometry_rev_weight_list;
 
     const auto maybe_load_internal_to_external_node_map = [&] {
         if (!(update_edge_weights || update_turn_penalties))
             return;
 
-        boost::filesystem::ifstream nodes_input_stream(nodes_filename, std::ios::binary);
+        storage::io::FileReader nodes_file(nodes_filename,
+                                           storage::io::FileReader::HasNoFingerprint);
 
-        if (!nodes_input_stream)
-        {
-            throw util::exception("Failed to open " + nodes_filename);
-        }
+        nodes_file.DeserializeVector(internal_to_external_node_map);
 
-        unsigned number_of_nodes = 0;
-        nodes_input_stream.read((char *)&number_of_nodes, sizeof(unsigned));
-        internal_to_external_node_map.resize(number_of_nodes);
-
-        // Load all the query nodes into a vector
-        nodes_input_stream.read(reinterpret_cast<char *>(&(internal_to_external_node_map[0])),
-                                number_of_nodes * sizeof(extractor::QueryNode));
     };
 
     const auto maybe_load_geometries = [&] {
         if (!(update_edge_weights || update_turn_penalties))
             return;
 
-        std::ifstream geometry_stream(geometry_filename, std::ios::binary);
-        if (!geometry_stream)
-        {
-            throw util::exception("Failed to open " + geometry_filename);
-        }
-        unsigned number_of_indices = 0;
-        unsigned number_of_compressed_geometries = 0;
+        storage::io::FileReader geometry_file(geometry_filename,
+                                              storage::io::FileReader::HasNoFingerprint);
+        const auto number_of_indices = geometry_file.ReadElementCount32();
+        geometry_indices.resize(number_of_indices);
+        geometry_file.ReadInto(geometry_indices.data(), number_of_indices);
 
-        geometry_stream.read((char *)&number_of_indices, sizeof(unsigned));
+        const auto number_of_compressed_geometries = geometry_file.ReadElementCount32();
 
-        m_geometry_indices.resize(number_of_indices);
-        if (number_of_indices > 0)
-        {
-            geometry_stream.read((char *)&(m_geometry_indices[0]),
-                                 number_of_indices * sizeof(unsigned));
-        }
-
-        geometry_stream.read((char *)&number_of_compressed_geometries, sizeof(unsigned));
-
-        BOOST_ASSERT(m_geometry_indices.back() == number_of_compressed_geometries);
-        m_geometry_list.resize(number_of_compressed_geometries);
+        BOOST_ASSERT(geometry_indices.back() == number_of_compressed_geometries);
+        geometry_node_list.resize(number_of_compressed_geometries);
+        geometry_fwd_weight_list.resize(number_of_compressed_geometries);
+        geometry_rev_weight_list.resize(number_of_compressed_geometries);
 
         if (number_of_compressed_geometries > 0)
         {
-            geometry_stream.read((char *)&(m_geometry_list[0]),
-                                 number_of_compressed_geometries *
-                                     sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+            geometry_file.ReadInto(geometry_node_list.data(), number_of_compressed_geometries);
+            geometry_file.ReadInto(geometry_fwd_weight_list.data(),
+                                   number_of_compressed_geometries);
+            geometry_file.ReadInto(geometry_rev_weight_list.data(),
+                                   number_of_compressed_geometries);
         }
     };
 
     // Folds all our actions into independently concurrently executing lambdas
-    tbb::parallel_invoke(parse_segment_speeds,
-                         parse_turn_penalties, //
-                         maybe_load_internal_to_external_node_map,
-                         maybe_load_geometries);
+    tbb::parallel_invoke(maybe_load_internal_to_external_node_map, maybe_load_geometries);
 
     if (update_edge_weights || update_turn_penalties)
     {
@@ -495,20 +543,18 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         // CSV file that supplied the value that gets used for that segment, then
         // we write out this list so that it can be returned by the debugging
         // vector tiles later on.
-        m_geometry_datasource.resize(m_geometry_list.size(), 0);
+        geometry_datasource.resize(geometry_fwd_weight_list.size(), 0);
 
         // Now, we iterate over all the segments stored in the StaticRTree, updating
         // the packed geometry weights in the `.geometries` file (note: we do not
         // update the RTree itself, we just use the leaf nodes to iterate over all segments)
         using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
 
-        using boost::interprocess::file_mapping;
         using boost::interprocess::mapped_region;
-        using boost::interprocess::read_only;
 
-        const file_mapping mapping{rtree_leaf_filename.c_str(), read_only};
-        mapped_region region{mapping, read_only};
+        auto region = mmap_file(rtree_leaf_filename.c_str());
         region.advise(mapped_region::advice_willneed);
+        BOOST_ASSERT(is_aligned<LeafNode>(region.get_address()));
 
         const auto bytes = region.get_size();
         const auto first = static_cast<const LeafNode *>(region.get_address());
@@ -527,108 +573,55 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
             for (size_t i = 0; i < current_node.object_count; i++)
             {
                 const auto &leaf_object = current_node.objects[i];
-                extractor::QueryNode *u;
-                extractor::QueryNode *v;
 
-                if (leaf_object.forward_packed_geometry_id != SPECIAL_EDGEID)
+                const auto forward_begin = geometry_indices.at(leaf_object.packed_geometry_id);
+                const auto u_index = forward_begin + leaf_object.fwd_segment_position;
+                const auto v_index = forward_begin + leaf_object.fwd_segment_position + 1;
+
+                const extractor::QueryNode &u =
+                    internal_to_external_node_map[geometry_node_list[u_index]];
+                const extractor::QueryNode &v =
+                    internal_to_external_node_map[geometry_node_list[v_index]];
+
+                const double segment_length = util::coordinate_calculation::greatCircleDistance(
+                    util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat});
+
+                auto fwd_source = LUA_SOURCE, rev_source = LUA_SOURCE;
+                if (auto value = segment_speed_lookup({u.node_id, v.node_id}))
                 {
-                    const unsigned forward_begin =
-                        m_geometry_indices.at(leaf_object.forward_packed_geometry_id);
+                    const auto current_fwd_weight = geometry_fwd_weight_list[u_index];
+                    const auto new_segment_weight = GetNewWeight(*value,
+                                                                 segment_length,
+                                                                 segment_speed_filenames,
+                                                                 current_fwd_weight,
+                                                                 log_edge_updates_factor,
+                                                                 u.node_id,
+                                                                 v.node_id);
 
-                    if (leaf_object.fwd_segment_position == 0)
-                    {
-                        u = &(internal_to_external_node_map[leaf_object.u]);
-                        v = &(
-                            internal_to_external_node_map[m_geometry_list[forward_begin].node_id]);
-                    }
-                    else
-                    {
-                        u = &(internal_to_external_node_map
-                                  [m_geometry_list[forward_begin +
-                                                   leaf_object.fwd_segment_position - 1]
-                                       .node_id]);
-                        v = &(internal_to_external_node_map
-                                  [m_geometry_list[forward_begin + leaf_object.fwd_segment_position]
-                                       .node_id]);
-                    }
-                    const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                        util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
-
-                    auto forward_speed_iter =
-                        find(segment_speed_lookup, Segment{u->node_id, v->node_id});
-                    if (forward_speed_iter != segment_speed_lookup.end())
-                    {
-                        int new_segment_weight =
-                            std::max(1,
-                                     static_cast<int>(std::floor(
-                                         (segment_length * 10.) /
-                                             (forward_speed_iter->speed_source.speed / 3.6) +
-                                         .5)));
-                        m_geometry_list[forward_begin + leaf_object.fwd_segment_position].weight =
-                            new_segment_weight;
-                        m_geometry_datasource[forward_begin + leaf_object.fwd_segment_position] =
-                            forward_speed_iter->speed_source.source;
-
-                        // count statistics for logging
-                        counters[forward_speed_iter->speed_source.source] += 1;
-                    }
-                    else
-                    {
-                        // count statistics for logging
-                        counters[LUA_SOURCE] += 1;
-                    }
+                    geometry_fwd_weight_list[v_index] = new_segment_weight;
+                    geometry_datasource[v_index] = value->source;
+                    fwd_source = value->source;
                 }
-                if (leaf_object.reverse_packed_geometry_id != SPECIAL_EDGEID)
+
+                if (auto value = segment_speed_lookup({v.node_id, u.node_id}))
                 {
-                    const unsigned reverse_begin =
-                        m_geometry_indices.at(leaf_object.reverse_packed_geometry_id);
-                    const unsigned reverse_end =
-                        m_geometry_indices.at(leaf_object.reverse_packed_geometry_id + 1);
+                    const auto current_rev_weight = geometry_rev_weight_list[u_index];
+                    const auto new_segment_weight = GetNewWeight(*value,
+                                                                 segment_length,
+                                                                 segment_speed_filenames,
+                                                                 current_rev_weight,
+                                                                 log_edge_updates_factor,
+                                                                 v.node_id,
+                                                                 u.node_id);
 
-                    int rev_segment_position =
-                        (reverse_end - reverse_begin) - leaf_object.fwd_segment_position - 1;
-                    if (rev_segment_position == 0)
-                    {
-                        u = &(internal_to_external_node_map[leaf_object.v]);
-                        v = &(
-                            internal_to_external_node_map[m_geometry_list[reverse_begin].node_id]);
-                    }
-                    else
-                    {
-                        u = &(
-                            internal_to_external_node_map[m_geometry_list[reverse_begin +
-                                                                          rev_segment_position - 1]
-                                                              .node_id]);
-                        v = &(internal_to_external_node_map
-                                  [m_geometry_list[reverse_begin + rev_segment_position].node_id]);
-                    }
-                    const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                        util::Coordinate{u->lon, u->lat}, util::Coordinate{v->lon, v->lat});
-
-                    auto reverse_speed_iter =
-                        find(segment_speed_lookup, Segment{u->node_id, v->node_id});
-                    if (reverse_speed_iter != segment_speed_lookup.end())
-                    {
-                        int new_segment_weight =
-                            std::max(1,
-                                     static_cast<int>(std::floor(
-                                         (segment_length * 10.) /
-                                             (reverse_speed_iter->speed_source.speed / 3.6) +
-                                         .5)));
-                        m_geometry_list[reverse_begin + rev_segment_position].weight =
-                            new_segment_weight;
-                        m_geometry_datasource[reverse_begin + rev_segment_position] =
-                            reverse_speed_iter->speed_source.source;
-
-                        // count statistics for logging
-                        counters[reverse_speed_iter->speed_source.source] += 1;
-                    }
-                    else
-                    {
-                        // count statistics for logging
-                        counters[LUA_SOURCE] += 1;
-                    }
+                    geometry_rev_weight_list[u_index] = new_segment_weight;
+                    geometry_datasource[u_index] = value->source;
+                    rev_source = value->source;
                 }
+
+                // count statistics for logging
+                counters[fwd_source] += 1;
+                counters[rev_source] += 1;
             }
         }); // parallel_for_each
 
@@ -645,15 +638,15 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         {
             if (i == LUA_SOURCE)
             {
-                util::SimpleLogger().Write() << "Used " << merged_counters[LUA_SOURCE]
-                                             << " speeds from LUA profile or input map";
+                util::Log() << "Used " << merged_counters[LUA_SOURCE]
+                            << " speeds from LUA profile or input map";
             }
             else
             {
                 // segments_speeds_counters has 0 as LUA, segment_speed_filenames not, thus we need
                 // to susbstract 1 to avoid off-by-one error
-                util::SimpleLogger().Write() << "Used " << merged_counters[i] << " speeds from "
-                                             << segment_speed_filenames[i - 1];
+                util::Log() << "Used " << merged_counters[i] << " speeds from "
+                            << segment_speed_filenames[i - 1];
             }
         }
     }
@@ -666,32 +659,38 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         std::ofstream geometry_stream(geometry_filename, std::ios::binary);
         if (!geometry_stream)
         {
-            throw util::exception("Failed to open " + geometry_filename + " for writing");
+            const std::string message{"Failed to open " + geometry_filename + " for writing"};
+            throw util::exception(message + SOURCE_REF);
         }
-        const unsigned number_of_indices = m_geometry_indices.size();
-        const unsigned number_of_compressed_geometries = m_geometry_list.size();
+        const unsigned number_of_indices = geometry_indices.size();
+        const unsigned number_of_compressed_geometries = geometry_node_list.size();
         geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices), sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_indices[0])),
+        geometry_stream.write(reinterpret_cast<char *>(&(geometry_indices[0])),
                               number_of_indices * sizeof(unsigned));
         geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries),
                               sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<char *>(&(m_geometry_list[0])),
-                              number_of_compressed_geometries *
-                                  sizeof(extractor::CompressedEdgeContainer::CompressedEdge));
+        geometry_stream.write(reinterpret_cast<char *>(&(geometry_node_list[0])),
+                              number_of_compressed_geometries * sizeof(NodeID));
+        geometry_stream.write(reinterpret_cast<char *>(&(geometry_fwd_weight_list[0])),
+                              number_of_compressed_geometries * sizeof(EdgeWeight));
+        geometry_stream.write(reinterpret_cast<char *>(&(geometry_rev_weight_list[0])),
+                              number_of_compressed_geometries * sizeof(EdgeWeight));
     };
 
     const auto save_datasource_indexes = [&] {
         std::ofstream datasource_stream(datasource_indexes_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_indexes_filename + " for writing");
+            const std::string message{"Failed to open " + datasource_indexes_filename +
+                                      " for writing"};
+            throw util::exception(message + SOURCE_REF);
         }
-        auto number_of_datasource_entries = m_geometry_datasource.size();
+        std::uint64_t number_of_datasource_entries = geometry_datasource.size();
         datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
                                 sizeof(number_of_datasource_entries));
         if (number_of_datasource_entries > 0)
         {
-            datasource_stream.write(reinterpret_cast<char *>(&(m_geometry_datasource[0])),
+            datasource_stream.write(reinterpret_cast<char *>(&(geometry_datasource[0])),
                                     number_of_datasource_entries * sizeof(uint8_t));
         }
     };
@@ -700,124 +699,122 @@ std::size_t Contractor::LoadEdgeExpandedGraph(
         std::ofstream datasource_stream(datasource_names_filename, std::ios::binary);
         if (!datasource_stream)
         {
-            throw util::exception("Failed to open " + datasource_names_filename + " for writing");
+            const std::string message{"Failed to open " + datasource_names_filename +
+                                      " for writing"};
+            throw util::exception(message + SOURCE_REF);
         }
         datasource_stream << "lua profile" << std::endl;
+
+        // Only write the filename, without path or extension.
+        // This prevents information leakage, and keeps names short
+        // for rendering in the debug tiles.
         for (auto const &name : segment_speed_filenames)
         {
-            // Only write the filename, without path or extension.
-            // This prevents information leakage, and keeps names short
-            // for rendering in the debug tiles.
-            const boost::filesystem::path p(name);
-            datasource_stream << p.stem().string() << std::endl;
+            datasource_stream << boost::filesystem::path(name).stem().string() << std::endl;
         }
     };
 
     tbb::parallel_invoke(maybe_save_geometries, save_datasource_indexes, save_datastore_names);
 
-    // TODO: can we read this in bulk?  util::DeallocatingVector isn't necessarily
-    // all stored contiguously
-    for (; number_of_edges > 0; --number_of_edges)
+    auto turn_penalty_blocks_ptr = reinterpret_cast<const extractor::lookup::PenaltyBlock *>(
+        edge_penalty_region.get_address());
+    BOOST_ASSERT(is_aligned<extractor::lookup::PenaltyBlock>(turn_penalty_blocks_ptr));
+
+    auto edge_based_edge_ptr = reinterpret_cast<extractor::EdgeBasedEdge *>(
+        reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
+        sizeof(EdgeBasedGraphHeader));
+    BOOST_ASSERT(is_aligned<extractor::EdgeBasedEdge>(edge_based_edge_ptr));
+
+    auto edge_segment_byte_ptr = reinterpret_cast<const char *>(edge_segment_region.get_address());
+
+    for (std::uint64_t edge_index = 0; edge_index < graph_header.number_of_edges; ++edge_index)
     {
-        extractor::EdgeBasedEdge inbuffer;
-        input_stream.read((char *)&inbuffer, sizeof(extractor::EdgeBasedEdge));
+        // Make a copy of the data from the memory map
+        extractor::EdgeBasedEdge inbuffer = edge_based_edge_ptr[edge_index];
+
         if (update_edge_weights || update_turn_penalties)
         {
-            // Processing-time edge updates
-            unsigned fixed_penalty;
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&fixed_penalty),
-                                                   sizeof(fixed_penalty));
+            using extractor::lookup::SegmentHeaderBlock;
+            using extractor::lookup::SegmentBlock;
 
-            int new_weight = 0;
+            auto header = reinterpret_cast<const SegmentHeaderBlock *>(edge_segment_byte_ptr);
+            BOOST_ASSERT(is_aligned<SegmentHeaderBlock>(header));
+            edge_segment_byte_ptr += sizeof(SegmentHeaderBlock);
 
-            unsigned num_osm_nodes = 0;
-            edge_segment_input_stream.read(reinterpret_cast<char *>(&num_osm_nodes),
-                                           sizeof(num_osm_nodes));
-            OSMNodeID previous_osm_node_id;
-            edge_segment_input_stream.read(reinterpret_cast<char *>(&previous_osm_node_id),
-                                           sizeof(previous_osm_node_id));
-            OSMNodeID this_osm_node_id;
-            double segment_length;
-            int segment_weight;
-            int compressed_edge_nodes = static_cast<int>(num_osm_nodes);
-            --num_osm_nodes;
-            for (; num_osm_nodes != 0; --num_osm_nodes)
-            {
-                edge_segment_input_stream.read(reinterpret_cast<char *>(&this_osm_node_id),
-                                               sizeof(this_osm_node_id));
-                edge_segment_input_stream.read(reinterpret_cast<char *>(&segment_length),
-                                               sizeof(segment_length));
-                edge_segment_input_stream.read(reinterpret_cast<char *>(&segment_weight),
-                                               sizeof(segment_weight));
+            auto first = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
+            BOOST_ASSERT(is_aligned<SegmentBlock>(first));
+            edge_segment_byte_ptr += sizeof(SegmentBlock) * (header->num_osm_nodes - 1);
+            auto last = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
 
-                auto speed_iter =
-                    find(segment_speed_lookup, Segment{previous_osm_node_id, this_osm_node_id});
-                if (speed_iter != segment_speed_lookup.end())
-                {
-                    // This sets the segment weight using the same formula as the
-                    // EdgeBasedGraphFactory for consistency.  The *why* of this formula
-                    // is lost in the annals of time.
-                    int new_segment_weight = std::max(
-                        1,
-                        static_cast<int>(std::floor(
-                            (segment_length * 10.) / (speed_iter->speed_source.speed / 3.6) + .5)));
-                    new_weight += new_segment_weight;
-                }
-                else
-                {
-                    // If no lookup found, use the original weight value for this segment
+            // Find a segment with zero speed and simultaneously compute the new edge weight
+            EdgeWeight new_weight = 0;
+            auto osm_node_id = header->previous_osm_node_id;
+            bool skip_edge =
+                std::find_if(first, last, [&](const auto &segment) {
+                    auto segment_weight = segment.segment_weight;
+                    if (auto value = segment_speed_lookup({osm_node_id, segment.this_osm_node_id}))
+                    {
+                        // If we hit a 0-speed edge, then it's effectively not traversible.
+                        // We don't want to include it in the edge_based_edge_list.
+                        if (value->speed == 0)
+                            return true;
+
+                        segment_weight = ConvertToDuration(segment.segment_length, value->speed);
+                    }
+
+                    // Update the edge weight and the next OSM node ID
+                    osm_node_id = segment.this_osm_node_id;
                     new_weight += segment_weight;
-                }
+                    return false;
+                }) != last;
 
-                previous_osm_node_id = this_osm_node_id;
-            }
+            // Update the node-weight cache. This is the weight of the edge-based-node only,
+            // it doesn't include the turn. We may visit the same node multiple times, but
+            // we should always assign the same value here.
+            node_weights[inbuffer.source] = new_weight;
 
-            OSMNodeID from_id;
-            OSMNodeID via_id;
-            OSMNodeID to_id;
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&from_id),
-                                                   sizeof(from_id));
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&via_id),
-                                                   sizeof(via_id));
-            edge_fixed_penalties_input_stream.read(reinterpret_cast<char *>(&to_id), sizeof(to_id));
+            // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
+            // effectively removes it from the routing network.
+            if (skip_edge)
+                continue;
 
-            const auto turn_iter =
-                turn_penalty_lookup.find(std::make_tuple(from_id, via_id, to_id));
-            if (turn_iter != turn_penalty_lookup.end())
+            // Get the turn penalty and update to the new value if required
+            const auto &turn_block = turn_penalty_blocks_ptr[edge_index];
+            EdgeWeight new_turn_penalty = turn_block.fixed_penalty;
+            if (auto value = turn_penalty_lookup(turn_block))
             {
-                int new_turn_weight = static_cast<int>(turn_iter->second.first * 10);
+                new_turn_penalty = static_cast<EdgeWeight>(value->penalty * 10);
 
-                if (new_turn_weight + new_weight < compressed_edge_nodes)
+                if (new_weight + new_turn_penalty < static_cast<EdgeWeight>(header->num_osm_nodes))
                 {
-                    util::SimpleLogger().Write(logWARNING)
-                        << "turn penalty " << turn_iter->second.first << " for turn " << from_id
-                        << ", " << via_id << ", " << to_id
-                        << " is too negative: clamping turn weight to " << compressed_edge_nodes;
-                }
+                    util::Log(logWARNING)
+                        << "turn penalty " << value->penalty << " for turn " << turn_block.from_id
+                        << "," << turn_block.via_id << "," << turn_block.to_id
+                        << " is too negative: clamping turn weight to " << header->num_osm_nodes;
 
-                inbuffer.weight = std::max(new_turn_weight + new_weight, compressed_edge_nodes);
+                    new_turn_penalty = header->num_osm_nodes - new_weight;
+                }
             }
-            else
-            {
-                inbuffer.weight = fixed_penalty + new_weight;
-            }
+
+            // Update edge weight
+            inbuffer.weight = new_weight + new_turn_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
     }
 
-    util::SimpleLogger().Write() << "Done reading edges";
-    return max_edge_id;
+    util::Log() << "Done reading edges";
+    return graph_header.max_edge_id;
 }
 
 void Contractor::ReadNodeLevels(std::vector<float> &node_levels) const
 {
-    boost::filesystem::ifstream order_input_stream(config.level_output_path, std::ios::binary);
+    storage::io::FileReader order_file(config.level_output_path,
+                                       storage::io::FileReader::HasNoFingerprint);
 
-    unsigned level_size;
-    order_input_stream.read((char *)&level_size, sizeof(unsigned));
+    const auto level_size = order_file.ReadElementCount32();
     node_levels.resize(level_size);
-    order_input_stream.read((char *)node_levels.data(), sizeof(float) * node_levels.size());
+    order_file.ReadInto(node_levels);
 }
 
 void Contractor::WriteNodeLevels(std::vector<float> &&in_node_levels) const
@@ -854,15 +851,14 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
 {
     // Sorting contracted edges in a way that the static query graph can read some in in-place.
     tbb::parallel_sort(contracted_edge_list.begin(), contracted_edge_list.end());
-    const unsigned contracted_edge_count = contracted_edge_list.size();
-    util::SimpleLogger().Write() << "Serializing compacted graph of " << contracted_edge_count
-                                 << " edges";
+    const std::uint64_t contracted_edge_count = contracted_edge_list.size();
+    util::Log() << "Serializing compacted graph of " << contracted_edge_count << " edges";
 
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
     hsgr_output_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
-    const unsigned max_used_node_id = [&contracted_edge_list] {
-        unsigned tmp_max = 0;
+    const NodeID max_used_node_id = [&contracted_edge_list] {
+        NodeID tmp_max = 0;
         for (const QueryEdge &edge : contracted_edge_list)
         {
             BOOST_ASSERT(SPECIAL_NODEID != edge.source);
@@ -873,15 +869,14 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
         return tmp_max;
     }();
 
-    util::SimpleLogger().Write(logDEBUG) << "input graph has " << (max_node_id + 1) << " nodes";
-    util::SimpleLogger().Write(logDEBUG) << "contracted graph has " << (max_used_node_id + 1)
-                                         << " nodes";
+    util::Log(logDEBUG) << "input graph has " << (max_node_id + 1) << " nodes";
+    util::Log(logDEBUG) << "contracted graph has " << (max_used_node_id + 1) << " nodes";
 
     std::vector<util::StaticGraph<EdgeData>::NodeArrayEntry> node_array;
     // make sure we have at least one sentinel
     node_array.resize(max_node_id + 2);
 
-    util::SimpleLogger().Write() << "Building node array";
+    util::Log() << "Building node array";
     util::StaticGraph<EdgeData>::EdgeIterator edge = 0;
     util::StaticGraph<EdgeData>::EdgeIterator position = 0;
     util::StaticGraph<EdgeData>::EdgeIterator last_edge;
@@ -905,19 +900,19 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
         node_array[sentinel_counter].first_edge = contracted_edge_count;
     }
 
-    util::SimpleLogger().Write() << "Serializing node array";
+    util::Log() << "Serializing node array";
 
     RangebasedCRC32 crc32_calculator;
     const unsigned edges_crc32 = crc32_calculator(contracted_edge_list);
-    util::SimpleLogger().Write() << "Writing CRC32: " << edges_crc32;
+    util::Log() << "Writing CRC32: " << edges_crc32;
 
-    const unsigned node_array_size = node_array.size();
+    const std::uint64_t node_array_size = node_array.size();
     // serialize crc32, aka checksum
     hsgr_output_stream.write((char *)&edges_crc32, sizeof(unsigned));
     // serialize number of nodes
-    hsgr_output_stream.write((char *)&node_array_size, sizeof(unsigned));
+    hsgr_output_stream.write((char *)&node_array_size, sizeof(std::uint64_t));
     // serialize number of edges
-    hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(unsigned));
+    hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(std::uint64_t));
     // serialize all nodes
     if (node_array_size > 0)
     {
@@ -927,8 +922,8 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     }
 
     // serialize all edges
-    util::SimpleLogger().Write() << "Building edge array";
-    int number_of_used_edges = 0;
+    util::Log() << "Building edge array";
+    std::size_t number_of_used_edges = 0;
 
     util::StaticGraph<EdgeData>::EdgeArrayEntry current_edge;
     for (const auto edge : util::irange<std::size_t>(0UL, contracted_edge_list.size()))
@@ -944,17 +939,17 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
         // every target needs to be valid
         BOOST_ASSERT(current_edge.target <= max_used_node_id);
 #ifndef NDEBUG
-        if (current_edge.data.distance <= 0)
+        if (current_edge.data.weight <= 0)
         {
-            util::SimpleLogger().Write(logWARNING)
-                << "Edge: " << edge << ",source: " << contracted_edge_list[edge].source
-                << ", target: " << contracted_edge_list[edge].target
-                << ", dist: " << current_edge.data.distance;
+            util::Log(logWARNING) << "Edge: " << edge
+                                  << ",source: " << contracted_edge_list[edge].source
+                                  << ", target: " << contracted_edge_list[edge].target
+                                  << ", weight: " << current_edge.data.weight;
 
-            util::SimpleLogger().Write(logWARNING) << "Failed at adjacency list of node "
-                                                   << contracted_edge_list[edge].source << "/"
-                                                   << node_array.size() - 1;
-            return 1;
+            util::Log(logWARNING) << "Failed at adjacency list of node "
+                                  << contracted_edge_list[edge].source << "/"
+                                  << node_array.size() - 1;
+            throw util::exception("Edge weight is <= 0" + SOURCE_REF);
         }
 #endif
         hsgr_output_stream.write((char *)&current_edge,
@@ -966,26 +961,5 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     return number_of_used_edges;
 }
 
-/**
- \brief Build contracted graph.
- */
-void Contractor::ContractGraph(
-    const unsigned max_edge_id,
-    util::DeallocatingVector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-    util::DeallocatingVector<QueryEdge> &contracted_edge_list,
-    std::vector<EdgeWeight> &&node_weights,
-    std::vector<bool> &is_core_node,
-    std::vector<float> &inout_node_levels) const
-{
-    std::vector<float> node_levels;
-    node_levels.swap(inout_node_levels);
-
-    GraphContractor graph_contractor(
-        max_edge_id + 1, edge_based_edge_list, std::move(node_levels), std::move(node_weights));
-    graph_contractor.Run(config.core_factor);
-    graph_contractor.GetEdges(contracted_edge_list);
-    graph_contractor.GetCoreMarker(is_core_node);
-    graph_contractor.GetNodeLevels(inout_node_levels);
-}
-}
-}
+} // namespace contractor
+} // namespace osrm

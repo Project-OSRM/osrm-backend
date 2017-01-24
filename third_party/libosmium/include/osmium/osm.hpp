@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,11 +33,20 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <osmium/osm/node.hpp> // IWYU pragma: export
-#include <osmium/osm/way.hpp> // IWYU pragma: export
-#include <osmium/osm/relation.hpp> // IWYU pragma: export
 #include <osmium/osm/area.hpp> // IWYU pragma: export
 #include <osmium/osm/changeset.hpp> // IWYU pragma: export
+#include <osmium/osm/entity.hpp> // IWYU pragma: export
+#include <osmium/osm/entity_bits.hpp> // IWYU pragma: export
+#include <osmium/osm/item_type.hpp> // IWYU pragma: export
+#include <osmium/osm/location.hpp> // IWYU pragma: export
+#include <osmium/osm/node.hpp> // IWYU pragma: export
+#include <osmium/osm/node_ref.hpp> // IWYU pragma: export
+#include <osmium/osm/node_ref_list.hpp> // IWYU pragma: export
+#include <osmium/osm/object.hpp> // IWYU pragma: export
+#include <osmium/osm/relation.hpp> // IWYU pragma: export
+#include <osmium/osm/timestamp.hpp> // IWYU pragma: export
+#include <osmium/osm/types.hpp> // IWYU pragma: export
+#include <osmium/osm/way.hpp> // IWYU pragma: export
 
 /**
  * @brief Namespace for everything in the Osmium library.

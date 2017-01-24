@@ -18,8 +18,8 @@ documentation.
 
 #include <type_traits>
 
-#include <protozero/types.hpp>
 #include <protozero/pbf_writer.hpp>
+#include <protozero/types.hpp>
 
 namespace protozero {
 
@@ -57,7 +57,7 @@ public:
 
 /// @cond INTERNAL
 #define PROTOZERO_WRITER_WRAP_ADD_SCALAR(name, type) \
-    inline void add_##name(T tag, type value) { \
+    void add_##name(T tag, type value) { \
         pbf_writer::add_##name(pbf_tag_type(tag), value); \
     }
 
@@ -79,38 +79,43 @@ public:
 #undef PROTOZERO_WRITER_WRAP_ADD_SCALAR
 /// @endcond
 
-    inline void add_bytes(T tag, const char* value, std::size_t size) {
+    void add_bytes(T tag, const char* value, std::size_t size) {
         pbf_writer::add_bytes(pbf_tag_type(tag), value, size);
     }
 
-    inline void add_bytes(T tag, const std::string& value) {
+    void add_bytes(T tag, const std::string& value) {
         pbf_writer::add_bytes(pbf_tag_type(tag), value);
     }
 
-    inline void add_string(T tag, const char* value, std::size_t size) {
+    template <typename... Ts>
+    void add_bytes_vectored(T tag, Ts&&... values) {
+        pbf_writer::add_bytes_vectored(pbf_tag_type(tag), std::forward<Ts>(values)...);
+    }
+
+    void add_string(T tag, const char* value, std::size_t size) {
         pbf_writer::add_string(pbf_tag_type(tag), value, size);
     }
 
-    inline void add_string(T tag, const std::string& value) {
+    void add_string(T tag, const std::string& value) {
         pbf_writer::add_string(pbf_tag_type(tag), value);
     }
 
-    inline void add_string(T tag, const char* value) {
+    void add_string(T tag, const char* value) {
         pbf_writer::add_string(pbf_tag_type(tag), value);
     }
 
-    inline void add_message(T tag, const char* value, std::size_t size) {
+    void add_message(T tag, const char* value, std::size_t size) {
         pbf_writer::add_message(pbf_tag_type(tag), value, size);
     }
 
-    inline void add_message(T tag, const std::string& value) {
+    void add_message(T tag, const std::string& value) {
         pbf_writer::add_message(pbf_tag_type(tag), value);
     }
 
 /// @cond INTERNAL
 #define PROTOZERO_WRITER_WRAP_ADD_PACKED(name) \
     template <typename InputIterator> \
-    inline void add_packed_##name(T tag, InputIterator first, InputIterator last) { \
+    void add_packed_##name(T tag, InputIterator first, InputIterator last) { \
         pbf_writer::add_packed_##name(pbf_tag_type(tag), first, last); \
     }
 
@@ -132,7 +137,7 @@ public:
 #undef PROTOZERO_WRITER_WRAP_ADD_PACKED
 /// @endcond
 
-};
+}; // class pbf_builder
 
 } // end namespace protozero
 

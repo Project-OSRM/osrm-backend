@@ -1,10 +1,13 @@
 #ifndef SHARED_MEMORY_VECTOR_WRAPPER_HPP
 #define SHARED_MEMORY_VECTOR_WRAPPER_HPP
 
+#include "util/log.hpp"
+
 #include <boost/assert.hpp>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/iterator/reverse_iterator.hpp>
 
-#include "util/simple_logger.hpp"
-
+#include <climits>
 #include <cstddef>
 
 #include <algorithm>
@@ -18,32 +21,34 @@ namespace osrm
 namespace util
 {
 
-template <typename DataT> class ShMemIterator : public std::iterator<std::input_iterator_tag, DataT>
+template <typename DataT>
+class ShMemIterator
+    : public boost::iterator_facade<ShMemIterator<DataT>, DataT, boost::random_access_traversal_tag>
 {
-    DataT *p;
+    typedef boost::iterator_facade<ShMemIterator<DataT>, DataT, boost::random_access_traversal_tag>
+        base_t;
 
   public:
-    explicit ShMemIterator(DataT *x) : p(x) {}
-    ShMemIterator(const ShMemIterator &mit) : p(mit.p) {}
-    ShMemIterator &operator++()
+    typedef typename base_t::value_type value_type;
+    typedef typename base_t::difference_type difference_type;
+    typedef typename base_t::reference reference;
+    typedef std::random_access_iterator_tag iterator_category;
+
+    explicit ShMemIterator(DataT *x) : m_value(x) {}
+
+  private:
+    void increment() { ++m_value; }
+    void decrement() { --m_value; }
+    void advance(difference_type offset) { m_value += offset; }
+    bool equal(const ShMemIterator &other) const { return m_value == other.m_value; }
+    reference dereference() const { return *m_value; }
+    difference_type distance_to(const ShMemIterator &other) const
     {
-        ++p;
-        return *this;
+        return other.m_value - m_value;
     }
-    ShMemIterator operator++(int)
-    {
-        ShMemIterator tmp(*this);
-        operator++();
-        return tmp;
-    }
-    ShMemIterator operator+(std::ptrdiff_t diff)
-    {
-        ShMemIterator tmp(p + diff);
-        return tmp;
-    }
-    bool operator==(const ShMemIterator &rhs) { return p == rhs.p; }
-    bool operator!=(const ShMemIterator &rhs) { return p != rhs.p; }
-    DataT &operator*() { return *p; }
+
+    friend class ::boost::iterator_core_access;
+    DataT *m_value;
 };
 
 template <typename DataT> class SharedMemoryWrapper
@@ -53,6 +58,9 @@ template <typename DataT> class SharedMemoryWrapper
     std::size_t m_size;
 
   public:
+    using iterator = ShMemIterator<DataT>;
+    using reverse_iterator = boost::reverse_iterator<iterator>;
+
     SharedMemoryWrapper() : m_ptr(nullptr), m_size(0) {}
 
     SharedMemoryWrapper(DataT *ptr, std::size_t size) : m_ptr(ptr), m_size(size) {}
@@ -67,9 +75,13 @@ template <typename DataT> class SharedMemoryWrapper
 
     const DataT &at(const std::size_t index) const { return m_ptr[index]; }
 
-    ShMemIterator<DataT> begin() const { return ShMemIterator<DataT>(m_ptr); }
+    auto begin() const { return iterator(m_ptr); }
 
-    ShMemIterator<DataT> end() const { return ShMemIterator<DataT>(m_ptr + m_size); }
+    auto end() const { return iterator(m_ptr + m_size); }
+
+    auto rbegin() const { return reverse_iterator(iterator(m_ptr + m_size)); }
+
+    auto rend() const { return reverse_iterator(iterator(m_ptr)); }
 
     std::size_t size() const { return m_size; }
 
@@ -104,8 +116,9 @@ template <> class SharedMemoryWrapper<bool>
 
     bool at(const std::size_t index) const
     {
-        const std::size_t bucket = index / 32;
-        const unsigned offset = static_cast<unsigned>(index % 32);
+        BOOST_ASSERT_MSG(index < m_size, "invalid size");
+        const std::size_t bucket = index / (CHAR_BIT * sizeof(unsigned));
+        const unsigned offset = index % (CHAR_BIT * sizeof(unsigned));
         return m_ptr[bucket] & (1u << offset);
     }
 
@@ -119,13 +132,7 @@ template <> class SharedMemoryWrapper<bool>
 
     bool empty() const { return 0 == size(); }
 
-    bool operator[](const unsigned index)
-    {
-        BOOST_ASSERT_MSG(index < m_size, "invalid size");
-        const unsigned bucket = index / 32;
-        const unsigned offset = index % 32;
-        return m_ptr[bucket] & (1u << offset);
-    }
+    bool operator[](const unsigned index) const { return at(index); }
 
     template <typename T>
     friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;

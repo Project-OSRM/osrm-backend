@@ -1,4 +1,4 @@
-language: c
+language: generic
 
 sudo: false
 
@@ -6,49 +6,50 @@ sudo: false
 addons_shortcuts:
   addons_clang35: &clang35
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5', 'boost-latest' ]
-      packages: [ 'clang-3.5', 'libboost1.55-all-dev' ]
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5' ]
+      packages: [ 'clang-3.5', 'llvm-3.5-dev' ]
   addons_clang36: &clang36
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6', 'boost-latest' ]
-      packages: [ 'clang-3.6', 'libboost1.55-all-dev' ]
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6' ]
+      packages: [ 'clang-3.6' ]
   addons_clang37: &clang37
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7', 'boost-latest' ]
-      packages: [ 'clang-3.7', 'libboost1.55-all-dev' ]
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.7' ]
+      packages: [ 'clang-3.7' ]
   addons_clang38: &clang38
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise', 'boost-latest' ]
-      packages: [ 'clang-3.8', 'libboost1.55-all-dev']
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
+      packages: [ 'clang-3.8']
+  addons_clang39: &clang39
+    apt:
+      sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise' ]
+      packages: [ 'clang-3.9']
   addons_gcc47: &gcc47
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'boost-latest' ]
-      packages: [ 'g++-4.7', 'libboost1.55-all-dev' ]
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'g++-4.7' ]
   addons_gcc48: &gcc48
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'boost-latest' ]
-      packages: [ 'g++-4.8', 'libboost1.55-all-dev' ]
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'g++-4.8' ]
   addons_gcc49: &gcc49
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'boost-latest' ]
-      packages: [ 'g++-4.9', 'libboost1.55-all-dev' ]
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'g++-4.9' ]
   addons_gcc5: &gcc5
     apt:
-      sources: [ 'ubuntu-toolchain-r-test', 'boost-latest' ]
-      packages: [ 'g++-5', 'libboost1.55-all-dev' ]
+      sources: [ 'ubuntu-toolchain-r-test' ]
+      packages: [ 'g++-5' ]
 
 matrix:
   include:
-    - os: osx
-      osx_image: xcode6
-      compiler: clang
     - os: osx
       osx_image: xcode7
       env: TEST_GYP_BUILD=True
       compiler: clang
     - os: linux
       compiler: "clang35"
-      env: CXX=clang++-3.5
+      env: CXX=clang++-3.5 COVERAGE=True
       addons: *clang35
     - os: linux
       compiler: "clang36"
@@ -56,7 +57,7 @@ matrix:
       addons: *clang36
     - os: linux
       compiler: "clang37"
-      env: CXX=clang++-3.7 COVERAGE=True
+      env: CXX=clang++-3.7
       addons: *clang37
     - os: linux
       compiler: "clang38"
@@ -66,6 +67,11 @@ matrix:
       compiler: "clang38"
       env: CXX=clang++-3.8 CXX_STD=c++14
       addons: *clang38
+    # not whitelisted yet: https://github.com/travis-ci/apt-package-whitelist/issues/2764
+    #- os: linux
+    #  compiler: "clang39"
+    #  env: CXX=clang++-3.9
+    #  addons: *clang39
     - os: linux
       compiler: "gcc47"
       env: CXX=g++-4.7
@@ -96,7 +102,6 @@ before_install:
  - if [[ $(uname -s) == 'Linux' ]]; then
      export PYTHONPATH=$(pwd)/.local/lib/python2.7/site-packages;
    else
-     brew install boost;
      export PYTHONPATH=$(pwd)/.local/lib/python/site-packages;
    fi
  - if [[ ${COVERAGE:-0} == 'True' ]]; then
@@ -106,11 +111,7 @@ before_install:
 install:
  - make test
  - make bench
- - if [[ $(uname -s) == 'Linux' ]]; then
-     make sizes /usr/include/boost/variant.hpp;
-   else
-     make sizes `brew --prefix`/include/boost/variant.hpp;
-   fi
+ - make sizes
  - scripts/run_compilation_failure_tests.sh
  - if [[ ${TEST_GYP_BUILD:-0} == 'True' ]]; then
      make clean;
@@ -123,5 +124,5 @@ script:
     make coverage;
     ./out/cov-test;
     cp unit*gc* test/;
-    ./.local/bin/cpp-coveralls -i optional.hpp -i recursive_wrapper.hpp -i variant.hpp -i variant_io.hpp --gcov-options '\-lp';
+    ./.local/bin/cpp-coveralls --gcov /usr/bin/llvm-cov-3.5 --gcov-options '\-lp' -i optional.hpp -i recursive_wrapper.hpp -i variant.hpp -i variant_io.hpp;
    fi

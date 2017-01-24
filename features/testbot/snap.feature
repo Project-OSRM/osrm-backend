@@ -6,11 +6,13 @@ Feature: Snap start/end point to the nearest way
 
     Scenario: Snap to nearest protruding oneway
         Given the node map
-            |   | 1 |   | 2 |   |
-            | 8 |   | n |   | 3 |
-            |   | w | c | e |   |
-            | 7 |   | s |   | 4 |
-            |   | 6 |   | 5 |   |
+            """
+              1   2
+            8   n   3
+              w c e
+            7   s   4
+              6   5
+            """
 
         And the ways
             | nodes |
@@ -32,10 +34,12 @@ Feature: Snap start/end point to the nearest way
 
     Scenario: Snap to nearest edge of a square
         Given the node map
-            | 4 | 5 | 6 | 7 |
-            | 3 | a |   | u |
-            | 2 |   |   |   |
-            | 1 | d |   | b |
+            """
+            4 5 6 7
+            3 a   u
+            2
+            1 d   b
+            """
 
         And the ways
             | nodes |
@@ -51,10 +55,12 @@ Feature: Snap start/end point to the nearest way
 
     Scenario: Snap to edge right under start/end point
         Given the node map
-            | d | e | f | g |
-            | c |   |   | h |
-            | b |   |   | i |
-            | a | l | k | j |
+            """
+            d e f g
+            c     h
+            b     i
+            a l k j
+            """
 
         And the ways
             | nodes |
@@ -79,8 +85,10 @@ Feature: Snap start/end point to the nearest way
     Scenario: Snapping in viaroute
         Given the extract extra arguments "--small-component-size 4"
         Given the node map
-            | a |   | c | e |
-            | b |   | d | f |
+            """
+            a   c e
+            b   d f
+            """
 
         And the ways
             | nodes |
@@ -99,9 +107,11 @@ Feature: Snap start/end point to the nearest way
     Scenario: Snap to correct way at large scales
         Given a grid size of 1000 meters
         Given the node map
-            |   |  |  | a |
-            | x |  |  | b |
-            |   |  |  | c |
+            """
+                  a
+            x     b
+                  c
+            """
 
         And the ways
             | nodes |
@@ -121,23 +131,25 @@ Feature: Snap start/end point to the nearest way
     Scenario: Find edges within 100m, and the same from 1km
         Given a grid size of 100 meters
         Given the node map
-            | p |  |  |  |  |  |   |   | i |   |   |  |  |  |  |  | j |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  | 8 |   | 1 |   | 2 |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   | h | a | b |   |  |  |  |  |  |   |
-            | o |  |  |  |  |  | 7 | g | x | c | 3 |  |  |  |  |  | k |
-            |   |  |  |  |  |  |   | f | e | d |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  | 6 |   | 5 |   | 4 |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            |   |  |  |  |  |  |   |   |   |   |   |  |  |  |  |  |   |
-            | n |  |  |  |  |  |   |   | m |   |   |  |  |  |  |  | l |
+            """
+            p               i               j
+
+
+
+
+
+                        8   1   2
+                          h a b
+            o           7 g x c 3           k
+                          f e d
+                        6   5   4
+
+
+
+
+
+            n               m               l
+            """
 
         Given the ways
             | nodes |

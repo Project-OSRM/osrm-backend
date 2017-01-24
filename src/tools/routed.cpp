@@ -1,6 +1,5 @@
 #include "server/server.hpp"
-#include "util/make_unique.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 #include "util/version.hpp"
 
 #include "osrm/engine_config.hpp"
@@ -11,17 +10,15 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#ifdef __linux__
-#include <sys/mman.h>
-#endif
-
 #include <cstdlib>
 
 #include <signal.h>
 
 #include <chrono>
+#include <exception>
 #include <future>
 #include <iostream>
+#include <memory>
 #include <new>
 #include <string>
 #include <thread>
@@ -63,7 +60,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              int &max_locations_trip,
                                              int &max_locations_viaroute,
                                              int &max_locations_distance_table,
-                                             int &max_locations_map_matching)
+                                             int &max_locations_map_matching,
+                                             int &max_results_nearest)
 {
     using boost::program_options::value;
     using boost::filesystem::path;
@@ -100,7 +98,10 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Max. locations supported in distance table query") //
         ("max-matching-size",
          value<int>(&max_locations_map_matching)->default_value(100),
-         "Max. locations supported in map matching query");
+         "Max. locations supported in map matching query") //
+        ("max-nearest-size",
+         value<int>(&max_results_nearest)->default_value(100),
+         "Max. results supported in nearest query");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -122,21 +123,29 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     // parse command line options
     boost::program_options::variables_map option_variables;
-    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                      .options(cmdline_options)
-                                      .positional(positional_options)
-                                      .run(),
-                                  option_variables);
+    try
+    {
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                          .options(cmdline_options)
+                                          .positional(positional_options)
+                                          .run(),
+                                      option_variables);
+    }
+    catch (const boost::program_options::error &e)
+    {
+        util::Log(logERROR) << e.what();
+        return INIT_FAILED;
+    }
 
     if (option_variables.count("version"))
     {
-        util::SimpleLogger().Write() << OSRM_VERSION;
+        std::cout << OSRM_VERSION << std::endl;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
     if (option_variables.count("help"))
     {
-        util::SimpleLogger().Write() << visible_options;
+        std::cout << visible_options;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
@@ -152,11 +161,10 @@ inline unsigned generateServerProgramOptions(const int argc,
     }
     else if (use_shared_memory && option_variables.count("base"))
     {
-        util::SimpleLogger().Write(logWARNING)
-            << "Shared memory settings conflict with path settings.";
+        util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }
 
-    util::SimpleLogger().Write() << visible_options;
+    std::cout << visible_options;
     return INIT_OK_DO_NOT_START_ENGINE;
 }
 
@@ -181,7 +189,8 @@ int main(int argc, const char *argv[]) try
                                                               config.max_locations_trip,
                                                               config.max_locations_viaroute,
                                                               config.max_locations_distance_table,
-                                                              config.max_locations_map_matching);
+                                                              config.max_locations_map_matching,
+                                                              config.max_results_nearest);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -198,103 +207,74 @@ int main(int argc, const char *argv[]) try
     {
         if (base_path.empty() != config.use_shared_memory)
         {
-            util::SimpleLogger().Write(logWARNING) << "Path settings and shared memory conflicts.";
+            util::Log(logWARNING) << "Path settings and shared memory conflicts.";
         }
         else
         {
             if (!boost::filesystem::is_regular_file(config.storage_config.ram_index_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.ram_index_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.ram_index_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.file_index_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.file_index_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.file_index_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.hsgr_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.hsgr_data_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.hsgr_data_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.nodes_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.nodes_data_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.nodes_data_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.edges_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.edges_data_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.edges_data_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.core_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.core_data_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.core_data_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.geometries_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.geometries_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.geometries_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.timestamp_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.timestamp_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.timestamp_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.datasource_names_path))
             {
-                util::SimpleLogger().Write(logWARNING)
-                    << config.storage_config.datasource_names_path << " is not found";
+                util::Log(logWARNING) << config.storage_config.datasource_names_path
+                                      << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.datasource_indexes_path))
             {
-                util::SimpleLogger().Write(logWARNING)
-                    << config.storage_config.datasource_indexes_path << " is not found";
+                util::Log(logWARNING) << config.storage_config.datasource_indexes_path
+                                      << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.names_data_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.names_data_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.names_data_path << " is not found";
             }
             if (!boost::filesystem::is_regular_file(config.storage_config.properties_path))
             {
-                util::SimpleLogger().Write(logWARNING) << config.storage_config.properties_path
-                                                       << " is not found";
+                util::Log(logWARNING) << config.storage_config.properties_path << " is not found";
             }
         }
         return EXIT_FAILURE;
     }
 
-#ifdef __linux__
-    struct MemoryLocker final
-    {
-        explicit MemoryLocker(bool should_lock) : should_lock(should_lock)
-        {
-            if (should_lock && -1 == mlockall(MCL_CURRENT | MCL_FUTURE))
-            {
-                could_lock = false;
-                util::SimpleLogger().Write(logWARNING) << "memory could not be locked to RAM";
-            }
-        }
-        ~MemoryLocker()
-        {
-            if (should_lock && could_lock)
-                (void)munlockall();
-        }
-        bool should_lock = false, could_lock = true;
-    } memory_locker(config.use_shared_memory);
-#endif
-    util::SimpleLogger().Write() << "starting up engines, " << OSRM_VERSION;
+    util::Log() << "starting up engines, " << OSRM_VERSION;
 
     if (config.use_shared_memory)
     {
-        util::SimpleLogger().Write() << "Loading from shared memory";
+        util::Log() << "Loading from shared memory";
     }
 
-    util::SimpleLogger().Write() << "Threads: " << requested_thread_num;
-    util::SimpleLogger().Write() << "IP address: " << ip_address;
-    util::SimpleLogger().Write() << "IP port: " << ip_port;
+    util::Log() << "Threads: " << requested_thread_num;
+    util::Log() << "IP address: " << ip_address;
+    util::Log() << "IP port: " << ip_port;
 
 #ifndef _WIN32
     int sig = 0;
@@ -305,13 +285,13 @@ int main(int argc, const char *argv[]) try
 #endif
 
     auto routing_server = server::Server::CreateServer(ip_address, ip_port, requested_thread_num);
-    auto service_handler = util::make_unique<server::ServiceHandler>(config);
+    auto service_handler = std::make_unique<server::ServiceHandler>(config);
 
     routing_server->RegisterServiceHandler(std::move(service_handler));
 
     if (trial_run)
     {
-        util::SimpleLogger().Write() << "trial run, quitting after successful initialization";
+        util::Log() << "trial run, quitting after successful initialization";
     }
     else
     {
@@ -330,7 +310,7 @@ int main(int argc, const char *argv[]) try
         sigaddset(&wait_mask, SIGQUIT);
         sigaddset(&wait_mask, SIGTERM);
         pthread_sigmask(SIG_BLOCK, &wait_mask, nullptr);
-        util::SimpleLogger().Write() << "running and waiting for requests";
+        util::Log() << "running and waiting for requests";
         if (std::getenv("SIGNAL_PARENT_WHEN_READY"))
         {
             kill(getppid(), SIGUSR1);
@@ -340,12 +320,12 @@ int main(int argc, const char *argv[]) try
         // Set console control handler to allow server to be stopped.
         console_ctrl_function = std::bind(&server::Server::Stop, routing_server);
         SetConsoleCtrlHandler(console_ctrl_handler, TRUE);
-        util::SimpleLogger().Write() << "running and waiting for requests";
+        util::Log() << "running and waiting for requests";
         routing_server->Run();
 #endif
-        util::SimpleLogger().Write() << "initiating shutdown";
+        util::Log() << "initiating shutdown";
         routing_server->Stop();
-        util::SimpleLogger().Write() << "stopping threads";
+        util::Log() << "stopping threads";
 
         auto status = future.wait_for(std::chrono::seconds(2));
 
@@ -355,24 +335,25 @@ int main(int argc, const char *argv[]) try
         }
         else
         {
-            util::SimpleLogger().Write(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
+            util::Log(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
             server_task.reset(); // just kill it
         }
     }
 
-    util::SimpleLogger().Write() << "freeing objects";
+    util::Log() << "freeing objects";
     routing_server.reset();
-    util::SimpleLogger().Write() << "shutdown completed";
+    util::Log() << "shutdown completed";
 }
 catch (const std::bad_alloc &e)
 {
-    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
-    util::SimpleLogger().Write(logWARNING)
-        << "Please provide more memory or consider using a larger swapfile";
+    util::Log(logWARNING) << "[exception] " << e.what();
+    util::Log(logWARNING) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }
+#ifdef _WIN32
 catch (const std::exception &e)
 {
-    util::SimpleLogger().Write(logWARNING) << "[exception] " << e.what();
+    util::Log(logERROR) << "[exception] " << e.what();
     return EXIT_FAILURE;
 }
+#endif

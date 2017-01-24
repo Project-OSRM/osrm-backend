@@ -1,0 +1,22 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      compiler: clang
+    - os: linux
+      compiler: clang
+      sudo: false
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - libstdc++-5-dev
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+- ./mason link ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

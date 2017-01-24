@@ -1,5 +1,5 @@
 #include "storage/storage_config.hpp"
-#include "util/simple_logger.hpp"
+#include "util/log.hpp"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -16,7 +16,8 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       datasource_names_path{base.string() + ".datasource_names"},
       datasource_indexes_path{base.string() + ".datasource_indexes"},
       names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"},
-      intersection_class_path{base.string() + ".icd"}
+      intersection_class_path{base.string() + ".icd"}, turn_lane_data_path{base.string() + ".tld"},
+      turn_lane_description_path{base.string() + ".tls"}
 {
 }
 
@@ -42,7 +43,7 @@ bool StorageConfig::IsValid() const
     {
         if (!boost::filesystem::is_regular_file(*path))
         {
-            util::SimpleLogger().Write(logWARNING) << "Missing/Broken File: " << path->string();
+            util::Log(logWARNING) << "Missing/Broken File: " << path->string();
             success = false;
         }
     }

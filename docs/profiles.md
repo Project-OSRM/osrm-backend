@@ -32,3 +32,16 @@ Given an OpenStreetMap way, the way_function will either return nothing (meaning
 All other calculations stem from that, including the returned timings in driving directions, but also, less directly, it feeds into the actual routing decisions the engine will take (a way with a slow traversal speed, may be less favoured than a way with fast traversal speed, but it depends how long it is, and... what it connects to in the rest of the network graph)
 
 Using the power of the scripting language you wouldn't typically see something as simple as a `result.forward_speed = 20` line within the way_function. Instead a way_function will examine the tagging (e.g. `way:get_value_by_key("highway")` and many others), process this information in various ways, calling other local functions, referencing the global variables and look-up hashes, before arriving at the result.
+
+## Guidance
+
+The guidance parameters in profiles are currently a work in progress. They can and will change.
+Please be aware of this when using guidance configuration possibilities.
+
+### Road Classification
+
+Guidance uses road classes to decide on when/if to emit specific instructions and to discover which road is obvious when following a route.
+Classification uses three flags and a priority-category.
+The flags indicate whether a road is a motorway (required for on/off ramps), a link type (the ramps itself, if also a motorway) and whether a road may be omittted in considerations (is considered purely for connectivity).
+The priority-category influences the decision which road is considered the obvious choice and which roads can be seen as fork.
+Forks can be emitted between roads of similar priority category only. Obvious choices follow a major priority road, if the priority difference is large.

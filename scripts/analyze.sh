@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # Runs the Static Analyzer on the code base.
 # This is a wrapper intended to be used with like this:
 # 1/ analyze cmake ..
 # 2/ analyze cmake --build .
+
 
 exec scan-build -analyze-headers -no-failure-reports --keep-going --status-bugs \
   -enable-checker alpha.core.BoolAssignment \

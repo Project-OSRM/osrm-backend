@@ -13,14 +13,23 @@ module.exports = function () {
             }
 
             this.reprocessAndLoadData((e) => {
-                if (e) callback(e);
+                if (e) return callback(e);
                 var testRow = (row, i, cb) => {
-                    var outputRow = row;
+                    var outputRow = Object.assign({}, row);
 
                     testRoutabilityRow(i, (err, result) => {
                         if (err) return cb(err);
                         directions.filter(d => headers.has(d)).forEach((direction) => {
-                            var want = this.shortcutsHash[row[direction]] || row[direction];
+                            var usingShortcut = false,
+                                want = row[direction];
+                            // shortcuts are when a test has mapped a value like `foot` to
+                            // a value like `5 km/h`, to represent the speed that one
+                            // can travel by foot. we check for these and use the mapped to
+                            // value for later comparison.
+                            if (this.shortcutsHash[row[direction]]) {
+                                want = this.shortcutsHash[row[direction]];
+                                usingShortcut = row[direction];
+                            }
 
                             switch (true) {
                             case '' === want:
@@ -28,27 +37,39 @@ module.exports = function () {
                                 outputRow[direction] = result[direction].status ?
                                     result[direction].status.toString() : '';
                                 break;
-                            case /^\d+s/.test(want):
+                            case /^[\d\.]+ s/.test(want):
+                                // the result here can come back as a non-number value like
+                                // `diff`, but we only want to apply the unit when it comes
+                                // back as a number, for tableDiff's literal comparison
+                                if (result[direction].time) {
+                                    outputRow[direction] = !isNaN(result[direction].time) ?
+                                        result[direction].time.toString()+' s' :
+                                        result[direction].time.toString() || '';
+                                } else {
+                                    outputRow[direction] = '';
+                                }
                                 break;
                             case /^\d+ km\/h/.test(want):
+                                if (result[direction].speed) {
+                                    outputRow[direction] = !isNaN(result[direction].speed) ?
+                                        result[direction].speed.toString()+' km/h' :
+                                        result[direction].speed.toString() || '';
+                                } else {
+                                    outputRow[direction] = '';
+                                }
                                 break;
                             default:
                                 throw new Error(util.format('*** Unknown expectation format: %s', want));
                             }
 
                             if (this.FuzzyMatch.match(outputRow[direction], want)) {
-                                outputRow[direction] = row[direction];
+                                outputRow[direction] = [usingShortcut ? usingShortcut : row[direction]];
                             }
                         });
-
-                        if (outputRow != row) {
-                            this.logFail(row, outputRow, result);
-                        }
 
                         cb(null, outputRow);
                     });
                 };
-
                 this.processRowsAndDiff(table, testRow, callback);
             });
         });
@@ -116,7 +137,7 @@ module.exports = function () {
                     sq.defer(parseRes, key);
                 });
 
-                sq.awaitAll(() => { cb(null, result); });
+                sq.awaitAll((err) => { cb(err, result); });
             });
     };
 };

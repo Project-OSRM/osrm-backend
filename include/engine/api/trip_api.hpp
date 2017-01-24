@@ -47,9 +47,7 @@ class TripAPI final : public RouteAPI
         response.values["code"] = "Ok";
     }
 
-    // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
-    //  protected:
-
+  protected:
     // FIXME this logic is a little backwards. We should change the output format of the
     // trip plugin routing algorithm to be easier to consume here.
     util::json::Array MakeWaypoints(const std::vector<std::vector<NodeID>> &sub_trips,

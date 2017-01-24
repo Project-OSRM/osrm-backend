@@ -2,17 +2,19 @@
 #define OSRM_EXTRACTOR_GUIDANCE_ROUNDABOUT_HANDLER_HPP_
 
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/guidance/coordinate_extractor.hpp"
 #include "extractor/guidance/intersection.hpp"
+#include "extractor/guidance/intersection_generator.hpp"
 #include "extractor/guidance/intersection_handler.hpp"
 #include "extractor/guidance/roundabout_type.hpp"
+#include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
-#include <set>
-#include <utility>
+#include <unordered_set>
 #include <vector>
 
 namespace osrm
@@ -42,9 +44,11 @@ class RoundaboutHandler : public IntersectionHandler
                       const std::vector<QueryNode> &node_info_list,
                       const CompressedEdgeContainer &compressed_edge_container,
                       const util::NameTable &name_table,
-                      const SuffixTable &street_name_suffix_table);
+                      const SuffixTable &street_name_suffix_table,
+                      const ProfileProperties &profile_properties,
+                      const IntersectionGenerator &intersection_generator);
 
-    ~RoundaboutHandler() override final;
+    ~RoundaboutHandler() override final = default;
 
     // check whether the handler can actually handle the intersection
     bool canProcess(const NodeID from_nid,
@@ -78,9 +82,13 @@ class RoundaboutHandler : public IntersectionHandler
                                    const bool can_exit_roundabout,
                                    Intersection intersection) const;
 
-    bool qualifiesAsRoundaboutIntersection(const std::set<NodeID> &roundabout_nodes) const;
+    bool
+    qualifiesAsRoundaboutIntersection(const std::unordered_set<NodeID> &roundabout_nodes) const;
 
     const CompressedEdgeContainer &compressed_edge_container;
+    const ProfileProperties &profile_properties;
+
+    const CoordinateExtractor coordinate_extractor;
 };
 
 } // namespace guidance

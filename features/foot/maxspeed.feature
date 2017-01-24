@@ -6,14 +6,14 @@ Background: Use specific speeds
 
     Scenario: Foot - Ignore maxspeed
         Then routability should be
-            | highway     | maxspeed  | bothw     |
-            | residential |           | 145s ~10% |
-            | residential | 1         | 145s ~10% |
-            | residential | 100       | 145s ~10% |
-            | residential | 1         | 145s ~10% |
-            | residential | 1mph      | 145s ~10% |
-            | residential | 1 mph     | 145s ~10% |
-            | residential | 1unknown  | 145s ~10% |
-            | residential | 1 unknown | 145s ~10% |
-            | residential | none      | 145s ~10% |
-            | residential | signals   | 145s ~10% |
+            | highway     | maxspeed  | bothw      |
+            | residential |           | 145 s ~10% |
+            | residential | 1         | 145 s ~10% |
+            | residential | 100       | 145 s ~10% |
+            | residential | 1         | 145 s ~10% |
+            | residential | 1mph      | 145 s ~10% |
+            | residential | 1 mph     | 145 s ~10% |
+            | residential | 1unknown  | 145 s ~10% |
+            | residential | 1 unknown | 145 s ~10% |
+            | residential | none      | 145 s ~10% |
+            | residential | signals   | 145 s ~10% |

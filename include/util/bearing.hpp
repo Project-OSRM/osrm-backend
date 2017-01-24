@@ -1,16 +1,18 @@
 #ifndef BEARING_HPP
 #define BEARING_HPP
 
+#include <algorithm>
 #include <boost/assert.hpp>
+#include <cmath>
 #include <string>
 
 namespace osrm
 {
 namespace util
 {
-
 namespace bearing
 {
+
 inline std::string get(const double heading)
 {
     BOOST_ASSERT(heading >= 0);
@@ -67,7 +69,7 @@ inline bool CheckInBounds(const int A, const int B, const int range)
 
     if (range >= 180)
         return true;
-    if (range <= 0)
+    if (range < 0)
         return false;
 
     // Map both bearings into positive modulo 360 space
@@ -90,14 +92,79 @@ inline bool CheckInBounds(const int A, const int B, const int range)
     }
 }
 
-inline double reverseBearing(const double bearing)
+inline double reverse(const double bearing)
 {
     if (bearing >= 180)
         return bearing - 180.;
     return bearing + 180;
 }
+
+// Compute the angle between two bearings on a normal turn circle
+//
+//      Bearings                      Angles
+//
+//         0                           180
+//   315         45               225       135
+//
+// 270     x       90           270     x      90
+//
+//   225        135               315        45
+//        180                           0
+//
+// A turn from north to north-east offerst bearing 0 and 45 has to be translated
+// into a turn of 135 degrees. The same holdes for 90 - 135 (east to south
+// east).
+// For north, the transformation works by angle = 540 (360 + 180) - exit_bearing
+// % 360;
+// All other cases are handled by first rotating both bearings to an
+// entry_bearing of 0.
+inline double angleBetween(const double entry_bearing, const double exit_bearing)
+{
+    // transform bearing from cw into ccw order
+    const double offset = 360 - entry_bearing;
+    const double rotated_exit = [](double bearing, const double offset) {
+        bearing += offset;
+        return bearing > 360 ? bearing - 360 : bearing;
+    }(exit_bearing, offset);
+
+    const auto angle = 540 - rotated_exit;
+    return angle >= 360 ? angle - 360 : angle;
 }
+
+} // namespace bearing
+
+// compute the minimum distance in degree between two angles/bearings
+inline double angularDeviation(const double angle_or_bearing, const double from)
+{
+    const double deviation = std::abs(angle_or_bearing - from);
+    return std::min(360 - deviation, deviation);
 }
+
+/* Angles in OSRM are expressed in the range of [0,360). During calculations, we might violate
+ * this range via offsets. This function helps to ensure the range is kept. */
+inline double restrictAngleToValidRange(const double angle)
+{
+    if (angle < 0)
+        return restrictAngleToValidRange(angle + 360.);
+    else if (angle > 360)
+        return restrictAngleToValidRange(angle - 360.);
+    else
+        return angle;
 }
+
+// finds the angle between two angles, based on the minum difference between the two
+inline double angleBetween(const double lhs, const double rhs)
+{
+    const auto difference = std::abs(lhs - rhs);
+    const auto is_clockwise_difference = difference <= 180;
+    const auto angle_between_candidate = .5 * (lhs + rhs);
+    if (is_clockwise_difference)
+        return angle_between_candidate;
+    else
+        return restrictAngleToValidRange(angle_between_candidate + 180);
+}
+
+} // namespace util
+} // namespace osrm
 
 #endif // BEARING_HPP

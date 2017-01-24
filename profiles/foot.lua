@@ -1,3 +1,4 @@
+api_version = 0
 -- Foot profile
 
 local find_access_tag = require("lib/access").find_access_tag
@@ -6,11 +7,8 @@ local find_access_tag = require("lib/access").find_access_tag
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["block"] = true}
 access_tag_whitelist = { ["yes"] = true, ["foot"] = true, ["permissive"] = true, ["designated"] = true  }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["delivery"] = true }
-access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "foot", "access" }
-service_tag_restricted = { ["parking_aisle"] = true }
-ignore_in_grid = { ["ferry"] = true }
-restriction_exception_tags = { "foot" }
+restrictions = { "foot" }
 
 walking_speed = 5
 
@@ -66,13 +64,12 @@ leisure_speeds = {
 
 properties.traffic_signal_penalty        = 2
 properties.u_turn_penalty                = 2
+properties.max_speed_for_map_matching    = 40/3.6 -- kmph -> m/s
 properties.use_turn_restrictions         = false
 properties.continue_straight_at_waypoint = false
 
-local fallback_names     = true
-
-function get_exceptions(vector)
-  for i,v in ipairs(restriction_exception_tags) do
+function get_restrictions(vector)
+  for i,v in ipairs(restrictions) do
     vector:Add(v)
   end
 end
@@ -150,32 +147,30 @@ function way_function (way, result)
   local surface = way:get_value_by_key("surface")
 
    -- name
-  if ref and "" ~= ref and name and "" ~= name then
-    result.name = name .. " (" .. ref .. ")"
-    elseif ref and "" ~= ref then
-      result.name = ref
-  elseif name and "" ~= name then
+  if name and "" ~= name then
     result.name = name
-  elseif highway and fallback_names then
-    result.name = "{highway:"..highway.."}"  -- if no name exists, use way type
-                                            -- this encoding scheme is excepted to be a temporary solution
+  end
+  if ref and "" ~= ref then
+    result.ref = ref
   end
 
-    -- roundabouts
+  -- roundabouts
   if "roundabout" == junction then
     result.roundabout = true
+  end
+  if "circular" == junction then
+    result.circular = true
   end
 
     -- speed
   if route_speeds[route] then
     -- ferries (doesn't cover routes tagged using relations)
-    result.ignore_in_grid = true
-  if duration and durationIsValid(duration) then
-    result.duration = math.max( 1, parseDuration(duration) )
-  else
-    result.forward_speed = route_speeds[route]
-    result.backward_speed = route_speeds[route]
-  end
+      if duration and durationIsValid(duration) then
+        result.duration = math.max( 1, parseDuration(duration) )
+      else
+        result.forward_speed = route_speeds[route]
+        result.backward_speed = route_speeds[route]
+      end
     result.forward_mode = mode.ferry
     result.backward_mode = mode.ferry
   elseif railway and platform_speeds[railway] then

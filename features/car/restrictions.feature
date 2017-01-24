@@ -10,9 +10,11 @@ Feature: Car - Turn restrictions
     @no_turning
     Scenario: Car - No left turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -34,9 +36,11 @@ Feature: Car - Turn restrictions
     @no_turning
     Scenario: Car - No straight on
         Given the node map
-            | a | b | j | d | e |
-            | v |   |   |   | z |
-            |   | w | x | y |   |
+            """
+            a b j d e
+            v       z
+              w x y
+            """
 
         And the ways
             | nodes | oneway |
@@ -62,9 +66,11 @@ Feature: Car - Turn restrictions
     @no_turning
     Scenario: Car - No right turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -86,9 +92,11 @@ Feature: Car - Turn restrictions
     @no_turning
     Scenario: Car - No u-turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -110,9 +118,11 @@ Feature: Car - Turn restrictions
     @no_turning
     Scenario: Car - Handle any no_* relation
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -134,9 +144,11 @@ Feature: Car - Turn restrictions
     @only_turning
     Scenario: Car - Only left turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -149,18 +161,38 @@ Feature: Car - Turn restrictions
             | type        | way:from | way:to | node:via | restriction    |
             | restriction | sj       | wj     | j        | only_left_turn |
 
+    Scenario: Car - Only right turn, invalid
+        Given the node map
+            """
+              n
+            w j e r
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | sj    | yes    |
+            | nj    | -1     |
+            | wj    | -1     |
+            | ej    | -1     |
+            | re    | -1     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | sj       | er     | j        | only_right_on |
+
         When I route I should get
-            | from | to | route    |
-            | s    | w  | sj,wj,wj |
-            | s    | n  |          |
-            | s    | e  |          |
+            | from | to | route       |
+            | s    | r  | sj,ej,re,re |
 
     @only_turning
     Scenario: Car - Only right turn
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -182,9 +214,11 @@ Feature: Car - Turn restrictions
     @only_turning
     Scenario: Car - Only straight on
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -206,9 +240,11 @@ Feature: Car - Turn restrictions
     @no_turning
     Scenario: Car - Handle any only_* restriction
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -230,9 +266,11 @@ Feature: Car - Turn restrictions
     @specific
     Scenario: Car - :hgv-qualified on a standard turn restriction
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -254,9 +292,11 @@ Feature: Car - Turn restrictions
     @specific
     Scenario: Car - :motorcar-qualified on a standard turn restriction
         Given the node map
-            |   | n |   |
-            | w | j | e |
-            |   | s |   |
+            """
+              n
+            w j e
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -278,9 +318,11 @@ Feature: Car - Turn restrictions
     @except
     Scenario: Car - Except tag and on no_ restrictions
         Given the node map
-            | b | x | c |
-            | a | j | d |
-            |   | s |   |
+            """
+            b x c
+            a j d
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -308,9 +350,11 @@ Feature: Car - Turn restrictions
     @except
     Scenario: Car - Except tag and on only_ restrictions
         Given the node map
-            | a |   | b |
-            |   | j |   |
-            |   | s |   |
+            """
+            a   b
+              j
+              s
+            """
 
         And the ways
             | nodes | oneway |
@@ -330,10 +374,12 @@ Feature: Car - Turn restrictions
     @except
     Scenario: Car - Several only_ restrictions at the same segment
         Given the node map
-            |   |   |   |   | y |   |   |   |   |
-            | i | j | f | b | x | a | e | g | h |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   | c |   | d |   |   |   |
+            """
+                    y
+            i j f b x a e g h
+
+                  c   d
+            """
 
         And the ways
             | nodes | oneway |
@@ -365,13 +411,15 @@ Feature: Car - Turn restrictions
     @except
     Scenario: Car - two only_ restrictions share same to-way
         Given the node map
-            |   |   | e |   |   |   | f |   |   |
-            |   |   |   |   | a |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   | c |   | x |   | d |   |   |
-            |   |   |   |   | y |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | b |   |   |   |   |
+            """
+                e       f
+                    a
+
+                c   x   d
+                    y
+
+                    b
+            """
 
         And the ways
             | nodes | oneway |
@@ -399,13 +447,15 @@ Feature: Car - Turn restrictions
     @except
     Scenario: Car - two only_ restrictions share same from-way
         Given the node map
-            |   |   | e |   |   |   | f |   |   |
-            |   |   |   |   | a |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   | c |   | x |   | d |   |   |
-            |   |   |   |   | y |   |   |   |   |
-            |   |   |   |   |   |   |   |   |   |
-            |   |   |   |   | b |   |   |   |   |
+            """
+                e       f
+                    a
+
+                c   x   d
+                    y
+
+                    b
+            """
 
         And the ways
             | nodes | oneway |
@@ -429,4 +479,30 @@ Feature: Car - Turn restrictions
             | from | to | route       |
             | a    | b  | ax,xy,yb,yb |
             | b    | a  | yb,xy,ax,ax |
+
+    @specific
+    Scenario: Car - Ignore unrecognized restriction
+        Given the node map
+            """
+              n
+            w j e
+              s
+            """
+
+        And the ways
+            | nodes | oneway |
+            | sj    | yes    |
+            | nj    | -1     |
+            | wj    | -1     |
+            | ej    | -1     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | sj       | wj     | j        | yield        |
+
+        When I route I should get
+            | from | to | route    |
+            | s    | w  | sj,wj,wj |
+            | s    | n  | sj,nj,nj |
+            | s    | e  | sj,ej,ej |
 

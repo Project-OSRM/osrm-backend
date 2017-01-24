@@ -60,8 +60,9 @@ OSRM_STRONG_TYPEDEF(double, FloatLongitude)
 inline FixedLatitude toFixed(const FloatLatitude floating)
 {
     const auto latitude = static_cast<double>(floating);
-    const auto fixed = boost::numeric_cast<std::int32_t>(latitude * COORDINATE_PRECISION);
-    return FixedLatitude(fixed);
+    const auto fixed =
+        boost::numeric_cast<std::int32_t>(std::round(latitude * COORDINATE_PRECISION));
+    return FixedLatitude{fixed};
 }
 
 /**
@@ -74,8 +75,9 @@ inline FixedLatitude toFixed(const FloatLatitude floating)
 inline FixedLongitude toFixed(const FloatLongitude floating)
 {
     const auto longitude = static_cast<double>(floating);
-    const auto fixed = boost::numeric_cast<std::int32_t>(longitude * COORDINATE_PRECISION);
-    return FixedLongitude(fixed);
+    const auto fixed =
+        boost::numeric_cast<std::int32_t>(std::round(longitude * COORDINATE_PRECISION));
+    return FixedLongitude{fixed};
 }
 
 /**
@@ -89,7 +91,7 @@ inline FloatLatitude toFloating(const FixedLatitude fixed)
 {
     const auto latitude = static_cast<std::int32_t>(fixed);
     const auto floating = boost::numeric_cast<double>(latitude / COORDINATE_PRECISION);
-    return FloatLatitude(floating);
+    return FloatLatitude{floating};
 }
 
 /**
@@ -103,7 +105,7 @@ inline FloatLongitude toFloating(const FixedLongitude fixed)
 {
     const auto longitude = static_cast<std::int32_t>(fixed);
     const auto floating = boost::numeric_cast<double>(longitude / COORDINATE_PRECISION);
-    return FloatLongitude(floating);
+    return FloatLongitude{floating};
 }
 
 // fwd. decl.
@@ -127,7 +129,7 @@ struct Coordinate
     FixedLongitude lon;
     FixedLatitude lat;
 
-    Coordinate() : lon(std::numeric_limits<int>::min()), lat(std::numeric_limits<int>::min()) {}
+    Coordinate() : lon{std::numeric_limits<int>::min()}, lat{std::numeric_limits<int>::min()} {}
 
     Coordinate(const FloatCoordinate &other);
 
@@ -173,7 +175,7 @@ struct FloatCoordinate
     FloatLatitude lat;
 
     FloatCoordinate()
-        : lon(std::numeric_limits<double>::min()), lat(std::numeric_limits<double>::min())
+        : lon{std::numeric_limits<double>::min()}, lat{std::numeric_limits<double>::min()}
     {
     }
 

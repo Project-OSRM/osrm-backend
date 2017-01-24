@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,8 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <iterator>
 #include <iosfwd>
+#include <iterator>
 #include <type_traits>
 
 #include <osmium/memory/item.hpp>
@@ -44,16 +44,22 @@ namespace osmium {
     namespace memory {
 
         template <typename TMember>
-        class CollectionIterator : public std::iterator<std::forward_iterator_tag, TMember> {
+        class CollectionIterator {
 
-            // This data_type is either 'unsigned char*' or 'const unsigned char*' depending
-            // on whether TMember is const. This allows this class to be used as an iterator and
-            // as a const_iterator.
-            typedef typename std::conditional<std::is_const<TMember>::value, const unsigned char*, unsigned char*>::type data_type;
+            // This data_type is either 'unsigned char*' or 'const unsigned
+            // char*' depending on whether TMember is const. This allows this
+            // class to be used as an iterator and as a const_iterator.
+            using data_type = typename std::conditional<std::is_const<TMember>::value, const unsigned char*, unsigned char*>::type;
 
             data_type m_data;
 
         public:
+
+            using iterator_category = std::forward_iterator_tag;
+            using value_type        = TMember;
+            using difference_type   = std::ptrdiff_t;
+            using pointer           = value_type*;
+            using reference         = value_type&;
 
             CollectionIterator() noexcept :
                 m_data(nullptr) {
@@ -86,11 +92,11 @@ namespace osmium {
                 return m_data;
             }
 
-            TMember& operator*() const {
+            TMember& operator*() const noexcept {
                 return *reinterpret_cast<TMember*>(m_data);
             }
 
-            TMember* operator->() const {
+            TMember* operator->() const noexcept {
                 return reinterpret_cast<TMember*>(m_data);
             }
 
@@ -112,41 +118,62 @@ namespace osmium {
 
         public:
 
-            typedef CollectionIterator<TMember> iterator;
-            typedef CollectionIterator<const TMember> const_iterator;
-            typedef TMember value_type;
+            using value_type      = TMember;
+            using reference       = TMember&;
+            using const_reference = const TMember&;
+            using iterator        = CollectionIterator<TMember>;
+            using const_iterator  = CollectionIterator<const TMember>;
+            using size_type       = size_t;
 
             static constexpr osmium::item_type itemtype = TCollectionItemType;
+
+            constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+                return t == itemtype;
+            }
 
             Collection() :
                 Item(sizeof(Collection<TMember, TCollectionItemType>), TCollectionItemType) {
             }
 
-            bool empty() const {
+            /**
+             * Does this collection contain any items?
+             *
+             * Complexity: Constant.
+             */
+            bool empty() const noexcept {
                 return sizeof(Collection<TMember, TCollectionItemType>) == byte_size();
             }
 
-            iterator begin() {
+            /**
+             * Returns the number of items in this collection.
+             *
+             * Complexity: Linear in the number of items.
+             */
+            size_type size() const noexcept {
+                return static_cast<size_type>(std::distance(begin(), end()));
+            }
+
+            iterator begin() noexcept {
                 return iterator(data() + sizeof(Collection<TMember, TCollectionItemType>));
             }
 
-            iterator end() {
+            iterator end() noexcept {
                 return iterator(data() + byte_size());
             }
 
-            const_iterator cbegin() const {
+            const_iterator cbegin() const noexcept {
                 return const_iterator(data() + sizeof(Collection<TMember, TCollectionItemType>));
             }
 
-            const_iterator cend() const {
+            const_iterator cend() const noexcept {
                 return const_iterator(data() + byte_size());
             }
 
-            const_iterator begin() const {
+            const_iterator begin() const noexcept {
                 return cbegin();
             }
 
-            const_iterator end() const {
+            const_iterator end() const noexcept {
                 return cend();
             }
 

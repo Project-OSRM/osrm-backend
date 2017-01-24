@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,12 +33,15 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cassert>
+#include <type_traits>
+
 #include <osmium/osm/item_type.hpp>
 
 namespace osmium {
 
     /**
-     * @brief Bitfield for OSM entity types.
+     * @brief Bit field for OSM entity types.
      */
     namespace osm_entity_bits {
 
@@ -57,23 +60,33 @@ namespace osmium {
          * assert(! (entities & osmium::osm_entity_bits::changeset));
          * @endcode
          */
-        enum type : unsigned char {
+        enum type : unsigned char { // this should have been an enum class
+                                    // but now we can't change it any more
+                                    // without breaking lots of code
 
-            nothing    = 0x00,
-            node       = 0x01,
-            way        = 0x02,
-            relation   = 0x04,
-            nwr        = 0x07, ///< node, way, or relation object
-            area       = 0x08,
-            nwra       = 0x0f, ///< node, way, relation, or area object
-            object     = 0x0f, ///< node, way, relation, or area object
-            changeset  = 0x10,
-            all        = 0x1f  ///< object or changeset
+            nothing   = 0x00,
+            node      = 0x01,
+            way       = 0x02,
+            relation  = 0x04,
+            nwr       = 0x07, ///< node, way, or relation object
+            area      = 0x08,
+            nwra      = 0x0f, ///< node, way, relation, or area object
+            object    = 0x0f, ///< node, way, relation, or area object
+            changeset = 0x10,
+            all       = 0x1f ///< object or changeset
 
         }; // enum type
 
-        inline type operator|(const type lhs, const type rhs) noexcept {
-            return static_cast<type>(static_cast<int>(lhs) | static_cast<int> (rhs));
+        inline constexpr type operator|(const type lhs, const type rhs) noexcept {
+            return static_cast<type>(static_cast<int>(lhs) | static_cast<int>(rhs));
+        }
+
+        inline constexpr type operator&(const type lhs, const type rhs) noexcept {
+            return static_cast<type>(static_cast<int>(lhs) & static_cast<int>(rhs));
+        }
+
+        inline constexpr type operator~(const type value) noexcept {
+            return all & static_cast<type>(~static_cast<int>(value));
         }
 
         inline type& operator|=(type& lhs, const type rhs) noexcept {
@@ -81,21 +94,24 @@ namespace osmium {
             return lhs;
         }
 
-        inline type operator&(const type lhs, const type rhs) noexcept {
-            return static_cast<type>(static_cast<int>(lhs) & static_cast<int> (rhs));
-        }
-
-        inline type operator~(const type value) noexcept {
-            return static_cast<type>(~static_cast<int>(value));
-        }
-
         inline type operator&=(type& lhs, const type rhs) noexcept {
             lhs = lhs & rhs;
             return lhs;
         }
 
+        /**
+         * Get entity_bits from item_type.
+         *
+         * @pre item_type must be undefined, node, way, relation, area, or
+         *      changeset.
+         */
         inline type from_item_type(osmium::item_type item_type) noexcept {
-            return static_cast<osmium::osm_entity_bits::type>(0x1 << (static_cast<uint16_t>(item_type) - 1));
+            const auto ut = static_cast<std::underlying_type<osmium::item_type>::type>(item_type);
+            assert(ut <= 0x05);
+            if (ut == 0) {
+                return nothing;
+            }
+            return static_cast<osmium::osm_entity_bits::type>(0x1 << (ut - 1));
         }
 
     } // namespace osm_entity_bits

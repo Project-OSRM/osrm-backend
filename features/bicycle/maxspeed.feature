@@ -9,7 +9,7 @@ Feature: Bike - Max speed restrictions
         Then routability should be
             | highway     | maxspeed | bothw   |
             | residential |          | 15 km/h |
-            | residential | 10       | 10 km/h |
+            | residential | 10       | 9 km/h  |
 
     Scenario: Bicycle - Ignore maxspeed when higher than way speed
         Then routability should be
@@ -40,7 +40,9 @@ Feature: Bike - Max speed restrictions
 
     Scenario: Bike - Do not use maxspeed when higher that way type speed
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | highway     | maxspeed |
@@ -63,12 +65,12 @@ Feature: Bike - Max speed restrictions
         Then routability should be
             | maxspeed | maxspeed:forward | maxspeed:backward | forw    | backw   |
             |          |                  |                   | 15 km/h | 15 km/h |
-            | 10       |                  |                   | 10 km/h | 10 km/h |
-            |          | 10               |                   | 10 km/h | 15 km/h |
-            |          |                  | 10                | 15 km/h | 10 km/h |
-            | 2        | 10               |                   | 10 km/h | 2 km/h  |
-            | 2        |                  | 10                | 2 km/h  | 10 km/h |
-            | 2        | 5                | 10                | 5 km/h  | 10 km/h |
+            | 10       |                  |                   | 9 km/h  | 9 km/h  |
+            |          | 10               |                   | 9 km/h  | 15 km/h |
+            |          |                  | 10                | 14 km/h | 9 km/h  |
+            | 2        | 10               |                   | 9 km/h  | 2 km/h  |
+            | 2        |                  | 10                | 2 km/h  | 9 km/h  |
+            | 2        | 5                | 10                | 5 km/h  | 9 km/h  |
 
     Scenario: Bike - Maxspeed should not allow routing on unroutable ways
         Then routability should be

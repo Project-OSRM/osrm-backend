@@ -1,9 +1,18 @@
-# here we set up the node version on the fly. currently only node 4, but can be used for more values if need be
-# This is done manually so that the build works the same on OS X
-rm -rf ~/.nvm/ && git clone --depth 1 --branch v0.30.1 https://github.com/creationix/nvm.git ~/.nvm
-source ~/.nvm/nvm.sh
-nvm install $1
-nvm use $1
+#!/usr/bin/env bash
+
+NODE_HOME=$HOME/node
+export NODE_HOME
+mkdir ${NODE_HOME}
+if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+  curl https://s3.amazonaws.com/mapbox/apps/install-node/v2.0.0/run | NV=4.4.2 NP=darwin-x64 OD=${NODE_HOME} sh
+else
+  curl https://s3.amazonaws.com/mapbox/apps/install-node/v2.0.0/run | NV=4.4.2 NP=linux-x64 OD=${NODE_HOME} sh
+fi
+
+PATH="${NODE_HOME}/bin:$PATH"
+export PATH
 node --version
 npm --version
 which node
+
+

@@ -15,11 +15,15 @@ bool EngineConfig::IsValid() const
         storage_config.datasource_names_path.empty() &&
         storage_config.datasource_indexes_path.empty() && storage_config.names_data_path.empty();
 
-    const bool limits_valid =
-        (max_locations_distance_table == -1 || max_locations_distance_table > 2) &&
-        (max_locations_map_matching == -1 || max_locations_map_matching > 2) &&
-        (max_locations_trip == -1 || max_locations_trip > 2) &&
-        (max_locations_viaroute == -1 || max_locations_viaroute > 2);
+    const auto unlimited_or_more_than = [](const int v, const int limit) {
+        return v == -1 || v > limit;
+    };
+
+    const bool limits_valid = unlimited_or_more_than(max_locations_distance_table, 2) &&
+                              unlimited_or_more_than(max_locations_map_matching, 2) &&
+                              unlimited_or_more_than(max_locations_trip, 2) &&
+                              unlimited_or_more_than(max_locations_viaroute, 2) &&
+                              unlimited_or_more_than(max_results_nearest, 0);
 
     return ((use_shared_memory && all_path_are_empty) || storage_config.IsValid()) && limits_valid;
 }

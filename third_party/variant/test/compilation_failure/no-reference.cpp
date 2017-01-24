@@ -1,7 +1,6 @@
-
 // @EXPECTED: Variant can not hold reference types
 
-#include <variant.hpp>
+#include <mapbox/variant.hpp>
 
 int main()
 {

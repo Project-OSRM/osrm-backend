@@ -20,7 +20,7 @@ const constexpr double EARTH_RADIUS_WGS84 = 6378137.0;
 // earth circumference devided by 2
 const constexpr double MAXEXTENT = EARTH_RADIUS_WGS84 * boost::math::constants::pi<double>();
 // ^ math functions are not constexpr since they have side-effects (setting errno) :(
-const constexpr double MAX_LATITUDE = 85.;
+const constexpr double EPSG3857_MAX_LATITUDE = 85.051128779806592378; // 90(4*atan(exp(pi))/pi-1)
 const constexpr double MAX_LONGITUDE = 180.0;
 }
 
@@ -29,22 +29,33 @@ const constexpr double DEGREE_TO_PX = detail::MAXEXTENT / 180.0;
 // This is the global default tile size for all Mapbox Vector Tiles
 const constexpr double TILE_SIZE = 256.0;
 
+inline FloatLatitude clamp(const FloatLatitude lat)
+{
+    return std::max(std::min(lat, FloatLatitude{detail::EPSG3857_MAX_LATITUDE}),
+                    FloatLatitude{-detail::EPSG3857_MAX_LATITUDE});
+}
+
+inline FloatLongitude clamp(const FloatLongitude lon)
+{
+    return std::max(std::min(lon, FloatLongitude{detail::MAX_LONGITUDE}),
+                    FloatLongitude{-detail::MAX_LONGITUDE});
+}
+
 inline FloatLatitude yToLat(const double y)
 {
     const auto clamped_y = std::max(-180., std::min(180., y));
     const double normalized_lat =
         detail::RAD_TO_DEGREE * 2. * std::atan(std::exp(clamped_y * detail::DEGREE_TO_RAD));
 
-    return FloatLatitude(normalized_lat - 90.);
+    return FloatLatitude{normalized_lat - 90.};
 }
 
 inline double latToY(const FloatLatitude latitude)
 {
     // apparently this is the (faster) version of the canonical log(tan()) version
-    const double f = std::sin(detail::DEGREE_TO_RAD * static_cast<double>(latitude));
-    const double y = detail::RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
-    const auto clamped_y = std::max(-180., std::min(180., y));
-    return clamped_y;
+    const auto clamped_latitude = clamp(latitude);
+    const double f = std::sin(detail::DEGREE_TO_RAD * static_cast<double>(clamped_latitude));
+    return detail::RAD_TO_DEGREE * 0.5 * std::log((1 + f) / (1 - f));
 }
 
 template <typename T> constexpr double horner(double, T an) { return an; }
@@ -56,7 +67,7 @@ template <typename T, typename... U> constexpr double horner(double x, T an, U..
 
 inline double latToYapprox(const FloatLatitude latitude)
 {
-    if (latitude < FloatLatitude(-70.) || latitude > FloatLatitude(70.))
+    if (latitude < FloatLatitude{-70.} || latitude > FloatLatitude{70.})
         return latToY(latitude);
 
     // Approximate the inverse Gudermannian function with the Padé approximant [11/11]: deg → deg
@@ -89,18 +100,6 @@ inline double latToYapprox(const FloatLatitude latitude)
                   9.17695141954265959600965170e-23,
                   -8.72130728982012387640166055e-22,
                   -3.23083224835967391884404730e-28);
-}
-
-inline FloatLatitude clamp(const FloatLatitude lat)
-{
-    return std::max(std::min(lat, FloatLatitude(detail::MAX_LATITUDE)),
-                    FloatLatitude(-detail::MAX_LATITUDE));
-}
-
-inline FloatLongitude clamp(const FloatLongitude lon)
-{
-    return std::max(std::min(lon, FloatLongitude(detail::MAX_LONGITUDE)),
-                    FloatLongitude(-detail::MAX_LONGITUDE));
 }
 
 inline void pixelToDegree(const double shift, double &x, double &y)
@@ -140,13 +139,19 @@ inline FloatCoordinate toWGS84(const FloatCoordinate &mercator_coordinate)
 }
 
 // Converts a WMS tile coordinate (z,x,y) into a wgs bounding box
-inline void xyzToWGS84(
-    const int x, const int y, const int z, double &minx, double &miny, double &maxx, double &maxy)
+inline void xyzToWGS84(const int x,
+                       const int y,
+                       const int z,
+                       double &minx,
+                       double &miny,
+                       double &maxx,
+                       double &maxy,
+                       int mercator_buffer = 0)
 {
-    minx = x * TILE_SIZE;
-    miny = (y + 1.0) * TILE_SIZE;
-    maxx = (x + 1.0) * TILE_SIZE;
-    maxy = y * TILE_SIZE;
+    minx = x * TILE_SIZE - mercator_buffer;
+    miny = (y + 1.0) * TILE_SIZE + mercator_buffer;
+    maxx = (x + 1.0) * TILE_SIZE + mercator_buffer;
+    maxy = y * TILE_SIZE - mercator_buffer;
     // 2^z * TILE_SIZE
     const double shift = (1u << static_cast<unsigned>(z)) * TILE_SIZE;
     pixelToDegree(shift, minx, miny);
@@ -159,10 +164,10 @@ inline void xyzToMercator(
 {
     xyzToWGS84(x, y, z, minx, miny, maxx, maxy);
 
-    minx = static_cast<double>(clamp(util::FloatLongitude(minx))) * DEGREE_TO_PX;
-    miny = latToY(clamp(util::FloatLatitude(miny))) * DEGREE_TO_PX;
-    maxx = static_cast<double>(clamp(util::FloatLongitude(maxx))) * DEGREE_TO_PX;
-    maxy = latToY(clamp(util::FloatLatitude(maxy))) * DEGREE_TO_PX;
+    minx = static_cast<double>(clamp(util::FloatLongitude{minx})) * DEGREE_TO_PX;
+    miny = latToY(util::FloatLatitude{miny}) * DEGREE_TO_PX;
+    maxx = static_cast<double>(clamp(util::FloatLongitude{maxx})) * DEGREE_TO_PX;
+    maxy = latToY(util::FloatLatitude{maxy}) * DEGREE_TO_PX;
 }
 }
 }

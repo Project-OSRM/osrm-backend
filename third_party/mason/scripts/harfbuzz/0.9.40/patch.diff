@@ -1,0 +1,106 @@
+diff --git a/configure b/configure
+index 1c08cae..7ada61a 100755
+--- a/configure
++++ b/configure
+@@ -18616,98 +18616,11 @@ else
+   with_freetype=auto
+ fi
+ 
+-have_freetype=false
+-if test "x$with_freetype" = "xyes" -o "x$with_freetype" = "xauto"; then
+-	# See freetype/docs/VERSION.DLL; 12.0.6 means freetype-2.4.2
+-
+-pkg_failed=no
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for FREETYPE" >&5
+-$as_echo_n "checking for FREETYPE... " >&6; }
+-
+-if test -n "$PKG_CONFIG"; then
+-    if test -n "$FREETYPE_CFLAGS"; then
+-        pkg_cv_FREETYPE_CFLAGS="$FREETYPE_CFLAGS"
+-    else
+-        if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"freetype2 >= 12.0.6\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "freetype2 >= 12.0.6") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_FREETYPE_CFLAGS=`$PKG_CONFIG --cflags "freetype2 >= 12.0.6" 2>/dev/null`
+-else
+-  pkg_failed=yes
+-fi
+-    fi
+-else
+-	pkg_failed=untried
+-fi
+-if test -n "$PKG_CONFIG"; then
+-    if test -n "$FREETYPE_LIBS"; then
+-        pkg_cv_FREETYPE_LIBS="$FREETYPE_LIBS"
+-    else
+-        if test -n "$PKG_CONFIG" && \
+-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"freetype2 >= 12.0.6\""; } >&5
+-  ($PKG_CONFIG --exists --print-errors "freetype2 >= 12.0.6") 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-  pkg_cv_FREETYPE_LIBS=`$PKG_CONFIG --libs "freetype2 >= 12.0.6" 2>/dev/null`
+-else
+-  pkg_failed=yes
+-fi
+-    fi
+-else
+-	pkg_failed=untried
+-fi
+-
+-
+-
+-if test $pkg_failed = yes; then
+-
+-if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+-        _pkg_short_errors_supported=yes
+-else
+-        _pkg_short_errors_supported=no
+-fi
+-        if test $_pkg_short_errors_supported = yes; then
+-	        FREETYPE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "freetype2 >= 12.0.6"`
+-        else
+-	        FREETYPE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "freetype2 >= 12.0.6"`
+-        fi
+-	# Put the nasty error message in config.log where it belongs
+-	echo "$FREETYPE_PKG_ERRORS" >&5
+-
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-                :
+-elif test $pkg_failed = untried; then
+-	:
+-else
+-	FREETYPE_CFLAGS=$pkg_cv_FREETYPE_CFLAGS
+-	FREETYPE_LIBS=$pkg_cv_FREETYPE_LIBS
+-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
+-	have_freetype=true
+-fi
+-fi
+-if test "x$with_freetype" = "xyes" -a "x$have_freetype" != "xtrue"; then
+-	as_fn_error $? "FreeType support requested but libfreetype2 not found" "$LINENO" 5
+-fi
+-if $have_freetype; then
+-
++have_freetype=true
+ $as_echo "#define HAVE_FREETYPE 1" >>confdefs.h
+ 
+-fi
+- if $have_freetype; then
+-  HAVE_FREETYPE_TRUE=
+-  HAVE_FREETYPE_FALSE='#'
+-else
+-  HAVE_FREETYPE_TRUE='#'
+-  HAVE_FREETYPE_FALSE=
+-fi
+-
+-
++HAVE_FREETYPE_TRUE=
++HAVE_FREETYPE_FALSE='#'
+ 
+ 
+ # Check whether --with-uniscribe was given.

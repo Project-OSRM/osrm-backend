@@ -6,11 +6,13 @@ Feature: Locating Nearest node on a Way - pick closest way
 
     Scenario: Nearest - two ways crossing
         Given the node map
-            |   | 0 | c | 1 |   |
-            | 7 |   | n |   | 2 |
-            | a | k | x | m | b |
-            | 6 |   | l |   | 3 |
-            |   | 5 | d | 4 |   |
+            """
+              0 c 1
+            7   n   2
+            a k x m b
+            6   l   3
+              5 d 4
+            """
 
         And the ways
             | nodes |
@@ -34,12 +36,14 @@ Feature: Locating Nearest node on a Way - pick closest way
 
     Scenario: Nearest - inside a triangle
         Given the node map
-            |   |  |  |   |   | c |   |   |  |  |   |
-            |   |  |  |   |   |   |   |   |  |  |   |
-            |   |  |  | y |   |   |   | z |  |  |   |
-            |   |  |  |   | 0 |   | 1 |   |  |  |   |
-            |   |  |  | 2 |   | 3 |   | 4 |  |  |   |
-            | a |  |  | x |   | u |   | w |  |  | b |
+            """
+                      c
+
+                  y       z
+                    0   1
+                  2   3   4
+            a     x   u   w     b
+            """
 
         And the ways
             | nodes |

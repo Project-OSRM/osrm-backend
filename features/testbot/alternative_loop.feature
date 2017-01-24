@@ -6,10 +6,12 @@ Feature: Alternative route
 
     Scenario: Alternative Loop Paths
         Given the node map
-            | a | 2 | 1 | b |
-            | 7 |   |   | 4 |
-            | 8 |   |   | 3 |
-            | c | 5 | 6 | d |
+            """
+            a 2 1 b
+            7     4
+            8     3
+            c 5 6 d
+            """
 
         And the ways
             | nodes | oneway |

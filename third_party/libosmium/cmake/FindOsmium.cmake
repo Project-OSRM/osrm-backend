@@ -2,8 +2,8 @@
 #
 #  FindOsmium.cmake
 #
-#  Find the Libosmium headers and, optionally, several components needed for
-#  different Libosmium functions.
+#  Find the Libosmium headers and, optionally, several components needed
+#  for different Libosmium functions.
 #
 #----------------------------------------------------------------------
 #
@@ -18,8 +18,11 @@
 #
 #    Then add the following in your CMakeLists.txt:
 #
-#      find_package(Osmium REQUIRED COMPONENTS <XXX>)
+#      find_package(Osmium [version] REQUIRED COMPONENTS <XXX>)
 #      include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
+#
+#    The version number is optional. If it is not set, any version of
+#    libosmium will do.
 #
 #    For the <XXX> substitute a space separated list of one or more of the
 #    following components:
@@ -51,16 +54,31 @@
 #
 #----------------------------------------------------------------------
 
-# Look for the header file.
-find_path(OSMIUM_INCLUDE_DIR osmium/osm.hpp
-    PATH_SUFFIXES include
-    PATHS
+# This is the list of directories where we look for osmium and protozero
+# includes.
+set(_osmium_include_path
         ../libosmium
         ~/Library/Frameworks
         /Library/Frameworks
         /opt/local # DarwinPorts
         /opt
 )
+
+# Look for the header file.
+find_path(OSMIUM_INCLUDE_DIR osmium/version.hpp
+    PATH_SUFFIXES include
+    PATHS ${_osmium_include_path}
+)
+
+# Check libosmium version number
+if(Osmium_FIND_VERSION)
+    file(STRINGS "${OSMIUM_INCLUDE_DIR}/osmium/version.hpp" _libosmium_version_define REGEX "#define LIBOSMIUM_VERSION_STRING")
+    if("${_libosmium_version_define}" MATCHES "#define LIBOSMIUM_VERSION_STRING \"([0-9.]+)\"")
+        set(_libosmium_version "${CMAKE_MATCH_1}")
+    else()
+        set(_libosmium_version "unknown")
+    endif()
+endif()
 
 set(OSMIUM_INCLUDE_DIRS "${OSMIUM_INCLUDE_DIR}")
 
@@ -95,17 +113,31 @@ if(Osmium_USE_PBF)
     find_package(ZLIB)
     find_package(Threads)
 
-    list(APPEND OSMIUM_EXTRA_FIND_VARS ZLIB_FOUND Threads_FOUND)
-    if(ZLIB_FOUND AND Threads_FOUND)
+    message(STATUS "Looking for protozero")
+    find_path(PROTOZERO_INCLUDE_DIR protozero/version.hpp
+        PATH_SUFFIXES include
+        PATHS ${_osmium_include_path}
+              ${OSMIUM_INCLUDE_DIR}
+    )
+    if(PROTOZERO_INCLUDE_DIR)
+        message(STATUS "Looking for protozero - found")
+    else()
+        message(STATUS "Looking for protozero - not found")
+    endif()
+
+    list(APPEND OSMIUM_EXTRA_FIND_VARS ZLIB_FOUND Threads_FOUND PROTOZERO_INCLUDE_DIR)
+    if(ZLIB_FOUND AND Threads_FOUND AND PROTOZERO_INCLUDE_DIR)
         list(APPEND OSMIUM_PBF_LIBRARIES
             ${ZLIB_LIBRARIES}
             ${CMAKE_THREAD_LIBS_INIT}
         )
         if(WIN32)
+            # This is needed for the ntohl() function
             list(APPEND OSMIUM_PBF_LIBRARIES ws2_32)
         endif()
         list(APPEND OSMIUM_INCLUDE_DIRS
             ${ZLIB_INCLUDE_DIR}
+            ${PROTOZERO_INCLUDE_DIR}
         )
     else()
         message(WARNING "Osmium: Can not find some libraries for PBF input/output, please install them or configure the paths.")
@@ -203,7 +235,7 @@ if(Osmium_USE_SPARSEHASH)
     if(SPARSEHASH_INCLUDE_DIR)
         # Find size of sparsetable::size_type. This does not work on older
         # CMake versions because they can do this check only in C, not in C++.
-        if (NOT CMAKE_VERSION VERSION_LESS 3.0)
+        if(NOT CMAKE_VERSION VERSION_LESS 3.0)
            include(CheckTypeSize)
            set(CMAKE_REQUIRED_INCLUDES ${SPARSEHASH_INCLUDE_DIR})
            set(CMAKE_EXTRA_INCLUDE_FILES "google/sparsetable")
@@ -253,13 +285,15 @@ endif()
 #  Check that all required libraries are available
 #
 #----------------------------------------------------------------------
-if (OSMIUM_EXTRA_FIND_VARS)
+if(OSMIUM_EXTRA_FIND_VARS)
     list(REMOVE_DUPLICATES OSMIUM_EXTRA_FIND_VARS)
 endif()
-# Handle the QUIETLY and REQUIRED arguments and set OSMIUM_FOUND to TRUE if
-# all listed variables are TRUE.
+# Handle the QUIETLY and REQUIRED arguments and the optional version check
+# and set OSMIUM_FOUND to TRUE if all listed variables are TRUE.
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Osmium REQUIRED_VARS OSMIUM_INCLUDE_DIR ${OSMIUM_EXTRA_FIND_VARS})
+find_package_handle_standard_args(Osmium
+                                  REQUIRED_VARS OSMIUM_INCLUDE_DIR ${OSMIUM_EXTRA_FIND_VARS}
+                                  VERSION_VAR _libosmium_version)
 unset(OSMIUM_EXTRA_FIND_VARS)
 
 #----------------------------------------------------------------------

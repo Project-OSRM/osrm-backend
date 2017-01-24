@@ -7,8 +7,10 @@ Feature: Suppressed Turns
 
     Scenario: Do not announce passing a exit ramp
         Given the node map
-            | a | b | c | d | e |
-            |   |   |   | f | g |
+            """
+            a-b-c-d-e
+              \---f-g
+            """
 
         And the ways
             | nodes  | highway       |
@@ -21,7 +23,9 @@ Feature: Suppressed Turns
 
     Scenario: Do not announce reference changes
         Given the node map
-            | a | b | c | d | e | f |
+            """
+            a-b-c-d-e-f
+            """
 
         And the ways
             | nodes | highway  | name     | ref   |
@@ -32,14 +36,16 @@ Feature: Suppressed Turns
             | ef    | motorway | highway  | A1    |
 
         When I route I should get
-            | waypoints | route                     | turns         |
-            | a,f       | highway (A1),highway (A1) | depart,arrive |
+            | waypoints | route                     | turns         | ref    |
+            | a,f       | highway,highway           | depart,arrive | A1,A1  |
 
 
     Scenario: Don't Announce Turn on following major road class -- service
         Given the node map
-            | a | b | d |
-            |   |   | c |
+            """
+            a-b-d
+                c
+            """
 
         And the ways
             | nodes | highway |
@@ -52,8 +58,10 @@ Feature: Suppressed Turns
 
     Scenario: Don't Announce Turn on following major road class -- residential
         Given the node map
-            | a | b | d |
-            |   |   | c |
+            """
+            a-b-d
+                c
+            """
 
         And the ways
             | nodes | highway     |

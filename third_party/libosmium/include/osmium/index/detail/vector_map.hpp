@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -55,10 +55,10 @@ namespace osmium {
 
             public:
 
-                typedef TValue element_type;
-                typedef TVector vector_type;
-                typedef typename vector_type::iterator iterator;
-                typedef typename vector_type::const_iterator const_iterator;
+                using element_type   = TValue;
+                using vector_type    = TVector;
+                using iterator       = typename vector_type::iterator;
+                using const_iterator = typename vector_type::const_iterator;
 
                 VectorBasedDenseMap() :
                     m_vector() {
@@ -81,16 +81,22 @@ namespace osmium {
                     m_vector[id] = value;
                 }
 
-                const TValue get(const TId id) const final {
-                    try {
-                        const TValue& value = m_vector.at(id);
-                        if (value == osmium::index::empty_value<TValue>()) {
-                            not_found_error(id);
-                        }
-                        return value;
-                    } catch (std::out_of_range&) {
-                        not_found_error(id);
+                TValue get(const TId id) const final {
+                    if (id >= m_vector.size()) {
+                        throw osmium::not_found{id};
                     }
+                    const TValue value = m_vector[id];
+                    if (value == osmium::index::empty_value<TValue>()) {
+                        throw osmium::not_found{id};
+                    }
+                    return value;
+                }
+
+                TValue get_noexcept(const TId id) const noexcept final {
+                    if (id >= m_vector.size()) {
+                        return osmium::index::empty_value<TValue>();
+                    }
+                    return m_vector[id];
                 }
 
                 size_t size() const final {
@@ -146,14 +152,24 @@ namespace osmium {
 
             public:
 
-                typedef typename std::pair<TId, TValue> element_type;
-                typedef TVector<element_type> vector_type;
-                typedef typename vector_type::iterator iterator;
-                typedef typename vector_type::const_iterator const_iterator;
+                using element_type   = typename std::pair<TId, TValue>;
+                using vector_type    = TVector<element_type>;
+                using iterator       = typename vector_type::iterator;
+                using const_iterator = typename vector_type::const_iterator;
 
             private:
 
                 vector_type m_vector;
+
+                typename vector_type::const_iterator find_id(const TId id) const noexcept {
+                    const element_type element {
+                        id,
+                        osmium::index::empty_value<TValue>()
+                    };
+                    return std::lower_bound(m_vector.begin(), m_vector.end(), element, [](const element_type& a, const element_type& b) {
+                        return a.first < b.first;
+                    });
+                }
 
             public:
 
@@ -171,19 +187,22 @@ namespace osmium {
                     m_vector.push_back(element_type(id, value));
                 }
 
-                const TValue get(const TId id) const final {
-                    const element_type element {
-                        id,
-                        osmium::index::empty_value<TValue>()
-                    };
-                    const auto result = std::lower_bound(m_vector.begin(), m_vector.end(), element, [](const element_type& a, const element_type& b) {
-                        return a.first < b.first;
-                    });
+                TValue get(const TId id) const final {
+                    const auto result = find_id(id);
                     if (result == m_vector.end() || result->first != id) {
-                        not_found_error(id);
-                    } else {
-                        return result->second;
+                        throw osmium::not_found{id};
                     }
+
+                    return result->second;
+                }
+
+                TValue get_noexcept(const TId id) const noexcept final {
+                    const auto result = find_id(id);
+                    if (result == m_vector.end() || result->first != id) {
+                        return osmium::index::empty_value<TValue>();
+                    }
+
+                    return result->second;
                 }
 
                 size_t size() const final {

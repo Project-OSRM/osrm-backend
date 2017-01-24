@@ -9,8 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include "variant.hpp"
-#include "variant_io.hpp"
+#include <mapbox/variant.hpp>
+#include <mapbox/variant_io.hpp>
 
 using namespace mapbox;
 

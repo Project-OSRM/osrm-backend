@@ -13,6 +13,255 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 
+## [2.11.0] - 2017-01-14
+
+### Added
+
+- New index::RelationsMap(Stash|Index) classes implementing an index for
+  looking up parent relation IDs given a member relation ID.
+- Add `get_noexcept()` method to all index maps. For cases where ids are
+  often not in the index using this can speed up a program considerably.
+- New non-const WayNodeList::operator[].
+- Default constructed "invalid" Coordinates.
+- Tile constructor from web mercator coordinates and some helper
+  functions for tile arithmetic.
+- Tag matcher matching keys using a regex.
+- New `envelope()` functions on `NodeRefList`, `Way`, and `Area` returning a
+  `Box` object with the geometric envelope of the object.
+- Add `amenity_list` example.
+
+### Changed
+
+- Replaced the implementation for the web mercator projection using the usual
+  tan-formula with a polynomial approximation which is much faster and good
+  enough for OSM data which only has ~1cm resolution anyway. See
+  https://github.com/osmcode/mercator-projection for all the details and
+  benchmarks. You can disable this by defining the macro
+  `OSMIUM_USE_SLOW_MERCATOR_PROJECTION` before including any of the Osmium
+  headers.
+- Removed the outdated `Makefile`. Always use CMake directly to build.
+- Refactoring of `osmium::apply()` removing the resursive templates for faster
+  compile times and allowing rvalue handlers.
+- Lots of code and test cleanups and more documentation.
+
+### Fixed
+
+- Handle endianess on FreeBSD properly.
+- Fixed doxygen config for reproducible builds.
+
+
+## [2.10.3] - 2016-11-20
+
+### Changed
+
+- Round out ObjectPointerCollection implementation and test it.
+- Updated embedded protozero to 1.4.5.
+
+
+## [2.10.2] - 2016-11-16
+
+### Changed
+
+- Updated embedded protozero to 1.4.4.
+
+### Fixed
+
+- Buffer overflow in osmium::Buffer.
+
+
+## [2.10.1] - 2016-11-15
+
+### Changed
+
+- Updated embedded protozero to 1.4.3.
+
+### Fixed
+
+- Made IdSet work on 32bit systems.
+- Fixed endianness check for WKB tests.
+
+
+## [2.10.0] - 2016-11-11
+
+### Added
+
+- The `Reader` can take an additional optional `read_meta` flag. If this is
+  set to false the PBF input will ignore metadata on OSM objects (like version,
+  timestamp, uid, ...) which speeds up file reading by 10 to 20%.
+- New `IdSet` virtual class with two implementations: `IdSetDense` and
+  `IdSetSmall`. Used to efficiently store a set of Ids. This is often needed
+  to track, for instance, which nodes are needed for ways, etc.
+- Added more examples and better documented existing examples.
+- Add a benchmark "mercator" converting all node locations in a file to
+  WebMercator and creating geometries in WKB format.
+
+### Changed
+
+- Better queue handling makes I/O faster in some circumstances.
+- The `FindOsmium.cmake` CMake script can now check a current enough libosmium
+  version is found.
+- Builders can now be constructed with a reference to parent builder.
+- Made builders more robust by adding asserts that will catch common usage
+  problems.
+- Calling `OSMObjectBuilder::add_user()` is now optional, and the method was
+  renamed to `set_user()`. (`add_user()` is marked as deprecated.)
+- Benchmarks now show compiler and compiler options used.
+- `Builder::add_item()` now takes a reference instead of pointer (old version
+  of the function marked as deprecated).
+- GEOS support is deprecated. It does not work any more for GEOS 3.6 or newer.
+  Reason is the changed interface in GEOS 3.6. If there is interest for the
+  GEOS support, we can add support back in later (but probably using the
+  GEOS C API which is more stable than the C++ API). Some tests using GEOS
+  were rewritten to work without it.
+- The `BoolVector` has been deprecated in favour of the new `IdSet` classes.
+- Lots of code cleanups and improved API documentation in many places.
+- The relations collector can now tell you whether a relation member was in
+  the input data. See the new `is_available()` and
+  `get_availability_and_offset()` methods.
+- Updated embedded Catch unit test header to version 1.5.8.
+
+### Fixed
+
+- Parsing of coordinates starting with decimal dot and coordinates in
+  scientific notation.
+- `~` operator for `entity_bits` doesn't set unused bits any more.
+- Progress bar can now be (temporarily) removed, to allow other output.
+
+
+## [2.9.0] - 2016-09-15
+
+### Added
+
+- Support for reading OPL files.
+- For diff output OSM objects in buffers can be marked as only in one or the
+  other file. The OPL and debug output formats support diff output based on
+  this.
+- Add documentation and range checks to `Tile` struct.
+- More documentation.
+- More examples and more extensive comments on examples.
+- Support for a progress report in `osmium::io::Reader()` and a `ProgressBar`
+  utility class to use it.
+- New `OSMObject::set_timestamp(const char*)` function.
+
+### Changed
+
+- Parse coordinates in scientific notations ourselves.
+- Updated included protozero version to 1.4.2.
+- Lots of one-argument constructors are now explicit.
+- Timestamp parser now uses our own implementation instead of strptime.
+  This is faster and independant of locale settings.
+- More cases of invalid areas with duplicate segments are reported as
+  errors.
+
+### Fixed
+
+- Fixed a problem limiting cache file sizes on Windows to 32 bit.
+- Fixed includes.
+- Exception messages for invalid areas do not report "area contains no rings"
+  any more, but "invalid area".
+
+
+## [2.8.0] - 2016-08-04
+
+### Added
+
+- EWKT support.
+- Track `pop` type calls and queue underruns when `OSMIUM_DEBUG_QUEUE_SIZE`
+  environment variable is set.
+
+### Changed
+
+- Switched to newest protozero v1.4.0. This should deliver some speedups
+  when parsing PBF files. This also removes the DeltaEncodeIterator class,
+  which isn't needed any more.
+- Uses `std::unordered_map` instead of `std::map` in PBF string table code
+  speeding up writing of PBF files considerably.
+- Uses less memory when writing PBF files (smaller string table by default).
+- Removes dependency on sparsehash and boost program options libraries for
+  examples.
+- Cleaned up threaded queue code.
+
+### Fixed
+
+- A potentially very bad bug was fixed: When there are many and/or long strings
+  in tag keys and values and/or user names and/or relation roles, the string
+  table inside a PBF block would overflow. I have never seen this happen for
+  normal OSM data, but that doesn't mean it can't happen. The result is that
+  the strings will all be mixed up, keys for values, values for user names or
+  whatever.
+- Automatically set correct SRID when creating WKB and GEOS geometries.
+  Note that this changes the behaviour of libosmium when creating GEOS
+  geometries. Before we created them with -1 as SRID unless set otherwise.
+  Manual setting of the SRID on the GEOSGeometryFactory is now deprecated.
+- Allow coordinates of nodes in scientific notation when reading XML files.
+  This shouldn't be used really, but sometimes you can find them.
+
+
+## [2.7.2] - 2016-06-08
+
+### Changed
+
+- Much faster output of OSM files in XML, OPL, or debug formats.
+
+### Fixed
+
+- Parsing and output of coordinates now faster and always uses decimal dot
+  independant of locale setting.
+- Do not output empty discussion elements in changeset XML output.
+- Data corruption regression in mmap based indexes.
+
+
+## [2.7.1] - 2016-06-01
+
+### Fixes
+
+- Update version number in version.hpp.
+
+
+## [2.7.0] - 2016-06-01
+
+### Added
+
+- New functions for iterating over specific item types in buffers
+  (`osmium::memory::Buffer::select()`), over specific subitems
+  (`osmium::OSMObject::subitems()`), and for iterating over all rings of
+  an area (`osmium::Areas::outer_rings()`, `inner_rings()`).
+- Debug output optionally prints CRC32 when `add_crc32` file option is set.
+
+### Changed
+
+- XML parser will not allow any XML entities which are usually not used in OSM
+  files anyway. This can help avoiding DOS attacks.
+- Removed SortedQueue implementation which was never used.
+- Also incorporate Locations in NodeRefs into CRC32 checksums. This means
+  all checksums will be different compared to earlier versions of libosmium.
+- The completely new algorithm for assembling multipolygons is much faster,
+  has better error reporting, generates statistics and can build more complex
+  multipolygons correctly. The ProblemReporter classes have changed to make
+  this happen, if you have written your own, you have to fix it.
+- Sparse node location stores are now only sorted if needed, ie. when nodes
+  come in unordered.
+
+### Fixed
+
+- Output operator for Location shows full precision.
+- Undefined behaviour in WKB writer and `types_from_string()` function.
+- Fix unsigned overflow in pool.hpp.
+- OSM objects are now ordered by type (nodes, then ways, then relations),
+  then ID, then version, then timestamp. Ordering by timestamp is normally
+  not necessary, because there can't be two objects with same type, ID, and
+  version but different timestamp. But this can happen when diffs are
+  created from OSM extracts, so we check for this here. This change also
+  makes sure IDs are always ordered by absolute IDs, positives first, so
+  order is 0, 1, -1, 2, -2, ...
+- Data corruption bug fixed in disk based indexes (used for the node
+  location store for instance). This only affected you, if you created
+  and index, closed it, and re-opened it (possibly in a different process)
+  and if there were missing nodes. If you looked up those nodes, you got
+  location (0,0) back instead of an error.
+- Memory corruption bug showing up with GDAL 2.
+
+
 ## [2.6.1] - 2016-02-22
 
 ### Added
@@ -133,9 +382,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   one in Writer. Calling flush() on the OutputIterator isn't needed any
   more.
 - Reader now throws when trying to read after eof or an error.
-- I/O functions that used to throw std::runtime_error now throw
-  osmium::io_error or derived.
-- Optional parameters on osmium::io::Writer now work in any order.
+- I/O functions that used to throw `std::runtime_error` now throw
+  `osmium::io_error` or derived.
+- Optional parameters on `osmium::io::Writer` now work in any order.
 
 ### Fixed
 
@@ -276,7 +525,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   Doxygen (up to version 1.8.8). This version contains a workaround to fix
   this.
 
-[unreleased]: https://github.com/osmcode/libosmium/compare/v2.6.1...HEAD
+[unreleased]: https://github.com/osmcode/libosmium/compare/v2.10.3...HEAD
+[2.10.3]: https://github.com/osmcode/libosmium/compare/v2.10.2...v2.10.3
+[2.10.2]: https://github.com/osmcode/libosmium/compare/v2.10.1...v2.10.2
+[2.10.1]: https://github.com/osmcode/libosmium/compare/v2.10.0...v2.10.1
+[2.10.0]: https://github.com/osmcode/libosmium/compare/v2.9.0...v2.10.0
+[2.9.0]: https://github.com/osmcode/libosmium/compare/v2.8.0...v2.9.0
+[2.8.0]: https://github.com/osmcode/libosmium/compare/v2.7.2...v2.8.0
+[2.7.2]: https://github.com/osmcode/libosmium/compare/v2.7.1...v2.7.2
+[2.7.1]: https://github.com/osmcode/libosmium/compare/v2.7.0...v2.7.1
+[2.7.0]: https://github.com/osmcode/libosmium/compare/v2.6.1...v2.7.0
 [2.6.1]: https://github.com/osmcode/libosmium/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/osmcode/libosmium/compare/v2.5.4...v2.6.0
 [2.5.4]: https://github.com/osmcode/libosmium/compare/v2.5.3...v2.5.4

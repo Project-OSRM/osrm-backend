@@ -1,3 +1,4 @@
+api_version = 0
 -- Rasterbot profile
 
 -- Minimalist node_ and way_functions in order to test source_ and segment_functions
@@ -21,8 +22,12 @@ function way_function (way, result)
 end
 
 function source_function ()
+  local path = os.getenv('OSRM_RASTER_SOURCE')
+  if not path then
+    path = "rastersource.asc"
+  end
   raster_source = sources:load(
-    "../test/rastersource.asc",
+    path,
     0,    -- lon_min
     0.1,  -- lon_max
     0,    -- lat_min

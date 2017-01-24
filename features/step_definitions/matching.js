@@ -1,11 +1,14 @@
+'use strict';
+
 var util = require('util');
-var d3 = require('d3-queue');
+var polyline = require('polyline');
 
 module.exports = function () {
     this.When(/^I match I should get$/, (table, callback) => {
         var got;
 
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             var testRow = (row, ri, cb) => {
                 var afterRequest = (err, res) => {
                     if (err) return cb(err);
@@ -35,12 +38,34 @@ module.exports = function () {
                         route = '',
                         duration = '',
                         annotation = '',
+                        geometry = '',
                         OSMIDs = '';
 
 
                     if (res.statusCode === 200) {
                         if (headers.has('matchings')) {
-                            subMatchings = json.matchings.filter(m => !!m).map(sub => sub.matched_points);
+                            subMatchings = [];
+
+                            // find the first matched
+                            let start_index = 0;
+                            while (start_index < json.tracepoints.length && json.tracepoints[start_index] === null) start_index++;
+
+                            var sub = [];
+                            let prev_index = null;
+                            for(var i = start_index; i < json.tracepoints.length; i++){
+                                if (json.tracepoints[i] === null) continue;
+
+                                let current_index = json.tracepoints[i].matchings_index;
+
+                                if(prev_index !== current_index) {
+                                    if (sub.length > 0) subMatchings.push(sub);
+                                    sub = [];
+                                    prev_index = current_index;
+                                }
+
+                                sub.push(json.tracepoints[i].location);
+                            }
+                            subMatchings.push(sub);
                         }
 
                         if (headers.has('turns')) {
@@ -63,8 +88,13 @@ module.exports = function () {
                             annotation = this.annotationList(json.matchings[0]);
                         }
 
+                        if (headers.has('geometry')) {
+                            if (json.matchings.length != 1) throw new Error('*** Checking geometry only supported for matchings with one subtrace');
+                            geometry = json.matchings[0].geometry;
+                        }
+
                         if (headers.has('OSM IDs')) {
-                            if (json.matchings.length != 1) throw new Error('*** CHecking annotation only supported for matchings with one subtrace');
+                            if (json.matchings.length != 1) throw new Error('*** Checking annotation only supported for matchings with one subtrace');
                             OSMIDs = this.OSMIDList(json.matchings[0]);
                         }
                     }
@@ -85,6 +115,16 @@ module.exports = function () {
                         got.annotation = annotation.toString();
                     }
 
+                    if (headers.has('geometry')) {
+                        if (this.queryParams['geometries'] === 'polyline') {
+                            got.geometry = polyline.decode(geometry).toString();
+                        } else if (this.queryParams['geometries'] === 'polyline6') {
+                            got.geometry = polyline.decode(geometry,6).toString();
+                        } else {
+                            got.geometry = geometry.coordinates;
+                        }
+                    }
+
                     if (headers.has('OSM IDs')) {
                         got['OSM IDs'] = OSMIDs;
                     }
@@ -93,60 +133,55 @@ module.exports = function () {
                     var encodedResult = '',
                         extendedTarget = '';
 
-                    var q = d3.queue();
+                    var testSubMatching = (sub, si) => {
+                        var testSubNode = (ni) => {
+                            var node = this.findNodeByName(sub[ni]),
+                                outNode = subMatchings[si][ni];
 
-                    var testSubMatching = (sub, si, scb) => {
-                        if (si >= subMatchings.length) {
-                            ok = false;
-                            q.abort();
-                            scb();
-                        } else {
-                            var sq = d3.queue();
-
-                            var testSubNode = (ni, ncb) => {
-                                var node = this.findNodeByName(sub[ni]),
-                                    outNode = subMatchings[si][ni];
-
-                                if (this.FuzzyMatch.matchLocation(outNode, node)) {
-                                    encodedResult += sub[ni];
-                                    extendedTarget += sub[ni];
-                                } else {
+                            if (this.FuzzyMatch.matchLocation(outNode, node)) {
+                                encodedResult += sub[ni];
+                                extendedTarget += sub[ni];
+                            } else {
+                                if (outNode != null) {
                                     encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
-                                    extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
-                                    ok = false;
+                                } else {
+                                    encodedResult += '?';
                                 }
-                                ncb();
-                            };
-
-                            for (var i=0; i<sub.length; i++) {
-                                sq.defer(testSubNode, i);
+                                extendedTarget += util.format('%s [%d,%d]', node.lat, node.lon);
+                                ok = false;
                             }
+                        };
 
-                            sq.awaitAll(scb);
+                        for (var i=0; i<sub.length; i++) {
+                            testSubNode(i);
                         }
                     };
 
-                    row.matchings.split(',').forEach((sub, si) => {
-                        q.defer(testSubMatching, sub, si);
-                    });
-
-                    q.awaitAll(() => {
-                        if (ok) {
-                            if (headers.has('matchings')) {
-                                got.matchings = row.matchings;
-                            }
-
-                            if (headers.has('timestamps')) {
-                                got.timestamps = row.timestamps;
-                            }
-                        } else {
-                            got.matchings = encodedResult;
-                            row.matchings = extendedTarget;
-                            this.logFail(row, got, { matching: { query: this.query, response: res } });
+                    if (headers.has('matchings')) {
+                        if (subMatchings.length != row.matchings.split(',').length) {
+                            ok = false;
+                            cb(new Error('*** table matchings and api response are not the same'));
                         }
 
-                        cb(null, got);
-                    });
+                        row.matchings.split(',').forEach((sub, si) => {
+                            testSubMatching(sub, si);
+                        });
+                    }
+
+                    if (ok) {
+                        if (headers.has('matchings')) {
+                            got.matchings = row.matchings;
+                        }
+
+                        if (headers.has('timestamps')) {
+                            got.timestamps = row.timestamps;
+                        }
+                    } else {
+                        got.matchings = encodedResult;
+                        row.matchings = extendedTarget;
+                    }
+
+                    cb(null, got);
                 };
 
                 if (row.request) {

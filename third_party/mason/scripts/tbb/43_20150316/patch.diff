@@ -1,0 +1,30 @@
+diff --git a/build/linux.gcc.inc b/build/linux.gcc.inc
+index b4faddc..7668a57 100644
+--- a/build/linux.gcc.inc
++++ b/build/linux.gcc.inc
+@@ -40,8 +40,8 @@ DYLIB_KEY = -shared
+ EXPORT_KEY = -Wl,--version-script,
+ LIBDL = -ldl
+ 
+-CPLUS = g++
+-CONLY = gcc
++CPLUS = $(CXX)
++CONLY = $(CC)
+ LIB_LINK_FLAGS = $(DYLIB_KEY) -Wl,-soname=$(BUILDING_LIBRARY)
+ LIBS += -lpthread -lrt
+ LINK_FLAGS = -Wl,-rpath-link=. -rdynamic
+diff --git a/build/macos.clang.inc b/build/macos.clang.inc
+index ca28be7..355d418 100644
+--- a/build/macos.clang.inc
++++ b/build/macos.clang.inc
+@@ -24,8 +24,8 @@
+ # invalidate any other reasons why the executable file might be covered by
+ # the GNU General Public License.
+ 
+-CPLUS = clang++
+-CONLY = clang
++CPLUS = $(CXX)
++CONLY = $(CC)
+ COMPILE_ONLY = -c -MMD
+ PREPROC_ONLY = -E -x c++
+ INCLUDE_KEY = -I

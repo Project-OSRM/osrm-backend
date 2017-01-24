@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -84,8 +84,8 @@ namespace osmium {
 
     template <typename TSource, typename... THandlers>
     inline void apply_diff(TSource& source, THandlers&... handlers) {
-        apply_diff(osmium::io::InputIterator<TSource, osmium::OSMObject> {source},
-                   osmium::io::InputIterator<TSource, osmium::OSMObject> {},
+        apply_diff(osmium::io::InputIterator<TSource, osmium::OSMObject>{source},
+                   osmium::io::InputIterator<TSource, osmium::OSMObject>{},
                    handlers...);
     }
 

@@ -6,9 +6,11 @@ Feature: Car - Handle ferry routes
 
     Scenario: Car - Use a ferry route
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | route | bicycle |
@@ -29,9 +31,11 @@ Feature: Car - Handle ferry routes
 
     Scenario: Car - Properly handle simple durations
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | route | duration |
@@ -41,16 +45,18 @@ Feature: Car - Handle ferry routes
 
         When I route I should get
             | from | to | route           | modes                         | speed   |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 25 km/h |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 20 km/h |
-            | c    | e  | cde,cde         | ferry,ferry                   | 12 km/h |
-            | e    | c  | cde,cde         | ferry,ferry                   | 12 km/h |
+            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 23 km/h |
+            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h |
+            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h |
+            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h |
 
     Scenario: Car - Properly handle ISO 8601 durations
         Given the node map
-            | a | b | c |   |   |
-            |   |   | d |   |   |
-            |   |   | e | f | g |
+            """
+            a b c
+                d
+                e f g
+            """
 
         And the ways
             | nodes | highway | route | duration |
@@ -60,7 +66,7 @@ Feature: Car - Handle ferry routes
 
         When I route I should get
             | from | to | route           | modes                         | speed   |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 25 km/h |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 20 km/h |
-            | c    | e  | cde,cde         | ferry,ferry                   | 12 km/h |
-            | e    | c  | cde,cde         | ferry,ferry                   | 12 km/h |
+            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 23 km/h |
+            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h |
+            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h |
+            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h |

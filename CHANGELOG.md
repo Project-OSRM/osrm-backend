@@ -1,3 +1,240 @@
+# 5.6.0
+  - Changes from 5.5
+    - Bugfixes
+      - Fix #3475 removed an invalid `exit` field from the `arrive` maneuver
+      - Fix #3515 adjusted number of `nodes` in `annotation`
+    - Infrastructure
+      - Support building rpm packages.
+    - Guidance
+      - No longer emitting turns on ferries, if a ferry should use multiple docking locations
+    - Profiles
+      - Removed the `./profile.lua -> ./profiles/car.lua` symlink. Use specific profiles from the `profiles` directory.
+    - Infrastructure
+      - Disabled link-time optimized (LTO) builds by default. Enable by passing `-DENABLE_LTO=ON` to `cmake` if you need the performance and know what you are doing.
+      - Datafile versioning is now based on OSRM semver values, rather than source code checksums.
+        Datafiles are compatible between patch levels, but incompatible between minor version or higher bumps.
+      - libOSRM now creates an own watcher thread then used in shared memory mode to listen for data updates
+    - Tools:
+      - Added osrm-extract-conditionals tool for checking conditional values in OSM data
+
+# 5.5.1
+  - Changes from 5.5.0
+    - API:
+      - Adds `generate_hints=true` (`true` by default) which lets user disable `Hint` generating in the response. Use if you don't need `Hint`s!
+    - Bugfixes
+      - Fix #3418 and ensure we only return bearings in the range 0-359 in API responses
+      - Fixed a bug that could lead to emitting false instructions for staying on a roundabout
+
+# 5.5.0
+  - Changes from 5.4.0
+    - API:
+      - `osrm-datastore` now accepts the parameter `--max-wait` that specifies how long it waits before aquiring a shared memory lock by force
+      - Shared memory now allows for multiple clients (multiple instances of libosrm on the same segment)
+      - Polyline geometries can now be requested with precision 5 as well as with precision 6
+    - Profiles
+      - the car profile has been refactored into smaller functions
+      - get_value_by_key() is now guaranteed never to return empty strings, nil is returned instead.
+      - debug.lua was added to make it easier to test/develop profile code.
+      - `car.lua` now depends on lib/set.lua and lib/sequence.lua
+      - `restrictions` is now used for namespaced restrictions and restriction exceptions (e.g. `restriction:motorcar=` as well as `except=motorcar`)
+      - replaced lhs/rhs profiles by using test defined profiles
+      - Handle `oneway=alternating` (routed over with penalty) separately from `oneway=reversible` (not routed over due to time dependence)
+      - Handle `destination:forward`, `destination:backward`, `destination:ref:forward`, `destination:ref:backward` tags
+      - Properly handle destinations on `oneway=-1` roads
+    - Guidance
+      - Notifications are now exposed more prominently, announcing turns onto a ferry/pushing your bike more prominently
+      - Improved turn angle calculation, detecting offsets due to lanes / minor variations due to inaccuracies
+      - Corrected the bearings returned for intermediate steps - requires reprocessing
+      - Improved turn locations for collapsed turns
+      - Sliproad classification refinements: the situations we detect as Sliproads now resemble more closely the reality
+    - Trip Plugin
+      - changed internal behaviour to prefer the smallest lexicographic result over the largest one
+    - Bugfixes
+      - fixed a bug where polyline decoding on a defective polyline could end up in out-of-bound access on a vector
+      - fixed compile errors in tile unit-test framework
+      - fixed a bug that could result in inconsistent behaviour when collapsing instructions
+      - fixed a bug that could result in crashes when leaving a ferry directly onto a motorway ramp
+      - fixed a bug in the tile plugin that resulted in discovering invalid edges for connections
+      - improved error messages when missing files during traffic updates (#3114)
+      - For single coordinate geometries the GeoJSON `Point` encoding was broken. We now always emit `LineString`s even in the one-coordinate-case (backwards compatible) (#3425)
+    - Debug Tiles
+      - Added support for turn penalties
+    - Internals
+      - Internal/Shared memory datafacades now share common memory layout and data loading code
+      - File reading now has much better error handling
+    - Misc
+      - Progress indicators now print newlines when stdout is not a TTY
+      - Prettier API documentation now generated via `npm run build-api-docs` output `build/docs`
+
+# 5.4.3
+  - Changes from 5.4.2
+    - Bugfixes
+      - #3254 Fixed a bug that could end up hiding roundabout instructions
+      - #3260 fixed a bug that provided the wrong location in the arrival instruction
+
+# 5.4.2
+  - Changes from 5.4.1
+    - Bugfixes
+      - #3032 Fixed a bug that could result in emitting `invalid` as an instruction type on sliproads with mode changes
+      - #3085 Fixed an outdated assertion that could throw without a cause for concern
+      - #3179 Fixed a bug that could trigger an assertion in TurnInstruciton generation
+
+# 5.4.1
+  - Changes from 5.4.0
+    - Bugfixes
+      - #3016: Fixes shared memory updates while queries are running
+
+# 5.4.0
+  - Changes from 5.3.0
+    - Profiles
+      - includes library guidance.lua that offers preliminary configuration on guidance.
+      - added left_hand_driving flag in global profile properties
+      - modified turn penalty function for car profile - better fit to real data
+      - return `ref` and `name` as separate fields. Do no use ref or destination as fallback for name value
+      - the default profile for car now ignores HOV only roads
+    - Guidance
+      - Handle Access tags for lanes, only considering valid lanes in lane-guidance (think car | car | bike | car)
+      - Improved the detection of non-noticeable name-changes
+      - Summaries have been improved to consider references as well
+    - API:
+      - `annotations=true` now returns the data source id for each segment as `datasources`
+      - Reduced semantic of merge to refer only to merges from a lane onto a motorway-like road
+      - new `ref` field in the `RouteStep` object. It contains the reference code or name of a way. Previously merged into the `name` property like `name (ref)` and are now separate fields.
+    - Bugfixes
+      - Fixed an issue that would result in segfaults for viaroutes with an invalid intermediate segment when u-turns were allowed at the via-location
+      - Invalid only_* restrictions could result in loss of connectivity. As a fallback, we assume all turns allowed when the restriction is not valid
+      - Fixed a bug that could result in an infinite loop when finding information about an upcoming intersection
+      - Fixed a bug that led to not discovering if a road simply looses a considered prefix
+      - BREAKING: Fixed a bug that could crash postprocessing of instructions on invalid roundabout taggings. This change requires reprocessing datasets with osrm-extract and osrm-contract
+      - Fixed an issue that could emit `invalid` as instruction when ending on a sliproad after a traffic-light
+      - Fixed an issue that would detect turning circles as sliproads
+      - Fixed a bug where post-processing instructions (e.g. left + left -> uturn) could result in false pronunciations
+      - Fixes a bug where a bearing range of zero would cause exhaustive graph traversals
+      - Fixes a bug where certain looped geometries could cause an infinite loop during extraction
+      - Fixed a bug where some roads could be falsly identified as sliproads
+      - Fixed a bug where roundabout intersections could result in breaking assertions when immediately exited
+    - Infrastructure:
+      - Adds a feature to limit results in nearest service with a default of 100 in `osrm-routed`
+
+# 5.3.0
+  - Changes from 5.3.0-rc.3
+    - Guidance
+      - Only announce `use lane` on required turns (not using all lanes to go straight)
+      - Moved `lanes` to the intersection objects. This is BREAKING in relation to other Release Candidates but not with respect to other releases.
+    - Bugfixes
+      - Fix BREAKING: bug that could result in failure to load 'osrm.icd' files. This breaks the dataformat
+      - Fix: bug that results in segfaults when `use lane` instructions are suppressed
+
+  - Changes form 5.2.7
+    - API
+      - Introduces new `TurnType` in the form of `use lane`. The type indicates that you have to stick to a lane without turning
+      - Introduces `lanes` to the `Intersection` object. The lane data contains both the markings at the intersection and a flag indicating if they can be chosen for the next turn
+      - Removed unused `-s` from `osrm-datastore`
+    - Guidance
+      - Only announce `use lane` on required turns (not using all lanes to go straight)
+      - Improved detection of obvious turns
+      - Improved turn lane detection
+      - Reduce the number of end-of-road instructions in obvious cases
+    - Profile:
+      - bicycle.lua: Surface speeds never increase the actual speed
+    - Infrastructure
+      - Add 32bit support
+      - Add ARM NEON/VFP support
+      - Fix Windows builds
+      - Optimize speed file updates using mmap
+      - Add option to disable LTO for older compilers
+      - BREAKING: The new turn type changes the turn-type order. This breaks the **data format**.
+      - BREAKING: Turn lane data introduces two new files (osrm.tld,osrm.tls). This breaks the fileformat for older versions.
+    - Bugfixes:
+      - Fix devide by zero on updating speed data using osrm-contract
+
+# 5.3.0 RC3
+  - Changes from 5.3.0-rc.2
+    - Guidance
+      - Improved detection of obvious turns
+      - Improved turn lane detection
+    - Bugfixes
+      - Fix bug that didn't chose minimal weights on overlapping edges
+
+# 5.3.0 RC2
+  - Changes from 5.3.0-rc.1
+    - Bugfixes
+      - Fixes invalid checks in the lane-extraction part of the car profile
+
+# 5.3.0 RC1
+    - API
+     - Introduces new `TurnType` in the form of `use lane`. The type indicates that you have to stick to a lane without turning
+     - Introduces lanes to the route response. The lane data contains both the markings at the intersection and a flag indicating their involvement in the turn
+
+    - Infrastructure
+     - BREAKING: The new turn type changes the turn-type order. This breaks the **data format**.
+     - BREAKING: Turn lane data introduces two new files (osrm.tld,osrm.tls). This breaks the fileformat for older versions.
+
+# 5.2.5
+  - Bugfixes
+    - Fixes a segfault caused by incorrect trimming logic for very short steps.
+
+# 5.2.4
+  - Bugfixes:
+    - Fixed in issue that arised on roundabouts in combination with intermediate intersections and sliproads
+
+# 5.2.3
+  - Bugfixes:
+    - Fixed an issue with name changes in roundabouts that could result in crashes
+
+# 5.2.2
+  Changes from 5.2.1
+  - Bugfixes:
+    - Buffer overrun in tile plugin response handling
+
+# 5.2.1
+  Changes from 5.2.0
+  - Bugfixes:
+    - Removed debug statement that was spamming the console
+
+# 5.2.0
+  Changes from 5.2.0 RC2
+   - Bugfixes:
+     - Fixed crash when loading shared memory caused by invalid OSM IDs segment size.
+     - Various small instructions handling fixes
+
+   Changes from 5.1.0
+   - API:
+     - new parameter `annotations` for `route`, `trip` and `match` requests.  Returns additional data about each
+       coordinate along the selected/matched route line per `RouteLeg`:
+         - duration of each segment
+         - distance of each segment
+         - OSM node ids of all segment endpoints
+     - Introducing Intersections for Route Steps. This changes the API format in multiple ways.
+         - `bearing_before`/`bearing_after` of `StepManeuver` are now deprecated and will be removed in the next major release
+         - `location` of `StepManeuvers` is now deprecated and will be removed in the next major release
+         - every `RouteStep` now has property `intersections` containing a list of `Intersection` objects.
+     - Support for destination signs. New member `destinations` in `RouteStep`, based on `destination` and `destination:ref`
+     - Support for name pronunciations. New member `pronunciation` in `RouteStep`, based on `name:pronunciation`
+
+   - Profile changes:
+     - duration parser now accepts P[n]DT[n]H[n]M[n]S, P[n]W, PTHHMMSS and PTHH:MM:SS ISO8601 formats.
+     - `result.destinations` allows you to set a way's destinations
+     - `result.pronunciation` allows you to set way name pronunciations
+     - `highway=motorway_link` no longer implies `oneway` as per the OSM Wiki
+
+   - Infrastructure:
+     - BREAKING: Changed the on-disk encoding of the StaticRTree to reduce ramIndex file size. This breaks the **data format**
+     - BREAKING: Intersection Classification adds a new file to the mix (osrm.icd). This breaks the fileformat for older versions.
+     - Better support for osrm-routed binary upgrade on the fly [UNIX specific]:
+       - Open sockets with SO_REUSEPORT to allow multiple osrm-routed processes serving requests from the same port.
+       - Add SIGNAL_PARENT_WHEN_READY environment variable to enable osrm-routed signal its parent with USR1 when it's running and waiting for requests.
+     - Disable http access logging via DISABLE_ACCESS_LOGGING environment variable.
+
+   - Guidance:
+     - BREAKING: modifies the file format with new internal identifiers
+     - improved detection of turning streets, not reporting new-name in wrong situations
+     - improved handling of sliproads (emit turns instead of 'take the ramp')
+     - improved collapsing of instructions. Some 'new name' instructions will be suppressed if they are without alternative and the segment is short
+
+   - Bugfixes
+     - fixed broken summaries for very short routes
+
 # 5.2.0 RC2
    Changes from 5.2.0 RC1
 
@@ -167,5 +404,3 @@
         - `properties.use_turn_restrictions`
         - `properties.u_turn_penalty`
         - `properties.allow_u_turn_at_via`
-
-

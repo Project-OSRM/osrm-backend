@@ -6,7 +6,9 @@ Feature: Separate settings for forward/backward direction
 
     Scenario: Testbot - Going against the flow
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway |

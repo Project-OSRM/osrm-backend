@@ -1,10 +1,16 @@
 var util = require('util');
+var polyline = require('polyline');
 
 module.exports = function () {
+    function add(a, b) {
+        return a + b;
+    }
+
     this.When(/^I plan a trip I should get$/, (table, callback) => {
         var got;
 
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             var testRow = (row, ri, cb) => {
                 var afterRequest = (err, res) => {
                     if (err) return cb(err);
@@ -36,12 +42,23 @@ module.exports = function () {
                         got.message = json.status_message;
                     }
 
+                    if (headers.has('geometry')) {
+                        if (this.queryParams['geometries'] === 'polyline') {
+                            got.geometry = polyline.decode(json.trips[0].geometry).toString();
+                        } else if (this.queryParams['geometries'] === 'polyline6') {
+                            got.geometry = polyline.decode(json.trips[0].geometry, 6).toString();
+                        } else {
+                            got.geometry = json.trips[0].geometry.coordinates;
+                        }
+                    }
+
                     if (headers.has('#')) {
                         // comment column
                         got['#'] = row['#'];
                     }
 
                     var subTrips;
+                    var trip_durations;
                     if (res.statusCode === 200) {
                         if (headers.has('trips')) {
                             subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
@@ -50,6 +67,12 @@ module.exports = function () {
                                 toAdd.push(sl.steps[sl.steps.length-1].intersections[0].location);
                                 return toAdd;
                             })));
+                        }
+                        if(headers.has('durations')) {
+                            var all_durations = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map(sl => {
+                                return sl.duration;
+                            })));
+                            trip_durations = all_durations.map( a => a.reduce(add, 0));
                         }
                     }
 
@@ -61,7 +84,6 @@ module.exports = function () {
                         if (si >= subTrips.length) {
                             ok = false;
                         } else {
-                            ok = false;
                             // TODO: Check all rotations of the round trip
                             for (var ni=0; ni<sub.length; ni++) {
                                 var node = this.findNodeByName(sub[ni]),
@@ -69,8 +91,8 @@ module.exports = function () {
                                 if (this.FuzzyMatch.matchLocation(outNode, node)) {
                                     encodedResult += sub[ni];
                                     extendedTarget += sub[ni];
-                                    ok = true;
                                 } else {
+                                    ok = false;
                                     encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
                                     extendedTarget += util.format('%s [%d,%d]', sub[ni], node.lat, node.lon);
                                 }
@@ -84,21 +106,14 @@ module.exports = function () {
                     } else {
                         got.trips = encodedResult;
                         got.trips = extendedTarget;
-                        this.logFail(row, got, { trip: { query: this.query, response: res }});
                     }
 
-                    ok = true;
+                    got.durations = trip_durations;
 
                     for (var key in row) {
                         if (this.FuzzyMatch.match(got[key], row[key])) {
                             got[key] = row[key];
-                        } else {
-                            ok = false;
                         }
-                    }
-
-                    if (!ok) {
-                        this.logFail(row, got, { trip: { query: this.query, response: res }});
                     }
 
                     cb(null, got);

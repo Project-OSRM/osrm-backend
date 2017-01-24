@@ -95,3 +95,11 @@ Feature: Foot - Access tags on ways
             | footway  |      | no            |       | x     |
             | motorway |      |               | yes   |       |
             | footway  |      |               | no    | x     |
+
+    Scenario: Foot - Bridleways when access is explicit
+        Then routability should be
+            | highway   | horse      | bicycle | foot | bothw |
+            | bridleway |            |         | yes  | x     |
+            | bridleway |            | yes     |      |       |
+            | bridleway | designated |         |      |       |
+            | bridleway |            |         |      |       |

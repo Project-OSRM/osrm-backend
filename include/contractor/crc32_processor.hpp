@@ -82,6 +82,9 @@ class IteratorbasedCRC32
                                  : "0"(crc), "c"(*str));
             ++str;
         }
+#else
+        (void)str;
+        (void)len;
 #endif
         return crc;
     }
@@ -95,8 +98,11 @@ class IteratorbasedCRC32
     }
 
 #if defined(__MINGW64__) || defined(_MSC_VER) || !defined(__x86_64__)
-    inline void
-    __get_cpuid(int param, unsigned *eax, unsigned *ebx, unsigned *ecx, unsigned *edx) const
+    inline void __get_cpuid(int /*param*/,
+                            unsigned * /*eax*/,
+                            unsigned * /*ebx*/,
+                            unsigned *ecx,
+                            unsigned * /*edx*/) const
     {
         *ecx = 0;
     }

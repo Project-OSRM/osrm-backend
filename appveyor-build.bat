@@ -8,18 +8,18 @@ SET PROJECT_DIR=%CD%
 ECHO PROJECT_DIR^: %PROJECT_DIR%
 ECHO NUMBER_OF_PROCESSORS^: %NUMBER_OF_PROCESSORS%
 ECHO cmake^: && cmake --version
-IF %ERRORLEVEL% NEQ 0 ECHO CMAKE not found GOTO ERROR
+IF %ERRORLEVEL% NEQ 0 ECHO CMAKE not found && GOTO CMAKE_NOT_OK
 
-FOR /F %%G IN ("--version") DO cmake %%G 2>&1 | findstr /C:"3.5.0" > nul && goto CMAKE_NOT_OK
-GOTO CMAKE_OK
+cmake --version | findstr /C:"3.7.1" && GOTO CMAKE_OK
 
 :CMAKE_NOT_OK
-ECHO CMAKE NOT OK - downloading new CMake
-IF NOT EXIST cm.zip powershell Invoke-WebRequest https://cmake.org/files/v3.5/cmake-3.5.1-win32-x86.zip -OutFile $env:PROJECT_DIR\cm.zip
+SET CMAKE_VERSION=3.7.1
+ECHO CMAKE NOT OK - downloading new CMake %CMAKE_VERSION%
+IF NOT EXIST cm.zip powershell Invoke-WebRequest https://cmake.org/files/v3.7/cmake-%CMAKE_VERSION%-win32-x86.zip -OutFile $env:PROJECT_DIR\cm.zip
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-IF NOT EXIST cmake-3.5.1-win32-x86 7z -y x cm.zip | %windir%\system32\FIND "ing archive"
+IF NOT EXIST cmake-%CMAKE_VERSION%-win32-x86 7z -y x cm.zip | %windir%\system32\FIND "ing archive"
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
-SET PATH=%PROJECT_DIR%\cmake-3.5.1-win32-x86\bin;%PATH%
+SET PATH=%PROJECT_DIR%\cmake-%CMAKE_VERSION%-win32-x86\bin;%PATH%
 
 :CMAKE_OK
 ECHO CMAKE_OK
@@ -119,15 +119,26 @@ SET PATH=%PROJECT_DIR%\osrm-deps\libs\bin;%PATH%
 ECHO running extractor-tests.exe ...
 unit_tests\%Configuration%\extractor-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
 ECHO running engine-tests.exe ...
 unit_tests\%Configuration%\engine-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
 ECHO running util-tests.exe ...
 unit_tests\%Configuration%\util-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
 ECHO running server-tests.exe ...
 unit_tests\%Configuration%\server-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+ECHO running library-tests.exe ...
+SET test_region=monaco
+SET test_osm=%test_region%.osm.pbf
+IF NOT EXIST %test_osm% powershell Invoke-WebRequest https://s3.amazonaws.com/mapbox/osrm/testing/monaco.osm.pbf -OutFile %test_osm%
+%Configuration%\osrm-extract.exe -p ../profiles/car.lua %test_osm%
+%Configuration%\osrm-contract.exe %test_region%.osrm
+unit_tests\%Configuration%\library-tests.exe %test_region%.osrm
 
 IF NOT "%APPVEYOR_REPO_BRANCH%"=="master" GOTO DONE
 ECHO ========= CREATING PACKAGES ==========

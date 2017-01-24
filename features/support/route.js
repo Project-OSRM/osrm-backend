@@ -1,7 +1,8 @@
 'use strict';
 
-var Timeout = require('node-timeout');
-var request = require('request');
+const Timeout = require('node-timeout');
+const request = require('request');
+const ensureDecimal = require('../lib/utils').ensureDecimal;
 
 module.exports = function () {
     this.requestPath = (service, params, callback) => {
@@ -42,7 +43,7 @@ module.exports = function () {
     };
 
     var encodeWaypoints = (waypoints) => {
-        return waypoints.map(w => [w.lon, w.lat].map(this.ensureDecimal).join(','));
+        return waypoints.map(w => [w.lon, w.lat].map(ensureDecimal).join(','));
     };
 
     this.requestRoute = (waypoints, bearings, userParams, callback) => {
@@ -120,8 +121,7 @@ module.exports = function () {
         return this.requestPath('match', params, callback);
     };
 
-    this.extractInstructionList = (instructions, keyFinder, postfix) => {
-        postfix = postfix || null;
+    this.extractInstructionList = (instructions, keyFinder) => {
         if (instructions) {
             return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
                 .map(keyFinder)
@@ -131,12 +131,16 @@ module.exports = function () {
 
     this.summary = (instructions) => {
         if (instructions) {
-            return instructions.legs.map(l => l.summary).join(',');
+            return instructions.legs.map(l => l.summary).join(';');
         }
     };
 
     this.wayList = (instructions) => {
         return this.extractInstructionList(instructions, s => s.name);
+    };
+
+    this.refList = (instructions) => {
+        return this.extractInstructionList(instructions, s => s.ref || '');
     };
 
     this.pronunciationList = (instructions) => {
@@ -147,25 +151,44 @@ module.exports = function () {
         return this.extractInstructionList(instructions, s => s.destinations || '');
     };
 
+    this.reverseBearing = (bearing) => {
+        if (bearing >= 180)
+            return bearing - 180.;
+        return bearing + 180;
+    };
+
     this.bearingList = (instructions) => {
-        return this.extractInstructionList(instructions, s => s.maneuver.bearing_before + '->' + s.maneuver.bearing_after);
+        return this.extractInstructionList(instructions, s => ('in' in s.intersections[0] ? this.reverseBearing(s.intersections[0].bearings[s.intersections[0].in]) : 0)
+                                                              + '->' +
+                                                              ('out' in s.intersections[0] ? s.intersections[0].bearings[s.intersections[0].out] : 0));
     };
 
     this.annotationList = (instructions) => {
-        function zip(list_1, list_2)
+        function zip(list_1, list_2, list_3)
         {
-            let pairs = [];
+            let tuples = [];
             for (let i = 0; i <  list_1.length; ++i) {
-                pairs.push([list_1[i], list_2[i]]);
+                tuples.push([list_1[i], list_2[i], list_3[i]]);
             }
-            return pairs;
+            return tuples;
         }
-        return instructions.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance).map(p => { return p.join(':'); }).join(','); }).join(',');
+        return instructions.legs.map(l => {return zip(l.annotation.duration, l.annotation.distance, l.annotation.datasources).map(p => { return p.join(':'); }).join(','); }).join(',');
     };
 
     this.OSMIDList = (instructions) => {
         // OSM node IDs also come from the annotation list
         return instructions.legs.map(l => l.annotation.nodes.map(n => n.toString()).join(',')).join(',');
+    };
+
+    this.lanesList = (instructions) => {
+        return this.extractInstructionList(instructions, instruction => {
+            if( 'lanes' in instruction.intersections[0] )
+            {
+                return instruction.intersections[0].lanes.map( p => { return (p.indications).join(';') + ':' + p.valid; } ).join(' ');
+            } else
+            {
+                return '';
+            }});
     };
 
     this.turnList = (instructions) => {
@@ -191,6 +214,14 @@ module.exports = function () {
                 default:
                     return v.maneuver.type + ' ' + v.maneuver.modifier;
                 }
+            })
+            .join(',');
+    };
+
+    this.locations = (instructions) => {
+        return instructions.legs.reduce((m, v) => m.concat(v.steps), [])
+            .map(v => {
+                return this.findNodeByLocation(v.maneuver.location);
             })
             .join(',');
     };

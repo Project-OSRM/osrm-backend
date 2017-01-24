@@ -3,7 +3,6 @@
 
 #include "util/dist_table_wrapper.hpp"
 #include "util/typedefs.hpp"
-#include "util/typedefs.hpp"
 
 #include "osrm/json_container.hpp"
 #include <boost/assert.hpp>
@@ -119,7 +118,7 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
 
                 // add the location to the current trip such that it results in the shortest total
                 // tour
-                if (insert_candidate.first >= farthest_distance)
+                if (insert_candidate.first > farthest_distance)
                 {
                     farthest_distance = insert_candidate.first;
                     next_node = *i;
@@ -168,9 +167,11 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     if (static_cast<std::size_t>(component_size) == number_of_locations)
     {
         // find the pair of location with the biggest distance and make the pair the initial start
-        // trip
-        const auto index = std::distance(
-            std::begin(dist_table), std::max_element(std::begin(dist_table), std::end(dist_table)));
+        // trip. Skipping over the very first element (0,0), we make sure not to end up with the
+        // same start/end in the special case where all entries are the same.
+        const auto index =
+            std::distance(std::begin(dist_table),
+                          std::max_element(std::begin(dist_table) + 1, std::end(dist_table)));
         max_from = index / number_of_locations;
         max_to = index % number_of_locations;
     }
@@ -182,11 +183,15 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
         {
             for (auto y = start; y != end; ++y)
             {
+                // don't repeat coordinates
+                if (*x == *y)
+                    continue;
+
                 const auto xy_dist = dist_table(*x, *y);
                 // SCC decomposition done correctly?
                 BOOST_ASSERT(xy_dist != INVALID_EDGE_WEIGHT);
 
-                if (xy_dist > max_dist)
+                if (xy_dist >= max_dist)
                 {
                     max_dist = xy_dist;
                     max_from = *x;

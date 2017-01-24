@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstddef>
 #include <limits>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -49,12 +48,16 @@ namespace osmium {
      */
     struct not_found : public std::runtime_error {
 
-        not_found(const std::string& what) :
+        explicit not_found(const std::string& what) :
             std::runtime_error(what) {
         }
 
-        not_found(const char* what) :
+        explicit not_found(const char* what) :
             std::runtime_error(what) {
+        }
+
+        explicit not_found(uint64_t id) :
+            std::runtime_error(std::string{"id "} + std::to_string(id) + " not found") {
         }
 
     }; // struct not_found
@@ -63,13 +66,6 @@ namespace osmium {
      * @brief Indexing of OSM data, Locations, etc.
      */
     namespace index {
-
-        template <typename TKey>
-        OSMIUM_NORETURN void not_found_error(TKey key) {
-            std::stringstream s;
-            s << "id " << key << " not found";
-            throw not_found(s.str());
-        }
 
         /**
          * Some of the index classes need an "empty" value that can

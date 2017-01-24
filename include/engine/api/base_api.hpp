@@ -44,13 +44,21 @@ class BaseAPI
         return waypoints;
     }
 
-    // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
-    //  protected:
+    // FIXME: gcc 4.9 does not like MakeWaypoints to be protected
+    // protected:
     util::json::Object MakeWaypoint(const PhantomNode &phantom) const
     {
-        return json::makeWaypoint(phantom.location,
-                                  facade.GetNameForID(phantom.name_id),
-                                  Hint{phantom, facade.GetCheckSum()});
+        if (parameters.generate_hints)
+        {
+            return json::makeWaypoint(phantom.location,
+                                      facade.GetNameForID(phantom.name_id).to_string(),
+                                      Hint{phantom, facade.GetCheckSum()});
+        }
+        else
+        {
+            return json::makeWaypoint(phantom.location,
+                                      facade.GetNameForID(phantom.name_id).to_string());
+        }
     }
 
     const datafacade::BaseDataFacade &facade;

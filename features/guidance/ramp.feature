@@ -7,8 +7,10 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Through Street Right
         Given the node map
-            | a | b | c |
-            |   | d |   |
+            """
+            a b c
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -21,8 +23,10 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Through Street Left
         Given the node map
-            |   | d |   |
-            | a | b | c |
+            """
+              d
+            a b c
+            """
 
         And the ways
             | nodes | highway       |
@@ -35,9 +39,11 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Through Street Left and Right
         Given the node map
-            |   | e |   |
-            | a | b | c |
-            |   | d |   |
+            """
+              e
+            a b c
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -52,8 +58,10 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Three Way Intersection Right
         Given the node map
-            | a | b | c |
-            |   | d |   |
+            """
+            a b c
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -67,9 +75,11 @@ Feature: Ramp Guidance
 
     Scenario: Ramp On Three Way Intersection Right
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   | d |   |
+            """
+                c
+            a b
+              d
+            """
 
         And the ways
             | nodes | highway       |
@@ -83,14 +93,16 @@ Feature: Ramp Guidance
 
     Scenario: Ramp Off Though Street
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   | d |   |
+            """
+                    c
+            a     b
+                  d
+            """
 
         And the ways
-            | nodes | highway       |
-            | abc   | tertiary      |
-            | bd    | motorway_link |
+            | nodes | highway       | oneway |
+            | abc   | tertiary      | yes    |
+            | bd    | motorway_link | yes    |
 
        When I route I should get
             | waypoints | route     | turns                          |
@@ -99,8 +111,10 @@ Feature: Ramp Guidance
 
     Scenario: Straight Ramp Off Turning Though Street
         Given the node map
-            |   |   | c |
-            | a | b | d |
+            """
+                c
+            a b d
+            """
 
         And the ways
             | nodes | highway       |
@@ -108,15 +122,17 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route       | turns                             |
-            | a,d       | abc,bd,bd   | depart,on ramp straight,arrive |
-            | a,c       | abc,abc,abc | depart,continue left,arrive       |
+            | waypoints | route     | turns                          |
+            | a,d       | abc,bd,bd | depart,on ramp straight,arrive |
+            | a,c       | abc,abc   | depart,arrive                  |
 
     Scenario: Fork Ramp Off Turning Though Street
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   |   | d |
+            """
+                c
+            a b
+                d
+            """
 
         And the ways
             | nodes | highway       |
@@ -124,15 +140,17 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route       | turns                             |
-            | a,d       | abc,bd,bd   | depart,on ramp right,arrive    |
-            | a,c       | abc,abc,abc | depart,continue left,arrive       |
+            | waypoints | route     | turns                       |
+            | a,d       | abc,bd,bd | depart,on ramp right,arrive |
+            | a,c       | abc,abc   | depart,arrive               |
 
     Scenario: Fork Ramp
         Given the node map
-            |   |   | c |
-            | a | b |   |
-            |   |   | d |
+            """
+                c
+            a b
+                d
+            """
 
         And the ways
             | nodes | highway       |
@@ -147,9 +165,11 @@ Feature: Ramp Guidance
 
     Scenario: Fork Slight Ramp
         Given the node map
-            |   |   |   | c |
-            | a | b |   |   |
-            |   |   |   | d |
+            """
+                  c
+            a b
+                  d
+            """
 
         And the ways
             | nodes | highway       |
@@ -164,9 +184,11 @@ Feature: Ramp Guidance
 
     Scenario: Fork Slight Ramp on Through Street
         Given the node map
-            |   |   |   | c |
-            | a | b |   |   |
-            |   |   |   | d |
+            """
+                  c
+            a b
+                  d
+            """
 
         And the ways
             | nodes | highway       |
@@ -174,15 +196,17 @@ Feature: Ramp Guidance
             | bd    | motorway_link |
 
        When I route I should get
-            | waypoints | route       | turns                                    |
-            | a,d       | abc,bd,bd   | depart,on ramp slight right,arrive    |
-            | a,c       | abc,abc,abc | depart,continue slight left,arrive       |
+            | waypoints | route     | turns                              |
+            | a,d       | abc,bd,bd | depart,on ramp slight right,arrive |
+            | a,c       | abc,abc   | depart,arrive                      |
 
     Scenario: Fork Slight Ramp on Obvious Through Street
         Given the node map
-            |   |   |   | c |
-            | a | b |   |   |
-            |   |   |   | d |
+            """
+                  c
+            a b
+                  d
+            """
 
         And the ways
             | nodes | highway       |
@@ -196,9 +220,11 @@ Feature: Ramp Guidance
 
     Scenario: Two Ramps Joining into common Motorway
         Given the node map
-            | a |   |   |   |
-            |   |   | c | d |
-            | b |   |   |   |
+            """
+            a
+                c d
+            b
+            """
 
         And the ways
             | nodes | highway       |
@@ -213,9 +239,11 @@ Feature: Ramp Guidance
 
     Scenario: Two Ramps Joining into common Motorway Unnamed
         Given the node map
-            | a |   |   |   |
-            |   |   | c | d |
-            | b |   |   |   |
+            """
+            a
+                c d
+            b
+            """
 
         And the ways
             | nodes | highway       | name |
@@ -227,3 +255,24 @@ Feature: Ramp Guidance
             | waypoints | route    | turns         |
             | a,d       | ,        | depart,arrive |
             | b,d       | ,        | depart,arrive |
+
+    Scenario: Ferry Onto A Ramp
+        Given the node map
+            """
+                                d - e - g
+                                |
+            a - b ~ ~ ~ ~ ~ ~ ~ c
+                                  ` f
+            """
+
+        And the ways
+            | nodes | highway       | route | name                       | ref |
+            | ab    | primary       |       | boarding                   |     |
+            | bc    |               | ferry | boaty mc boatface          | m2  |
+            | cf    |               | ferry | boaty mc boatface          |     |
+            | cd    |               | ferry | boaty mc boatface's cousin |     |
+            | de    | motorway_link |       |                            |     |
+
+        When I route I should get
+            | waypoints | route                        |
+            | a,e       | boarding,boaty mc boatface,, |

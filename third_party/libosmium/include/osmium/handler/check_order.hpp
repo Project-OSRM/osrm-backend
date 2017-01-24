@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -51,11 +51,11 @@ namespace osmium {
      */
     struct out_of_order_error : public std::runtime_error {
 
-        out_of_order_error(const std::string& what) :
+        explicit out_of_order_error(const std::string& what) :
             std::runtime_error(what) {
         }
 
-        out_of_order_error(const char* what) :
+        explicit out_of_order_error(const char* what) :
             std::runtime_error(what) {
         }
 
@@ -67,8 +67,10 @@ namespace osmium {
          * Handler that can be used to check that an OSM file is ordered
          * correctly. Ordered in this case refers to the usual order in OSM
          * files: First nodes in the order of their IDs, then ways in the order
-         * of their IDs, then relations in the order or their IDs. IDs have to
-         * be unique for each type.
+         * of their IDs, then relations in the order or their IDs.
+         *
+         * IDs have to be unique for each type. This check will fail for
+         * history files.
          *
          * To use this add a CheckOrder member variable to your handler and
          * call the node(), way(), and relation() methods from your node(),

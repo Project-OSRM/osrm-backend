@@ -1,12 +1,12 @@
-#include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
+#include "util/coordinate.hpp"
 #include "util/trigonometry_table.hpp"
 #include "util/web_mercator.hpp"
 
 #include <boost/assert.hpp>
 
-#include <cmath>
-
+#include <algorithm>
+#include <iterator>
 #include <limits>
 #include <utility>
 
@@ -21,10 +21,15 @@ namespace coordinate_calculation
 // Does not project the coordinates!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs)
 {
-    const std::uint64_t dx = static_cast<std::int32_t>(lhs.lon - rhs.lon);
-    const std::uint64_t dy = static_cast<std::int32_t>(lhs.lat - rhs.lat);
+    std::int64_t d_lon = static_cast<std::int32_t>(lhs.lon - rhs.lon);
+    std::int64_t d_lat = static_cast<std::int32_t>(lhs.lat - rhs.lat);
 
-    return dx * dx + dy * dy;
+    std::int64_t sq_lon = d_lon * d_lon;
+    std::int64_t sq_lat = d_lat * d_lat;
+
+    std::uint64_t result = static_cast<std::uint64_t>(sq_lon + sq_lat);
+
+    return result;
 }
 
 double haversineDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
@@ -115,34 +120,22 @@ Coordinate centroid(const Coordinate lhs, const Coordinate rhs)
     Coordinate centroid;
     // The coordinates of the midpoints are given by:
     // x = (x1 + x2) /2 and y = (y1 + y2) /2.
-    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude(2);
-    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude(2);
+    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude{2};
+    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude{2};
     return centroid;
-}
-
-double degToRad(const double degree)
-{
-    using namespace boost::math::constants;
-    return degree * (pi<double>() / 180.0);
-}
-
-double radToDeg(const double radian)
-{
-    using namespace boost::math::constants;
-    return radian * (180.0 * (1. / pi<double>()));
 }
 
 double bearing(const Coordinate first_coordinate, const Coordinate second_coordinate)
 {
     const double lon_diff =
         static_cast<double>(toFloating(second_coordinate.lon - first_coordinate.lon));
-    const double lon_delta = degToRad(lon_diff);
-    const double lat1 = degToRad(static_cast<double>(toFloating(first_coordinate.lat)));
-    const double lat2 = degToRad(static_cast<double>(toFloating(second_coordinate.lat)));
+    const double lon_delta = detail::degToRad(lon_diff);
+    const double lat1 = detail::degToRad(static_cast<double>(toFloating(first_coordinate.lat)));
+    const double lat2 = detail::degToRad(static_cast<double>(toFloating(second_coordinate.lat)));
     const double y = std::sin(lon_delta) * std::cos(lat2);
     const double x =
         std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
-    double result = radToDeg(std::atan2(y, x));
+    double result = detail::radToDeg(std::atan2(y, x));
     while (result < 0.0)
     {
         result += 360.0;
@@ -152,6 +145,11 @@ double bearing(const Coordinate first_coordinate, const Coordinate second_coordi
     {
         result -= 360.0;
     }
+    // If someone gives us two identical coordinates, then the concept of a bearing
+    // makes no sense.  However, because it sometimes happens, we'll at least
+    // return a consistent value of 0 so that the behaviour isn't random.
+    BOOST_ASSERT(first_coordinate != second_coordinate || result == 0.);
+
     return result;
 }
 
@@ -258,7 +256,10 @@ circleCenter(const Coordinate C1, const Coordinate C2, const Coordinate C3)
                             C2C1_slope * (C2_x + C3_x)) /
                            (2 * (C3C2_slope - C2C1_slope));
         const double lat = (0.5 * (C1_x + C2_x) - lon) / C2C1_slope + 0.5 * (C1_y + C2_y);
-        return Coordinate(FloatLongitude(lon), FloatLatitude(lat));
+        if (lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0)
+            return boost::none;
+        else
+            return Coordinate(FloatLongitude{lon}, FloatLatitude{lat});
     }
 }
 
@@ -276,12 +277,108 @@ Coordinate interpolateLinear(double factor, const Coordinate from, const Coordin
 {
     BOOST_ASSERT(0 <= factor && factor <= 1.0);
 
-    FixedLongitude interpolated_lon(((1. - factor) * static_cast<std::int32_t>(from.lon)) +
-                                    (factor * static_cast<std::int32_t>(to.lon)));
-    FixedLatitude interpolated_lat(((1. - factor) * static_cast<std::int32_t>(from.lat)) +
-                                   (factor * static_cast<std::int32_t>(to.lat)));
+    const auto from_lon = static_cast<std::int32_t>(from.lon);
+    const auto from_lat = static_cast<std::int32_t>(from.lat);
+    const auto to_lon = static_cast<std::int32_t>(to.lon);
+    const auto to_lat = static_cast<std::int32_t>(to.lat);
+
+    FixedLongitude interpolated_lon{
+        static_cast<std::int32_t>(from_lon + factor * (to_lon - from_lon))};
+    FixedLatitude interpolated_lat{
+        static_cast<std::int32_t>(from_lat + factor * (to_lat - from_lat))};
 
     return {std::move(interpolated_lon), std::move(interpolated_lat)};
+}
+
+// compute the signed area of a triangle
+double signedArea(const Coordinate first_coordinate,
+                  const Coordinate second_coordinate,
+                  const Coordinate third_coordinate)
+{
+    const auto lat_1 = static_cast<double>(toFloating(first_coordinate.lat));
+    const auto lon_1 = static_cast<double>(toFloating(first_coordinate.lon));
+    const auto lat_2 = static_cast<double>(toFloating(second_coordinate.lat));
+    const auto lon_2 = static_cast<double>(toFloating(second_coordinate.lon));
+    const auto lat_3 = static_cast<double>(toFloating(third_coordinate.lat));
+    const auto lon_3 = static_cast<double>(toFloating(third_coordinate.lon));
+    return 0.5 * (-lon_2 * lat_1 + lon_3 * lat_1 + lon_1 * lat_2 - lon_3 * lat_2 - lon_1 * lat_3 +
+                  lon_2 * lat_3);
+}
+
+// check if a set of three coordinates is given in CCW order
+bool isCCW(const Coordinate first_coordinate,
+           const Coordinate second_coordinate,
+           const Coordinate third_coordinate)
+{
+    return signedArea(first_coordinate, second_coordinate, third_coordinate) > 0;
+}
+
+// find the closest distance between a coordinate and a segment
+double findClosestDistance(const Coordinate coordinate,
+                           const Coordinate segment_begin,
+                           const Coordinate segment_end)
+{
+    return haversineDistance(coordinate,
+                             projectPointOnSegment(segment_begin, segment_end, coordinate).second);
+}
+
+// find the closes distance between two sets of coordinates
+double findClosestDistance(const std::vector<Coordinate> &lhs, const std::vector<Coordinate> &rhs)
+{
+    double current_min = std::numeric_limits<double>::max();
+
+    const auto compute_minimum_distance_in_rhs = [&current_min, &rhs](const Coordinate coordinate) {
+        current_min =
+            std::min(current_min, findClosestDistance(coordinate, rhs.begin(), rhs.end()));
+        return false;
+    };
+
+    std::find_if(std::begin(lhs), std::end(lhs), compute_minimum_distance_in_rhs);
+    return current_min;
+}
+
+std::vector<double> getDeviations(const std::vector<Coordinate> &from,
+                                  const std::vector<Coordinate> &to)
+{
+    auto find_deviation = [&to](const Coordinate coordinate) {
+        return findClosestDistance(coordinate, to.begin(), to.end());
+    };
+
+    std::vector<double> deviations_from;
+    deviations_from.reserve(from.size());
+    std::transform(
+        std::begin(from), std::end(from), std::back_inserter(deviations_from), find_deviation);
+
+    return deviations_from;
+}
+
+Coordinate rotateCCWAroundZero(Coordinate coordinate, double angle_in_radians)
+{
+    /*
+     * a rotation  around 0,0 in vector space is defined as
+     *
+     * | cos a   -sin a | . | lon |
+     * | sin a    cos a |   | lat |
+     *
+     * resulting in cos a lon - sin a lon for the new longitude and sin a lon + cos a lat for the
+     * new latitude
+     */
+
+    const auto cos_alpha = cos(angle_in_radians);
+    const auto sin_alpha = sin(angle_in_radians);
+
+    const auto lon = static_cast<double>(toFloating(coordinate.lon));
+    const auto lat = static_cast<double>(toFloating(coordinate.lat));
+
+    return {util::FloatLongitude{cos_alpha * lon - sin_alpha * lat},
+            util::FloatLatitude{sin_alpha * lon + cos_alpha * lat}};
+}
+
+Coordinate difference(const Coordinate lhs, const Coordinate rhs)
+{
+    const auto lon_diff_int = static_cast<int>(lhs.lon) - static_cast<int>(rhs.lon);
+    const auto lat_diff_int = static_cast<int>(lhs.lat) - static_cast<int>(rhs.lat);
+    return {util::FixedLongitude{lon_diff_int}, util::FixedLatitude{lat_diff_int}};
 }
 
 } // ns coordinate_calculation

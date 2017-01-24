@@ -4,34 +4,35 @@
 #include <boost/interprocess/sync/named_condition.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp>
 
+#include "util/retry_lock.hpp"
+
 namespace osrm
 {
 namespace storage
 {
+
 struct SharedBarriers
 {
 
     SharedBarriers()
-        : pending_update_mutex(boost::interprocess::open_or_create, "pending_update"),
-          update_mutex(boost::interprocess::open_or_create, "update"),
-          query_mutex(boost::interprocess::open_or_create, "query"),
-          no_running_queries_condition(boost::interprocess::open_or_create, "no_running_queries"),
-          update_ongoing(false), number_of_queries(0)
+        : region_mutex(boost::interprocess::open_or_create, "osrm-region"),
+          region_condition(boost::interprocess::open_or_create, "osrm-region-cv")
     {
     }
 
-    // Mutex to protect access to the boolean variable
-    boost::interprocess::named_mutex pending_update_mutex;
-    boost::interprocess::named_mutex update_mutex;
-    boost::interprocess::named_mutex query_mutex;
+    static void remove()
+    {
+        boost::interprocess::named_mutex::remove("osrm-region");
+        boost::interprocess::named_condition::remove("osrm-region-cv");
+    }
 
-    // Condition that no update is running
-    boost::interprocess::named_condition no_running_queries_condition;
+    static RetryLock getLockWithRetry(int timeout_seconds)
+    {
+        return RetryLock(timeout_seconds, "osrm-region");
+    }
 
-    // Is there an ongoing update?
-    bool update_ongoing;
-    // Is there any query?
-    int number_of_queries;
+    boost::interprocess::named_mutex region_mutex;
+    boost::interprocess::named_condition region_condition;
 };
 }
 }

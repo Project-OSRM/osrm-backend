@@ -6,10 +6,12 @@ Feature: Bike - Destination only, no passing through
 
     Scenario: Bike - Destination only street
         Given the node map
-            | a |   |   |   | e |
-            |   | b | c | d |   |
-            |   |   |   |   |   |
-            | x |   |   |   | y |
+            """
+            a       e
+              b c d
+
+            x       y
+            """
 
         And the ways
             | nodes | access      |
@@ -31,10 +33,12 @@ Feature: Bike - Destination only, no passing through
 
     Scenario: Bike - Destination only street
         Given the node map
-            | a |   |   |   | e |
-            |   | b | c | d |   |
-            |   |   |   |   |   |
-            | x |   |   |   | y |
+            """
+            a       e
+              b c d
+
+            x       y
+            """
 
         And the ways
             | nodes | access      |
@@ -57,9 +61,11 @@ Feature: Bike - Destination only, no passing through
 
     Scenario: Bike - Routing inside a destination only area
         Given the node map
-            | a |   | c |   | e |
-            |   | b |   | d |   |
-            | x |   |   |   | y |
+            """
+            a   c   e
+              b   d
+            x       y
+            """
 
         And the ways
             | nodes | access      |

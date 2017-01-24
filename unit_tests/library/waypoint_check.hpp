@@ -15,8 +15,8 @@ inline bool waypoint_check(json::Value waypoint)
     }
     const auto waypoint_object = waypoint.get<json::Object>();
     const auto waypoint_location = waypoint_object.values.at("location").get<json::Array>().values;
-    util::FloatLongitude lon(waypoint_location[0].get<json::Number>().value);
-    util::FloatLatitude lat(waypoint_location[1].get<json::Number>().value);
+    util::FloatLongitude lon{waypoint_location[0].get<json::Number>().value};
+    util::FloatLatitude lat{waypoint_location[1].get<json::Number>().value};
     util::Coordinate location_coordinate(lon, lat);
     return location_coordinate.IsValid();
 }

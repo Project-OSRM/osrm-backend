@@ -1,20 +1,16 @@
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/road_classification.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
-#include "util/guidance/toolkit.hpp"
-#include "util/simple_logger.hpp"
 
 #include <cstddef>
-#include <iomanip>
-#include <limits>
-#include <map>
 #include <set>
-#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
-using osrm::util::guidance::getTurnDirection;
+using osrm::extractor::guidance::getTurnDirection;
 
 namespace osrm
 {
@@ -27,7 +23,7 @@ using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
 bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
 {
-    return !from.IsCompatibleTo(to);
+    return !from.CanCombineWith(to);
 }
 
 TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
@@ -36,167 +32,174 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                            const std::unordered_set<NodeID> &barrier_nodes,
                            const CompressedEdgeContainer &compressed_edge_container,
                            const util::NameTable &name_table,
-                           const SuffixTable &street_name_suffix_table)
+                           const SuffixTable &street_name_suffix_table,
+                           const ProfileProperties &profile_properties)
     : node_based_graph(node_based_graph), intersection_generator(node_based_graph,
                                                                  restriction_map,
                                                                  barrier_nodes,
                                                                  node_info_list,
                                                                  compressed_edge_container),
+      intersection_normalizer(node_based_graph,
+                              node_info_list,
+                              name_table,
+                              street_name_suffix_table,
+                              intersection_generator),
       roundabout_handler(node_based_graph,
                          node_info_list,
                          compressed_edge_container,
                          name_table,
-                         street_name_suffix_table),
+                         street_name_suffix_table,
+                         profile_properties,
+                         intersection_generator),
       motorway_handler(node_based_graph,
                        node_info_list,
                        name_table,
                        street_name_suffix_table,
                        intersection_generator),
-      turn_handler(node_based_graph, node_info_list, name_table, street_name_suffix_table)
+      turn_handler(node_based_graph,
+                   node_info_list,
+                   name_table,
+                   street_name_suffix_table,
+                   intersection_generator),
+      sliproad_handler(intersection_generator,
+                       node_based_graph,
+                       node_info_list,
+                       name_table,
+                       street_name_suffix_table),
+      suppress_mode_handler(intersection_generator,
+                            node_based_graph,
+                            node_info_list,
+                            name_table,
+                            street_name_suffix_table)
 {
 }
 
-std::vector<TurnOperation> TurnAnalysis::getTurns(const NodeID from_nid, const EdgeID via_eid) const
+Intersection TurnAnalysis::operator()(const NodeID node_prior_to_intersection,
+                                      const EdgeID entering_via_edge) const
 {
-    auto intersection = intersection_generator(from_nid, via_eid);
+    TurnAnalysis::ShapeResult shape_result =
+        ComputeIntersectionShapes(node_based_graph.GetTarget(entering_via_edge));
 
+    // assign valid flags to normalized_shape
+    const auto intersection_view = intersection_generator.TransformIntersectionShapeIntoView(
+        node_prior_to_intersection,
+        entering_via_edge,
+        shape_result.annotated_normalized_shape.normalized_shape,
+        shape_result.intersection_shape,
+        shape_result.annotated_normalized_shape.performed_merges);
+
+    // assign the turn types to the intersection
+    return AssignTurnTypes(node_prior_to_intersection, entering_via_edge, intersection_view);
+}
+
+Intersection TurnAnalysis::AssignTurnTypes(const NodeID node_prior_to_intersection,
+                                           const EdgeID entering_via_edge,
+                                           const IntersectionView &intersection_view) const
+{
     // Roundabouts are a main priority. If there is a roundabout instruction present, we process the
     // turn as a roundabout
-    if (roundabout_handler.canProcess(from_nid, via_eid, intersection))
+
+    // the following lines create a partly invalid intersection object. We might want to refactor
+    // this at some point
+    Intersection intersection;
+    intersection.reserve(intersection_view.size());
+    std::transform(intersection_view.begin(),
+                   intersection_view.end(),
+                   std::back_inserter(intersection),
+                   [&](const IntersectionViewData &data) {
+                       return ConnectedRoad(data,
+                                            {TurnType::Invalid, DirectionModifier::UTurn},
+                                            INVALID_LANE_DATAID);
+                   });
+
+    // Suppress turns on ways between mode types that do not need guidance, think ferry routes.
+    // This handler has to come first and when it triggers we're done with the intersection: there's
+    // nothing left to be done once we suppressed instructions on such routes. Exit early.
+    if (suppress_mode_handler.canProcess(
+            node_prior_to_intersection, entering_via_edge, intersection))
     {
-        intersection = roundabout_handler(from_nid, via_eid, std::move(intersection));
+        intersection = suppress_mode_handler(
+            node_prior_to_intersection, entering_via_edge, std::move(intersection));
+
+        return intersection;
+    }
+
+    if (roundabout_handler.canProcess(node_prior_to_intersection, entering_via_edge, intersection))
+    {
+        intersection = roundabout_handler(
+            node_prior_to_intersection, entering_via_edge, std::move(intersection));
     }
     else
     {
         // set initial defaults for normal turns and modifier based on angle
-        intersection = setTurnTypes(from_nid, via_eid, std::move(intersection));
-        if (motorway_handler.canProcess(from_nid, via_eid, intersection))
+        intersection =
+            setTurnTypes(node_prior_to_intersection, entering_via_edge, std::move(intersection));
+        if (motorway_handler.canProcess(
+                node_prior_to_intersection, entering_via_edge, intersection))
         {
-            intersection = motorway_handler(from_nid, via_eid, std::move(intersection));
+            intersection = motorway_handler(
+                node_prior_to_intersection, entering_via_edge, std::move(intersection));
         }
         else
         {
-            BOOST_ASSERT(turn_handler.canProcess(from_nid, via_eid, intersection));
-            intersection = turn_handler(from_nid, via_eid, std::move(intersection));
+            BOOST_ASSERT(turn_handler.canProcess(
+                node_prior_to_intersection, entering_via_edge, intersection));
+            intersection = turn_handler(
+                node_prior_to_intersection, entering_via_edge, std::move(intersection));
         }
     }
-
     // Handle sliproads
-    intersection = handleSliproads(via_eid, std::move(intersection));
+    if (sliproad_handler.canProcess(node_prior_to_intersection, entering_via_edge, intersection))
+        intersection = sliproad_handler(
+            node_prior_to_intersection, entering_via_edge, std::move(intersection));
 
-    std::vector<TurnOperation> turns;
-    for (auto road : intersection)
-        if (road.entry_allowed)
-            turns.emplace_back(road.turn);
-
-    return turns;
+    // Turn On Ramps Into Off Ramps, if we come from a motorway-like road
+    if (node_based_graph.GetEdgeData(entering_via_edge).road_classification.IsMotorwayClass())
+    {
+        std::for_each(intersection.begin(), intersection.end(), [](ConnectedRoad &road) {
+            if (road.instruction.type == TurnType::OnRamp)
+                road.instruction.type = TurnType::OffRamp;
+        });
+    }
+    return intersection;
 }
 
-Intersection TurnAnalysis::getIntersection(const NodeID from_nid, const EdgeID via_eid) const
+TurnAnalysis::ShapeResult
+TurnAnalysis::ComputeIntersectionShapes(const NodeID node_at_center_of_intersection) const
 {
-    return intersection_generator(from_nid, via_eid);
+    ShapeResult intersection_shape;
+    intersection_shape.intersection_shape =
+        intersection_generator.ComputeIntersectionShape(node_at_center_of_intersection);
+
+    intersection_shape.annotated_normalized_shape = intersection_normalizer(
+        node_at_center_of_intersection, intersection_shape.intersection_shape);
+
+    return intersection_shape;
 }
 
 // Sets basic turn types as fallback for otherwise unhandled turns
-Intersection
-TurnAnalysis::setTurnTypes(const NodeID from_nid, const EdgeID, Intersection intersection) const
+Intersection TurnAnalysis::setTurnTypes(const NodeID node_prior_to_intersection,
+                                        const EdgeID,
+                                        Intersection intersection) const
 {
     for (auto &road : intersection)
     {
         if (!road.entry_allowed)
             continue;
 
-        const EdgeID onto_edge = road.turn.eid;
+        const EdgeID onto_edge = road.eid;
         const NodeID to_nid = node_based_graph.GetTarget(onto_edge);
 
-        road.turn.instruction = {TurnType::Turn,
-                                 (from_nid == to_nid) ? DirectionModifier::UTurn
-                                                      : getTurnDirection(road.turn.angle)};
+        road.instruction = {TurnType::Turn,
+                            (node_prior_to_intersection == to_nid) ? DirectionModifier::UTurn
+                                                                   : getTurnDirection(road.angle)};
     }
     return intersection;
 }
 
-// "Sliproads" occur when we've got a link between two roads (MOTORWAY_LINK, etc), but
-// the two roads are *also* directly connected shortly afterwards.
-// In these cases, we tag the turn-type as "sliproad", and then in post-processing
-// we emit a "turn", instead of "take the ramp"+"merge"
-Intersection TurnAnalysis::handleSliproads(const EdgeID source_edge_id,
-                                           Intersection intersection) const
+const IntersectionGenerator &TurnAnalysis::GetIntersectionGenerator() const
 {
-
-    auto intersection_node_id = node_based_graph.GetTarget(source_edge_id);
-
-    const auto linkTest = [this](const ConnectedRoad &road) {
-        return isLinkClass(
-                   node_based_graph.GetEdgeData(road.turn.eid).road_classification.road_class) &&
-               road.entry_allowed &&
-               angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < NARROW_TURN_ANGLE;
-    };
-
-    bool hasRamp =
-        std::find_if(intersection.begin(), intersection.end(), linkTest) != intersection.end();
-    if (!hasRamp)
-        return intersection;
-
-    const auto source_edge_data = node_based_graph.GetEdgeData(source_edge_id);
-
-    // Find the continuation of the intersection we're on
-    auto next_road = std::find_if(
-        intersection.begin(),
-        intersection.end(),
-        [this, source_edge_data](const ConnectedRoad &road) {
-            const auto road_edge_data = node_based_graph.GetEdgeData(road.turn.eid);
-            // Test to see if the source edge and the one we're looking at are the same road
-            return road_edge_data.road_classification.road_class ==
-                       source_edge_data.road_classification.road_class &&
-                   road_edge_data.name_id != EMPTY_NAMEID &&
-                   road_edge_data.name_id == source_edge_data.name_id && road.entry_allowed &&
-                   angularDeviation(road.turn.angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE;
-        });
-
-    const bool hasNext = next_road != intersection.end();
-
-    if (!hasNext)
-    {
-        return intersection;
-    }
-
-    // Threshold check, if the intersection is too far away, don't bother continuing
-    const auto &next_road_data = node_based_graph.GetEdgeData(next_road->turn.eid);
-    if (next_road_data.distance > MAX_SLIPROAD_THRESHOLD)
-    {
-        return intersection;
-    }
-
-    const auto next_road_next_intersection =
-        intersection_generator(intersection_node_id, next_road->turn.eid);
-
-    std::unordered_set<NameID> target_road_names;
-
-    for (const auto &road : next_road_next_intersection)
-    {
-        const auto &target_data = node_based_graph.GetEdgeData(road.turn.eid);
-        target_road_names.insert(target_data.name_id);
-    }
-
-    for (auto &road : intersection)
-    {
-        if (linkTest(road))
-        {
-            auto target_intersection = intersection_generator(intersection_node_id, road.turn.eid);
-            for (const auto &candidate_road : target_intersection)
-            {
-                const auto &candidate_data = node_based_graph.GetEdgeData(candidate_road.turn.eid);
-                if (target_road_names.count(candidate_data.name_id) > 0)
-                {
-                    road.turn.instruction.type = TurnType::Sliproad;
-                    break;
-                }
-            }
-        }
-    }
-
-    return intersection;
+    return intersection_generator;
 }
 
 } // namespace guidance

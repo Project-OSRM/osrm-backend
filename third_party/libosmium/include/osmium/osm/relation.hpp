@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,21 +33,24 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iterator>
 
 #include <osmium/memory/collection.hpp> // IWYU pragma: keep
 #include <osmium/memory/item.hpp>
+#include <osmium/osm/entity.hpp>
 #include <osmium/osm/item_type.hpp>
 #include <osmium/osm/object.hpp>
 #include <osmium/osm/types.hpp>
+#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
     namespace builder {
-        template <typename> class ObjectBuilder;
+        template <typename TDerived, typename T>
+        class OSMObjectBuilder;
+
         class RelationMemberListBuilder;
     } // namespace builder
 
@@ -109,7 +112,8 @@ namespace osmium {
             return m_ref;
         }
 
-        RelationMember& ref(object_id_type ref) noexcept {
+        /// @deprecated Use set_ref() instead.
+        OSMIUM_DEPRECATED RelationMember& ref(object_id_type ref) noexcept {
             m_ref = ref;
             return *this;
         }
@@ -149,14 +153,13 @@ namespace osmium {
 
     public:
 
-        typedef size_t size_type;
+        constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            return t == osmium::item_type::relation_member_list ||
+                   t == osmium::item_type::relation_member_list_with_full_members;
+        }
 
         RelationMemberList() :
             osmium::memory::Collection<RelationMember, osmium::item_type::relation_member_list>() {
-        }
-
-        size_type size() const noexcept {
-            return static_cast<size_type>(std::distance(begin(), end()));
         }
 
     }; // class RelationMemberList
@@ -165,7 +168,8 @@ namespace osmium {
 
     class Relation : public OSMObject {
 
-        friend class osmium::builder::ObjectBuilder<osmium::Relation>;
+        template <typename TDerived, typename T>
+        friend class osmium::builder::OSMObjectBuilder;
 
         Relation() noexcept :
             OSMObject(sizeof(Relation), osmium::item_type::relation) {
@@ -174,6 +178,10 @@ namespace osmium {
     public:
 
         static constexpr osmium::item_type itemtype = osmium::item_type::relation;
+
+        constexpr static bool is_compatible_to(osmium::item_type t) noexcept {
+            return t == itemtype;
+        }
 
         RelationMemberList& members() {
             return osmium::detail::subitem_of_type<RelationMemberList>(begin(), end());

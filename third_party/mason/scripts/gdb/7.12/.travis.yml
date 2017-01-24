@@ -1,0 +1,25 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8
+      compiler: clang
+    - os: linux
+      sudo: false
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - g++-5
+           - texinfo
+
+# override install to prefer g++ instead of clang++
+install:
+  - export CXX=g++-5
+  - export CC=gcc-5
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

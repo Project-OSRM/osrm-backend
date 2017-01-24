@@ -1,0 +1,96 @@
+diff --git a/build/configure.ac.tools b/build/configure.ac.tools
+index a24dbce..aaf0e5d 100644
+--- a/build/configure.ac.tools
++++ b/build/configure.ac.tools
+@@ -10,16 +10,3 @@ AC_C_INLINE
+ 
+ dnl ===========================================================================
+ 
+-PKG_PROG_PKG_CONFIG()
+-if test "x$PKG_CONFIG" = x; then
+-	AC_MSG_ERROR([pkg-config >= $PKGCONFIG_REQUIRED required but not found (http://pkgconfig.freedesktop.org/)])
+-fi
+-
+-dnl Check for recent pkg-config which supports Requires.private
+-case `$PKG_CONFIG --version` in
+-[0.?|0.?.?|0.1[0-7]|0.1[0-7].?]) PKGCONFIG_REQUIRES="Requires"; ;;
+-*) PKGCONFIG_REQUIRES="Requires.private"; ;;
+-esac
+-
+-AC_SUBST(PKGCONFIG_REQUIRES)
+-
+diff --git a/configure.ac b/configure.ac
+index 2ce1959..87c71ac 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -321,26 +321,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(gallium, Gallium3D, no, [
+ dnl ===========================================================================
+ 
+ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
+-  use_png=no
+-  AC_ARG_VAR([png_REQUIRES], [module name for libpng to search for using pkg-config])
+-  if test "x$png_REQUIRES" = x; then
+-    # libpng13 is GnuWin32's libpng-1.2.8 :-(
+-    for l in libpng libpng14 libpng12 libpng13 libpng10; do
+-      if $PKG_CONFIG --exists $l ; then
+-        png_REQUIRES=$l
+-        use_png=yes
+-        break
+-      fi
+-    done
+-  else
+-    use_png=yes
+-  fi
+-
+-  if test "x$use_png" = "xyes" ; then 
+-    PKG_CHECK_MODULES(png, $png_REQUIRES, , : )
+-  else
+-    AC_MSG_WARN([Could not find libpng in the pkg-config search path])
+-  fi    
++  use_png=yes
+ ])
+ 
+ dnl ===========================================================================
+@@ -495,10 +476,6 @@ FREETYPE_MIN_RELEASE=2.1.9
+ FREETYPE_MIN_VERSION=9.7.3
+ 
+ CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
+-
+-    PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
+-                      [freetype_pkgconfig=yes],
+-		      [freetype_pkgconfig=no])
+   
+     if test "x$freetype_pkgconfig" = "xyes"; then
+       ft_REQUIRES="freetype2 >= $FREETYPE_MIN_VERSION $ft_REQUIRES"
+@@ -662,18 +639,12 @@ CAIRO_ENABLE(test_surfaces, test surfaces, no)
+ dnl ===========================================================================
+ 
+ CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
+-  pixman_REQUIRES="pixman-1 >= 0.30.0"
+-  PKG_CHECK_MODULES(pixman, $pixman_REQUIRES, ,
+-    [use_image="no (requires $pixman_REQUIRES http://cairographics.org/releases/)"])
++  use_image=yes
+   image_REQUIRES=$pixman_REQUIRES
+   image_CFLAGS=$pixman_CFLAGS
+   image_LIBS=$pixman_LIBS
+ ])
+ 
+-if pkg-config --exists 'pixman-1 >= 0.27.1'; then
+-    AC_DEFINE([HAS_PIXMAN_GLYPHS], 1, [Enable pixman glyph cache])
+-fi
+-
+ 
+ dnl ===========================================================================
+ 
+diff --git a/test/Makefile.am b/test/Makefile.am
+index 950629b..f733dd9 100644
+--- a/test/Makefile.am
++++ b/test/Makefile.am
+@@ -75,7 +75,6 @@ endif
+ endif
+ test_sources += $(test)
+ 
+-noinst_PROGRAMS = cairo-test-suite$(EXEEXT) # always build
+ noinst_SCRIPTS = check-refs.sh
+ 
+ TESTS += cairo-test-suite$(EXEEXT)

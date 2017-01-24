@@ -7,9 +7,11 @@ Feature: Foot - Squares and other areas
     @square
     Scenario: Foot - Route along edge of a squares
         Given the node map
-            | x |   |
-            | a | b |
-            | d | c |
+            """
+            x
+            a b
+            d c
+            """
 
         And the ways
             | nodes | area | highway     |
@@ -30,9 +32,11 @@ Feature: Foot - Squares and other areas
     @building
     Scenario: Foot - Don't route on buildings
         Given the node map
-            | x |   |
-            | a | b |
-            | d | c |
+            """
+            x
+            a b
+            d c
+            """
 
         And the ways
             | nodes | highway | area | building | access |
@@ -53,9 +57,11 @@ Feature: Foot - Squares and other areas
     @parking
     Scenario: Foot - parking areas
         Given the node map
-            | e |   |   | f |
-            | x | a | b | y |
-            |   | d | c |   |
+            """
+            e     f
+            x a b y
+              d c
+            """
 
         And the ways
             | nodes | highway | amenity |
@@ -80,8 +86,10 @@ Feature: Foot - Squares and other areas
     @train @platform
     Scenario: Foot - railway platforms
         Given the node map
-            | x | a | b | y |
-            |   | d | c |   |
+            """
+            x a b y
+              d c
+            """
 
         And the ways
             | nodes | highway | railway  |

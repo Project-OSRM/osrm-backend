@@ -6,7 +6,9 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Simple Bridge
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway | bridge | name               |
@@ -20,9 +22,11 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Bridge with Immediate Turn
         Given the node map
-            |   |   |   | d |
-            | a |   | b | c |
-            |   |   |   | e |
+            """
+                  d
+            a   b c
+                  e
+            """
 
         And the ways
             | nodes | highway | bridge | name               |
@@ -31,17 +35,19 @@ Feature: Car - Guidance - Bridges and Tunnels
             | dce   | primary |        | Nebenstraße        |
 
         When I route I should get
-            | from | to | route                                      | turns                           |
-            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road left,arrive  |
-            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road right,arrive |
-            | e    | a  | Nebenstraße,Hauptstraßenbrücke,Hauptstraße | depart,turn left,arrive         |
-            | d    | a  | Nebenstraße,Hauptstraßenbrücke,Hauptstraße | depart,turn right,arrive        |
+            | from | to | route                                      | turns                    |
+            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,turn left,arrive  |
+            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,turn right,arrive |
+            | e    | a  | Nebenstraße,Hauptstraßenbrücke,Hauptstraße | depart,turn left,arrive  |
+            | d    | a  | Nebenstraße,Hauptstraßenbrücke,Hauptstraße | depart,turn right,arrive |
 
     Scenario: Bridge with Immediate Turn Front and Back
         Given the node map
-            | f |   |   | d |
-            | a |   | b | c |
-            | g |   |   | e |
+            """
+            f     d
+            a   b c
+            g     e
+            """
 
         And the ways
             | nodes | highway | bridge | name               |
@@ -51,19 +57,21 @@ Feature: Car - Guidance - Bridges and Tunnels
             | gaf   | primary |        | Anderestraße       |
 
         When I route I should get
-            | from | to | route                                                    | turns                                      |
-            | f    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,end of road left,arrive   |
-            | f    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,end of road right,arrive  |
-            | g    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,end of road left,arrive  |
-            | g    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,end of road right,arrive |
-            | e    | f  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn left,end of road right,arrive  |
-            | e    | g  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn left,end of road left,arrive   |
-            | d    | f  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn right,end of road right,arrive |
-            | d    | g  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn right,end of road left,arrive  |
+            | from | to | route                                                    | turns                               |
+            | f    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,turn left,arrive   |
+            | f    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,turn right,arrive  |
+            | g    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,turn left,arrive  |
+            | g    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,turn right,arrive |
+            | e    | f  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn left,turn right,arrive  |
+            | e    | g  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn left,turn left,arrive   |
+            | d    | f  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn right,turn right,arrive |
+            | d    | g  | Nebenstraße,Hauptstraßenbrücke,Anderestraße,Anderestraße | depart,turn right,turn left,arrive  |
 
     Scenario: Simple Tunnel
         Given the node map
-            | a | b | c | d |
+            """
+            a b c d
+            """
 
         And the ways
             | nodes | highway | tunnel | name               |
@@ -77,9 +85,11 @@ Feature: Car - Guidance - Bridges and Tunnels
 
     Scenario: Tunnel with Immediate Turn
         Given the node map
-            |   |   |   | d |
-            | a |   | b | c |
-            |   |   |   | e |
+            """
+                  d
+            a   b c
+                  e
+            """
 
         And the ways
             | nodes | highway | tunnel | name               |
@@ -88,17 +98,19 @@ Feature: Car - Guidance - Bridges and Tunnels
             | dce   | primary |        | Nebenstraße        |
 
         When I route I should get
-            | from | to | route                                      | turns                           |
-            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road left,arrive  |
-            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,end of road right,arrive |
-            | e    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn left,arrive         |
-            | d    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn right,arrive        |
+            | from | to | route                                      | turns                    |
+            | a    | d  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,turn left,arrive  |
+            | a    | e  | Hauptstraße,Nebenstraße,Nebenstraße        | depart,turn right,arrive |
+            | e    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn left,arrive  |
+            | d    | a  | Nebenstraße,Hauptstraßentunnel,Hauptstraße | depart,turn right,arrive |
 
     Scenario: Tunnel with Immediate Turn Front and Back
         Given the node map
-            | f |   |   | d |
-            | a |   | b | c |
-            | g |   |   | e |
+            """
+            f     d
+            a   b c
+            g     e
+            """
 
         And the ways
             | nodes | highway | bridge | name               |
@@ -108,13 +120,13 @@ Feature: Car - Guidance - Bridges and Tunnels
             | gaf   | primary |        | Anderestraße       |
 
         When I route I should get
-            | from | to | route                                                    | turns                                      |
-            | f    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,end of road left,arrive   |
-            | f    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,end of road right,arrive  |
-            | g    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,end of road left,arrive  |
-            | g    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,end of road right,arrive |
-            | e    | f  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn left,end of road right,arrive  |
-            | e    | g  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn left,end of road left,arrive   |
-            | d    | f  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn right,end of road right,arrive |
-            | d    | g  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn right,end of road left,arrive  |
+            | from | to | route                                                    | turns                               |
+            | f    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,turn left,arrive   |
+            | f    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn left,turn right,arrive  |
+            | g    | d  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,turn left,arrive  |
+            | g    | e  | Anderestraße,Hauptstraße,Nebenstraße,Nebenstraße         | depart,turn right,turn right,arrive |
+            | e    | f  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn left,turn right,arrive  |
+            | e    | g  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn left,turn left,arrive   |
+            | d    | f  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn right,turn right,arrive |
+            | d    | g  | Nebenstraße,Hauptstraßentunnel,Anderestraße,Anderestraße | depart,turn right,turn left,arrive  |
 

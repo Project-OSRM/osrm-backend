@@ -1,45 +1,34 @@
 #include "extractor/suffix_table.hpp"
+#include "extractor/scripting_environment.hpp"
 
-#include "util/lua_util.hpp"
-#include "util/simple_logger.hpp"
+#include <algorithm>
+#include <iterator>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/assert.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/ref.hpp>
-
-#include <iterator>
-#include <vector>
 
 namespace osrm
 {
 namespace extractor
 {
 
-SuffixTable::SuffixTable(lua_State *lua_state)
+SuffixTable::SuffixTable(ScriptingEnvironment &scripting_environment)
 {
-    BOOST_ASSERT(lua_state != nullptr);
-    if (!util::luaFunctionExists(lua_state, "get_name_suffix_list"))
-        return;
+    suffixes = scripting_environment.GetNameSuffixList();
 
-    std::vector<std::string> suffixes_vector;
-    try
-    {
-        // call lua profile to compute turn penalty
-        luabind::call_function<void>(
-            lua_state, "get_name_suffix_list", boost::ref(suffixes_vector));
-    }
-    catch (const luabind::error &er)
-    {
-        util::SimpleLogger().Write(logWARNING) << er.what();
-    }
-
-    for (auto &suffix : suffixes_vector)
+    for (auto &suffix : suffixes)
         boost::algorithm::to_lower(suffix);
-    suffix_set.insert(std::begin(suffixes_vector), std::end(suffixes_vector));
+
+    auto into = std::inserter(suffix_set, end(suffix_set));
+    auto to_view = [](const auto &s) { return util::StringView{s}; };
+    std::transform(begin(suffixes), end(suffixes), into, to_view);
 }
 
 bool SuffixTable::isSuffix(const std::string &possible_suffix) const
+{
+    return isSuffix(util::StringView{possible_suffix});
+}
+
+bool SuffixTable::isSuffix(util::StringView possible_suffix) const
 {
     return suffix_set.count(possible_suffix) > 0;
 }

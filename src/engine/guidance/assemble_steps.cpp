@@ -13,22 +13,6 @@ namespace guidance
 {
 namespace detail
 {
-std::pair<short, short> getIntermediateBearings(const LegGeometry &leg_geometry,
-                                                const std::size_t segment_index)
-{
-    auto turn_index = leg_geometry.BackIndex(segment_index);
-    BOOST_ASSERT(turn_index > 0);
-    BOOST_ASSERT(turn_index + 1 < leg_geometry.locations.size());
-
-    // TODO chose a bigger look-a-head to smooth complex geometry
-    const auto pre_turn_coordinate = leg_geometry.locations[turn_index - 1];
-    const auto turn_coordinate = leg_geometry.locations[turn_index];
-    const auto post_turn_coordinate = leg_geometry.locations[turn_index + 1];
-
-    return std::make_pair<short, short>(
-        std::round(util::coordinate_calculation::bearing(pre_turn_coordinate, turn_coordinate)),
-        std::round(util::coordinate_calculation::bearing(turn_coordinate, post_turn_coordinate)));
-}
 
 std::pair<short, short> getDepartBearings(const LegGeometry &leg_geometry)
 {

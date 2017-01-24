@@ -20,6 +20,31 @@
             "object_types": [ "way" ]
         },
         {
+            "key": "service",
+            "value": "driveway",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "service",
+            "value": "alley",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "service",
+            "value": "emergency_access",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "service",
+            "value": "drive-through",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "service",
+            "value": "parking",
+            "object_types": [ "way" ]
+        },
+        {
             "key": "oneway",
             "value": "true",
             "object_types": [ "way" ]
@@ -36,8 +61,14 @@
         },
         {
             "key": "oneway",
+            "value": "alternating",
+            "description": "high frequency reversible oneways are routed over taking the waiting period into account",
+            "object_types": [ "way" ]
+        },
+        {
+            "key": "oneway",
             "value": "reversible",
-            "description": "is marked as non-routable because of time-dependence",
+            "description": "low frequency reversible oneways are marked as non-routable because of time-dependence",
             "object_types": [ "way" ]
         },
         {
@@ -45,6 +76,36 @@
             "value": "yes",
             "object_types": [ "way" ],
             "description": "Roads with area=yes are ignored by default."
+        },
+        {
+            "key": "hov",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov=designated are ignored by default."
+        },
+        {
+            "key": "hov:lanes",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov:lanes all-designated are ignored by default."
+        },
+        {
+            "key": "hov:lanes:forward",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov:lanes:forward all-designated are ignored by default."
+        },
+        {
+            "key": "hov:lanes:backward",
+            "value": "designated",
+            "object_types": [ "way" ],
+            "description": "Roads with hov:lanes:backward all-designated are ignored by default."
+        },
+        {
+            "key": "toll",
+            "value": "yes",
+            "object_types": [ "way" ],
+            "description": "Roads with toll=yes are ignored by default."
         },
         {
             "key": "impassable",
@@ -104,6 +165,8 @@
         {"key": "maxspeed", "value": "uk:nsl_single"},
         {"key": "maxspeed", "value": "uk:nsl_dual"},
         {"key": "maxspeed", "value": "uk:motorway"},
+        {"key": "maxspeed", "value": "nl:rural"},
+        {"key": "maxspeed", "value": "nl:trunk"},
         {"key": "smoothness", "value": "intermediate"},
         {"key": "smoothness", "value": "bad"},
         {"key": "smoothness", "value": "very_bad"},
@@ -146,6 +209,8 @@
         {"key": "highway", "value": "default"},
         {"key": "width", "description": "Penalties for narrow streets"},
         {"key": "lanes", "description": "Penalties for shared single lane streets"},
+        {"key": "lanes:forward", "description": "Lanes in forward direction"},
+        {"key": "lanes:backward", "description": "Lanes in backward direction"},
         {"key": "surface", "value": "asphalt"},
         {"key": "surface", "value": "concrete"},
         {"key": "surface", "value": "concrete:plates"},
@@ -201,6 +266,51 @@
             "description": "Name of road for navigation instructions."
         },
         {
+            "key": "turn:lanes",
+            "object_types": [ "way" ],
+            "description": "Turn Lanes for lane guidance."
+        },
+        {
+            "key": "vehicle:lanes",
+            "object_types": [ "way" ],
+            "description": "Access tags for turn lanes."
+        },
+        {
+            "key": "turn:lanes:forward",
+            "object_types": [ "way" ],
+            "description": "Turn Lanes for lane guidance."
+        },
+        {
+            "key": "vehicle:lanes:forward",
+            "object_types": [ "way" ],
+            "description": "Access tags for turn lanes."
+        },
+        {
+            "key": "turn:lanes:backward",
+            "object_types": [ "way" ],
+            "description": "Turn Lanes for lane guidance."
+        },
+        {
+            "key": "vehicle:lanes:backward",
+            "object_types": [ "way" ],
+            "description": "Access tags for turn lanes."
+        },
+        {
+            "key": "lanes:psv",
+            "object_types": [ "way" ],
+            "description": "Turn Lanes for lane guidance."
+        },
+        {
+            "key": "lanes:psv:forward",
+            "object_types": [ "way" ],
+            "description": "Turn Lanes for lane guidance."
+        },
+        {
+            "key": "lanes:psv:backward",
+            "object_types": [ "way" ],
+            "description": "Turn Lanes for lane guidance."
+        },
+        {
             "key": "ref",
             "object_types": [ "way" ],
             "description": "Ref of road for navigation instructions, overrides name."
@@ -211,14 +321,45 @@
             "description": "Destination of road for navigation instructions, supplements name."
         },
         {
+            "key": "destination:forward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
+        },
+        {
+            "key": "destination:backward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
+        },
+        {
+            "key": "destination:street",
+            "object_types": [ "way" ],
+            "description": "Destination of road for navigation instructions, supplements name."
+        },
+        {
             "key": "destination:ref",
             "object_types": [ "way" ],
             "description": "Destination of road for navigation instructions, supplements name."
         },
         {
+            "key": "destination:ref:forward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
+        },
+        {
+            "key": "destination:ref:backward",
+            "object_types": [ "way" ],
+            "description": "Destination and direction of road for oneways for navigation instructions, supplements name."
+        },
+        {
             "key": "junction",
             "object_types": [ "way" ],
             "value": "roundabout"
+        },
+        {
+            "key": "junction",
+            "object_types": [ "way" ],
+            "value": "circular",
+            "description": "A Roundabout where the traffic on the roundabout not always has right of way."
         },
         {
             "key": "type",

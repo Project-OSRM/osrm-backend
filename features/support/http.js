@@ -19,6 +19,9 @@ module.exports = function () {
         return paramString;
     };
 
+    // FIXME this needs to be simplified!
+    // - remove usage of node-timeout
+    // - replace with node's native timout mechanism
     this.sendRequest = (baseUri, parameters, callback) => {
         var limit = Timeout(this.TIMEOUT, { err: { statusCode: 408 } });
 
@@ -28,9 +31,9 @@ module.exports = function () {
 
             request(this.query, (err, res, body) => {
                 if (err && err.code === 'ECONNREFUSED') {
-                    throw new Error('*** osrm-routed is not running.');
+                    return cb(new Error('*** osrm-routed is not running.'));
                 } else if (err && err.statusCode === 408) {
-                    throw new Error();
+                    return cb(new Error());
                 }
 
                 return cb(err, res, body);
@@ -40,11 +43,10 @@ module.exports = function () {
         runRequest(limit((err, res, body) => {
             if (err) {
                 if (err.statusCode === 408)
-                    return callback(this.RoutedError('*** osrm-routed did not respond'));
+                    return callback(new Error('*** osrm-routed did not respond'));
                 else if (err.code === 'ECONNREFUSED')
-                    return callback(this.RoutedError('*** osrm-routed is not running'));
+                    return callback(new Error('*** osrm-routed is not running'));
             }
-            //console.log(body+"\n");
             return callback(err, res, body);
         }));
     };

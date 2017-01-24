@@ -3,6 +3,7 @@
 
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
+#include <tuple>
 
 namespace osrm
 {
@@ -60,19 +61,12 @@ inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
 
 inline bool EdgeBasedEdge::operator<(const EdgeBasedEdge &other) const
 {
-    if (source == other.source)
-    {
-        if (target == other.target)
-        {
-            if (weight == other.weight)
-            {
-                return forward && backward && ((!other.forward) || (!other.backward));
-            }
-            return weight < other.weight;
-        }
-        return target < other.target;
-    }
-    return source < other.source;
+    const auto unidirectional = (!forward || !backward);
+    const auto other_is_unidirectional = (!other.forward || !other.backward);
+    // if all items are the same, we want to keep bidirectional edges. due to the `<` operator,
+    // preferring 0 (false) over 1 (true), we need to compare the inverse of `bidirectional`
+    return std::tie(source, target, weight, unidirectional) <
+           std::tie(other.source, other.target, other.weight, other_is_unidirectional);
 }
 } // ns extractor
 } // ns osrm

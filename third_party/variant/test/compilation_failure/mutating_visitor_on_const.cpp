@@ -1,7 +1,6 @@
-
 // @EXPECTED: const int
 
-#include <variant.hpp>
+#include <mapbox/variant.hpp>
 
 struct mutating_visitor
 {

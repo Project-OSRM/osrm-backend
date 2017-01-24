@@ -4,6 +4,9 @@
 #include <atomic>
 #include <iostream>
 
+#include "util/isatty.hpp"
+#include "util/log.hpp"
+
 namespace osrm
 {
 namespace util
@@ -11,8 +14,13 @@ namespace util
 
 class Percent
 {
+    Log &log;
+
   public:
-    explicit Percent(unsigned max_value, unsigned step = 5) { Reinit(max_value, step); }
+    explicit Percent(Log &log_, unsigned max_value, unsigned step = 5) : log{log_}
+    {
+        Reinit(max_value, step);
+    }
 
     // Reinitializes
     void Reinit(unsigned max_value, unsigned step = 5)
@@ -34,7 +42,7 @@ class Percent
             PrintPercent(current_value / static_cast<double>(m_max_value) * 100.);
         }
         if (current_value + 1 == m_max_value)
-            std::cout << " 100%" << std::endl;
+            log << " 100%";
     }
 
     void PrintIncrement()
@@ -65,13 +73,17 @@ class Percent
             m_last_percent += m_step;
             if (m_last_percent % 10 == 0)
             {
-                std::cout << " " << m_last_percent << "% ";
+                log << " " << m_last_percent << "% ";
             }
             else
             {
-                std::cout << ".";
+                log << ".";
             }
-            std::cout.flush();
+
+            // When not on a TTY, print newlines after each progress indicator so
+            // so that progress is visible to line-buffered logging systems
+            if (!IsStdoutATTY())
+                log << "" << std::endl;
         }
     }
 };

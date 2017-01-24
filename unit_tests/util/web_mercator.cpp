@@ -22,23 +22,23 @@ BOOST_AUTO_TEST_CASE(lon_to_pixel)
 
 BOOST_AUTO_TEST_CASE(lat_to_pixel)
 {
-    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude(43.733947)) *
+    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude{43.733947}) *
                           web_mercator::DEGREE_TO_PX,
                       5424361.75863,
                       0.1);
-    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude(43.733799)) *
+    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude{43.733799}) *
                           web_mercator::DEGREE_TO_PX,
                       5424338.95731,
                       0.1);
-    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude(43.733922)) *
+    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude{43.733922}) *
                           web_mercator::DEGREE_TO_PX,
                       5424357.90705,
                       0.1);
-    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude(43.733697)) *
+    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude{43.733697}) *
                           web_mercator::DEGREE_TO_PX,
                       5424323.24293,
                       0.1);
-    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude(43.733729)) *
+    BOOST_CHECK_CLOSE(web_mercator::latToY(util::FloatLatitude{43.733729}) *
                           web_mercator::DEGREE_TO_PX,
                       5424328.17293,
                       0.1);
@@ -73,12 +73,14 @@ BOOST_AUTO_TEST_CASE(xyz_to_mercator)
     double miny;
     double maxx;
     double maxy;
+
+    // http://tools.geofabrik.de/map/#13/85.0500/-175.5876&type=Geofabrik_Standard&grid=1
     web_mercator::xyzToMercator(100, 0, 13, minx, miny, maxx, maxy);
 
     BOOST_CHECK_CLOSE(minx, -19548311.361764118075, 0.0001);
-    BOOST_CHECK_CLOSE(miny, 19971868.8804085782, 0.0001);
+    BOOST_CHECK_CLOSE(miny, 20032616.372979045, 0.0001);
     BOOST_CHECK_CLOSE(maxx, -19543419.391953866929, 0.0001);
-    BOOST_CHECK_CLOSE(maxy, 19971868.880408578, 0.0001);
+    BOOST_CHECK_CLOSE(maxy, 20037508.342789277, 0.0001); // Mercator 6378137*pi, WGS 85.0511
 }
 
 BOOST_AUTO_TEST_SUITE_END()

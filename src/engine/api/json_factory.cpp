@@ -6,7 +6,7 @@
 
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
-#include "util/guidance/toolkit.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -47,33 +47,68 @@ const constexpr char *turn_type_names[] = {
     "invalid",         "new name",   "continue", "turn",        "merge",
     "on ramp",         "off ramp",   "fork",     "end of road", "notification",
     "roundabout",      "roundabout", "rotary",   "rotary",      "roundabout turn",
-    "roundabout turn", "invalid",    "invalid",  "invalid",     "invalid",
+    "roundabout turn", "use lane",   "invalid",  "invalid",     "invalid",
     "invalid",         "invalid",    "invalid",  "invalid",     "invalid",
-    "invalid"};
+    "invalid",         "invalid"};
 
 const constexpr char *waypoint_type_names[] = {"invalid", "arrive", "depart"};
 
 // Check whether to include a modifier in the result of the API
 inline bool isValidModifier(const guidance::StepManeuver maneuver)
 {
-    if (maneuver.waypoint_type != guidance::WaypointType::None &&
-        maneuver.instruction.direction_modifier == DirectionModifier::UTurn)
-        return false;
-    return true;
+    return (maneuver.waypoint_type == guidance::WaypointType::None ||
+            maneuver.instruction.direction_modifier != DirectionModifier::UTurn);
+}
+
+inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection)
+{
+    return intersection.lanes.lanes_in_turn > 0;
 }
 
 std::string instructionTypeToString(const TurnType::Enum type)
 {
+    static_assert(sizeof(turn_type_names) / sizeof(turn_type_names[0]) >= TurnType::MaxTurnType,
+                  "Some turn types has not string representation.");
     return turn_type_names[static_cast<std::size_t>(type)];
+}
+
+util::json::Array lanesFromIntersection(const guidance::IntermediateIntersection &intersection)
+{
+    BOOST_ASSERT(intersection.lanes.lanes_in_turn >= 1);
+    util::json::Array result;
+    LaneID lane_id = intersection.lane_description.size();
+
+    for (const auto &lane_desc : intersection.lane_description)
+    {
+        --lane_id;
+        util::json::Object lane;
+        lane.values["indications"] = extractor::guidance::TurnLaneType::toJsonArray(lane_desc);
+        if (lane_id >= intersection.lanes.first_lane_from_the_right &&
+            lane_id <
+                intersection.lanes.first_lane_from_the_right + intersection.lanes.lanes_in_turn)
+            lane.values["valid"] = util::json::True();
+        else
+            lane.values["valid"] = util::json::False();
+
+        result.values.push_back(lane);
+    }
+
+    return result;
 }
 
 std::string instructionModifierToString(const DirectionModifier::Enum modifier)
 {
+    static_assert(sizeof(modifier_names) / sizeof(modifier_names[0]) >=
+                      DirectionModifier::MaxDirectionModifier,
+                  "Some direction modifiers has not string representation.");
     return modifier_names[static_cast<std::size_t>(modifier)];
 }
 
 std::string waypointTypeToString(const guidance::WaypointType waypoint_type)
 {
+    static_assert(sizeof(waypoint_type_names) / sizeof(waypoint_type_names[0]) >=
+                      static_cast<size_t>(guidance::WaypointType::MaxWaypointType),
+                  "Some waypoint types has not string representation.");
     return waypoint_type_names[static_cast<std::size_t>(waypoint_type)];
 }
 
@@ -139,34 +174,43 @@ std::string modeToString(const extractor::TravelMode mode)
 util::json::Object makeStepManeuver(const guidance::StepManeuver &maneuver)
 {
     util::json::Object step_maneuver;
+
+    std::string maneuver_type;
+
     if (maneuver.waypoint_type == guidance::WaypointType::None)
-        step_maneuver.values["type"] = detail::instructionTypeToString(maneuver.instruction.type);
+        maneuver_type = detail::instructionTypeToString(maneuver.instruction.type);
     else
-        step_maneuver.values["type"] = detail::waypointTypeToString(maneuver.waypoint_type);
+        maneuver_type = detail::waypointTypeToString(maneuver.waypoint_type);
+
+    // These invalid responses should never happen: log if they do happen
+    BOOST_ASSERT_MSG(maneuver_type != "invalid", "unexpected invalid maneuver type");
+
+    step_maneuver.values["type"] = std::move(maneuver_type);
 
     if (detail::isValidModifier(maneuver))
         step_maneuver.values["modifier"] =
             detail::instructionModifierToString(maneuver.instruction.direction_modifier);
 
     step_maneuver.values["location"] = detail::coordinateToLonLat(maneuver.location);
-    step_maneuver.values["bearing_before"] = std::round(maneuver.bearing_before);
-    step_maneuver.values["bearing_after"] = std::round(maneuver.bearing_after);
+    step_maneuver.values["bearing_before"] = detail::roundAndClampBearing(maneuver.bearing_before);
+    step_maneuver.values["bearing_after"] = detail::roundAndClampBearing(maneuver.bearing_after);
     if (maneuver.exit != 0)
         step_maneuver.values["exit"] = maneuver.exit;
 
     return step_maneuver;
 }
 
-util::json::Object makeIntersection(const guidance::Intersection &intersection)
+util::json::Object makeIntersection(const guidance::IntermediateIntersection &intersection)
 {
     util::json::Object result;
     util::json::Array bearings;
     util::json::Array entry;
 
     bearings.values.reserve(intersection.bearings.size());
-    std::copy(intersection.bearings.begin(),
-              intersection.bearings.end(),
-              std::back_inserter(bearings.values));
+    std::transform(intersection.bearings.begin(),
+                   intersection.bearings.end(),
+                   std::back_inserter(bearings.values),
+                   detail::roundAndClampBearing);
 
     entry.values.reserve(intersection.entry.size());
     std::transform(intersection.entry.begin(),
@@ -182,10 +226,13 @@ util::json::Object makeIntersection(const guidance::Intersection &intersection)
     result.values["location"] = detail::coordinateToLonLat(intersection.location);
     result.values["bearings"] = bearings;
     result.values["entry"] = entry;
-    if (intersection.in != guidance::Intersection::NO_INDEX)
+    if (intersection.in != guidance::IntermediateIntersection::NO_INDEX)
         result.values["in"] = intersection.in;
-    if (intersection.out != guidance::Intersection::NO_INDEX)
+    if (intersection.out != guidance::IntermediateIntersection::NO_INDEX)
         result.values["out"] = intersection.out;
+
+    if (detail::hasValidLanes(intersection))
+        result.values["lanes"] = detail::lanesFromIntersection(intersection);
 
     return result;
 }
@@ -196,12 +243,20 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
     route_step.values["distance"] = std::round(step.distance * 10) / 10.;
     route_step.values["duration"] = std::round(step.duration * 10) / 10.;
     route_step.values["name"] = std::move(step.name);
+    if (!step.ref.empty())
+        route_step.values["ref"] = std::move(step.ref);
     if (!step.pronunciation.empty())
         route_step.values["pronunciation"] = std::move(step.pronunciation);
     if (!step.destinations.empty())
         route_step.values["destinations"] = std::move(step.destinations);
     if (!step.rotary_name.empty())
+    {
         route_step.values["rotary_name"] = std::move(step.rotary_name);
+        if (!step.rotary_pronunciation.empty())
+        {
+            route_step.values["rotary_pronunciation"] = std::move(step.rotary_pronunciation);
+        }
+    }
 
     route_step.values["mode"] = detail::modeToString(std::move(step.mode));
     route_step.values["maneuver"] = makeStepManeuver(std::move(step.maneuver));
@@ -233,11 +288,17 @@ util::json::Object makeRoute(const guidance::Route &route,
     return json_route;
 }
 
-util::json::Object makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint)
+util::json::Object makeWaypoint(const util::Coordinate location, std::string name)
 {
     util::json::Object waypoint;
     waypoint.values["location"] = detail::coordinateToLonLat(location);
     waypoint.values["name"] = std::move(name);
+    return waypoint;
+}
+
+util::json::Object makeWaypoint(const util::Coordinate location, std::string name, const Hint &hint)
+{
+    auto waypoint = makeWaypoint(location, name);
     waypoint.values["hint"] = hint.ToBase64();
     return waypoint;
 }

@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -56,10 +56,12 @@ namespace osmium {
         namespace haversine {
 
             /// @brief Earth's quadratic mean radius for WGS84
-            constexpr double EARTH_RADIUS_IN_METERS = 6372797.560856;
+            constexpr const double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
             /**
              * Calculate distance in meters between two sets of coordinates.
+             *
+             * @pre @code c1.valid() && c2.valid() @endcode
              */
             inline double distance(const osmium::geom::Coordinates& c1, const osmium::geom::Coordinates& c2) {
                 double lonh = sin(deg_to_rad(c1.x - c2.x) * 0.5);

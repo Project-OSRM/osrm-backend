@@ -1,6 +1,7 @@
 #ifndef STATIC_RTREE_HPP
 #define STATIC_RTREE_HPP
 
+#include "storage/io.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/deallocating_vector.hpp"
@@ -17,6 +18,7 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/format.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <tbb/parallel_for.h>
@@ -192,11 +194,11 @@ class StaticRTree
 
                     Coordinate current_centroid = coordinate_calculation::centroid(
                         m_coordinate_list[current_element.u], m_coordinate_list[current_element.v]);
-                    current_centroid.lat =
-                        FixedLatitude(COORDINATE_PRECISION *
-                                      web_mercator::latToY(toFloating(current_centroid.lat)));
+                    current_centroid.lat = FixedLatitude{static_cast<std::int32_t>(
+                        COORDINATE_PRECISION *
+                        web_mercator::latToY(toFloating(current_centroid.lat)))};
 
-                    current_wrapper.m_hilbert_value = hilbertCode(current_centroid);
+                    current_wrapper.m_hilbert_value = GetHilbertCode(current_centroid);
                 }
             });
 
@@ -331,9 +333,9 @@ class StaticRTree
         // open tree file
         boost::filesystem::ofstream tree_node_file(tree_node_filename, std::ios::binary);
 
-        std::uint32_t size_of_tree = m_search_tree.size();
+        std::uint64_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
-        tree_node_file.write((char *)&size_of_tree, sizeof(std::uint32_t));
+        tree_node_file.write((char *)&size_of_tree, sizeof(size_of_tree));
         tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
 
         MapLeafNodesFile(leaf_node_filename);
@@ -344,25 +346,13 @@ class StaticRTree
                          const CoordinateListT &coordinate_list)
         : m_coordinate_list(coordinate_list)
     {
-        // open tree node file and load into RAM.
-        if (!boost::filesystem::exists(node_file))
-        {
-            throw exception("ram index file does not exist");
-        }
-        if (boost::filesystem::file_size(node_file) == 0)
-        {
-            throw exception("ram index file is empty");
-        }
-        boost::filesystem::ifstream tree_node_file(node_file, std::ios::binary);
+        storage::io::FileReader tree_node_file(node_file,
+                                               storage::io::FileReader::HasNoFingerprint);
 
-        std::uint32_t tree_size = 0;
-        tree_node_file.read((char *)&tree_size, sizeof(std::uint32_t));
+        const auto tree_size = tree_node_file.ReadElementCount64();
 
         m_search_tree.resize(tree_size);
-        if (tree_size > 0)
-        {
-            tree_node_file.read((char *)&m_search_tree[0], sizeof(TreeNode) * tree_size);
-        }
+        tree_node_file.ReadInto(&m_search_tree[0], tree_size);
 
         MapLeafNodesFile(leaf_file);
     }
@@ -383,12 +373,15 @@ class StaticRTree
         {
             m_leaves_region.open(leaf_file);
             std::size_t num_leaves = m_leaves_region.size() / sizeof(LeafNode);
-            m_leaves.reset(reinterpret_cast<const LeafNode *>(m_leaves_region.data()), num_leaves);
+            auto data_ptr = m_leaves_region.data();
+            BOOST_ASSERT(reinterpret_cast<uintptr_t>(data_ptr) % alignof(LeafNode) == 0);
+            m_leaves.reset(reinterpret_cast<const LeafNode *>(data_ptr), num_leaves);
         }
-        catch (std::exception &exc)
+        catch (const std::exception &exc)
         {
             throw exception(boost::str(boost::format("Leaf file %1% mapping failed: %2%") %
-                                       leaf_file % exc.what()));
+                                       leaf_file % exc.what()) +
+                            SOURCE_REF);
         }
     }
 

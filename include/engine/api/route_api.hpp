@@ -12,6 +12,7 @@
 #include "engine/guidance/assemble_overview.hpp"
 #include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_steps.hpp"
+#include "engine/guidance/lane_processing.hpp"
 #include "engine/guidance/post_processing.hpp"
 
 #include "engine/internal_route_result.hpp"
@@ -60,14 +61,18 @@ class RouteAPI : public BaseAPI
         response.values["code"] = "Ok";
     }
 
-    // FIXME gcc 4.8 doesn't support for lambdas to call protected member functions
-    //  protected:
+  protected:
     template <typename ForwardIter>
     util::json::Value MakeGeometry(ForwardIter begin, ForwardIter end) const
     {
         if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
         {
-            return json::makePolyline(begin, end);
+            return json::makePolyline<100000>(begin, end);
+        }
+
+        if (parameters.geometries == RouteParameters::GeometriesType::Polyline6)
+        {
+            return json::makePolyline<1000000>(begin, end);
         }
 
         BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
@@ -93,8 +98,12 @@ class RouteAPI : public BaseAPI
             const bool reversed_source = source_traversed_in_reverse[idx];
             const bool reversed_target = target_traversed_in_reverse[idx];
 
-            auto leg_geometry = guidance::assembleGeometry(
-                BaseAPI::facade, path_data, phantoms.source_phantom, phantoms.target_phantom);
+            auto leg_geometry = guidance::assembleGeometry(BaseAPI::facade,
+                                                           path_data,
+                                                           phantoms.source_phantom,
+                                                           phantoms.target_phantom,
+                                                           reversed_source,
+                                                           reversed_target);
             auto leg = guidance::assembleLeg(facade,
                                              path_data,
                                              leg_geometry,
@@ -149,6 +158,8 @@ class RouteAPI : public BaseAPI
                                                               leg_geometry,
                                                               phantoms.source_phantom,
                                                               phantoms.target_phantom);
+                leg.steps = guidance::anticipateLaneChange(std::move(leg.steps));
+                leg.steps = guidance::collapseUseLane(std::move(leg.steps));
                 leg_geometry = guidance::resyncGeometry(std::move(leg_geometry), leg.steps);
             }
 
@@ -173,6 +184,9 @@ class RouteAPI : public BaseAPI
         for (const auto idx : util::irange<std::size_t>(0UL, legs.size()))
         {
             auto &leg_geometry = leg_geometries[idx];
+
+            step_geometries.reserve(step_geometries.size() + legs[idx].steps.size());
+
             std::transform(
                 legs[idx].steps.begin(),
                 legs[idx].steps.end(),
@@ -180,10 +194,18 @@ class RouteAPI : public BaseAPI
                 [this, &leg_geometry](const guidance::RouteStep &step) {
                     if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
                     {
-                        return static_cast<util::json::Value>(
-                            json::makePolyline(leg_geometry.locations.begin() + step.geometry_begin,
-                                               leg_geometry.locations.begin() + step.geometry_end));
+                        return static_cast<util::json::Value>(json::makePolyline<100000>(
+                            leg_geometry.locations.begin() + step.geometry_begin,
+                            leg_geometry.locations.begin() + step.geometry_end));
                     }
+
+                    if (parameters.geometries == RouteParameters::GeometriesType::Polyline6)
+                    {
+                        return static_cast<util::json::Value>(json::makePolyline<1000000>(
+                            leg_geometry.locations.begin() + step.geometry_begin,
+                            leg_geometry.locations.begin() + step.geometry_end));
+                    }
+
                     BOOST_ASSERT(parameters.geometries == RouteParameters::GeometriesType::GeoJSON);
                     return static_cast<util::json::Value>(json::makeGeoJSONGeometry(
                         leg_geometry.locations.begin() + step.geometry_begin,
@@ -200,14 +222,22 @@ class RouteAPI : public BaseAPI
                 util::json::Array durations;
                 util::json::Array distances;
                 util::json::Array nodes;
+                util::json::Array datasources;
                 auto &leg_geometry = leg_geometries[idx];
-                std::for_each(
-                    leg_geometry.annotations.begin(),
-                    leg_geometry.annotations.end(),
-                    [this, &durations, &distances](const guidance::LegGeometry::Annotation &step) {
-                        durations.values.push_back(step.duration);
-                        distances.values.push_back(step.distance);
-                    });
+
+                durations.values.reserve(leg_geometry.annotations.size());
+                distances.values.reserve(leg_geometry.annotations.size());
+                nodes.values.reserve(leg_geometry.osm_node_ids.size());
+                datasources.values.reserve(leg_geometry.annotations.size());
+
+                std::for_each(leg_geometry.annotations.begin(),
+                              leg_geometry.annotations.end(),
+                              [this, &durations, &distances, &datasources](
+                                  const guidance::LegGeometry::Annotation &step) {
+                                  durations.values.push_back(step.duration);
+                                  distances.values.push_back(step.distance);
+                                  datasources.values.push_back(step.datasource);
+                              });
                 std::for_each(leg_geometry.osm_node_ids.begin(),
                               leg_geometry.osm_node_ids.end(),
                               [this, &nodes](const OSMNodeID &node_id) {
@@ -217,6 +247,7 @@ class RouteAPI : public BaseAPI
                 annotation.values["distance"] = std::move(distances);
                 annotation.values["duration"] = std::move(durations);
                 annotation.values["nodes"] = std::move(nodes);
+                annotation.values["datasources"] = std::move(datasources);
                 annotations.push_back(std::move(annotation));
             }
         }

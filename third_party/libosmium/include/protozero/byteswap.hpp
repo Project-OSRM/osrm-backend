@@ -16,56 +16,69 @@ documentation.
  * @brief Contains functions to swap bytes in values (for different endianness).
  */
 
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 
 #include <protozero/config.hpp>
 
 namespace protozero {
+namespace detail {
 
-/**
- * Swap N byte value between endianness formats. This template function must
- * be specialized to actually work.
- */
-template <int N>
-inline void byteswap(const char* /*data*/, char* /*result*/) {
-    static_assert(N == 1, "Can only swap 4 or 8 byte values");
-}
-
-/**
- * Swap 4 byte value (int32_t, uint32_t, float) between endianness formats.
- */
-template <>
-inline void byteswap<4>(const char* data, char* result) {
+inline uint32_t byteswap_impl(uint32_t value) noexcept {
 #ifdef PROTOZERO_USE_BUILTIN_BSWAP
-    *reinterpret_cast<uint32_t*>(result) = __builtin_bswap32(*reinterpret_cast<const uint32_t*>(data));
+    return __builtin_bswap32(value);
 #else
-    result[3] = data[0];
-    result[2] = data[1];
-    result[1] = data[2];
-    result[0] = data[3];
+    return ((value & 0xff000000) >> 24) |
+           ((value & 0x00ff0000) >>  8) |
+           ((value & 0x0000ff00) <<  8) |
+           ((value & 0x000000ff) << 24);
 #endif
 }
 
-/**
- * Swap 8 byte value (int64_t, uint64_t, double) between endianness formats.
- */
-template <>
-inline void byteswap<8>(const char* data, char* result) {
+inline uint64_t byteswap_impl(uint64_t value) noexcept {
 #ifdef PROTOZERO_USE_BUILTIN_BSWAP
-    *reinterpret_cast<uint64_t*>(result) = __builtin_bswap64(*reinterpret_cast<const uint64_t*>(data));
+    return __builtin_bswap64(value);
 #else
-    result[7] = data[0];
-    result[6] = data[1];
-    result[5] = data[2];
-    result[4] = data[3];
-    result[3] = data[4];
-    result[2] = data[5];
-    result[1] = data[6];
-    result[0] = data[7];
+    return ((value & 0xff00000000000000ULL) >> 56) |
+           ((value & 0x00ff000000000000ULL) >> 40) |
+           ((value & 0x0000ff0000000000ULL) >> 24) |
+           ((value & 0x000000ff00000000ULL) >>  8) |
+           ((value & 0x00000000ff000000ULL) <<  8) |
+           ((value & 0x0000000000ff0000ULL) << 24) |
+           ((value & 0x000000000000ff00ULL) << 40) |
+           ((value & 0x00000000000000ffULL) << 56);
 #endif
 }
 
+inline void byteswap_inplace(uint32_t* ptr) noexcept {
+    *ptr = byteswap_impl(*ptr);
+}
+
+inline void byteswap_inplace(uint64_t* ptr) noexcept {
+    *ptr = byteswap_impl(*ptr);
+}
+
+inline void byteswap_inplace(int32_t* ptr) noexcept {
+    auto bptr = reinterpret_cast<uint32_t*>(ptr);
+    *bptr = byteswap_impl(*bptr);
+}
+
+inline void byteswap_inplace(int64_t* ptr) noexcept {
+    auto bptr = reinterpret_cast<uint64_t*>(ptr);
+    *bptr = byteswap_impl(*bptr);
+}
+
+inline void byteswap_inplace(float* ptr) noexcept {
+    auto bptr = reinterpret_cast<uint32_t*>(ptr);
+    *bptr = byteswap_impl(*bptr);
+}
+
+inline void byteswap_inplace(double* ptr) noexcept {
+    auto bptr = reinterpret_cast<uint64_t*>(ptr);
+    *bptr = byteswap_impl(*bptr);
+}
+
+} // end namespace detail
 } // end namespace protozero
 
 #endif // PROTOZERO_BYTESWAP_HPP

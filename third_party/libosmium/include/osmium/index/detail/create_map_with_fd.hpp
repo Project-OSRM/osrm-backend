@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -54,9 +54,9 @@ namespace osmium {
                 }
                 assert(config.size() > 1);
                 const std::string& filename = config[1];
-                int fd = ::open(filename.c_str(), O_CREAT | O_RDWR, 0644);
+                const int fd = ::open(filename.c_str(), O_CREAT | O_RDWR, 0644);
                 if (fd == -1) {
-                    throw std::runtime_error(std::string("can't open file '") + filename + "': " + strerror(errno));
+                    throw std::runtime_error(std::string("can't open file '") + filename + "': " + std::strerror(errno));
                 }
                 return new T(fd);
             }

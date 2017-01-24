@@ -45,7 +45,7 @@ namespace api
  * Holds member attributes:
  *  - steps: return route step for each route leg
  *  - alternatives: tries to find alternative routes
- *  - geometries: route geometry encoded in Polyline or GeoJSON
+ *  - geometries: route geometry encoded in Polyline, Polyline6 or GeoJSON
  *  - overview: adds overview geometry either Full, Simplified (according to highest zoom level) or
  *              False (not at all)
  *  - continue_straight: enable or disable continue_straight (disabled by default)
@@ -58,6 +58,7 @@ struct RouteParameters : public BaseParameters
     enum class GeometriesType
     {
         Polyline,
+        Polyline6,
         GeoJSON
     };
     enum class OverviewType
@@ -69,6 +70,21 @@ struct RouteParameters : public BaseParameters
 
     RouteParameters() = default;
 
+    template <typename... Args>
+    RouteParameters(const bool steps_,
+                    const bool alternatives_,
+                    const GeometriesType geometries_,
+                    const OverviewType overview_,
+                    const boost::optional<bool> continue_straight_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
+          annotations{false}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}
+    // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one below.
+    {
+    }
+
+    // RouteParameters constructor adding the `annotations` setting in a API-compatible way.
     template <typename... Args>
     RouteParameters(const bool steps_,
                     const bool alternatives_,

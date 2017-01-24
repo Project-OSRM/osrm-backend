@@ -114,8 +114,10 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     return SCC_Component(std::move(components), std::move(range));
 }
 
-InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &snapped_phantoms,
-                                             const std::vector<NodeID> &trip)
+InternalRouteResult
+TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+                         const std::vector<PhantomNode> &snapped_phantoms,
+                         const std::vector<NodeID> &trip) const
 {
     InternalRouteResult min_route;
     // given he final trip, compute total duration and return the route and location permutation
@@ -134,14 +136,15 @@ InternalRouteResult TripPlugin::ComputeRoute(const std::vector<PhantomNode> &sna
     }
     BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
 
-    shortest_path(min_route.segment_end_coordinates, {false}, min_route);
+    shortest_path(facade, min_route.segment_end_coordinates, {false}, min_route);
 
     BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
 }
 
-Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
-                                 util::json::Object &json_result)
+Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+                                 const api::TripParameters &parameters,
+                                 util::json::Object &json_result) const
 {
     BOOST_ASSERT(parameters.IsValid());
 
@@ -157,7 +160,7 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
         return Error("InvalidValue", "Invalid coordinate value.", json_result);
     }
 
-    auto phantom_node_pairs = GetPhantomNodes(parameters);
+    auto phantom_node_pairs = GetPhantomNodes(*facade, parameters);
     if (phantom_node_pairs.size() != parameters.coordinates.size())
     {
         return Error("NoSegment",
@@ -173,7 +176,7 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
 
     // compute the duration table of all phantom nodes
     const auto result_table = util::DistTableWrapper<EdgeWeight>(
-        duration_table(snapped_phantoms, {}, {}), number_of_locations);
+        duration_table(facade, snapped_phantoms, {}, {}), number_of_locations);
 
     if (result_table.size() == 0)
     {
@@ -231,10 +234,10 @@ Status TripPlugin::HandleRequest(const api::TripParameters &parameters,
     routes.reserve(trips.size());
     for (const auto &trip : trips)
     {
-        routes.push_back(ComputeRoute(snapped_phantoms, trip));
+        routes.push_back(ComputeRoute(facade, snapped_phantoms, trip));
     }
 
-    api::TripAPI trip_api{BasePlugin::facade, parameters};
+    api::TripAPI trip_api{*facade, parameters};
     trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result);
 
     return Status::Ok;

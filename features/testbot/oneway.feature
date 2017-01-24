@@ -3,15 +3,18 @@ Feature: Testbot - oneways
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 250 meters
 
     Scenario: Routing on a oneway roundabout
         Given the node map
-        |   |   |   |   | v |   |
-        | x |   | d | c |   |   |
-        |   | e |   |   | b |   |
-        |   | f |   |   | a |   |
-        |   |   | g | h |   | y |
-        |   | z |   |   |   |   |
+        """
+                v
+        x   d c
+          e     b
+          f     a
+            g h   y
+          z
+        """
 
         And the ways
             | nodes | oneway |
@@ -59,8 +62,10 @@ Feature: Testbot - oneways
 
     Scenario: Testbot - Around the Block
         Given the node map
-            | a | b |
-            | d | c |
+            """
+              a b
+            e d c f
+            """
 
         And the ways
             | nodes | oneway | foot |
@@ -68,6 +73,8 @@ Feature: Testbot - oneways
             | bc    |        | no   |
             | cd    |        | no   |
             | da    |        | no   |
+            | de    |        | no   |
+            | cf    |        | no   |
 
         When I route I should get
             | from | to | route       |
@@ -89,7 +96,9 @@ Feature: Testbot - oneways
 
     Scenario: Testbot - Two consecutive oneways
         Given the node map
-            | a | b | c |
+            """
+            a b c
+            """
 
         And the ways
             | nodes | oneway |

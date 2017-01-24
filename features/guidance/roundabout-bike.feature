@@ -5,44 +5,15 @@ Feature: Basic Roundabout
         Given the profile "bicycle"
         Given a grid size of 10 meters
 
-    Scenario: Enter and Exit
-        Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | h | g |   | c | d |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
-
-       And the ways
-            | nodes  | junction   |
-            | ab     |            |
-            | cd     |            |
-            | ef     |            |
-            | gh     |            |
-            | bgecb  | roundabout |
-
-       When I route I should get
-           | waypoints | route    | turns                           |
-           | a,d       | ab,cd,cd | depart,roundabout-exit-3,arrive |
-           | a,f       | ab,ef,ef | depart,roundabout-exit-2,arrive |
-           | a,h       | ab,gh,gh | depart,roundabout-exit-1,arrive |
-           | d,f       | cd,ef,ef | depart,roundabout-exit-3,arrive |
-           | d,h       | cd,gh,gh | depart,roundabout-exit-2,arrive |
-           | d,a       | cd,ab,ab | depart,roundabout-exit-1,arrive |
-           | f,h       | ef,gh,gh | depart,roundabout-exit-3,arrive |
-           | f,a       | ef,ab,ab | depart,roundabout-exit-2,arrive |
-           | f,d       | ef,cd,cd | depart,roundabout-exit-1,arrive |
-           | h,a       | gh,ab,ab | depart,roundabout-exit-3,arrive |
-           | h,d       | gh,cd,cd | depart,roundabout-exit-2,arrive |
-           | h,f       | gh,ef,ef | depart,roundabout-exit-1,arrive |
-
     Scenario: Only Enter
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -69,11 +40,13 @@ Feature: Basic Roundabout
 
     Scenario: Only Exit
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -101,11 +74,13 @@ Feature: Basic Roundabout
 
     Scenario: Drive Around
         Given the node map
-            |   |   | a |   |   |
-            |   |   | b |   |   |
-            | d | c |   | g | h |
-            |   |   | e |   |   |
-            |   |   | f |   |   |
+            """
+                a
+                b
+            d c   g h
+                e
+                f
+            """
 
        And the ways
             | nodes  | junction   |
@@ -132,11 +107,13 @@ Feature: Basic Roundabout
 
      Scenario: Mixed Entry and Exit
         Given the node map
-           |   | c |   | a |   |
-           | j |   | b |   | f |
-           |   | k |   | e |   |
-           | l |   | h |   | d |
-           |   | g |   | i |   |
+           """
+             c   a
+           j   b   f
+             k   e
+           l   h   d
+             g   i
+           """
 
         And the ways
            | nodes | junction   | oneway |

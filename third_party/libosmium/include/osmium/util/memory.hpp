@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -42,18 +42,17 @@ namespace osmium {
     class MemoryUsage {
 
         int m_current = 0;
-        int m_peak = 0;
+        int m_peak    = 0;
 
 #ifdef __linux__
         static int parse_number(const std::string& line) {
             const auto f = line.find_first_of("0123456789");
             const auto l = line.find_last_of("0123456789");
-            return std::atoi(line.substr(f, l-f+1).c_str());
+            return std::atoi(line.substr(f, l - f + 1).c_str());
         }
 #endif
 
     public:
-
         /**
          * Get the memory usage for the current process. The constructor will
          * get the memory usage. Use the current() and peak() calls to access
@@ -69,7 +68,7 @@ namespace osmium {
 
             if (status_file.is_open()) {
                 std::string line;
-                while (! status_file.eof() ) {
+                while (!status_file.eof()) {
                     std::getline(status_file, line);
                     if (line.substr(0, 6) == "VmPeak") {
                         m_peak = parse_number(line);

@@ -111,15 +111,15 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                                                 qi::_1,
                                                 qi::_2)];
 
-        location_rule = (double_ > qi::lit(',') >
-                         double_)[qi::_val = ph::bind(
-                                      [](double lon, double lat) {
-                                          return util::Coordinate(
-                                              util::FixedLongitude(lon * COORDINATE_PRECISION),
-                                              util::FixedLatitude(lat * COORDINATE_PRECISION));
-                                      },
-                                      qi::_1,
-                                      qi::_2)];
+        location_rule =
+            (double_ > qi::lit(',') >
+             double_)[qi::_val = ph::bind(
+                          [](double lon, double lat) {
+                              return util::Coordinate(util::toFixed(util::FloatLongitude{lon}),
+                                                      util::toFixed(util::FloatLatitude{lat}));
+                          },
+                          qi::_1,
+                          qi::_2)];
 
         polyline_rule = qi::as_string[qi::lit("polyline(") > +polyline_chars > ')']
                                      [qi::_val = ph::bind(
@@ -141,11 +141,18 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
                          add_hint, qi::_r1, qi::_1)] %
                          ';';
 
+        generate_hints_rule =
+            qi::lit("generate_hints=") >
+            qi::bool_[ph::bind(&engine::api::BaseParameters::generate_hints, qi::_r1) = qi::_1];
+
         bearings_rule =
             qi::lit("bearings=") >
             (-(qi::short_ > ',' > qi::short_))[ph::bind(add_bearing, qi::_r1, qi::_1)] % ';';
 
-        base_rule = radiuses_rule(qi::_r1) | hints_rule(qi::_r1) | bearings_rule(qi::_r1);
+        base_rule = radiuses_rule(qi::_r1)   //
+                    | hints_rule(qi::_r1)    //
+                    | bearings_rule(qi::_r1) //
+                    | generate_hints_rule(qi::_r1);
     }
 
   protected:
@@ -156,6 +163,8 @@ struct BaseParametersGrammar : boost::spirit::qi::grammar<Iterator, Signature>
     qi::rule<Iterator, Signature> bearings_rule;
     qi::rule<Iterator, Signature> radiuses_rule;
     qi::rule<Iterator, Signature> hints_rule;
+
+    qi::rule<Iterator, Signature> generate_hints_rule;
 
     qi::rule<Iterator, osrm::engine::Bearing()> bearing_rule;
     qi::rule<Iterator, osrm::util::Coordinate()> location_rule;

@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
+#include "util/guidance/turn_lanes.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -43,20 +44,20 @@ namespace osrm
 namespace extractor
 {
 
+class ScriptingEnvironment;
 struct ProfileProperties;
 
 class Extractor
 {
   public:
     Extractor(ExtractorConfig extractor_config) : config(std::move(extractor_config)) {}
-    int run();
+    int run(ScriptingEnvironment &scripting_environment);
 
   private:
     ExtractorConfig config;
 
-    std::pair<std::size_t, std::size_t>
-    BuildEdgeExpandedGraph(lua_State *lua_state,
-                           const ProfileProperties &profile_properties,
+    std::pair<std::size_t, EdgeID>
+    BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                            std::vector<QueryNode> &internal_to_external_node_map,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
@@ -79,7 +80,7 @@ class Extractor
                        std::vector<QueryNode> &internal_to_external_node_map);
 
     void WriteEdgeBasedGraph(const std::string &output_file_filename,
-                             const size_t max_edge_id,
+                             const EdgeID max_edge_id,
                              util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list);
 
     void WriteIntersectionClassificationData(
@@ -87,6 +88,16 @@ class Extractor
         const std::vector<std::uint32_t> &node_based_intersection_classes,
         const std::vector<util::guidance::BearingClass> &bearing_classes,
         const std::vector<util::guidance::EntryClass> &entry_classes) const;
+
+    void WriteTurnLaneData(const std::string &turn_lane_file) const;
+
+    // globals persisting during the extraction process and the graph generation process
+
+    // during turn lane analysis, we might have to combine lanes for roads that are modelled as two
+    // but are more or less experienced as one. This can be due to solid lines in between lanes, for
+    // example, that genereate a small separation between them. As a result, we might have to
+    // augment the turn lane map during processing, further adding more types.
+    guidance::LaneDescriptionMap turn_lane_map;
 };
 }
 }

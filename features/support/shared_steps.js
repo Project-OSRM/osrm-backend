@@ -24,7 +24,8 @@ module.exports = function () {
     };
 
     this.WhenIRouteIShouldGet = (table, callback) => {
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             var headers = new Set(table.raw()[0]);
 
             var requestRow = (row, ri, cb) => {
@@ -33,7 +34,8 @@ module.exports = function () {
                 var afterRequest = (err, res, body) => {
                     if (err) return cb(err);
                     if (body && body.length) {
-                        let destinations, pronunciations, instructions, bearings, turns, modes, times, distances, summary, intersections;
+                        let destinations, pronunciations, instructions, refs, bearings, turns, modes, times,
+                            distances, summary, intersections, lanes, locations;
 
                         let json = JSON.parse(body);
 
@@ -42,6 +44,7 @@ module.exports = function () {
                         if (hasRoute) {
                             instructions = this.wayList(json.routes[0]);
                             pronunciations = this.pronunciationList(json.routes[0]);
+                            refs = this.refList(json.routes[0]);
                             destinations = this.destinationsList(json.routes[0]);
                             bearings = this.bearingList(json.routes[0]);
                             turns = this.turnList(json.routes[0]);
@@ -49,7 +52,9 @@ module.exports = function () {
                             modes = this.modeList(json.routes[0]);
                             times = this.timeList(json.routes[0]);
                             distances = this.distanceList(json.routes[0]);
+                            lanes = this.lanesList(json.routes[0]);
                             summary = this.summary(json.routes[0]);
+                            locations = this.locations(json.routes[0]);
                         }
 
                         if (headers.has('status')) {
@@ -89,7 +94,7 @@ module.exports = function () {
                             if (headers.has('distance')) {
                                 if (row.distance.length) {
                                     if (!row.distance.match(/\d+m/))
-                                        throw new Error('*** Distance must be specified in meters. (ex: 250m)');
+                                        return cb(new Error('*** Distance must be specified in meters. (ex: 250m)'));
                                     got.distance = instructions ? util.format('%dm', distance) : '';
                                 } else {
                                     got.distance = '';
@@ -98,14 +103,18 @@ module.exports = function () {
 
                             if (headers.has('time')) {
                                 if (!row.time.match(/\d+s/))
-                                    throw new Error('*** Time must be specied in seconds. (ex: 60s)');
+                                    return cb(new Error('*** Time must be specied in seconds. (ex: 60s)'));
                                 got.time = instructions ? util.format('%ds', time) : '';
+                            }
+
+                            if (headers.has('lanes')) {
+                                got.lanes = (lanes || '').trim();
                             }
 
                             if (headers.has('speed')) {
                                 if (row.speed !== '' && instructions) {
                                     if (!row.speed.match(/\d+ km\/h/))
-                                        throw new Error('*** Speed must be specied in km/h. (ex: 50 km/h)');
+                                        cb(new Error('*** Speed must be specied in km/h. (ex: 50 km/h)'));
                                     var speed = time > 0 ? Math.round(3.6*distance/time) : null;
                                     got.speed = util.format('%d km/h', speed);
                                 } else {
@@ -117,10 +126,15 @@ module.exports = function () {
                                 got.intersections = (intersections || '').trim();
                             }
 
+                            if (headers.has('locations')){
+                                got.locations = (locations || '').trim();
+                            }
+
                             var putValue = (key, value) => {
                                 if (headers.has(key)) got[key] = instructions ? value : '';
                             };
 
+                            putValue('ref', refs);
                             putValue('bearing', bearings);
                             putValue('turns', turns);
                             putValue('modes', modes);
@@ -130,18 +144,10 @@ module.exports = function () {
                             putValue('destinations', destinations);
                         }
 
-                        var ok = true;
-
                         for (var key in row) {
                             if (this.FuzzyMatch.match(got[key], row[key])) {
                                 got[key] = row[key];
-                            } else {
-                                ok = false;
                             }
-                        }
-
-                        if (!ok) {
-                            this.logFail(row, got, { route: { query: this.query, response: res }});
                         }
 
                         cb(null, got);
@@ -180,11 +186,11 @@ module.exports = function () {
 
                     if (row.from && row.to) {
                         var fromNode = this.findNodeByName(row.from);
-                        if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"'), row.from);
+                        if (!fromNode) return cb(new Error(util.format('*** unknown from-node "%s"'), row.from));
                         waypoints.push(fromNode);
 
                         var toNode = this.findNodeByName(row.to);
-                        if (!toNode) throw new Error(util.format('*** unknown to-node "%s"'), row.to);
+                        if (!toNode) return cb(new Error(util.format('*** unknown to-node "%s"'), row.to));
                         waypoints.push(toNode);
 
                         got.from = row.from;
@@ -193,13 +199,13 @@ module.exports = function () {
                     } else if (row.waypoints) {
                         row.waypoints.split(',').forEach((n) => {
                             var node = this.findNodeByName(n.trim());
-                            if (!node) throw new Error('*** unknown waypoint node "%s"', n.trim());
+                            if (!node) return cb(new Error('*** unknown waypoint node "%s"', n.trim()));
                             waypoints.push(node);
                         });
                         got.waypoints = row.waypoints;
                         this.requestRoute(waypoints, bearings, params, afterRequest);
                     } else {
-                        throw new Error('*** no waypoints');
+                        return cb(new Error('*** no waypoints'));
                     }
                 }
             };

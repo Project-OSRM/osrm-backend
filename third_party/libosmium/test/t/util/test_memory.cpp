@@ -11,6 +11,8 @@ TEST_CASE("Check memory usage") {
     REQUIRE(m1.current() > 1);
     REQUIRE(m1.peak() > 1);
 
+// Memory reporting on M68k architecture doesn't work properly.
+# ifndef __m68k__
     {
         std::vector<int> v;
         v.reserve(size_in_mbytes * 1024 * 1024);
@@ -25,6 +27,7 @@ TEST_CASE("Check memory usage") {
     REQUIRE(m3.current() > 1);
     REQUIRE(m3.current() < m3.peak());
     REQUIRE(m3.peak() >= m1.peak() + size_in_mbytes);
+# endif
 #else
     osmium::MemoryUsage m;
     REQUIRE(m.current() == 0);

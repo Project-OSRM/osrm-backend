@@ -1,0 +1,17 @@
+diff --git a/src/Makefile b/src/Makefile
+index 7b4b2b7..c1e3507 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -6,9 +6,9 @@
+ # Your platform. See PLATS for possible values.
+ PLAT= none
+ 
+-CC= gcc
+-CFLAGS= -O2 -Wall -DLUA_COMPAT_ALL $(SYSCFLAGS) $(MYCFLAGS)
+-LDFLAGS= $(SYSLDFLAGS) $(MYLDFLAGS)
++CC := $(CC)
++CFLAGS := -O3 -DNDEBUG -Wall -DLUA_COMPAT_ALL $(SYSCFLAGS) $(MYCFLAGS)
++LDFLAGS := $(SYSLDFLAGS) $(MYLDFLAGS)
+ LIBS= -lm $(SYSLIBS) $(MYLIBS)
+ 
+ AR= ar rcu

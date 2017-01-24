@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <cstddef>
+
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/factory.hpp>
 
@@ -53,13 +55,13 @@ namespace osmium {
 
             public:
 
-                typedef void point_type;
-                typedef void linestring_type;
-                typedef void polygon_type;
-                typedef void multipolygon_type;
-                typedef void ring_type;
+                using point_type        = void;
+                using linestring_type   = void;
+                using polygon_type      = void;
+                using multipolygon_type = void;
+                using ring_type         = void;
 
-                RapidGeoJSONFactoryImpl(TWriter& writer) :
+                RapidGeoJSONFactoryImpl(int /* srid */, TWriter& writer) :
                     m_writer(&writer) {
                 }
 

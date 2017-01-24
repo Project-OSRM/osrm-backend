@@ -27,7 +27,8 @@ struct URLParser final : qi::grammar<Iterator, Into>
         using boost::spirit::repository::qi::iter_pos;
 
         alpha_numeral = qi::char_("a-zA-Z0-9");
-        polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\%~`^");
+        percent_encoding = qi::char_('%') > qi::uint_parser<char, 16, 2, 2>()[qi::_val = qi::_1];
+        polyline_chars = qi::char_("a-zA-Z0-9_.--[]{}@?|\\~`^") | percent_encoding;
         all_chars = polyline_chars | qi::char_("=,;:&().");
 
         service = +alpha_numeral;
@@ -55,6 +56,7 @@ struct URLParser final : qi::grammar<Iterator, Into>
     qi::rule<Iterator, char()> alpha_numeral;
     qi::rule<Iterator, char()> all_chars;
     qi::rule<Iterator, char()> polyline_chars;
+    qi::rule<Iterator, char()> percent_encoding;
 };
 
 } // anon.

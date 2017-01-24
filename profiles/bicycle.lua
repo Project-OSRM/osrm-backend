@@ -1,17 +1,18 @@
+api_version = 0
+
 -- Bicycle profile
 
 local find_access_tag = require("lib/access").find_access_tag
 local limit = require("lib/maxspeed").limit
+local set_classification = require("lib/guidance").set_classification
 
 -- Begin of globals
 barrier_whitelist = { [""] = true, ["cycle_barrier"] = true, ["bollard"] = true, ["entrance"] = true, ["cattle_grid"] = true, ["border_control"] = true, ["toll_booth"] = true, ["sally_port"] = true, ["gate"] = true, ["no"] = true, ["block"] = true }
 access_tag_whitelist = { ["yes"] = true, ["permissive"] = true, ["designated"] = true }
 access_tag_blacklist = { ["no"] = true, ["private"] = true, ["agricultural"] = true, ["forestry"] = true, ["delivery"] = true }
-access_tag_restricted = { ["destination"] = true, ["delivery"] = true }
 access_tags_hierarchy = { "bicycle", "vehicle", "access" }
 cycleway_tags = {["track"]=true,["lane"]=true,["opposite"]=true,["opposite_lane"]=true,["opposite_track"]=true,["share_busway"]=true,["sharrow"]=true,["shared"]=true }
-service_tag_restricted = { ["parking_aisle"] = true }
-restriction_exception_tags = { "bicycle", "vehicle", "access" }
+restrictions = { "bicycle" }
 unsafe_highway_list = { ["primary"] = true, ["secondary"] = true, ["tertiary"] = true, ["primary_link"] = true, ["secondary_link"] = true, ["tertiary_link"] = true}
 
 local default_speed = 15
@@ -92,19 +93,19 @@ surface_speeds = {
 
 -- these need to be global because they are accesed externaly
 properties.traffic_signal_penalty        = 2
-properties.use_turn_restrictions         = false
 properties.u_turn_penalty                = 20
+properties.max_speed_for_map_matching    = 110/3.6 -- kmph -> m/s
+properties.use_turn_restrictions         = false
 properties.continue_straight_at_waypoint = false
 
 local obey_oneway               = true
 local ignore_areas              = true
-local turn_penalty              = 60
+local turn_penalty              = 6
 local turn_bias                 = 1.4
 -- reduce the driving speed by 30% for unsafe roads
 -- local safety_penalty            = 0.7
 local safety_penalty            = 1.0
 local use_public_transport      = true
-local fallback_names            = true
 
 local function parse_maxspeed(source)
     if not source then
@@ -120,8 +121,8 @@ local function parse_maxspeed(source)
     return n
 end
 
-function get_exceptions(vector)
-  for i,v in ipairs(restriction_exception_tags) do
+function get_restrictions(vector)
+  for i,v in ipairs(restrictions) do
     vector:Add(v)
   end
 end
@@ -207,26 +208,24 @@ function way_function (way, result)
   local foot = way:get_value_by_key("foot")
   local foot_forward = way:get_value_by_key("foot:forward")
   local foot_backward = way:get_value_by_key("foot:backward")
-  local surface = way:get_value_by_key("surface")
   local bicycle = way:get_value_by_key("bicycle")
 
   -- name
-  if ref and "" ~= ref and name and "" ~= name then
-    result.name = name .. " (" .. ref .. ")"
-  elseif ref and "" ~= ref then
-    result.name = ref
-  elseif name and "" ~= name then
+  if name and "" ~= name then
     result.name = name
-  -- TODO find a better solution for encoding way type
-  elseif fallback_names and highway then
-    -- if no name exists, use way type
-    -- this encoding scheme is excepted to be a temporary solution
-    result.name = "{highway:"..highway.."}"
+  end
+
+  -- ref
+  if ref and "" ~= ref then
+    result.ref = ref
   end
 
   -- roundabout handling
-  if junction and "roundabout" == junction then
+  if junction and ("roundabout" == junction) then
     result.roundabout = true
+  end
+  if junction and ("circular" == junction) then
+    result.circular = true;
   end
 
   -- speed
@@ -242,7 +241,6 @@ function way_function (way, result)
     -- ferries (doesn't cover routes tagged using relations)
     result.forward_mode = mode.ferry
     result.backward_mode = mode.ferry
-    result.ignore_in_grid = true
     if duration and durationIsValid(duration) then
       result.duration = math.max( 1, parseDuration(duration) )
     else
@@ -285,7 +283,7 @@ function way_function (way, result)
   else
     -- biking not allowed, maybe we can push our bike?
     -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
-    if foot ~= 'no' and junction ~= "roundabout" then
+    if foot ~= 'no' and (junction ~= "roundabout" and junction ~= "circular") then
       if pedestrian_speeds[highway] then
         -- pedestrian-only ways and areas
         result.forward_speed = pedestrian_speeds[highway]
@@ -317,7 +315,7 @@ function way_function (way, result)
 
   -- direction
   local impliedOneway = false
-  if junction == "roundabout" or highway == "motorway" then
+  if junction == "roundabout" or junction == "circular" or highway == "motorway" then
     impliedOneway = true
   end
 
@@ -357,7 +355,7 @@ function way_function (way, result)
 
   -- pushing bikes
   if bicycle_speeds[highway] or pedestrian_speeds[highway] then
-    if foot ~= "no" and junction ~= "roundabout" then
+    if foot ~= "no" and junction ~= "roundabout" and junction ~= "circular" then
       if result.backward_mode == mode.inaccessible then
         result.backward_speed = walking_speed
         result.backward_mode = mode.pushing_bike
@@ -371,10 +369,13 @@ function way_function (way, result)
   -- cycleways
   if cycleway and cycleway_tags[cycleway] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   elseif cycleway_left and cycleway_tags[cycleway_left] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   elseif cycleway_right and cycleway_tags[cycleway_right] then
     result.forward_speed = bicycle_speeds["cycleway"]
+    result.backward_speed = bicycle_speeds["cycleway"]
   end
 
   -- dismount
@@ -385,18 +386,16 @@ function way_function (way, result)
     result.backward_speed = walking_speed
   end
 
-  -- surfaces
-  if surface then
-    surface_speed = surface_speeds[surface]
-    if surface_speed then
-      if result.forward_speed > 0 then
-        result.forward_speed = surface_speed
-      end
-      if result.backward_speed > 0 then
-        result.backward_speed  = surface_speed
-      end
-    end
+  -- reduce speed on bad surfaces
+  local surface = way:get_value_by_key("surface")
+
+  if surface and surface_speeds[surface] then
+    result.forward_speed = math.min(surface_speeds[surface], result.forward_speed)
+    result.backward_speed = math.min(surface_speeds[surface], result.backward_speed)
   end
+
+  -- set the road classification based on guidance globals configuration
+  set_classification(highway,result,way)
 
   -- maxspeed
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
@@ -404,7 +403,8 @@ end
 
 function turn_function (angle)
   -- compute turn penalty as angle^2, with a left/right bias
-  k = turn_penalty/(90.0*90.0)
+  -- multiplying by 10 converts to deci-seconds see issue #1318
+  k = 10*turn_penalty/(90.0*90.0)
   if angle>=0 then
     return angle*angle*k/turn_bias
   else

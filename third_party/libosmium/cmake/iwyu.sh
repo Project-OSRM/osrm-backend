@@ -6,6 +6,11 @@
 # TODO: This script should be integrated with cmake in some way...
 #
 
+# If these are set, the wrong compiler is used by iwyu and there will be
+# errors about missing includes.
+unset CC
+unset CXX
+
 cmdline="iwyu -Xiwyu --mapping_file=osmium.imp -std=c++11 -I include"
 
 log=build/iwyu.log

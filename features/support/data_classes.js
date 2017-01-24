@@ -1,50 +1,12 @@
 'use strict';
 
-var util = require('util');
-var path = require('path');
+const util = require('util');
 
 module.exports = {
     Location: class {
         constructor (lon, lat) {
             this.lon = lon;
             this.lat = lat;
-        }
-    },
-
-    osmData: class {
-        constructor (scope) {
-            this.scope          = scope;
-            this.str            = null;
-            this.hash           = null;
-            this.fingerprintOSM = null;
-            this.osmFile        = null;
-            this.extractedFile  = null;
-            this.contractedFile   = null;
-        }
-
-        populate (callback) {
-            this.scope.OSMDB.toXML((str) => {
-                this.str = str;
-
-                this.hash = this.scope.hashString(str);
-                this.fingerprintOSM = this.scope.hashString(this.hash);
-
-                this.osmFile        = path.resolve(this.scope.DATA_FOLDER, this.fingerprintOSM);
-
-                this.extractedFile  = path.resolve([this.osmFile, this.scope.fingerprintExtract].join('_'));
-                this.contractedFile   = path.resolve([this.osmFile, this.scope.fingerprintExtract, this.scope.fingerprintContract].join('_'));
-
-                callback();
-            });
-        }
-
-        reset () {
-            this.str            = null;
-            this.hash           = null;
-            this.fingerprintOSM = null;
-            this.osmFile        = null;
-            this.extractedFile  = null;
-            this.contractedFile   = null;
         }
     },
 
@@ -145,8 +107,16 @@ module.exports = {
         }
 
         matchLocation (got, want) {
+            if (got == null || want == null) return false;
             return this.match(got[0], util.format('%d ~0.0025%', want.lon)) &&
                 this.match(got[1], util.format('%d ~0.0025%', want.lat));
         }
+
+        matchCoordinate (got, want, zoom) {
+            if (got == null || want == null) return false;
+            return this.match(got.lon, util.format('%d +- %d', want.lon, 0.25*zoom)) &&
+                this.match(got.lat, util.format('%d +- %d', want.lat, 0.25*zoom));
+        }
+
     }
 };

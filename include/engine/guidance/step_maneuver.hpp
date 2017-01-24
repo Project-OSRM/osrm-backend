@@ -5,6 +5,7 @@
 #include "util/coordinate.hpp"
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace osrm
@@ -16,9 +17,10 @@ namespace guidance
 
 enum class WaypointType : std::uint8_t
 {
-    None,
-    Arrive,
-    Depart,
+    None = 0,
+    Arrive = 1,
+    Depart = 2,
+    MaxWaypointType = 3
 };
 
 struct StepManeuver
@@ -27,6 +29,7 @@ struct StepManeuver
     short bearing_before;
     short bearing_after;
     extractor::guidance::TurnInstruction instruction;
+
     WaypointType waypoint_type;
     unsigned exit;
 };

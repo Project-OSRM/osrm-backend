@@ -9,8 +9,10 @@ Feature: Setting impedance and speed separately
 
     Scenario: Use impedance to pick route, even when longer/slower
         Given the node map
-            |   | s |   | t |   | u |   | v |   |
-            | a |   | b |   | c |   | d |   | e |
+            """
+              s   t   u   v
+            a   b   c   d   e
+            """
 
         And the ways
             | nodes | impedance |
@@ -36,8 +38,10 @@ Feature: Setting impedance and speed separately
 
     Scenario: Weight should default to 1
         Given the node map
-            |   | s |   | t |   |
-            | a |   | b |   | c |
+            """
+              s   t
+            a   b   c
+            """
 
         And the ways
             | nodes | impedance |
@@ -57,8 +61,10 @@ Feature: Setting impedance and speed separately
     # OSRM should not factor speed into impedance internally. However, the profile can choose to do so,
     # and this test expect the testbot profile to do it.
         Given the node map
-            |   | s |   | t |   |
-            | a |   | b |   | c |
+            """
+              s   t
+            a   b   c
+            """
 
         And the ways
             | nodes | impedance | highway   |
@@ -76,8 +82,10 @@ Feature: Setting impedance and speed separately
 
     Scenario: Weight should influence neither speed nor travel time.
         Given the node map
-            | a | b | c |
-            | t |   |   |
+            """
+            a b c
+            t
+            """
 
         And the ways
             | nodes |

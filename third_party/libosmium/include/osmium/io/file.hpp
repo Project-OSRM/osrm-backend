@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <cstddef>
-#include <stdexcept>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -43,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include <osmium/io/file_format.hpp>
 #include <osmium/io/file_compression.hpp>
 #include <osmium/util/options.hpp>
-#include <osmium/util/compatibility.hpp>
 
 namespace osmium {
 
@@ -115,7 +113,7 @@ namespace osmium {
                 }
 
                 // if filename is a URL, default to XML format
-                std::string protocol = m_filename.substr(0, m_filename.find_first_of(':'));
+                const std::string protocol = m_filename.substr(0, m_filename.find_first_of(':'));
                 if (protocol == "http" || protocol == "https") {
                     m_file_format = file_format::xml;
                 }
@@ -174,7 +172,7 @@ namespace osmium {
                 }
 
                 for (auto& option : options) {
-                    size_t pos = option.find_first_of('=');
+                    const size_t pos = option.find_first_of('=');
                     if (pos == std::string::npos) {
                         set(option, true);
                     } else {

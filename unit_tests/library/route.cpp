@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     for (auto &itr : result.values["waypoints"].get<json::Array>().values)
         itr.get<json::Object>().values["hint"] = "";
 
-    const auto location = json::Array{{{7.437070}, {43.749247}}};
+    const auto location = json::Array{{{7.437070}, {43.749248}}};
 
     json::Object reference{
         {{"code", "Ok"},
@@ -359,6 +359,27 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
         BOOST_CHECK(longitude >= -180. && longitude <= 180.);
         BOOST_CHECK(latitude >= -90. && latitude <= 90.);
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
+{
+    const auto args = get_args();
+    auto osrm = getOSRM(args.at(0));
+
+    using namespace osrm;
+
+    RouteParameters params;
+    params.steps = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.generate_hints = false;
+
+    json::Object result;
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    for (auto waypoint : result.values["waypoints"].get<json::Array>().values)
+        BOOST_CHECK_EQUAL(waypoint.get<json::Object>().values.count("hint"), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

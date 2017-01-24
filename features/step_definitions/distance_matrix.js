@@ -16,18 +16,18 @@ module.exports = function () {
         if (symmetric) {
             columnHeaders.forEach((nodeName) => {
                 var node = this.findNodeByName(nodeName);
-                if (!node) throw new Error(util.format('*** unknown node "%s"'), nodeName);
+                if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
                 waypoints.push({ coord: node, type: 'loc' });
             });
         } else {
             columnHeaders.forEach((nodeName) => {
                 var node = this.findNodeByName(nodeName);
-                if (!node) throw new Error(util.format('*** unknown node "%s"'), nodeName);
+                if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
                 waypoints.push({ coord: node, type: 'dst' });
             });
             rowHeaders.forEach((nodeName) => {
                 var node = this.findNodeByName(nodeName);
-                if (!node) throw new Error(util.format('*** unknown node "%s"'), nodeName);
+                if (!node) throw new Error(util.format('*** unknown node "%s"', nodeName));
                 waypoints.push({ coord: node, type: 'src' });
             });
         }
@@ -35,7 +35,8 @@ module.exports = function () {
         var actual = [];
         actual.push(table.headers);
 
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             // compute matrix
             var params = this.queryParams;
 
@@ -52,8 +53,6 @@ module.exports = function () {
                 });
 
                 var testRow = (row, ri, cb) => {
-                    var ok = true;
-
                     for (var k in result[ri]) {
                         if (this.FuzzyMatch.match(result[ri][k], row[k])) {
                             result[ri][k] = row[k];
@@ -61,13 +60,7 @@ module.exports = function () {
                             result[ri][k] = '';
                         } else {
                             result[ri][k] = result[ri][k].toString();
-                            ok = false;
                         }
-                    }
-
-                    if (!ok) {
-                        var failed = { attempt: 'distance_matrix', query: this.query, response: response };
-                        this.logFail(row, result[ri], [failed]);
                     }
 
                     result[ri][''] = row[''];

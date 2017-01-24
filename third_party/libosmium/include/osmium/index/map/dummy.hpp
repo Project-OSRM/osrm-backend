@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -62,8 +62,12 @@ namespace osmium {
                     // intentionally left blank
                 }
 
-                const TValue get(const TId id) const final {
-                    not_found_error(id);
+                TValue get(const TId id) const final {
+                    throw osmium::not_found{id};
+                }
+
+                TValue get_noexcept(const TId /*id*/) const noexcept final {
+                    return osmium::index::empty_value<TValue>();
                 }
 
                 size_t size() const final {

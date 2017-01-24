@@ -35,9 +35,11 @@ Feature: Bike - Accessability of different way types
     @square
     Scenario: Bike - Push bikes on pedestrian areas
         Given the node map
-            | x |   |
-            | a | b |
-            | d | c |
+            """
+            x
+            a b
+            d c
+            """
 
         And the ways
             | nodes | area | highway    |
@@ -63,6 +65,7 @@ Feature: Bike - Accessability of different way types
             | runway   |      |      |       |
             | runway   | yes  | foot | foot  |
 
+    @todo
     Scenario: Bike - Pushing bikes on ways with foot=yes in one direction
         Then routability should be
             | highway  | foot:forward | foot:backward | forw | backw |
@@ -87,14 +90,18 @@ Feature: Bike - Accessability of different way types
 
     Scenario: Bike - Instructions when pushing bike on oneways
         Given the node map
-            | a | b |   |
-            |   | c | d |
+            """
+            a b e
+            f c d
+            """
 
         And the ways
             | nodes | highway | oneway |
             | ab    | primary |        |
             | bc    | primary | yes    |
             | cd    | primary |        |
+            | be    | primary |        |
+            | cf    | primary |        |
 
         When I route I should get
             | from | to | route       | modes                                   |
@@ -105,8 +112,10 @@ Feature: Bike - Accessability of different way types
 
     Scenario: Bike - Instructions when pushing bike on footway/pedestrian, etc.
         Given the node map
-            | a | b |   |
-            |   | c | d |
+            """
+            a b
+              c d
+            """
 
         And the ways
             | nodes | highway |

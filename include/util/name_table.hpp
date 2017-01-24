@@ -3,6 +3,8 @@
 
 #include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
+#include "util/string_view.hpp"
+#include "util/typedefs.hpp"
 
 #include <string>
 
@@ -18,12 +20,19 @@ class NameTable
 {
   private:
     // FIXME should this use shared memory
-    RangeTable<16, false> m_name_table;
+    util::RangeTable<16, false> m_name_table;
     ShM<char, false>::vector m_names_char_list;
 
   public:
     NameTable(const std::string &filename);
-    std::string GetNameForID(const unsigned name_id) const;
+
+    // This class provides a limited view over all the string data we serialize out.
+    // The following functions are a subset of what is available.
+    // See the data facades for they provide full access to this serialized string data.
+    // (at time of writing this: get{Name,Ref,Pronunciation,Destinations}ForID(name_id);)
+    util::StringView GetNameForID(const NameID id) const;
+    util::StringView GetRefForID(const NameID id) const;
+    util::StringView GetPronunciationForID(const NameID id) const;
 };
 } // namespace util
 } // namespace osrm

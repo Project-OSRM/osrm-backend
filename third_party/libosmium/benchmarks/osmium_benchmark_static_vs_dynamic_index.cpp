@@ -19,8 +19,10 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <string>
 
 #include <osmium/index/map/all.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
@@ -29,23 +31,23 @@
 #include <osmium/io/any_input.hpp>
 #include <osmium/handler.hpp>
 
-typedef osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location> static_index_type;
-const std::string location_store="sparse_mem_array";
+using static_index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
+const std::string location_store{"sparse_mem_array"};
 
-typedef osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location> dynamic_index_type;
+using dynamic_index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
 
-typedef osmium::handler::NodeLocationsForWays<static_index_type> static_location_handler_type;
-typedef osmium::handler::NodeLocationsForWays<dynamic_index_type> dynamic_location_handler_type;
+using static_location_handler_type = osmium::handler::NodeLocationsForWays<static_index_type>;
+using dynamic_location_handler_type = osmium::handler::NodeLocationsForWays<dynamic_index_type>;
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cerr << "Usage: " << argv[0] << " OSMFILE\n";
-        exit(1);
+        std::exit(1);
     }
 
-    std::string input_filename = argv[1];
+    const std::string input_filename{argv[1]};
 
-    osmium::memory::Buffer buffer = osmium::io::read_file(input_filename);
+    osmium::memory::Buffer buffer{osmium::io::read_file(input_filename)};
 
     const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
 
@@ -67,20 +69,20 @@ int main(int argc, char* argv[]) {
 
         {
             // static index
-            osmium::memory::Buffer tmp_buffer(buffer.committed());
+            osmium::memory::Buffer tmp_buffer{buffer.committed()};
             for (const auto& item : buffer) {
                 tmp_buffer.add_item(item);
                 tmp_buffer.commit();
             }
 
             static_index_type static_index;
-            static_location_handler_type static_location_handler(static_index);
+            static_location_handler_type static_location_handler{static_index};
 
-            auto start = std::chrono::steady_clock::now();
+            const auto start = std::chrono::steady_clock::now();
             osmium::apply(tmp_buffer, static_location_handler);
-            auto end = std::chrono::steady_clock::now();
+            const auto end = std::chrono::steady_clock::now();
 
-            double duration = std::chrono::duration<double, std::milli>(end-start).count();
+            const double duration = std::chrono::duration<double, std::milli>(end-start).count();
 
             if (duration < static_min) static_min = duration;
             if (duration > static_max) static_max = duration;
@@ -89,21 +91,21 @@ int main(int argc, char* argv[]) {
 
         {
             // dynamic index
-            osmium::memory::Buffer tmp_buffer(buffer.committed());
+            osmium::memory::Buffer tmp_buffer{buffer.committed()};
             for (const auto& item : buffer) {
                 tmp_buffer.add_item(item);
                 tmp_buffer.commit();
             }
 
             std::unique_ptr<dynamic_index_type> index = map_factory.create_map(location_store);
-            dynamic_location_handler_type dynamic_location_handler(*index);
+            dynamic_location_handler_type dynamic_location_handler{*index};
             dynamic_location_handler.ignore_errors();
 
-            auto start = std::chrono::steady_clock::now();
+            const auto start = std::chrono::steady_clock::now();
             osmium::apply(tmp_buffer, dynamic_location_handler);
-            auto end = std::chrono::steady_clock::now();
+            const auto end = std::chrono::steady_clock::now();
 
-            double duration = std::chrono::duration<double, std::milli>(end-start).count();
+            const double duration = std::chrono::duration<double, std::milli>(end-start).count();
 
             if (duration < dynamic_min) dynamic_min = duration;
             if (duration > dynamic_max) dynamic_max = duration;
@@ -111,21 +113,21 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    double static_avg = static_sum/runs;
-    double dynamic_avg = dynamic_sum/runs;
+    const double static_avg = static_sum/runs;
+    const double dynamic_avg = dynamic_sum/runs;
 
     std::cout << "static  min=" << static_min << "ms avg=" << static_avg << "ms max=" << static_max << "ms\n";
     std::cout << "dynamic min=" << dynamic_min << "ms avg=" << dynamic_avg << "ms max=" << dynamic_max << "ms\n";
 
-    double rfactor = 100.0;
-    double diff_min = std::round((dynamic_min - static_min) * rfactor) / rfactor;
-    double diff_avg = std::round((dynamic_avg - static_avg) * rfactor) / rfactor;
-    double diff_max = std::round((dynamic_max - static_max) * rfactor) / rfactor;
+    const double rfactor = 100.0;
+    const double diff_min = std::round((dynamic_min - static_min) * rfactor) / rfactor;
+    const double diff_avg = std::round((dynamic_avg - static_avg) * rfactor) / rfactor;
+    const double diff_max = std::round((dynamic_max - static_max) * rfactor) / rfactor;
 
-    double prfactor = 10.0;
-    double percent_min = std::round((100.0 * diff_min / static_min) * prfactor) / prfactor;
-    double percent_avg = std::round((100.0 * diff_avg / static_avg) * prfactor) / prfactor;
-    double percent_max = std::round((100.0 * diff_max / static_max) * prfactor) / prfactor;
+    const double prfactor = 10.0;
+    const double percent_min = std::round((100.0 * diff_min / static_min) * prfactor) / prfactor;
+    const double percent_avg = std::round((100.0 * diff_avg / static_avg) * prfactor) / prfactor;
+    const double percent_max = std::round((100.0 * diff_max / static_max) * prfactor) / prfactor;
 
     std::cout << "difference:";
     std::cout << " min=" << diff_min << "ms (" << percent_min << "%)";

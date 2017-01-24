@@ -8,10 +8,12 @@ Feature: OSM Route Relation
     # This scenario assumes that the testbot uses an impedance of 0.5 for ways that are part of 'testbot' routes.
 
         Given the node map
-            | s |  |  | t |  |  |   |
-            | a |  |  | b |  |  | c |
-            |   |  |  |   |  |  |   |
-            |   |  |  | u |  |  | v |
+            """
+            s     t
+            a     b     c
+
+                  u     v
+            """
 
         And the ways
             | nodes |

@@ -2,7 +2,8 @@ var assert = require('assert');
 
 module.exports = function () {
     this.When(/^I request \/(.*)$/, (path, callback) => {
-        this.reprocessAndLoadData(() => {
+        this.reprocessAndLoadData((e) => {
+            if (e) return callback(e);
             this.requestPath(path, {}, (err, res, body) => {
                 this.response = res;
                 callback(err, res, body);
@@ -50,7 +51,7 @@ module.exports = function () {
     });
 
     this.Then(/^"([^"]*)" should return code (\d+)$/, (binary, code) => {
-        assert.ok(this.processError instanceof this.OSRMError);
+        assert.ok(this.processError instanceof Error);
         assert.equal(this.processError.process, binary);
         assert.equal(parseInt(this.processError.code), parseInt(code));
     });

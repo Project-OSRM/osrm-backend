@@ -5,7 +5,7 @@
 
 This file is part of Osmium (http://osmcode.org/libosmium).
 
-Copyright 2013-2016 Jochen Topf <jochen@topf.org> and others (see README).
+Copyright 2013-2017 Jochen Topf <jochen@topf.org> and others (see README).
 
 Boost Software License - Version 1.0 - August 17th, 2003
 
@@ -44,11 +44,11 @@ namespace osmium {
      */
     struct projection_error : public std::runtime_error {
 
-        projection_error(const std::string& what) :
+        explicit projection_error(const std::string& what) :
             std::runtime_error(what) {
         }
 
-        projection_error(const char* what) :
+        explicit projection_error(const char* what) :
             std::runtime_error(what) {
         }
 

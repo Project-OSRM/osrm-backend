@@ -18,7 +18,7 @@
 
 #include <cstdlib>
 
-int main(int argc, const char *argv[]) try
+int main(int argc, const char *argv[])
 {
     if (argc < 2)
     {
@@ -34,14 +34,14 @@ int main(int argc, const char *argv[]) try
     config.use_shared_memory = false;
 
     // Routing machine with several services (such as Route, Table, Nearest, Trip, Match)
-    OSRM osrm{config};
+    const OSRM osrm{config};
 
     // The following shows how to use the Route service; configure this service
     RouteParameters params;
 
     // Route in monaco
-    params.coordinates.push_back({util::FloatLongitude(7.419758), util::FloatLatitude(43.731142)});
-    params.coordinates.push_back({util::FloatLongitude(7.419505), util::FloatLatitude(43.736825)});
+    params.coordinates.push_back({util::FloatLongitude{7.419758}, util::FloatLatitude{43.731142}});
+    params.coordinates.push_back({util::FloatLongitude{7.419505}, util::FloatLatitude{43.736825}});
 
     // Response is in JSON format
     json::Object result;
@@ -67,6 +67,7 @@ int main(int argc, const char *argv[]) try
 
         std::cout << "Distance: " << distance << " meter\n";
         std::cout << "Duration: " << duration << " seconds\n";
+        return EXIT_SUCCESS;
     }
     else if (status == Status::Error)
     {
@@ -77,9 +78,4 @@ int main(int argc, const char *argv[]) try
         std::cout << "Message: " << code << "\n";
         return EXIT_FAILURE;
     }
-}
-catch (const std::exception &e)
-{
-    std::cerr << "Error: " << e.what() << std::endl;
-    return EXIT_FAILURE;
 }
