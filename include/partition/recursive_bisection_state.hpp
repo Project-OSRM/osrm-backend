@@ -41,10 +41,26 @@ namespace partition
 // 
 // bisection-ids: [00,10,01,10,00,11,01,11,00,10]
 
+/* Written out in a recursive tree form:
+
+ ids:     [0,1,2,3,4,5,6,7,8,9]
+ mask:    [0,1,0,1,0,1,0,1,0,1]
+              /          \
+ ids:    [0,2,4,6,8] [1,3,5,7,9]
+ mask:   [0,1,0,1,0] [0,0,1,1,0]
+           /    \      /    \
+ ids:  [0,4,8] [2,6] [1,3,9] [5,7]
+
+ The bisection ids then trace the path (left: 0, right: 1) through the tree:
+
+ ids:     [0,  1,  2,  3,  4,  5,  6,  7,  8,  9 ]
+ path:    [00, 10, 01, 10, 00, 11, 01, 11, 00, 10]
+
+*/
 class RecursiveBisectionState
 {
   public:
-    // the ID in the partition arr
+    // The ID in the partition array
     using BisectionID = std::uint32_t;
     using IDIterator = std::vector<NodeID>::const_iterator;
 
@@ -53,7 +69,8 @@ class RecursiveBisectionState
 
     BisectionID GetBisectionID(const NodeID nid) const;
 
-    // returns the center of the bisection
+    // Bisects the node id array's sub-range based on the partition mask.
+    // Returns: partition point of the bisection: iterator to the second group's first element.
     IDIterator ApplyBisection(const IDIterator begin,
                               const IDIterator end,
                               const std::vector<bool> &partition);

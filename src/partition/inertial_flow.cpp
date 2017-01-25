@@ -1,10 +1,18 @@
 #include "partition/inertial_flow.hpp"
+#include "partition/bisection_graph.hpp"
 #include "partition/dinic_max_flow.hpp"
+#include "partition/reorder_first_last.hpp"
 
-#include <cstddef>
-#include <set>
+#include <algorithm>
 #include <cmath>
-#include <bitset>
+#include <cstddef>
+#include <iterator>
+#include <mutex>
+#include <set>
+#include <utility>
+
+#include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
 
 namespace osrm
 {
@@ -13,30 +21,102 @@ namespace partition
 
 InertialFlow::InertialFlow(const GraphView &view_) : view(view_) {}
 
-std::vector<bool> InertialFlow::ComputePartition(const double balance, const double source_sink_rate)
+std::vector<bool> InertialFlow::ComputePartition(const double balance,
+                                                 const double source_sink_rate)
 {
-    std::set<NodeID> sources;
-    std::set<NodeID> sinks;
+    auto cut = bestMinCut(10 /* should be taken from outside */, source_sink_rate);
 
-    std::size_t count = std::ceil(source_sink_rate * view.NumberOfNodes());
-
-    auto itr = view.Begin();
-    auto itr_end = view.End();
-    while(count--)
-    {
-        --itr_end;
-        sinks.insert(*itr_end);
-        sources.insert(*itr);
-        ++itr;
-    }
-
-    std::cout << "Running Flow" << std::endl;
-    auto result = DinicMaxFlow()(view,sources,sinks);
     std::cout << "Partition: ";
-    for( auto b : result)
+    for (auto b : cut.flags)
         std::cout << b;
     std::cout << std::endl;
-    return result;
+
+    return cut.flags;
+}
+
+InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
+                                                          const double slope) const
+{
+    struct NodeWithCoordinate
+    {
+        NodeWithCoordinate(NodeID nid_, util::Coordinate coordinate_)
+            : nid{nid_}, coordinate{std::move(coordinate_)}
+        {
+        }
+
+        NodeID nid;
+        util::Coordinate coordinate;
+    };
+
+    using Embedding = std::vector<NodeWithCoordinate>;
+
+    Embedding embedding;
+    embedding.reserve(view.NumberOfNodes());
+
+    std::transform(view.Begin(), view.End(), std::back_inserter(embedding), [&](const auto nid) {
+        return NodeWithCoordinate{nid, view.GetNode(nid).coordinate};
+    });
+
+    const auto project = [slope](const auto &each) {
+        auto lon = static_cast<std::int32_t>(each.coordinate.lon);
+        auto lat = static_cast<std::int32_t>(each.coordinate.lat);
+
+        return slope * lon + (1. - std::fabs(slope)) * lat;
+    };
+
+    const auto spatially = [&](const auto &lhs, const auto &rhs) {
+        return project(lhs) < project(rhs);
+    };
+
+    const std::size_t n = ratio * embedding.size();
+
+    reorderFirstLast(embedding, n, spatially);
+
+    InertialFlow::SpatialOrder order;
+
+    order.sources.reserve(n);
+    order.sinks.reserve(n);
+
+    for (auto it = begin(embedding), last = begin(embedding) + n; it != last; ++it)
+        order.sources.insert(it->nid);
+
+    for (auto it = end(embedding) - n, last = end(embedding); it != last; ++it)
+        order.sinks.insert(it->nid);
+
+    return order;
+}
+
+MinCut InertialFlow::bestMinCut(const std::size_t n, const double ratio) const
+{
+    auto base = MakeSpatialOrder(ratio, -1.);
+    auto best = DinicMaxFlow()(view, base.sources, base.sinks);
+
+    std::mutex lock;
+
+    tbb::blocked_range<std::size_t> range{1, n + 1};
+
+    tbb::parallel_for(range, [&, this](const auto &chunk) {
+        for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
+        {
+            const auto slope = -1. + round * (2. / n);
+
+            auto order = this->MakeSpatialOrder(ratio, slope);
+            auto cut = Dinic(view, order.sources, order.sinks);
+            auto cut = DinicMaxFlow()(view, order.sources, order.sinks);
+
+            {
+                std::lock_guard<std::mutex> guard{lock};
+
+                // Swap to keep the destruction of the old object outside of critical section.
+                if (cut.num_edges < best.num_edges)
+                    std::swap(best, cut);
+            }
+
+            // cut gets destroyed here
+        }
+    });
+
+    return best;
 }
 
 } // namespace partition

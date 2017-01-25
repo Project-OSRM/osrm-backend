@@ -13,7 +13,7 @@ namespace partition
 
 struct PartitionConfig
 {
-    PartitionConfig() noexcept : requested_num_threads(0) {}
+    PartitionConfig() : requested_num_threads(0) {}
 
     void UseDefaults()
     {
