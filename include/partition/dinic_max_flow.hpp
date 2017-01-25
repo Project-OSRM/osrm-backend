@@ -31,7 +31,11 @@ namespace partition
 class DinicMaxFlow
 {
   public:
-    using PartitionResult = std::vector<bool>;
+    using PartitionResult = struct
+    {
+        std::size_t num_edges;
+        std::vector<bool> flags;
+    };
     using SourceSinkNodes = std::set<NodeID>;
     using LevelGraph = std::unordered_map<NodeID, std::uint32_t>;
     using FlowEdges = std::unordered_set<std::pair<NodeID, NodeID>>;
