@@ -28,13 +28,13 @@ namespace plugins
 
 // Filters PhantomNodes to obtain a set of viable candiates
 void filterCandidates(const std::vector<util::Coordinate> &coordinates,
-                      MatchPlugin::CandidateLists &candidates_lists, const bool &allow_uturn_parameter)
+                      MatchPlugin::CandidateLists &candidates_lists, const bool &continue_straight)
 {
     for (const auto current_coordinate : util::irange<std::size_t>(0, coordinates.size()))
     {
         bool allow_uturn = false;
 
-        if (allow_uturn_parameter && coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
+        if (continue_straight && coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
         {
             double turn_angle =
                 util::coordinate_calculation::computeAngle(coordinates[current_coordinate - 1],
@@ -171,7 +171,7 @@ Status MatchPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDa
 
     auto candidates_lists = GetPhantomNodesInRange(*facade, parameters, search_radiuses);
 
-    filterCandidates(parameters.coordinates, candidates_lists, parameters.allow_uturn);
+    filterCandidates(parameters.coordinates, candidates_lists, parameters.continue_straight);
     if (std::all_of(candidates_lists.begin(),
                     candidates_lists.end(),
                     [](const std::vector<PhantomNodeWithDistance> &candidates) {
