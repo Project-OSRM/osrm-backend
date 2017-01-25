@@ -7,11 +7,15 @@
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
+#include <cstddef>
+
 namespace osrm
 {
 namespace partition
 {
 
+// Predicate for EdgeIDs checking their partition ids for equality.
+// Used in filter iterator below to discard edges in different partitions.
 struct HasSamePartitionID
 {
     HasSamePartitionID(const RecursiveBisectionState::BisectionID bisection_id,
@@ -26,9 +30,10 @@ struct HasSamePartitionID
     const RecursiveBisectionState &recursive_bisection_state;
 };
 
-// a wrapper around the EdgeIDs returned by the static graph to make them iterable
-class EdgeIDIterator
-    : public boost::iterator_facade<EdgeIDIterator, EdgeID const, boost::random_access_traversal_tag>
+// Random Access Iterator on top of contiguous integral EdgeIDs
+class EdgeIDIterator : public boost::iterator_facade<EdgeIDIterator,
+                                                     EdgeID const,
+                                                     boost::random_access_traversal_tag>
 {
   public:
     EdgeIDIterator() : position(SPECIAL_EDGEID) {}
@@ -37,13 +42,24 @@ class EdgeIDIterator
   private:
     friend class boost::iterator_core_access;
 
-    void increment() { position++; }
-    bool equal(const EdgeIDIterator &other) const { return position == other.position; }
-    const EdgeID &dereference() const { return position; }
+    // Implements the facade's core operations required for random access iterators:
+    // http://www.boost.org/doc/libs/1_63_0/libs/iterator/doc/iterator_facade.html#core-operations
 
-    EdgeID position;
+    void increment() { ++position; }
+    void decrement() { --position; }
+    void advance(difference_type offset) { position += offset; }
+    bool equal(const EdgeIDIterator &other) const { return position == other.position; }
+    const reference dereference() const { return position; }
+    difference_type distance_to(const EdgeIDIterator &other) const
+    {
+        return static_cast<difference_type>(other.position - position);
+    }
+
+    value_type position;
 };
 
+// Non-owning immutable sub-graph view into a base graph.
+// The part of the graph to select is determined by the recursive bisection state.
 class GraphView
 {
   public:
@@ -54,6 +70,7 @@ class GraphView
               const RecursiveBisectionState::IDIterator begin,
               const RecursiveBisectionState::IDIterator end);
 
+    // Number of nodes _in this sub-graph_.
     std::size_t NumberOfNodes() const;
 
     RecursiveBisectionState::IDIterator Begin() const;

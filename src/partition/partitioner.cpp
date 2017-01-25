@@ -6,6 +6,9 @@
 // TODO remove after testing
 #include "util/coordinate.hpp"
 
+#include <iterator>
+#include <vector>
+
 namespace osrm
 {
 namespace partition
@@ -53,7 +56,7 @@ int Partitioner::Run(const PartitionConfig &config)
     input_edges.push_back({7, 3});
     input_edges.push_back({7, 6});
 
-    input_edges = groupBySource(std::move(input_edges));
+    sortBySourceThenTarget(begin(input_edges), end(input_edges));
 
     std::vector<util::Coordinate> coordinates;
 
