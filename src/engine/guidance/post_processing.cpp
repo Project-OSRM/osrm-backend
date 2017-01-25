@@ -60,7 +60,7 @@ inline bool choiceless(const RouteStep &step, const RouteStep &previous)
                                                    step.intersections.front().entry.end(),
                                                    true);
 
-    return is_without_choice;
+    return is_without_choice && step.maneuver.instruction.type != TurnType::EndOfRoad;
 }
 
 // List of types that can be collapsed, if all other restrictions pass
@@ -293,17 +293,20 @@ bool bearingsAreReversed(const double bearing_in, const double bearing_out)
     return angularDeviation(left_turn_angle, 180) <= 35;
 }
 
-bool isLinkroad(const RouteStep &step)
+bool isLinkroad(const RouteStep &pre_link_step,
+                const RouteStep &link_step,
+                const RouteStep &post_link_step)
 {
     const constexpr double MAX_LINK_ROAD_LENGTH = 60.0;
-    return step.distance <= MAX_LINK_ROAD_LENGTH && step.name_id == EMPTY_NAMEID;
+    return link_step.distance <= MAX_LINK_ROAD_LENGTH && link_step.name_id == EMPTY_NAMEID &&
+           pre_link_step.name_id != EMPTY_NAMEID && post_link_step.name_id != EMPTY_NAMEID;
 }
 
 bool isUTurn(const RouteStep &in_step, const RouteStep &out_step, const RouteStep &pre_in_step)
 {
     const bool is_possible_candidate =
         in_step.distance <= MAX_COLLAPSE_DISTANCE || choiceless(out_step, in_step) ||
-        (isLinkroad(in_step) && out_step.name_id != EMPTY_NAMEID &&
+        (isLinkroad(pre_in_step, in_step, out_step) && out_step.name_id != EMPTY_NAMEID &&
          pre_in_step.name_id != EMPTY_NAMEID && !isNoticeableNameChange(pre_in_step, out_step));
     const bool takes_u_turn = bearingsAreReversed(
         util::bearing::reverse(
@@ -459,7 +462,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
 
     // check if the actual turn we wan't to announce is delayed. This situation describes a turn
     // that is expressed by two turns,
-    const auto isDelayedTurn = [](const RouteStep &opening_turn, const RouteStep &finishing_turn) {
+    const auto isDelayedTurn = [](
+        const RouteStep &opening_turn, const RouteStep &finishing_turn, const RouteStep &pre_turn) {
         // only possible if both are compatible
         if (!compatible(opening_turn, finishing_turn))
             return false;
@@ -481,9 +485,12 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
             const auto is_delayed_turn_onto_a_ramp =
                 opening_turn.distance <= 4 * MAX_COLLAPSE_DISTANCE && without_choice &&
                 hasRampType(finishing_turn.maneuver.instruction);
+
+            const auto linkroad = isLinkroad(pre_turn, opening_turn, finishing_turn);
+
             return !hasRampType(opening_turn.maneuver.instruction) &&
-                   (is_short_and_collapsable || is_not_too_long_and_choiceless ||
-                    isLinkroad(opening_turn) || is_delayed_turn_onto_a_ramp);
+                   (is_short_and_collapsable || is_not_too_long_and_choiceless || linkroad ||
+                    is_delayed_turn_onto_a_ramp);
         }
     };
 
@@ -650,7 +657,8 @@ void collapseTurnAt(std::vector<RouteStep> &steps,
         steps[one_back_index].Invalidate();
     }
     // very short segment after turn, turn location remains at one_back_step
-    else if (isDelayedTurn(one_back_step, current_step)) // checks for compatibility
+    else if (isDelayedTurn(
+                 one_back_step, current_step, steps[two_back_index])) // checks for compatibility
     {
         steps[one_back_index].ElongateBy(steps[step_index]);
         // TODO check for lanes (https://github.com/Project-OSRM/osrm-backend/issues/2553)
@@ -1139,7 +1147,9 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps)
         }
         else if (one_back_index > 0 &&
                  (one_back_step.distance <= MAX_COLLAPSE_DISTANCE ||
-                  choiceless(current_step, one_back_step) || isLinkroad(one_back_step)))
+                  choiceless(current_step, one_back_step) ||
+                  isLinkroad(
+                      steps[getPreviousIndex(one_back_index, steps)], one_back_step, current_step)))
         {
             // check for one of the multiple collapse scenarios and, if possible, collapse the turn
             const auto two_back_index = getPreviousIndex(one_back_index, steps);

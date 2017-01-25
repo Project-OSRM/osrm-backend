@@ -24,6 +24,44 @@ Feature: End Of Road Instructions
             | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  |
             | a,d       | aeb,cbd,cbd | depart,end of road right,arrive |
 
+    @3605
+    Scenario: End of Road with oneway through street
+        Given the node map
+            """
+                    c
+            a e     b
+              f     d
+            """
+
+        And the ways
+            | nodes  | highway | oneway |
+            | aeb    | primary | no     |
+            | cbd    | primary | yes    |
+            | ef     | primary | no     |
+
+       When I route I should get
+            | waypoints | route       | turns                           |
+            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive |
+
+    @3605
+    Scenario: End of Road fromnameless onto through street
+        Given the node map
+            """
+                    c
+            a e     b
+              f     d
+            """
+
+        And the ways
+            | nodes  | highway | oneway | name |
+            | aeb    | primary | no     |      |
+            | cbd    | primary | yes    | cbd  |
+            | ef     | primary | no     | ef   |
+
+       When I route I should get
+            | waypoints | route    | turns                           |
+            | a,d       | ,cbd,cbd | depart,end of road right,arrive |
+
     Scenario: End of Road with three streets
         Given the node map
             """
