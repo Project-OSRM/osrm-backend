@@ -34,7 +34,7 @@ GraphView::GraphView(const BisectionGraph &bisection_graph_,
         std::cout << "Node: " << *itr << std::endl;
         for (auto eitr = EdgeBegin(*itr); eitr != EdgeEnd(*itr); ++eitr)
         {
-            std::cout << "\t" << *eitr << " -> " << bisection_graph.GetTarget(*eitr) << std::endl;
+            std::cout << "\t" << *eitr << " -> " << GetTarget(*eitr) << std::endl;
         }
     }
 }
@@ -64,6 +64,11 @@ GraphView::EdgeIterator GraphView::EdgeEnd(const NodeID nid) const
     EdgeIDIterator last{bisection_graph.EndEdges(nid)};
 
     return boost::make_filter_iterator(predicate, last, last);
+}
+
+NodeID GraphView::GetTarget(const EdgeID eid) const
+{
+    return bisection_graph.GetTarget(eid);
 }
 
 } // namespace partition

@@ -70,7 +70,7 @@ class GraphView
               const RecursiveBisectionState::IDIterator begin,
               const RecursiveBisectionState::IDIterator end);
 
-    // Number of nodes _in this sub-graph_.
+    // Number of nodes _in this sub-graph.
     std::size_t NumberOfNodes() const;
 
     RecursiveBisectionState::IDIterator Begin() const;
@@ -78,6 +78,8 @@ class GraphView
 
     EdgeIterator EdgeBegin(const NodeID nid) const;
     EdgeIterator EdgeEnd(const NodeID nid) const;
+
+    NodeID GetTarget(const EdgeID eid) const;
 
   private:
     const BisectionGraph &bisection_graph;
