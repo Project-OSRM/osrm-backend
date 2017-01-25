@@ -252,6 +252,10 @@ Status IsochronePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseData
             cheapest_path_so_far[phantom_node.phantom_node.reverse_segment_id.id] = 0;
             priority_queue.push(phantom_node.phantom_node.reverse_segment_id.id);
         }
+
+        // Add the start edge if phantom_node is bidirectional.
+        if(phantom_node.phantom_node.IsBidirected())
+          parent[phantom_node.phantom_node.reverse_segment_id.id] = phantom_node.phantom_node.reverse_segment_id.id;
     }
 
     while (priority_queue.size() > 0)
