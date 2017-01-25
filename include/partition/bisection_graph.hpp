@@ -55,32 +55,34 @@ template <typename InputEdge>
 std::vector<BisectionNode> computeNodes(const std::vector<util::Coordinate> &coordinates,
                                         const std::vector<InputEdge> &edges)
 {
-    std::vector<BisectionNode> result(coordinates.size() + 1 /*sentinel*/);
+    std::vector<BisectionNode> result;
+    result.reserve(coordinates.size() + 1 /*sentinel*/);
 
-    // stateful transform, counting node ids and moving the edge itr forward
-    const auto coordinate_to_bisection_node =
-        [ edge_itr = edges.begin(), node_id = 0u, &edges ](
-            const util::Coordinate coordinate) mutable->BisectionNode
-    {
-        const auto edges_of_node = edge_itr;
-
-        // count all edges with this source
+    // find the end of edges that belong to node_id
+    const auto advance_edge_itr = [&edges](const std::size_t node_id, auto edge_itr) {
         while (edge_itr != edges.end() && edge_itr->source == node_id)
             ++edge_itr;
-
-        // go to the next node
-        ++node_id;
-
-        return {static_cast<std::size_t>(std::distance(edges.begin(), edges_of_node)), coordinate};
+        return edge_itr;
     };
 
-    std::transform(
-        begin(coordinates), end(coordinates), begin(result), coordinate_to_bisection_node);
+    // create a bisection node, requires the ID of the node as well as the lower bound to its edges
+    const auto make_bisection_node = [&edges, &coordinates](const std::size_t node_id,
+                                                            const auto edge_itr) -> BisectionNode {
+        return {static_cast<std::size_t>(std::distance(edges.begin(), edge_itr)),
+                coordinates[node_id]};
+    };
+
+    auto edge_itr = edges.begin();
+    for (std::size_t node_id = 0; node_id < coordinates.size(); ++node_id)
+    {
+        result.emplace_back(make_bisection_node(node_id,edge_itr));
+        edge_itr = advance_edge_itr(node_id,edge_itr);
+    }
 
     auto null_island = util::Coordinate(util::FloatLongitude{0.0}, util::FloatLatitude{0.0});
     auto sentinel = BisectionNode{edges.size(), std::move(null_island)};
 
-    result.back() = std::move(sentinel);
+    result.emplace_back(std::move(sentinel));
 
     return result;
 }
