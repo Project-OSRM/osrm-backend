@@ -71,5 +71,15 @@ NodeID GraphView::GetTarget(const EdgeID eid) const
     return bisection_graph.GetTarget(eid);
 }
 
+const BisectionNode &GraphView::GetNode(const NodeID nid) const
+{
+    return bisection_graph.GetNode(nid);
+}
+
+const BisectionEdge &GraphView::GetEdge(const EdgeID eid) const
+{
+    return bisection_graph.GetEdge(eid);
+}
+
 } // namespace partition
 } // namespace osrm

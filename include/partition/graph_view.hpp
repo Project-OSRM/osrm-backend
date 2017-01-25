@@ -81,6 +81,9 @@ class GraphView
 
     NodeID GetTarget(const EdgeID eid) const;
 
+    const BisectionNode &GetNode(const NodeID nid) const;
+    const BisectionEdge &GetEdge(const EdgeID eid) const;
+
   private:
     const BisectionGraph &bisection_graph;
     const RecursiveBisectionState &bisection_state;
