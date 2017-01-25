@@ -49,7 +49,7 @@ class EdgeIDIterator : public boost::iterator_facade<EdgeIDIterator,
     void decrement() { --position; }
     void advance(difference_type offset) { position += offset; }
     bool equal(const EdgeIDIterator &other) const { return position == other.position; }
-    const reference dereference() const { return position; }
+    reference dereference() const { return position; }
     difference_type distance_to(const EdgeIDIterator &other) const
     {
         return static_cast<difference_type>(other.position - position);
@@ -70,7 +70,7 @@ class GraphView
               const RecursiveBisectionState::IDIterator begin,
               const RecursiveBisectionState::IDIterator end);
 
-    // Number of nodes _in this sub-graph_.
+    // Number of nodes _in this sub-graph.
     std::size_t NumberOfNodes() const;
 
     RecursiveBisectionState::IDIterator Begin() const;
@@ -78,6 +78,8 @@ class GraphView
 
     EdgeIterator EdgeBegin(const NodeID nid) const;
     EdgeIterator EdgeEnd(const NodeID nid) const;
+
+    NodeID GetTarget(const EdgeID eid) const;
 
   private:
     const BisectionGraph &bisection_graph;
