@@ -2,9 +2,9 @@
 
 #include <numeric>
 
-//TODO remove
-#include <iostream>
+// TODO remove
 #include <bitset>
+#include <iostream>
 
 namespace osrm
 {
@@ -15,20 +15,20 @@ RecursiveBisectionState::RecursiveBisectionState(const BisectionGraph &bisection
     : bisection_graph(bisection_graph_)
 {
     id_array.resize(bisection_graph.GetNumberOfNodes());
-    std::iota(id_array.begin(), id_array.end(), 0);
-    bisection_ids.resize(bisection_graph.GetNumberOfNodes(), 0);
+    std::iota(id_array.begin(), id_array.end(), NodeID{0});
+    bisection_ids.resize(bisection_graph.GetNumberOfNodes(), BisectionID{0});
 }
 
 RecursiveBisectionState::~RecursiveBisectionState()
 {
     std::cout << "Internal Result\n";
     std::cout << "IDArray:";
-    for( auto id : id_array )
+    for (auto id : id_array)
         std::cout << " " << id;
     std::cout << std::endl;
 
     std::cout << "BisectionIDs:";
-    for( auto id : bisection_ids)
+    for (auto id : bisection_ids)
         std::cout << " " << (std::bitset<4>(id));
 
     std::cout << std::endl;
@@ -36,12 +36,12 @@ RecursiveBisectionState::~RecursiveBisectionState()
 
 const RecursiveBisectionState::IDIterator RecursiveBisectionState::Begin() const
 {
-    return id_array.begin();
+    return id_array.cbegin();
 }
 
 const RecursiveBisectionState::IDIterator RecursiveBisectionState::End() const
 {
-    return id_array.end();
+    return id_array.cend();
 }
 
 RecursiveBisectionState::BisectionID RecursiveBisectionState::GetBisectionID(const NodeID nid) const
@@ -59,10 +59,15 @@ RecursiveBisectionState::IDIterator RecursiveBisectionState::ApplyBisection(
         bisection_ids[*itr] |= partition[std::distance(begin, itr)];
     }
 
-    // keep items with `0` as partition id to the left, move other to the right
-    return std::stable_partition(id_array.begin() + std::distance(id_array.cbegin(), begin),
-                                 id_array.begin() + std::distance(id_array.cbegin(), end),
-                                 [this](const auto nid) { return 0 == (bisection_ids[nid] & 1); });
+    auto first = id_array.begin() + std::distance(id_array.cbegin(), begin);
+    auto last = id_array.begin() + std::distance(id_array.cbegin(), end);
+
+    // Keep items with `0` as partition id to the left, move other to the right
+    auto by_last_bit = [this](const auto nid) {
+        return BisectionID{0} == (bisection_ids[nid] & 1);
+    };
+
+    return std::stable_partition(first, last, by_last_bit);
 }
 
 } // namespace partition
