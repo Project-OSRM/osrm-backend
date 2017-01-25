@@ -34,7 +34,7 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
     {
         bool allow_uturn = false;
 
-        if (continue_straight && coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
+        if (!continue_straight && coordinates.size() - 1 > current_coordinate && 0 < current_coordinate)
         {
             double turn_angle =
                 util::coordinate_calculation::computeAngle(coordinates[current_coordinate - 1],
