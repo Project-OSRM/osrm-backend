@@ -1,4 +1,6 @@
 #include "partition/graph_view.hpp"
+
+#include <iostream>
 #include <iterator>
 
 namespace osrm
@@ -25,12 +27,12 @@ GraphView::GraphView(const BisectionGraph &bisection_graph_,
                      const RecursiveBisectionState::IDIterator end_)
     : bisection_graph(bisection_graph_), bisection_state(bisection_state_), begin(begin_), end(end_)
 {
-    // print graph
+
     std::cout << "Graph\n";
-    for( auto itr = begin_; itr != end_; ++itr )
+    for (auto itr = begin; itr != end; ++itr)
     {
         std::cout << "Node: " << *itr << std::endl;
-        for( auto eitr = EdgeBegin(*itr); eitr != EdgeEnd(*itr); ++eitr )
+        for (auto eitr = EdgeBegin(*itr); eitr != EdgeEnd(*itr); ++eitr)
         {
             std::cout << "\t" << *eitr << " -> " << bisection_graph.GetTarget(*eitr) << std::endl;
         }
@@ -45,20 +47,23 @@ std::size_t GraphView::NumberOfNodes() const { return std::distance(begin, end);
 
 GraphView::EdgeIterator GraphView::EdgeBegin(const NodeID nid) const
 {
-    return boost::make_filter_iterator(
-        HasSamePartitionID(bisection_state.GetBisectionID(nid),
-                           bisection_graph,
-                           bisection_state),
-        EdgeIDIterator(bisection_graph.BeginEdges(nid)),
-        EdgeIDIterator(bisection_graph.EndEdges(nid)));
+    HasSamePartitionID predicate{
+        bisection_state.GetBisectionID(nid), bisection_graph, bisection_state};
+
+    EdgeIDIterator first{bisection_graph.BeginEdges(nid)};
+    EdgeIDIterator last{bisection_graph.EndEdges(nid)};
+
+    return boost::make_filter_iterator(predicate, first, last);
 }
 
 GraphView::EdgeIterator GraphView::EdgeEnd(const NodeID nid) const
 {
-    return boost::make_filter_iterator(
-        HasSamePartitionID(bisection_state.GetBisectionID(nid), bisection_graph, bisection_state),
-        EdgeIDIterator(bisection_graph.EndEdges(nid)),
-        EdgeIDIterator(bisection_graph.EndEdges(nid)));
+    HasSamePartitionID predicate{
+        bisection_state.GetBisectionID(nid), bisection_graph, bisection_state};
+
+    EdgeIDIterator last{bisection_graph.EndEdges(nid)};
+
+    return boost::make_filter_iterator(predicate, last, last);
 }
 
 } // namespace partition
