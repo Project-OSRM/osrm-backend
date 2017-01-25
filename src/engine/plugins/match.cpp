@@ -47,10 +47,6 @@ void filterCandidates(const std::vector<util::Coordinate> &coordinates,
                 allow_uturn = true;
             }
         }
-        else
-        {
-          
-        }
 
         auto &candidates = candidates_lists[current_coordinate];
         if (candidates.empty())
