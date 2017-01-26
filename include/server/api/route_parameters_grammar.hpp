@@ -26,6 +26,15 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 {
     using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
 
+    const auto add_annotation = [](engine::api::RouteParameters &route_parameters,
+                                   engine::api::RouteParameters::AnnotationsType &route_param) {
+        // bitflag each parameter
+        if (route_param)
+        {
+            route_parameters.annotations_ = route_parameters.annotations_ | route_param;
+        }
+    };
+
     RouteParametersGrammar() : RouteParametersGrammar(root_rule)
     {
         route_rule =
@@ -50,17 +59,23 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             "full", engine::api::RouteParameters::OverviewType::Full)(
             "false", engine::api::RouteParameters::OverviewType::False);
 
+        annotations_type.add("all", engine::api::RouteParameters::AnnotationsType::All)(
+            "none", engine::api::RouteParameters::AnnotationsType::None)(
+            "duration", engine::api::RouteParameters::AnnotationsType::Duration)(
+            "nodes", engine::api::RouteParameters::AnnotationsType::Nodes)(
+            "distance", engine::api::RouteParameters::AnnotationsType::Distance);
+
         base_rule =
             BaseGrammar::base_rule(qi::_r1) |
             (qi::lit("steps=") >
              qi::bool_[ph::bind(&engine::api::RouteParameters::steps, qi::_r1) = qi::_1]) |
-            (qi::lit("annotations=") >
-             qi::bool_[ph::bind(&engine::api::RouteParameters::annotations, qi::_r1) = qi::_1]) |
             (qi::lit("geometries=") >
              geometries_type[ph::bind(&engine::api::RouteParameters::geometries, qi::_r1) =
                                  qi::_1]) |
             (qi::lit("overview=") >
-             overview_type[ph::bind(&engine::api::RouteParameters::overview, qi::_r1) = qi::_1]);
+             overview_type[ph::bind(&engine::api::RouteParameters::overview, qi::_r1) = qi::_1]) |
+            (qi::lit("annotations=") >
+             annotations_type[ph::bind(add_annotation, qi::_r1, qi::_1)] % ',');
 
         query_rule = BaseGrammar::query_rule(qi::_r1);
     }
@@ -75,6 +90,7 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 
     qi::symbols<char, engine::api::RouteParameters::GeometriesType> geometries_type;
     qi::symbols<char, engine::api::RouteParameters::OverviewType> overview_type;
+    qi::symbols<char, engine::api::RouteParameters::AnnotationsType> annotations_type;
 };
 }
 }
