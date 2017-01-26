@@ -67,6 +67,14 @@ struct RouteParameters : public BaseParameters
         Full,
         False
     };
+    enum class AnnotationsType
+    {
+        None = 0,
+        Duration = 1 << 1,
+        Nodes = 1 << 2,
+        Distance = 1 << 3,
+        All = Duration | Nodes | Distance
+    };
 
     RouteParameters() = default;
 
@@ -78,7 +86,7 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations{false}, geometries{geometries_}, overview{overview_},
+          annotations{false}, annotations_type{AnnotationsType::None}, geometries{geometries_}, overview{overview_},
           continue_straight{continue_straight_}
     // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one below.
     {
@@ -94,7 +102,22 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations{annotations_}, geometries{geometries_}, overview{overview_},
+          annotations{annotations_}, annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}
+    {
+    }
+
+    // enum based implementation of annotations parameter
+    template <typename... Args>
+    RouteParameters(const bool steps_,
+                    const bool alternatives_,
+                    const AnnotationsType annotations_,
+                    const GeometriesType geometries_,
+                    const OverviewType overview_,
+                    const boost::optional<bool> continue_straight_,
+                    Args... args_)
+        : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
+          annotations_type{annotations_}, annotations{true}, geometries{geometries_}, overview{overview_},
           continue_straight{continue_straight_}
     {
     }
@@ -102,6 +125,7 @@ struct RouteParameters : public BaseParameters
     bool steps = false;
     bool alternatives = false;
     bool annotations = false;
+    AnnotationsType annotations_type = AnnotationsType::None;
     GeometriesType geometries = GeometriesType::Polyline;
     OverviewType overview = OverviewType::Simplified;
     boost::optional<bool> continue_straight;
