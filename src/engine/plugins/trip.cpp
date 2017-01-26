@@ -81,8 +81,8 @@ SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
     }
 
     // Run TarjanSCC
-    auto wrapper = std::make_shared<util::MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
-                                                                          number_of_locations);
+    auto wrapper =
+        util::MatrixGraphWrapper<EdgeWeight>(result_table.GetTable(), number_of_locations);
     auto scc = extractor::TarjanSCC<util::MatrixGraphWrapper<EdgeWeight>>(wrapper);
     scc.Run();
 

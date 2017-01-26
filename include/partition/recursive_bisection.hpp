@@ -2,9 +2,11 @@
 #define OSRM_PARTITION_RECURSIVE_BISECTION_HPP_
 
 #include "partition/bisection_graph.hpp"
+#include "partition/graph_view.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
 #include <cstddef>
+#include <vector>
 
 namespace osrm
 {
@@ -17,11 +19,15 @@ class RecursiveBisection
     RecursiveBisection(std::size_t maximum_cell_size,
                        double balance,
                        double boundary_factor,
-                       const BisectionGraph &bisection_graph);
+                       BisectionGraph &bisection_graph);
 
   private:
-    const BisectionGraph &bisection_graph;
+    BisectionGraph &bisection_graph;
     RecursiveBisectionState internal_state;
+
+    // on larger graphs, SCCs give perfect cuts (think Amerika vs Europe)
+    // This function performs an initial pre-partitioning using these sccs.
+    std::vector<GraphView> FakeFirstPartitionWithSCC(const std::size_t small_component_size);
 };
 
 } // namespace partition

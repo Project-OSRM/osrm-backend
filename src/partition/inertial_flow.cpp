@@ -1,6 +1,5 @@
 #include "partition/inertial_flow.hpp"
 #include "partition/bisection_graph.hpp"
-#include "partition/dinic_max_flow.hpp"
 #include "partition/reorder_first_last.hpp"
 
 #include <algorithm>
@@ -9,6 +8,7 @@
 #include <iterator>
 #include <mutex>
 #include <set>
+#include <tuple>
 #include <utility>
 
 #include <tbb/blocked_range.h>
@@ -21,17 +21,13 @@ namespace partition
 
 InertialFlow::InertialFlow(const GraphView &view_) : view(view_) {}
 
-std::vector<bool> InertialFlow::ComputePartition(const double balance,
-                                                 const double source_sink_rate)
+DinicMaxFlow::MinCut InertialFlow::ComputePartition(const std::size_t num_slopes,
+                                                    const double balance,
+                                                    const double source_sink_rate)
 {
-    auto cut = bestMinCut(10 /* should be taken from outside */, source_sink_rate);
+    auto cut = BestMinCut(num_slopes, source_sink_rate);
 
-    std::cout << "Partition: ";
-    for (auto b : cut.flags)
-        std::cout << b;
-    std::cout << std::endl;
-
-    return cut.flags;
+    return cut;
 }
 
 InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
@@ -53,8 +49,12 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
     Embedding embedding;
     embedding.reserve(view.NumberOfNodes());
 
-    std::transform(view.Begin(), view.End(), std::back_inserter(embedding), [&](const auto nid) {
-        return NodeWithCoordinate{nid, view.GetNode(nid).coordinate};
+    // adress of the very first node
+    const auto node_zero = &(*view.Begin());
+
+    std::transform(view.Begin(), view.End(), std::back_inserter(embedding), [&](const auto &node) {
+        const auto node_id = static_cast<NodeID>(&node - node_zero);
+        return NodeWithCoordinate{node_id, node.coordinate};
     });
 
     const auto project = [slope](const auto &each) {
@@ -86,14 +86,22 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
     return order;
 }
 
-MinCut InertialFlow::bestMinCut(const std::size_t n, const double ratio) const
+DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double ratio) const
 {
-    auto base = MakeSpatialOrder(ratio, -1.);
-    auto best = DinicMaxFlow()(view, base.sources, base.sinks);
+    DinicMaxFlow::MinCut best;
+    best.num_edges = -1;
+
+    const auto get_balance = [this](const auto num_nodes_source) {
+        double ratio = static_cast<double>(view.NumberOfNodes() - num_nodes_source) /
+                       static_cast<double>(num_nodes_source);
+        return std::abs(ratio - 1.0);
+    };
+
+    auto best_balance = 10000; // get_balance(best.num_nodes_source);
 
     std::mutex lock;
 
-    tbb::blocked_range<std::size_t> range{1, n + 1};
+    tbb::blocked_range<std::size_t> range{0, n, 1};
 
     tbb::parallel_for(range, [&, this](const auto &chunk) {
         for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
@@ -101,17 +109,24 @@ MinCut InertialFlow::bestMinCut(const std::size_t n, const double ratio) const
             const auto slope = -1. + round * (2. / n);
 
             auto order = this->MakeSpatialOrder(ratio, slope);
-            auto cut = Dinic(view, order.sources, order.sinks);
             auto cut = DinicMaxFlow()(view, order.sources, order.sinks);
+            auto cut_balance = get_balance(cut.num_nodes_source);
 
             {
                 std::lock_guard<std::mutex> guard{lock};
 
                 // Swap to keep the destruction of the old object outside of critical section.
-                if (cut.num_edges < best.num_edges)
+                if (std::tie(cut.num_edges, cut_balance) < std::tie(best.num_edges, best_balance))
+                {
+                    std::cout << "New Cut: " << cut.num_edges << " " << cut_balance << std::endl;
+                    best_balance = cut_balance;
                     std::swap(best, cut);
+                }
+                else
+                {
+                    std::cout << "Bad Cut: " << cut.num_edges << " " << cut_balance << std::endl;
+                }
             }
-
             // cut gets destroyed here
         }
     });

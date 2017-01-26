@@ -379,10 +379,9 @@ void Extractor::FindComponents(unsigned max_edge_id,
     auto new_end = std::unique(edges.begin(), edges.end());
     edges.resize(new_end - edges.begin());
 
-    auto uncontractor_graph = std::make_shared<UncontractedGraph>(max_edge_id + 1, edges);
+    auto uncontracted_graph = UncontractedGraph(max_edge_id + 1, edges);
 
-    TarjanSCC<UncontractedGraph> component_search(
-        std::const_pointer_cast<const UncontractedGraph>(uncontractor_graph));
+    TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();
 
     for (auto &node : input_nodes)

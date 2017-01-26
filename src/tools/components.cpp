@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 
     util::Log() << "Starting SCC graph traversal";
 
-    extractor::TarjanSCC<tools::TarjanGraph> tarjan{graph};
+    extractor::TarjanSCC<tools::TarjanGraph> tarjan{*graph};
     tarjan.Run();
 
     util::Log() << "Identified: " << tarjan.GetNumberOfComponents() << " components";
