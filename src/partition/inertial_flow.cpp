@@ -1,6 +1,5 @@
 #include "partition/inertial_flow.hpp"
 #include "partition/bisection_graph.hpp"
-#include "partition/dinic_max_flow.hpp"
 #include "partition/reorder_first_last.hpp"
 
 #include <algorithm>
@@ -9,6 +8,7 @@
 #include <iterator>
 #include <mutex>
 #include <set>
+#include <tuple>
 #include <utility>
 
 #include <tbb/blocked_range.h>
@@ -24,7 +24,7 @@ InertialFlow::InertialFlow(const GraphView &view_) : view(view_) {}
 std::vector<bool> InertialFlow::ComputePartition(const double balance,
                                                  const double source_sink_rate)
 {
-    auto cut = bestMinCut(10 /* should be taken from outside */, source_sink_rate);
+    auto cut = BestMinCut(10 /* should be taken from outside */, source_sink_rate);
 
     std::cout << "Partition: ";
     for (auto b : cut.flags)
@@ -86,10 +86,18 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
     return order;
 }
 
-MinCut InertialFlow::bestMinCut(const std::size_t n, const double ratio) const
+DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double ratio) const
 {
     auto base = MakeSpatialOrder(ratio, -1.);
     auto best = DinicMaxFlow()(view, base.sources, base.sinks);
+
+    const auto get_balance = [this](const auto num_nodes_source) {
+        double ratio = static_cast<double>(view.NumberOfNodes() - num_nodes_source) /
+                       static_cast<double>(num_nodes_source);
+        return std::abs(ratio - 1.0);
+    };
+
+    auto best_balance = get_balance(best.num_nodes_source);
 
     std::mutex lock;
 
@@ -101,15 +109,18 @@ MinCut InertialFlow::bestMinCut(const std::size_t n, const double ratio) const
             const auto slope = -1. + round * (2. / n);
 
             auto order = this->MakeSpatialOrder(ratio, slope);
-            auto cut = Dinic(view, order.sources, order.sinks);
             auto cut = DinicMaxFlow()(view, order.sources, order.sinks);
+            auto cut_balance = get_balance(cut.num_nodes_source);
 
             {
                 std::lock_guard<std::mutex> guard{lock};
 
                 // Swap to keep the destruction of the old object outside of critical section.
-                if (cut.num_edges < best.num_edges)
+                if (std::tie(cut.num_edges, cut_balance) < std::tie(best.num_edges, best_balance))
+                {
+                    best_balance = cut_balance;
                     std::swap(best, cut);
+                }
             }
 
             // cut gets destroyed here

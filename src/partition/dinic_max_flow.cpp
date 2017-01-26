@@ -7,9 +7,9 @@ namespace osrm
 namespace partition
 {
 
-DinicMaxFlow::PartitionResult DinicMaxFlow::operator()(const GraphView &view,
-                                                       const SourceSinkNodes &source_nodes,
-                                                       const SourceSinkNodes &sink_nodes) const
+DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
+                                              const SourceSinkNodes &source_nodes,
+                                              const SourceSinkNodes &sink_nodes) const
 {
     FlowEdges flow;
     do
@@ -26,13 +26,26 @@ DinicMaxFlow::PartitionResult DinicMaxFlow::operator()(const GraphView &view,
         if (separated)
         {
             // all elements within `levels` are on the source side
-            PartitionResult result(view.NumberOfNodes(), true);
+            std::vector<bool> result(view.NumberOfNodes(), true);
             for (auto itr = view.Begin(); itr != view.End(); ++itr)
             {
                 if (levels.find(*itr) != levels.end())
                     result[std::distance(view.Begin(), itr)] = false;
             }
-            return result;
+            std::size_t num_edges = 0;
+            for (auto itr = view.Begin(); itr != view.End(); ++itr)
+            {
+                const auto sink_side = levels.find(*itr) != levels.end();
+                for (auto edge_itr = view.EdgeBegin(*itr); edge_itr != view.EdgeEnd(*itr);
+                     ++edge_itr)
+                {
+                    if ((levels.find(view.GetTarget(*edge_itr)) != levels.end()) != sink_side)
+                    {
+                        ++num_edges;
+                    }
+                }
+            }
+            return {levels.size(), num_edges, std::move(result)};
         }
 
         AugmentFlow(flow, view, source_nodes, sink_nodes, levels);
@@ -97,10 +110,6 @@ void DinicMaxFlow::AugmentFlow(FlowEdges &flow,
                                const SourceSinkNodes &sink_nodes,
                                const LevelGraph &levels) const
 {
-    const auto has_flow = [&](const auto from, const auto to) {
-        return flow.find(std::make_pair(from, to)) != flow.end();
-    };
-
     // find a path and augment the flow along its edges
     // do a dfs on the level graph, augment all paths that are found
     const auto find_and_augment_path = [&](const NodeID source) {
@@ -163,10 +172,10 @@ bool DinicMaxFlow::findPath(const NodeID node_id,
 
         // don't go back, only follow edges to new nodes
         const auto level = levels.find(target)->second;
-        if( level != node_level + 1 )
+        if (level != node_level + 1)
             continue;
 
-        if( findPath(target,path,view,levels,flow,sink_nodes) )
+        if (findPath(target, path, view, levels, flow, sink_nodes))
             return true;
     }
     path.pop_back();

@@ -31,18 +31,19 @@ namespace partition
 class DinicMaxFlow
 {
   public:
-    using PartitionResult = struct
+    using MinCut = struct
     {
+        std::size_t num_nodes_source;
         std::size_t num_edges;
         std::vector<bool> flags;
     };
-    using SourceSinkNodes = std::set<NodeID>;
+    using SourceSinkNodes = std::unordered_set<NodeID>;
     using LevelGraph = std::unordered_map<NodeID, std::uint32_t>;
     using FlowEdges = std::unordered_set<std::pair<NodeID, NodeID>>;
 
-    PartitionResult operator()(const GraphView &view,
-                               const SourceSinkNodes &sink_nodes,
-                               const SourceSinkNodes &source_nodes) const;
+    MinCut operator()(const GraphView &view,
+                      const SourceSinkNodes &sink_nodes,
+                      const SourceSinkNodes &source_nodes) const;
 
   private:
     LevelGraph ComputeLevelGraph(const GraphView &view,
