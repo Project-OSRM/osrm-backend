@@ -10,13 +10,16 @@
       - No longer emitting turns on ferries, if a ferry should use multiple docking locations
     - Profiles
       - Removed the `./profile.lua -> ./profiles/car.lua` symlink. Use specific profiles from the `profiles` directory.
-      - properties object has a new `weight_name` field, default value is "duration"
-      - properties object has a new `weight_precision` field that specifies a decimal precision of edge weights, default value 1
-      - in `way_function` can be set `forward_rate` and `backward_rate` fields of `ExtractionWay` that have the same interpretation for the way weight as `forward_speed` and `backward_speed` for the edge duration. The rate has units of distance per a unit weight, so higher values will be preferable during routing.
-      - `turn_function` now does not return an integer but takes in a `ExtractionTurn` object and can modify `weight` and `duration` fields
+      - `properties` object has a new `weight_name` field, default value is "duration"
+      - `properties` object has a new `weight_precision` field that specifies a decimal precision of edge weights, default value 1
+      - In `way_function` the filed `forward_rate` and `backward_rate` of `ExtractionWay` can now be set.
+        They have the same interpretation for the way weight as `forward_speed` and `backward_speed` for the edge duration.
+        The unit of rate is meters per weight unit, so higher values will be prefered during routing.
+      - `turn_function` now does not return an integer but takes in a `ExtractionTurn` object and can modify the `weight` and `duration` fields
       - `segment_function` now takes in a `ExtractionSegment` object and can modify `weight` and `duration` fields
-      - `properties.uturn_penalty` is deprecated. Set it in the `turn_function`
-      - `properties.traffic_light_penalty` is deprecated. Traffic light penalties now need to be set over in the turn function. Each turn with a traffic light is marked with `ExtractionTurn::has_traffic_light` = true
+      - `properties.uturn_penalty` is deprecated. Set it in the `turn_function`. The turn type is exposed as `ExtractionTurn::direction_modifier`.
+      - `properties.traffic_light_penalty` is deprecated. Traffic light penalties now need to be set over in the turn function.
+         Each turn with a traffic light is marked with `ExtractionTurn::has_traffic_light = true`.
     - Infrastructure
       - Disabled link-time optimized (LTO) builds by default. Enable by passing `-DENABLE_LTO=ON` to `cmake` if you need the performance and know what you are doing.
       - Datafile versioning is now based on OSRM semver values, rather than source code checksums.
