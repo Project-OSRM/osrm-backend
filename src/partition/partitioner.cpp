@@ -1,74 +1,75 @@
 #include "partition/partitioner.hpp"
 #include "partition/bisection_graph.hpp"
-
 #include "partition/recursive_bisection.hpp"
-
-// TODO remove after testing
+#include "storage/io.hpp"
 #include "util/coordinate.hpp"
+#include "util/log.hpp"
 
 #include <iterator>
 #include <vector>
+
+#include <boost/assert.hpp>
 
 namespace osrm
 {
 namespace partition
 {
 
-int Partitioner::Run(const PartitionConfig &config)
+struct CompressedNodeBasedGraphEdge
 {
-    struct TestEdge
+    NodeID source;
+    NodeID target;
+};
+
+struct CompressedNodeBasedGraph
+{
+    CompressedNodeBasedGraph(storage::io::FileReader &reader)
     {
-        NodeID source;
-        NodeID target;
-    };
+        // Reads:  | Fingerprint | #e | #n | edges | coordinates |
+        // - uint64: number of edges (from, to) pairs
+        // - uint64: number of nodes and therefore also coordinates
+        // - (uint32_t, uint32_t): num_edges * edges
+        // - (int32_t, int32_t: num_nodes * coordinates (lon, lat)
 
-    std::vector<TestEdge> input_edges;
+        const auto num_edges = reader.ReadElementCount64();
+        const auto num_nodes = reader.ReadElementCount64();
 
-    // 0 - 1 - 2 - 3
-    // | \     |   |
-    // 4 - 5 - 6 - 7
+        edges.resize(num_edges);
+        coordinates.resize(num_nodes);
 
-    input_edges.push_back({0, 1});
-    input_edges.push_back({0, 4});
-    input_edges.push_back({0, 5});
-
-    input_edges.push_back({1, 0});
-    input_edges.push_back({1, 2});
-
-    input_edges.push_back({2, 1});
-    input_edges.push_back({2, 3});
-    input_edges.push_back({2, 6});
-
-    input_edges.push_back({3, 2});
-    input_edges.push_back({3, 7});
-
-    input_edges.push_back({4, 0});
-    input_edges.push_back({4, 5});
-
-    input_edges.push_back({5, 0});
-    input_edges.push_back({5, 4});
-    input_edges.push_back({5, 6});
-
-    input_edges.push_back({6, 2});
-    input_edges.push_back({6, 5});
-    input_edges.push_back({6, 7});
-
-    input_edges.push_back({7, 3});
-    input_edges.push_back({7, 6});
-
-    sortBySourceThenTarget(begin(input_edges), end(input_edges));
-
-    std::vector<util::Coordinate> coordinates;
-
-    for (std::size_t i = 0; i < 8; ++i)
-    {
-        coordinates.push_back(
-            {util::FloatLongitude{(i % 4) / 4.0}, util::FloatLatitude{(double)(i / 4)}});
+        reader.ReadInto(edges);
+        reader.ReadInto(coordinates);
     }
 
-    // do the partitioning
-    std::vector<BisectionNode> nodes = computeNodes(coordinates, input_edges);
-    std::vector<BisectionEdge> edges = adaptToBisectionEdge(input_edges);
+    std::vector<CompressedNodeBasedGraphEdge> edges;
+    std::vector<util::Coordinate> coordinates;
+};
+
+CompressedNodeBasedGraph LoadCompressedNodeBasedGraph(const std::string &path)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+
+    storage::io::FileReader reader(path, fingerprint);
+
+    CompressedNodeBasedGraph graph{reader};
+    return graph;
+}
+
+int Partitioner::Run(const PartitionConfig &config)
+{
+    auto compressed_node_based_graph =
+        LoadCompressedNodeBasedGraph(config.compressed_node_based_graph_path.string());
+
+    util::Log() << "Loaded compressed node based graph: "
+                << compressed_node_based_graph.edges.size() << " edges, "
+                << compressed_node_based_graph.coordinates.size() << " nodes";
+
+    sortBySourceThenTarget(begin(compressed_node_based_graph.edges),
+                           end(compressed_node_based_graph.edges));
+
+    std::vector<BisectionNode> nodes =
+        computeNodes(compressed_node_based_graph.coordinates, compressed_node_based_graph.edges);
+    std::vector<BisectionEdge> edges = adaptToBisectionEdge(compressed_node_based_graph.edges);
 
     BisectionGraph graph(nodes, edges);
 
