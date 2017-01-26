@@ -95,6 +95,10 @@ surface_speeds = {
   sand =          walking_speed*0.5
 }
 
+tracktype_speeds = {}
+
+smoothness_speeds = {}
+
 leisure_speeds = {
   track = walking_speed
 }
