@@ -20,7 +20,7 @@ void reorderFirstLast(RandomIt first, RandomIt last, std::size_t n, Comparator c
 {
     BOOST_ASSERT_MSG(n <= (last - first) / std::size_t{2}, "overlapping subranges not allowed");
 
-    if (n == 0 or (last - first < 2))
+    if (n == 0 || (last - first < 2))
         return;
 
     // Reorder first n: guarantees that the predicate holds for the first elements.
