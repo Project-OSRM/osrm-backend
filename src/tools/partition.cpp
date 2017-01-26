@@ -28,11 +28,31 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &p
 
     // declare a group of options that will be allowed both on command line
     boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "threads,t",
-        boost::program_options::value<unsigned int>(&partition_config.requested_num_threads)
-            ->default_value(tbb::task_scheduler_init::default_num_threads()),
-        "Number of threads to use");
+    config_options.add_options()
+        //
+        ("threads,t",
+         boost::program_options::value<unsigned int>(&partition_config.requested_num_threads)
+             ->default_value(tbb::task_scheduler_init::default_num_threads()),
+         "Number of threads to use")
+        //
+        ("max-cell-size",
+         boost::program_options::value<std::size_t>(&partition_config.maximum_cell_size)
+             ->default_value(4096),
+         "Bisection termination citerion based on cell size")
+        //
+        ("balance",
+         boost::program_options::value<double>(&partition_config.balance)->default_value(1.2),
+         "Balance for left and right side in single bisection")
+        //
+        ("boundary",
+         boost::program_options::value<double>(&partition_config.boundary_factor)
+             ->default_value(0.25),
+         "Percentage of embedded nodes to contract as sources and sinks")
+        //
+        ("optimizing-cuts",
+         boost::program_options::value<std::size_t>(&partition_config.num_optimizing_cuts)
+             ->default_value(10),
+         "Number of cuts to use for optimizing a single bisection");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
