@@ -91,6 +91,11 @@ class Extractor
 
     void WriteTurnLaneData(const std::string &turn_lane_file) const;
 
+    // Writes compressed node based graph and its embedding into a file for osrm-partition to use.
+    static void WriteCompressedNodeBasedGraph(const std::string &path,
+                                              const util::NodeBasedDynamicGraph &graph,
+                                              const std::vector<QueryNode> &externals);
+
     // globals persisting during the extraction process and the graph generation process
 
     // during turn lane analysis, we might have to combine lanes for roads that are modelled as two

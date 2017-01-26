@@ -46,13 +46,18 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
             ->implicit_value(true)
             ->default_value(false),
         "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs")(
+        "dump-partition-graph",
+        boost::program_options::bool_switch(&extractor_config.dump_compressed_node_based_graph)
+            ->implicit_value(true)
+            ->default_value(false),
+        "Generate a partitionable graph file (.cnbg) for use with osrm-partition")(
         "small-component-size",
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
             ->default_value(1000),
         "Number of nodes required before a strongly-connected-componennt is considered big "
         "(affects nearest neighbor snapping)")(
         "with-osm-metadata",
-        boost::program_options::value<bool>(&extractor_config.use_metadata)
+        boost::program_options::bool_switch(&extractor_config.use_metadata)
             ->implicit_value(true)
             ->default_value(false),
         "Use metada during osm parsing (This can affect the extraction performance).");

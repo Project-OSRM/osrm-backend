@@ -4,10 +4,18 @@
 #include "partition/graph_view.hpp"
 #include "partition/recursive_bisection_state.hpp"
 
+#include "util/log.hpp"
 #include "util/timing_util.hpp"
 
-#include "util/geojson_debug_logger.hpp"
-#include "util/geojson_debug_policies.hpp"
+#include <tbb/parallel_do.h>
+
+#include <climits> // for CHAR_BIT
+#include <cstddef>
+
+#include <algorithm>
+#include <iterator>
+#include <utility>
+#include <vector>
 
 #include "extractor/tarjan_scc.hpp"
 #include "partition/tarjan_graph_wrapper.hpp"
@@ -22,83 +30,78 @@ namespace partition
 RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
                                        double balance,
                                        double boundary_factor,
+                                       std::size_t num_optimizing_cuts,
                                        BisectionGraph &bisection_graph_)
     : bisection_graph(bisection_graph_), internal_state(bisection_graph_)
 {
-    auto views = FakeFirstPartitionWithSCC(1000);
+    auto components = FakeFirstPartitionWithSCC(1000 /*limit for small*/); // TODO
+    BOOST_ASSERT(!components.empty());
 
-    std::cout << "Components: " << views.size() << std::endl;
-    ;
+    // Parallelize recursive bisection trees. Root cut happens serially (well, this is a lie:
+    // since we handle big components in parallel, too. But we don't know this and
+    // don't have to. TBB's scheduler handles nested parallelism just fine).
+    //
+    //     [   |   ]
+    //      /     \         root cut
+    //  [ | ]     [ | ]
+    //  /   \     /   \     descend, do cuts in parallel
+    //
+    // https://www.threadingbuildingblocks.org/docs/help/index.htm#reference/algorithms/parallel_do_func.html
+
+    struct TreeNode
+    {
+        GraphView graph;
+        std::uint64_t depth;
+    };
+
+    // Build a recursive bisection tree for all big components independently in parallel.
+    // Last GraphView is all small components: skip for bisection.
+    auto first = begin(components);
+    auto last = end(components) - 1;
+
+    // We construct the trees on the fly: the root node is the entry point.
+    // All tree branches depend on the actual cut and will be generated while descending.
+    std::vector<TreeNode> forest;
+    forest.reserve(last - first);
+
+    std::transform(first, last, std::back_inserter(forest), [](auto graph) {
+        return TreeNode{std::move(graph), 0};
+    });
+
+    using Feeder = tbb::parallel_do_feeder<TreeNode>;
 
     TIMER_START(bisection);
-    GraphView view = views.front();
-    InertialFlow flow(view);
-    const auto partition = flow.ComputePartition(10, balance, boundary_factor);
-    const auto center = internal_state.ApplyBisection(view.Begin(), view.End(), 0, partition.flags);
-    {
-        auto state = internal_state;
-    }
+
+    // Bisect graph into two parts. Get partition point and recurse left and right in parallel.
+    tbb::parallel_do(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
+        InertialFlow flow{node.graph};
+        const auto partition = flow.ComputePartition(num_optimizing_cuts, balance, boundary_factor);
+        const auto center = internal_state.ApplyBisection(
+            node.graph.Begin(), node.graph.End(), node.depth, partition.flags);
+
+        const auto terminal = [&](const auto &node) {
+            const auto maximum_depth = sizeof(RecursiveBisectionState::BisectionID) * CHAR_BIT;
+            const auto too_small = node.graph.NumberOfNodes() < maximum_cell_size;
+            const auto too_deep = node.depth >= maximum_depth;
+            return too_small || too_deep;
+        };
+
+        GraphView left_graph{bisection_graph, node.graph.Begin(), center};
+        TreeNode left_node{std::move(left_graph), node.depth + 1};
+
+        if (!terminal(left_node))
+            feeder.add(std::move(left_node));
+
+        GraphView right_graph{bisection_graph, center, node.graph.End()};
+        TreeNode right_node{std::move(right_graph), node.depth + 1};
+
+        if (!terminal(right_node))
+            feeder.add(std::move(right_node));
+    });
+
     TIMER_STOP(bisection);
-    std::cout << "Bisection completed in " << TIMER_SEC(bisection)
-              << " Cut Size: " << partition.num_edges << " Balance: " << partition.num_nodes_source
-              << std::endl;
 
-    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString, util::LoggingScenario(0)>
-        logger_zero("level_0.geojson");
-    for (NodeID nid = 0; nid < bisection_graph.NumberOfNodes(); ++nid)
-    {
-        for (const auto &edge : bisection_graph.Edges(nid))
-        {
-            const auto target = edge.target;
-            if (internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target))
-            {
-                std::vector<util::Coordinate> coordinates;
-                coordinates.push_back(bisection_graph.Node(nid).coordinate);
-                coordinates.push_back(bisection_graph.Node(target).coordinate);
-                logger_zero.Write(coordinates);
-            }
-        }
-    }
-
-    TIMER_START(bisection_2_1);
-    GraphView recursive_view_lhs(bisection_graph, view.Begin(), center);
-    InertialFlow flow_lhs(recursive_view_lhs);
-    const auto partition_lhs = flow_lhs.ComputePartition(10, balance, boundary_factor);
-    internal_state.ApplyBisection(
-        recursive_view_lhs.Begin(), recursive_view_lhs.End(), 1, partition_lhs.flags);
-    TIMER_STOP(bisection_2_1);
-    std::cout << "Bisection(2) completed in " << TIMER_SEC(bisection_2_1)
-              << " Cut Size: " << partition_lhs.num_edges
-              << " Balance: " << partition_lhs.num_nodes_source << std::endl;
-
-    TIMER_START(bisection_2_2);
-    GraphView recursive_view_rhs(bisection_graph, center, view.End());
-    InertialFlow flow_rhs(recursive_view_rhs);
-    const auto partition_rhs = flow_rhs.ComputePartition(10, balance, boundary_factor);
-    internal_state.ApplyBisection(
-        recursive_view_rhs.Begin(), recursive_view_rhs.End(), 1, partition_rhs.flags);
-    TIMER_STOP(bisection_2_2);
-    std::cout << "Bisection(3) completed in " << TIMER_SEC(bisection_2_2)
-              << " Cut Size: " << partition_rhs.num_edges
-              << " Balance: " << partition_rhs.num_nodes_source << std::endl;
-
-    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString, util::LoggingScenario(1)>
-        logger_one("level_1.geojson");
-
-    for (NodeID nid = 0; nid < bisection_graph.NumberOfNodes(); ++nid)
-    {
-        for (const auto &edge : bisection_graph.Edges(nid))
-        {
-            const auto target = edge.target;
-            if (internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target))
-            {
-                std::vector<util::Coordinate> coordinates;
-                coordinates.push_back(bisection_graph.Node(nid).coordinate);
-                coordinates.push_back(bisection_graph.Node(target).coordinate);
-                logger_one.Write(coordinates);
-            }
-        }
-    }
+    util::Log() << "Full bisection done in " << TIMER_SEC(bisection) << "s";
 }
 
 std::vector<GraphView>
