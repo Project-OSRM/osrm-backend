@@ -34,7 +34,7 @@ struct HasTargetMember<T, decltype((void)(sizeof(std::declval<T>().target) > 0))
 // Static Graph requires edges to have a .target and .data member attribute
 template <typename Edge>
 struct HasDataAndTargetMember
-    : std::integral_constant<bool, HasDataMember<Edge>() && HasTargetMember<Edge>()>
+    : std::integral_constant<bool, HasDataMember<Edge>::value && HasTargetMember<Edge>::value>
 {
 };
 

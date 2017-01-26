@@ -31,36 +31,42 @@ namespace partition
 class DinicMaxFlow
 {
   public:
-    using PartitionResult = struct
+    using Level = std::uint32_t;
+    using MinCut = struct
     {
+        std::size_t num_nodes_source;
         std::size_t num_edges;
         std::vector<bool> flags;
     };
-    using SourceSinkNodes = std::set<NodeID>;
-    using LevelGraph = std::unordered_map<NodeID, std::uint32_t>;
-    using FlowEdges = std::unordered_set<std::pair<NodeID, NodeID>>;
+    using SourceSinkNodes = std::unordered_set<NodeID>;
+    using LevelGraph = std::vector<Level>;
+    using FlowEdges = std::vector<std::set<NodeID>>;
 
-    PartitionResult operator()(const GraphView &view,
-                               const SourceSinkNodes &sink_nodes,
-                               const SourceSinkNodes &source_nodes) const;
+    MinCut operator()(const GraphView &view,
+                      const SourceSinkNodes &sink_nodes,
+                      const SourceSinkNodes &source_nodes) const;
 
   private:
     LevelGraph ComputeLevelGraph(const GraphView &view,
+                                 const std::vector<NodeID> &border_source_nodes,
                                  const SourceSinkNodes &source_nodes,
+                                 const SourceSinkNodes &sink_nodes,
                                  const FlowEdges &flow) const;
 
-    void AugmentFlow(FlowEdges &flow,
-                     const GraphView &view,
-                     const SourceSinkNodes &source_nodes,
-                     const SourceSinkNodes &sink_nodes,
-                     const LevelGraph &levels) const;
+    std::uint32_t BlockingFlow(FlowEdges &flow,
+                               LevelGraph &levels,
+                               const GraphView &view,
+                               const SourceSinkNodes &source_nodes,
+                               const std::vector<NodeID> &border_sink_nodes) const;
 
-    bool findPath(const NodeID from,
-                  std::vector<NodeID> &path,
-                  const GraphView &view,
-                  const LevelGraph &levels,
-                  const FlowEdges &flow,
-                  const SourceSinkNodes &sink_nodes) const;
+    std::vector<NodeID> GetAugmentingPath(LevelGraph &levels,
+                                          const NodeID from,
+                                          const GraphView &view,
+                                          const FlowEdges &flow,
+                                          const SourceSinkNodes &sink_nodes) const;
+
+    // Builds an actual cut result from a level graph
+    MinCut MakeCut(const GraphView &view, const LevelGraph &levels) const;
 };
 
 } // namespace partition

@@ -63,9 +63,9 @@ template <typename EdgeDataT> class SortableEdgeWithData
 
 template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class FlexibleStaticGraph
 {
-    static_assert(traits::HasFirstEdgeMember<NodeT>(),
+    static_assert(traits::HasFirstEdgeMember<NodeT>::value,
                   "Model for compatible Node type requires .first_edge member attribute");
-    static_assert(traits::HasDataAndTargetMember<EdgeT>(),
+    static_assert(traits::HasDataAndTargetMember<EdgeT>::value,
                   "Model for compatible Edge type requires .data and .target member attribute");
 
   public:

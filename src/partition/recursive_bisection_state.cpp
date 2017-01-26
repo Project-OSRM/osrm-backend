@@ -1,5 +1,6 @@
 #include "partition/recursive_bisection_state.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 // TODO remove
@@ -11,63 +12,72 @@ namespace osrm
 namespace partition
 {
 
-RecursiveBisectionState::RecursiveBisectionState(const BisectionGraph &bisection_graph_)
+RecursiveBisectionState::RecursiveBisectionState(BisectionGraph &bisection_graph_)
     : bisection_graph(bisection_graph_)
 {
-    id_array.resize(bisection_graph.GetNumberOfNodes());
-    std::iota(id_array.begin(), id_array.end(), NodeID{0});
-    bisection_ids.resize(bisection_graph.GetNumberOfNodes(), BisectionID{0});
+    bisection_ids.resize(bisection_graph.NumberOfNodes(), BisectionID{0});
 }
 
-RecursiveBisectionState::~RecursiveBisectionState()
+RecursiveBisectionState::~RecursiveBisectionState() {}
+
+RecursiveBisectionState::BisectionID
+RecursiveBisectionState::GetBisectionID(const NodeID node) const
 {
-    std::cout << "Internal Result\n";
-    std::cout << "IDArray:";
-    for (auto id : id_array)
-        std::cout << " " << id;
-    std::cout << std::endl;
-
-    std::cout << "BisectionIDs:";
-    for (auto id : bisection_ids)
-        std::cout << " " << (std::bitset<4>(id));
-
-    std::cout << std::endl;
+    return bisection_ids[node];
 }
 
-const RecursiveBisectionState::IDIterator RecursiveBisectionState::Begin() const
-{
-    return id_array.cbegin();
-}
-
-const RecursiveBisectionState::IDIterator RecursiveBisectionState::End() const
-{
-    return id_array.cend();
-}
-
-RecursiveBisectionState::BisectionID RecursiveBisectionState::GetBisectionID(const NodeID nid) const
-{
-    return bisection_ids[nid];
-}
-
-RecursiveBisectionState::IDIterator RecursiveBisectionState::ApplyBisection(
-    const IDIterator begin, const IDIterator end, const std::vector<bool> &partition)
+RecursiveBisectionState::NodeIterator
+RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
+                                        const NodeIterator const_end,
+                                        const std::size_t depth,
+                                        const std::vector<bool> &partition)
 {
     // augment the partition ids
-    for (auto itr = begin; itr != end; ++itr)
+    const auto flag = BisectionID{1} << depth;
+    for (auto itr = const_begin; itr != const_end; ++itr)
     {
-        bisection_ids[*itr] <<= 1;
-        bisection_ids[*itr] |= partition[std::distance(begin, itr)];
+        const auto nid = std::distance(const_begin, itr);
+        if (partition[nid])
+            bisection_ids[itr->original_id] |= flag;
     }
 
-    auto first = id_array.begin() + std::distance(id_array.cbegin(), begin);
-    auto last = id_array.begin() + std::distance(id_array.cbegin(), end);
-
     // Keep items with `0` as partition id to the left, move other to the right
-    auto by_last_bit = [this](const auto nid) {
-        return BisectionID{0} == (bisection_ids[nid] & 1);
+    auto by_flag_bit = [this, flag](const auto &node) {
+        return BisectionID{0} == (bisection_ids[node.original_id] & flag);
     };
 
-    return std::stable_partition(first, last, by_last_bit);
+    auto begin = bisection_graph.Begin() + std::distance(bisection_graph.CBegin(), const_begin);
+    const auto end = begin + std::distance(const_begin, const_end);
+
+    // remap the edges
+    std::vector<NodeID> mapping(std::distance(const_begin, const_end), SPECIAL_NODEID);
+    // calculate a mapping of all node ids
+    std::size_t lesser_id = 0, upper_id = 0;
+    std::transform(const_begin,
+                   const_end,
+                   mapping.begin(),
+                   [by_flag_bit, &lesser_id, &upper_id](const auto &node) {
+                       return by_flag_bit(node) ? lesser_id++ : upper_id++;
+                   });
+
+    // erase all edges that point into different partitions
+    std::for_each(begin, end, [&](auto &node) {
+        const auto node_flag = by_flag_bit(node);
+        bisection_graph.RemoveEdges(node, [&](const BisectionGraph::EdgeT &edge) {
+            const auto target_flag = by_flag_bit(*(const_begin + edge.target));
+            return (node_flag != target_flag);
+        });
+    });
+
+    auto center = std::stable_partition(begin, end, by_flag_bit);
+
+    // remap all remaining edges
+    std::for_each(const_begin, const_end, [&](const auto &node) {
+        for (auto &edge : bisection_graph.Edges(node))
+            edge.target = mapping[edge.target];
+    });
+
+    return const_begin + std::distance(begin, center);
 }
 
 } // namespace partition
