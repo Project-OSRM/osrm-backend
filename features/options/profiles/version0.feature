@@ -72,7 +72,7 @@ end
 
 function turn_function (angle)
   print('turn_function ' .. angle)
-  return angle == 0 and 0 or 17
+  return angle == 0 and 0 or 42
 end
 
 function segment_function (source, target, distance, weight)
@@ -82,7 +82,7 @@ end
         And the node map
            """
                a
-              bcd
+             b c d
                e
            """
         And the ways
@@ -102,6 +102,6 @@ end
 
         When I route I should get
            | from | to | route    | time  |
-           | a    | b  | ac,cb,cb | 16.7s |
-           | a    | d  | ac,cd,cd | 16.7s |
+           | a    | b  | ac,cb,cb | 24.2s |
+           | a    | d  | ac,cd,cd | 24.2s |
            | a    | e  | ac,ce,ce | 20s   |

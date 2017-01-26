@@ -138,6 +138,10 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
             return sum + data.duration_until_turn;
         });
+    auto weight = std::accumulate(
+        route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
+            return sum + data.weight_until_turn;
+        });
 
     //                 s
     //                 |
@@ -165,6 +169,8 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     {
         duration -= (target_traversed_in_reverse ? source_node.reverse_duration
                                                  : source_node.forward_duration);
+        weight -=
+            (target_traversed_in_reverse ? source_node.reverse_weight : source_node.forward_weight);
     }
 
     std::string summary;
@@ -196,7 +202,11 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         summary = boost::algorithm::join(summary_names, ", ");
     }
 
-    return RouteLeg{duration / 10., distance, summary, {}};
+    return RouteLeg{std::round(distance * 10.) / 10.,
+                    duration / 10.,
+                    duration / facade.GetWeightMultiplier(),
+                    summary,
+                    {}};
 }
 
 } // namespace guidance

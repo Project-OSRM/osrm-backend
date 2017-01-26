@@ -37,48 +37,27 @@ Feature: Weight tests
             | s,t       | abc,cde,cde | 3.1s,3s,0s | duration    | 3.1,3,0 |
 
     # FIXME include/engine/guidance/assemble_geometry.hpp:95
-    @todo
-    Scenario: Start and target on the same edge
-        Given the query options
-            | annotations | true |
-
-        Given the node map
-            """
-            a-------b
-              ·   ·
-              s   t
-            """
-
-        And the ways
-            | nodes |
-            | ab    |
-
-        When I route I should get
-            | waypoints | route   | distances | weights | times | annotation         |
-            | s,t       | abc,abc | 20m,0m    | 20,0    | 2s,0s | 29:2.9:20.017685:0 |
-            | t,s       | abc,abc | 20m,0m    | 20,0    | 2s,0s | 29:2.9:20.017685:0 |
-
-    # FIXME include/engine/guidance/assemble_geometry.hpp:95
-    @todo
-    Scenario: Start and target on adjacent edges
+    Scenario: Start and target on the same and adjacent edge
         Given the query options
             | annotations | true |
 
         Given the node map
             """
             a-------b-------c
-              ·           ·
-              s           t
+              ·   ·   ·
+              s   t   e
             """
 
         And the ways
             | nodes |
-            | ab    |
+            | abc   |
 
         When I route I should get
-            | waypoints | route   | distances | weights | times   | annotation         |
-            | s,t       | abc,abc | 30m,0m    | 31,0    | 3.1s,0s | 31:3.1:30.026527:0 |
-            | t,s       | abc,abc | 30m,0m    | 31,0    | 3.1s,0s | 31:3.1:30.026527:0 |
+            | waypoints | route   | distances | weights | times   | annotation                          |
+            | s,t       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 3:3:20.017685:0                     |
+            | t,s       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 3.1:3.1:20.017685:0                 |
+            | s,e       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 3.1:3.1:30.026527:0,1:1:10.008842:0 |
+            | e,s       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 1:1:10.008842:0,3.1:3.1:30.026527:0 |
 
 
     Scenario: Step weights -- way_function: fail if no weight or weight_per_meter property
