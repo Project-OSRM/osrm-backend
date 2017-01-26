@@ -25,13 +25,15 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
 
     GraphView recursive_view_lhs(bisection_graph, internal_state, view.Begin(), center);
     InertialFlow flow_lhs(recursive_view_lhs);
-    const auto partition_lhs = flow_lhs.ComputePartition(balance,boundary_factor);
-    internal_state.ApplyBisection(recursive_view_lhs.Begin(),recursive_view_lhs.End(),partition_lhs);
+    const auto partition_lhs = flow_lhs.ComputePartition(balance, boundary_factor);
+    internal_state.ApplyBisection(
+        recursive_view_lhs.Begin(), recursive_view_lhs.End(), partition_lhs);
 
     GraphView recursive_view_rhs(bisection_graph, internal_state, center, view.End());
     InertialFlow flow_rhs(recursive_view_rhs);
-    const auto partition_rhs = flow_rhs.ComputePartition(balance,boundary_factor);
-    internal_state.ApplyBisection(recursive_view_rhs.Begin(),recursive_view_rhs.End(),partition_rhs);
+    const auto partition_rhs = flow_rhs.ComputePartition(balance, boundary_factor);
+    internal_state.ApplyBisection(
+        recursive_view_rhs.Begin(), recursive_view_rhs.End(), partition_rhs);
 }
 
 } // namespace partition

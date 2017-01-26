@@ -79,8 +79,6 @@ class GraphView
     EdgeIterator EdgeBegin(const NodeID nid) const;
     EdgeIterator EdgeEnd(const NodeID nid) const;
 
-    NodeID GetTarget(const EdgeID eid) const;
-
     const BisectionNode &GetNode(const NodeID nid) const;
     const BisectionEdge &GetEdge(const EdgeID eid) const;
 

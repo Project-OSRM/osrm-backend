@@ -18,7 +18,8 @@ HasSamePartitionID::HasSamePartitionID(const RecursiveBisectionState::BisectionI
 
 bool HasSamePartitionID::operator()(const EdgeID eid) const
 {
-    return recursive_bisection_state.GetBisectionID(bisection_graph.GetTarget(eid)) == bisection_id;
+    return recursive_bisection_state.GetBisectionID(bisection_graph.GetEdge(eid).target) ==
+           bisection_id;
 }
 
 GraphView::GraphView(const BisectionGraph &bisection_graph_,
@@ -34,7 +35,7 @@ GraphView::GraphView(const BisectionGraph &bisection_graph_,
         std::cout << "Node: " << *itr << std::endl;
         for (auto eitr = EdgeBegin(*itr); eitr != EdgeEnd(*itr); ++eitr)
         {
-            std::cout << "\t" << *eitr << " -> " << GetTarget(*eitr) << std::endl;
+            std::cout << "\t" << *eitr << " -> " << GetEdge(*eitr).target << std::endl;
         }
     }
 }
@@ -64,11 +65,6 @@ GraphView::EdgeIterator GraphView::EdgeEnd(const NodeID nid) const
     EdgeIDIterator last{bisection_graph.EndEdges(nid)};
 
     return boost::make_filter_iterator(predicate, last, last);
-}
-
-NodeID GraphView::GetTarget(const EdgeID eid) const
-{
-    return bisection_graph.GetTarget(eid);
 }
 
 const BisectionNode &GraphView::GetNode(const NodeID nid) const

@@ -75,8 +75,8 @@ std::vector<BisectionNode> computeNodes(const std::vector<util::Coordinate> &coo
     auto edge_itr = edges.begin();
     for (std::size_t node_id = 0; node_id < coordinates.size(); ++node_id)
     {
-        result.emplace_back(make_bisection_node(node_id,edge_itr));
-        edge_itr = advance_edge_itr(node_id,edge_itr);
+        result.emplace_back(make_bisection_node(node_id, edge_itr));
+        edge_itr = advance_edge_itr(node_id, edge_itr);
     }
 
     auto null_island = util::Coordinate(util::FloatLongitude{0.0}, util::FloatLatitude{0.0});
