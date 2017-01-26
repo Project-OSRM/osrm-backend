@@ -31,15 +31,22 @@ struct PartitionConfig
         }
 
         edge_based_graph_path = basepath + ".osrm.ebg";
+        compressed_node_based_graph_path = basepath + ".osrm.cnbg";
         partition_path = basepath + ".osrm.partition";
     }
 
     // might be changed to the node based graph at some point
     boost::filesystem::path base_path;
     boost::filesystem::path edge_based_graph_path;
+    boost::filesystem::path compressed_node_based_graph_path;
     boost::filesystem::path partition_path;
 
     unsigned requested_num_threads;
+
+    std::size_t maximum_cell_size;
+    double balance;
+    double boundary_factor;
+    std::size_t num_optimizing_cuts;
 };
 }
 }

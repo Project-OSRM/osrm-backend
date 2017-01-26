@@ -77,6 +77,7 @@ struct ExtractorConfig
         edge_based_node_weights_output_path = basepath + ".osrm.enw";
         profile_properties_output_path = basepath + ".osrm.properties";
         intersection_class_data_output_path = basepath + ".osrm.icd";
+        compressed_node_based_graph_output_path = basepath + ".osrm.cnbg";
     }
 
     boost::filesystem::path input_path;
@@ -108,6 +109,9 @@ struct ExtractorConfig
     std::string edge_segment_lookup_path;
 
     bool use_metadata;
+
+    bool dump_compressed_node_based_graph;
+    std::string compressed_node_based_graph_output_path;
 };
 }
 }

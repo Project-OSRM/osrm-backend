@@ -13,6 +13,7 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/graph_loader.hpp"
+#include "util/integer_range.hpp"
 #include "util/io.hpp"
 #include "util/log.hpp"
 #include "util/name_table.hpp"
@@ -32,6 +33,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/scope_exit.hpp>
 
 #include <osmium/io/any_input.hpp>
 
@@ -45,6 +47,7 @@
 #include <bitset>
 #include <chrono>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -502,6 +505,32 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                  config.turn_penalties_index_path,
                                  config.generate_edge_lookup);
 
+    // The osrm-partition tool requires the compressed node based graph with an embedding.
+    //
+    // The `Run` function above re-numbers non-reverse compressed node based graph edges
+    // to a continuous range so that the nodes in the edge based graph are continuous.
+    //
+    // Luckily node based node ids still coincide with the coordinate array.
+    // That's the reason we can only here write out the final compressed node based graph.
+
+    // Dumps to file asynchronously and makes sure we wait for its completion.
+    std::future<void> compressed_node_based_graph_writing;
+
+    BOOST_SCOPE_EXIT_ALL(&)
+    {
+        if (compressed_node_based_graph_writing.valid())
+            compressed_node_based_graph_writing.wait();
+    };
+
+    if (config.dump_compressed_node_based_graph)
+    {
+        compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
+            WriteCompressedNodeBasedGraph(config.compressed_node_based_graph_output_path,
+                                          *node_based_graph,
+                                          internal_to_external_node_map);
+        });
+    }
+
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);
     compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
 
@@ -692,6 +721,58 @@ void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
 
     TIMER_STOP(turn_lane_timer);
     util::Log() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
+}
+
+void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
+                                              const util::NodeBasedDynamicGraph &graph,
+                                              const std::vector<QueryNode> &externals)
+{
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+
+    storage::io::FileWriter writer{path, fingerprint};
+
+    // Writes:  | Fingerprint | #e | #n | edges | coordinates |
+    // - uint64: number of edges (from, to) pairs
+    // - uint64: number of nodes and therefore also coordinates
+    // - (uint32_t, uint32_t): num_edges * edges
+    // - (int32_t, int32_t: num_nodes * coordinates (lon, lat)
+
+    const auto num_edges = graph.GetNumberOfEdges();
+    const auto num_nodes = graph.GetNumberOfNodes();
+
+    BOOST_ASSERT_MSG(num_nodes == externals.size(), "graph and embedding out of sync");
+
+    const auto die = [] {
+        throw util::exception("Writing the compressed node based graph to disk failed");
+    };
+
+    if (!writer.WriteElementCount64(num_edges))
+        die();
+
+    if (!writer.WriteElementCount64(num_nodes))
+        die();
+
+    // For all nodes iterate over its edges and dump (from, to) pairs
+    for (const NodeID from_node : util::irange(0u, num_nodes))
+    {
+        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
+        {
+            const auto to_node = graph.GetTarget(edge);
+
+            if (!writer.WriteOne(from_node))
+                die();
+            if (!writer.WriteOne(to_node))
+                die();
+        }
+    }
+
+    for (const auto &qnode : externals)
+    {
+        if (!writer.WriteOne(qnode.lon))
+            die();
+        if (!writer.WriteOne(qnode.lat))
+            die();
+    }
 }
 
 } // namespace extractor
