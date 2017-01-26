@@ -1,5 +1,5 @@
-#include "partition/partitioner.hpp"
 #include "partition/partition_config.hpp"
+#include "partition/partitioner.hpp"
 
 #include "util/log.hpp"
 #include "util/version.hpp"

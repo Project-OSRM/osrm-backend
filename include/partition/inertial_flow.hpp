@@ -1,6 +1,7 @@
 #ifndef OSRM_PARTITION_INERTIAL_FLOW_HPP_
 #define OSRM_PARTITION_INERTIAL_FLOW_HPP_
 
+#include "partition/dinic_max_flow.hpp"
 #include "partition/graph_view.hpp"
 
 #include <unordered_set>
@@ -16,7 +17,9 @@ class InertialFlow
   public:
     InertialFlow(const GraphView &view);
 
-    std::vector<bool> ComputePartition(const double balance, const double source_sink_rate);
+    DinicMaxFlow::MinCut ComputePartition(const std::size_t num_slopes,
+                                          const double balance,
+                                          const double source_sink_rate);
 
   private:
     // Spatially ordered sources and sink ids.
@@ -32,7 +35,7 @@ class InertialFlow
     SpatialOrder MakeSpatialOrder(double ratio, double slope) const;
 
     // Makes n cuts with different spatial orders and returns the best.
-    MinCut bestMinCut(std::size_t n, double ratio) const;
+    DinicMaxFlow::MinCut BestMinCut(std::size_t n, double ratio) const;
 
     // The subgraph to partition into two parts.
     const GraphView &view;

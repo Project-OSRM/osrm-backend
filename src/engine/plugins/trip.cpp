@@ -7,7 +7,6 @@
 #include "engine/trip/trip_nearest_neighbour.hpp"
 #include "util/dist_table_wrapper.hpp" // to access the dist table more easily
 #include "util/json_container.hpp"
-#include "util/matrix_graph_wrapper.hpp" // wrapper to use tarjan scc on dist table
 
 #include <boost/assert.hpp>
 
