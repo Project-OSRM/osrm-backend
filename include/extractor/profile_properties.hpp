@@ -14,10 +14,7 @@ const constexpr auto DEFAULT_MAX_SPEED = 180 / 3.6; // 180kmph -> m/s
 
 struct ProfileProperties
 {
-    enum
-    {
-        MAX_WEIGHT_NAME_LENGTH = 255
-    };
+    static constexpr int MAX_WEIGHT_NAME_LENGTH = 255;
 
     ProfileProperties()
         : traffic_signal_penalty(0), u_turn_penalty(0),

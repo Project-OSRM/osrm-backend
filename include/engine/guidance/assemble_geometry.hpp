@@ -78,7 +78,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         geometry.annotations.emplace_back(
             LegGeometry::Annotation{current_distance,
                                     path_point.duration_until_turn / 10.,
-                                    path_point.weight_until_turn / 10.,
+                                    path_point.weight_until_turn / facade.GetWeightMultiplier(),
                                     path_point.datasource_id});
         geometry.locations.push_back(std::move(coordinate));
         geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(path_point.turn_via_node));
@@ -92,13 +92,15 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     const std::vector<DatasourceID> forward_datasources =
         facade.GetUncompressedForwardDatasources(target_node.packed_geometry_id);
 
-    // FIXME this is wrong. We need to check for traversal direction here
-    // and for the case of a local path (target and source on the same edge)
-    geometry.annotations.emplace_back(
-        LegGeometry::Annotation{current_distance,
-                                target_node.forward_duration / 10.,
-                                target_node.forward_weight / 10.,
-                                forward_datasources[target_node.fwd_segment_position]});
+    // FIXME if source and target phantoms are on the same segment then duration and weight
+    // will be from one projected point till end of segment
+    // testbot/weight.feature:Start and target on the same and adjacent edge
+    geometry.annotations.emplace_back(LegGeometry::Annotation{
+        current_distance,
+        (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
+        (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
+            facade.GetWeightMultiplier(),
+        forward_datasources[target_node.fwd_segment_position]});
 
     geometry.segment_offsets.push_back(geometry.locations.size());
     geometry.locations.push_back(target_node.location);

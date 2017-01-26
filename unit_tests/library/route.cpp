@@ -50,12 +50,14 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
           json::Array{{json::Object{
               {{"distance", 0.},
                {"duration", 0.},
+               {"weight", 0.},
                {"weight_name", "duration"},
                {"geometry", "yw_jGupkl@??"},
                {"legs",
                 json::Array{{json::Object{
                     {{"distance", 0.},
                      {"duration", 0.},
+                     {"weight", 0.},
                      {"summary", "Boulevard du Larvotto"},
                      {"steps",
                       json::Array{{{json::Object{{{"duration", 0.},

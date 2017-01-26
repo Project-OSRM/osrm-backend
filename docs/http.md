@@ -56,7 +56,7 @@ Example: 2nd location use the default value for `option`:
 ```curl
 # Query on Berlin with three coordinates:
 curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219?overview=false'
- 
+
 # Using polyline:
 curl 'http://router.project-osrm.org/route/v1/driving/polyline(ofp_Ik_vpAilAyu@te@g`E)?overview=false'
 ```
@@ -401,13 +401,15 @@ Represents a route through (potentially multiple) waypoints.
 - `distance`: The distance traveled by the route, in `float` meters.
 - `duration`: The estimated travel time, in `float` number of seconds.
 - `geometry`: The whole geometry of the route value depending on `overview` parameter, format depending on the `geometries` parameter. See `RouteStep`'s `geometry` field for a parameter documentation.
-  
+- `weight`: The calculated weight of the route.
+- `weight_name`: The name of the weight profile used during extraction phase.
+
 | overview   | Description                 |
 |------------|-----------------------------|
 | simplified | Geometry is simplified according to the highest zoom level it can still be displayed on full. |
 | full       | Geometry is not simplified. |
 | false      | Geometry is not added.      |
-  
+
 - `legs`: The legs between the given waypoints, an array of `RouteLeg` objects.
 
 #### Example
@@ -418,6 +420,8 @@ Three input coordinates, `geometry=geojson`, `steps=false`:
 {
   "distance": 90.0,
   "duration": 300.0,
+  "weight": 300.0,
+  "weight_name": "duration",
   "geometry": {"type": "LineString", "coordinates": [[120.0, 10.0], [120.1, 10.0], [120.2, 10.0], [120.3, 10.0]]},
   "legs": [
     {
@@ -442,15 +446,16 @@ Represents a route between two waypoints.
 
 - `distance`: The distance traveled by this route leg, in `float` meters.
 - `duration`: The estimated travel time, in `float` number of seconds.
+- `weight`: The calculated weight of the route leg.
 - `summary`: Summary of the route taken as `string`. Depends on the `steps` parameter:
-   
+
 | steps        |                                                                       |
 |--------------|-----------------------------------------------------------------------|
 | true         | Names of the two major roads used. Can be empty if route is too short.|
 | false        | empty `string`                                                        |
 
 - `steps`: Depends on the `steps` parameter.
-   
+
 | steps        |                                                                       |
 |--------------|-----------------------------------------------------------------------|
 | true         | array of `RouteStep` objects describing the turn-by-turn instructions |
@@ -460,8 +465,8 @@ Represents a route between two waypoints.
 
 | annotations  |                                                                       |
 |--------------|-----------------------------------------------------------------------|
-| true         | An `Annotation` object containing node ids, durations and distances   |
-| false        | `undefined`                                                           |
+| true         | An `Annotation` object containing node ids, durations distances and   |
+| false        | weights `undefined`                                                   |
 
 #### Example
 
@@ -471,6 +476,7 @@ With `steps=false` and `annotations=true`:
 {
   "distance": 30.0,
   "duration": 100.0,
+  "weight": 100.0,
   "steps": [],
   "annotation": {
     "distance": [5,5,10,5,5],
@@ -491,6 +497,7 @@ Annotation of the whole route leg with fine-grained information about each segme
 - `duration`: The duration between each pair of coordinates, in seconds
 - `datasources`: The index of the datasource for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract`
 - `nodes`: The OSM node ID for each coordinate along the route, excluding the first/last user-supplied coordinates
+- `weight`: The weights between each pair of coordinates
 
 #### Example
 
@@ -499,7 +506,8 @@ Annotation of the whole route leg with fine-grained information about each segme
   "distance": [5,5,10,5,5],
   "duration": [15,15,40,15,15],
   "datasources": [1,0,0,0,1],
-  "nodes": [49772551,49772552,49786799,49786800,49786801,49786802]
+  "nodes": [49772551,49772552,49786799,49786800,49786801,49786802],
+  "weight": [15,15,40,15,15]
 }
 ```
 
@@ -515,6 +523,7 @@ step.
 - `distance`: The distance of travel from the maneuver to the subsequent step, in `float` meters.
 - `duration`: The estimated travel time, in `float` number of seconds.
 - `geometry`: The unsimplified geometry of the route segment, depending on the `geometries` parameter.
+- `weight`: The calculated weight of the step.
 
 | `geometry` |                                                                    |
 |------------|--------------------------------------------------------------------|
@@ -537,6 +546,7 @@ step.
    "geometry" : "{lu_IypwpAVrAvAdI",
    "mode" : "driving",
    "duration" : 15.6,
+   "weight" : 15.6,
    "intersections" : [
       {  "bearings" : [ 10, 92, 184, 270 ],
          "lanes" : [
@@ -583,7 +593,7 @@ step.
   direction of travel immediately after the maneuver.  Range 0-359.
 - `type` A string indicating the type of maneuver. **new identifiers might be introduced without API change**
    Types  unknown to the client should be handled like the `turn` type, the existance of correct `modifier` values is guranteed.
-  
+
 | `type`           | Description                                                  |
 |------------------|--------------------------------------------------------------|
 | `turn`           | a basic turn into direction of the `modifier`                |
@@ -607,7 +617,7 @@ step.
   between all instructions. They only offer a fallback in case nothing else is to report.
 
 - `modifier` An optional `string` indicating the direction change of the maneuver.
-  
+
 | `modifier`        | Description                               |
 |-------------------|-------------------------------------------|
 | `uturn`           | indicates  reversal of direction          |
@@ -618,18 +628,18 @@ step.
 | `slight left`     | a slight turn to the left                 |
 | `left`            | a normal turn to the left                 |
 | `sharp left`      | a sharp turn to the left                  |
-  
+
   The list of turns without a modifier is limited to: `depart/arrive`. If the source/target location is close enough to the `depart/arrive` location, no modifier will be given.
-  
+
   The meaning depends on the `type` field.
-  
+
 | `type`                 | Description                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------|
 | `turn`                 | `modifier` indicates the change in direction accomplished through the turn                                                |
 | `depart`/`arrive`      | `modifier` indicates the position of departure point and arrival point in relation to the current direction of travel      |
-  
+
 - `exit` An optional `integer` indicating number of the exit to take. The field exists for the following `type` field:
-  
+
 | `type`                 | Description                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------|
 | `roundabout`/`rotary`         | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
@@ -645,7 +655,7 @@ A `Lane` represents a turn lane at the corresponding turn location.
 **Properties**
 
 - `indications`: a indication (e.g. marking on the road) specifying the turn lane. A road can have multiple indications (e.g. an arrow pointing straight and left). The indications are given in an array, each containing one of the following types. Further indications might be added on without an API version change.
-  
+
 | `value`                | Description                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------|
 | `none`                 | No dedicated indication is shown.                                                                                         |
@@ -657,7 +667,7 @@ A `Lane` represents a turn lane at the corresponding turn location.
 | `slight left`          | An indication indicating a slight left turn (i.e. slightly bend arrow).                                                   |
 | `left`                 | An indication indicating a left turn (i.e. bend arrow).                                                                   |
 | `sharp left`           | An indication indicating a sharp left turn (i.e. strongly bend arrow).                                                    |
-  
+
 - `valid`: a boolean flag indicating whether the lane is a valid choice in the current maneuver
 
 #### Example

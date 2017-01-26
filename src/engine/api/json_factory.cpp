@@ -241,8 +241,8 @@ util::json::Object makeRouteStep(guidance::RouteStep step, util::json::Value geo
 {
     util::json::Object route_step;
     route_step.values["distance"] = std::round(step.distance * 10) / 10.;
-    route_step.values["duration"] = std::round(step.duration * 10) / 10.;
-    route_step.values["weight"] = step.weight; // We should round to weight_precision here
+    route_step.values["duration"] = step.duration;
+    route_step.values["weight"] = step.weight;
     route_step.values["name"] = std::move(step.name);
     if (!step.ref.empty())
         route_step.values["ref"] = std::move(step.ref);
@@ -280,9 +280,10 @@ util::json::Object makeRoute(const guidance::Route &route,
                              const char *weight_name)
 {
     util::json::Object json_route;
+    json_route.values["distance"] = route.distance;
+    json_route.values["duration"] = route.duration;
+    json_route.values["weight"] = route.weight;
     json_route.values["weight_name"] = weight_name;
-    json_route.values["distance"] = std::round(route.distance * 10) / 10.;
-    json_route.values["duration"] = std::round(route.duration * 10) / 10.;
     json_route.values["legs"] = std::move(legs);
     if (geometry)
     {
@@ -309,8 +310,9 @@ util::json::Object makeWaypoint(const util::Coordinate location, std::string nam
 util::json::Object makeRouteLeg(guidance::RouteLeg leg, util::json::Array steps)
 {
     util::json::Object route_leg;
-    route_leg.values["distance"] = std::round(leg.distance * 10) / 10.;
-    route_leg.values["duration"] = std::round(leg.duration * 10) / 10.;
+    route_leg.values["distance"] = leg.distance;
+    route_leg.values["duration"] = leg.duration;
+    route_leg.values["weight"] = leg.weight;
     route_leg.values["summary"] = std::move(leg.summary);
     route_leg.values["steps"] = std::move(steps);
     return route_leg;

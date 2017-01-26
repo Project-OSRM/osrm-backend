@@ -382,9 +382,6 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                       "duration",
                                                       &InternalExtractorEdge::duration_data);
 
-    // context.state.new_usertype<InternalExtractorEdge::WeightData>(
-    //     "WeightData", "weight", &InternalExtractorEdge::WeightData::weight_data);
-
     context.state.new_usertype<ExternalMemoryNode>("EdgeTarget",
                                                    "lon",
                                                    &lonToDouble<ExternalMemoryNode>,
