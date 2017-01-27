@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -31,24 +32,30 @@ struct NodeArrayEntry
     EdgeIterator first_edge;
 };
 
+template <typename EdgeDataT> struct EdgeArrayEntry;
+
 template <typename EdgeDataT> struct EdgeArrayEntry
 {
     NodeID target;
     EdgeDataT data;
 };
 
-template <typename EdgeDataT> class SortableEdgeWithData
+template <> struct EdgeArrayEntry<void>
 {
-  public:
+    NodeID target;
+};
+
+template <typename EdgeDataT> struct SortableEdgeWithData;
+
+template <> struct SortableEdgeWithData<void>
+{
     NodeIterator source;
     NodeIterator target;
-    EdgeDataT data;
 
-    template <typename... Ts>
-    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
-        : source(source), target(target), data(std::forward<Ts>(data)...)
+    SortableEdgeWithData(NodeIterator source, NodeIterator target) : source(source), target(target)
     {
     }
+
     bool operator<(const SortableEdgeWithData &right) const
     {
         if (source != right.source)
@@ -59,19 +66,31 @@ template <typename EdgeDataT> class SortableEdgeWithData
     }
 };
 
+template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData<void>
+{
+    using Base = SortableEdgeWithData<void>;
+
+    EdgeDataT data;
+
+    template <typename... Ts>
+    SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
+        : Base{source, target}, data{std::forward<Ts>(data)...}
+    {
+    }
+};
+
 } // namespace static_graph_details
 
 template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class FlexibleStaticGraph
 {
     static_assert(traits::HasFirstEdgeMember<NodeT>::value,
                   "Model for compatible Node type requires .first_edge member attribute");
-    static_assert(traits::HasDataAndTargetMember<EdgeT>::value,
-                  "Model for compatible Edge type requires .data and .target member attribute");
+    static_assert(traits::HasTargetMember<EdgeT>(),
+                  "Model for compatible Node type requires .target member attribute");
 
   public:
     using NodeIterator = static_graph_details::NodeIterator;
     using EdgeIterator = static_graph_details::EdgeIterator;
-    using EdgeData = decltype(EdgeT::data);
     using EdgeRange = range<EdgeIterator>;
     using NodeArrayEntry = NodeT;
     using EdgeArrayEntry = EdgeT;
@@ -109,7 +128,7 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
             for (const auto i : irange(node_array[node].first_edge, e))
             {
                 edge_array[i].target = graph[edge].target;
-                edge_array[i].data = graph[edge].data;
+                CopyDataIfAvailable(edge_array[i], graph[edge], traits::HasDataMember<EdgeT>{});
                 edge++;
             }
         }
@@ -179,6 +198,9 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
     EdgeIterator
     FindSmallestEdge(const NodeIterator from, const NodeIterator to, FilterFunction &&filter) const
     {
+        static_assert(traits::HasDataMember<EdgeT>::value,
+                      "Filtering on .data not possible without .data member attribute");
+
         EdgeIterator smallest_edge = SPECIAL_EDGEID;
         EdgeWeight smallest_weight = INVALID_EDGE_WEIGHT;
         for (auto edge : GetAdjacentEdgeRange(from))
@@ -220,6 +242,20 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
     const EdgeArrayEntry &GetEdge(const EdgeID eid) const { return edge_array[eid]; }
 
   private:
+    template <typename OtherEdge>
+    void CopyDataIfAvailable(EdgeT &into, const OtherEdge &from, std::true_type)
+    {
+        into.data = from.data;
+    }
+
+    template <typename OtherEdge>
+    void CopyDataIfAvailable(EdgeT &into, const OtherEdge &from, std::false_type)
+    {
+        // Graph has no .data member, never copy even if `from` has a .data member.
+        (void)into;
+        (void)from;
+    }
+
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
