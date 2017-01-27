@@ -28,21 +28,8 @@ namespace osrm
 namespace tools
 {
 
-struct TarjanEdgeData
-{
-    TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
-
-    TarjanEdgeData(std::uint32_t distance, std::uint32_t name_id)
-        : distance(distance), name_id(name_id)
-    {
-    }
-
-    std::uint32_t distance;
-    std::uint32_t name_id;
-};
-
-using TarjanGraph = util::StaticGraph<TarjanEdgeData>;
-using TarjanEdge = util::static_graph_details::SortableEdgeWithData<TarjanEdgeData>;
+using TarjanGraph = util::StaticGraph<void>;
+using TarjanEdge = util::static_graph_details::SortableEdgeWithData<void>;
 
 std::size_t loadGraph(const std::string &path,
                       std::vector<extractor::QueryNode> &coordinate_list,
@@ -68,18 +55,12 @@ std::size_t loadGraph(const std::string &path,
 
         if (input_edge.forward)
         {
-            graph_edge_list.emplace_back(input_edge.source,
-                                         input_edge.target,
-                                         (std::max)(input_edge.weight, 1),
-                                         input_edge.name_id);
+            graph_edge_list.emplace_back(input_edge.source, input_edge.target);
         }
 
         if (input_edge.backward)
         {
-            graph_edge_list.emplace_back(input_edge.target,
-                                         input_edge.source,
-                                         (std::max)(input_edge.weight, 1),
-                                         input_edge.name_id);
+            graph_edge_list.emplace_back(input_edge.target, input_edge.source);
         }
     }
 
