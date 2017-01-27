@@ -373,7 +373,7 @@ Vector tiles contain two layers:
 
 `speeds` layer:
 
-| Property        | Type      | Description                              |
+| Property     | Type      | Description                              |
 | ------------ | --------- | ---------------------------------------- |
 | `speed`      | `integer` | the speed on that road segment, in km/h  |
 | `is_small`   | `boolean` | whether this segment belongs to a small (< 1000 node) [strongly connected component](https://en.wikipedia.org/wiki/Strongly_connected_component) |
@@ -383,7 +383,7 @@ Vector tiles contain two layers:
 
 `turns` layer:
 
-| Property        | Type      | Description                              |
+| Property     | Type      | Description                              |
 | ------------ | --------- | ---------------------------------------- |
 | `bearing_in` | `integer` | the absolute bearing that approaches the intersection.  -180 to +180, 0 = North, 90 = East |
 | `turn_angle` | `integer` | the angle of the turn, relative to the `bearing_in`.  -180 to +180, 0 = straight ahead, 90 = 90-degrees to the right |
