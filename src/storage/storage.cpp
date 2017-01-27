@@ -8,7 +8,7 @@
 #include "extractor/travel_mode.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
-#include "storage/shared_barriers.hpp"
+#include "storage/shared_barrier.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
@@ -29,9 +29,11 @@
 #include <sys/mman.h>
 #endif
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include <cstdint>
 
@@ -88,19 +90,10 @@ int Storage::Run(int max_wait)
 
     // Get the next region ID and time stamp without locking shared barriers.
     // Because of datastore_lock the only write operation can occur sequentially later.
-    auto next_region = REGION_1;
-    unsigned next_timestamp = 1;
-    auto in_use_region = REGION_NONE;
-    unsigned in_use_timestamp = 0;
-    if (SharedMemory::RegionExists(CURRENT_REGION))
-    {
-        auto shared_memory = makeSharedMemory(CURRENT_REGION);
-        auto current_region = static_cast<SharedDataTimestamp *>(shared_memory->Ptr());
-        in_use_region = current_region->region;
-        in_use_timestamp = current_region->timestamp;
-        next_region = in_use_region == REGION_1 ? REGION_2 : REGION_1;
-        next_timestamp = in_use_timestamp + 1;
-    }
+    SharedBarrier barrier(boost::interprocess::open_or_create);
+    auto in_use_region = barrier.GetRegion();
+    auto next_region =
+        in_use_region == REGION_2 || in_use_region == REGION_NONE ? REGION_1 : REGION_2;
 
     // ensure that the shared memory region we want to write to is really removed
     // this is only needef for failure recovery because we actually wait for all clients
@@ -114,8 +107,7 @@ int Storage::Run(int max_wait)
         util::UnbufferedLog() << "ok.";
     }
 
-    util::Log() << "Loading data into " << regionToString(next_region) << " timestamp "
-                << next_timestamp;
+    util::Log() << "Loading data into " << regionToString(next_region);
 
     // Populate a memory layout into stack memory
     DataLayout layout;
@@ -131,28 +123,37 @@ int Storage::Run(int max_wait)
     memcpy(shared_memory_ptr, &layout, sizeof(layout));
     PopulateData(layout, shared_memory_ptr + sizeof(layout));
 
-    SharedBarriers barriers;
-    { // Lock for write access shared region mutex that protects CURRENT_REGION
-        RetryLock current_region_lock = barriers.getLockWithRetry(max_wait);
+    { // Lock for write access shared region mutex
+        boost::interprocess::scoped_lock<SharedBarrier::mutex_type> lock(
+            barrier.GetMutex(), boost::interprocess::defer_lock);
 
-        if (!current_region_lock.TryLock())
+        if (max_wait >= 0)
         {
-            util::Log(logWARNING) << "Could not aquire current region lock after " << max_wait
-                                  << " seconds. Claiming the lock by force.";
-            current_region_lock.ForceLock();
+            if (!lock.timed_lock(boost::posix_time::microsec_clock::universal_time() +
+                                 boost::posix_time::seconds(max_wait)))
+            {
+                util::Log(logWARNING)
+                    << "Could not aquire current region lock after " << max_wait
+                    << " seconds. Removing locked block and creating a new one. All currently "
+                       "attached processes will not receive notifications and must be restarted";
+                SharedBarrier::Remove();
+                in_use_region = REGION_NONE;
+                barrier = SharedBarrier(boost::interprocess::open_or_create);
+            }
+        }
+        else
+        {
+            lock.lock();
         }
 
-        // Get write access to CURRENT_REGION
-        auto shared_memory = makeSharedMemory(CURRENT_REGION, sizeof(SharedDataTimestamp));
-        auto current_region = static_cast<SharedDataTimestamp *>(shared_memory->Ptr());
-
         // Update the current region ID and timestamp
-        current_region->region = next_region;
-        current_region->timestamp = next_timestamp;
+        barrier.SetRegion(next_region);
     }
 
-    util::Log() << "All data loaded. Notify all client... ";
-    barriers.region_condition.notify_all();
+    util::Log() << "All data loaded. Notify all client about new data in "
+                << regionToString(barrier.GetRegion()) << " with timestamp "
+                << barrier.GetTimestamp();
+    barrier.NotifyAll();
 
     // SHMCTL(2): Mark the segment to be destroyed. The segment will actually be destroyed
     // only after the last process detaches it.
