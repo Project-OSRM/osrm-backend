@@ -67,7 +67,7 @@ struct RouteParameters : public BaseParameters
         Full,
         False
     };
-    enum class AnnotationsType
+    enum class AnnotationsType : int
     {
         None = 0,
         Duration = 1 << 1,
@@ -86,8 +86,8 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations{false}, annotations_type{AnnotationsType::None}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}
+          annotations{false}, annotations_type{AnnotationsType::None}, geometries{geometries_},
+          overview{overview_}, continue_straight{continue_straight_}
     // Once we perfectly-forward `args` (see #2990) this constructor can delegate to the one below.
     {
     }
@@ -102,8 +102,9 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations{annotations_}, annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}
+          annotations{annotations_},
+          annotations_type{annotations_ ? AnnotationsType::All : AnnotationsType::None},
+          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_}
     {
     }
 
@@ -117,8 +118,8 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations_type{annotations_}, annotations{true}, geometries{geometries_}, overview{overview_},
-          continue_straight{continue_straight_}
+          annotations_type{annotations_}, annotations{true}, geometries{geometries_},
+          overview{overview_}, continue_straight{continue_straight_}
     {
     }
 
@@ -132,6 +133,15 @@ struct RouteParameters : public BaseParameters
 
     bool IsValid() const { return coordinates.size() >= 2 && BaseParameters::IsValid(); }
 };
+
+inline RouteParameters::AnnotationsType operator|(RouteParameters::AnnotationsType lhs,
+                                                  RouteParameters::AnnotationsType rhs)
+{
+    return (RouteParameters::AnnotationsType)(
+        static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(lhs) |
+        static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(rhs));
+}
+
 }
 }
 }

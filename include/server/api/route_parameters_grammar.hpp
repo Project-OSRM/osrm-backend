@@ -26,15 +26,6 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 {
     using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
 
-    const auto add_annotation = [](engine::api::RouteParameters &route_parameters,
-                                   engine::api::RouteParameters::AnnotationsType &route_param) {
-        // bitflag each parameter
-        if (route_param)
-        {
-            route_parameters.annotations_ = route_parameters.annotations_ | route_param;
-        }
-    };
-
     RouteParametersGrammar() : RouteParametersGrammar(root_rule)
     {
         route_rule =
@@ -51,6 +42,11 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
 
     RouteParametersGrammar(qi::rule<Iterator, Signature> &root_rule_) : BaseGrammar(root_rule_)
     {
+        const auto add_annotation = [](engine::api::RouteParameters &route_parameters,
+                                       engine::api::RouteParameters::AnnotationsType &route_param) {
+            return route_parameters.annotations_type = route_parameters.annotations_type | route_param;
+        };
+
         geometries_type.add("geojson", engine::api::RouteParameters::GeometriesType::GeoJSON)(
             "polyline", engine::api::RouteParameters::GeometriesType::Polyline)(
             "polyline6", engine::api::RouteParameters::GeometriesType::Polyline6);
