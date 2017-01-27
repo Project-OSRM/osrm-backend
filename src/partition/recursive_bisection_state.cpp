@@ -21,6 +21,7 @@ RecursiveBisectionState::RecursiveBisectionState(const BisectionGraph &bisection
 
 RecursiveBisectionState::~RecursiveBisectionState()
 {
+    /*
     std::cout << "Internal Result\n";
     std::cout << "IDArray:";
     for (auto id : id_array)
@@ -32,6 +33,7 @@ RecursiveBisectionState::~RecursiveBisectionState()
         std::cout << " " << (std::bitset<4>(id));
 
     std::cout << std::endl;
+    */
 }
 
 const RecursiveBisectionState::IDIterator RecursiveBisectionState::Begin() const

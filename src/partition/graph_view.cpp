@@ -28,7 +28,7 @@ GraphView::GraphView(const BisectionGraph &bisection_graph_,
                      const RecursiveBisectionState::IDIterator end_)
     : bisection_graph(bisection_graph_), bisection_state(bisection_state_), begin(begin_), end(end_)
 {
-
+/*
     std::cout << "Graph\n";
     for (auto itr = begin; itr != end; ++itr)
     {
@@ -38,6 +38,7 @@ GraphView::GraphView(const BisectionGraph &bisection_graph_,
             std::cout << "\t" << *eitr << " -> " << GetEdge(*eitr).target << std::endl;
         }
     }
+*/
 }
 
 RecursiveBisectionState::IDIterator GraphView::Begin() const { return begin; }

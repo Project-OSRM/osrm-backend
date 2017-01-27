@@ -197,7 +197,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
 
             // check if the edge is valid
             const auto has_capacity = flow.find(std::make_pair(path.back(), target)) == flow.end();
-            const auto descends_level_graph = levels.find(target)->second == path.size();
+            const auto descends_level_graph = levels.count(target) != 0 && levels.find(target)->second == path.size();
 
             if (has_capacity && descends_level_graph)
             {
