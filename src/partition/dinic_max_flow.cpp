@@ -20,6 +20,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
     FlowEdges flow;
     do
     {
+        std::cout << "." << std::flush;
         auto levels = ComputeLevelGraph(view, source_nodes, flow);
 
         // check if the sink can be reached from the source
@@ -151,15 +152,20 @@ void DinicMaxFlow::BlockingFlow(FlowEdges &flow,
     };
 
     // find and augment the blocking flow
-    auto source_itr = source_nodes.begin();
-    while (source_itr != source_nodes.end())
+    auto sink_itr = sink_nodes.begin();
+    while (sink_itr != sink_nodes.end())
     {
-        auto path = GetAugmentingPath(levels, *source_itr, view, flow, sink_nodes);
+        if (levels.count(*sink_itr))
+        {
+            auto path = GetAugmentingPath(levels, *sink_itr, view, flow, source_nodes);
 
-        if (!path.empty())
-            augment_flow(path);
+            if (!path.empty())
+                augment_flow(path);
+            else
+                ++sink_itr;
+        }
         else
-            ++source_itr;
+            ++sink_itr;
     }
 }
 
@@ -167,7 +173,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
                                                     const NodeID node_id,
                                                     const GraphView &view,
                                                     const FlowEdges &flow,
-                                                    const SourceSinkNodes &sink_nodes) const
+                                                    const SourceSinkNodes &source_nodes) const
 {
     std::vector<NodeID> path;
     BOOST_ASSERT(sink_nodes.find(node_id) == sink_nodes.end());
@@ -196,8 +202,10 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
             dfs_stack.top().edge_iterator++;
 
             // check if the edge is valid
-            const auto has_capacity = flow.find(std::make_pair(path.back(), target)) == flow.end();
-            const auto descends_level_graph = levels.count(target) != 0 && levels.find(target)->second == path.size();
+            const auto has_capacity = flow.find(std::make_pair(target, path.back())) == flow.end();
+            const auto descends_level_graph =
+                levels.count(target) != 0 &&
+                levels.find(target)->second + 1 == levels.find(path.back())->second;
 
             if (has_capacity && descends_level_graph)
             {
@@ -205,8 +213,11 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
                 path.push_back(target);
 
                 // termination
-                if (sink_nodes.find(target) != sink_nodes.end())
+                if (source_nodes.find(target) != source_nodes.end())
+                {
+                    std::reverse(path.begin(), path.end());
                     return path;
+                }
 
                 // start next iteration
                 dfs_stack.push({view.EdgeBegin(target), view.EdgeEnd(target)});
