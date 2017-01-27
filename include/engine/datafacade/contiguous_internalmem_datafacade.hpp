@@ -26,9 +26,6 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/interprocess/sync/named_sharable_mutex.hpp>
-#include <boost/interprocess/sync/sharable_lock.hpp>
-#include <boost/thread/tss.hpp>
 
 #include <algorithm>
 #include <cstddef>

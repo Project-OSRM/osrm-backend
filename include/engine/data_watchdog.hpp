@@ -4,7 +4,7 @@
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/datafacade/shared_memory_allocator.hpp"
 
-#include "storage/shared_barriers.hpp"
+#include "storage/shared_barrier.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 
@@ -27,19 +27,16 @@ namespace engine
 class DataWatchdog
 {
   public:
-    DataWatchdog() : active(true), timestamp(0)
+    DataWatchdog() : barrier(boost::interprocess::open_only), active(true), timestamp(0)
     {
         // create the initial facade before launching the watchdog thread
         {
-            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> current_region_lock(
-                barrier.region_mutex);
-
-            auto shared_memory = makeSharedMemory(storage::CURRENT_REGION);
-            auto current = static_cast<storage::SharedDataTimestamp *>(shared_memory->Ptr());
+            boost::interprocess::scoped_lock<storage::SharedBarrier::mutex_type>
+                current_region_lock(barrier.GetMutex());
 
             facade = std::make_shared<datafacade::ContiguousInternalMemoryDataFacade>(
-                std::make_unique<datafacade::SharedMemoryAllocator>(current->region));
-            timestamp = current->timestamp;
+                std::make_unique<datafacade::SharedMemoryAllocator>(barrier.GetRegion()));
+            timestamp = barrier.GetTimestamp();
         }
 
         watcher = std::thread(&DataWatchdog::Run, this);
@@ -48,14 +45,8 @@ class DataWatchdog
     ~DataWatchdog()
     {
         active = false;
-        barrier.region_condition.notify_all();
+        barrier.NotifyAll();
         watcher.join();
-    }
-
-    // Tries to connect to the shared memory containing the regions table
-    static bool TryConnect()
-    {
-        return storage::SharedMemory::RegionExists(storage::CURRENT_REGION);
     }
 
     auto GetDataFacade() const { return facade; }
@@ -63,34 +54,31 @@ class DataWatchdog
   private:
     void Run()
     {
-        auto shared_memory = makeSharedMemory(storage::CURRENT_REGION);
-        auto current = static_cast<storage::SharedDataTimestamp *>(shared_memory->Ptr());
-
         while (active)
         {
-            boost::interprocess::scoped_lock<boost::interprocess::named_mutex> current_region_lock(
-                barrier.region_mutex);
+            boost::interprocess::scoped_lock<storage::SharedBarrier::mutex_type>
+                current_region_lock(barrier.GetMutex());
 
-            while (active && timestamp == current->timestamp)
+            while (active && timestamp == barrier.GetTimestamp())
             {
-                barrier.region_condition.wait(current_region_lock);
+                barrier.Wait(current_region_lock);
             }
 
-            if (timestamp != current->timestamp)
+            if (timestamp != barrier.GetTimestamp())
             {
                 facade = std::make_shared<datafacade::ContiguousInternalMemoryDataFacade>(
-                    std::make_unique<datafacade::SharedMemoryAllocator>(current->region));
-                timestamp = current->timestamp;
+                    std::make_unique<datafacade::SharedMemoryAllocator>(barrier.GetRegion()));
+                timestamp = barrier.GetTimestamp();
                 util::Log() << "updated facade to region "
-                            << storage::regionToString(current->region) << " with timestamp "
-                            << current->timestamp;
+                            << storage::regionToString(barrier.GetRegion()) << " with timestamp "
+                            << timestamp;
             }
         }
 
         util::Log() << "DataWatchdog thread stopped";
     }
 
-    storage::SharedBarriers barrier;
+    storage::SharedBarrier barrier;
     std::thread watcher;
     bool active;
     unsigned timestamp;

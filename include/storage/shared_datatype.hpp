@@ -204,10 +204,9 @@ struct DataLayout
 
 enum SharedDataType
 {
-    CURRENT_REGION,
+    REGION_NONE,
     REGION_1,
-    REGION_2,
-    REGION_NONE
+    REGION_2
 };
 
 struct SharedDataTimestamp
@@ -220,8 +219,6 @@ inline std::string regionToString(const SharedDataType region)
 {
     switch (region)
     {
-    case CURRENT_REGION:
-        return "CURRENT_REGION";
     case REGION_1:
         return "REGION_1";
     case REGION_2:

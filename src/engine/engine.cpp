@@ -6,13 +6,9 @@
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/datafacade/process_memory_allocator.hpp"
 
-#include "storage/shared_barriers.hpp"
 #include "util/log.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/interprocess/sync/named_condition.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/interprocess/sync/sharable_lock.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -63,14 +59,6 @@ Engine::Engine(const EngineConfig &config)
 {
     if (config.use_shared_memory)
     {
-        if (!DataWatchdog::TryConnect())
-        {
-            throw util::exception(
-                std::string(
-                    "No shared memory blocks found, have you forgotten to run osrm-datastore?") +
-                SOURCE_REF);
-        }
-
         watchdog = std::make_unique<DataWatchdog>();
         BOOST_ASSERT(watchdog);
     }

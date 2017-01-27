@@ -1,4 +1,4 @@
-#include "storage/shared_barriers.hpp"
+#include "storage/shared_barrier.hpp"
 #include "storage/shared_memory.hpp"
 #include "storage/storage.hpp"
 #include "util/exception.hpp"
@@ -14,7 +14,7 @@
 
 using namespace osrm;
 
-void removeLocks() { osrm::storage::SharedBarriers::remove(); }
+void removeLocks() { osrm::storage::SharedBarrier::Remove(); }
 
 void deleteRegion(const storage::SharedDataType region)
 {
@@ -44,7 +44,6 @@ void springClean()
     {
         deleteRegion(storage::REGION_1);
         deleteRegion(storage::REGION_2);
-        deleteRegion(storage::CURRENT_REGION);
         removeLocks();
     }
 }
