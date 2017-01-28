@@ -63,7 +63,7 @@ curl 'http://router.project-osrm.org/route/v1/driving/polyline(ofp_Ik_vpAilAyu@t
 
 ### Responses
 
-Every response object has a `code` field containing one of the strings below or a service dependent code:
+Every response object has a `code` property containing one of the strings below or a service dependent code:
 
 | Type              | Description                                                                      |
 |-------------------|----------------------------------------------------------------------------------|
@@ -191,7 +191,7 @@ In case of error the following `code`s are supported in addition to the general 
 |-------------------|-----------------|
 | `NoRoute`         | No route found. |
 
-All other fields might be undefined.
+All other properties might be undefined.
 
 #### Example Request
 
@@ -257,7 +257,7 @@ In case of error the following `code`s are supported in addition to the general 
 |-------------------|-----------------|
 | `NoTable`        | No route found. |
 
-All other fields might be undefined.
+All other properties might be undefined.
 
 ### Match service
 
@@ -307,7 +307,7 @@ In case of error the following `code`s are supported in addition to the general 
 |-------------------|---------------------|
 | `NoMatch`         | No matchings found. |
 
-All other fields might be undefined.
+All other properties might be undefined.
 
 ### Trip service
 
@@ -343,7 +343,7 @@ In case of error the following `code`s are supported in addition to the general 
 |-------------------|---------------------|
 | `NoTrips`         | No trips found.     |
 
-All other fields might be undefined.
+All other properties might be undefined.
 
 ### Tile service
 
@@ -373,7 +373,7 @@ Vector tiles contain two layers:
 
 `speeds` layer:
 
-| Field        | Type      | Description                              |
+| Property     | Type      | Description                              |
 | ------------ | --------- | ---------------------------------------- |
 | `speed`      | `integer` | the speed on that road segment, in km/h  |
 | `is_small`   | `boolean` | whether this segment belongs to a small (< 1000 node) [strongly connected component](https://en.wikipedia.org/wiki/Strongly_connected_component) |
@@ -383,7 +383,7 @@ Vector tiles contain two layers:
 
 `turns` layer:
 
-| Field        | Type      | Description                              |
+| Property     | Type      | Description                              |
 | ------------ | --------- | ---------------------------------------- |
 | `bearing_in` | `integer` | the absolute bearing that approaches the intersection.  -180 to +180, 0 = North, 90 = East |
 | `turn_angle` | `integer` | the angle of the turn, relative to the `bearing_in`.  -180 to +180, 0 = straight ahead, 90 = 90-degrees to the right |
@@ -400,7 +400,7 @@ Represents a route through (potentially multiple) waypoints.
 
 - `distance`: The distance traveled by the route, in `float` meters.
 - `duration`: The estimated travel time, in `float` number of seconds.
-- `geometry`: The whole geometry of the route value depending on `overview` parameter, format depending on the `geometries` parameter. See `RouteStep`'s `geometry` field for a parameter documentation.
+- `geometry`: The whole geometry of the route value depending on `overview` parameter, format depending on the `geometries` parameter. See `RouteStep`'s `geometry` property for a parameter documentation.
 - `weight`: The calculated weight of the route.
 - `weight_name`: The name of the weight profile used during extraction phase.
 
@@ -608,7 +608,7 @@ step.
 | `end of road`    | road ends in a T intersection turn in direction of `modifier`|
 | `use lane`       | going straight on a specific lane                            |
 | `continue`       | Turn in direction of `modifier` to stay on the same road     |
-| `roundabout`     | traverse roundabout, has additional field `exit` with NR if the roundabout is left. `the modifier specifies the direction of entering the roundabout` |
+| `roundabout`     | traverse roundabout, has additional property `exit` with NR if the roundabout is left. `the modifier specifies the direction of entering the roundabout` |
 | `rotary`         | a traffic circle. While very similar to a larger version of a roundabout, it does not necessarily follow roundabout rules for right of way. It can offer `rotary_name/rotary_pronunciation` in addition to the `exit` parameter.  |
 | `roundabout turn`| Describes a turn at a small roundabout that should be treated as normal turn. The `modifier` indicates the turn direciton. Example instruction: `At the roundabout turn left`. |
 | `notification`   | not an actual turn but a change in the driving conditions. For example the travel mode.  If the road takes a turn itself, the `modifier` describes the direction |
@@ -631,14 +631,14 @@ step.
 
   The list of turns without a modifier is limited to: `depart/arrive`. If the source/target location is close enough to the `depart/arrive` location, no modifier will be given.
 
-  The meaning depends on the `type` field.
+  The meaning depends on the `type` property.
 
 | `type`                 | Description                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------|
 | `turn`                 | `modifier` indicates the change in direction accomplished through the turn                                                |
 | `depart`/`arrive`      | `modifier` indicates the position of departure point and arrival point in relation to the current direction of travel      |
 
-- `exit` An optional `integer` indicating number of the exit to take. The field exists for the following `type` field:
+- `exit` An optional `integer` indicating number of the exit to take. The property exists for the following `type` property:
 
 | `type`                 | Description                                                                                                               |
 |------------------------|---------------------------------------------------------------------------------------------------------------------------|
