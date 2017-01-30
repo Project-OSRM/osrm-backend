@@ -29,8 +29,8 @@ Feature: Weight tests
             | cde   |
 
         When I route I should get
-            | waypoints | route       | annotation                                                          |
-            | s,t       | abc,cde,cde | 1.1:1.1:10.008843:0,2:2:20.017686:0,2:2:20.020734:0,1:1:10.010367:0 |
+            | waypoints | route       | annotation                                                                  |
+            | s,t       | abc,cde,cde | 1.1:10.008843:1.1:2:0,2:20.017686:2:3:0,2:20.020734:2:4:0,1:10.010367:1:5:0 |
 
         When I route I should get
             | waypoints | route       | times      | weight_name | weights |
@@ -53,11 +53,11 @@ Feature: Weight tests
             | abc   |
 
         When I route I should get
-            | waypoints | route   | distances | weights | times   | annotation                          |
-            | s,t       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 3:3:20.017685:0                     |
-            | t,s       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 3.1:3.1:20.017685:0                 |
-            | s,e       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 3.1:3.1:30.026527:0,1:1:10.008842:0 |
-            | e,s       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 1:1:10.008842:0,3.1:3.1:30.026527:0 |
+            | waypoints | route   | distances | weights | times   | annotation                              |
+            | s,t       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 3:20.017685:3:1:0                       |
+            | t,s       | abc,abc | 20m,0m    | 2.1,0   | 2.1s,0s | 3.1:20.017685:3.1:2:0                   |
+            | s,e       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 3.1:30.026527:3.1:1:0,1:10.008842:1:2:0 |
+            | e,s       | abc,abc | 40m,0m    | 4.1,0   | 4.1s,0s | 1:10.008842:1:3:0,3.1:30.026527:3.1:2:0 |
 
 
     Scenario: Step weights -- way_function: fail if no weight or weight_per_meter property

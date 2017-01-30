@@ -118,6 +118,32 @@ Feature: Basic Map Matching
             | dcba  | hgfe        |
             | efgh  | abcd        |
 
+    Scenario: Testbot - request duration annotations
+        Given the query options
+            | annotations | duration |
+
+        Given the node map
+            """
+            a b c d e   g h
+                i
+            """
+
+        And the ways
+            | nodes    | oneway |
+            | abcdegh  | no     |
+            | ci       | no     |
+
+        And the speed file
+        """
+        1,2,36
+        """
+
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+
+        When I match I should get
+            | trace | matchings | annotation    |
+            | ach   | ach       | 1:1,0:1:1:2:1 |
+
     Scenario: Testbot - Duration details
         Given the query options
             | annotations | true    |
@@ -337,3 +363,29 @@ Feature: Basic Map Matching
             | trace | OSM IDs     |
             | 12    | 1,2,3,4,5,6 |
             | 21    | 6,5,4,3,2,1 |
+
+    Scenario: Testbot - return annotations based on parameter
+        Given the query options
+            | annotations | duration,weight |
+
+        Given the node map
+            """
+            a - b
+                |
+                c
+            """
+
+        And the nodes
+            | node | id |
+            | a    | 1  |
+            | b    | 2  |
+            | c    | 3  |
+
+        And the ways
+            | nodes | oneway |
+            | abc   | no     |
+
+        When I match I should get
+            | trace | annotation   |
+            | ac    | 2:2,2:2      |
+            | ca    | 2:2:0,2:2:0  |
