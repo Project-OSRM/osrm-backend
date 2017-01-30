@@ -73,7 +73,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
 
         if (!separated)
         {
-            BlockingFlow(flow, levels, view, source_nodes, sink_nodes);
+            BlockingFlow(flow, levels, view, source_nodes, border_sink_nodes);
         }
         else
         {
@@ -189,7 +189,7 @@ std::uint32_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
                                          LevelGraph &levels,
                                          const GraphView &view,
                                          const SourceSinkNodes &source_nodes,
-                                         const SourceSinkNodes &sink_nodes) const
+                                         const std::vector<NodeID> &border_sink_nodes) const
 {
     std::uint32_t flow_increase = 0;
     // augment the flow along a path in the level graph
@@ -219,7 +219,7 @@ std::uint32_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
     // find and augment the blocking flow
 
     std::vector<std::pair<std::uint32_t, NodeID>> reached_sinks;
-    for (auto sink : sink_nodes)
+    for (auto sink : border_sink_nodes)
     {
         const auto sink_position = view.GetPosition(sink);
         if (levels[sink_position] != INVALID_LEVEL)

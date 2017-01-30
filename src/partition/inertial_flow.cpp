@@ -117,7 +117,8 @@ DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double 
                     std::cout << "New Cut: " << cut.num_edges << " " << cut_balance << std::endl;
                     best_balance = cut_balance;
                     std::swap(best, cut);
-                } else
+                }
+                else
                 {
                     std::cout << "Bad Cut: " << cut.num_edges << " " << cut_balance << std::endl;
                 }

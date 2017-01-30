@@ -5,10 +5,10 @@
 
 #include <cstdint>
 #include <functional>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
-#include <set>
 #include <vector>
 
 namespace std
@@ -57,7 +57,7 @@ class DinicMaxFlow
                                LevelGraph &levels,
                                const GraphView &view,
                                const SourceSinkNodes &source_nodes,
-                               const SourceSinkNodes &sink_nodes) const;
+                               const std::vector<NodeID> &border_sink_nodes) const;
 
     std::vector<NodeID> GetAugmentingPath(LevelGraph &levels,
                                           const NodeID from,
