@@ -17,7 +17,9 @@ class InertialFlow
   public:
     InertialFlow(const GraphView &view);
 
-    DinicMaxFlow::MinCut ComputePartition(const double balance, const double source_sink_rate);
+    DinicMaxFlow::MinCut ComputePartition(const std::size_t num_slopes,
+                                          const double balance,
+                                          const double source_sink_rate);
 
   private:
     // Spatially ordered sources and sink ids.

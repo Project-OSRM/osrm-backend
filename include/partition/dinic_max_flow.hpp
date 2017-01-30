@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <set>
 #include <vector>
 
 namespace std
@@ -39,7 +40,7 @@ class DinicMaxFlow
     };
     using SourceSinkNodes = std::unordered_set<NodeID>;
     using LevelGraph = std::vector<Level>;
-    using FlowEdges = std::unordered_set<std::pair<NodeID, NodeID>>;
+    using FlowEdges = std::vector<std::set<NodeID>>;
 
     MinCut operator()(const GraphView &view,
                       const SourceSinkNodes &sink_nodes,
@@ -47,7 +48,9 @@ class DinicMaxFlow
 
   private:
     LevelGraph ComputeLevelGraph(const GraphView &view,
+                                 const std::vector<NodeID> &border_source_nodes,
                                  const SourceSinkNodes &source_nodes,
+                                 const SourceSinkNodes &sink_nodes,
                                  const FlowEdges &flow) const;
 
     std::uint32_t BlockingFlow(FlowEdges &flow,

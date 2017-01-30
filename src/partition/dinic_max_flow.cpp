@@ -1,5 +1,6 @@
 #include "partition/dinic_max_flow.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <queue>
 #include <set>
@@ -19,29 +20,66 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
                                               const SourceSinkNodes &source_nodes,
                                               const SourceSinkNodes &sink_nodes) const
 {
+    std::vector<NodeID> border_source_nodes;
+    border_source_nodes.reserve(0.01 * source_nodes.size());
+
+    for (auto node : source_nodes)
+    {
+        for (auto itr = view.EdgeBegin(node); itr != view.EdgeEnd(node); ++itr)
+        {
+            const auto target = view.GetEdge(*itr).target;
+            if (0 == source_nodes.count(target))
+            {
+                border_source_nodes.push_back(node);
+                break;
+            }
+        }
+    }
+
+    std::vector<NodeID> border_sink_nodes;
+    border_sink_nodes.reserve(0.01 * sink_nodes.size());
+    for (auto node : sink_nodes)
+    {
+        for (auto itr = view.EdgeBegin(node); itr != view.EdgeEnd(node); ++itr)
+        {
+            const auto target = view.GetEdge(*itr).target;
+            if (0 == sink_nodes.count(target))
+            {
+                border_sink_nodes.push_back(node);
+                break;
+            }
+        }
+    }
+
     // edges in current flow that have capacity
     // The graph (V,E) contains undirected edges for all (u,v) \in V x V. We describe the flow as a
     // set of vertices (s,t) with flow set to `true`. Since flow can be either from `s` to `t` or
     // from `t` to `s`, we can remove `(s,t)` from the flow, if we send flow back the first time,
     // and insert `(t,s)` only if we send flow again.
-    FlowEdges flow;
+
+    FlowEdges flow(view.NumberOfNodes());
     do
     {
         std::cout << "." << std::flush;
-        auto levels = ComputeLevelGraph(view, source_nodes, flow);
+        auto levels = ComputeLevelGraph(view, border_source_nodes, source_nodes, sink_nodes, flow);
 
         // check if the sink can be reached from the source
         const auto separated =
-            std::find_if(sink_nodes.begin(), sink_nodes.end(), [&levels, &view](const auto node) {
-                return levels[view.GetPosition(node)] != INVALID_LEVEL;
-            }) == sink_nodes.end();
+            std::find_if(border_sink_nodes.begin(),
+                         border_sink_nodes.end(),
+                         [&levels, &view](const auto node) {
+                             return levels[view.GetPosition(node)] != INVALID_LEVEL;
+                         }) == border_sink_nodes.end();
 
         if (!separated)
         {
-            const auto flow_value = BlockingFlow(flow, levels, view, source_nodes, sink_nodes);
+            BlockingFlow(flow, levels, view, source_nodes, sink_nodes);
         }
         else
         {
+            // mark levels for all sources to not confuse make-cut
+            for (auto s : source_nodes)
+                levels[view.GetPosition(s)] = 0;
             return MakeCut(view, levels);
         }
     } while (true);
@@ -81,30 +119,43 @@ DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const GraphView &view, const LevelGra
     return {source_side_count, num_edges, std::move(result)};
 }
 
-DinicMaxFlow::LevelGraph DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
-                                                         const SourceSinkNodes &source_nodes,
-                                                         const FlowEdges &flow) const
+DinicMaxFlow::LevelGraph
+DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
+                                const std::vector<NodeID> &border_source_nodes,
+                                const SourceSinkNodes &source_nodes,
+                                const SourceSinkNodes &sink_nodes,
+                                const FlowEdges &flow) const
 {
     LevelGraph levels(view.NumberOfNodes(), INVALID_LEVEL);
     std::queue<NodeID> level_queue;
 
-    for (const auto node : source_nodes)
+    for (const auto node_id : border_source_nodes)
     {
-        levels[view.GetPosition(node)] = 0;
-        level_queue.push(node);
+        levels[view.GetPosition(node_id)] = 0;
+        level_queue.push(node_id);
+        for (auto itr = view.EdgeBegin(node_id); itr != view.EdgeEnd(node_id); ++itr)
+        {
+            const auto target = view.GetEdge(*itr).target;
+            if (source_nodes.count(target))
+            {
+                levels[view.GetPosition(target)] = 0;
+            }
+        }
     }
-
     // check if there is flow present on an edge
     const auto has_flow = [&](const NodeID from, const NodeID to) {
-        return flow.find(std::make_pair(from, to)) != flow.end();
+        return flow[view.GetPosition(from)].find(to) != flow[view.GetPosition(from)].end();
     };
 
     // perform a relaxation step in the BFS algorithm
     const auto relax_node = [&](const NodeID node_id, const Level level) {
+        // don't relax sink nodes
+        if (sink_nodes.count(node_id))
+            return;
+
         for (auto itr = view.EdgeBegin(node_id); itr != view.EdgeEnd(node_id); ++itr)
         {
             const auto target = view.GetEdge(*itr).target;
-
             // don't relax edges with flow on them
             if (has_flow(node_id, target))
                 continue;
@@ -142,22 +193,20 @@ std::uint32_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
 {
     std::uint32_t flow_increase = 0;
     // augment the flow along a path in the level graph
-    const auto augment_flow = [&flow](const std::vector<NodeID> &path) {
-        const auto augment_one = [&flow](const NodeID from, const NodeID to) {
-            const auto flow_edge = std::make_pair(from, to);
-            const auto reverse_flow_edge = std::make_pair(to, from);
+    const auto augment_flow = [&flow, &view](const std::vector<NodeID> &path) {
+        const auto augment_one = [&flow, &view](const NodeID from, const NodeID to) {
 
             // check if there is flow in the opposite direction
-            auto existing_edge = flow.find(reverse_flow_edge);
-            if (existing_edge != flow.end())
+            auto existing_edge = flow[view.GetPosition(to)].find(from);
+            if (existing_edge != flow[view.GetPosition(to)].end())
             {
                 // remove flow from reverse edges first
-                flow.erase(existing_edge);
+                flow[view.GetPosition(to)].erase(existing_edge);
             }
             else
             {
                 // only add flow if no opposite flow exists
-                flow.insert(flow_edge);
+                flow[view.GetPosition(from)].insert(to);
             }
             // for adjacent find
             return false;
@@ -168,22 +217,25 @@ std::uint32_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
     };
 
     // find and augment the blocking flow
-    auto sink_itr = sink_nodes.begin();
-    while (sink_itr != sink_nodes.end())
+
+    std::vector<std::pair<std::uint32_t, NodeID>> reached_sinks;
+    for (auto sink : sink_nodes)
     {
-        const auto sink_position = view.GetPosition(*sink_itr);
+        const auto sink_position = view.GetPosition(sink);
         if (levels[sink_position] != INVALID_LEVEL)
         {
-            auto path = GetAugmentingPath(levels, *sink_itr, view, flow, source_nodes);
-
-            if (!path.empty())
-            {
-                augment_flow(path);
-                ++flow_increase;
-            }
-            else
-                ++sink_itr;
+            reached_sinks.push_back(std::make_pair(levels[sink_position], sink));
         }
+    }
+    std::sort(reached_sinks.begin(), reached_sinks.end());
+
+    for (auto sink_itr = reached_sinks.begin(); sink_itr != reached_sinks.end();)
+    {
+
+        auto path = GetAugmentingPath(levels, sink_itr->second, view, flow, source_nodes);
+
+        if (!path.empty())
+            augment_flow(path);
         else
             ++sink_itr;
     }
@@ -220,11 +272,13 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
         {
             const auto target = view.GetEdge(*dfs_stack.top().edge_iterator).target;
 
-            // look at every edge only once, so advance the state of the current node (last in path)
+            // look at every edge only once, so advance the state of the current node (last in
+            // path)
             dfs_stack.top().edge_iterator++;
 
             // check if the edge is valid
-            const auto has_capacity = flow.find(std::make_pair(target, path.back())) == flow.end();
+            const auto has_capacity = flow[view.GetPosition(target)].count(path.back()) == 0;
+
             const auto descends_level_graph =
                 levels[view.GetPosition(target)] + 1 == levels[view.GetPosition(path.back())];
 

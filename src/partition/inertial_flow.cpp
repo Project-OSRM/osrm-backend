@@ -21,10 +21,11 @@ namespace partition
 
 InertialFlow::InertialFlow(const GraphView &view_) : view(view_) {}
 
-DinicMaxFlow::MinCut InertialFlow::ComputePartition(const double balance,
+DinicMaxFlow::MinCut InertialFlow::ComputePartition(const std::size_t num_slopes,
+                                                    const double balance,
                                                     const double source_sink_rate)
 {
-    auto cut = BestMinCut(10 /* should be taken from outside */, source_sink_rate);
+    auto cut = BestMinCut(num_slopes, source_sink_rate);
 
     return cut;
 }
@@ -83,10 +84,8 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
 
 DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double ratio) const
 {
-    // auto base = MakeSpatialOrder(ratio, -1.);
     DinicMaxFlow::MinCut best;
     best.num_edges = -1;
-    // auto best = DinicMaxFlow()(view, base.sources, base.sinks);
 
     const auto get_balance = [this](const auto num_nodes_source) {
         double ratio = static_cast<double>(view.NumberOfNodes() - num_nodes_source) /
@@ -98,7 +97,7 @@ DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double 
 
     std::mutex lock;
 
-    tbb::blocked_range<std::size_t> range{0, n + 1, 1};
+    tbb::blocked_range<std::size_t> range{0, n, 1};
 
     tbb::parallel_for(range, [&, this](const auto &chunk) {
         for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
@@ -123,7 +122,6 @@ DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double 
                     std::cout << "Bad Cut: " << cut.num_edges << " " << cut_balance << std::endl;
                 }
             }
-
             // cut gets destroyed here
         }
     });
