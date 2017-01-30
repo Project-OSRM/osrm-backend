@@ -164,20 +164,23 @@ module.exports = function () {
     };
 
     this.annotationList = (instructions) => {
-        if (!('annotation' in instructions.legs[0]))
+        if (!('annotation' in instructions.legs[0]) || instructions.legs[0].annotation.length < 1)
             return '';
 
-        function zip(list_1, list_2, list_3, list_4)
-        {
-            let tuples = [];
-            for (let i = 0; i < list_1.length; ++i) {
-                tuples.push([list_1[i], list_2[i], list_3[i], list_4[i]]);
-            }
-            return tuples;
-        }
         return instructions.legs.map(l => {
-            const values = zip( l.annotation.weight, l.annotation.duration, l.annotation.distance, l.annotation.datasources);
-            return values.map(p => { return p.join(':'); }).join(',');
+            var fields = Object.keys(l.annotation);
+            if (fields.length < 1) return '';
+            var collected = l.annotation[fields[0]].map((f, i) => {
+                var zipped = [];
+                for (var j = 0; j < fields.length; j++) {
+                    zipped.push(l.annotation[fields[j]][i]);
+                }
+                return zipped;
+            });
+
+            return collected.map((v) => {
+                return v.join(':');
+            }).join(',');
         }).join(',');
     };
 
