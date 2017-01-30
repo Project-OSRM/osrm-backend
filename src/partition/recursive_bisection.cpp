@@ -24,7 +24,7 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     GraphView view(bisection_graph, internal_state, internal_state.Begin(), internal_state.End());
     InertialFlow flow(view);
     const auto partition = flow.ComputePartition(balance, boundary_factor);
-    const auto center = internal_state.ApplyBisection(view.Begin(), view.End(), partition.flags);
+    const auto center = internal_state.ApplyBisection(view.Begin(), view.End(), 0, partition.flags);
     {
         auto state = internal_state;
     }
@@ -33,13 +33,14 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
               << " Cut Size: " << partition.num_edges << " Balance: " << partition.num_nodes_source
               << std::endl;
 
-    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,util::LoggingScenario(0)> logger_zero("level_0.geojson");
-    for( NodeID nid = 0; nid < bisection_graph.GetNumberOfNodes(); ++nid )
+    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString, util::LoggingScenario(0)>
+        logger_zero("level_0.geojson");
+    for (NodeID nid = 0; nid < bisection_graph.GetNumberOfNodes(); ++nid)
     {
-        for( auto eid : bisection_graph.GetAdjacentEdgeRange(nid))
+        for (auto eid : bisection_graph.GetAdjacentEdgeRange(nid))
         {
             const auto target = bisection_graph.GetTarget(eid);
-            if( internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target) )
+            if (internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target))
             {
                 std::vector<util::Coordinate> coordinates;
                 coordinates.push_back(bisection_graph.GetNode(nid).coordinate);
@@ -54,7 +55,7 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     InertialFlow flow_lhs(recursive_view_lhs);
     const auto partition_lhs = flow_lhs.ComputePartition(balance, boundary_factor);
     internal_state.ApplyBisection(
-        recursive_view_lhs.Begin(), recursive_view_lhs.End(), partition_lhs.flags);
+        recursive_view_lhs.Begin(), recursive_view_lhs.End(), 1, partition_lhs.flags);
     TIMER_STOP(bisection_2_1);
     std::cout << "Bisection(2) completed in " << TIMER_SEC(bisection_2_1)
               << " Cut Size: " << partition_lhs.num_edges
@@ -65,22 +66,21 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     InertialFlow flow_rhs(recursive_view_rhs);
     const auto partition_rhs = flow_rhs.ComputePartition(balance, boundary_factor);
     internal_state.ApplyBisection(
-        recursive_view_rhs.Begin(), recursive_view_rhs.End(), partition_rhs.flags);
+        recursive_view_rhs.Begin(), recursive_view_rhs.End(), 1, partition_rhs.flags);
     TIMER_STOP(bisection_2_2);
     std::cout << "Bisection(3) completed in " << TIMER_SEC(bisection_2_2)
               << " Cut Size: " << partition_rhs.num_edges
               << " Balance: " << partition_rhs.num_nodes_source << std::endl;
 
+    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString, util::LoggingScenario(1)>
+        logger_one("level_1.geojson");
 
-
-    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,util::LoggingScenario(1)> logger_one("level_1.geojson");
-
-    for( NodeID nid = 0; nid < bisection_graph.GetNumberOfNodes(); ++nid )
+    for (NodeID nid = 0; nid < bisection_graph.GetNumberOfNodes(); ++nid)
     {
-        for( auto eid : bisection_graph.GetAdjacentEdgeRange(nid))
+        for (auto eid : bisection_graph.GetAdjacentEdgeRange(nid))
         {
             const auto target = bisection_graph.GetTarget(eid);
-            if( internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target) )
+            if (internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target))
             {
                 std::vector<util::Coordinate> coordinates;
                 coordinates.push_back(bisection_graph.GetNode(nid).coordinate);

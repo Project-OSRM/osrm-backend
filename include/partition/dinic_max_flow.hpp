@@ -30,6 +30,7 @@ namespace partition
 class DinicMaxFlow
 {
   public:
+    using Level = std::uint32_t;
     using MinCut = struct
     {
         std::size_t num_nodes_source;
@@ -37,7 +38,7 @@ class DinicMaxFlow
         std::vector<bool> flags;
     };
     using SourceSinkNodes = std::unordered_set<NodeID>;
-    using LevelGraph = std::unordered_map<NodeID, std::uint32_t>;
+    using LevelGraph = std::vector<Level>;
     using FlowEdges = std::unordered_set<std::pair<NodeID, NodeID>>;
 
     MinCut operator()(const GraphView &view,
@@ -49,11 +50,11 @@ class DinicMaxFlow
                                  const SourceSinkNodes &source_nodes,
                                  const FlowEdges &flow) const;
 
-    void BlockingFlow(FlowEdges &flow,
-                      LevelGraph &levels,
-                      const GraphView &view,
-                      const SourceSinkNodes &source_nodes,
-                      const SourceSinkNodes &sink_nodes) const;
+    std::uint32_t BlockingFlow(FlowEdges &flow,
+                               LevelGraph &levels,
+                               const GraphView &view,
+                               const SourceSinkNodes &source_nodes,
+                               const SourceSinkNodes &sink_nodes) const;
 
     std::vector<NodeID> GetAugmentingPath(LevelGraph &levels,
                                           const NodeID from,

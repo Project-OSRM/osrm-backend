@@ -67,5 +67,11 @@ const BisectionEdge &GraphView::GetEdge(const EdgeID eid) const
     return bisection_graph.GetEdge(eid);
 }
 
+std::uint32_t GraphView::GetPosition(const NodeID nid) const
+{
+    BOOST_ASSERT(bisection_state.GetPosition(nid) >= bisection_state.GetPosition(*Begin()));
+    return bisection_state.GetPosition(nid) - bisection_state.GetPosition(*Begin());
+}
+
 } // namespace partition
 } // namespace osrm

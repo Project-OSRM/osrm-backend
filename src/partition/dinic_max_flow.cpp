@@ -1,12 +1,19 @@
 #include "partition/dinic_max_flow.hpp"
 
+#include <limits>
 #include <queue>
+#include <set>
 #include <stack>
 
 namespace osrm
 {
 namespace partition
 {
+
+namespace
+{
+const auto constexpr INVALID_LEVEL = std::numeric_limits<DinicMaxFlow::Level>::max();
+} // end namespace
 
 DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
                                               const SourceSinkNodes &source_nodes,
@@ -25,13 +32,13 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
 
         // check if the sink can be reached from the source
         const auto separated =
-            std::find_if(sink_nodes.begin(), sink_nodes.end(), [&levels](const auto node) {
-                return levels.find(node) != levels.end();
+            std::find_if(sink_nodes.begin(), sink_nodes.end(), [&levels, &view](const auto node) {
+                return levels[view.GetPosition(node)] != INVALID_LEVEL;
             }) == sink_nodes.end();
 
         if (!separated)
         {
-            BlockingFlow(flow, levels, view, source_nodes, sink_nodes);
+            const auto flow_value = BlockingFlow(flow, levels, view, source_nodes, sink_nodes);
         }
         else
         {
@@ -42,41 +49,48 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
 
 DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const GraphView &view, const LevelGraph &levels) const
 {
+    const auto is_sink_side = [&view, &levels](const NodeID nid) {
+        return levels[view.GetPosition(nid)] == INVALID_LEVEL;
+    };
 
     // all elements within `levels` are on the source side
     // This part should opt to find the most balanced cut, which is not necessarily the case right
     // now
     std::vector<bool> result(view.NumberOfNodes(), true);
+    std::size_t source_side_count = view.NumberOfNodes();
     for (auto itr = view.Begin(); itr != view.End(); ++itr)
     {
-        if (levels.find(*itr) != levels.end())
+        if (is_sink_side(*itr))
+        {
             result[std::distance(view.Begin(), itr)] = false;
+            --source_side_count;
+        }
     }
     std::size_t num_edges = 0;
     for (auto itr = view.Begin(); itr != view.End(); ++itr)
     {
-        const auto sink_side = levels.find(*itr) != levels.end();
+        const auto sink_side = is_sink_side(*itr);
         for (auto edge_itr = view.EdgeBegin(*itr); edge_itr != view.EdgeEnd(*itr); ++edge_itr)
         {
-            if ((levels.find(view.GetEdge(*edge_itr).target) != levels.end()) != sink_side)
+            if (is_sink_side(view.GetEdge(*edge_itr).target) != sink_side)
             {
                 ++num_edges;
             }
         }
     }
-    return {levels.size(), num_edges, std::move(result)};
+    return {source_side_count, num_edges, std::move(result)};
 }
 
 DinicMaxFlow::LevelGraph DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
                                                          const SourceSinkNodes &source_nodes,
                                                          const FlowEdges &flow) const
 {
-    LevelGraph levels;
+    LevelGraph levels(view.NumberOfNodes(), INVALID_LEVEL);
     std::queue<NodeID> level_queue;
 
     for (const auto node : source_nodes)
     {
-        levels[node] = 0;
+        levels[view.GetPosition(node)] = 0;
         level_queue.push(node);
     }
 
@@ -86,7 +100,7 @@ DinicMaxFlow::LevelGraph DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
     };
 
     // perform a relaxation step in the BFS algorithm
-    const auto relax_node = [&](const NodeID node_id, const std::uint32_t level) {
+    const auto relax_node = [&](const NodeID node_id, const Level level) {
         for (auto itr = view.EdgeBegin(node_id); itr != view.EdgeEnd(node_id); ++itr)
         {
             const auto target = view.GetEdge(*itr).target;
@@ -95,17 +109,18 @@ DinicMaxFlow::LevelGraph DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
             if (has_flow(node_id, target))
                 continue;
 
+            const auto position = view.GetPosition(target);
             // don't go back, only follow edges to new nodes
-            if (levels.find(target) == levels.end())
+            if (levels[position] > level)
             {
                 level_queue.push(target);
-                levels[target] = level;
+                levels[position] = level;
             }
         }
     };
 
     // compute the levels of level graph using BFS
-    for (std::uint32_t level = 1; !level_queue.empty(); ++level)
+    for (Level level = 1; !level_queue.empty(); ++level)
     {
         // run through the current level
         auto steps = level_queue.size();
@@ -119,12 +134,13 @@ DinicMaxFlow::LevelGraph DinicMaxFlow::ComputeLevelGraph(const GraphView &view,
     return levels;
 }
 
-void DinicMaxFlow::BlockingFlow(FlowEdges &flow,
-                                LevelGraph &levels,
-                                const GraphView &view,
-                                const SourceSinkNodes &source_nodes,
-                                const SourceSinkNodes &sink_nodes) const
+std::uint32_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
+                                         LevelGraph &levels,
+                                         const GraphView &view,
+                                         const SourceSinkNodes &source_nodes,
+                                         const SourceSinkNodes &sink_nodes) const
 {
+    std::uint32_t flow_increase = 0;
     // augment the flow along a path in the level graph
     const auto augment_flow = [&flow](const std::vector<NodeID> &path) {
         const auto augment_one = [&flow](const NodeID from, const NodeID to) {
@@ -155,18 +171,24 @@ void DinicMaxFlow::BlockingFlow(FlowEdges &flow,
     auto sink_itr = sink_nodes.begin();
     while (sink_itr != sink_nodes.end())
     {
-        if (levels.count(*sink_itr))
+        const auto sink_position = view.GetPosition(*sink_itr);
+        if (levels[sink_position] != INVALID_LEVEL)
         {
             auto path = GetAugmentingPath(levels, *sink_itr, view, flow, source_nodes);
 
             if (!path.empty())
+            {
                 augment_flow(path);
+                ++flow_increase;
+            }
             else
                 ++sink_itr;
         }
         else
             ++sink_itr;
     }
+
+    return flow_increase;
 }
 
 std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
@@ -176,7 +198,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
                                                     const SourceSinkNodes &source_nodes) const
 {
     std::vector<NodeID> path;
-    BOOST_ASSERT(sink_nodes.find(node_id) == sink_nodes.end());
+    BOOST_ASSERT(source_nodes.find(node_id) == source_nodes.end());
 
     // Keeps the local state of the DFS in forms of the iterators
     using DFSState = struct
@@ -204,8 +226,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
             // check if the edge is valid
             const auto has_capacity = flow.find(std::make_pair(target, path.back())) == flow.end();
             const auto descends_level_graph =
-                levels.count(target) != 0 &&
-                levels.find(target)->second + 1 == levels.find(path.back())->second;
+                levels[view.GetPosition(target)] + 1 == levels[view.GetPosition(path.back())];
 
             if (has_capacity && descends_level_graph)
             {
@@ -225,7 +246,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
         }
 
         // backtrack - mark that there is no way to the target
-        levels[path.back()] = -1;
+        levels[view.GetPosition(path.back())] = -1;
         path.pop_back();
         dfs_stack.pop();
     }

@@ -2,6 +2,7 @@
 #define OSRM_PARTITION_RECURSIVE_BISECTION_STATE_HPP_
 
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
 #include "partition/bisection_graph.hpp"
@@ -73,15 +74,21 @@ class RecursiveBisectionState
     // Returns: partition point of the bisection: iterator to the second group's first element.
     IDIterator ApplyBisection(const IDIterator begin,
                               const IDIterator end,
+                              const std::size_t depth,
                               const std::vector<bool> &partition);
 
     const IDIterator Begin() const;
     const IDIterator End() const;
 
+    std::uint32_t GetPosition(NodeID nid) const;
+
   private:
     const BisectionGraph &bisection_graph;
 
     std::vector<NodeID> id_array;
+    // the positions of all nodes in the id_array
+    std::vector<std::uint32_t> position_array;
+
     std::vector<BisectionID> bisection_ids;
 };
 

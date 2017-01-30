@@ -8,6 +8,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 
 #include <cstddef>
+#include <cstdint>
 
 namespace osrm
 {
@@ -82,6 +83,7 @@ class GraphView
     const BisectionNode &GetNode(const NodeID nid) const;
     const BisectionEdge &GetEdge(const EdgeID eid) const;
 
+    std::uint32_t GetPosition(const NodeID nid) const;
   private:
     const BisectionGraph &bisection_graph;
     const RecursiveBisectionState &bisection_state;
