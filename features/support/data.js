@@ -248,7 +248,7 @@ module.exports = function () {
         q.awaitAll((err, actual) => {
             if (err) return callback(err);
             let diff = tableDiff(table, actual);
-            if (diff) callback(new Error(diff));
+            if (diff) callback(diff);
             else callback();
         });
     };
