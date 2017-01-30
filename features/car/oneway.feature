@@ -15,6 +15,22 @@ Feature: Car - Oneway streets
             | highway | oneway | forw | backw |
             | primary | -1     |      | x     |
 
+    Scenario: Car - Mode specific oneway
+        Then routability should be
+            | highway | oneway:motorcar | oneway:motor_vehicle | oneway:vehicle | oneway | forw | backw |
+            | primary |                 |                      |                |        | x    | x     |
+            | primary | yes             |                      |                |        | x    |       |
+            | primary |                 | yes                  |                |        | x    |       |
+            | primary |                 |                      | yes            |        | x    |       |
+            | primary |                 |                      |                | yes    | x    |       |
+            | primary | yes             | no                   |                |        | x    |       |
+            | primary |                 | yes                  | no             |        | x    |       |
+            | primary |                 |                      | yes            | no     | x    |       |
+            | primary |                 |                      |                | yes    | x    |       |
+            | primary | no              | yes                  |                |        | x    | x     |
+            | primary |                 | no                   | yes            |        | x    | x     |
+            | primary |                 |                      | no             | yes    | x    | x     |
+
     Scenario: Car - Implied oneways
         Then routability should be
             | highway         | junction   | forw | backw | #                     |
