@@ -215,43 +215,72 @@ class RouteAPI : public BaseAPI
 
         std::vector<util::json::Object> annotations;
 
-        if (parameters.annotations)
+        if (!static_cast<bool>(parameters.annotations_type &
+                               RouteParameters::AnnotationsType::None))
         {
             for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
             {
-                util::json::Array durations;
-                util::json::Array distances;
-                util::json::Array weights;
-                util::json::Array nodes;
-                util::json::Array datasources;
                 auto &leg_geometry = leg_geometries[idx];
-
-                durations.values.reserve(leg_geometry.annotations.size());
-                distances.values.reserve(leg_geometry.annotations.size());
-                weights.values.reserve(leg_geometry.annotations.size());
-                nodes.values.reserve(leg_geometry.osm_node_ids.size());
-                datasources.values.reserve(leg_geometry.annotations.size());
-
-                std::for_each(leg_geometry.annotations.begin(),
-                              leg_geometry.annotations.end(),
-                              [this, &durations, &distances, &weights, &datasources](
-                                  const guidance::LegGeometry::Annotation &step) {
-                                  durations.values.push_back(step.duration);
-                                  distances.values.push_back(step.distance);
-                                  weights.values.push_back(step.weight);
-                                  datasources.values.push_back(step.datasource);
-                              });
-                std::for_each(leg_geometry.osm_node_ids.begin(),
-                              leg_geometry.osm_node_ids.end(),
-                              [this, &nodes](const OSMNodeID &node_id) {
-                                  nodes.values.push_back(static_cast<std::uint64_t>(node_id));
-                              });
                 util::json::Object annotation;
-                annotation.values["distance"] = std::move(distances);
-                annotation.values["duration"] = std::move(durations);
-                annotation.values["weight"] = std::move(weights);
-                annotation.values["nodes"] = std::move(nodes);
-                annotation.values["datasources"] = std::move(datasources);
+                if (parameters.annotations_type & RouteParameters::AnnotationsType::Duration)
+                {
+                    util::json::Array durations;
+                    durations.values.reserve(leg_geometry.annotations.size());
+                    std::for_each(
+                        leg_geometry.annotations.begin(),
+                        leg_geometry.annotations.end(),
+                        [this, &durations](const guidance::LegGeometry::Annotation &step) {
+                            durations.values.push_back(step.duration);
+                        });
+                    annotation.values["duration"] = std::move(durations);
+                }
+                if (parameters.annotations_type & RouteParameters::AnnotationsType::Distance)
+                {
+                    util::json::Array distances;
+                    distances.values.reserve(leg_geometry.annotations.size());
+                    std::for_each(
+                        leg_geometry.annotations.begin(),
+                        leg_geometry.annotations.end(),
+                        [this, &distances](const guidance::LegGeometry::Annotation &step) {
+                            distances.values.push_back(step.distance);
+                        });
+                    annotation.values["distance"] = std::move(distances);
+                }
+                if (parameters.annotations_type & RouteParameters::AnnotationsType::Weight)
+                {
+                    util::json::Array weights;
+                    weights.values.reserve(leg_geometry.annotations.size());
+                    std::for_each(leg_geometry.annotations.begin(),
+                                  leg_geometry.annotations.end(),
+                                  [this, &weights](const guidance::LegGeometry::Annotation &step) {
+                                      weights.values.push_back(step.weight);
+                                  });
+                    annotation.values["weight"] = std::move(weights);
+                }
+                if (parameters.annotations_type & RouteParameters::AnnotationsType::Datasources)
+                {
+                    util::json::Array datasources;
+                    datasources.values.reserve(leg_geometry.annotations.size());
+                    std::for_each(
+                        leg_geometry.annotations.begin(),
+                        leg_geometry.annotations.end(),
+                        [this, &datasources](const guidance::LegGeometry::Annotation &step) {
+                            datasources.values.push_back(step.datasource);
+                        });
+                    annotation.values["datasources"] = std::move(datasources);
+                }
+                if (parameters.annotations_type & RouteParameters::AnnotationsType::Nodes)
+                {
+                    util::json::Array nodes;
+                    nodes.values.reserve(leg_geometry.osm_node_ids.size());
+                    std::for_each(leg_geometry.osm_node_ids.begin(),
+                                  leg_geometry.osm_node_ids.end(),
+                                  [this, &nodes](const OSMNodeID &node_id) {
+                                      nodes.values.push_back(static_cast<std::uint64_t>(node_id));
+                                  });
+                    annotation.values["nodes"] = std::move(nodes);
+                }
+
                 annotations.push_back(std::move(annotation));
             }
         }

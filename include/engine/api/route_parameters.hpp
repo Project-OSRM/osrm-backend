@@ -73,7 +73,9 @@ struct RouteParameters : public BaseParameters
         Duration = 1 << 1,
         Nodes = 1 << 2,
         Distance = 1 << 3,
-        All = Duration | Nodes | Distance
+        Weight = 1 << 4,
+        Datasources = 1 << 5,
+        All = Duration | Nodes | Distance | Weight | Datasources
     };
 
     RouteParameters() = default;
@@ -133,6 +135,14 @@ struct RouteParameters : public BaseParameters
 
     bool IsValid() const { return coordinates.size() >= 2 && BaseParameters::IsValid(); }
 };
+
+inline bool operator&(RouteParameters::AnnotationsType lhs,
+                                                  RouteParameters::AnnotationsType rhs)
+{
+    return static_cast<bool>(
+        static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(lhs) &
+        static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(rhs));
+}
 
 inline RouteParameters::AnnotationsType operator|(RouteParameters::AnnotationsType lhs,
                                                   RouteParameters::AnnotationsType rhs)

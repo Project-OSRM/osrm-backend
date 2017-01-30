@@ -55,11 +55,13 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             "full", engine::api::RouteParameters::OverviewType::Full)(
             "false", engine::api::RouteParameters::OverviewType::False);
 
-        annotations_type.add("all", engine::api::RouteParameters::AnnotationsType::All)(
-            "none", engine::api::RouteParameters::AnnotationsType::None)(
+        annotations_type.add("true", engine::api::RouteParameters::AnnotationsType::All)(
+            "false", engine::api::RouteParameters::AnnotationsType::None)(
             "duration", engine::api::RouteParameters::AnnotationsType::Duration)(
             "nodes", engine::api::RouteParameters::AnnotationsType::Nodes)(
-            "distance", engine::api::RouteParameters::AnnotationsType::Distance);
+            "distance", engine::api::RouteParameters::AnnotationsType::Distance)(
+            "weight", engine::api::RouteParameters::AnnotationsType::Weight)(
+            "datasources", engine::api::RouteParameters::AnnotationsType::Datasources);
 
         base_rule =
             BaseGrammar::base_rule(qi::_r1) |
