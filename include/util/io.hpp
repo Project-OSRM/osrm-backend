@@ -71,15 +71,8 @@ bool serializeVectorIntoAdjacencyArray(const std::string &filename,
     for (auto const &vec : data)
         all_data.insert(all_data.end(), vec.begin(), vec.end());
 
-    if (!file.SerializeVector(offsets))
-    {
-        return false;
-    }
-
-    if (!file.SerializeVector(all_data))
-    {
-        return false;
-    }
+    file.SerializeVector(offsets);
+    file.SerializeVector(all_data);
 
     return true;
 }

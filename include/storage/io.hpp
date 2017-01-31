@@ -224,7 +224,7 @@ class FileWriter
     }
 
     /* Write count objects of type T from pointer src to output stream */
-    template <typename T> bool WriteFrom(const T *src, const std::size_t count)
+    template <typename T> void WriteFrom(const T *src, const std::size_t count)
     {
 #if not defined __GNUC__ or __GNUC__ > 4
         static_assert(std::is_trivially_copyable<T>::value,
@@ -232,33 +232,32 @@ class FileWriter
 #endif
 
         if (count == 0)
-            return true;
+            return;
 
         const auto &result =
             output_stream.write(reinterpret_cast<const char *>(src), count * sizeof(T));
+
         if (!result)
         {
             throw util::exception("Error writing to " + filepath.string());
         }
-
-        return static_cast<bool>(output_stream);
     }
 
-    template <typename T> bool WriteFrom(const T &target) { return WriteFrom(&target, 1); }
+    template <typename T> void WriteFrom(const T &target) { WriteFrom(&target, 1); }
 
-    template <typename T> bool WriteOne(const T tmp) { return WriteFrom(tmp); }
+    template <typename T> void WriteOne(const T tmp) { WriteFrom(tmp); }
 
-    bool WriteElementCount32(const std::uint32_t count) { return WriteOne<std::uint32_t>(count); }
-    bool WriteElementCount64(const std::uint64_t count) { return WriteOne<std::uint64_t>(count); }
+    void WriteElementCount32(const std::uint32_t count) { WriteOne<std::uint32_t>(count); }
+    void WriteElementCount64(const std::uint64_t count) { WriteOne<std::uint64_t>(count); }
 
-    template <typename T> bool SerializeVector(const std::vector<T> &data)
+    template <typename T> void SerializeVector(const std::vector<T> &data)
     {
         const auto count = data.size();
         WriteElementCount64(count);
         return WriteFrom(data.data(), count);
     }
 
-    bool WriteFingerprint()
+    void WriteFingerprint()
     {
         const auto fingerprint = util::FingerPrint::GetValid();
         return WriteOne(fingerprint);
