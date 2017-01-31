@@ -49,8 +49,12 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
     Embedding embedding;
     embedding.reserve(view.NumberOfNodes());
 
-    std::transform(view.Begin(), view.End(), std::back_inserter(embedding), [&](const auto nid) {
-        return NodeWithCoordinate{nid, view.GetNode(nid).coordinate};
+    // adress of the very first node
+    const auto node_zero = &(*view.Begin());
+
+    std::transform(view.Begin(), view.End(), std::back_inserter(embedding), [&](const auto &node) {
+        const auto node_id = static_cast<NodeID>(&node - node_zero);
+        return NodeWithCoordinate{node_id, node.coordinate};
     });
 
     const auto project = [slope](const auto &each) {

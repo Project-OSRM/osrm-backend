@@ -63,12 +63,12 @@ class RecursiveBisectionState
   public:
     // The ID in the partition array
     using BisectionID = std::uint32_t;
-    using NodeIterator = BisectionGraph::NodeIterator;
+    using NodeIterator = BisectionGraph::ConstNodeIterator;
 
     RecursiveBisectionState(BisectionGraph &bisection_graph);
     ~RecursiveBisectionState();
 
-    BisectionID GetBisectionID(const NodeIterator node) const;
+    BisectionID GetBisectionID(const NodeID node) const;
 
     // Bisects the node id array's sub-range based on the partition mask.
     // Returns: partition point of the bisection: iterator to the second group's first element.

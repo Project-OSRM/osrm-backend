@@ -17,11 +17,11 @@ namespace partition
 RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
                                        double balance,
                                        double boundary_factor,
-                                       const BisectionGraph &bisection_graph_)
+                                       BisectionGraph &bisection_graph_)
     : bisection_graph(bisection_graph_), internal_state(bisection_graph_)
 {
     TIMER_START(bisection);
-    GraphView view(bisection_graph, internal_state, internal_state.Begin(), internal_state.End());
+    GraphView view(bisection_graph, internal_state);
     InertialFlow flow(view);
     const auto partition = flow.ComputePartition(10, balance, boundary_factor);
     const auto center = internal_state.ApplyBisection(view.Begin(), view.End(), 0, partition.flags);

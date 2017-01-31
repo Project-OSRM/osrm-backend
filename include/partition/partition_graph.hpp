@@ -56,6 +56,8 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
 
     using NodeIterator = typename std::vector<NodeT>::iterator;
     using ConstNodeIterator = typename std::vector<NodeT>::const_iterator;
+    using EdgeIterator = typename std::vector<EdgeT>::iterator;
+    using ConstEdgeIterator = typename std::vector<EdgeT>::const_iterator;
 
     // Constructs an empty graph with a given number of nodes.
     explicit RemappableGraph(std::vector<NodeT> nodes_, std::vector<EdgeT> edges_)
@@ -83,8 +85,13 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
                                           edges.begin() + nodes[nid].edges_end);
     }
 
-    EdgeID BeginEdges(const NodeID nid) const { return nodes[nid].edges_begin; }
-    EdgeID EndEdges(const NodeID nid) const { return nodes[nid].edges_end; }
+    auto BeginEdges(const NodeID nid) const { return edges.begin() + nodes[nid].edges_begin; }
+    auto EndEdges(const NodeID nid) const { return edges.begin() + nodes[nid].edges_end; }
+
+    NodeIterator Begin() { return nodes.begin(); }
+    NodeIterator End() { return nodes.end(); }
+    ConstNodeIterator CBegin() const { return nodes.cbegin(); }
+    ConstNodeIterator CEnd() const { return nodes.cend(); }
 
   protected:
     std::vector<NodeT> nodes;
