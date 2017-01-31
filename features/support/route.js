@@ -164,12 +164,11 @@ module.exports = function () {
     };
 
     this.annotationList = (instructions) => {
-        if (!('annotation' in instructions.legs[0]) || instructions.legs[0].annotation.length < 1)
+        if (!('annotation' in instructions.legs[0]))
             return '';
 
         return instructions.legs.map(l => {
             var fields = Object.keys(l.annotation);
-            if (fields.length < 1) return '';
             var collected = l.annotation[fields[0]].map((f, i) => {
                 var zipped = [];
                 for (var j = 0; j < fields.length; j++) {

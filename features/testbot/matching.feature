@@ -142,7 +142,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace | matchings | annotation    |
-            | ach   | ach       | 1:1,0:1:1:2:1 |
+            | ach   | ach       | 1,1,0,1,1,2,1 |
 
     Scenario: Testbot - Duration details
         Given the query options
@@ -167,9 +167,9 @@ Feature: Basic Map Matching
         And the contract extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
-            | trace | matchings | annotation                                                                                                      |
-            | abeh  | abeh      | 1:1:10.008842:1,0:0:0:0,1:1:10.008842:0,1:1:10.008842:0,1:1:10.008842:0,0:0:0:0,2:2:19.906475:0,1:1:10.008842:0 |
-            | abci  | abci      | 1:1:10.008842:1,0:0:0:0,1:1:10.008842:0,0:0:0:0,1:1:10.010367:0                                                 |
+            | trace | matchings | annotation                                                                                                                      |
+            | abeh  | abeh      | 1:10.008842:1:1:1,0:0:0:2:0,1:10.008842:1:2:0,1:10.008842:1:3:0,1:10.008842:1:4:0,0:0:0:4:0,2:19.906475:2:5:0,1:10.008842:1:6:0 |
+            | abci  | abci      | 1:10.008842:1:1:1,0:0:0:2:0,1:10.008842:1:2:0,0:0:0:2:0,1:10.010367:1:3:0                                                       |
 
         # The following is the same as the above, but separated for readability (line length)
         When I match I should get
@@ -388,4 +388,4 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | annotation   |
             | ac    | 2:2,2:2      |
-            | ca    | 2:2:0,2:2:0  |
+            | ca    | 2:2,2:2,0:0  |
