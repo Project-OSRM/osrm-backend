@@ -65,7 +65,9 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,4"} + '\0' + ".json"),
                       7);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,"} + '\0'), 6);
-    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4&annotations=distances"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=distances"), 28UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations="), 20UL);
+    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=&overview=simplified"), 20UL);
 
     // BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(), );
 }
@@ -326,36 +328,59 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK(result_13);
     BOOST_CHECK_EQUAL(result_13->generate_hints, true);
 
-    // parse single annotations value correctly
+    // parse none annotations value correctly
     RouteParameters reference_14{};
-    reference_14.annotations_type = RouteParameters::AnnotationsType::Duration;
+    reference_14.annotations_type = RouteParameters::AnnotationsType::None;
     reference_14.coordinates = coords_1;
-    auto result_14 = parseParameters<RouteParameters>("1,2;3,4?geometries=polyline&"
-                                                      "overview=simplified&annotations=duration");
+    auto result_14 = parseParameters<RouteParameters>("1,2;3,4?geometries=polyline");
     BOOST_CHECK(result_14);
     BOOST_CHECK_EQUAL(reference_14.geometries, result_14->geometries);
-    BOOST_CHECK_EQUAL(
-        static_cast<bool>(result_2->annotations_type & RouteParameters::AnnotationsType::Duration),
-        true);
-    BOOST_CHECK_EQUAL(result_14->annotations, true);
+    BOOST_CHECK_EQUAL(result_14->annotations_type == RouteParameters::AnnotationsType::None, true);
+    BOOST_CHECK_EQUAL(result_14->annotations, false);
 
-    // parse multiple annotations correctly
+    // parse single annotations value correctly
     RouteParameters reference_15{};
-    reference_15.annotations_type = RouteParameters::AnnotationsType::Duration |
-                                    RouteParameters::AnnotationsType::Weight |
-                                    RouteParameters::AnnotationsType::Nodes;
+    reference_15.annotations_type = RouteParameters::AnnotationsType::Duration;
     reference_15.coordinates = coords_1;
-    auto result_15 =
-        parseParameters<RouteParameters>("1,2;3,4?geometries=polyline&"
-                                         "overview=simplified&annotations=duration,weight,nodes");
+    auto result_15 = parseParameters<RouteParameters>("1,2;3,4?geometries=polyline&"
+                                                      "overview=simplified&annotations=duration");
     BOOST_CHECK(result_15);
     BOOST_CHECK_EQUAL(reference_15.geometries, result_15->geometries);
     BOOST_CHECK_EQUAL(
-        static_cast<bool>(result_2->annotations_type & (RouteParameters::AnnotationsType::Duration |
-                                                        RouteParameters::AnnotationsType::Weight |
-                                                        RouteParameters::AnnotationsType::Nodes)),
+        static_cast<bool>(result_2->annotations_type & RouteParameters::AnnotationsType::Duration),
         true);
     BOOST_CHECK_EQUAL(result_15->annotations, true);
+
+    // parse multiple annotations correctly
+    RouteParameters reference_16{};
+    reference_16.annotations_type = RouteParameters::AnnotationsType::Duration |
+                                    RouteParameters::AnnotationsType::Weight |
+                                    RouteParameters::AnnotationsType::Nodes;
+    reference_16.coordinates = coords_1;
+    auto result_16 =
+        parseParameters<RouteParameters>("1,2;3,4?geometries=polyline&"
+                                         "overview=simplified&annotations=duration,weight,nodes");
+    BOOST_CHECK(result_16);
+    BOOST_CHECK_EQUAL(reference_16.geometries, result_16->geometries);
+    BOOST_CHECK_EQUAL(
+        static_cast<bool>(result_2->annotations_type & (RouteParameters::AnnotationsType::Weight |
+                                                        RouteParameters::AnnotationsType::Duration |
+                                                        RouteParameters::AnnotationsType::Nodes)),
+        true);
+    BOOST_CHECK_EQUAL(result_16->annotations, true);
+
+    // parse all annotations correctly
+    RouteParameters reference_17{};
+    reference_17.annotations_type = RouteParameters::AnnotationsType::All;
+    reference_17.coordinates = coords_1;
+    auto result_17 =
+        parseParameters<RouteParameters>("1,2;3,4?overview=simplified&annotations=duration,weight,nodes,datasources,distance");
+    BOOST_CHECK(result_17);
+    BOOST_CHECK_EQUAL(reference_17.geometries, result_17->geometries);
+    BOOST_CHECK_EQUAL(
+        static_cast<bool>(result_2->annotations_type & RouteParameters::AnnotationsType::All),
+        true);
+    BOOST_CHECK_EQUAL(result_17->annotations, true);
 }
 
 BOOST_AUTO_TEST_CASE(valid_table_urls)
