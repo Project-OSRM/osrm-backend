@@ -13,7 +13,7 @@ local Tags = {}
 function Tags.get_forward_backward_by_key(way,data,key)
   local forward = way:get_value_by_key(key .. ':forward')
   local backward = way:get_value_by_key(key .. ':backward')
-  
+
   if forward and backward then
     return forward, backward
   end
@@ -23,7 +23,7 @@ function Tags.get_forward_backward_by_key(way,data,key)
          backward or common
 end
 
--- return [forward,backward] values, searching a 
+-- return [forward,backward] values, searching a
 -- prioritized sequence of tags
 -- e.g. for the sequence [maxspeed,advisory] search forward:
 --   maxspeed:forward
@@ -90,7 +90,7 @@ function Tags.get_value_by_postfixed_sequence(way,seq,postfix)
   end
 end
 
--- check if key-value pairs are set in a way and return a 
+-- check if key-value pairs are set in a way and return a
 -- corresponding constant if it is. e.g. for this input:
 --
 -- local speeds = {
@@ -105,7 +105,7 @@ end
 --
 -- we would check whether the following key-value combinations
 -- are set, and return the corresponding constant:
--- 
+--
 -- highway = residential      => 20
 -- highway = primary          => 40
 -- amenity = parking          => 10
