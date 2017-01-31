@@ -259,10 +259,10 @@ function way_function (way, result)
     result.forward_speed = platform_speeds[public_transport]
     result.backward_speed = platform_speeds[public_transport]
   elseif use_public_transport and railway and railway_speeds[railway] then
-      result.forward_mode = mode.train
-      result.backward_mode = mode.train
-     -- railways
-    if access and access_tag_whitelist[access] then
+    result.forward_mode = mode.train
+    result.backward_mode = mode.train
+    -- railways
+    if (not access and highway) or access_tag_whitelist[access] then
       result.forward_speed = railway_speeds[railway]
       result.backward_speed = railway_speeds[railway]
     end
