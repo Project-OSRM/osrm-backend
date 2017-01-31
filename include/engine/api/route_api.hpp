@@ -215,8 +215,7 @@ class RouteAPI : public BaseAPI
 
         std::vector<util::json::Object> annotations;
 
-        if (!static_cast<bool>(parameters.annotations_type &
-                               RouteParameters::AnnotationsType::None))
+        if (parameters.annotations_type != RouteParameters::AnnotationsType::None)
         {
             for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
             {
