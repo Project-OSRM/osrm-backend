@@ -42,12 +42,44 @@ RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
     }
 
     // Keep items with `0` as partition id to the left, move other to the right
-    auto by_flag_bit = [this, flag](const auto node) {
+    auto by_flag_bit = [this, flag](const auto &node) {
         return BisectionID{0} == (bisection_ids[node.original_id] & flag);
     };
 
     auto begin = bisection_graph.Begin() + std::distance(bisection_graph.CBegin(), const_begin);
     const auto end = begin + std::distance(const_begin, const_end);
+    // erase all edges that point into different partitions
+    std::for_each(const_begin, const_end, [this, begin](const auto &node) {
+        const auto id = bisection_ids[node.original_id];
+        for (auto &edge : bisection_graph.Edges(node))
+        {
+            const auto new_id = bisection_ids[(begin + edge.target)->original_id];
+            if (new_id != id)
+            {
+                edge.target = &node - &(*begin);
+            }
+        }
+    });
+
+    // remap the edges
+    std::vector<NodeID> mapping(std::distance(const_begin, const_end), SPECIAL_NODEID);
+    // calculate a mapping of all node ids
+    std::transform(const_begin,
+                   const_end,
+                   mapping.begin(),
+                   [ by_flag_bit, lesser_id = 0, upper_id = 0 ](const auto &node) mutable {
+                       return by_flag_bit(node) ? lesser_id++ : upper_id++;
+                   });
+
+    // remap all remaining edges
+    std::for_each(const_begin, const_end, [this, &mapping](const auto &node) {
+        for (auto &edge : bisection_graph.Edges(node))
+        {
+            edge.target = mapping[edge.target];
+        }
+    });
+
+
 
     auto center = std::stable_partition(begin, end, by_flag_bit);
 
