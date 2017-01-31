@@ -34,12 +34,12 @@ access_tag_whitelist = Set {
 
 access_tag_blacklist = Set {
   'no',
-  'private',
+--  'private',
   'agricultural',
   'forestry',
   'emergency',
   'psv',
-  'delivery'
+--  'delivery'
 }
 
 access_tags_hierarchy = Sequence {
@@ -77,7 +77,7 @@ speed_profile = {
   residential = 25,
   living_street = 10,
   service = 15,
---track = 5,
+  track = 5,
   ferry = 5,
   movable = 5,
   shuttle_train = 10,
@@ -209,7 +209,7 @@ local turn_bias                  = properties.left_hand_driving and 1/1.075 or 1
 
 local obey_oneway                = true
 local ignore_areas               = true
-local ignore_hov_ways            = true
+local ignore_hov_ways            = false
 local ignore_toll_ways           = false
 
 local abs = math.abs
@@ -261,17 +261,17 @@ function node_function (node, result)
     if access_tag_blacklist[access] then
       result.barrier = true
     end
-  else
-    local barrier = node:get_value_by_key("barrier")
-    if barrier then
-      --  make an exception for rising bollard barriers
-      local bollard = node:get_value_by_key("bollard")
-      local rising_bollard = bollard and "rising" == bollard
-
-      if not barrier_whitelist[barrier] and not rising_bollard then
-        result.barrier = true
-      end
-    end
+--  else
+--    local barrier = node:get_value_by_key("barrier")
+--    if barrier then
+--      --  make an exception for rising bollard barriers
+--      local bollard = node:get_value_by_key("bollard")
+--      local rising_bollard = bollard and "rising" == bollard
+--
+--      if not barrier_whitelist[barrier] and not rising_bollard then
+--        result.barrier = true
+--      end
+--    end
   end
 
   -- check if node is a traffic light
@@ -348,10 +348,10 @@ function is_way_blocked(way,result)
   -- Reversible oneways change direction with low frequency (think twice a day):
   -- do not route over these at all at the moment because of time dependence.
   -- Note: alternating (high frequency) oneways are handled below with penalty.
-  local oneway = way:get_value_by_key("oneway")
-  if "reversible" == oneway then
-    return false
-  end
+--  local oneway = way:get_value_by_key("oneway")
+--  if "reversible" == oneway then
+--    return false
+--  end
 
   local impassable = way:get_value_by_key("impassable")
   if "yes" == impassable then
@@ -537,15 +537,15 @@ end
 
 -- service roads
 function handle_service(way,result)
-  local service = way:get_value_by_key("service")
-  if service then
-    -- Set don't allow access to certain service roads
-    if service_tag_forbidden[service] then
-      result.forward_mode = mode.inaccessible
-      result.backward_mode = mode.inaccessible
-      return false
-    end
-  end
+--  local service = way:get_value_by_key("service")
+--  if service then
+--    -- Set don't allow access to certain service roads
+--    if service_tag_forbidden[service] then
+--      result.forward_mode = mode.inaccessible
+--      result.backward_mode = mode.inaccessible
+--      return false
+--    end
+--  end
 end
 
 -- scale speeds to get better average driving times
