@@ -18,7 +18,7 @@ HasSamePartitionID::HasSamePartitionID(const RecursiveBisectionState::BisectionI
 
 bool HasSamePartitionID::operator()(const EdgeID eid) const
 {
-    return recursive_bisection_state.GetBisectionID(bisection_graph.GetEdge(eid).target) ==
+    return recursive_bisection_state.GetBisectionID(bisection_graph.Edge(eid).target) ==
            bisection_id;
 }
 
@@ -59,12 +59,12 @@ GraphView::EdgeIterator GraphView::EdgeEnd(const NodeID nid) const
 
 const BisectionNode &GraphView::GetNode(const NodeID nid) const
 {
-    return bisection_graph.GetNode(nid);
+    return bisection_graph.Node(nid);
 }
 
 const BisectionEdge &GraphView::GetEdge(const EdgeID eid) const
 {
-    return bisection_graph.GetEdge(eid);
+    return bisection_graph.Edge(eid);
 }
 
 std::uint32_t GraphView::GetPosition(const NodeID nid) const

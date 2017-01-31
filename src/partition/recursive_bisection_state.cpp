@@ -12,14 +12,14 @@ namespace osrm
 namespace partition
 {
 
-RecursiveBisectionState::RecursiveBisectionState(const BisectionGraph &bisection_graph_)
+RecursiveBisectionState::RecursiveBisectionState(BisectionGraph &bisection_graph_)
     : bisection_graph(bisection_graph_)
 {
-    id_array.resize(bisection_graph.GetNumberOfNodes());
+    id_array.resize(bisection_graph.NumberOfNodes());
     std::iota(id_array.begin(), id_array.end(), NodeID{0});
-    position_array.resize(bisection_graph.GetNumberOfNodes());
+    position_array.resize(bisection_graph.NumberOfNodes());
     std::iota(position_array.begin(), position_array.end(), 0);
-    bisection_ids.resize(bisection_graph.GetNumberOfNodes(), BisectionID{0});
+    bisection_ids.resize(bisection_graph.NumberOfNodes(), BisectionID{0});
 }
 
 RecursiveBisectionState::~RecursiveBisectionState() {}
@@ -34,14 +34,15 @@ const RecursiveBisectionState::IDIterator RecursiveBisectionState::End() const
     return id_array.cend();
 }
 
-RecursiveBisectionState::BisectionID RecursiveBisectionState::GetBisectionID(const NodeID nid) const
+RecursiveBisectionState::BisectionID
+RecursiveBisectionState::GetBisectionID(const NodeIterator node) const
 {
-    return bisection_ids[nid];
+    return bisection_ids[node->original_id];
 }
 
-RecursiveBisectionState::IDIterator
-RecursiveBisectionState::ApplyBisection(const IDIterator begin,
-                                        const IDIterator end,
+RecursiveBisectionState::NodeIterator
+RecursiveBisectionState::ApplyBisection(NodeIterator begin,
+                                        const NodeIterator end,
                                         const std::size_t depth,
                                         const std::vector<bool> &partition)
 {
@@ -50,30 +51,15 @@ RecursiveBisectionState::ApplyBisection(const IDIterator begin,
     for (auto itr = begin; itr != end; ++itr)
     {
         if (partition[std::distance(begin, itr)])
-            bisection_ids[*itr] |= flag;
+            bisection_ids[itr->original_id] |= flag;
     }
 
-    auto first = id_array.begin() + std::distance(id_array.cbegin(), begin);
-    auto last = id_array.begin() + std::distance(id_array.cbegin(), end);
-
     // Keep items with `0` as partition id to the left, move other to the right
-    auto by_last_bit = [this](const auto nid) {
-        return BisectionID{0} == (bisection_ids[nid] & 1);
+    auto by_flag_bit = [this, flag](const auto node) {
+        return BisectionID{0} == (bisection_ids[node.original_id] & flag);
     };
 
-    auto center = std::stable_partition(first, last, by_last_bit);
-
-    // remember the new position to any node between begin and end
-    std::for_each(
-        first,
-        last,
-        [ this, position = std::distance(id_array.begin(), first) ](const auto node_id) mutable {
-            position_array[node_id] = position++;
-            BOOST_ASSERT(id_array[position_array[node_id]] == node_id);
-        });
-
-    BOOST_ASSERT(position_array[*first] == std::distance(id_array.begin(), first));
-    BOOST_ASSERT(position_array[*center] == std::distance(id_array.begin(), center));
+    auto center = std::stable_partition(begin, end, by_flag_bit);
 
     return center;
 }

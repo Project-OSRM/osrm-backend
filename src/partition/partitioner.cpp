@@ -70,14 +70,12 @@ int Partitioner::Run(const PartitionConfig &config)
                 << compressed_node_based_graph.edges.size() << " edges, "
                 << compressed_node_based_graph.coordinates.size() << " nodes";
 
-    sortBySourceThenTarget(begin(compressed_node_based_graph.edges),
-                           end(compressed_node_based_graph.edges));
+    groupEdgesBySource(begin(compressed_node_based_graph.edges),
+                       end(compressed_node_based_graph.edges));
 
-    std::vector<BisectionNode> nodes =
-        computeNodes(compressed_node_based_graph.coordinates, compressed_node_based_graph.edges);
-    std::vector<BisectionEdge> edges = adaptToBisectionEdge(compressed_node_based_graph.edges);
-
-    BisectionGraph graph(nodes, edges);
+    auto graph =
+        makeBisectionGraph(compressed_node_based_graph.coordinates,
+                           adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
     RecursiveBisection recursive_bisection(1024, 1.1, 0.25, graph);
 

@@ -98,7 +98,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const GraphView &view, const LevelGra
     std::size_t source_side_count = view.NumberOfNodes();
     for (auto itr = view.Begin(); itr != view.End(); ++itr)
     {
-        if (is_sink_side(*itr))
+        if (is_sink_side(std::distance(view.Begin(), itr)))
         {
             result[std::distance(view.Begin(), itr)] = false;
             --source_side_count;
@@ -107,10 +107,11 @@ DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const GraphView &view, const LevelGra
     std::size_t num_edges = 0;
     for (auto itr = view.Begin(); itr != view.End(); ++itr)
     {
-        const auto sink_side = is_sink_side(*itr);
-        for (auto edge_itr = view.EdgeBegin(*itr); edge_itr != view.EdgeEnd(*itr); ++edge_itr)
+        const auto nid = std::distance(view.Begin(),itr);
+        const auto sink_side = is_sink_side(nid);
+        for( const auto & edge : view.Edges(nid))
         {
-            if (is_sink_side(view.GetEdge(*edge_itr).target) != sink_side)
+            if (is_sink_side(edge.target) != sink_side)
             {
                 ++num_edges;
             }

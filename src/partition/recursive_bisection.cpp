@@ -35,16 +35,16 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
 
     util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString, util::LoggingScenario(0)>
         logger_zero("level_0.geojson");
-    for (NodeID nid = 0; nid < bisection_graph.GetNumberOfNodes(); ++nid)
+    for (NodeID nid = 0; nid < bisection_graph.NumberOfNodes(); ++nid)
     {
-        for (auto eid : bisection_graph.GetAdjacentEdgeRange(nid))
+        for (const auto &edge : bisection_graph.Edges(nid))
         {
-            const auto target = bisection_graph.GetTarget(eid);
+            const auto target = edge.target;
             if (internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target))
             {
                 std::vector<util::Coordinate> coordinates;
-                coordinates.push_back(bisection_graph.GetNode(nid).coordinate);
-                coordinates.push_back(bisection_graph.GetNode(target).coordinate);
+                coordinates.push_back(bisection_graph.Node(nid).coordinate);
+                coordinates.push_back(bisection_graph.Node(target).coordinate);
                 logger_zero.Write(coordinates);
             }
         }
@@ -75,16 +75,16 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString, util::LoggingScenario(1)>
         logger_one("level_1.geojson");
 
-    for (NodeID nid = 0; nid < bisection_graph.GetNumberOfNodes(); ++nid)
+    for (NodeID nid = 0; nid < bisection_graph.NumberOfNodes(); ++nid)
     {
-        for (auto eid : bisection_graph.GetAdjacentEdgeRange(nid))
+        for (const auto &edge : bisection_graph.Edges(nid))
         {
-            const auto target = bisection_graph.GetTarget(eid);
+            const auto target = edge.target;
             if (internal_state.GetBisectionID(nid) != internal_state.GetBisectionID(target))
             {
                 std::vector<util::Coordinate> coordinates;
-                coordinates.push_back(bisection_graph.GetNode(nid).coordinate);
-                coordinates.push_back(bisection_graph.GetNode(target).coordinate);
+                coordinates.push_back(bisection_graph.Node(nid).coordinate);
+                coordinates.push_back(bisection_graph.Node(target).coordinate);
                 logger_one.Write(coordinates);
             }
         }

@@ -68,17 +68,19 @@ class GraphView
 
     GraphView(const BisectionGraph &graph,
               const RecursiveBisectionState &bisection_state,
-              const RecursiveBisectionState::IDIterator begin,
-              const RecursiveBisectionState::IDIterator end);
+              const RecursiveBisectionState::NodeIterator begin,
+              const RecursiveBisectionState::NodeIterator end);
 
     // Number of nodes _in this sub-graph.
     std::size_t NumberOfNodes() const;
 
-    RecursiveBisectionState::IDIterator Begin() const;
-    RecursiveBisectionState::IDIterator End() const;
+    RecursiveBisectionState::NodeIterator Begin() const;
+    RecursiveBisectionState::NodeIterator End() const;
 
     EdgeIterator EdgeBegin(const NodeID nid) const;
     EdgeIterator EdgeEnd(const NodeID nid) const;
+
+
 
     const BisectionNode &GetNode(const NodeID nid) const;
     const BisectionEdge &GetEdge(const EdgeID eid) const;
@@ -89,8 +91,8 @@ class GraphView
     const BisectionGraph &bisection_graph;
     const RecursiveBisectionState &bisection_state;
 
-    const RecursiveBisectionState::IDIterator begin;
-    const RecursiveBisectionState::IDIterator end;
+    const RecursiveBisectionState::NodeIterator begin;
+    const RecursiveBisectionState::NodeIterator end;
 };
 
 } // namespace partition

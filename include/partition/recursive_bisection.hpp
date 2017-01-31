@@ -17,7 +17,7 @@ class RecursiveBisection
     RecursiveBisection(std::size_t maximum_cell_size,
                        double balance,
                        double boundary_factor,
-                       const BisectionGraph &bisection_graph);
+                       BisectionGraph &bisection_graph);
 
   private:
     const BisectionGraph &bisection_graph;
