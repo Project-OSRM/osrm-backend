@@ -83,13 +83,21 @@ void ExtractorCallbacks::ProcessRestriction(
  */
 void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const ExtractionWay &parsed_way)
 {
-    if ((parsed_way.forward_travel_mode == TRAVEL_MODE_INACCESSIBLE &&
-         parsed_way.backward_travel_mode == TRAVEL_MODE_INACCESSIBLE) ||
-        (parsed_way.forward_speed <= 0 && parsed_way.backward_speed <= 0 &&
-         parsed_way.duration <= 0) ||
-        (!fallback_to_duration && parsed_way.forward_rate <= 0 && parsed_way.backward_rate <= 0 &&
-         parsed_way.weight <= 0))
-    { // Only true if the way is specified by the speed profile
+    if ((parsed_way.forward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+         parsed_way.forward_speed <= 0) &&
+        (parsed_way.backward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+         parsed_way.backward_speed <= 0) &&
+        parsed_way.duration <= 0)
+    { // Only true if the way is assigned a valid speed/duration
+        return;
+    }
+
+    if (!fallback_to_duration && (parsed_way.forward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+                                  parsed_way.forward_rate <= 0) &&
+        (parsed_way.backward_travel_mode == TRAVEL_MODE_INACCESSIBLE ||
+         parsed_way.backward_rate <= 0) &&
+        parsed_way.weight <= 0)
+    { // Only true if the way is assigned a valid rate/weight and there is no duration fallback
         return;
     }
 
