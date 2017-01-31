@@ -67,14 +67,14 @@ struct RouteParameters : public BaseParameters
         Full,
         False
     };
-    enum class AnnotationsType : int
+    enum class AnnotationsType
     {
         None = 0,
-        Duration = 1 << 1,
-        Nodes = 1 << 2,
-        Distance = 1 << 3,
-        Weight = 1 << 4,
-        Datasources = 1 << 5,
+        Duration = 0x01,
+        Nodes = 0x02,
+        Distance = 0x03,
+        Weight = 0x04,
+        Datasources = 0x05,
         All = Duration | Nodes | Distance | Weight | Datasources
     };
 
