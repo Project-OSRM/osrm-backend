@@ -60,7 +60,6 @@ RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
                        return by_flag_bit(node) ? lesser_id++ : upper_id++;
                    });
 
-
     // erase all edges that point into different partitions
     std::for_each(begin, end, [&](auto &node) {
         const auto node_flag = by_flag_bit(node);

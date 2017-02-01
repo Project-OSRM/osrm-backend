@@ -37,9 +37,15 @@ class GraphView
 
     NodeID GetID(const BisectionGraph::NodeT &node) const;
 
-    inline auto Edges(const NodeID nid) const { return bisection_graph.Edges(*(begin+nid)); }
-    inline auto BeginEdges(const NodeID nid) const { return bisection_graph.BeginEdges(*(begin+nid)); }
-    inline auto EndEdges(const NodeID nid) const { return bisection_graph.EndEdges(*(begin+nid)); }
+    inline auto Edges(const NodeID nid) const { return bisection_graph.Edges(*(begin + nid)); }
+    inline auto BeginEdges(const NodeID nid) const
+    {
+        return bisection_graph.BeginEdges(*(begin + nid));
+    }
+    inline auto EndEdges(const NodeID nid) const
+    {
+        return bisection_graph.EndEdges(*(begin + nid));
+    }
 
   private:
     const BisectionGraph &bisection_graph;

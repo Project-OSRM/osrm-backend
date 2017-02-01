@@ -46,11 +46,11 @@ template <typename GraphT> class TarjanSCC
 
     std::vector<unsigned> components_index;
     std::vector<NodeID> component_size_vector;
-    const GraphT& m_graph;
+    const GraphT &m_graph;
     std::size_t size_one_counter;
 
   public:
-    TarjanSCC(const GraphT& graph)
+    TarjanSCC(const GraphT &graph)
         : components_index(graph.GetNumberOfNodes(), SPECIAL_NODEID), m_graph(graph),
           size_one_counter(0)
     {

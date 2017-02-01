@@ -9,8 +9,8 @@ namespace partition
 {
 
 GraphView::GraphView(const BisectionGraph &bisection_graph_)
-    : bisection_graph(bisection_graph_),
-      begin(bisection_graph.CBegin()), end(bisection_graph.CEnd())
+    : bisection_graph(bisection_graph_), begin(bisection_graph.CBegin()),
+      end(bisection_graph.CEnd())
 {
 }
 

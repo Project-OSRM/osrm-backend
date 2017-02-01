@@ -27,7 +27,8 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
 {
     auto views = FakeFirstPartitionWithSCC(1000);
 
-    std::cout << "Components: " << views.size() << std::endl;;
+    std::cout << "Components: " << views.size() << std::endl;
+    ;
 
     TIMER_START(bisection);
     GraphView view = views.front();
@@ -100,7 +101,8 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     }
 }
 
-std::vector<GraphView> RecursiveBisection::FakeFirstPartitionWithSCC(const std::size_t small_component_size)
+std::vector<GraphView>
+RecursiveBisection::FakeFirstPartitionWithSCC(const std::size_t small_component_size)
 {
     // since our graphs are unidirectional, we don't realy need the scc. But tarjan is so nice and
     // assigns IDs and counts sizes
@@ -129,8 +131,7 @@ std::vector<GraphView> RecursiveBisection::FakeFirstPartitionWithSCC(const std::
     // needs to remove edges, if we should ever switch to directed graphs here
     std::stable_sort(
         bisection_graph.Begin(), bisection_graph.End(), [&](const auto &lhs, const auto &rhs) {
-            return transform_id(lhs.original_id) <
-                   transform_id(rhs.original_id);
+            return transform_id(lhs.original_id) < transform_id(rhs.original_id);
         });
 
     // remap all remaining edges
@@ -143,17 +144,17 @@ std::vector<GraphView> RecursiveBisection::FakeFirstPartitionWithSCC(const std::
     auto last = bisection_graph.CBegin();
     auto last_id = transform_id(bisection_graph.Begin()->original_id);
 
-    for( auto itr = bisection_graph.CBegin(); itr != bisection_graph.CEnd(); ++itr )
+    for (auto itr = bisection_graph.CBegin(); itr != bisection_graph.CEnd(); ++itr)
     {
         auto itr_id = transform_id(itr->original_id);
-        if( last_id != itr_id)
+        if (last_id != itr_id)
         {
-            views.push_back(GraphView(bisection_graph,last,itr));
+            views.push_back(GraphView(bisection_graph, last, itr));
             last_id = itr_id;
             last = itr;
         }
     }
-    views.push_back(GraphView(bisection_graph,last,bisection_graph.CEnd()));
+    views.push_back(GraphView(bisection_graph, last, bisection_graph.CEnd()));
     return views;
 }
 
