@@ -122,16 +122,6 @@ std::vector<GraphView> RecursiveBisection::FakeFirstPartitionWithSCC(const std::
             return scc_algo.GetComponentID(node_id);
     };
 
-    // for all small components
-    std::size_t num_big_components = 0;
-    for (std::size_t component_id = 0; component_id < scc_algo.GetNumberOfComponents();
-         ++component_id)
-    {
-        const auto size = scc_algo.GetComponentSize(component_id);
-        if (size > small_component_size)
-            num_big_components++;
-    }
-
     std::vector<NodeID> mapping(bisection_graph.NumberOfNodes(), SPECIAL_NODEID);
     for (const auto &node : bisection_graph.Nodes())
         mapping[node.original_id] = component_map[transform_id(node.original_id)]++;
