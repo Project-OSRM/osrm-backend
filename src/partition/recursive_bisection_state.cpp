@@ -80,5 +80,11 @@ RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
     return const_begin + std::distance(begin, center);
 }
 
+const std::vector<RecursiveBisectionState::BisectionID> &
+RecursiveBisectionState::BisectionIDs() const
+{
+    return bisection_ids;
+}
+
 } // namespace partition
 } // namespace osrm

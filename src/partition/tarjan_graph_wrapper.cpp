@@ -14,8 +14,7 @@ std::size_t TarjanGraphWrapper::GetNumberOfNodes() const { return bisection_grap
 
 util::range<EdgeID> TarjanGraphWrapper::GetAdjacentEdgeRange(const NodeID nid) const
 {
-    const auto &node = bisection_graph.Node(nid);
-    return util::irange<EdgeID>(node.edges_begin, node.edges_end);
+    return util::irange<EdgeID>(bisection_graph.BeginEdgeID(nid), bisection_graph.EndEdgeID(nid));
 }
 
 NodeID TarjanGraphWrapper::GetTarget(const EdgeID eid) const

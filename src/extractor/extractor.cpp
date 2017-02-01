@@ -742,15 +742,8 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
 
     BOOST_ASSERT_MSG(num_nodes == externals.size(), "graph and embedding out of sync");
 
-    const auto die = [] {
-        throw util::exception("Writing the compressed node based graph to disk failed");
-    };
-
-    if (!writer.WriteElementCount64(num_edges))
-        die();
-
-    if (!writer.WriteElementCount64(num_nodes))
-        die();
+    writer.WriteElementCount64(num_edges);
+    writer.WriteElementCount64(num_nodes);
 
     // For all nodes iterate over its edges and dump (from, to) pairs
     for (const NodeID from_node : util::irange(0u, num_nodes))
@@ -759,19 +752,15 @@ void Extractor::WriteCompressedNodeBasedGraph(const std::string &path,
         {
             const auto to_node = graph.GetTarget(edge);
 
-            if (!writer.WriteOne(from_node))
-                die();
-            if (!writer.WriteOne(to_node))
-                die();
+            writer.WriteOne(from_node);
+            writer.WriteOne(to_node);
         }
     }
 
     for (const auto &qnode : externals)
     {
-        if (!writer.WriteOne(qnode.lon))
-            die();
-        if (!writer.WriteOne(qnode.lat))
-            die();
+        writer.WriteOne(qnode.lon);
+        writer.WriteOne(qnode.lat);
     }
 }
 
