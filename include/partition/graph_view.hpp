@@ -6,6 +6,7 @@
 
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/iterator_range.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -20,32 +21,38 @@ namespace partition
 class GraphView
 {
   public:
-    GraphView(const BisectionGraph &graph,
-              const BisectionGraph::ConstNodeIterator begin,
-              const BisectionGraph::ConstNodeIterator end);
+    using ConstNodeIterator = BisectionGraph::ConstNodeIterator;
+    using NodeIterator = BisectionGraph::NodeIterator;
+    using NodeT = BisectionGraph::NodeT;
+    using EdgeT = BisectionGraph::EdgeT;
 
+    // Construction either for a subrange, or for a full range
     GraphView(const BisectionGraph &graph);
+    GraphView(const BisectionGraph &graph,
+              const ConstNodeIterator begin,
+              const ConstNodeIterator end);
+
+    // construction from a different view, no need to keep the graph around
+    GraphView(const GraphView &view, const ConstNodeIterator begin, const ConstNodeIterator end);
 
     // Number of nodes _in this sub-graph.
     std::size_t NumberOfNodes() const;
 
-    BisectionGraph::ConstNodeIterator Begin() const;
-    BisectionGraph::ConstNodeIterator End() const;
+    // Iteration over all nodes (direct access into the node)
+    ConstNodeIterator Begin() const;
+    ConstNodeIterator End() const;
 
-    const BisectionNode &GetNode(const NodeID nid) const;
-    const BisectionEdge &GetEdge(const EdgeID eid) const;
+    // Re-Construct the ID of a node from a reference
+    NodeID GetID(const NodeT &node) const;
 
-    NodeID GetID(const BisectionGraph::NodeT &node) const;
+    // Access into single nodes/Edges
+    const NodeT &Node(const NodeID nid) const;
+    const EdgeT &Edge(const EdgeID eid) const;
 
-    inline auto Edges(const NodeID nid) const { return bisection_graph.Edges(*(begin + nid)); }
-    inline auto BeginEdges(const NodeID nid) const
-    {
-        return bisection_graph.BeginEdges(*(begin + nid));
-    }
-    inline auto EndEdges(const NodeID nid) const
-    {
-        return bisection_graph.EndEdges(*(begin + nid));
-    }
+    // Access into all Edges
+    auto Edges(const NodeID nid) const { return bisection_graph.Edges(*(begin + nid)); }
+    auto BeginEdges(const NodeID nid) const { return bisection_graph.BeginEdges(*(begin + nid)); }
+    auto EndEdges(const NodeID nid) const { return bisection_graph.EndEdges(*(begin + nid)); }
 
   private:
     const BisectionGraph &bisection_graph;
