@@ -246,8 +246,8 @@ function Handlers.handle_side_roads(way,result,data,profile)
   local sideway = way:get_value_by_key("side_road")
   if "yes" == sideway or
   "rotary" == sideway then
-    result.forward_speed = result.forward_speed * side_road_speed_multiplier
-    result.backward_speed = result.backward_speed * side_road_speed_multiplier
+    result.forward_speed = result.forward_speed * profile.side_road_speed_multiplier
+    result.backward_speed = result.backward_speed * profile.side_road_speed_multiplier
   end
 end
 
