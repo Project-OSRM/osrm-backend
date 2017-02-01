@@ -125,7 +125,7 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
         const auto remaining_edges = std::distance(BeginEdges(node), center);
         node.edges_end = node.edges_begin + remaining_edges;
         return center;
-    };
+    }
 
   protected:
     std::vector<NodeT> nodes;
