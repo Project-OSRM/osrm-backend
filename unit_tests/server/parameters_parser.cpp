@@ -67,7 +67,8 @@ BOOST_AUTO_TEST_CASE(invalid_route_urls)
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(std::string{"1,2;3,"} + '\0'), 6);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=distances"), 28UL);
     BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations="), 20UL);
-    BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>("1,2;3,4?annotations=&overview=simplified"), 20UL);
+    BOOST_CHECK_EQUAL(
+        testInvalidOptions<RouteParameters>("1,2;3,4?annotations=&overview=simplified"), 20UL);
 
     // BOOST_CHECK_EQUAL(testInvalidOptions<RouteParameters>(), );
 }
@@ -346,9 +347,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                                       "overview=simplified&annotations=duration");
     BOOST_CHECK(result_15);
     BOOST_CHECK_EQUAL(reference_15.geometries, result_15->geometries);
-    BOOST_CHECK_EQUAL(
-        static_cast<bool>(result_2->annotations_type & RouteParameters::AnnotationsType::Duration),
-        true);
+    BOOST_CHECK_EQUAL(result_15->annotations_type == RouteParameters::AnnotationsType::Duration, true);
     BOOST_CHECK_EQUAL(result_15->annotations, true);
 
     // parse multiple annotations correctly
@@ -373,8 +372,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     RouteParameters reference_17{};
     reference_17.annotations_type = RouteParameters::AnnotationsType::All;
     reference_17.coordinates = coords_1;
-    auto result_17 =
-        parseParameters<RouteParameters>("1,2;3,4?overview=simplified&annotations=duration,weight,nodes,datasources,distance");
+    auto result_17 = parseParameters<RouteParameters>(
+        "1,2;3,4?overview=simplified&annotations=duration,weight,nodes,datasources,distance");
     BOOST_CHECK(result_17);
     BOOST_CHECK_EQUAL(reference_17.geometries, result_17->geometries);
     BOOST_CHECK_EQUAL(

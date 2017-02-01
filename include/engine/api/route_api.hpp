@@ -79,6 +79,19 @@ class RouteAPI : public BaseAPI
         return json::makeGeoJSONGeometry(begin, end);
     }
 
+    template <typename GetFn>
+    util::json::Array GetAnnotations(const guidance::LegGeometry &leg, GetFn Get) const
+    {
+        util::json::Array annotations_store;
+        annotations_store.values.reserve(leg.annotations.size());
+        std::for_each(leg.annotations.begin(),
+                      leg.annotations.end(),
+                      [Get, &annotations_store](const guidance::LegGeometry::Annotation &step) {
+                          annotations_store.values.push_back(Get(step));
+                      });
+        return annotations_store;
+    }
+
     util::json::Object MakeRoute(const std::vector<PhantomNodes> &segment_end_coordinates,
                                  const std::vector<std::vector<PathData>> &unpacked_path_segments,
                                  const std::vector<bool> &source_traversed_in_reverse,
@@ -221,52 +234,35 @@ class RouteAPI : public BaseAPI
             {
                 auto &leg_geometry = leg_geometries[idx];
                 util::json::Object annotation;
+
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Duration)
                 {
-                    util::json::Array durations;
-                    durations.values.reserve(leg_geometry.annotations.size());
-                    std::for_each(
-                        leg_geometry.annotations.begin(),
-                        leg_geometry.annotations.end(),
-                        [this, &durations](const guidance::LegGeometry::Annotation &step) {
-                            durations.values.push_back(step.duration);
-                        });
-                    annotation.values["duration"] = std::move(durations);
+                    annotation.values["duration"] =
+                        GetAnnotations(leg_geometry,
+                                       std::bind(&guidance::LegGeometry::Annotation::duration,
+                                                 std::placeholders::_1));
                 }
+
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Distance)
                 {
-                    util::json::Array distances;
-                    distances.values.reserve(leg_geometry.annotations.size());
-                    std::for_each(
-                        leg_geometry.annotations.begin(),
-                        leg_geometry.annotations.end(),
-                        [this, &distances](const guidance::LegGeometry::Annotation &step) {
-                            distances.values.push_back(step.distance);
-                        });
-                    annotation.values["distance"] = std::move(distances);
+                    annotation.values["distance"] =
+                        GetAnnotations(leg_geometry,
+                                       std::bind(&guidance::LegGeometry::Annotation::distance,
+                                                 std::placeholders::_1));
                 }
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Weight)
                 {
-                    util::json::Array weights;
-                    weights.values.reserve(leg_geometry.annotations.size());
-                    std::for_each(leg_geometry.annotations.begin(),
-                                  leg_geometry.annotations.end(),
-                                  [this, &weights](const guidance::LegGeometry::Annotation &step) {
-                                      weights.values.push_back(step.weight);
-                                  });
-                    annotation.values["weight"] = std::move(weights);
+                    annotation.values["weight"] =
+                        GetAnnotations(leg_geometry,
+                                       std::bind(&guidance::LegGeometry::Annotation::weight,
+                                                 std::placeholders::_1));
                 }
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Datasources)
                 {
-                    util::json::Array datasources;
-                    datasources.values.reserve(leg_geometry.annotations.size());
-                    std::for_each(
-                        leg_geometry.annotations.begin(),
-                        leg_geometry.annotations.end(),
-                        [this, &datasources](const guidance::LegGeometry::Annotation &step) {
-                            datasources.values.push_back(step.datasource);
-                        });
-                    annotation.values["datasources"] = std::move(datasources);
+                    annotation.values["datasources"] =
+                        GetAnnotations(leg_geometry,
+                                       std::bind(&guidance::LegGeometry::Annotation::datasource,
+                                                 std::placeholders::_1));
                 }
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Nodes)
                 {
