@@ -72,9 +72,9 @@ struct RouteParameters : public BaseParameters
         None = 0,
         Duration = 0x01,
         Nodes = 0x02,
-        Distance = 0x03,
-        Weight = 0x04,
-        Datasources = 0x05,
+        Distance = 0x04,
+        Weight = 0x08,
+        Datasources = 0x10,
         All = Duration | Nodes | Distance | Weight | Datasources
     };
 
