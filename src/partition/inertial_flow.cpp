@@ -118,13 +118,8 @@ DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double 
                 // Swap to keep the destruction of the old object outside of critical section.
                 if (std::tie(cut.num_edges, cut_balance) < std::tie(best.num_edges, best_balance))
                 {
-                    std::cout << "New Cut: " << cut.num_edges << " " << cut_balance << std::endl;
                     best_balance = cut_balance;
                     std::swap(best, cut);
-                }
-                else
-                {
-                    std::cout << "Bad Cut: " << cut.num_edges << " " << cut_balance << std::endl;
                 }
             }
             // cut gets destroyed here

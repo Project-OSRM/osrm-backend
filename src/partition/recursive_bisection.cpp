@@ -158,7 +158,23 @@ RecursiveBisection::FakeFirstPartitionWithSCC(const std::size_t small_component_
         }
     }
     views.push_back(GraphView(bisection_graph, last, bisection_graph.CEnd()));
+
+    bool has_small_component = [&]() {
+        for (std::size_t i = 0; i < scc_algo.GetNumberOfComponents(); ++i)
+            if (scc_algo.GetComponentSize(i) <= small_component_size)
+                return true;
+        return false;
+    }();
+
+    if (!has_small_component)
+        views.push_back(GraphView(bisection_graph, bisection_graph.CEnd(), bisection_graph.CEnd()));
+
     return views;
+}
+
+const std::vector<RecursiveBisectionState::BisectionID> &RecursiveBisection::BisectionIDs() const
+{
+    return internal_state.BisectionIDs();
 }
 
 } // namespace partition

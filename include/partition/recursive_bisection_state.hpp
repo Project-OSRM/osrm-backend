@@ -77,6 +77,8 @@ class RecursiveBisectionState
                                 const std::size_t depth,
                                 const std::vector<bool> &partition);
 
+    const std::vector<BisectionID> &BisectionIDs() const;
+
   private:
     BisectionGraph &bisection_graph;
     std::vector<BisectionID> bisection_ids;

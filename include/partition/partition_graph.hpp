@@ -15,6 +15,9 @@ namespace osrm
 namespace partition
 {
 
+// forward declaration to allow finding friends
+template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph;
+
 // wrapper for nodes to augment with a tag storing first edge id
 template <typename Base> class NodeEntryWrapper : public Base
 {
@@ -25,9 +28,16 @@ template <typename Base> class NodeEntryWrapper : public Base
     {
     }
 
+  private:
+    // only to be modified by the graph itself
     std::size_t edges_begin;
     std::size_t edges_end;
+
+    // give the graph access to the node data wrapper
+    template <typename NodeEntryT, typename EdgeEntryT> friend class RemappableGraph;
 };
+
+using RemappableGraphNode = NodeEntryWrapper<struct zero_base_class>;
 
 template <typename Base> class GraphConstructionWrapper : public Base
 {
@@ -106,9 +116,18 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     auto BeginEdges(const NodeT &node) { return edges.begin() + node.edges_begin; }
     auto EndEdges(const NodeT &node) { return edges.begin() + node.edges_end; }
 
+    EdgeID BeginEdgeID(const NodeID nid) const { return nodes[nid].edges_begin; }
+    EdgeID EndEdgeID(const NodeID nid) const { return nodes[nid].edges_end; }
+
     // iterate over all nodes
     auto Nodes() { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
     auto Nodes() const { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
+
+    NodeID GetID(const NodeT &node)
+    {
+        BOOST_ASSERT(&node >= &nodes[0] && &node <= &nodes.back());
+        return (&node - &nodes[0]);
+    }
 
     NodeIterator Begin() { return nodes.begin(); }
     NodeIterator End() { return nodes.end(); }

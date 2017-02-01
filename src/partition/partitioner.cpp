@@ -9,12 +9,15 @@
 
 #include <iterator>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include <boost/assert.hpp>
 
 #include <tbb/task_scheduler_init.h>
+
+#include "util/geojson_debug_logger.hpp"
+#include "util/geojson_debug_policies.hpp"
+#include "util/json_container.hpp"
 
 namespace osrm
 {
@@ -136,6 +139,9 @@ int Partitioner::Run(const PartitionConfig &config)
     util::Log() << "Loaded compressed node based graph: "
                 << compressed_node_based_graph.edges.size() << " edges, "
                 << compressed_node_based_graph.coordinates.size() << " nodes";
+
+    groupEdgesBySource(begin(compressed_node_based_graph.edges),
+                       end(compressed_node_based_graph.edges));
 
     auto graph =
         makeBisectionGraph(compressed_node_based_graph.coordinates,

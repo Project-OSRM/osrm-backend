@@ -6,22 +6,9 @@
 #include <cstdint>
 #include <functional>
 #include <set>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-namespace std
-{
-template <> struct hash<std::pair<NodeID, NodeID>>
-{
-    std::size_t operator()(const std::pair<NodeID, NodeID> &flow_edge) const
-    {
-        std::size_t combined = (static_cast<std::size_t>(flow_edge.first) << 32) | flow_edge.second;
-        return std::hash<std::size_t>()(combined);
-    }
-};
-}
 
 namespace osrm
 {
@@ -31,42 +18,68 @@ namespace partition
 class DinicMaxFlow
 {
   public:
+    // maximal number of hops in the graph from source to sink
     using Level = std::uint32_t;
+
     using MinCut = struct
     {
         std::size_t num_nodes_source;
         std::size_t num_edges;
         std::vector<bool> flags;
     };
+
+    // input parameter storing the set o
     using SourceSinkNodes = std::unordered_set<NodeID>;
-    using LevelGraph = std::vector<Level>;
-    using FlowEdges = std::vector<std::set<NodeID>>;
 
     MinCut operator()(const GraphView &view,
                       const SourceSinkNodes &sink_nodes,
                       const SourceSinkNodes &source_nodes) const;
 
   private:
+    // the level of each node in the graph (==hops in BFS from source)
+    using LevelGraph = std::vector<Level>;
+
+    // this is actually faster than using an unordered_set<Edge>, stores all edges that have
+    // capacity grouped by node
+    using FlowEdges = std::vector<std::set<NodeID>>;
+
+    // The level graph (see [1]) is based on a BFS computation. We assign a level to all nodes
+    // (starting with 0 for all source nodes) and assign the hop distance in the residual graph as
+    // the level of the node.
+    //    a
+    //  /   \
+    // s     t
+    //  \   /
+    //    b
+    // would assign s = 0, a,b = 1, t=2
     LevelGraph ComputeLevelGraph(const GraphView &view,
                                  const std::vector<NodeID> &border_source_nodes,
                                  const SourceSinkNodes &source_nodes,
                                  const SourceSinkNodes &sink_nodes,
                                  const FlowEdges &flow) const;
 
-    std::uint32_t BlockingFlow(FlowEdges &flow,
-                               LevelGraph &levels,
-                               const GraphView &view,
-                               const SourceSinkNodes &source_nodes,
-                               const std::vector<NodeID> &border_sink_nodes) const;
+    // Using the above levels (see ComputeLevelGraph), we can use multiple DFS (that can now be
+    // directed at the sink) to find a flow that completely blocks the level graph (i.e. no path
+    // with increasing level exists from `s` to `t`).
+    std::size_t BlockingFlow(FlowEdges &flow,
+                             LevelGraph &levels,
+                             const GraphView &view,
+                             const SourceSinkNodes &source_nodes,
+                             const std::vector<NodeID> &border_sink_nodes) const;
 
+    // Finds a single augmenting path from a node to the sink side following levels in the level
+    // graph. We don't actually remove the edges, so we have to check for increasing level values.
+    // Since we know which sinks have been reached, we actually search for these paths starting at
+    // sink nodes, instead of the source, so we can save a few dfs runs
     std::vector<NodeID> GetAugmentingPath(LevelGraph &levels,
                                           const NodeID from,
                                           const GraphView &view,
                                           const FlowEdges &flow,
-                                          const SourceSinkNodes &sink_nodes) const;
+                                          const SourceSinkNodes &source_nodes) const;
 
     // Builds an actual cut result from a level graph
-    MinCut MakeCut(const GraphView &view, const LevelGraph &levels) const;
+    MinCut
+    MakeCut(const GraphView &view, const LevelGraph &levels, const std::size_t flow_value) const;
 };
 
 } // namespace partition

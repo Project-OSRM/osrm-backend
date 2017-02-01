@@ -3,14 +3,15 @@
 #include <iostream>
 #include <iterator>
 
+#include <boost/assert.hpp>
+
 namespace osrm
 {
 namespace partition
 {
 
 GraphView::GraphView(const BisectionGraph &bisection_graph_)
-    : bisection_graph(bisection_graph_), begin(bisection_graph.CBegin()),
-      end(bisection_graph.CEnd())
+    : GraphView(bisection_graph_, bisection_graph_.CBegin(), bisection_graph_.CEnd())
 {
 }
 
@@ -21,23 +22,32 @@ GraphView::GraphView(const BisectionGraph &bisection_graph_,
 {
 }
 
-NodeID GraphView::GetID(const BisectionGraph::NodeT &node) const
+GraphView::GraphView(const GraphView &other_view,
+                     const BisectionGraph::ConstNodeIterator begin_,
+                     const BisectionGraph::ConstNodeIterator end_)
+    : GraphView(other_view.bisection_graph, begin_, end_)
 {
-    return static_cast<NodeID>(&node - &(*begin));
+}
+
+std::size_t GraphView::NumberOfNodes() const { return std::distance(begin, end); }
+
+NodeID GraphView::GetID(const NodeT &node) const
+{
+    const auto node_id = static_cast<NodeID>(&node - &(*begin));
+    BOOST_ASSERT(node_id < NumberOfNodes());
+    return node_id;
 }
 
 BisectionGraph::ConstNodeIterator GraphView::Begin() const { return begin; }
 
 BisectionGraph::ConstNodeIterator GraphView::End() const { return end; }
 
-std::size_t GraphView::NumberOfNodes() const { return std::distance(begin, end); }
-
-const BisectionNode &GraphView::GetNode(const NodeID nid) const
+const GraphView::NodeT &GraphView::Node(const NodeID nid) const
 {
     return bisection_graph.Node(nid);
 }
 
-const BisectionEdge &GraphView::GetEdge(const EdgeID eid) const
+const GraphView::EdgeT &GraphView::Edge(const EdgeID eid) const
 {
     return bisection_graph.Edge(eid);
 }
