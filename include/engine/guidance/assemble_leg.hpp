@@ -131,6 +131,8 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
 {
     const auto target_duration =
         (target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration);
+    const auto target_weight =
+        (target_traversed_in_reverse ? target_node.reverse_weight : target_node.forward_weight);
 
     auto distance = std::accumulate(
         leg_geometry.segment_distances.begin(), leg_geometry.segment_distances.end(), 0.);
@@ -165,6 +167,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     // On local segments, the target duration is already part of the duration, however.
 
     duration = duration + target_duration;
+    weight = weight + target_weight;
     if (route_data.empty())
     {
         duration -= (target_traversed_in_reverse ? source_node.reverse_duration
@@ -204,7 +207,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
 
     return RouteLeg{std::round(distance * 10.) / 10.,
                     duration / 10.,
-                    duration / facade.GetWeightMultiplier(),
+                    weight / facade.GetWeightMultiplier(),
                     summary,
                     {}};
 }

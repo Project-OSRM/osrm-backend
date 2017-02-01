@@ -405,6 +405,18 @@ function Handlers.handle_oneway(way,result,data,profile)
   end
 end
 
+function Handlers.handle_weights(way,result,data,profile)
+  if properties.weight_name == 'distance' then
+    result.weight = 0
+     -- set weight rates to 1 for the distance weight, edge weights are distance / rate
+    if (result.forward_mode ~= mode.inaccessible and result.forward_speed > 0) then
+       result.forward_rate = 1
+    end
+    if (result.backward_mode ~= mode.inaccessible and result.backward_speed > 0) then
+       result.backward_rate = 1
+    end
+  end
+end
 
 -- handle various that can block access
 function Handlers.handle_blocked_ways(way,result,data,profile)
