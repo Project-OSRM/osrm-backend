@@ -66,7 +66,7 @@ end
 -- determine if this way can be used as a start/end point for routing
 function Handlers.handle_startpoint(way,result,data,profile)
   -- only allow this road as start point if it not a ferry
-  result.is_startpoint = result.forward_mode == profile.default_mode or 
+  result.is_startpoint = result.forward_mode == profile.default_mode or
                          result.backward_mode == profile.default_mode
 end
 
@@ -210,16 +210,16 @@ function Handlers.handle_speed(way,result,data,profile)
   if result.forward_speed ~= -1 then
     return        -- abort if already set, eg. by a route
   end
-  
+
   local key,value,speed = Tags.get_constant_by_key_value(way,profile.speeds)
-  
+
   if speed then
     -- set speed by way type
     result.forward_speed = highway_speed
     result.backward_speed = highway_speed
     result.forward_speed = speed
     result.backward_speed = speed
-  else 
+  else
     -- Set the avg speed on ways that are marked accessible
     if profile.access_tag_whitelist[data.forward_access] then
       result.forward_speed = profile.default_speed
@@ -236,7 +236,7 @@ function Handlers.handle_speed(way,result,data,profile)
 end
 
 -- reduce speed on special side roads
-function Handlers.handle_side_roads(way,result,data,profile)  
+function Handlers.handle_side_roads(way,result,data,profile)
   local sideway = way:get_value_by_key("side_road")
   if "yes" == sideway or
   "rotary" == sideway then
@@ -281,7 +281,7 @@ function Handlers.handle_speed_scaling(way,result,data,profile)
     end
   end
 
-  local is_bidirectional = result.forward_mode ~= mode.inaccessible and 
+  local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
 
   local service = way:get_value_by_key("service")
@@ -367,7 +367,7 @@ function Handlers.handle_oneway(way,result,data,profile)
   if not profile.oneway_handling then
     return
   end
-  
+
   local oneway
   if profile.oneway_handling == true then
     oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
@@ -388,7 +388,7 @@ function Handlers.handle_oneway(way,result,data,profile)
   elseif profile.oneway_handling == true then
     local junction = way:get_value_by_key("junction")
     if data.highway == "motorway" or
-       junction == "roundabout" or 
+       junction == "roundabout" or
        junction == "circular" then
       if oneway ~= "no" then
         -- implied oneway
@@ -399,15 +399,27 @@ function Handlers.handle_oneway(way,result,data,profile)
   end
 end
 
+function Handlers.handle_weights(way,result,data,profile)
+  if properties.weight_name == 'distance' then
+    result.weight = 0
+     -- set weight rates to 1 for the distance weight, edge weights are distance / rate
+    if (result.forward_mode ~= mode.inaccessible and result.forward_speed > 0) then
+       result.forward_rate = 1
+    end
+    if (result.backward_mode ~= mode.inaccessible and result.backward_speed > 0) then
+       result.backward_rate = 1
+    end
+  end
+end
 
 -- handle various that can block access
 function Handlers.handle_blocked_ways(way,result,data,profile)
-    
+
   -- areas
   if profile.avoid.area and way:get_value_by_key("area") == "yes" then
     return false
   end
-  
+
   -- toll roads
   if profile.avoid.toll and way:get_value_by_key("toll") == "yes" then
     return false
@@ -419,7 +431,7 @@ function Handlers.handle_blocked_ways(way,result,data,profile)
   if profile.avoid.reversible and way:get_value_by_key("oneway") == "reversible" then
     return false
   end
-  
+
   -- impassables
   if profile.avoid.impassable  then
     if way:get_value_by_key("impassable") == "yes" then

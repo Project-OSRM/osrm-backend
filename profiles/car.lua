@@ -21,13 +21,13 @@ local profile = {
   default_mode      = mode.driving,
   default_speed     = 10,
   oneway_handling   = true,
-  
+
   side_road_speed_multiplier = 0.8,
   turn_penalty               = 7.5,
   speed_reduction            = 0.8,
   traffic_light_penalty      = 2,
   u_turn_penalty             = 20,
-  
+
   -- Note: this biases right-side driving.
   -- Should be inverted for left-driving countries.
   turn_bias   = properties.left_hand_driving and 1/1.075 or 1.075,
@@ -36,7 +36,7 @@ local profile = {
   suffix_list = {
     'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
   },
-  
+
   barrier_whitelist = Set {
     'cattle_grid',
     'border_control',
@@ -85,7 +85,7 @@ local profile = {
     'motor_vehicle',
     'vehicle'
   },
-  
+
   avoid = Set {
     'area',
     'toll',
@@ -93,7 +93,7 @@ local profile = {
     'impassable',
     'hov_lanes'
   },
-  
+
   speeds = Sequence {
     highway = {
       motorway        = 90,
@@ -120,7 +120,7 @@ local profile = {
     driveway          = 5,
     ["drive-through"] = 5
   },
-  
+
   route_speeds = {
     ferry = 5,
     shuttle_train = 10
@@ -129,7 +129,7 @@ local profile = {
   bridge_speeds = {
     movable = 5
   },
-  
+
   -- surface/trackype/smoothness
   -- values were estimated from looking at the photos at the relevant wiki pages
 
@@ -277,7 +277,7 @@ function way_function(way, result)
   -- in general we should  try to abort as soon as
   -- possible if the way is not routable, to avoid doing
   -- unnecessary work. this implies we should check things that
-  -- commonly forbids access early, and handle edge cases later.  
+  -- commonly forbids access early, and handle edge cases later.
 
   -- data table for storing intermediate values during processing
   local data = {
@@ -342,9 +342,12 @@ function way_function(way, result)
     'handle_startpoint',
 
     -- set name, ref and pronunciation
-    'handle_names'
+    'handle_names',
+
+    -- set weight properties of the way
+    'handle_weights'
   }
-  
+
   Handlers.run(handlers,way,result,data,profile)
 end
 
@@ -354,7 +357,7 @@ function turn_function (turn)
   -- the function to some turn penalty samples from real driving.
   local turn_penalty = profile.turn_penalty
   local turn_bias = profile.turn_bias
-  
+
   if turn.turn_type ~= turn_type.no_turn then
     if turn.angle >= 0 then
       turn.duration = turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
