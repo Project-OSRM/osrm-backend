@@ -21,7 +21,7 @@ local profile = {
   oneway_handling         = 'specific',     -- respect 'oneway:foot' but not 'oneway'
   traffic_light_penalty   = 2,
   u_turn_penalty          = 2,
-  
+
   barrier_whitelist = Set {
     'cycle_barrier',
     'bollard',
@@ -34,19 +34,19 @@ local profile = {
     'no',
     'block'
   },
-  
+
   access_tag_whitelist = Set {
-    'yes', 
-    'foot', 
-    'permissive', 
-    'designated'  
+    'yes',
+    'foot',
+    'permissive',
+    'designated'
   },
-  
+
   access_tag_blacklist = Set {
-    'no', 
-    'private', 
-    'agricultural', 
-    'forestry', 
+    'no',
+    'private',
+    'agricultural',
+    'forestry',
     'delivery'
   },
 
@@ -63,11 +63,11 @@ local profile = {
   suffix_list = Set {
     'N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'North', 'South', 'West', 'East'
   },
-  
+
   avoid = Set {
     'impassable'
   },
-  
+
   speeds = Sequence {
     highway = {
       primary         = walking_speed,
@@ -101,22 +101,31 @@ local profile = {
     man_made = {
       pier            = walking_speed
     },
-    
+
     leisure = {
       track           = walking_speed
     }
   },
-  
+
   route_speeds = {
     ferry = 5
   },
-  
+
+  bridge_speeds = {
+  },
+
   surface_speeds = {
     fine_gravel =   walking_speed*0.75,
     gravel =        walking_speed*0.75,
     pebblestone =   walking_speed*0.75,
     mud =           walking_speed*0.5,
     sand =          walking_speed*0.5
+  },
+
+  tracktype_speeds = {
+  },
+
+  smoothness_speeds = {
   }
 }
 
@@ -221,7 +230,7 @@ function way_function(way, result)
     -- set name, ref and pronunciation
     'handle_names'
   }
-  
+
   Handlers.run(handlers,way,result,data,profile)
 end
 
