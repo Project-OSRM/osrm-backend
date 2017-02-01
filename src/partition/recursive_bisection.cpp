@@ -73,7 +73,7 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     TIMER_START(bisection);
 
     // Bisect graph into two parts. Get partition point and recurse left and right in parallel.
-    tbb::parallel_do(forest, [&](const TreeNode &node, Feeder &feeder) {
+    tbb::parallel_do(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
         InertialFlow flow{node.graph};
         const auto partition = flow.ComputePartition(num_optimizing_cuts, balance, boundary_factor);
         const auto center = internal_state.ApplyBisection(
