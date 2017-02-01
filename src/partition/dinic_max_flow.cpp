@@ -60,7 +60,6 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
     FlowEdges flow(view.NumberOfNodes());
     do
     {
-        std::cout << "." << std::flush;
         auto levels = ComputeLevelGraph(view, border_source_nodes, source_nodes, sink_nodes, flow);
 
         // check if the sink can be reached from the source

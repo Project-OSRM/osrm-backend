@@ -172,5 +172,10 @@ RecursiveBisection::FakeFirstPartitionWithSCC(const std::size_t small_component_
     return views;
 }
 
+const std::vector<RecursiveBisectionState::BisectionID> &RecursiveBisection::BisectionIDs() const
+{
+    return internal_state.BisectionIDs();
+}
+
 } // namespace partition
 } // namespace osrm

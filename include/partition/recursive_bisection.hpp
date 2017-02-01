@@ -21,6 +21,7 @@ class RecursiveBisection
                        double boundary_factor,
                        BisectionGraph &bisection_graph);
 
+    const std::vector<RecursiveBisectionState::BisectionID> &BisectionIDs() const;
   private:
     BisectionGraph &bisection_graph;
     RecursiveBisectionState internal_state;

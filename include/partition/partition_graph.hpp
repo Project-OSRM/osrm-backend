@@ -110,6 +110,12 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     auto Nodes() { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
     auto Nodes() const { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
 
+    NodeID GetID(const NodeT &node)
+    {
+        BOOST_ASSERT(&node >= &nodes[0] && &node <= &nodes.back());
+        return (&node - &nodes[0]);
+    }
+
     NodeIterator Begin() { return nodes.begin(); }
     NodeIterator End() { return nodes.end(); }
     ConstNodeIterator CBegin() const { return nodes.cbegin(); }

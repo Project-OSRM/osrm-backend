@@ -6,11 +6,16 @@
 #include "util/log.hpp"
 
 #include <iterator>
+#include <tuple>
 #include <vector>
 
 #include <boost/assert.hpp>
 
 #include <tbb/task_scheduler_init.h>
+
+#include "util/geojson_debug_logger.hpp"
+#include "util/geojson_debug_policies.hpp"
+#include "util/json_container.hpp"
 
 namespace osrm
 {
@@ -57,6 +62,74 @@ CompressedNodeBasedGraph LoadCompressedNodeBasedGraph(const std::string &path)
     return graph;
 }
 
+void LogGeojson(const std::string &filename, const std::vector<std::uint32_t> &bisection_ids)
+{
+    // reload graph, since we destroyed the old one
+    auto compressed_node_based_graph = LoadCompressedNodeBasedGraph(filename);
+
+    util::Log() << "Loaded compressed node based graph: "
+                << compressed_node_based_graph.edges.size() << " edges, "
+                << compressed_node_based_graph.coordinates.size() << " nodes";
+
+    groupEdgesBySource(begin(compressed_node_based_graph.edges),
+                       end(compressed_node_based_graph.edges));
+
+    auto graph =
+        makeBisectionGraph(compressed_node_based_graph.coordinates,
+                           adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
+
+    const auto get_level = [](const std::uint32_t lhs, const std::uint32_t rhs) {
+        auto xored = lhs ^ rhs;
+        std::uint32_t level = log(xored) / log(2.0);
+        return level;
+    };
+
+    const auto reverse_bits = [](std::uint32_t x)
+    {
+        x = ((x >> 1) & 0x55555555u) | ((x & 0x55555555u) << 1);
+        x = ((x >> 2) & 0x33333333u) | ((x & 0x33333333u) << 2);
+        x = ((x >> 4) & 0x0f0f0f0fu) | ((x & 0x0f0f0f0fu) << 4);
+        x = ((x >> 8) & 0x00ff00ffu) | ((x & 0x00ff00ffu) << 8);
+        x = ((x >> 16) & 0xffffu) | ((x & 0xffffu) << 16);
+        return x;
+    };
+
+    std::vector<std::vector<util::Coordinate>> border_vertices(33);
+
+    for (NodeID nid = 0; nid < graph.NumberOfNodes(); ++nid)
+    {
+        const auto source_id = reverse_bits(bisection_ids[nid]);
+        for (const auto &edge : graph.Edges(nid))
+        {
+            const auto target_id = reverse_bits(bisection_ids[edge.target]);
+            if (source_id != target_id)
+            {
+                auto level = get_level(source_id, target_id);
+                border_vertices[level].push_back(graph.Node(nid).coordinate);
+                border_vertices[level].push_back(graph.Node(edge.target).coordinate);
+            }
+        }
+    }
+
+    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToMultiPoint> guard(
+        "border_vertices.geojson");
+    std::size_t level = 0;
+    for (auto &bv : border_vertices)
+    {
+        if (!bv.empty())
+        {
+            std::sort(bv.begin(), bv.end(), [](const auto lhs, const auto rhs) {
+                return std::tie(lhs.lon, lhs.lat) < std::tie(rhs.lon, rhs.lat);
+            });
+            bv.erase(std::unique(bv.begin(), bv.end()), bv.end());
+
+            util::json::Object jslevel;
+            jslevel.values["level"] = util::json::Number(level++);
+            guard.Write(bv, jslevel);
+        }
+    }
+}
+
 int Partitioner::Run(const PartitionConfig &config)
 {
     const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
@@ -77,7 +150,10 @@ int Partitioner::Run(const PartitionConfig &config)
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
-    RecursiveBisection recursive_bisection(1024, 1.1, 0.25, graph);
+    RecursiveBisection recursive_bisection(8096, 1.1, 0.35, graph);
+
+    LogGeojson(config.compressed_node_based_graph_path.string(),
+               recursive_bisection.BisectionIDs());
 
     return 0;
 }
