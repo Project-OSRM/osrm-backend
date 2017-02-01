@@ -7,6 +7,7 @@
 
 #include <iterator>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <boost/assert.hpp>
@@ -84,8 +85,7 @@ void LogGeojson(const std::string &filename, const std::vector<std::uint32_t> &b
         return level;
     };
 
-    const auto reverse_bits = [](std::uint32_t x)
-    {
+    const auto reverse_bits = [](std::uint32_t x) {
         x = ((x >> 1) & 0x55555555u) | ((x & 0x55555555u) << 1);
         x = ((x >> 2) & 0x33333333u) | ((x & 0x33333333u) << 2);
         x = ((x >> 4) & 0x0f0f0f0fu) | ((x & 0x0f0f0f0fu) << 4);
@@ -150,7 +150,11 @@ int Partitioner::Run(const PartitionConfig &config)
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
-    RecursiveBisection recursive_bisection(8096, 1.1, 0.35, graph);
+    RecursiveBisection recursive_bisection(config.maximum_cell_size,
+                                           config.balance,
+                                           config.boundary_factor,
+                                           config.num_optimizing_cuts,
+                                           graph);
 
     LogGeojson(config.compressed_node_based_graph_path.string(),
                recursive_bisection.BisectionIDs());
