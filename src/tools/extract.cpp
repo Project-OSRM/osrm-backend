@@ -57,7 +57,7 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
         "Number of nodes required before a strongly-connected-componennt is considered big "
         "(affects nearest neighbor snapping)")(
         "with-osm-metadata",
-        boost::program_options::value<bool>(&extractor_config.use_metadata)
+        boost::program_options::bool_switch(&extractor_config.use_metadata)
             ->implicit_value(true)
             ->default_value(false),
         "Use metada during osm parsing (This can affect the extraction performance).");
