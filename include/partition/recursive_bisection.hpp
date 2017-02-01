@@ -22,6 +22,8 @@ class RecursiveBisection
                        std::size_t num_optimizing_cuts,
                        BisectionGraph &bisection_graph);
 
+    const std::vector<RecursiveBisectionState::BisectionID> &BisectionIDs() const;
+
   private:
     BisectionGraph &bisection_graph;
     RecursiveBisectionState internal_state;

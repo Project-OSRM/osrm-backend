@@ -6,6 +6,10 @@ file(GLOB ExtractorTestsSources
     extractor_tests.cpp
     extractor/*.cpp)
 
+file(GLOB PartitionTestsSources
+    partition_tests.cpp
+    partition/*.cpp)
+
 file(GLOB LibraryTestsSources
     library_tests.cpp
     library/*.cpp)
@@ -28,6 +32,11 @@ add_executable(extractor-tests
 	EXCLUDE_FROM_ALL
 	${ExtractorTestsSources}
 	$<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
+
+add_executable(partition-tests
+	EXCLUDE_FROM_ALL
+	${PartitionTestsSources}
+	$<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(library-tests
 	EXCLUDE_FROM_ALL
@@ -57,6 +66,7 @@ target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(partition-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -64,4 +74,4 @@ target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_L
 
 add_custom_target(tests
 	DEPENDS
-	engine-tests extractor-tests library-tests server-tests util-tests)
+	engine-tests extractor-tests partition-tests library-tests server-tests util-tests)
