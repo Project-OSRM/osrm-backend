@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <iterator>
 #include <vector>
 
@@ -102,11 +103,29 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
 
     auto BeginEdges(const NodeT &node) const { return edges.begin() + node.edges_begin; }
     auto EndEdges(const NodeT &node) const { return edges.begin() + node.edges_end; }
+    auto BeginEdges(const NodeT &node) { return edges.begin() + node.edges_begin; }
+    auto EndEdges(const NodeT &node) { return edges.begin() + node.edges_end; }
+
+    // iterate over all nodes
+    auto Nodes() { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
+    auto Nodes() const { return boost::make_iterator_range(nodes.begin(), nodes.end()); }
 
     NodeIterator Begin() { return nodes.begin(); }
     NodeIterator End() { return nodes.end(); }
     ConstNodeIterator CBegin() const { return nodes.cbegin(); }
     ConstNodeIterator CEnd() const { return nodes.cend(); }
+
+    // removes the edges from the graph that return true for the filter, returns new end
+    template <typename FilterT> auto RemoveEdges(NodeT &node, FilterT filter)
+    {
+        BOOST_ASSERT(&node >= &nodes[0] && &node <= &nodes.back());
+        // required since we are not on std++17 yet, otherwise we are missing an argument_type
+        const auto negate_filter = [&](const EdgeT &edge) { return !filter(edge); };
+        const auto center = std::stable_partition(BeginEdges(node), EndEdges(node), negate_filter);
+        const auto remaining_edges = std::distance(BeginEdges(node), center);
+        node.edges_end = node.edges_begin + remaining_edges;
+        return center;
+    };
 
   protected:
     std::vector<NodeT> nodes;

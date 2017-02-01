@@ -4,8 +4,6 @@
 #include "storage/io.hpp"
 #include "util/coordinate.hpp"
 #include "util/log.hpp"
-#include "extractor/tarjan_scc.hpp"
-#include "partition/tarjan_graph_wrapper.hpp"
 
 #include <iterator>
 #include <vector>
@@ -78,10 +76,6 @@ int Partitioner::Run(const PartitionConfig &config)
     auto graph =
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
-
-    TarjanGraphWrapper wrapped_graph(graph);
-    extractor::TarjanSCC<TarjanGraphWrapper> scc_algo(wrapped_graph);
-    scc_algo.Run();
 
     RecursiveBisection recursive_bisection(1024, 1.1, 0.25, graph);
 
