@@ -100,6 +100,9 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     auto BeginEdges(const NodeID nid) const { return edges.begin() + nodes[nid].edges_begin; }
     auto EndEdges(const NodeID nid) const { return edges.begin() + nodes[nid].edges_end; }
 
+    auto BeginEdges(const NodeT &node) const { return edges.begin() + node.edges_begin; }
+    auto EndEdges(const NodeT &node) const { return edges.begin() + node.edges_end; }
+
     NodeIterator Begin() { return nodes.begin(); }
     NodeIterator End() { return nodes.end(); }
     ConstNodeIterator CBegin() const { return nodes.cbegin(); }

@@ -21,12 +21,10 @@ class GraphView
 {
   public:
     GraphView(const BisectionGraph &graph,
-              const RecursiveBisectionState &bisection_state,
               const BisectionGraph::ConstNodeIterator begin,
               const BisectionGraph::ConstNodeIterator end);
 
-    GraphView(const BisectionGraph &graph,
-              const RecursiveBisectionState &bisection_state);
+    GraphView(const BisectionGraph &graph);
 
     // Number of nodes _in this sub-graph.
     std::size_t NumberOfNodes() const;
@@ -39,13 +37,12 @@ class GraphView
 
     NodeID GetID(const BisectionGraph::NodeT &node) const;
 
-    inline auto Edges(const NodeID nid) const { return bisection_graph.Edges(nid); }
-    inline auto BeginEdges(const NodeID nid) const { return bisection_graph.BeginEdges(nid); }
-    inline auto EndEdges(const NodeID nid) const { return bisection_graph.EndEdges(nid); }
+    inline auto Edges(const NodeID nid) const { return bisection_graph.Edges(*(begin+nid)); }
+    inline auto BeginEdges(const NodeID nid) const { return bisection_graph.BeginEdges(*(begin+nid)); }
+    inline auto EndEdges(const NodeID nid) const { return bisection_graph.EndEdges(*(begin+nid)); }
 
   private:
     const BisectionGraph &bisection_graph;
-    const RecursiveBisectionState &bisection_state;
 
     const BisectionGraph::ConstNodeIterator begin;
     const BisectionGraph::ConstNodeIterator end;

@@ -21,7 +21,7 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     : bisection_graph(bisection_graph_), internal_state(bisection_graph_)
 {
     TIMER_START(bisection);
-    GraphView view(bisection_graph, internal_state);
+    GraphView view(bisection_graph);
     InertialFlow flow(view);
     const auto partition = flow.ComputePartition(10, balance, boundary_factor);
     const auto center = internal_state.ApplyBisection(view.Begin(), view.End(), 0, partition.flags);
@@ -51,7 +51,7 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
     }
 
     TIMER_START(bisection_2_1);
-    GraphView recursive_view_lhs(bisection_graph, internal_state, view.Begin(), center);
+    GraphView recursive_view_lhs(bisection_graph, view.Begin(), center);
     InertialFlow flow_lhs(recursive_view_lhs);
     const auto partition_lhs = flow_lhs.ComputePartition(10, balance, boundary_factor);
     internal_state.ApplyBisection(
@@ -62,7 +62,7 @@ RecursiveBisection::RecursiveBisection(std::size_t maximum_cell_size,
               << " Balance: " << partition_lhs.num_nodes_source << std::endl;
 
     TIMER_START(bisection_2_2);
-    GraphView recursive_view_rhs(bisection_graph, internal_state, center, view.End());
+    GraphView recursive_view_rhs(bisection_graph, center, view.End());
     InertialFlow flow_rhs(recursive_view_rhs);
     const auto partition_rhs = flow_rhs.ComputePartition(10, balance, boundary_factor);
     internal_state.ApplyBisection(

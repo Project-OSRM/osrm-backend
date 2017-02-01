@@ -8,18 +8,36 @@ namespace osrm
 namespace partition
 {
 
-GraphView::GraphView(const BisectionGraph &bisection_graph_,
-                     const RecursiveBisectionState &bisection_state_)
-    : bisection_graph(bisection_graph_), bisection_state(bisection_state_),
+namespace
+{
+bool verifyView(const GraphView &view)
+{
+    for (std::size_t i = 0; i < view.NumberOfNodes(); ++i)
+    {
+        for (const auto &edge : view.Edges(i))
+            if (edge.target > view.NumberOfNodes())
+            {
+                std::cout << "Out of range: " << edge.target << " not within " << view.NumberOfNodes() << std::endl;
+                return false;
+            }
+    }
+    return true;
+}
+} // namespace
+
+GraphView::GraphView(const BisectionGraph &bisection_graph_)
+    : bisection_graph(bisection_graph_),
       begin(bisection_graph.CBegin()), end(bisection_graph.CEnd())
 {
+    BOOST_ASSERT(verifyView(*this));
 }
+
 GraphView::GraphView(const BisectionGraph &bisection_graph_,
-                     const RecursiveBisectionState &bisection_state_,
                      const BisectionGraph::ConstNodeIterator begin_,
                      const BisectionGraph::ConstNodeIterator end_)
-    : bisection_graph(bisection_graph_), bisection_state(bisection_state_), begin(begin_), end(end_)
+    : bisection_graph(bisection_graph_), begin(begin_), end(end_)
 {
+    BOOST_ASSERT(verifyView(*this));
 }
 
 NodeID GraphView::GetID(const BisectionGraph::NodeT &node) const
