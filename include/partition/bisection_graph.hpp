@@ -56,7 +56,7 @@ using BisectionInputEdge = GraphConstructionWrapper<BisectionEdge>;
 using BisectionGraph = RemappableGraph<BisectionGraphNode, BisectionEdge>;
 
 // Factory method to construct the bisection graph form a set of coordinates and Input Edges (need
-// to contain source and target)
+// to contain source and target). Edges needs to be labeled from zero
 inline BisectionGraph makeBisectionGraph(const std::vector<util::Coordinate> &coordinates,
                                          const std::vector<BisectionInputEdge> &edges)
 {

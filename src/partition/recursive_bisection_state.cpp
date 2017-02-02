@@ -1,4 +1,6 @@
 #include "partition/recursive_bisection_state.hpp"
+#include "extractor/tarjan_scc.hpp"
+#include "partition/tarjan_graph_wrapper.hpp"
 
 #include <algorithm>
 #include <numeric>
@@ -6,6 +8,7 @@
 // TODO remove
 #include <bitset>
 #include <iostream>
+#include <unordered_map>
 
 namespace osrm
 {
@@ -32,6 +35,10 @@ RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
                                         const std::size_t depth,
                                         const std::vector<bool> &partition)
 {
+    // ensure that the iterators belong to the graph
+    BOOST_ASSERT(bisection_graph.GetID(*const_begin) < bisection_graph.NumberOfNodes() &&
+                 bisection_graph.GetID(*const_begin) + std::distance(const_begin, const_end) <=
+                     bisection_graph.NumberOfNodes());
     // augment the partition ids
     const auto flag = BisectionID{1} << depth;
     for (auto itr = const_begin; itr != const_end; ++itr)
@@ -78,6 +85,73 @@ RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
     });
 
     return const_begin + std::distance(begin, center);
+}
+
+std::vector<GraphView>
+RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_size)
+{
+    // since our graphs are unidirectional, we don't realy need the scc. But tarjan is so nice and
+    // assigns IDs and counts sizes
+    TarjanGraphWrapper wrapped_graph(bisection_graph);
+    extractor::TarjanSCC<TarjanGraphWrapper> scc_algo(wrapped_graph);
+    scc_algo.Run();
+
+    // Map Edges to Sccs
+    const auto in_small = [&scc_algo, small_component_size](const NodeID node_id) {
+        return scc_algo.GetComponentSize(scc_algo.GetComponentID(node_id)) <= small_component_size;
+    };
+
+    const constexpr std::size_t small_component_id = -1;
+    std::unordered_map<std::size_t, std::size_t> component_map;
+    const auto transform_id = [&](const NodeID node_id) -> std::size_t {
+        if (in_small(node_id))
+            return small_component_id;
+        else
+            return scc_algo.GetComponentID(node_id);
+    };
+
+    std::vector<NodeID> mapping(bisection_graph.NumberOfNodes(), SPECIAL_NODEID);
+    for (const auto &node : bisection_graph.Nodes())
+        mapping[node.original_id] = component_map[transform_id(node.original_id)]++;
+
+    // needs to remove edges, if we should ever switch to directed graphs here
+    std::stable_sort(
+        bisection_graph.Begin(), bisection_graph.End(), [&](const auto &lhs, const auto &rhs) {
+            return transform_id(lhs.original_id) < transform_id(rhs.original_id);
+        });
+
+    // remap all remaining edges
+    std::for_each(bisection_graph.Begin(), bisection_graph.End(), [&](const auto &node) {
+        for (auto &edge : bisection_graph.Edges(node))
+            edge.target = mapping[edge.target];
+    });
+
+    std::vector<GraphView> views;
+    auto last = bisection_graph.CBegin();
+    auto last_id = transform_id(bisection_graph.Begin()->original_id);
+    for (auto itr = bisection_graph.CBegin(); itr != bisection_graph.CEnd(); ++itr)
+    {
+        auto itr_id = transform_id(itr->original_id);
+        if (last_id != itr_id)
+        {
+            views.push_back(GraphView(bisection_graph, last, itr));
+            last_id = itr_id;
+            last = itr;
+        }
+    }
+    views.push_back(GraphView(bisection_graph, last, bisection_graph.CEnd()));
+
+    bool has_small_component = [&]() {
+        for (std::size_t i = 0; i < scc_algo.GetNumberOfComponents(); ++i)
+            if (scc_algo.GetComponentSize(i) <= small_component_size)
+                return true;
+        return false;
+    }();
+
+    if (!has_small_component)
+        views.push_back(GraphView(bisection_graph, bisection_graph.CEnd(), bisection_graph.CEnd()));
+
+    return views;
 }
 
 const std::vector<RecursiveBisectionState::BisectionID> &

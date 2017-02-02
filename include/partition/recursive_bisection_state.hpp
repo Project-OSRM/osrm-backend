@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "partition/bisection_graph.hpp"
+#include "partition/graph_view.hpp"
 #include "util/typedefs.hpp"
 
 namespace osrm
@@ -13,51 +14,8 @@ namespace osrm
 namespace partition
 {
 
-// The recursive state describes the relation between our global graph and the recursive state in a
-// recursive bisection.
-// 
-// We describe the state with the use of two arrays:
-// 
-// The id-arrays keeps nodes in order, based on their partitioning. Initially, it contains all nodes
-// in sorted order:
-// 
-// ids: [0,1,2,3,4,5,6,7,8,9]
-// 
-// When partitioned (for this example we use even : odd), the arrays is re-ordered to group all
-// elements within a single cell of the partition:
-// 
-// ids: [0,2,4,6,8,1,3,5,7,9]
-//
-// This can be performed recursively by interpreting the arrays [0,2,4,6,8] and [1,3,5,7,9] as new
-// input.
-//
-// The partitioning array describes all results of the partitioning in form of `left` or `right`.
-// It is a sequence of bits for every id that describes if it is moved to the `front` or `back`
-// during the split of the ID array. In the example, we would get the result
-// 
-// bisection-ids: [0,1,0,1,0,1,0,1,0,1]
-// 
-// Further partitioning [0,2,4,6,8] into [0,4,8], [2,6] and [1,3,5,7,9] into [1,3,9] and [5,7]
-// the result would be:
-// 
-// bisection-ids: [00,10,01,10,00,11,01,11,00,10]
-
-/* Written out in a recursive tree form:
-
- ids:     [0,1,2,3,4,5,6,7,8,9]
- mask:    [0,1,0,1,0,1,0,1,0,1]
-              /          \
- ids:    [0,2,4,6,8] [1,3,5,7,9]
- mask:   [0,1,0,1,0] [0,0,1,1,0]
-           /    \      /    \
- ids:  [0,4,8] [2,6] [1,3,9] [5,7]
-
- The bisection ids then trace the path (left: 0, right: 1) through the tree:
-
- ids:     [0,  1,  2,  3,  4,  5,  6,  7,  8,  9 ]
- path:    [00, 10, 01, 10, 00, 11, 01, 11, 00, 10]
-
-*/
+// Keeps track of the bisection ids, modifies the graph accordingly, splitting it into a left/right
+// section with consecutively labelled nodes. Requires a GraphView to look at.
 class RecursiveBisectionState
 {
   public:
@@ -76,6 +34,11 @@ class RecursiveBisectionState
                                 const NodeIterator end,
                                 const std::size_t depth,
                                 const std::vector<bool> &partition);
+
+    // perform an initial pre-partitioning into small components
+    // on larger graphs, SCCs give perfect cuts (think Amerika vs Europe)
+    // This function performs an initial pre-partitioning using these sccs.
+    std::vector<GraphView> PrePartitionWithSCC(const std::size_t small_component_size);
 
     const std::vector<BisectionID> &BisectionIDs() const;
 

@@ -47,6 +47,7 @@ struct PartitionConfig
     double balance;
     double boundary_factor;
     std::size_t num_optimizing_cuts;
+    std::size_t small_component_size;
 };
 }
 }
