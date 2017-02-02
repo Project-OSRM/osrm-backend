@@ -133,9 +133,19 @@ module.exports = function () {
                                 got.locations = (locations || '').trim();
                             }
 
-                            if (headers.has('annotation')){
-                                got.annotation = (annotation || '').trim();
-                            }
+                            // if header matches 'a:*', parse out the values for *
+                            // and return in that header
+                            headers.forEach((k) => {
+                                let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight'];
+                                if (k.match(/^a:/)) {
+                                    let a_type = k.slice(2);
+                                    if (whitelist.indexOf(a_type) == -1)
+                                        return cb(new Error('Unrecognized annotation field', a_type));
+                                    if (!annotation[a_type])
+                                        return cb(new Error('Annotation not found in response', a_type));
+                                    got[k] = annotation[a_type];
+                                }
+                            });
 
                             var putValue = (key, value) => {
                                 if (headers.has(key)) got[key] = instructions ? value : '';
