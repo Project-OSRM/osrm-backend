@@ -120,7 +120,7 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations_type{annotations_}, annotations{true}, geometries{geometries_},
+          annotations_type{annotations_}, annotations{annotations_ == AnnotationsType::None ? false : true}, geometries{geometries_},
           overview{overview_}, continue_straight{continue_straight_}
     {
     }
@@ -150,6 +150,12 @@ inline RouteParameters::AnnotationsType operator|(RouteParameters::AnnotationsTy
     return (RouteParameters::AnnotationsType)(
         static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(lhs) |
         static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(rhs));
+}
+
+inline RouteParameters::AnnotationsType operator|=(RouteParameters::AnnotationsType lhs,
+                                                  RouteParameters::AnnotationsType rhs)
+{
+    return lhs = lhs | rhs;
 }
 
 }
