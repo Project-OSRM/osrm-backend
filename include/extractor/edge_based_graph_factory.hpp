@@ -7,18 +7,16 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "extractor/extraction_turn.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
-
-#include "extractor/guidance/turn_analysis.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/guidance/turn_lane_types.hpp"
+#include "util/deallocating_vector.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
-
-#include "util/deallocating_vector.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -35,6 +33,7 @@
 #include <vector>
 
 #include <boost/filesystem/fstream.hpp>
+#include <boost/optional.hpp>
 
 namespace osrm
 {
@@ -86,7 +85,9 @@ struct TurnIndexBlock
 #pragma pack(pop)
 static_assert(std::is_trivial<TurnIndexBlock>::value, "TurnIndexBlock is not trivial");
 static_assert(sizeof(TurnIndexBlock) == 24, "TurnIndexBlock is not packed correctly");
-}
+} // ns lookup
+
+struct NodeBasedGraphToEdgeBasedGraphMappingWriter; // fwd. decl
 
 class EdgeBasedGraphFactory
 {
@@ -113,7 +114,9 @@ class EdgeBasedGraphFactory
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
-             const bool generate_edge_lookup);
+             const bool generate_edge_lookup,
+             const bool generate_nbg_ebg_mapping,
+             const std::string &nbg_ebg_mapping_path);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
@@ -172,7 +175,10 @@ class EdgeBasedGraphFactory
     guidance::LaneDescriptionMap &lane_description_map;
 
     unsigned RenumberEdges();
-    void GenerateEdgeExpandedNodes();
+
+    void GenerateEdgeExpandedNodes(const bool generate_nbg_ebg_mapping,
+                                   const std::string &nbg_ebg_mapping_path);
+
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
                                    const std::string &original_edge_data_filename,
                                    const std::string &turn_lane_data_filename,
@@ -182,7 +188,15 @@ class EdgeBasedGraphFactory
                                    const std::string &turn_penalties_index_filename,
                                    const bool generate_edge_lookup);
 
-    void InsertEdgeBasedNode(const NodeID u, const NodeID v);
+    // Mapping betweenn the node based graph u,v nodes and the edge based graph head,tail edge ids.
+    // Required in the osrm-partition tool to translate from a nbg partition to a ebg partition.
+    struct Mapping
+    {
+        NodeID u, v;
+        EdgeID head, tail;
+    };
+
+    boost::optional<Mapping> InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
     void FlushVectorToStream(std::ofstream &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;

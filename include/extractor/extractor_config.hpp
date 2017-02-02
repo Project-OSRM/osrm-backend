@@ -78,6 +78,7 @@ struct ExtractorConfig
         profile_properties_output_path = basepath + ".osrm.properties";
         intersection_class_data_output_path = basepath + ".osrm.icd";
         compressed_node_based_graph_output_path = basepath + ".osrm.cnbg";
+        nbg_ebg_graph_mapping_output_path = basepath + ".osrm.nbg_to_ebg";
     }
 
     boost::filesystem::path input_path;
@@ -110,8 +111,10 @@ struct ExtractorConfig
 
     bool use_metadata;
 
+    // Auxiliary data for osrm-partition
     bool dump_compressed_node_based_graph;
     std::string compressed_node_based_graph_output_path;
+    std::string nbg_ebg_graph_mapping_output_path;
 };
 }
 }
