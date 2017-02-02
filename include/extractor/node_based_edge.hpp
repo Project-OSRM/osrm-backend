@@ -48,6 +48,7 @@ struct NodeBasedEdge
     guidance::RoadClassification road_classification;
 };
 
+#pragma pack(push, 4)
 struct NodeBasedEdgeWithOSM : NodeBasedEdge
 {
     NodeBasedEdgeWithOSM(OSMNodeID source,
@@ -68,6 +69,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
     OSMNodeID osm_source_id;
     OSMNodeID osm_target_id;
 };
+#pragma pack(pop)
 
 // Impl.
 
