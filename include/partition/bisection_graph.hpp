@@ -51,9 +51,9 @@ struct BisectionEdge
 };
 
 // Aliases for the graph used during the bisection, based on the Remappable graph
-using RemappableGraphNode = NodeEntryWrapper<BisectionNode>;
+using BisectionGraphNode = NodeEntryWrapper<BisectionNode>;
 using BisectionInputEdge = GraphConstructionWrapper<BisectionEdge>;
-using BisectionGraph = RemappableGraph<RemappableGraphNode, BisectionEdge>;
+using BisectionGraph = RemappableGraph<BisectionGraphNode, BisectionEdge>;
 
 // Factory method to construct the bisection graph form a set of coordinates and Input Edges (need
 // to contain source and target)
@@ -78,17 +78,19 @@ inline BisectionGraph makeBisectionGraph(const std::vector<util::Coordinate> &co
 
     // create a bisection node, requires the ID of the node as well as the lower bound to its edges
     const auto make_bisection_node = [&edges, &coordinates](const std::size_t node_id,
-                                                            const auto edge_itr) {
-        std::size_t range_begin = std::distance(edges.begin(), edge_itr);
-        return BisectionGraph::NodeT(range_begin, range_begin, coordinates[node_id], node_id);
+                                                            const auto begin_itr,
+                                                            const auto end_itr) {
+        std::size_t range_begin = std::distance(edges.begin(), begin_itr);
+        std::size_t range_end = std::distance(edges.begin(),end_itr);
+        return BisectionGraph::NodeT(range_begin, range_end, coordinates[node_id], node_id);
     };
 
     auto edge_itr = edges.begin();
     for (std::size_t node_id = 0; node_id < coordinates.size(); ++node_id)
     {
-        result_nodes.emplace_back(make_bisection_node(node_id, edge_itr));
+        const auto begin_itr = edge_itr;
         edge_itr = advance_edge_itr(node_id, edge_itr);
-        result_nodes.back().edges_end = std::distance(edges.begin(), edge_itr);
+        result_nodes.emplace_back(make_bisection_node(node_id, begin_itr, edge_itr));
     }
 
     return BisectionGraph(std::move(result_nodes), std::move(result_edges));
