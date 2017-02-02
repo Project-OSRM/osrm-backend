@@ -16,21 +16,18 @@ namespace partition
 class RecursiveBisection
 {
   public:
-    RecursiveBisection(std::size_t maximum_cell_size,
-                       double balance,
-                       double boundary_factor,
-                       std::size_t num_optimizing_cuts,
-                       BisectionGraph &bisection_graph);
+    RecursiveBisection(BisectionGraph &bisection_graph,
+                       const std::size_t maximum_cell_size,
+                       const double balance,
+                       const double boundary_factor,
+                       const std::size_t num_optimizing_cuts,
+                       const std::size_t small_component_size);
 
     const std::vector<RecursiveBisectionState::BisectionID> &BisectionIDs() const;
 
   private:
     BisectionGraph &bisection_graph;
     RecursiveBisectionState internal_state;
-
-    // on larger graphs, SCCs give perfect cuts (think Amerika vs Europe)
-    // This function performs an initial pre-partitioning using these sccs.
-    std::vector<GraphView> FakeFirstPartitionWithSCC(const std::size_t small_component_size);
 };
 
 } // namespace partition

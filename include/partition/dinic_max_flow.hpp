@@ -32,8 +32,13 @@ class DinicMaxFlow
     using SourceSinkNodes = std::unordered_set<NodeID>;
 
     MinCut operator()(const GraphView &view,
-                      const SourceSinkNodes &sink_nodes,
-                      const SourceSinkNodes &source_nodes) const;
+                      const SourceSinkNodes &source_nodes,
+                      const SourceSinkNodes &sink_nodes) const;
+
+    // validates the inpiut parameters to the flow algorithm (e.g. not intersecting)
+    bool Validate(const GraphView &view,
+                  const SourceSinkNodes &source_nodes,
+                  const SourceSinkNodes &sink_nodes) const;
 
   private:
     // the level of each node in the graph (==hops in BFS from source)

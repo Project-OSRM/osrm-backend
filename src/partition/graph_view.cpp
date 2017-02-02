@@ -42,10 +42,7 @@ BisectionGraph::ConstNodeIterator GraphView::Begin() const { return begin; }
 
 BisectionGraph::ConstNodeIterator GraphView::End() const { return end; }
 
-const GraphView::NodeT &GraphView::Node(const NodeID nid) const
-{
-    return bisection_graph.Node(nid);
-}
+const GraphView::NodeT &GraphView::Node(const NodeID nid) const { return *(begin + nid); }
 
 const GraphView::EdgeT &GraphView::Edge(const EdgeID eid) const
 {

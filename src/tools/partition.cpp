@@ -52,6 +52,11 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &p
         ("optimizing-cuts",
          boost::program_options::value<std::size_t>(&partition_config.num_optimizing_cuts)
              ->default_value(10),
+         "Number of cuts to use for optimizing a single bisection")
+        //
+        ("small-component-size",
+         boost::program_options::value<std::size_t>(&partition_config.small_component_size)
+             ->default_value(1000),
          "Number of cuts to use for optimizing a single bisection");
 
     // hidden options, will be allowed on command line, but will not be
