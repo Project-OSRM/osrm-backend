@@ -20,23 +20,37 @@ namespace extractor
 
 namespace detail
 {
-// these are used for duration based mode of transportations like ferries
-OSRM_STRONG_TYPEDEF(double, ValueByEdge)
-OSRM_STRONG_TYPEDEF(double, ValueByMeter)
-using ByEdgeOrByMeterValue = mapbox::util::variant<detail::ValueByEdge, detail::ValueByMeter>;
-
-struct ToValueByEdge
+// Use a single float to pack two positive values:
+//  * by_edge: + sign, value >= 0, value used as the edge weight
+//  * by_meter: - sign, value > 0, value used as a denominator in distance / value
+struct ByEdgeOrByMeterValue
 {
-    ToValueByEdge(double distance_) : distance(distance_) {}
-
-    ValueByEdge operator()(const ValueByMeter by_meter) const
+    struct ValueByEdge
     {
-        return ValueByEdge{distance / static_cast<double>(by_meter)};
+    } static const by_edge;
+    struct ValueByMeter
+    {
+    } static const by_meter;
+
+    ByEdgeOrByMeterValue() : value(0.f) {}
+
+    ByEdgeOrByMeterValue(ValueByEdge, double input)
+    {
+        BOOST_ASSERT(input >= 0.f);
+        value = static_cast<value_type>(input);
     }
 
-    ValueByEdge operator()(const ValueByEdge by_edge) const { return by_edge; }
+    ByEdgeOrByMeterValue(ValueByMeter, double input)
+    {
+        BOOST_ASSERT(input > 0.f);
+        value = -static_cast<value_type>(input);
+    }
 
-    double distance;
+    double operator()(double distance) { return value >= 0 ? value : -distance / value; }
+
+  private:
+    using value_type = float;
+    value_type value;
 };
 }
 
@@ -60,7 +74,7 @@ struct InternalExtractorEdge
                  false,
                  guidance::TurnLaneType::empty,
                  guidance::RoadClassification()),
-          weight_data(detail::ValueByMeter{0.0}), duration_data(detail::ValueByMeter{0.0})
+          weight_data(), duration_data()
     {
     }
 
@@ -113,8 +127,8 @@ struct InternalExtractorEdge
         return InternalExtractorEdge(MIN_OSM_NODEID,
                                      MIN_OSM_NODEID,
                                      SPECIAL_NODEID,
-                                     detail::ValueByMeter{0.0},
-                                     detail::ValueByMeter{0.0},
+                                     WeightData(),
+                                     DurationData(),
                                      false, // forward
                                      false, // backward
                                      false, // roundabout
@@ -131,8 +145,8 @@ struct InternalExtractorEdge
         return InternalExtractorEdge(MAX_OSM_NODEID,
                                      MAX_OSM_NODEID,
                                      SPECIAL_NODEID,
-                                     detail::ValueByMeter{0.0},
-                                     detail::ValueByMeter{0.0},
+                                     WeightData(),
+                                     DurationData(),
                                      false, // forward
                                      false, // backward
                                      false, // roundabout

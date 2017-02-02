@@ -119,20 +119,20 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     InternalExtractorEdge::WeightData forward_weight_data;
     InternalExtractorEdge::WeightData backward_weight_data;
 
-    const auto toValueByEdgeOrByMeter =
-        [&nodes](const double by_way, const double by_meter) -> detail::ByEdgeOrByMeterValue {
-        if (by_way > 0)
+    const auto toValueByEdgeOrByMeter = [&nodes](const double by_way, const double by_meter) {
+        using Value = detail::ByEdgeOrByMeterValue;
+        if (by_way >= 0)
         {
             // FIXME We divide by the number of edges here, but should rather consider
             // the length of each segment. We would either have to compute the length
             // of the whole way here (we can't: no node coordinates) or push that back
             // to the container and keep a reference to the way.
-            const unsigned num_edges = (nodes.size() - 1);
-            return detail::ValueByEdge{by_way / num_edges};
+            const std::size_t num_edges = (nodes.size() - 1);
+            return Value(Value::by_edge, by_way / num_edges);
         }
         else
         {
-            return detail::ValueByMeter{by_meter};
+            return Value(Value::by_meter, by_meter);
         }
     };
 
