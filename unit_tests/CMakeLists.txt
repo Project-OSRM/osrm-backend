@@ -62,6 +62,7 @@ target_compile_definitions(extractor-tests PRIVATE COMPILE_DEFINITIONS OSRM_FIXT
 target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(partition-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

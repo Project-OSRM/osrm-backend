@@ -192,6 +192,7 @@ script:
   - ./unit_tests/engine-tests
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
+  - ./unit_tests/partition-tests
   - popd
   - npm test
 

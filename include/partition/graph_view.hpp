@@ -2,7 +2,6 @@
 #define OSRM_PARTITION_GRAPHVIEW_HPP_
 
 #include "partition/bisection_graph.hpp"
-#include "partition/recursive_bisection_state.hpp"
 
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -41,6 +40,7 @@ class GraphView
     // Iteration over all nodes (direct access into the node)
     ConstNodeIterator Begin() const;
     ConstNodeIterator End() const;
+    auto Nodes() const { return boost::make_iterator_range(begin, end); }
 
     // Re-Construct the ID of a node from a reference
     NodeID GetID(const NodeT &node) const;
@@ -50,6 +50,7 @@ class GraphView
     const EdgeT &Edge(const EdgeID eid) const;
 
     // Access into all Edges
+    auto Edges(const NodeT &node) const { return bisection_graph.Edges(node); }
     auto Edges(const NodeID nid) const { return bisection_graph.Edges(*(begin + nid)); }
     auto BeginEdges(const NodeID nid) const { return bisection_graph.BeginEdges(*(begin + nid)); }
     auto EndEdges(const NodeID nid) const { return bisection_graph.EndEdges(*(begin + nid)); }
