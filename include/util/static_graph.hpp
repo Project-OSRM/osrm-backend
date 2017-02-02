@@ -85,7 +85,7 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
 {
     static_assert(traits::HasFirstEdgeMember<NodeT>::value,
                   "Model for compatible Node type requires .first_edge member attribute");
-    static_assert(traits::HasTargetMember<EdgeT>(),
+    static_assert(traits::HasTargetMember<EdgeT>::value,
                   "Model for compatible Node type requires .target member attribute");
 
   public:

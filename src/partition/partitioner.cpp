@@ -147,11 +147,12 @@ int Partitioner::Run(const PartitionConfig &config)
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
-    RecursiveBisection recursive_bisection(config.maximum_cell_size,
+    RecursiveBisection recursive_bisection(graph,
+                                           config.maximum_cell_size,
                                            config.balance,
                                            config.boundary_factor,
                                            config.num_optimizing_cuts,
-                                           graph);
+                                           config.small_component_size);
 
     LogGeojson(config.compressed_node_based_graph_path.string(),
                recursive_bisection.BisectionIDs());

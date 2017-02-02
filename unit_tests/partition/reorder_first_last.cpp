@@ -35,10 +35,10 @@ BOOST_AUTO_TEST_CASE(reordering_n_shuffles_n_smallest_to_front_n_largest_to_back
     reorderFirstLast(begin(range), end(range), 2, std::less<>{});
 
     // Smallest at front, but: no ordering guarantee in that subrange!
-    BOOST_CHECK((range[0] == 2 and range[1] == 3) or (range[0] == 3 and range[1] == 2));
+    BOOST_CHECK((range[0] == 2 && range[1] == 3) || (range[0] == 3 && range[1] == 2));
 
     // Largest at back, but: no ordering guarantee in that subrange!
-    BOOST_CHECK((range[2] == 8 and range[3] == 9) or (range[2] == 9 and range[3] == 8));
+    BOOST_CHECK((range[2] == 8 && range[3] == 9) || (range[2] == 9 && range[3] == 8));
 }
 
 BOOST_AUTO_TEST_CASE(reordering_n_with_iterators)

@@ -35,6 +35,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const GraphView &view,
                                               const SourceSinkNodes &source_nodes,
                                               const SourceSinkNodes &sink_nodes) const
 {
+    BOOST_ASSERT(Validate(view, source_nodes, sink_nodes));
     // for the inertial flow algorithm, we use quite a large set of nodes as source/sink nodes. Only
     // a few of them can be part of the process, since they are grouped together. A standard
     // parameterisation would be 25% sink/source nodes. This already includes 50% of the graph. By
@@ -219,6 +220,7 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
     };
 
     std::for_each(border_sink_nodes.begin(), border_sink_nodes.end(), augment_all_paths);
+    BOOST_ASSERT(flow_increase > 0);
     return flow_increase;
 }
 
@@ -286,6 +288,25 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
     }
     BOOST_ASSERT(path.empty());
     return path;
+}
+
+bool DinicMaxFlow::Validate(const GraphView &view,
+                            const SourceSinkNodes &source_nodes,
+                            const SourceSinkNodes &sink_nodes) const
+{
+    // sink and source cannot share a common node
+    const auto separated =
+        std::find_if(source_nodes.begin(), source_nodes.end(), [&sink_nodes](const auto node) {
+            return sink_nodes.count(node);
+        }) == source_nodes.end();
+
+    const auto invalid_id = [&view](const NodeID nid) { return nid >= view.NumberOfNodes(); };
+    const auto in_range_source =
+        std::find_if(source_nodes.begin(), source_nodes.end(), invalid_id) == source_nodes.end();
+    const auto in_range_sink =
+        std::find_if(sink_nodes.begin(), sink_nodes.end(), invalid_id) == sink_nodes.end();
+
+    return separated && in_range_source && in_range_sink;
 }
 
 } // namespace partition
