@@ -1,5 +1,10 @@
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/guidance/turn_analysis.hpp"
+#include "extractor/guidance/turn_lane_handler.hpp"
+#include "extractor/node_based_graph_to_edge_based_graph_mapping_writer.hpp"
+#include "extractor/scripting_environment.hpp"
+#include "extractor/suffix_table.hpp"
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -9,11 +14,6 @@
 #include "util/log.hpp"
 #include "util/percent.hpp"
 #include "util/timing_util.hpp"
-
-#include "extractor/guidance/turn_analysis.hpp"
-#include "extractor/guidance/turn_lane_handler.hpp"
-#include "extractor/scripting_environment.hpp"
-#include "extractor/suffix_table.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -92,7 +92,8 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &out
 
 EdgeID EdgeBasedGraphFactory::GetHighestEdgeID() { return m_max_edge_id; }
 
-void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v)
+boost::optional<EdgeBasedGraphFactory::Mapping>
+EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v)
 {
     // merge edges together into one EdgeBasedNode
     BOOST_ASSERT(node_u != SPECIAL_NODEID);
@@ -112,7 +113,7 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
 
     if (forward_data.edge_id == SPECIAL_NODEID && reverse_data.edge_id == SPECIAL_NODEID)
     {
-        return;
+        return boost::none;
     }
 
     if (forward_data.edge_id != SPECIAL_NODEID && reverse_data.edge_id == SPECIAL_NODEID)
@@ -172,6 +173,8 @@ void EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeI
     }
 
     BOOST_ASSERT(current_edge_source_coordinate_id == node_v);
+
+    return Mapping{node_u, node_v, forward_data.edge_id, reverse_data.edge_id};
 }
 
 void EdgeBasedGraphFactory::FlushVectorToStream(
@@ -193,7 +196,9 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const std::string &turn_weight_penalties_filename,
                                 const std::string &turn_duration_penalties_filename,
                                 const std::string &turn_penalties_index_filename,
-                                const bool generate_edge_lookup)
+                                const bool generate_edge_lookup,
+                                const bool generate_nbg_ebg_mapping,
+                                const std::string &nbg_ebg_mapping_path)
 {
     TIMER_START(renumber);
     m_max_edge_id = RenumberEdges() - 1;
@@ -201,7 +206,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 
     TIMER_START(generate_nodes);
     m_edge_based_node_weights.reserve(m_max_edge_id + 1);
-    GenerateEdgeExpandedNodes();
+    GenerateEdgeExpandedNodes(generate_nbg_ebg_mapping, nbg_ebg_mapping_path);
     TIMER_STOP(generate_nodes);
 
     TIMER_START(generate_edges);
@@ -255,8 +260,16 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
 }
 
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.
-void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
+void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const bool generate_nbg_ebg_mapping,
+                                                      const std::string &nbg_ebg_mapping_path)
 {
+    // Optional writer, for writing out a mapping. Neither default ctor not boost::optional work
+    // with the underlying FileWriter, so hack around that limitation with a unique_ptr.
+    std::unique_ptr<NodeBasedGraphToEdgeBasedGraphMappingWriter> writer;
+    if (generate_nbg_ebg_mapping)
+        writer =
+            std::make_unique<NodeBasedGraphToEdgeBasedGraphMappingWriter>(nbg_ebg_mapping_path);
+
     util::Log() << "Generating edge expanded nodes ... ";
     {
         util::UnbufferedLog log;
@@ -286,15 +299,20 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes()
 
                 BOOST_ASSERT(node_u < node_v);
 
+                boost::optional<Mapping> mapping;
+
                 // if we found a non-forward edge reverse and try again
                 if (edge_data.edge_id == SPECIAL_NODEID)
                 {
-                    InsertEdgeBasedNode(node_v, node_u);
+                    mapping = InsertEdgeBasedNode(node_v, node_u);
                 }
                 else
                 {
-                    InsertEdgeBasedNode(node_u, node_v);
+                    mapping = InsertEdgeBasedNode(node_u, node_v);
                 }
+
+                if (generate_nbg_ebg_mapping)
+                    writer->WriteMapping(mapping->u, mapping->v, mapping->head, mapping->tail);
             }
         }
     }

@@ -504,7 +504,9 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                  config.turn_weight_penalties_path,
                                  config.turn_duration_penalties_path,
                                  config.turn_penalties_index_path,
-                                 config.generate_edge_lookup);
+                                 config.generate_edge_lookup,
+                                 config.dump_compressed_node_based_graph,
+                                 config.nbg_ebg_graph_mapping_output_path);
 
     // The osrm-partition tool requires the compressed node based graph with an embedding.
     //
