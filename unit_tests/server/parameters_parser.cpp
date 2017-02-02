@@ -132,9 +132,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
     CHECK_EQUAL_RANGE(reference_2.hints, result_2->hints);
-    BOOST_CHECK_EQUAL(
-        static_cast<bool>(result_2->annotations_type & RouteParameters::AnnotationsType::All),
-        true);
+    BOOST_CHECK_EQUAL(result_2->annotations_type == RouteParameters::AnnotationsType::All, true);
 
     RouteParameters reference_3{false,
                                 false,
@@ -376,9 +374,7 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
         "1,2;3,4?overview=simplified&annotations=duration,weight,nodes,datasources,distance");
     BOOST_CHECK(result_17);
     BOOST_CHECK_EQUAL(reference_17.geometries, result_17->geometries);
-    BOOST_CHECK_EQUAL(
-        static_cast<bool>(result_2->annotations_type & RouteParameters::AnnotationsType::All),
-        true);
+    BOOST_CHECK_EQUAL(result_2->annotations_type == RouteParameters::AnnotationsType::All, true);
     BOOST_CHECK_EQUAL(result_17->annotations, true);
 }
 

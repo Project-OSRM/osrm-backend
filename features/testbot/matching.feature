@@ -141,12 +141,12 @@ Feature: Basic Map Matching
         And the contract extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
-            | trace | matchings | annotation    |
-            | ach   | ach       | 1,1,0,1,1,2,1 |
+            | trace | matchings | a:duration       |
+            | ach   | ach       | 1:1,0:1:1:2:1    |
 
     Scenario: Testbot - Duration details
         Given the query options
-            | annotations | true    |
+            | annotations | duration,nodes |
 
         Given the node map
             """
@@ -167,15 +167,15 @@ Feature: Basic Map Matching
         And the contract extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
-            | trace | matchings | annotation                                                                                                                      |
-            | abeh  | abeh      | 1:10.008842:1:1:1,0:0:0:2:0,1:10.008842:1:2:0,1:10.008842:1:3:0,1:10.008842:1:4:0,0:0:0:4:0,2:19.906475:2:5:0,1:10.008842:1:6:0 |
-            | abci  | abci      | 1:10.008842:1:1:1,0:0:0:2:0,1:10.008842:1:2:0,0:0:0:2:0,1:10.010367:1:3:0                                                       |
+            | trace | matchings | a:duration      |
+            | abeh  | abeh      | 1:0,1:1:1,0:2:1 |
+            | abci  | abci      | 1:0,1,0:1       |
 
         # The following is the same as the above, but separated for readability (line length)
         When I match I should get
-            | trace | matchings | OSM IDs               |
-            | abeh  | abeh      | 1,2,3,2,3,4,5,4,5,6,7 |
-            | abci  | abci      | 1,2,3,2,3,2,3,8       |
+            | trace | matchings | a:nodes               |
+            | abeh  | abeh      | 1:2:3,2:3:4:5,4:5:6:7 |
+            | abci  | abci      | 1:2:3,2:3,2:3:8       |
 
     Scenario: Testbot - Regression test for #3037
         Given the query options
@@ -303,7 +303,7 @@ Feature: Basic Map Matching
             | abcd  | 0 1 2 3    | abcd      |
 
     # Regression test 1 for issue 3176
-    Scenario: Testbot - multiuple segments: properly expose OSM IDs
+    Scenario: Testbot - multiple segments: properly expose OSM IDs
         Given the query options
             | annotations | true    |
 
@@ -332,9 +332,9 @@ Feature: Basic Map Matching
             | fg    | no     |
 
         When I match I should get
-            | trace | OSM IDs       |
-            | 12    | 1,2,3,4,5,6,7 |
-            | 21    | 7,6,5,4,3,2,1 |
+            | trace | a:nodes       |
+            | 12    | 1:2:3:4:5:6:7 |
+            | 21    | 7:6:5:4:3:2:1 |
 
     # Regression test 2 for issue 3176
     Scenario: Testbot - same edge: properly expose OSM IDs
@@ -360,32 +360,6 @@ Feature: Basic Map Matching
             | abcdef  | no     |
 
         When I match I should get
-            | trace | OSM IDs     |
-            | 12    | 1,2,3,4,5,6 |
-            | 21    | 6,5,4,3,2,1 |
-
-    Scenario: Testbot - return annotations based on parameter
-        Given the query options
-            | annotations | duration,weight |
-
-        Given the node map
-            """
-            a - b
-                |
-                c
-            """
-
-        And the nodes
-            | node | id |
-            | a    | 1  |
-            | b    | 2  |
-            | c    | 3  |
-
-        And the ways
-            | nodes | oneway |
-            | abc   | no     |
-
-        When I match I should get
-            | trace | annotation   |
-            | ac    | 2:2,2:2      |
-            | ca    | 2:2,2:2,0:0  |
+            | trace | a:nodes     |
+            | 12    | 1:2:3:4:5:6 |
+            | 21    | 6:5:4:3:2:1 |

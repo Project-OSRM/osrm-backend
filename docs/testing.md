@@ -1,6 +1,6 @@
 # Testsuite
 
-OSRM comes with a testsuite containing both unit-tests using the Boost library and cucucmber.js for scenario driven testing.
+OSRM comes with a testsuite containing both unit-tests using the Boost library and cucumber.js for scenario driven testing.
 
 ## Unit Tests
 
