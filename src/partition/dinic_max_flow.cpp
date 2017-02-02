@@ -207,7 +207,7 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
         while (true)
         {
             // as long as there are augmenting paths from the sink, add them
-            auto path = GetAugmentingPath(levels, sink_node_id, view, flow, source_nodes);
+            const auto path = GetAugmentingPath(levels, sink_node_id, view, flow, source_nodes);
             if (path.empty())
                 break;
             else
@@ -234,7 +234,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
     BOOST_ASSERT(source_nodes.find(node_id) == source_nodes.end());
 
     // Keeps the local state of the DFS in forms of the iterators
-    using DFSState = struct
+    struct DFSState
     {
         BisectionGraph::ConstEdgeIterator edge_iterator;
         const BisectionGraph::ConstEdgeIterator end_iterator;
