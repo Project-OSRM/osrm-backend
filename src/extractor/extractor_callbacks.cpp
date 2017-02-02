@@ -142,14 +142,15 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         forward_duration_data =
             toValueByEdgeOrByMeter(parsed_way.duration, parsed_way.forward_speed / 3.6);
         // fallback to duration as weight
-        if (parsed_way.weight > 0 || parsed_way.forward_rate > 0)
-        {
-            forward_weight_data =
-                toValueByEdgeOrByMeter(parsed_way.weight, parsed_way.forward_rate);
-        }
-        else if (fallback_to_duration)
+        if (fallback_to_duration)
         {
             forward_weight_data = forward_duration_data;
+        }
+        else
+        {
+            BOOST_ASSERT(parsed_way.weight > 0 || parsed_way.forward_rate > 0);
+            forward_weight_data =
+                toValueByEdgeOrByMeter(parsed_way.weight, parsed_way.forward_rate);
         }
     }
     if (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE)
@@ -158,14 +159,15 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         backward_duration_data =
             toValueByEdgeOrByMeter(parsed_way.duration, parsed_way.backward_speed / 3.6);
         // fallback to duration as weight
-        if (parsed_way.weight > 0 || parsed_way.backward_rate > 0)
-        {
-            backward_weight_data =
-                toValueByEdgeOrByMeter(parsed_way.weight, parsed_way.backward_rate);
-        }
-        else if (fallback_to_duration)
+        if (fallback_to_duration)
         {
             backward_weight_data = backward_duration_data;
+        }
+        else
+        {
+            BOOST_ASSERT(parsed_way.weight > 0 || parsed_way.backward_rate > 0);
+            backward_weight_data =
+                toValueByEdgeOrByMeter(parsed_way.weight, parsed_way.backward_rate);
         }
     }
 
