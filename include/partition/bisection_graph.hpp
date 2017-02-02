@@ -19,8 +19,9 @@ namespace osrm
 namespace partition
 {
 
-// Graph node and its corresponding coordinate.
-// The coordinate will be used in the partitioning step.
+// Node in the bisection graph. We require the original node id (since we remap the nodes all the
+// time and can track the correct ID this way). In addtition, the node provides the coordinate its
+// located at for use in the inertial flow sorting by slope.
 struct BisectionNode
 {
     BisectionNode(util::Coordinate coordinate_ = {util::FloatLongitude{0}, util::FloatLatitude{0}},
@@ -36,7 +37,12 @@ struct BisectionNode
     NodeID original_id;
 };
 
-// Graph edge and data for Max-Flow Min-Cut augmentation.
+// For max-flow/min-cut computations, we operate on a undirected graph. This has some benefits:
+// - we don't disconnect the graph more than we have to
+// - small components will actually be disconnected (no border nodes)
+// - parts of the graph that are clonnected in one way (not reachable/not exitable) will remain
+// close to their connected nodes
+// As a result, we only require a target as our only data member in the edge.
 struct BisectionEdge
 {
     BisectionEdge(const NodeID target_ = SPECIAL_NODEID) : target(target_) {}
@@ -44,11 +50,13 @@ struct BisectionEdge
     NodeID target;
 };
 
-// The graph layout we use as a basis for partitioning.
+// Aliases for the graph used during the bisection, based on the Remappable graph
 using RemappableGraphNode = NodeEntryWrapper<BisectionNode>;
 using BisectionInputEdge = GraphConstructionWrapper<BisectionEdge>;
 using BisectionGraph = RemappableGraph<RemappableGraphNode, BisectionEdge>;
 
+// Factory method to construct the bisection graph form a set of coordinates and Input Edges (need
+// to contain source and target)
 inline BisectionGraph makeBisectionGraph(const std::vector<util::Coordinate> &coordinates,
                                          const std::vector<BisectionInputEdge> &edges)
 {
@@ -86,6 +94,7 @@ inline BisectionGraph makeBisectionGraph(const std::vector<util::Coordinate> &co
     return BisectionGraph(std::move(result_nodes), std::move(result_edges));
 }
 
+// Reduce any edge to a fitting input edge for the bisection graph
 template <typename InputEdge>
 std::vector<BisectionInputEdge> adaptToBisectionEdge(std::vector<InputEdge> edges)
 {
