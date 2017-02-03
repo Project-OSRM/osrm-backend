@@ -45,7 +45,8 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
         const auto add_annotation = [](engine::api::RouteParameters &route_parameters,
                                        engine::api::RouteParameters::AnnotationsType &route_param) {
             route_parameters.annotations_type = route_parameters.annotations_type | route_param;
-            route_parameters.annotations = route_parameters.annotations_type != engine::api::RouteParameters::AnnotationsType::None;
+            route_parameters.annotations = route_parameters.annotations_type !=
+                                           engine::api::RouteParameters::AnnotationsType::None;
         };
 
         geometries_type.add("geojson", engine::api::RouteParameters::GeometriesType::GeoJSON)(
