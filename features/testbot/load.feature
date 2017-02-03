@@ -22,6 +22,22 @@ Feature: Ways of loading data
             | a    | b  | ab,ab |
             | b    | a  | ab,ab |
 
+    Scenario: osrm-datastore - Remove shared control block
+        When I run "osrm-datastore --remove-locks"
+        Then stderr should be empty
+        And it should exit successfully
+
+    Scenario: osrm-datastore - Remove shared memory blocks
+        When I run "osrm-datastore --spring-clean" with input "Y"
+        Then stderr should be empty
+        And it should exit successfully
+
+    Scenario: osrm-datastore - Fail if no shared memory blocks are loaded
+        When I run "osrm-datastore --spring-clean" with input "Y"
+        And I try to run "osrm-routed --shared-memory=1"
+        Then stderr should contain "No shared memory block"
+        And it should exit with an error
+
     Scenario: Load data directly - st
         Given data is loaded directly
         Given the node map

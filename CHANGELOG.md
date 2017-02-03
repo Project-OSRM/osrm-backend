@@ -1,3 +1,8 @@
+# 5.7.0
+  - Changes from 5.6
+    - Internals
+      - Shared memory notification via conditional variables on Linux or semaphore queue on OS X and Windows with a limit of 128 OSRM Engine instances
+
 # 5.6.0
   - Changes from 5.5
     - Bugfixes

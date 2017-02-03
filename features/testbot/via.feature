@@ -22,18 +22,27 @@ Feature: Via points
         Given the contract extra arguments "--core 0.8"
         Given the node map
             """
-            a b c
+            a b c d
+              e f g
+                h i
+                  j
             """
 
         And the ways
             | nodes |
-            | abc   |
+            | abcd  |
+            | efg   |
+            | hi    |
+            | be    |
+            | cfh   |
+            | dgij  |
 
         When I route I should get
-            | waypoints | route           |
-            | a,b,c     | abc,abc,abc,abc |
-            | c,b,a     | abc,abc,abc,abc |
-            | c,b,a     | abc,abc,abc,abc |
+            | waypoints | route               |
+            | a,b,c     | abcd,abcd,abcd,abcd |
+            | c,b,a     | abcd,abcd,abcd,abcd |
+            | a,d,j     | abcd,abcd,dgij,dgij |
+            | j,d,a     | dgij,dgij,abcd,abcd |
 
     Scenario: Via point at a dead end
         Given the node map

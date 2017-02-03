@@ -1,5 +1,5 @@
-#include "storage/shared_barrier.hpp"
 #include "storage/shared_memory.hpp"
+#include "storage/shared_monitor.hpp"
 #include "storage/storage.hpp"
 #include "util/exception.hpp"
 #include "util/log.hpp"
@@ -14,7 +14,7 @@
 
 using namespace osrm;
 
-void removeLocks() { osrm::storage::SharedBarrier::Remove(); }
+void removeLocks() { osrm::storage::SharedMonitor<osrm::storage::SharedDataTimestamp>::remove(); }
 
 void deleteRegion(const storage::SharedDataType region)
 {
