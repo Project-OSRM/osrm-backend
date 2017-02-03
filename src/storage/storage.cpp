@@ -8,9 +8,9 @@
 #include "extractor/travel_mode.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
-#include "storage/shared_barrier.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
+#include "storage/shared_monitor.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
@@ -53,6 +53,8 @@ using RTreeNode =
     util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 
+using Monitor = SharedMonitor<SharedDataTimestamp>;
+
 Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
 int Storage::Run(int max_wait)
@@ -90,8 +92,9 @@ int Storage::Run(int max_wait)
 
     // Get the next region ID and time stamp without locking shared barriers.
     // Because of datastore_lock the only write operation can occur sequentially later.
-    SharedBarrier barrier(boost::interprocess::open_or_create);
-    auto in_use_region = barrier.GetRegion();
+    Monitor monitor(SharedDataTimestamp{REGION_NONE, 0});
+    auto in_use_region = monitor.data().region;
+    auto next_timestamp = monitor.data().timestamp + 1;
     auto next_region =
         in_use_region == REGION_2 || in_use_region == REGION_NONE ? REGION_1 : REGION_2;
 
@@ -124,8 +127,8 @@ int Storage::Run(int max_wait)
     PopulateData(layout, shared_memory_ptr + sizeof(layout));
 
     { // Lock for write access shared region mutex
-        boost::interprocess::scoped_lock<SharedBarrier::mutex_type> lock(
-            barrier.GetMutex(), boost::interprocess::defer_lock);
+        boost::interprocess::scoped_lock<Monitor::mutex_type> lock(monitor.get_mutex(),
+                                                                   boost::interprocess::defer_lock);
 
         if (max_wait >= 0)
         {
@@ -136,9 +139,9 @@ int Storage::Run(int max_wait)
                     << "Could not aquire current region lock after " << max_wait
                     << " seconds. Removing locked block and creating a new one. All currently "
                        "attached processes will not receive notifications and must be restarted";
-                SharedBarrier::Remove();
+                Monitor::remove();
                 in_use_region = REGION_NONE;
-                barrier = SharedBarrier(boost::interprocess::open_or_create);
+                monitor = Monitor(SharedDataTimestamp{REGION_NONE, 0});
             }
         }
         else
@@ -147,13 +150,13 @@ int Storage::Run(int max_wait)
         }
 
         // Update the current region ID and timestamp
-        barrier.SetRegion(next_region);
+        monitor.data().region = next_region;
+        monitor.data().timestamp = next_timestamp;
     }
 
     util::Log() << "All data loaded. Notify all client about new data in "
-                << regionToString(barrier.GetRegion()) << " with timestamp "
-                << barrier.GetTimestamp();
-    barrier.NotifyAll();
+                << regionToString(next_region) << " with timestamp " << next_timestamp;
+    monitor.notify_all();
 
     // SHMCTL(2): Mark the segment to be destroyed. The segment will actually be destroyed
     // only after the last process detaches it.

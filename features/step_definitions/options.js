@@ -12,7 +12,7 @@ module.exports = function () {
     };
 
     this.runAndSafeOutput = (binary, options, callback) => {
-        this.runBin(binary, this.expandOptions(options), this.environment, (err, stdout, stderr) => {
+        return this.runBin(binary, this.expandOptions(options), this.environment, (err, stdout, stderr) => {
             this.stdout = stdout;
             this.stderr = stderr;
             this.exitCode = err && err.code || 0;
@@ -53,8 +53,10 @@ module.exports = function () {
         this.runAndSafeOutput('osrm-contract', options, () => { callback(); });
     });
 
-    this.When(/^I run "osrm\-datastore\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-datastore', options, callback);
+    this.When(/^I run "osrm\-datastore\s?(.*?)"(?: with input "([^"]*)")?$/, (options, input, callback) => {
+        let child = this.runAndSafeOutput('osrm-datastore', options, callback);
+        if (input !== undefined)
+            child.stdin.write(input);
     });
 
     this.Then(/^it should exit successfully$/, () => {

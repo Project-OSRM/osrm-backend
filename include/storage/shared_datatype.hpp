@@ -207,8 +207,15 @@ enum SharedDataType
 
 struct SharedDataTimestamp
 {
+    explicit SharedDataTimestamp(SharedDataType region, unsigned timestamp)
+        : region(region), timestamp(timestamp)
+    {
+    }
+
     SharedDataType region;
     unsigned timestamp;
+
+    static constexpr const char *name = "osrm-region";
 };
 
 inline std::string regionToString(const SharedDataType region)
