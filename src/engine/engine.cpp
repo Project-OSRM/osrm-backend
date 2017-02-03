@@ -18,28 +18,27 @@
 
 namespace
 {
-
-auto GetWatchdogDataFacade()
-{
-    static osrm::engine::DataWatchdog watchdog;
-    return watchdog.GetDataFacade();
-}
-
 // Abstracted away the query locking into a template function
 // Works the same for every plugin.
 template <typename ParameterT, typename PluginT, typename ResultT>
 osrm::engine::Status
-RunQuery(const std::shared_ptr<const osrm::engine::datafacade::BaseDataFacade> &immutable_facade,
+RunQuery(const std::unique_ptr<osrm::engine::DataWatchdog> &watchdog,
+         const std::shared_ptr<const osrm::engine::datafacade::BaseDataFacade> &immutable_facade,
          const ParameterT &parameters,
          PluginT &plugin,
          ResultT &result)
 {
-    if (immutable_facade)
+    if (watchdog)
     {
-        return plugin.HandleRequest(immutable_facade, parameters, result);
+        BOOST_ASSERT(!immutable_facade);
+        auto facade = watchdog->GetDataFacade();
+
+        return plugin.HandleRequest(facade, parameters, result);
     }
 
-    return plugin.HandleRequest(GetWatchdogDataFacade(), parameters, result);
+    BOOST_ASSERT(immutable_facade);
+
+    return plugin.HandleRequest(immutable_facade, parameters, result);
 }
 
 } // anon. ns
@@ -58,7 +57,12 @@ Engine::Engine(const EngineConfig &config)
       tile_plugin()                                      //
 
 {
-    if (!config.use_shared_memory)
+    if (config.use_shared_memory)
+    {
+        watchdog = std::make_unique<DataWatchdog>();
+        BOOST_ASSERT(watchdog);
+    }
+    else
     {
         if (!config.storage_config.IsValid())
         {
@@ -74,32 +78,32 @@ Engine::Engine(const EngineConfig &config)
 
 Status Engine::Route(const api::RouteParameters &params, util::json::Object &result) const
 {
-    return RunQuery(immutable_data_facade, params, route_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, route_plugin, result);
 }
 
 Status Engine::Table(const api::TableParameters &params, util::json::Object &result) const
 {
-    return RunQuery(immutable_data_facade, params, table_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, table_plugin, result);
 }
 
 Status Engine::Nearest(const api::NearestParameters &params, util::json::Object &result) const
 {
-    return RunQuery(immutable_data_facade, params, nearest_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, nearest_plugin, result);
 }
 
 Status Engine::Trip(const api::TripParameters &params, util::json::Object &result) const
 {
-    return RunQuery(immutable_data_facade, params, trip_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, trip_plugin, result);
 }
 
 Status Engine::Match(const api::MatchParameters &params, util::json::Object &result) const
 {
-    return RunQuery(immutable_data_facade, params, match_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, match_plugin, result);
 }
 
 Status Engine::Tile(const api::TileParameters &params, std::string &result) const
 {
-    return RunQuery(immutable_data_facade, params, tile_plugin, result);
+    return RunQuery(watchdog, immutable_data_facade, params, tile_plugin, result);
 }
 
 } // engine ns

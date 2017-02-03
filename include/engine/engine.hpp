@@ -49,6 +49,8 @@ class Engine final
     Status Tile(const api::TileParameters &parameters, std::string &result) const;
 
   private:
+    std::unique_ptr<DataWatchdog> watchdog;
+
     const plugins::ViaRoutePlugin route_plugin;
     const plugins::TablePlugin table_plugin;
     const plugins::NearestPlugin nearest_plugin;
