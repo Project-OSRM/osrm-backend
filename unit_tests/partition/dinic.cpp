@@ -20,7 +20,6 @@ BOOST_AUTO_TEST_CASE(horizontal_cut_between_two_grids)
     const double step_size = 0.01;
     const int rows = 10;
     const int cols = 10;
-    const int cut_edges = 4;
 
     // build a small grid (10*10) and a (100 * 10) below (to make the different steps unique)
     auto graph = [&]() {

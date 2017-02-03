@@ -67,8 +67,12 @@ BOOST_AUTO_TEST_CASE(graph_views_on_components)
         }));
 
         for (const auto &node : view.Nodes())
+        {
             for (const auto &edge : view.Edges(node))
+            {
                 BOOST_CHECK(edge.target < view.NumberOfNodes());
+            }
+        }
     }
     BOOST_CHECK(views.back().NumberOfNodes() == 9);
 }
