@@ -8,13 +8,20 @@ local Sequence = require('lib/sequence')
 local Handlers = require("lib/handlers")
 local next = next       -- bind to local for speed
 
+penalty_table = {
+  ["service"] = 0.5,
+}
+
 -- set profile properties
 properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false
--- this will use the duration and {forward/backward}_speed values as weight
-properties.weight_name                     = 'duration'
+-- For routing based on duration, but weighted for prefering certain roads
+properties.weight_name                     = 'routability'
+-- For shortest duration without penalties for accessibility
+--properties.weight_name                     = 'duration'
+-- For shortest distance without penalties for accessibility
 --properties.weight_name                     = 'distance'
 
 local profile = {
@@ -22,7 +29,7 @@ local profile = {
   default_speed     = 10,
   oneway_handling   = true,
 
-  side_road_speed_multiplier = 0.8,
+  side_road_multiplier       = 0.8,
   turn_penalty               = 7.5,
   speed_reduction            = 0.8,
   traffic_light_penalty      = 2,
@@ -114,12 +121,12 @@ local profile = {
     }
   },
 
-  service_speeds = {
-    alley             = 5,
-    parking           = 5,
-    parking_aisle     = 5,
-    driveway          = 5,
-    ["drive-through"] = 5
+  service_penalties = {
+    alley             = 0.5,
+    parking           = 0.5,
+    parking_aisle     = 0.5,
+    driveway          = 0.5,
+    ["drive-through"] = 0.5
   },
 
   route_speeds = {
@@ -267,7 +274,6 @@ function node_function (node, result)
   end
 end
 
-
 function way_function(way, result)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
@@ -331,7 +337,7 @@ function way_function(way, result)
     'handle_side_roads',
     'handle_surface',
     'handle_maxspeed',
-    'handle_speed_scaling',
+    'handle_penalties',
     'handle_alternating_speed',
 
     -- handle turn lanes and road classification, used for guidance
