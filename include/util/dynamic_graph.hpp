@@ -105,8 +105,6 @@ template <typename EdgeDataT> class DynamicGraph
         }
     }
 
-    ~DynamicGraph() {}
-
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
 
     unsigned GetNumberOfEdges() const { return number_of_edges; }

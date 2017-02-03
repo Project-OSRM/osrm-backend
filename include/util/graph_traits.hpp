@@ -1,5 +1,5 @@
-#ifndef STATIC_GRAPH_TRAITS_HPP
-#define STATIC_GRAPH_TRAITS_HPP
+#ifndef OSRM_GRAPH_TRAITS_HPP
+#define OSRM_GRAPH_TRAITS_HPP
 
 #include <type_traits>
 
@@ -31,14 +31,14 @@ struct HasTargetMember<T, decltype((void)(sizeof(std::declval<T>().target) > 0))
 {
 };
 
-// Static Graph requires edges to have a .target and .data member attribute
+// Our graphs require edges to have a .target and .data member attribute
 template <typename Edge>
 struct HasDataAndTargetMember
     : std::integral_constant<bool, HasDataMember<Edge>::value && HasTargetMember<Edge>::value>
 {
 };
 
-// Static Graph requires nodes to have a .first_edge member attribute
+// Our graphs require nodes to have a .first_edge member attribute
 template <typename T, typename = void> struct HasFirstEdgeMember : std::false_type
 {
 };
