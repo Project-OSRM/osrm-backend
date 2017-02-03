@@ -2,12 +2,14 @@
 #include "partition/annotated_partition.hpp"
 #include "partition/bisection_graph.hpp"
 #include "partition/compressed_node_based_graph_reader.hpp"
+#include "partition/edge_based_graph_reader.hpp"
 #include "partition/node_based_graph_to_edge_based_graph_mapping_reader.hpp"
 #include "partition/recursive_bisection.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
+#include "util/integer_range.hpp"
 #include "util/json_container.hpp"
 #include "util/log.hpp"
 
@@ -136,8 +138,29 @@ int Partitioner::Run(const PartitionConfig &config)
                   recursive_bisection.BisectionIDs());
 
     auto mapping = LoadNodeBasedGraphToEdgeBasedGraphMapping(config.nbg_ebg_mapping_path.string());
-
     util::Log() << "Loaded node based graph to edge based graph mapping";
+
+    auto edge_based_graph = LoadEdgeBasedGraph(config.edge_based_graph_path.string());
+    util::Log() << "Loaded edge based graph for mapping partition ids: "
+                << edge_based_graph->GetNumberOfEdges() << " edges, "
+                << edge_based_graph->GetNumberOfNodes() << " nodes";
+
+    for (const auto node_id : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
+    {
+        const auto node_based_nodes = mapping.Lookup(node_id);
+
+        const auto u = node_based_nodes.u;
+        const auto v = node_based_nodes.v;
+
+        auto partition_id = [](auto) {
+            return 0; /*dummy*/
+        };
+
+        if (partition_id(u) != partition_id(v))
+        {
+            // TODO: resolve border nodes u, v
+        }
+    }
 
     return 0;
 }
