@@ -1,16 +1,17 @@
 #include "partition/partitioner.hpp"
 #include "partition/annotated_partition.hpp"
 #include "partition/bisection_graph.hpp"
+#include "partition/compressed_node_based_graph_reader.hpp"
+#include "partition/node_based_graph_to_edge_based_graph_mapping_reader.hpp"
 #include "partition/recursive_bisection.hpp"
 
-#include "storage/io.hpp"
 #include "util/coordinate.hpp"
-
+#include "util/geojson_debug_logger.hpp"
+#include "util/geojson_debug_policies.hpp"
+#include "util/json_container.hpp"
 #include "util/log.hpp"
 
 #include <iterator>
-#include <tuple>
-#include <unordered_map>
 #include <vector>
 
 #include <boost/assert.hpp>
@@ -24,104 +25,6 @@ namespace osrm
 {
 namespace partition
 {
-
-struct CompressedNodeBasedGraphEdge
-{
-    NodeID source;
-    NodeID target;
-};
-
-struct CompressedNodeBasedGraph
-{
-    CompressedNodeBasedGraph(storage::io::FileReader &reader)
-    {
-        // Reads:  | Fingerprint | #e | #n | edges | coordinates |
-        // - uint64: number of edges (from, to) pairs
-        // - uint64: number of nodes and therefore also coordinates
-        // - (uint32_t, uint32_t): num_edges * edges
-        // - (int32_t, int32_t: num_nodes * coordinates (lon, lat)
-        //
-        // Gets written in Extractor::WriteCompressedNodeBasedGraph
-
-        const auto num_edges = reader.ReadElementCount64();
-        const auto num_nodes = reader.ReadElementCount64();
-
-        edges.resize(num_edges);
-        coordinates.resize(num_nodes);
-
-        reader.ReadInto(edges);
-        reader.ReadInto(coordinates);
-    }
-
-    std::vector<CompressedNodeBasedGraphEdge> edges;
-    std::vector<util::Coordinate> coordinates;
-};
-
-CompressedNodeBasedGraph LoadCompressedNodeBasedGraph(const std::string &path)
-{
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader(path, fingerprint);
-
-    CompressedNodeBasedGraph graph{reader};
-    return graph;
-}
-
-struct NodeBasedGraphToEdgeBasedGraphMapping
-{
-    NodeBasedGraphToEdgeBasedGraphMapping(storage::io::FileReader &reader)
-    {
-        // Reads:  | Fingerprint | #mappings | u v fwd_node bkw_node | u v fwd_node bkw_node | ..
-        // - uint64: number of mappings (u, v, fwd_node, bkw_node) chunks
-        // - NodeID u, NodeID v, EdgeID fwd_node, EdgeID bkw_node
-        //
-        // Gets written in NodeBasedGraphToEdgeBasedGraphMappingWriter
-
-        const auto num_mappings = reader.ReadElementCount64();
-
-        edge_based_node_to_node_based_nodes.reserve(num_mappings * 2);
-
-        for (std::uint64_t i{0}; i < num_mappings; ++i)
-        {
-
-            const auto u = reader.ReadOne<NodeID>();            // node based graph `from` node
-            const auto v = reader.ReadOne<NodeID>();            // node based graph `to` node
-            const auto fwd_ebg_node = reader.ReadOne<EdgeID>(); // edge based graph forward node
-            const auto bkw_ebg_node = reader.ReadOne<EdgeID>(); // edge based graph backward node
-
-            edge_based_node_to_node_based_nodes.insert({fwd_ebg_node, {u, v}});
-            edge_based_node_to_node_based_nodes.insert({bkw_ebg_node, {v, u}});
-        }
-    }
-
-    struct NodeBasedNodes
-    {
-        NodeID u, v;
-    };
-
-    NodeBasedNodes Lookup(EdgeID edge_based_node) const
-    {
-        auto it = edge_based_node_to_node_based_nodes.find(edge_based_node);
-
-        if (it != end(edge_based_node_to_node_based_nodes))
-            return it->second;
-
-        BOOST_ASSERT_MSG(false, "unable to fine edge based node, graph <-> mapping out of sync");
-        return NodeBasedNodes{SPECIAL_NODEID, SPECIAL_NODEID};
-    }
-
-  private:
-    std::unordered_map<EdgeID, NodeBasedNodes> edge_based_node_to_node_based_nodes;
-};
-
-NodeBasedGraphToEdgeBasedGraphMapping
-LoadNodeBasedGraphToEdgeBasedGraphMapping(const std::string &path)
-{
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader(path, fingerprint);
-
-    NodeBasedGraphToEdgeBasedGraphMapping mapping{reader};
-    return mapping;
-}
 
 void LogStatistics(const std::string &filename, std::vector<std::uint32_t> bisection_ids)
 {
