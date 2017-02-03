@@ -247,16 +247,6 @@ function Handlers.handle_speed(way,result,data,profile)
   end
 end
 
--- reduce speed on special side roads
-function Handlers.handle_side_roads(way,result,data,profile)
-  local sideway = way:get_value_by_key("side_road")
-  if "yes" == sideway or
-  "rotary" == sideway then
-    result.forward_speed = result.forward_speed * profile.side_road_speed_multiplier
-    result.backward_speed = result.backward_speed * profile.side_road_speed_multiplier
-  end
-end
-
 -- reduce speed on bad surfaces
 function Handlers.handle_surface(way,result,data,profile)
   local surface = way:get_value_by_key("surface")
@@ -278,45 +268,58 @@ function Handlers.handle_surface(way,result,data,profile)
 end
 
 -- scale speeds to get better average driving times
-function Handlers.handle_speed_scaling(way,result,data,profile)
+function Handlers.handle_penalties(way,result,data,profile)
+  local service_penalty = 1.0
+  local service = way:get_value_by_key("service")
+  if service and service_penalties[service] then
+      service_penalty = service_penalties[service]
+  end
+
+  local width_penalty = 1.0
   local width = math.huge
   local lanes = math.huge
-  if result.forward_speed > 0 or result.backward_speed > 0 then
-    local width_string = way:get_value_by_key("width")
-    if width_string and tonumber(width_string:match("%d*")) then
-      width = tonumber(width_string:match("%d*"))
-    end
+  local width_string = way:get_value_by_key("width")
+  if width_string and tonumber(width_string:match("%d*")) then
+    width = tonumber(width_string:match("%d*"))
+  end
 
-    local lanes_string = way:get_value_by_key("lanes")
-    if lanes_string and tonumber(lanes_string:match("%d*")) then
-      lanes = tonumber(lanes_string:match("%d*"))
-    end
+  local lanes_string = way:get_value_by_key("lanes")
+  if lanes_string and tonumber(lanes_string:match("%d*")) then
+    lanes = tonumber(lanes_string:match("%d*"))
   end
 
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
 
-  local service = way:get_value_by_key("service")
-  if result.forward_speed > 0 then
-    local scaled_speed = result.forward_speed * profile.speed_reduction
-    local penalized_speed = math.huge
-    if service and profile.service_speeds[service] then
-      penalized_speed = profile.service_speeds[service]
-    elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.forward_speed / 2
-    end
-    result.forward_speed = math.min(penalized_speed, scaled_speed)
+  if width <= 3 or (lanes <= 1 and is_bidirectional) then
+    width_penalty = 0.5
   end
 
-  if result.backward_speed > 0 then
-    local scaled_speed = result.backward_speed * profile.speed_reduction
-    local penalized_speed = math.huge
-    if service and profile.service_speeds[service]then
-      penalized_speed = profile.service_speeds[service]
-    elseif width <= 3 or (lanes <= 1 and is_bidirectional) then
-      penalized_speed = result.backward_speed / 2
+  -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
+  -- Scaling speed to take average waiting time into account plus some more for start / stop.
+  local alternating_penalty = 1.0
+  if data.oneway == "alternating" then
+    alternating_penalty = 0.4
+  end
+
+  local sideroad_penalty = 1.0
+  data.sideroad = way:get_value_by_key("side_road")
+  if "yes" == data.sideroad or "rotary" == data.sideroad then
+    sideroad_penalty = side_road_multipler;
+  end
+
+  local penalty = service_penalty * width_penalty * alternating_penalty * sideroad_penalty
+
+  if properties.weight_name == 'routability' then
+    if result.forward_speed > 0 then
+      result.forward_rate = result.forward_speed * penalty
     end
-    result.backward_speed = math.min(penalized_speed, scaled_speed)
+    if result.backward_speed > 0 then
+      result.backward_rate = result.backward_speed * penalty
+    end
+    if result.duration > 0 then
+      result.weight = result.duration / penalty
+    end
   end
 end
 
@@ -328,25 +331,11 @@ function Handlers.handle_maxspeed(way,result,data,profile)
   backward = Handlers.parse_maxspeed(backward,profile)
 
   if forward and forward > 0 then
-    result.forward_speed = forward
+    result.forward_speed = forward * speed_scaling
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward
-  end
-end
-
--- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
--- Scaling speed to take average waiting time into account plus some more for start / stop.
-function Handlers.handle_alternating_speed(way,result,data,profile)
-  if "alternating" == data.oneway then
-    local scaling_factor = 0.4
-    if result.forward_speed ~= math.huge then
-      result.forward_speed = result.forward_speed * scaling_factor
-    end
-    if result.backward_speed ~= math.huge then
-      result.backward_speed = result.backward_speed * scaling_factor
-    end
+    result.backward_speed = backward * speed_scaling
   end
 end
 
