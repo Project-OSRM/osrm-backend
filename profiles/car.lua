@@ -17,7 +17,7 @@ properties.max_speed_for_map_matching      = 180/3.6 -- 180kmph -> m/s
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.left_hand_driving               = false
--- For routing based on duration, but weighted for prefering certain roads
+-- For routing based on duration, but weighted for preferring certain roads
 properties.weight_name                     = 'routability'
 -- For shortest duration without penalties for accessibility
 --properties.weight_name                     = 'duration'
@@ -316,10 +316,10 @@ function way_function(way, result)
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
     'handle_access',
 
-    -- check whether forward/backward directons are routable
+    -- check whether forward/backward directions are routable
     'handle_oneway',
 
-    -- check whether forward/backward directons are routable
+    -- check whether forward/backward directions are routable
     'handle_destinations',
 
     -- check whether we're using a special transport mode
@@ -334,11 +334,9 @@ function way_function(way, result)
 
     -- compute speed taking into account way type, maxspeed tags, etc.
     'handle_speed',
-    'handle_side_roads',
     'handle_surface',
     'handle_maxspeed',
     'handle_penalties',
-    'handle_alternating_speed',
 
     -- handle turn lanes and road classification, used for guidance
     'handle_turn_lanes',

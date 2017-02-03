@@ -53,21 +53,21 @@ Feature: Traffic - turn penalties
     Scenario: Weighting not based on turn penalty file
         When I route I should get
             | from | to | route           | speed   | time      |
-            | a    | h  | ad,dhk,dhk      | 52 km/h | 14s +-1   |
+            | a    | h  | ad,dhk,dhk      | 65 km/h | 11s +-1   |
                                                                   # straight
-            | i    | g  | fim,fg,fg       | 45 km/h | 16s +-1   |
+            | i    | g  | fim,fg,fg       | 55 km/h | 13s +-1 |
                                                                   # right
-            | a    | e  | ad,def,def      | 38 km/h | 19s +-1   |
+            | a    | e  | ad,def,def      | 44 km/h | 16.3s +-1 |
                                                                   # left
-            | c    | g  | cd,def,fg,fg    | 52 km/h | 27s +-1   |
+            | c    | g  | cd,def,fg,fg    | 65 km/h | 22s +-1   |
                                                                   # double straight
-            | p    | g  | mp,fim,fg,fg    | 48 km/h | 29s +-1   |
+            | p    | g  | mp,fim,fg,fg    | 60 km/h | 24s +-1   |
                                                                   # straight-right
-            | a    | l  | ad,dhk,klm,klm  | 44 km/h | 33s +-1   |
+            | a    | l  | ad,dhk,klm,klm  | 53 km/h | 27s +-1   |
                                                                   # straight-left
-            | l    | e  | klm,dhk,def,def | 45 km/h | 32s +-1   |
+            | l    | e  | klm,dhk,def,def | 55 km/h | 26s +-1   |
                                                                   # double right
-            | g    | n  | fg,fim,mn,mn    | 38 km/h | 38s +-1   |
+            | g    | n  | fg,fim,mn,mn    | 44 km/h | 32s +-1   |
                                                                   # double left
 
     Scenario: Weighting based on turn penalty file

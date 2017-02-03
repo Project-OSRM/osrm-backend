@@ -305,17 +305,17 @@ function Handlers.handle_penalties(way,result,data,profile)
   local sideroad_penalty = 1.0
   data.sideroad = way:get_value_by_key("side_road")
   if "yes" == data.sideroad or "rotary" == data.sideroad then
-    sideroad_penalty = side_road_multipler;
+    sideroad_penalty = side_road_multiplier;
   end
 
   local penalty = service_penalty * width_penalty * alternating_penalty * sideroad_penalty
 
   if properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
-      result.forward_rate = result.forward_speed * penalty
+      result.forward_rate = result.forward_speed * profile.speed_reduction
     end
     if result.backward_speed > 0 then
-      result.backward_rate = result.backward_speed * penalty
+      result.backward_rate = result.backward_speed * profile.speed_reduction
     end
     if result.duration > 0 then
       result.weight = result.duration / penalty
@@ -331,11 +331,11 @@ function Handlers.handle_maxspeed(way,result,data,profile)
   backward = Handlers.parse_maxspeed(backward,profile)
 
   if forward and forward > 0 then
-    result.forward_speed = forward * speed_scaling
+    result.forward_speed = forward * profile.speed_reduction
   end
 
   if backward and backward > 0 then
-    result.backward_speed = backward * speed_scaling
+    result.backward_speed = backward * profile.speed_reduction
   end
 end
 
