@@ -345,7 +345,8 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                                       "overview=simplified&annotations=duration");
     BOOST_CHECK(result_15);
     BOOST_CHECK_EQUAL(reference_15.geometries, result_15->geometries);
-    BOOST_CHECK_EQUAL(result_15->annotations_type == RouteParameters::AnnotationsType::Duration, true);
+    BOOST_CHECK_EQUAL(result_15->annotations_type == RouteParameters::AnnotationsType::Duration,
+                      true);
     BOOST_CHECK_EQUAL(result_15->annotations, true);
 
     // parse multiple annotations correctly
