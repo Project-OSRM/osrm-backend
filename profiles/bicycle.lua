@@ -4,8 +4,9 @@ api_version = 1
 local find_access_tag = require("lib/access").find_access_tag
 local Set = require('lib/set')
 local Sequence = require('lib/sequence')
+local Handlers = require("lib/handlers")
+local next = next       -- bind to local for speed
 local limit = require("lib/maxspeed").limit
-local set_classification = require("lib/guidance").set_classification
 
 -- these need to be global because they are accesed externaly
 properties.max_speed_for_map_matching    = 110/3.6 -- kmph -> m/s
@@ -19,19 +20,23 @@ local default_speed = 15
 local walking_speed = 6
 
 local profile = {
-  default_mode      = mode.cycling,
-  default_speed     = 15,
-  oneway_handling   = true,
-
+  default_mode              = mode.cycling,
+  default_speed             = 15,
+  oneway_handling           = true,
   traffic_light_penalty     = 2,
   u_turn_penalty            = 20,
   turn_penalty              = 6,
   turn_bias                 = 1.4,
-  
+
   -- reduce the driving speed by 30% for unsafe roads
   -- local safety_penalty            = 0.7,
   safety_penalty            = 1.0,
   use_public_transport      = true,
+
+  allowed_start_modes = Set {
+    mode.cycling,
+    mode.pushing_bike
+  },
 
   barrier_whitelist = Set {
     'cycle_barrier',
@@ -45,7 +50,7 @@ local profile = {
     'no',
     'block'
   },
-  
+
   access_tag_whitelist = Set {
   	'yes',
   	'permissive',
@@ -59,17 +64,17 @@ local profile = {
    	'forestry',
    	'delivery'
   },
-  
+
   access_tags_hierarchy = Sequence {
   	'bicycle',
   	'vehicle',
   	'access'
   },
-  
+
   restrictions = Set {
   	'bicycle'
   },
-  
+
   cycleway_tags = Set {
   	'track',
   	'lane',
@@ -80,7 +85,7 @@ local profile = {
   	'sharrow',
   	'shared'
   },
-  
+
   unsafe_highway_list = Set {
   	'primary',
    	'secondary',
@@ -89,7 +94,7 @@ local profile = {
    	'secondary_link',
    	'tertiary_link'
   },
-  
+
   bicycle_speeds = {
     cycleway = default_speed,
     primary = default_speed,
@@ -105,10 +110,8 @@ local profile = {
     service = default_speed,
     track = 12,
     path = 12
-    --footway = 12,
-    --pedestrian = 12,
   },
-  
+
   pedestrian_speeds = {
     footway = walking_speed,
     pedestrian = walking_speed,
@@ -162,6 +165,11 @@ local profile = {
     mud = 3,
     sand = 3,
     sett = 10
+  },
+
+  avoid = Set {
+    'impassable',
+    'construction'
   }
 }
 
@@ -215,6 +223,40 @@ function node_function (node, result)
 end
 
 function way_function (way, result)
+  -- the intial filtering of ways based on presence of tags
+  -- affects processing times significantly, because all ways
+  -- have to be checked.
+  -- to increase performance, prefetching and intial tag check
+  -- is done in directly instead of via a handler.
+
+  -- in general we should  try to abort as soon as
+  -- possible if the way is not routable, to avoid doing
+  -- unnecessary work. this implies we should check things that
+  -- commonly forbids access early, and handle edge cases later.
+
+  -- data table for storing intermediate values during processing
+
+  local data = {
+    -- prefetch tags
+    highway = way:get_value_by_key('highway'),
+  }
+
+  local handlers = Sequence {
+    -- set the default mode for this profile. if can be changed later
+    -- in case it turns we're e.g. on a ferry
+    'handle_default_mode',
+
+    -- check various tags that could indicate that the way is not
+    -- routable. this includes things like status=impassable,
+    -- toll=yes and oneway=reversible
+    'handle_blocked_ways',
+  }
+
+  if Handlers.run(handlers,way,result,data,profile) == false then
+    return
+  end
+
+
   -- initial routability check, filters out buildings, boundaries, etc
   local highway = way:get_value_by_key("highway")
   local route = way:get_value_by_key("route")
@@ -234,23 +276,13 @@ function way_function (way, result)
     return
   end
 
-  -- don't route on ways or railways that are still under construction
-  if highway=='construction' or railway=='construction' then
-    return
-  end
-
   -- access
   local access = find_access_tag(way, profile.access_tags_hierarchy)
   if access and profile.access_tag_blacklist[access] then
     return
   end
 
-  result.forward_mode = mode.cycling
-  result.backward_mode = mode.cycling
-
   -- other tags
-  local name = way:get_value_by_key("name")
-  local ref = way:get_value_by_key("ref")
   local junction = way:get_value_by_key("junction")
   local maxspeed = parse_maxspeed(way:get_value_by_key ( "maxspeed") )
   local maxspeed_forward = parse_maxspeed(way:get_value_by_key( "maxspeed:forward"))
@@ -263,29 +295,11 @@ function way_function (way, result)
   local cycleway_right = way:get_value_by_key("cycleway:right")
   local duration = way:get_value_by_key("duration")
   local service = way:get_value_by_key("service")
-  local area = way:get_value_by_key("area")
   local foot = way:get_value_by_key("foot")
   local foot_forward = way:get_value_by_key("foot:forward")
   local foot_backward = way:get_value_by_key("foot:backward")
   local bicycle = way:get_value_by_key("bicycle")
 
-  -- name
-  if name and "" ~= name then
-    result.name = name
-  end
-
-  -- ref
-  if ref and "" ~= ref then
-    result.ref = ref
-  end
-
-  -- roundabout handling
-  if junction and ("roundabout" == junction) then
-    result.roundabout = true
-  end
-  if junction and ("circular" == junction) then
-    result.circular = true;
-  end
 
   -- speed
   local bridge_speed = profile.bridge_speeds[bridge]
@@ -441,16 +455,6 @@ function way_function (way, result)
     result.backward_speed = walking_speed
   end
 
-  -- reduce speed on bad surfaces
-  local surface = way:get_value_by_key("surface")
-
-  if surface and profile.surface_speeds[surface] then
-    result.forward_speed = math.min(profile.surface_speeds[surface], result.forward_speed)
-    result.backward_speed = math.min(profile.surface_speeds[surface], result.backward_speed)
-  end
-
-  -- set the road classification based on guidance globals configuration
-  set_classification(highway,result,way)
 
   -- maxspeed
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
@@ -477,6 +481,26 @@ function way_function (way, result)
       result.weight = result.weight * (1+profile.safety_penalty)
     end
   end
+
+
+
+  local handlers = Sequence {
+    -- compute speed taking into account way type, maxspeed tags, etc.
+    'handle_surface',
+
+    -- handle turn lanes and road classification, used for guidance
+    'handle_classification',
+
+    -- handle various other flags
+    'handle_roundabouts',
+    --'handle_startpoint',
+
+    -- set name, ref and pronunciation
+    'handle_names'
+  }
+
+  Handlers.run(handlers,way,result,data,profile)
+
 end
 
 function turn_function(turn)
