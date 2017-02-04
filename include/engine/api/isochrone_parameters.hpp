@@ -50,7 +50,7 @@ namespace api
  */
 struct IsochroneParameters : public BaseParameters
 {
-    unsigned range = 10;
+    unsigned range = 300;
 
     bool IsValid() const { return BaseParameters::IsValid() && range >= 1; }
 };
