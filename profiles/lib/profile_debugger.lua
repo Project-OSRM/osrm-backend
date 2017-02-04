@@ -121,6 +121,7 @@ function Debug.way_function(way,result)
   result.road_classification = {}
   result.forward_speed = -1
   result.backward_speed = -1
+  result.duration = 0
   
   -- intercept tag function normally provided via C++
   function way:get_value_by_key(k)
