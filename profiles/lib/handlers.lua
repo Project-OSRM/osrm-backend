@@ -65,9 +65,15 @@ end
 
 -- determine if this way can be used as a start/end point for routing
 function Handlers.handle_startpoint(way,result,data,profile)
-  -- only allow this road as start point if it not a ferry
-  result.is_startpoint = result.forward_mode == profile.default_mode or
-                         result.backward_mode == profile.default_mode
+  -- if profile specifies set of allowed start modes, then check for that
+  -- otherwise require default mode
+  if profile.allowed_start_modes then
+    result.is_startpoint = profile.allowed_start_modes[result.forward_mode] == true or
+                           profile.allowed_start_modes[result.backward_mode] == true
+  else
+    result.is_startpoint = result.forward_mode == profile.default_mode or
+                           result.backward_mode == profile.default_mode
+  end
 end
 
 -- handle turn lanes
@@ -428,6 +434,12 @@ function Handlers.handle_blocked_ways(way,result,data,profile)
 
   -- toll roads
   if profile.avoid.toll and way:get_value_by_key("toll") == "yes" then
+    return false
+  end
+
+  -- construction
+  -- TODO if highway is valid then we shouldn't check railway, and vica versa
+  if profile.avoid.construction and (data.highway == 'construction' or way:get_value_by_key('railway') == 'construction') then
     return false
   end
 
