@@ -185,8 +185,9 @@ Feature: Bike - Access tags on ways
 
     Scenario: Bike - Tram with oneway when access is implicit
         Then routability should be
-            | highway     | railway | oneway | bothw |
-            | residential | tram    | yes    | x     |
+            | highway     | railway | access | oneway | bothw |
+            | residential | tram    |        | yes    | x     |
+            | service     | tram    | psv    | yes    | x     |
 
     Scenario: Bike - Access combinations
         Then routability should be

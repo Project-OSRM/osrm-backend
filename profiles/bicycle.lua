@@ -338,7 +338,7 @@ function way_function (way, result)
     result.forward_mode = mode.train
     result.backward_mode = mode.train
     -- railways
-    if (not access and data.highway) or profile.access_tag_whitelist[access] then
+    if (not access and data.highway) or (access and not profile.access_tag_blacklist[access]) then
       result.forward_speed = profile.railway_speeds[railway]
       result.backward_speed = profile.railway_speeds[railway]
     end
@@ -350,7 +350,7 @@ function way_function (way, result)
     -- regular ways
     result.forward_speed = profile.bicycle_speeds[data.highway]
     result.backward_speed = profile.bicycle_speeds[data.highway]
-  elseif access and profile.access_tag_whitelist[access] then
+  elseif access and not profile.access_tag_blacklist[access]  then
     -- unknown way, but valid access tag
     result.forward_speed = default_speed
     result.backward_speed = default_speed
