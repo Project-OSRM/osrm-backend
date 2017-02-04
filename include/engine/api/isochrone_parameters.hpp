@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_API_ISOCHRONE_PARAMETERS_HPP
 #define ENGINE_API_ISOCHRONE_PARAMETERS_HPP
 
-#include <cmath>
+#include "engine/api/base_parameters.hpp"
 
 namespace osrm
 {
@@ -48,13 +48,11 @@ namespace api
  * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
  */
-struct IsochroneParameters final
+struct IsochroneParameters : public BaseParameters
 {
-    double lon;
-    double lat;
-    unsigned range;
+    unsigned range = 10;
 
-    bool IsValid() const { return true; };
+    bool IsValid() const { return BaseParameters::IsValid() && range >= 1; }
 };
 }
 }

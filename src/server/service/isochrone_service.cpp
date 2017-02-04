@@ -38,7 +38,7 @@ IsochroneService::RunQuery(std::size_t prefix_length, std::string &query, Result
         result = util::json::Object();
         auto &json_result = result.get<util::json::Object>();
         json_result.values["code"] = "InvalidOptions";
-        json_result.values["message"] = "Invalid coodinates. Only zoomlevel 12+ is supported";
+        json_result.values["message"] = "Invalid coodinates.  Range must be >= 1";
         return engine::Status::Error;
     }
     BOOST_ASSERT(parameters->IsValid());

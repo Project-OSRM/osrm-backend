@@ -25,8 +25,7 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
 
     const auto range = parameters.range;
 
-    util::Coordinate startcoord{util::FloatLongitude{parameters.lon},
-                                util::FloatLatitude{parameters.lat}};
+    util::Coordinate startcoord = parameters.coordinates.front();
 
     const auto MAX_SPEED_METERS_PER_SECOND = 200 / 3.6;
     const auto MAX_TRAVEL_DISTANCE_METERS = MAX_SPEED_METERS_PER_SECOND * parameters.range;
@@ -35,17 +34,21 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
                                 (util::coordinate_calculation::detail::EARTH_RADIUS * M_PI * 2) *
                                 360;
 
-    const auto longitude_range =
-        360 * MAX_TRAVEL_DISTANCE_METERS /
-        ((util::coordinate_calculation::detail::EARTH_RADIUS * M_PI * 2) *
-         cos(parameters.lat * util::coordinate_calculation::detail::DEGREE_TO_RAD));
+    const auto longitude_range = 360 * MAX_TRAVEL_DISTANCE_METERS /
+                                 ((util::coordinate_calculation::detail::EARTH_RADIUS * M_PI * 2) *
+                                  cos(static_cast<double>(toFloating(startcoord.lat)) *
+                                      util::coordinate_calculation::detail::DEGREE_TO_RAD));
 
     util::Coordinate southwest{
-        util::FloatLongitude{static_cast<double>(parameters.lon - longitude_range)},
-        util::FloatLatitude{static_cast<double>(parameters.lat - latitude_range)}};
+        util::FloatLongitude{
+            static_cast<double>(static_cast<double>(toFloating(startcoord.lon)) - longitude_range)},
+        util::FloatLatitude{
+            static_cast<double>(static_cast<double>(toFloating(startcoord.lat)) - latitude_range)}};
     util::Coordinate northeast{
-        util::FloatLongitude{static_cast<double>(parameters.lon + longitude_range)},
-        util::FloatLatitude{static_cast<double>(parameters.lat + latitude_range)}};
+        util::FloatLongitude{
+            static_cast<double>(static_cast<double>(toFloating(startcoord.lon)) + longitude_range)},
+        util::FloatLatitude{
+            static_cast<double>(static_cast<double>(toFloating(startcoord.lat)) + latitude_range)}};
 
     util::Log() << "sw " << southwest;
     util::Log() << "ne " << northeast;
