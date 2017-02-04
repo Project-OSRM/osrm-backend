@@ -105,7 +105,7 @@ Status Engine::Tile(const api::TileParameters &params, std::string &result) cons
 
 Status Engine::Isochrone(const api::IsochroneParameters &params, std::string &result) const
 {
-    return RunQuery(watchdog, immutable_data_facade, params, isochrone_plugin, result);
+    return RunQuery(immutable_data_facade, params, isochrone_plugin, result);
 }
 
 } // engine ns

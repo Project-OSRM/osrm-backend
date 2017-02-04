@@ -4,6 +4,7 @@
 #include "util/timing_util.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "engine/edge_unpacker.hpp"
+#include "util/log.hpp"
 
 #include <queue>
 #include <iomanip>
@@ -16,9 +17,10 @@ namespace engine
 namespace plugins
 {
 
-Status IsochronePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseDataFacade> facade,
-                                      const api::IsochroneParameters &parameters,
-                                      std::string &pbf_buffer) const
+Status
+IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
+                               const api::IsochroneParameters &parameters,
+                               std::string &pbf_buffer) const
 {
 
     const auto range = parameters.range;
@@ -45,13 +47,13 @@ Status IsochronePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseData
         util::FloatLongitude{static_cast<double>(parameters.lon + longitude_range)},
         util::FloatLatitude{static_cast<double>(parameters.lat + latitude_range)}};
 
-    util::SimpleLogger().Write(logINFO) << "sw " << southwest;
-    util::SimpleLogger().Write(logINFO) << "ne " << northeast;
+    util::Log() << "sw " << southwest;
+    util::Log() << "ne " << northeast;
 
     TIMER_START(GET_EDGES_TIMER);
     const auto edges = facade->GetEdgesInBox(southwest, northeast);
     TIMER_STOP(GET_EDGES_TIMER);
-    util::SimpleLogger().Write(logINFO) << "Fetch RTree " << TIMER_MSEC(GET_EDGES_TIMER);
+    util::Log() << "Fetch RTree " << TIMER_MSEC(GET_EDGES_TIMER);
 
     auto startpoints = facade->NearestPhantomNodes(startcoord, 1);
 
@@ -105,7 +107,7 @@ Status IsochronePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseData
         }
     }
     TIMER_STOP(CONSTRUCT_LOOKUP);
-    util::SimpleLogger().Write(logINFO) << "Create lookup table " << TIMER_MSEC(CONSTRUCT_LOOKUP);
+    util::Log() << "Create lookup table " << TIMER_MSEC(CONSTRUCT_LOOKUP);
 
     // Overall strategy:
     // 1. Do a depth-limited dijkstra search on the upgraph from the startnode
@@ -173,7 +175,7 @@ Status IsochronePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseData
         }
     }
     TIMER_STOP(DO_SEARCH);
-    util::SimpleLogger().Write(logINFO) << "Dijkstra forward search" << TIMER_MSEC(DO_SEARCH);
+    util::Log() << "Dijkstra forward search" << TIMER_MSEC(DO_SEARCH);
     /********************************************************************/
 
     // Now, for the magic reverse search
@@ -226,8 +228,7 @@ Status IsochronePlugin::HandleRequest(const std::shared_ptr<datafacade::BaseData
             }
         }
     }
-    util::SimpleLogger().Write(logINFO) << "Dijkstra reverse search"
-                                        << TIMER_MSEC(DO_REVERSE_SEARCH);
+    util::Log() << "Dijkstra reverse search" << TIMER_MSEC(DO_REVERSE_SEARCH);
 
     // Serialize it out
     std::stringstream buf;

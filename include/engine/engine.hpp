@@ -1,7 +1,6 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
-#include "storage/shared_barriers.hpp"
 #include "engine/api/isochrone_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
