@@ -256,16 +256,15 @@ function way_function (way, result)
     return
   end
 
-
   -- initial routability check, filters out buildings, boundaries, etc
-  local highway = way:get_value_by_key("highway")
   local route = way:get_value_by_key("route")
   local man_made = way:get_value_by_key("man_made")
   local railway = way:get_value_by_key("railway")
   local amenity = way:get_value_by_key("amenity")
   local public_transport = way:get_value_by_key("public_transport")
   local bridge = way:get_value_by_key("bridge")
-  if (not highway or highway == '') and
+
+  if (not data.highway or data.highway == '') and
   (not route or route == '') and
   (not profile.use_public_transport or not railway or railway=='') and
   (not amenity or amenity=='') and
@@ -304,7 +303,7 @@ function way_function (way, result)
   -- speed
   local bridge_speed = profile.bridge_speeds[bridge]
   if (bridge_speed and bridge_speed > 0) then
-    highway = bridge
+    data.highway = bridge
     if duration and durationIsValid(duration) then
       result.duration = math.max( parseDuration(duration), 1 )
     end
@@ -333,7 +332,7 @@ function way_function (way, result)
     result.forward_mode = mode.train
     result.backward_mode = mode.train
     -- railways
-    if (not access and highway) or profile.access_tag_whitelist[access] then
+    if (not access and data.highway) or profile.access_tag_whitelist[access] then
       result.forward_speed = profile.railway_speeds[railway]
       result.backward_speed = profile.railway_speeds[railway]
     end
@@ -341,10 +340,10 @@ function way_function (way, result)
     -- parking areas
     result.forward_speed = profile.amenity_speeds[amenity]
     result.backward_speed = profile.amenity_speeds[amenity]
-  elseif profile.bicycle_speeds[highway] then
+  elseif profile.bicycle_speeds[data.highway] then
     -- regular ways
-    result.forward_speed = profile.bicycle_speeds[highway]
-    result.backward_speed = profile.bicycle_speeds[highway]
+    result.forward_speed = profile.bicycle_speeds[data.highway]
+    result.backward_speed = profile.bicycle_speeds[data.highway]
   elseif access and profile.access_tag_whitelist[access] then
     -- unknown way, but valid access tag
     result.forward_speed = default_speed
@@ -353,10 +352,10 @@ function way_function (way, result)
     -- biking not allowed, maybe we can push our bike?
     -- essentially requires pedestrian profiling, for example foot=no mean we can't push a bike
     if foot ~= 'no' and (junction ~= "roundabout" and junction ~= "circular") then
-      if profile.pedestrian_speeds[highway] then
+      if profile.pedestrian_speeds[data.highway] then
         -- pedestrian-only ways and areas
-        result.forward_speed = profile.pedestrian_speeds[highway]
-        result.backward_speed = profile.pedestrian_speeds[highway]
+        result.forward_speed = profile.pedestrian_speeds[data.highway]
+        result.backward_speed = profile.pedestrian_speeds[data.highway]
         result.forward_mode = mode.pushing_bike
         result.backward_mode = mode.pushing_bike
       elseif man_made and profile.man_made_speeds[man_made] then
@@ -384,7 +383,7 @@ function way_function (way, result)
 
   -- direction
   local impliedOneway = false
-  if junction == "roundabout" or junction == "circular" or highway == "motorway" then
+  if junction == "roundabout" or junction == "circular" or data.highway == "motorway" then
     impliedOneway = true
   end
 
@@ -423,7 +422,7 @@ function way_function (way, result)
   end
 
   -- pushing bikes
-  if profile.bicycle_speeds[highway] or profile.pedestrian_speeds[highway] then
+  if profile.bicycle_speeds[data.highway] or profile.pedestrian_speeds[data.highway] then
     if foot ~= "no" and junction ~= "roundabout" and junction ~= "circular" then
       if result.backward_mode == mode.inaccessible then
         result.backward_speed = walking_speed
@@ -460,7 +459,7 @@ function way_function (way, result)
   limit( result, maxspeed, maxspeed_forward, maxspeed_backward )
 
   -- convert duration into cyclability
-  local is_unsafe = profile.safety_penalty < 1 and profile.unsafe_highway_list[highway]
+  local is_unsafe = profile.safety_penalty < 1 and profile.unsafe_highway_list[data.highway]
   if result.forward_speed > 0 then
     -- convert from km/h to m/s
     result.forward_rate = result.forward_speed / 3.6;
