@@ -167,6 +167,12 @@ local profile = {
     sett = 10
   },
 
+  tracktype_speeds = {
+  },
+
+  smoothness_speeds = {
+  },
+
   avoid = Set {
     'impassable',
     'construction'
