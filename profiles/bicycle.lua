@@ -88,7 +88,8 @@ surface_speeds = {
   ["earth"] = 6,
   ["grass"] = 6,
   ["mud"] = 3,
-  ["sand"] = 3
+  ["sand"] = 3,
+  ["sett"] = 10
 }
 
 -- these need to be global because they are accesed externaly
