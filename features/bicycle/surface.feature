@@ -21,6 +21,7 @@ Feature: Bike - Surfaces
             | cycleway | grass                 | 120 s   |
             | cycleway | mud                   | 240 s   |
             | cycleway | sand                  | 240.1 s |
+            | cycleway | sett                  | 72 s    |
 
     Scenario: Bicycle - Good surfaces on small paths
         Then routability should be
