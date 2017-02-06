@@ -138,6 +138,16 @@ BOOST_AUTO_TEST_CASE(access_edges)
             BOOST_CHECK(std::abs(static_cast<int>(to_col(graph.GetID(node))) -
                                  static_cast<int>(to_col(itr->target))) <= 1);
         }
+        for (auto eid = graph.BeginEdgeID(id); eid != graph.EndEdgeID(id); ++eid)
+        {
+            const auto &itr = graph.Edge(eid);
+            BOOST_CHECK(itr.target < graph.NumberOfNodes());
+            BOOST_CHECK(std::abs(static_cast<int>(to_row(graph.GetID(node))) -
+                                 static_cast<int>(to_row(itr.target))) <= 1);
+            BOOST_CHECK(std::abs(static_cast<int>(to_col(graph.GetID(node))) -
+                                 static_cast<int>(to_col(itr.target))) <= 1);
+        }
+
     }
 }
 

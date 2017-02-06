@@ -94,17 +94,14 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom_copy)
         BOOST_CHECK(id < left.NumberOfNodes());
         BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id), 0);
 
-        for( auto eid = left.BeginEdgeID(id); eid != left.EndEdgeID(id); ++eid )
-        {
-            const auto & edge = left.Edge(eid);
+        for( const auto & edge : left.Edges(id) )
             BOOST_CHECK(edge.target < left.NumberOfNodes());
-        }
     }
 
     BOOST_CHECK_EQUAL(right.NumberOfNodes(), 4);
     for( NodeID id = 0; id < right.NumberOfNodes(); ++id )
     {
-        const auto &node = right.Nodes(id);
+        const auto &node = right.Node(id);
         BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id), 1);
         const auto compare = makeCoordinate(id, 1, step_size);
         BOOST_CHECK_EQUAL(compare, node.coordinate);

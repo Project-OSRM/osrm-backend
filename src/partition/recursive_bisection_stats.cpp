@@ -20,16 +20,17 @@ void printBisectionStats(std::vector<RecursiveBisectionState::BisectionID> const
     std::unordered_map<RecursiveBisectionState::BisectionID, std::size_t> cell_sizes[32];
     std::unordered_map<RecursiveBisectionState::BisectionID, std::size_t> border_nodes[32];
 
-    std::unordered_set<RecursiveBisectionState::BisectionID> all_ids;
-    all_ids.insert(bisection_ids.begin(), bisection_ids.end());
+    std::unordered_set<RecursiveBisectionState::BisectionID> all_ids[32];
+
 
     std::uint32_t flag = 0;
     for (std::uint32_t level = 0; level < 32; ++level)
     {
-        flag |= (1 << (31 - level));
+        flag |= (1 << level);
         for (const auto &node : graph.Nodes())
         {
             const auto bisection_id_node = bisection_ids[node.original_id];
+            all_ids[level].insert(bisection_id_node&flag);
             auto is_border_node = false;
             for (const auto &edge : graph.Edges(node))
             {
@@ -54,9 +55,6 @@ void printBisectionStats(std::vector<RecursiveBisectionState::BisectionID> const
             }
         }
     }
-
-    for (auto itr : all_ids)
-        std::cout << std::bitset<32>(itr) << std::endl;
 
     std::cout << "Partition statistics\n";
     std::cout << "Total border vertices: " << total_border_nodes << std::endl;
