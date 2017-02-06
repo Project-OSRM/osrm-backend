@@ -12,7 +12,8 @@ namespace osrm
 {
 namespace util
 {
-inline void DumpMemoryStats()
+
+inline void DumpSTXXLStats()
 {
 #if STXXL_VERSION_MAJOR > 1 || (STXXL_VERSION_MAJOR == 1 && STXXL_VERSION_MINOR >= 4)
     auto manager = stxxl::block_manager::get_instance();
@@ -22,7 +23,10 @@ inline void DumpMemoryStats()
 #warning STXXL 1.4+ recommended - STXXL memory summary will not be available
     util::Log() << "STXXL: memory summary not available, needs STXXL 1.4 or higher";
 #endif
+}
 
+inline void DumpMemoryStats()
+{
 #ifndef _WIN32
     rusage usage;
     getrusage(RUSAGE_SELF, &usage);
