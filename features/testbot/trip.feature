@@ -49,7 +49,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints               | trips         |
-            | a,b,c,d,e,f,g,h,i,j,k,l | cbalkjihgfedc |
+            | a,b,c,d,e,f,g,h,i,j,k,l | alkjihgfedcba |
 
 
     Scenario: Testbot - Trip planning with less than 10 waypoints tfse
@@ -140,7 +140,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints                       | trips               |
-            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | defghijklabcd,mnopm |
+            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | abcdefghijkla,mnopm |
 
 
     Scenario: Testbot - Trip planning with fixed start and end points errors

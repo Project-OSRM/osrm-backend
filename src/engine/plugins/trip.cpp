@@ -328,7 +328,15 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
         {
             scc_route = std::vector<NodeID>(route_begin, route_end);
         }
-
+        // rotate result such that roundtrip starts at node with index 0
+        if (roundtrip)
+        {
+            auto start_index = std::find(scc_route.begin(), scc_route.end(), 0);
+            // @TODO: Find out whether there is always a 0 == Find out whether we return multiple
+            //        trips if there are more than one SCC
+            // BOOST_ASSERT(start_index != scc_route.end());
+            std::rotate(scc_route.begin(), start_index, scc_route.end());
+        }
         trips.push_back(std::move(scc_route));
     }
     if (trips.empty())
