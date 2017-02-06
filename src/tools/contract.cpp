@@ -181,6 +181,7 @@ int main(int argc, char *argv[]) try
 
     auto exitcode = contractor::Contractor(contractor_config).Run();
 
+    util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
     return exitcode;
