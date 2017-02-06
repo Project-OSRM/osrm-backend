@@ -117,7 +117,7 @@ local profile = {
       unclassified    = 25,
       residential     = 25,
       living_street   = 10,
-      service         = 15,
+      service         = 15
     }
   },
 
@@ -126,7 +126,8 @@ local profile = {
     parking           = 0.5,
     parking_aisle     = 0.5,
     driveway          = 0.5,
-    ["drive-through"] = 0.5
+    ["drive-through"] = 0.5,
+    ["drive-thru"] = 0.5
   },
 
   route_speeds = {

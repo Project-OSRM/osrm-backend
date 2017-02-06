@@ -170,20 +170,14 @@ end
 -- handle high occupancy vehicle tags
 function Handlers.handle_hov(way,result,data,profile)
   -- respect user-preference for HOV
-  if not profile.avoid.hov_lanes then
+  if not profile.avoid.hov_lanes or properties.weight_name ~= 'routability' then
     return
   end
 
-  -- check if way is hov only
-  local hov = way:get_value_by_key("hov")
-  if "designated" == hov then
-    return false
-  end
-
   -- check if all lanes are hov only
-  local hov_lanes_forward, hov_lanes_backward = Tags.get_forward_backward_by_key(way,data,'hov:lanes')
-  local inaccessible_forward = Handlers.has_all_designated_hov_lanes(hov_lanes_forward)
-  local inaccessible_backward = Handlers.has_all_designated_hov_lanes(hov_lanes_backward)
+  data.hov_lanes_forward, data.hov_lanes_backward = Tags.get_forward_backward_by_key(way,data,'hov:lanes')
+  local inaccessible_forward = Handlers.has_all_designated_hov_lanes(data.hov_lanes_forward)
+  local inaccessible_backward = Handlers.has_all_designated_hov_lanes(data.hov_lanes_backward)
 
   if inaccessible_forward then
     result.forward_mode = mode.inaccessible
@@ -269,10 +263,21 @@ end
 
 -- scale speeds to get better average driving times
 function Handlers.handle_penalties(way,result,data,profile)
+  -- heavily penalize a way tagged with all HOV lanes
+  -- in order to only route over them if there is no other option
+  local hov_penalty = 0.1
+  if profile.avoid.hov_lanes then
+    local hov = way:get_value_by_key("hov")
+    local all_lanes_designated = Handlers.has_all_designated_hov_lanes(data.hov_lanes_forward)
+    if "designated" == hov or all_lanes_designated then
+      hov_penalty = 0.1
+    end
+  end
+
   local service_penalty = 1.0
   local service = way:get_value_by_key("service")
-  if service and service_penalties[service] then
-      service_penalty = service_penalties[service]
+  if service and profile.service_penalties[service] then
+      service_penalty = profile.service_penalties[service]
   end
 
   local width_penalty = 1.0
@@ -308,7 +313,7 @@ function Handlers.handle_penalties(way,result,data,profile)
     sideroad_penalty = side_road_multiplier;
   end
 
-  local penalty = service_penalty * width_penalty * alternating_penalty * sideroad_penalty
+  local penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, hov_penalty)
 
   if properties.weight_name == 'routability' then
     if result.forward_speed > 0 then

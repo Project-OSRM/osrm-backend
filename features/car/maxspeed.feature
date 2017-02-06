@@ -6,7 +6,7 @@ OSRM will use 4/5 of the projected free-flow speed.
         Given the profile "car"
         Given a grid size of 1000 meters
 
-    Scenario: Car - Respect maxspeeds when lower that way type speed
+    Scenario: Car - Respect maxspeeds when lower than way type speed
         Given the node map
             """
             a b c d e f g
@@ -23,7 +23,7 @@ OSRM will use 4/5 of the projected free-flow speed.
 
         When I route I should get
             | from | to | route | speed   |
-            | a    | b  | ab,ab | 68 km/h |
+            | a    | b  | ab,ab | 85 km/h |
             | b    | c  | bc,bc | 48 km/h |
             | c    | d  | cd,cd | 40 km/h |
             | d    | e  | de,de | 64 km/h |
