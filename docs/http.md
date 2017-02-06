@@ -638,12 +638,8 @@ step.
 | `turn`                 | `modifier` indicates the change in direction accomplished through the turn                                                |
 | `depart`/`arrive`      | `modifier` indicates the position of departure point and arrival point in relation to the current direction of travel      |
 
-- `exit` An optional `integer` indicating number of the exit to take. The property exists for the following `type` property:
-
-| `type`                 | Description                                                                                                               |
-|------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `roundabout`/`rotary`         | Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.                       |
-| else                   | Indicates the number of intersections passed until the turn. Example instruction: `at the fourth intersection, turn left` |
+- `exit` An optional `integer` indicating number of the exit to take. The property exists for the `roundabout` / `rotary` property:
+  Number of the roundabout exit to take. If exit is `undefined` the destination is on the roundabout.
 
 
 New properties (potentially depending on `type`) may be introduced in the future without an API version change.
