@@ -167,6 +167,7 @@ int main(int argc, char *argv[]) try
         extractor_config.profile_path.string().c_str());
     auto exitcode = extractor::Extractor(extractor_config).run(scripting_environment);
 
+    util::DumpSTXXLStats();
     util::DumpMemoryStats();
 
     return exitcode;

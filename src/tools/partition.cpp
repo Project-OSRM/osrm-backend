@@ -2,6 +2,7 @@
 #include "partition/partitioner.hpp"
 
 #include "util/log.hpp"
+#include "util/meminfo.hpp"
 #include "util/version.hpp"
 
 #include <tbb/task_scheduler_init.h>
@@ -153,6 +154,9 @@ int main(int argc, char *argv[]) try
     }
 
     auto exitcode = partition::Partitioner().Run(partition_config);
+
+    util::DumpMemoryStats();
+
     return exitcode;
 }
 catch (const std::bad_alloc &e)
