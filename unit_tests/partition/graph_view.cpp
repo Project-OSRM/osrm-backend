@@ -61,6 +61,59 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom)
     }
 }
 
+BOOST_AUTO_TEST_CASE(separate_top_bottom_copy)
+{
+    // 40 entries of left/right edges
+    double step_size = 0.01;
+    int rows = 2;
+    int cols = 4;
+    const auto coordinates = makeGridCoordinates(rows, cols, step_size, 0, 0);
+
+    auto grid_edges = makeGridEdges(rows, cols, 0);
+
+    std::random_shuffle(grid_edges.begin(), grid_edges.end());
+    groupEdgesBySource(grid_edges.begin(), grid_edges.end());
+
+    auto graph = makeBisectionGraph(coordinates, adaptToBisectionEdge(std::move(grid_edges)));
+    RecursiveBisectionState bisection_state(graph);
+    std::vector<bool> partition(8, false);
+    partition[4] = partition[5] = partition[6] = partition[7] = true;
+
+    const auto center = bisection_state.ApplyBisection(graph.Begin(), graph.End(), 0, partition);
+    GraphView total(graph, graph.Begin(), graph.End());
+
+    GraphView left(total, total.Begin(), center);
+    GraphView right(total, center, total.End());
+
+    BOOST_CHECK_EQUAL(left.NumberOfNodes(), 4);
+    for (const auto &node : left.Nodes())
+    {
+        auto id = left.GetID(node);
+        const auto compare = makeCoordinate(id, 0, step_size);
+        BOOST_CHECK_EQUAL(compare, node.coordinate);
+        BOOST_CHECK(id < left.NumberOfNodes());
+        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id), 0);
+
+        for( auto eid = left.BeginEdgeID(id); eid != left.EndEdgeID(id); ++eid )
+        {
+            const auto & edge = left.Edge(eid);
+            BOOST_CHECK(edge.target < left.NumberOfNodes());
+        }
+    }
+
+    BOOST_CHECK_EQUAL(right.NumberOfNodes(), 4);
+    for( NodeID id = 0; id < right.NumberOfNodes(); ++id )
+    {
+        const auto &node = right.Nodes(id);
+        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id), 1);
+        const auto compare = makeCoordinate(id, 1, step_size);
+        BOOST_CHECK_EQUAL(compare, node.coordinate);
+        BOOST_CHECK(id < right.NumberOfNodes());
+        for (const auto &edge : right.Edges(id))
+            BOOST_CHECK(edge.target < right.NumberOfNodes());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(separate_left_right)
 {
     // 40 entries of left/right edges

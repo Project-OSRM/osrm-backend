@@ -1,6 +1,7 @@
 #include "partition/partitioner.hpp"
 #include "partition/bisection_graph.hpp"
 #include "partition/recursive_bisection.hpp"
+#include "partition/recursive_bisection_stats.hpp"
 
 #include "storage/io.hpp"
 #include "util/coordinate.hpp"
@@ -64,7 +65,7 @@ CompressedNodeBasedGraph LoadCompressedNodeBasedGraph(const std::string &path)
     return graph;
 }
 
-void LogGeojson(const std::string &filename, const std::vector<std::uint32_t> &bisection_ids)
+void LogGeojson(const std::string &filename, std::vector<std::uint32_t> bisection_ids)
 {
     // reload graph, since we destroyed the old one
     auto compressed_node_based_graph = LoadCompressedNodeBasedGraph(filename);
@@ -95,14 +96,19 @@ void LogGeojson(const std::string &filename, const std::vector<std::uint32_t> &b
         return x;
     };
 
+
+    std::transform(bisection_ids.begin(),bisection_ids.end(),bisection_ids.begin(),reverse_bits);
+
+    printBisectionStats(bisection_ids, graph);
     std::vector<std::vector<util::Coordinate>> border_vertices(33);
+
 
     for (NodeID nid = 0; nid < graph.NumberOfNodes(); ++nid)
     {
-        const auto source_id = reverse_bits(bisection_ids[nid]);
+        const auto source_id = bisection_ids[nid];
         for (const auto &edge : graph.Edges(nid))
         {
-            const auto target_id = reverse_bits(bisection_ids[edge.target]);
+            const auto target_id = bisection_ids[edge.target];
             if (source_id != target_id)
             {
                 auto level = get_level(source_id, target_id);
