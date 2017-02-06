@@ -305,6 +305,14 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     add_dependency_defines(-DWIN32)
     set(OPTIONAL_SOCKET_LIBS ws2_32 wsock32)
   endif()
+
+  # -fpermissive is required for parallel_do Intel TBB internal issue with GCC < 5
+  # https://github.com/Project-OSRM/osrm-backend/pull/3603#issuecomment-277688589
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
+    message(STATUS "Adding -fpermissive for GCC version < 5 bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=51048). See #3603.")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+  endif()
+
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
   # using Intel C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-intel -wd10237 -Wall -ipo -fPIC")
