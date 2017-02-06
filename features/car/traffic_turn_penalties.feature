@@ -80,6 +80,12 @@ Feature: Traffic - turn penalties
             8,11,12,23
             1,4,5,-0.2
             """
+            # ifg right turn
+            # imn left turn
+            # hdc left turn
+            # lkh right turn
+            # hkl left turn
+            # ade left turn
         And the contract extra arguments "--turn-penalty-file {penalties_file}"
         When I route I should get
             | from | to | route                 | speed   | time      |
