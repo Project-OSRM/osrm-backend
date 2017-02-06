@@ -147,7 +147,6 @@ BOOST_AUTO_TEST_CASE(access_edges)
             BOOST_CHECK(std::abs(static_cast<int>(to_col(graph.GetID(node))) -
                                  static_cast<int>(to_col(itr.target))) <= 1);
         }
-
     }
 }
 

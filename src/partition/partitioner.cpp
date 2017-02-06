@@ -96,12 +96,10 @@ void LogGeojson(const std::string &filename, std::vector<std::uint32_t> bisectio
         return x;
     };
 
-
-    std::transform(bisection_ids.begin(),bisection_ids.end(),bisection_ids.begin(),reverse_bits);
+    std::transform(bisection_ids.begin(), bisection_ids.end(), bisection_ids.begin(), reverse_bits);
 
     printBisectionStats(bisection_ids, graph);
     std::vector<std::vector<util::Coordinate>> border_vertices(33);
-
 
     for (NodeID nid = 0; nid < graph.NumberOfNodes(); ++nid)
     {

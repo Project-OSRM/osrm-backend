@@ -22,15 +22,30 @@ void printBisectionStats(std::vector<RecursiveBisectionState::BisectionID> const
 
     std::unordered_set<RecursiveBisectionState::BisectionID> all_ids[32];
 
-
     std::uint32_t flag = 0;
     for (std::uint32_t level = 0; level < 32; ++level)
     {
-        flag |= (1 << level);
+        std::uint32_t bit = 1u << (31 - level);
+        flag |= bit;
+
+        for (std::size_t i = 0; i < bisection_ids.size(); ++i)
+            all_ids[level].insert(bisection_ids[i] & flag);
+
+        if (level > 0 && all_ids[level - 1] == all_ids[level])
+            break;
+
+        std::cout << "Level" << std::endl;
+        for (auto itr : all_ids[level])
+            std::cout << "\t" << std::bitset<32>(itr) << std::endl;
+
         for (const auto &node : graph.Nodes())
         {
             const auto bisection_id_node = bisection_ids[node.original_id];
-            all_ids[level].insert(bisection_id_node&flag);
+
+            // subrange is not partitioned anymore
+            if (all_ids[level].count((bisection_id_node & flag) ^ bit) == 0)
+                continue;
+
             auto is_border_node = false;
             for (const auto &edge : graph.Edges(node))
             {
@@ -38,7 +53,7 @@ void printBisectionStats(std::vector<RecursiveBisectionState::BisectionID> const
                     is_border_node = true;
             }
 
-            if (is_border_node)
+            if (is_border_node && level == 0)
                 ++total_border_nodes;
 
             cell_sizes[level][bisection_id_node & flag]++;
@@ -86,11 +101,12 @@ void printBisectionStats(std::vector<RecursiveBisectionState::BisectionID> const
                       << total_border / (double)cell_sizes[level].size();
 
         std::cout << " Cell Sizes: " << min_size << " " << max_size << " "
-                  << total_size / (double)cell_sizes[level].size();
+                  << total_size / (double)cell_sizes[level].size()
+                  << " Total Vertices In Level: " << total_size;
 
         std::cout << std::endl;
 
-    } while (level < 31 && cell_sizes[level++].size() > 1);
+    } while (level < 31 && cell_sizes[++level].size() > 1);
 }
 
 } // namespace partition
