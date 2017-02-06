@@ -277,7 +277,7 @@ Feature: Basic Map Matching
 
         When I match I should get
             | trace  | matchings | alternatives         |
-            | abcdef | abcde     | 1,1,1,1,2,2          |
+            | abcdef | abcde     | 0,0,0,0,1,1          |
 
     Scenario: Testbot - Speed greater than speed threshhold
         Given a grid size of 10 meters
