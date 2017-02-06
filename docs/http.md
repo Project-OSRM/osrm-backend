@@ -721,7 +721,6 @@ Object used to describe waypoint on a route.
 
 - `name` Name of the street the coordinate snapped to
 - `location` Array that contains the `[longitude, latitude]` pair of the snapped coordinate
-- `distance` The distance of the snapped point from the original
 - `hint` Unique internal identifier of the segment (ephemeral, not constant over data updates)
    This can be used on subsequent request to significantly speed up the query and to connect multiple services.
    E.g. you can use the `hint` value obtained by the `nearest` query as `hint` values for `route` inputs.
