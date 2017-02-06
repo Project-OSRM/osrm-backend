@@ -371,10 +371,13 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
 
             matching.indices.push_back(timestamp_index);
             matching.nodes.push_back(candidates_list[timestamp_index][location_index].phantom_node);
-            matching.alternatives_count.push_back(
+            auto const routes_count =
                 std::accumulate(model.viterbi_reachable[timestamp_index].begin(),
                                 model.viterbi_reachable[timestamp_index].end(),
-                                0));
+                                0);
+            BOOST_ASSERT(routes_count > 0);
+            // we don't count the current route in the "alternatives_count" parameter
+            matching.alternatives_count.push_back(routes_count - 1);
             matching_distance += model.path_distances[timestamp_index][location_index];
         }
         util::for_each_pair(
