@@ -26,6 +26,7 @@
 
 local Debug = require('lib/profile_debugger')
 local pprint = require('lib/pprint')
+json = require 'lib/json'
 
 
 function parse_command_arguments()
@@ -52,4 +53,4 @@ local profile, way = parse_command_arguments()
 Debug.load_profile(profile)     -- load profile
 local result = {}               -- results go here
 Debug.way_function(way,result)  -- call way function
-pprint(result)                  -- and print output
+print(json.encode(result))      -- and print output as json
