@@ -288,7 +288,6 @@ endif()
 if (ENABLE_SANITIZER)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
   set(OSRM_CXXFLAGS "${OSRM_CXXFLAGS} -fsanitize=address")
-  set(ASAN_OPTIONS "suppressions=MyASan.supp")
 endif()
 
 # Configuring compilers
