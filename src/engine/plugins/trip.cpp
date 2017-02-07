@@ -214,8 +214,8 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     InternalRouteResult route = ComputeRoute(facade, snapped_phantoms, trip, parameters.roundtrip);
 
     // get api response
-    const std::vector<std::vector<NodeID>> trips = {{trip}};
-    const std::vector<InternalRouteResult> routes = {{route}};
+    const std::vector<std::vector<NodeID>> trips = {trip};
+    const std::vector<InternalRouteResult> routes = {route};
     api::TripAPI trip_api{*facade, parameters};
     trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result);
 
