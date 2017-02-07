@@ -116,6 +116,51 @@ template <typename T> inline bool is_aligned(const void *pointer)
     static_assert(sizeof(T) % alignof(T) == 0, "pointer can not be used as an array pointer");
     return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
 }
+
+void CheckWeightsConsistency(
+    const osrm::contractor::ContractorConfig &config,
+    const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
+{
+    using Reader = osrm::storage::io::FileReader;
+    using OriginalEdgeData = osrm::extractor::OriginalEdgeData;
+
+    Reader geometry_file(config.geometry_path, Reader::HasNoFingerprint);
+    const auto number_of_indices = geometry_file.ReadElementCount32();
+    std::vector<unsigned> geometry_indices(number_of_indices);
+    geometry_file.ReadInto(geometry_indices);
+
+    const auto number_of_compressed_geometries = geometry_file.ReadElementCount32();
+    BOOST_ASSERT(geometry_indices.back() == number_of_compressed_geometries);
+    if (number_of_compressed_geometries == 0)
+        return;
+
+    std::vector<NodeID> geometry_node_list(number_of_compressed_geometries);
+    std::vector<EdgeWeight> forward_weight_list(number_of_compressed_geometries);
+    std::vector<EdgeWeight> reverse_weight_list(number_of_compressed_geometries);
+    geometry_file.ReadInto(geometry_node_list.data(), number_of_compressed_geometries);
+    geometry_file.ReadInto(forward_weight_list.data(), number_of_compressed_geometries);
+    geometry_file.ReadInto(reverse_weight_list.data(), number_of_compressed_geometries);
+
+    Reader edges_input_file(config.osrm_input_path.string() + ".edges", Reader::HasNoFingerprint);
+    std::vector<OriginalEdgeData> current_edge_data(edges_input_file.ReadElementCount64());
+    edges_input_file.ReadInto(current_edge_data);
+
+    for (auto &edge : edge_based_edge_list)
+    {
+        BOOST_ASSERT(edge.edge_id < current_edge_data.size());
+        auto geometry_id = current_edge_data[edge.edge_id].via_geometry;
+        BOOST_ASSERT(geometry_id.id < geometry_indices.size());
+
+        const auto &weights = geometry_id.forward ? forward_weight_list : reverse_weight_list;
+        const int shift = static_cast<int>(geometry_id.forward);
+        const auto first = weights.begin() + geometry_indices.at(geometry_id.id) + shift;
+        const auto last = weights.begin() + geometry_indices.at(geometry_id.id + 1) - 1 + shift;
+        EdgeWeight weight = std::accumulate(first, last, 0);
+
+        BOOST_ASSERT(weight <= edge.weight);
+    }
+}
+
 } // anon ns
 
 BOOST_FUSION_ADAPT_STRUCT(Segment, (decltype(Segment::from), from)(decltype(Segment::to), to))
@@ -454,7 +499,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
         throw util::exception("Incompatible file version" + SOURCE_REF);
     }
 
-    edge_based_edge_list.resize(graph_header.number_of_edges);
+    edge_based_edge_list.reserve(graph_header.number_of_edges);
     util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
     auto segment_speed_lookup = CSVFilesParser<Segment, SpeedSource>(
@@ -872,6 +917,14 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
             [&] { save_penalties(config.turn_weight_penalties_path, turn_weight_penalties); },
             [&] { save_penalties(config.turn_duration_penalties_path, turn_duration_penalties); });
     }
+
+#if !defined(NDEBUG)
+    if (!update_turn_penalties)
+    { // don't check weights consistency with turn updates that can break assertion
+        // condition with turn weight penalties negative updates
+        CheckWeightsConsistency(config, edge_based_edge_list);
+    }
+#endif
 
     util::Log() << "Done reading edges";
     return graph_header.max_edge_id;
