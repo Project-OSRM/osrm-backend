@@ -313,8 +313,7 @@ All other properties might be undefined.
 
 The trip plugin solves the Traveling Salesman Problem using a greedy heuristic (farthest-insertion algorithm) for 10 or more waypoints and uses brute force for less than 10 waypoints.
 The returned path does not have to be the fastest path, as TSP is NP-hard it is only an approximation.
-Note that if the input coordinates can not be joined by a single trip (e.g. the coordinates are on several disconnected islands)
-multiple trips for each connected component are returned.
+Note that all input coordinates have to be connected. 
 
 ```endpoint
 GET /trip/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}'
@@ -365,7 +364,7 @@ In case of error the following `code`s are supported in addition to the general 
 
 | Type              | Description         |
 |-------------------|---------------------|
-| `NoTrips`         | No trips found.     |
+| `NoTrips`         | No trips found because input coordinates are not connected.     |
 
 All other properties might be undefined.
 

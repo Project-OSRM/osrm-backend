@@ -60,7 +60,7 @@ Feature: Basic trip planning
                   c
             e  d
             """
- 
+
         And the ways
             | nodes |
             | ab    |
@@ -73,7 +73,7 @@ Feature: Basic trip planning
             | cd    |
             | ce    |
             | de    |
- 
+
         When I plan a trip I should get
             |  waypoints  | source | destination |roundtrip | trips  | durations         | distance               |
             |  a,b,c,d,e  | 4      | 4           | true     | abcdea | 10.3              | 103                    |
@@ -106,8 +106,6 @@ Feature: Basic trip planning
             |  a,b,c,d,e,f,g,h,i,j,k  | 4      | 4           | true      | abcdefghijka | 20         | 199.9     |
             |  a,b,c,d,e,f,g,h,i,j,k  | 0      | 5           | true      | abcdeghijkfa | 20         | 199.8     |
 
-
-
     Scenario: Testbot - Trip planning with multiple scc roundtrip
         Given the node map
             """
@@ -117,7 +115,7 @@ Feature: Basic trip planning
             j i h g
 
             q m n
-              p o
+            p o
             """
 
         And the ways
@@ -141,9 +139,25 @@ Feature: Basic trip planning
             | qm    |
 
         When I plan a trip I should get
-            | waypoints                       | trips               |
-            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | abcdefghijkla,mnopm |
+            | waypoints                       | status         | message                                      |
+            | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | NoTrips        | No trip visiting all destinations possible.  |
 
+    Scenario: Testbot - Trip planning with unroutable waypoints
+        Given the node map
+            """
+            a b
+
+            d c
+            """
+
+         And the ways
+            | nodes |
+            | ab    |
+            | dc    |
+
+         When I plan a trip I should get
+            |  waypoints    | status         | message                                       |
+            |  a,b,c,d      | NoTrips        | No trip visiting all destinations possible.  |
 
     Scenario: Testbot - Trip planning with fixed start and end points errors
         Given the node map
@@ -160,7 +174,7 @@ Feature: Basic trip planning
 
          When I plan a trip I should get
             |  waypoints    | source  | destination | roundtrip | status         | message                                       |
-            |  a,b,c,d      | 0       | 3           | false     | NoTrips        | No route possible from source to destination  |
+            |  a,b,c,d      | 0       | 3           | false     | NoTrips        | No trip visiting all destinations possible.  |
             |  a,b,c,d      | -1      | 1           | false     | InvalidQuery   | Query string malformed close to position 123  |
             |  a,b,c,d      | 1       | -1          | false     | InvalidQuery   | Query string malformed close to position 137  |
             |  a,b,c,d      | 10      | 1           | false     | InvalidValue   | Invalid source or destination value.          |
