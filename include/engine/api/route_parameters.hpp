@@ -120,9 +120,9 @@ struct RouteParameters : public BaseParameters
                     const boost::optional<bool> continue_straight_,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, steps{steps_}, alternatives{alternatives_},
-          annotations_type{annotations_},
           annotations{annotations_ == AnnotationsType::None ? false : true},
-          geometries{geometries_}, overview{overview_}, continue_straight{continue_straight_}
+          annotations_type{annotations_}, geometries{geometries_}, overview{overview_},
+          continue_straight{continue_straight_}
     {
     }
 
