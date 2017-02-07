@@ -4,11 +4,11 @@ Feature: Car - Surfaces
     Background:
         Given the profile "car"
 
-    Scenario: Car - Surface should reduce speed
+    Scenario: Car - Ways tagged service should reduce speed
         Then routability should be
-            | highway  | service           | forw       | backw       |
-            | service  | alley             | 5 km/h +-1 | 5 km/h +-1  |
-            | service  | emergency_access  |            |             |
-            | service  | driveway          | 5 km/h +-1 | 5 km/h +-1  |
-            | service  | drive-through     | 5 km/h +-1 | 5 km/h +-1  |
-            | service  | parking           | 5 km/h +-1 | 5 km/h +-1  |
+            | highway  | service           | forw        | backw        | forw_rate  |
+            | service  | alley             | 15 km/h +-1 | 15 km/h +-1  | 12.05 km/h |
+            | service  | emergency_access  |             |              |            |
+            | service  | driveway          | 15 km/h +-1 | 15 km/h +-1  | 12.05 km/h |
+            | service  | drive-through     | 15 km/h +-1 | 15 km/h +-1  | 12.05 km/h |
+            | service  | parking           | 15 km/h +-1 | 15 km/h +-1  | 12.05 km/h |

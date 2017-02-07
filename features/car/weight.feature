@@ -20,9 +20,9 @@ Feature: Car - weights
             | cg    | tertiary    |
             | bdf   | service     |
         When I route I should get
-            | from | to | route          | speed   |
-            | a    | e  | abc,cg,efg,efg | 23 km/h |
-            | a    | d  | abc,bdf,bdf    | 14 km/h |
+            | from | to | route          | speed   | weight |
+            | a    | e  | abc,cg,efg,efg | 28 km/h | 38 +-1 |
+            | a    | d  | abc,bdf,bdf    | 18 km/h | 21 +-1 |
 
     Scenario: Does not jump off the highway to go down service road
         Given the node map
@@ -37,20 +37,27 @@ Feature: Car - weights
             |
             d
             """
+        And the nodes
+            | node | id |
+            | a    | 1  |
+            | b    | 2  |
+            | c    | 3  |
+            | d    | 4  |
+            | e    | 5  |
         And the ways
-            | nodes | highway |
-            | ab    | primary |
-            | bc    | primary |
-            | cd    | primary |
-            | be    | service |
-            | ec    | service |
+            | nodes | highway | oneway |
+            | ab    | primary | yes    |
+            | bc    | primary | yes    |
+            | cd    | primary | yes    |
+            | be    | service | yes    |
+            | ec    | service | yes    |
         And the extract extra arguments "--generate-edge-lookup"
         And the contract extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
             """
-            2,4,8
+            2,5,8
             """
         When I route I should get
-            | from | to | route       | speed   |
-            | a    | d  | ab,bc,cd,cd | 14 km/h |
-            | a    | e  | ab,be,be    | 19 km/h |
+            | from | to | route       | speed   | weight |
+            | a    | d  | ab,bc,cd,cd | 65 km/h | 12 +-1 |
+            | a    | e  | ab,be,be    | 14 km/h | 104    |

@@ -8,8 +8,8 @@ module.exports = function () {
             var directions = ['forw','backw','bothw'],
                 headers = new Set(Object.keys(table.hashes()[0]));
 
-            if (!directions.some(k => !!headers.has(k))) {
-                throw new Error('*** routability table must contain either "forw", "backw" or "bothw" column');
+            if (!['forw','backw','bothw','forw_rate','backw_rate','bothw_rate'].some(k => !!headers.has(k))) {
+                throw new Error('*** routability table must contain either "forw", "backw", "bothw", "forw_rate" or "backw_rate" column');
             }
 
             this.reprocessAndLoadData((e) => {
@@ -19,6 +19,19 @@ module.exports = function () {
 
                     testRoutabilityRow(i, (err, result) => {
                         if (err) return cb(err);
+                        directions.filter(d => headers.has(d + '_rate')).forEach((direction) => {
+                            var want = row[direction + '_rate'];
+                            if (/^\d+ km\/h/.test(want)) {
+                                if (result[direction].rate) {
+                                    outputRow[direction + '_rate'] = !isNaN(result[direction].rate) ?
+                                        result[direction].rate.toString()+' km/h' :
+                                        result[direction].rate.toString() || '';
+                                } else {
+                                    outputRow[direction + '_rate'] = '';
+                                }
+                            }
+                        });
+
                         directions.filter(d => headers.has(d)).forEach((direction) => {
                             var usingShortcut = false,
                                 want = row[direction];
@@ -31,6 +44,8 @@ module.exports = function () {
                                 usingShortcut = row[direction];
                             }
 
+                            // TODO split out accessible/not accessible value from forw/backw headers
+                            // rename forw/backw to forw/backw_speed
                             switch (true) {
                             case '' === want:
                             case 'x' === want:
@@ -75,6 +90,10 @@ module.exports = function () {
         });
     });
 
+    // makes simple a-b request using the given cucumber test routability conditions
+    // result is an object containing the calculated values for 'rate', 'status',
+    // 'time', 'distance', and 'speed' for forwards and backwards routing, as well as
+    // a bothw object that diffs forwards/backwards
     var testRoutabilityRow = (i, cb) => {
         var result = {};
 
@@ -98,6 +117,7 @@ module.exports = function () {
                     if (r.route.split(',')[0] === util.format('w%d', i)) {
                         r.time = r.json.routes[0].duration;
                         r.distance = r.json.routes[0].distance;
+                        r.rate = Math.round(r.distance / r.json.routes[0].weight)
                         r.speed = r.time > 0 ? parseInt(3.6 * r.distance / r.time) : null;
                     } else {
                         r.status = null;
@@ -133,7 +153,7 @@ module.exports = function () {
                     scb();
                 };
 
-                ['status', 'time', 'distance', 'speed'].forEach((key) => {
+                ['rate', 'status', 'time', 'distance', 'speed'].forEach((key) => {
                     sq.defer(parseRes, key);
                 });
 

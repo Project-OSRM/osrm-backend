@@ -64,64 +64,65 @@ Feature: Car - Surfaces
     Scenario: Car - Surface should reduce speed
         Then routability should be
             | highway  | oneway | surface         | forw        | backw       |
-            | motorway | no     |                 | 72 km/h     | 72 km/h     |
-            | motorway | no     | asphalt         | 72 km/h     | 72 km/h +-1 |
-            | motorway | no     | concrete        | 72 km/h +-1 | 72 km/h +-1 |
-            | motorway | no     | concrete:plates | 72 km/h +-1 | 72 km/h +-1 |
-            | motorway | no     | concrete:lanes  | 72 km/h +-1 | 72 km/h +-1 |
-            | motorway | no     | paved           | 72 km/h +-1 | 72 km/h +-1 |
-            | motorway | no     | cement          | 64 km/h +-1 | 64 km/h +-1 |
-            | motorway | no     | compacted       | 64 km/h +-1 | 64 km/h +-1 |
-            | motorway | no     | fine_gravel     | 64 km/h +-1 | 64 km/h +-1 |
-            | motorway | no     | paving_stones   | 48 km/h +-1 | 48 km/h +-1 |
-            | motorway | no     | metal           | 48 km/h +-1 | 48 km/h +-1 |
-            | motorway | no     | bricks          | 48 km/h +-1 | 48 km/h +-1 |
-            | motorway | no     | grass           | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | wood            | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | sett            | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | grass_paver     | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | gravel          | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | unpaved         | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | ground          | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | dirt            | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | pebblestone     | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | tartan          | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | cobblestone     | 24 km/h +-1 | 24 km/h +-1 |
-            | motorway | no     | clay            | 24 km/h +-1 | 24 km/h +-1 |
-            | motorway | no     | earth           | 16 km/h +-1 | 16 km/h +-1 |
-            | motorway | no     | stone           | 16 km/h +-1 | 16 km/h +-1 |
-            | motorway | no     | rocky           | 16 km/h +-1 | 16 km/h +-1 |
-            | motorway | no     | sand            | 16 km/h +-1 | 16 km/h +-1 |
+            | motorway | no     |                 | 90 km/h     | 90 km/h     |
+            | motorway | no     | asphalt         | 90 km/h     | 90 km/h +-1 |
+            | motorway | no     | concrete        | 90 km/h +-1 | 90 km/h +-1 |
+            | motorway | no     | concrete:plates | 90 km/h +-1 | 90 km/h +-1 |
+            | motorway | no     | concrete:lanes  | 90 km/h +-1 | 90 km/h +-1 |
+            | motorway | no     | paved           | 90 km/h +-1 | 90 km/h +-1 |
+            | motorway | no     | cement          | 80 km/h +-1 | 80 km/h +-1 |
+            | motorway | no     | compacted       | 80 km/h +-1 | 80 km/h +-1 |
+            | motorway | no     | fine_gravel     | 80 km/h +-1 | 80 km/h +-1 |
+            | motorway | no     | paving_stones   | 60 km/h +-1 | 60 km/h +-1 |
+            | motorway | no     | metal           | 60 km/h +-1 | 60 km/h +-1 |
+            | motorway | no     | bricks          | 60 km/h +-1 | 60 km/h +-1 |
+            | motorway | no     | grass           | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | wood            | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | sett            | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | grass_paver     | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | gravel          | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | unpaved         | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | ground          | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | dirt            | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | pebblestone     | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | tartan          | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | cobblestone     | 30 km/h +-1 | 30 km/h +-1 |
+            | motorway | no     | clay            | 30 km/h +-1 | 30 km/h +-1 |
+            | motorway | no     | earth           | 20 km/h +-1 | 20 km/h +-1 |
+            | motorway | no     | stone           | 20 km/h +-1 | 20 km/h +-1 |
+            | motorway | no     | rocky           | 20 km/h +-1 | 20 km/h +-1 |
+            | motorway | no     | sand            | 20 km/h +-1 | 20 km/h +-1 |
+            | motorway | no     | mud             | 10 km/h +-1 | 10 km/h +-1 |
 
     Scenario: Car - Tracktypes should reduce speed
         Then routability should be
             | highway  | oneway | tracktype | forw        | backw       |
-            | motorway | no     |           | 72 km/h     | 72 km/h     |
-            | motorway | no     | grade1    | 48 km/h +-1 | 48 km/h +-1 |
-            | motorway | no     | grade2    | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | grade3    | 24 km/h +-1 | 24 km/h +-1 |
-            | motorway | no     | grade4    | 20 km/h +-1 | 20 km/h +-1 |
-            | motorway | no     | grade5    | 16 km/h +-1 | 16 km/h +-1 |
+            | motorway | no     |           | 90 km/h     | 90 km/h     |
+            | motorway | no     | grade1    | 60 km/h +-1 | 60 km/h +-1 |
+            | motorway | no     | grade2    | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | grade3    | 30 km/h +-1 | 30 km/h +-1 |
+            | motorway | no     | grade4    | 25 km/h +-1 | 25 km/h +-1 |
+            | motorway | no     | grade5    | 20 km/h +-1 | 20 km/h +-1 |
 
     Scenario: Car - Smoothness should reduce speed
         Then routability should be
             | highway  | oneway | smoothness    | forw        | backw       |
-            | motorway | no     |               | 72 km/h     | 72 km/h     |
-            | motorway | no     | intermediate  | 64 km/h     | 64 km/h     |
-            | motorway | no     | bad           | 32 km/h +-1 | 32 km/h +-1 |
-            | motorway | no     | very_bad      | 16 km/h +-1 | 16 km/h +-1 |
-            | motorway | no     | horrible      |  8 km/h +-1 |  8 km/h +-1 |
-            | motorway | no     | very_horrible |  4 km/h +-1 |  4 km/h +-1 |
+            | motorway | no     |               | 90 km/h     | 90 km/h     |
+            | motorway | no     | intermediate  | 80 km/h     | 80 km/h     |
+            | motorway | no     | bad           | 40 km/h +-1 | 40 km/h +-1 |
+            | motorway | no     | very_bad      | 20 km/h +-1 | 20 km/h +-1 |
+            | motorway | no     | horrible      |  10 km/h +-1 |  10 km/h +-1 |
+            | motorway | no     | very_horrible |  5 km/h +-1 |  5 km/h +-1 |
 
     Scenario: Car - Combination of surface tags should use lowest speed
         Then routability should be
-            | highway  | oneway | tracktype | surface | smoothness    | backw   | forw    |
-            | motorway | no     |           |         |               | 72 km/h | 72 km/h |
-            | service  | no     | grade1    | asphalt | excellent     | 12 km/h | 12 km/h |
-            | motorway | no     | grade5    | asphalt | excellent     | 16 km/h | 16 km/h |
-            | motorway | no     | grade1    | mud     | excellent     |  8 km/h |  8 km/h |
-            | motorway | no     | grade1    | asphalt | very_horrible |  4 km/h |  4 km/h |
-            | service  | no     | grade5    | mud     | very_horrible |  4 km/h |  4 km/h |
+            | highway  | oneway | tracktype | surface | smoothness    | bothw   |
+            | motorway | no     |           |         |               | 90 km/h |
+            | service  | no     | grade1    | asphalt | excellent     | 15 km/h |
+            | motorway | no     | grade5    | asphalt | excellent     | 20 km/h |
+            | motorway | no     | grade1    | mud     | excellent     | 10 km/h |
+            | motorway | no     | grade1    | asphalt | very_horrible |  5 km/h |
+            | service  | no     | grade5    | mud     | very_horrible |  5 km/h |
 
     Scenario: Car - Surfaces should not affect oneway direction
         Then routability should be

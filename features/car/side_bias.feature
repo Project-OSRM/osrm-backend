@@ -28,8 +28,8 @@ Feature: Testbot - side bias
 
         When I route I should get
             | from | to | route    | time       |
-            | d    | a  | bd,ab,ab | 29s +-1    |
-            | d    | c  | bd,bc,bc | 33s +-1    |
+            | d    | a  | bd,ab,ab | 24s +-1    |
+            | d    | c  | bd,bc,bc | 27s +-1    |
 
     Scenario: Right hand bias
         Given the profile file "car" extended with
@@ -51,8 +51,9 @@ Feature: Testbot - side bias
 
         When I route I should get
             | from | to | route    | time       |
-            | d    | a  | bd,ab,ab | 33s +-1    |
-            | d    | c  | bd,bc,bc | 29s +-1    |
+            | d    | a  | bd,ab,ab | 27s +-1    |
+                                            # should be inverse of left hand bias
+            | d    | c  | bd,bc,bc | 24s +-1    |
 
     Scenario: Roundabout exit counting for left sided driving
         And a grid size of 10 meters
