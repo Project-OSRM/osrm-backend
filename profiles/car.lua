@@ -91,7 +91,8 @@ local profile = {
     'toll',
     'reversible',
     'impassable',
-    'hov_lanes'
+    'hov_lanes',
+    'steps'
   },
 
   speeds = Sequence {
