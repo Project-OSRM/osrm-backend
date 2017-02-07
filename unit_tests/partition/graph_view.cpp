@@ -3,6 +3,7 @@
 #include "partition/recursive_bisection_state.hpp"
 
 #include <algorithm>
+#include <climits>
 #include <vector>
 
 #include <boost/test/test_case_template.hpp>
@@ -51,7 +52,8 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom)
     BOOST_CHECK_EQUAL(right.NumberOfNodes(), 4);
     for (const auto &node : right.Nodes())
     {
-        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id), 1);
+        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id),
+                          1 << (sizeof(BisectionID) * CHAR_BIT - 1));
         auto id = right.GetID(node);
         const auto compare = makeCoordinate(id, 1, step_size);
         BOOST_CHECK_EQUAL(compare, node.coordinate);
@@ -102,7 +104,8 @@ BOOST_AUTO_TEST_CASE(separate_top_bottom_copy)
     for (NodeID id = 0; id < right.NumberOfNodes(); ++id)
     {
         const auto &node = right.Node(id);
-        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id), 1);
+        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id),
+                          1 << (sizeof(BisectionID) * CHAR_BIT - 1));
         const auto compare = makeCoordinate(id, 1, step_size);
         BOOST_CHECK_EQUAL(compare, node.coordinate);
         BOOST_CHECK(id < right.NumberOfNodes());
@@ -162,7 +165,8 @@ BOOST_AUTO_TEST_CASE(separate_left_right)
     auto right_compare = right_coordinates.begin();
     for (const auto &node : right.Nodes())
     {
-        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id), 1);
+        BOOST_CHECK_EQUAL(bisection_state.GetBisectionID(node.original_id),
+                          1 << (sizeof(BisectionID) * CHAR_BIT - 1));
         auto id = right.GetID(node);
         const auto compare = *right_compare++;
         BOOST_CHECK_EQUAL(compare, node.coordinate);
