@@ -63,7 +63,7 @@ module.exports = function () {
                             }
 
                             if (this.FuzzyMatch.match(outputRow[direction], want)) {
-                                outputRow[direction] = [usingShortcut ? usingShortcut : row[direction]];
+                                outputRow[direction] = usingShortcut ? usingShortcut : row[direction];
                             }
                         });
 

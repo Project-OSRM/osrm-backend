@@ -7,48 +7,83 @@ var chalk = require('chalk');
 
 var unescapeStr = (str) => str.replace(/\\\|/g, '\|').replace(/\\\\/g, '\\');
 
+String.prototype.padLeft = function(char, length) { 
+    return char.repeat(Math.max(0, length - this.length)) + this;
+}
+
+String.prototype.padRight = function(char, length) { 
+    return this + char.repeat(Math.max(0, length - this.length));
+}
+
 module.exports = function (expected, actual) {
     let headers = expected.raw()[0];
-    let expected_keys = expected.hashes();
     let diff = [];
-    let hasErrors = false;
+    let tableError = false;
 
-    var good = 0, bad = 0;
-
-    expected_keys.forEach((row, i) => {
+    expected.hashes().forEach((expectedRow, i) => {        
         var rowError = false;
 
-        for (var j in row) {
-            if (unescapeStr(row[j]) != actual[i][j]) {
+        for (var key in expectedRow) {
+            var actualRow = actual[i]
+            var row
+            if (unescapeStr(expectedRow[key]) != actualRow[key]) {
+                
+                row = Object.assign({}, expectedRow, {diff_status: 'expected'})
+                diff.push(row);
+                
+                row = Object.assign({}, actualRow, {diff_status: 'actual'})
+                diff.push(row);
+                
+                tableError = true;
                 rowError = true;
-                hasErrors = true;
                 break;
             }
         }
-
-        if (rowError) {
-            bad++;
-            diff.push(Object.assign({}, row, {c_status: 'undefined'}));
-            diff.push(Object.assign({}, actual[i], {c_status: 'comment'}));
-        } else {
-            good++;
-            diff.push(row);
-        }
+        if( !rowError ) diff.push(expectedRow);
     });
 
-    if (!hasErrors) return null;
-
-    var s = ['Tables were not identical:'];
-    s.push(headers.map(key => '    ' + key).join(' | '));
+    if (!tableError) return null;
+    
+    
+    // insert a hash of headers where key=value so we can treat
+    // the header row like other rows in the processing below
+    var header_hash = {}
+    headers.forEach( (key,i) => {
+        header_hash[key] = key;
+    });
+    diff.unshift( header_hash )
+    
+    // determine column widths
+    var widths = [];
     diff.forEach((row) => {
-        var rowString = '| ';
-        headers.forEach((header) => {
-            if (!row.c_status) rowString += chalk.green('    ' + row[header] + ' | ');
-            else if (row.c_status === 'undefined') rowString += chalk.yellow('(-) ' + row[header] + ' | ');
-            else rowString += chalk.red('(+) ' + row[header] + ' | ');
-        });
-        s.push(rowString);
+        var cells = []
+        headers.forEach( (key,i) => {
+            var s = row[key]
+            var length = s.length;
+            if(widths[i]==null || length > widths[i])
+              widths[i] = length;
+       });
     });
 
-    return s.join('\n');
+    // format
+    var lines = ['Tables were not identical:'];
+    diff.forEach((row) => {
+        var cells = []
+        headers.forEach( (key,i) => {
+            var s
+            if( row[key] )
+                s = row[key].padRight(' ', widths[i] );
+            else
+                s = ' '.padRight(' ', widths[i] );
+                
+            if(row.diff_status == 'expected')
+                cells.push( chalk.yellow('(-) ' + s) );
+            else if(row.diff_status == 'actual')
+                cells.push( chalk.red(   '(+) ' + s) );
+            else
+                cells.push( chalk.green( '    ' + s) );
+        });
+        lines.push('| ' + cells.join(' | ') + ' |');
+    });
+    return lines.join('\n');
 };
