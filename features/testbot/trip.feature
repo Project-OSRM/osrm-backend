@@ -5,7 +5,7 @@ Feature: Basic trip planning
         Given the profile "testbot"
         Given a grid size of 10 meters
 
-    Scenario: Testbot - Trip planning with less than 10 waypoints
+    Scenario: Testbot - Trip planning with less than 10 waypoints roundtrip
         Given the node map
             """
             a b
@@ -24,7 +24,7 @@ Feature: Basic trip planning
             | a,b,c,d   | abcda  | 7.6       |
             | d,b,c,a   | dbcad  | 7.6       |
 
-    Scenario: Testbot - Trip planning with more than 10 waypoints
+    Scenario: Testbot - Trip planning with more than 10 waypoints roundtrip
         Given the node map
             """
             a b c d
@@ -61,7 +61,7 @@ Feature: Basic trip planning
             e  d
             """
  
-         And the ways
+        And the ways
             | nodes |
             | ab    |
             | ac    |
@@ -74,13 +74,14 @@ Feature: Basic trip planning
             | ce    |
             | de    |
  
-         When I plan a trip I should get
-            |  waypoints  | source | destination | trips  | durations         | distance |
-            |  a,b,c,d,e  | 4      | 4           | abcdea | 10.3              | 103      |
-            |  a,b,c,d,e  | 0      | 2           | abedc  | 8.200000000000001 | 81.6     |
+        When I plan a trip I should get
+            |  waypoints  | source | destination |roundtrip | trips  | durations         | distance               |
+            |  a,b,c,d,e  | 4      | 4           | true     | abcdea | 10.3              | 103                    |
+            |  a,b,c,d,e  | 0      | 2           | false    | abedc  | 8.200000000000001 | 81.6                   |
+            |  a,b,c,d,e  | 0      | 2           | true     | abedca | 11.8              | 117.69999999999999     |
 
 
-    Scenario: Testbot - Trip planning with more than 10 nodes tfse
+    Scenario: Testbot - Trip planning with more than 10 waypoints tfse
         Given the node map
             """
             a b c d e f g h i j k
@@ -100,9 +101,10 @@ Feature: Basic trip planning
             | jk    |
 
         When I plan a trip I should get
-            |  waypoints              | source | destination | trips        | durations  | distance  |
-            |  a,b,c,d,e,f,g,h,i,j,k  | 0      | 10          | abcdefghijk  | 10         | 99.9      |
-            |  a,b,c,d,e,f,g,h,i,j,k  | 4      | 4           | abcdefghijka | 20         | 199.9     |
+            |  waypoints              | source | destination | roundtrip |  trips       | durations  | distance  |
+            |  a,b,c,d,e,f,g,h,i,j,k  | 0      | 5           | false     | abcdeghijkf  | 15         | 149.8     |
+            |  a,b,c,d,e,f,g,h,i,j,k  | 4      | 4           | true      | abcdefghijka | 20         | 199.9     |
+            |  a,b,c,d,e,f,g,h,i,j,k  | 0      | 5           | true      | abcdeghijkfa | 20         | 199.8     |
 
 
 
@@ -157,12 +159,12 @@ Feature: Basic trip planning
             | dc    |
 
          When I plan a trip I should get
-            |  waypoints    | source  | destination | status         | message                                       |
-            |  a,b,c,d      | 0       | 3           | NoTrips        | No route possible from source to destination  |
-            |  a,b,c,d      | -1      | 1           | InvalidQuery   | Query string malformed close to position 123  |
-            |  a,b,c,d      | 1       | -1          | InvalidQuery   | Query string malformed close to position 137  |
-            |  a,b,c,d      | 10      | 1           | InvalidValue   | Invalid source or destination value.          |
-            |  a,b,c,d      | 1       | 10          | InvalidValue   | Invalid source or destination value.          |
+            |  waypoints    | source  | destination | roundtrip | status         | message                                       |
+            |  a,b,c,d      | 0       | 3           | false     | NoTrips        | No route possible from source to destination  |
+            |  a,b,c,d      | -1      | 1           | false     | InvalidQuery   | Query string malformed close to position 123  |
+            |  a,b,c,d      | 1       | -1          | false     | InvalidQuery   | Query string malformed close to position 137  |
+            |  a,b,c,d      | 10      | 1           | false     | InvalidValue   | Invalid source or destination value.          |
+            |  a,b,c,d      | 1       | 10          | false     | InvalidValue   | Invalid source or destination value.          |
 
 
     # Test single node in each component #1850

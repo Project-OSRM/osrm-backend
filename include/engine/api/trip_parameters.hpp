@@ -51,13 +51,15 @@ struct TripParameters : public RouteParameters
     TripParameters() = default;
 
     template <typename... Args>
-    TripParameters(std::size_t source_, std::size_t destination_, Args &&... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, source{source_}, destination{destination_}
+    TripParameters(std::size_t source_, std::size_t destination_, bool roundtrip_, Args &&... args_)
+        : RouteParameters{std::forward<Args>(args_)...}, source{source_}, destination{destination_},
+          roundtrip{roundtrip_}
     {
     }
 
     std::size_t source = 0;
     std::size_t destination = 0;
+    bool roundtrip = true;
 
     bool IsValid() const { return (RouteParameters::IsValid()); }
 };

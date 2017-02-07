@@ -156,6 +156,10 @@ module.exports = function () {
                             params.destination = got.destination = row.destination;
                         } 
 
+                        if (row.hasOwnProperty('roundtrip')) {
+                            params.roundtrip = got.roundtrip = row.roundtrip;
+                        }
+
                         this.requestTrip(waypoints, params, afterRequest);
                     } else {
                         throw new Error('*** no waypoints');
