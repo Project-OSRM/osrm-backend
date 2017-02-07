@@ -325,19 +325,18 @@ function way_function (way, result)
        result.forward_speed = profile.route_speeds[route]
        result.backward_speed = profile.route_speeds[route]
     end
-  -- public transport
-  elseif profile.use_public_transport and railway and profile.platform_speeds[railway] then
-    -- railway platforms (old tagging scheme)
+  -- railway platforms (old tagging scheme)
+  elseif railway and profile.platform_speeds[railway] then
     result.forward_speed = profile.platform_speeds[railway]
     result.backward_speed = profile.platform_speeds[railway]
-  elseif profile.use_public_transport and profile.platform_speeds[public_transport] then
-    -- public_transport platforms (new tagging platform)
+  -- public_transport platforms (new tagging platform)
+  elseif public_transport and profile.platform_speeds[public_transport] then
     result.forward_speed = profile.platform_speeds[public_transport]
     result.backward_speed = profile.platform_speeds[public_transport]
-  elseif profile.use_public_transport and railway and profile.railway_speeds[railway] then
+  -- railways
+  elseif profile.use_public_transport and railway and profile.railway_speeds[railway] and profile.access_tag_whitelist[access] then
     result.forward_mode = mode.train
     result.backward_mode = mode.train
-    -- railways
     result.forward_speed = profile.railway_speeds[railway]
     result.backward_speed = profile.railway_speeds[railway]
   elseif amenity and profile.amenity_speeds[amenity] then
