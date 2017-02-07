@@ -49,19 +49,32 @@ namespace api
 struct TripParameters : public RouteParameters
 {
     TripParameters() = default;
+    enum class SourceType
+    {
+        Any,
+        First
+    };
+    enum class DestinationType
+    {
+        Any,
+        Last
+    };
 
     template <typename... Args>
-    TripParameters(std::size_t source_, std::size_t destination_, bool roundtrip_, Args &&... args_)
+    TripParameters(SourceType source_,
+                   DestinationType destination_,
+                   bool roundtrip_,
+                   Args &&... args_)
         : RouteParameters{std::forward<Args>(args_)...}, source{source_}, destination{destination_},
           roundtrip{roundtrip_}
     {
     }
 
-    std::size_t source = 0;
-    std::size_t destination = 0;
+    SourceType source = SourceType::Any;
+    DestinationType destination = DestinationType::Any;
     bool roundtrip = true;
 
-    bool IsValid() const { return (RouteParameters::IsValid()); }
+    bool IsValid() const { return RouteParameters::IsValid(); }
 };
 }
 }

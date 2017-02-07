@@ -5,7 +5,7 @@ Feature: Basic trip planning
         Given the profile "testbot"
         Given a grid size of 10 meters
 
-    Scenario: Testbot - Trip planning with less than 10 waypoints roundtrip
+    Scenario: Testbot - Roundtrip with waypoints <10
         Given the node map
             """
             a b
@@ -24,7 +24,7 @@ Feature: Basic trip planning
             | a,b,c,d   | abcda  | 7.6       |
             | d,b,c,a   | dbcad  | 7.6       |
 
-    Scenario: Testbot - Trip planning with more than 10 waypoints roundtrip
+    Scenario: Testbot - Roundtrip waypoints >10
         Given the node map
             """
             a b c d
@@ -51,62 +51,25 @@ Feature: Basic trip planning
             | waypoints               | trips         |
             | a,b,c,d,e,f,g,h,i,j,k,l | alkjihgfedcba |
 
-
-    Scenario: Testbot - Trip planning with less than 10 waypoints tfse
+    Scenario: Testbot - Unroutable roundtrip with waypoints <10
         Given the node map
             """
-            a  b
+            a b
 
-                  c
-            e  d
+            d c
             """
 
-        And the ways
+         And the ways
             | nodes |
             | ab    |
-            | ac    |
-            | ad    |
-            | ae    |
-            | bc    |
-            | bd    |
-            | be    |
-            | cd    |
-            | ce    |
-            | de    |
+            | dc    |
 
-        When I plan a trip I should get
-            |  waypoints  | source | destination |roundtrip | trips  | durations         | distance               |
-            |  a,b,c,d,e  | 4      | 4           | true     | abcdea | 10.3              | 103                    |
-            |  a,b,c,d,e  | 0      | 2           | false    | abedc  | 8.200000000000001 | 81.6                   |
-            |  a,b,c,d,e  | 0      | 2           | true     | abedca | 11.8              | 117.69999999999999     |
+         When I plan a trip I should get
+            |  waypoints    | status         | message                                       |
+            |  a,b,c,d      | NoTrips        | No trip visiting all destinations possible.  |
 
 
-    Scenario: Testbot - Trip planning with more than 10 waypoints tfse
-        Given the node map
-            """
-            a b c d e f g h i j k
-            """
-
-        And the ways
-            | nodes |
-            | ab    |
-            | bc    |
-            | cd    |
-            | de    |
-            | ef    |
-            | fg    |
-            | gh    |
-            | hi    |
-            | ij    |
-            | jk    |
-
-        When I plan a trip I should get
-            |  waypoints              | source | destination | roundtrip |  trips       | durations  | distance  |
-            |  a,b,c,d,e,f,g,h,i,j,k  | 0      | 5           | false     | abcdeghijkf  | 15         | 149.8     |
-            |  a,b,c,d,e,f,g,h,i,j,k  | 4      | 4           | true      | abcdefghijka | 20         | 199.9     |
-            |  a,b,c,d,e,f,g,h,i,j,k  | 0      | 5           | true      | abcdeghijkfa | 20         | 199.8     |
-
-    Scenario: Testbot - Trip planning with multiple scc roundtrip
+    Scenario: Testbot - Unroutable roundtrip with waypoints >10
         Given the node map
             """
             a b c d
@@ -142,7 +105,8 @@ Feature: Basic trip planning
             | waypoints                       | status         | message                                      |
             | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | NoTrips        | No trip visiting all destinations possible.  |
 
-    Scenario: Testbot - Trip planning with unroutable waypoints
+# Test TFSE
+    Scenario: Testbot - TFSE with errors
         Given the node map
             """
             a b
@@ -156,29 +120,59 @@ Feature: Basic trip planning
             | dc    |
 
          When I plan a trip I should get
-            |  waypoints    | status         | message                                       |
-            |  a,b,c,d      | NoTrips        | No trip visiting all destinations possible.  |
+            |  waypoints    | source  | destination | roundtrip | status           | message                                       |
+            |  a,b,c,d      | first   | last        | false     | NoTrips          | No trip visiting all destinations possible.   |
+            |  a,b,c,d      | first   | last        | true      | NotImplemented   | This request is not implemented               |
 
-    Scenario: Testbot - Trip planning with fixed start and end points errors
+    Scenario: Testbot - TFSE with waypoints <10
         Given the node map
             """
-            a b
+            a  b
 
-            d c
+                  c
+            e  d
             """
 
-         And the ways
+        And the ways
             | nodes |
             | ab    |
-            | dc    |
+            | ac    |
+            | ad    |
+            | ae    |
+            | bc    |
+            | bd    |
+            | be    |
+            | cd    |
+            | ce    |
+            | de    |
 
-         When I plan a trip I should get
-            |  waypoints    | source  | destination | roundtrip | status         | message                                       |
-            |  a,b,c,d      | 0       | 3           | false     | NoTrips        | No trip visiting all destinations possible.  |
-            |  a,b,c,d      | -1      | 1           | false     | InvalidQuery   | Query string malformed close to position 123  |
-            |  a,b,c,d      | 1       | -1          | false     | InvalidQuery   | Query string malformed close to position 137  |
-            |  a,b,c,d      | 10      | 1           | false     | InvalidValue   | Invalid source or destination value.          |
-            |  a,b,c,d      | 1       | 10          | false     | InvalidValue   | Invalid source or destination value.          |
+        When I plan a trip I should get
+            |  waypoints  | source | destination |roundtrip | trips  | durations         | distance               |
+            |  a,b,d,e,c  | first  | last        | false    | abedc  | 8.200000000000001 | 81.6                   |
+
+
+    Scenario: Testbot - TFSE with waypoints >10
+        Given the node map
+            """
+            a b c d e f g h i j k
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cd    |
+            | de    |
+            | ef    |
+            | fg    |
+            | gh    |
+            | hi    |
+            | ij    |
+            | jk    |
+
+        When I plan a trip I should get
+            |  waypoints              | source | destination | roundtrip |  trips       | durations  | distance  |
+            |  a,b,c,d,e,h,i,j,k,g,f  | first  | last        | false     | abcdeghijkf  | 15         | 149.8     |
 
 
     # Test single node in each component #1850
