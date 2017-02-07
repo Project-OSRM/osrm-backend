@@ -256,3 +256,11 @@ Feature: Car - Restricted access
             | highway | motor_vehicle            | motor_vehicle:forward | motor_vehicle:backward | forw | backw |
             | footway |                          |                       | destination            |      | x     |
             | track   | destination;agricultural | destination           |                        | x    | x     |
+
+    Scenario: Car - Don't route over steps even if marked as accessible
+        Then routability should be
+            | highway | access | forw | backw |
+            | steps   | yes    |      |       |
+            | steps   | no     |      |       |
+            | primary |        |  x   |   x   |
+
