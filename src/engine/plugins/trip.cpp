@@ -33,6 +33,24 @@ bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeWeight> &resu
            std::end(result_table);
 }
 
+bool IsSupportedParameterCombination(const bool fixed_start,
+                                     const bool fixed_end,
+                                     const bool roundtrip)
+{
+    if (fixed_start && fixed_end && !roundtrip)
+    {
+        return true;
+    }
+    else if (!fixed_start && !fixed_end && roundtrip)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 InternalRouteResult
 TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                          const std::vector<PhantomNode> &snapped_phantoms,
@@ -83,10 +101,28 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                                  util::json::Object &json_result) const
 {
     BOOST_ASSERT(parameters.IsValid());
+    const auto number_of_locations = parameters.coordinates.size();
+
+    int source_id = -1;
+    int destination_id = -1;
+    if (parameters.source == api::TripParameters::SourceType::First)
+    {
+        source_id = 0;
+    }
+    if (parameters.destination == api::TripParameters::DestinationType::Last)
+    {
+        destination_id = number_of_locations - 1;
+    }
+    bool fixed_start = (source_id == int(0));
+    bool fixed_end = (destination_id == static_cast<int>(number_of_locations - 1));
+    bool fixed_start_and_end = fixed_start && fixed_end;
+    if (!IsSupportedParameterCombination(fixed_start, fixed_end, parameters.roundtrip))
+    {
+        return Error("NotImplemented", "This request is not implemented", json_result);
+    }
 
     // enforce maximum number of locations for performance reasons
-    if (max_locations_trip > 0 &&
-        static_cast<int>(parameters.coordinates.size()) > max_locations_trip)
+    if (max_locations_trip > 0 && static_cast<int>(number_of_locations) > max_locations_trip)
     {
         return Error("TooBig", "Too many trip coordinates", json_result);
     }
@@ -97,30 +133,24 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     }
 
     auto phantom_node_pairs = GetPhantomNodes(*facade, parameters);
-    if (phantom_node_pairs.size() != parameters.coordinates.size())
+    if (phantom_node_pairs.size() != number_of_locations)
     {
         return Error("NoSegment",
                      std::string("Could not find a matching segment for coordinate ") +
                          std::to_string(phantom_node_pairs.size()),
                      json_result);
     }
-    BOOST_ASSERT(phantom_node_pairs.size() == parameters.coordinates.size());
+    BOOST_ASSERT(phantom_node_pairs.size() == number_of_locations);
 
-    if (parameters.source >= parameters.coordinates.size() ||
-        parameters.destination >= parameters.coordinates.size())
+    if (source_id >= static_cast<int>(parameters.coordinates.size()) ||
+        destination_id >= static_cast<int>(parameters.coordinates.size()))
     {
         return Error("InvalidValue", "Invalid source or destination value.", json_result);
     }
 
-    bool fixed_start_and_end = false;
-    if (parameters.source != parameters.destination)
-    {
-        fixed_start_and_end = true;
-    }
-
     auto snapped_phantoms = SnapPhantomNodes(phantom_node_pairs);
 
-    const auto number_of_locations = snapped_phantoms.size();
+    BOOST_ASSERT(snapped_phantoms.size() == number_of_locations);
 
     // compute the duration table of all phantom nodes
     auto result_table = util::DistTableWrapper<EdgeWeight>(
@@ -162,30 +192,30 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
         // change parameters.source column
         // set any node to source to impossibly high numbers so it will never
         // try to use any node->source in the middle of the "optimal path"
-        for (NodeID i = 0; i < result_table.GetNumberOfNodes(); i++)
+        for (int i = 0; i < static_cast<int>(result_table.GetNumberOfNodes()); i++)
         {
-            if (i == (NodeID)parameters.source)
+            if (i == source_id)
                 continue;
-            result_table.InvalidateRoute(i, parameters.source);
+            result_table.InvalidateRoute(i, source_id);
         }
 
         // change parameters.destination row
         // set destination to anywhere else to impossibly high numbers so it will
         // never try to use destination->any node in the middle of the "optimal path"
-        for (NodeID i = 0; i < result_table.GetNumberOfNodes(); i++)
+        for (int i = 0; i < static_cast<int>(result_table.GetNumberOfNodes()); i++)
         {
-            if (i == (NodeID)parameters.destination)
+            if (i == destination_id)
                 continue;
-            result_table.ShortcutRoute(parameters.destination, i);
+            result_table.ShortcutRoute(destination_id, i);
         }
 
         // set destination->source to zero so rountrip treats source and
         // destination as one location
-        result_table.ShortcutRoute(parameters.destination, parameters.source);
+        result_table.ShortcutRoute(destination_id, source_id);
 
         // set source->destination as very high number so algorithm is forced
         // to find another path to get to destination
-        result_table.InvalidateRoute(parameters.source, parameters.destination);
+        result_table.InvalidateRoute(source_id, destination_id);
 
         //*********  End of changes to table  *************************************
     }
@@ -203,7 +233,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     }
 
     // rotate result such that roundtrip starts at node with index 0
-    if (parameters.roundtrip)
+    if (parameters.roundtrip && !fixed_end)
     {
         auto desired_start_index = std::find(std::begin(trip), std::end(trip), 0);
         BOOST_ASSERT(desired_start_index != std::end(trip));

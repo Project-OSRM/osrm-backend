@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_tfse_returns_roundtrip_when_source_equals_destination)
+BOOST_AUTO_TEST_CASE(test_tfse_1)
 {
     const auto args = get_args();
     auto osrm = getOSRM(args.at(0));
@@ -165,8 +165,9 @@ BOOST_AUTO_TEST_CASE(test_tfse_returns_roundtrip_when_source_equals_destination)
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
 
-    params.source = 2;
-    params.destination = 2;
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = false;
 
     json::Object result;
     const auto rc = osrm.Trip(params, result);
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE(test_tfse_returns_roundtrip_when_source_equals_destination)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_tfse_response_when_source_and_destination_are_different)
+BOOST_AUTO_TEST_CASE(test_tfse_2)
 {
     const auto args = get_args();
     auto osrm = getOSRM(args.at(0));
@@ -209,11 +210,12 @@ BOOST_AUTO_TEST_CASE(test_tfse_response_when_source_and_destination_are_differen
 
     TripParameters params;
     params.coordinates.push_back(locations.at(0));
-    params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
+    params.coordinates.push_back(locations.at(1));
 
-    params.source = 0;
-    params.destination = 1;
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = false;
 
     json::Object result;
     const auto rc = osrm.Trip(params, result);
@@ -254,47 +256,287 @@ BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters)
 
     const auto locations = get_locations_in_big_component();
 
+    // one parameter set
     TripParameters params;
     params.coordinates.push_back(locations.at(0));
     params.coordinates.push_back(locations.at(1));
     params.coordinates.push_back(locations.at(2));
-
-    params.source = 10;
-    params.destination = 1;
-
+    params.roundtrip = false;
     json::Object result;
     auto rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == Status::Error);
-
     auto code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "InvalidValue");
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
 
-    params.source = 1;
-    params.destination = 10;
-
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::First;
     rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == Status::Error);
-
     code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "InvalidValue");
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
 
-    params.source = -1;
-    params.destination = 1;
-
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.destination = TripParameters::DestinationType::Last;
     rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == Status::Error);
-
     code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "InvalidValue");
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
 
-    params.source = 1;
-    params.destination = -1;
-
+    // two parameters set
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Any;
     rc = osrm.Trip(params, result);
     BOOST_REQUIRE(rc == Status::Error);
-
     code = result.values.at("code").get<json::String>().value;
-    BOOST_CHECK_EQUAL(code, "InvalidValue");
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::Any;
+    params.destination = TripParameters::DestinationType::Last;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Last;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::Any;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::First;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::First;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.destination = TripParameters::DestinationType::Any;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    // three parameters set
+    params.source = TripParameters::SourceType::Any;
+    params.destination = TripParameters::DestinationType::Any;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params.source = TripParameters::SourceType::Any;
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params.source = TripParameters::SourceType::Any;
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Any;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Any;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Error);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "NotImplemented");
+}
+
+BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters)
+{
+    const auto args = get_args();
+    auto osrm = getOSRM(args.at(0));
+    using namespace osrm;
+    const auto locations = get_locations_in_big_component();
+    json::Object result;
+    TripParameters params;
+
+    // no parameter set
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    auto rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    // one parameter set
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::Any;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.destination = TripParameters::DestinationType::Any;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    // two parameter set
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::Any;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.destination = TripParameters::DestinationType::Any;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    params = TripParameters();
+    params.coordinates.push_back(locations.at(0));
+    params.coordinates.push_back(locations.at(1));
+    params.coordinates.push_back(locations.at(2));
+    params.source = TripParameters::SourceType::Any;
+    params.destination = TripParameters::DestinationType::Any;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    // three parameter set
+    params.source = TripParameters::SourceType::Any;
+    params.destination = TripParameters::DestinationType::Any;
+    params.roundtrip = true;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    params.source = TripParameters::SourceType::First;
+    params.destination = TripParameters::DestinationType::Last;
+    params.roundtrip = false;
+    rc = osrm.Trip(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+    code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

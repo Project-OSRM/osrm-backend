@@ -28,20 +28,26 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
 
     TripParametersGrammar() : BaseGrammar(root_rule)
     {
-        source_rule = (qi::lit("source=") >
-                       qi::uint_)[ph::bind(&engine::api::TripParameters::source, qi::_r1) = qi::_1];
-
-        destination_rule =
-            (qi::lit("destination=") >
-             qi::uint_)[ph::bind(&engine::api::TripParameters::destination, qi::_r1) = qi::_1];
-
         roundtrip_rule =
             qi::lit("roundtrip=") >
             qi::bool_[ph::bind(&engine::api::TripParameters::roundtrip, qi::_r1) = qi::_1];
 
+        source_type.add("any", engine::api::TripParameters::SourceType::Any)(
+            "first", engine::api::TripParameters::SourceType::First);
+
+        destination_type.add("any", engine::api::TripParameters::DestinationType::Any)(
+            "last", engine::api::TripParameters::DestinationType::Last);
+
+        source_rule = qi::lit("source=") >
+                      source_type[ph::bind(&engine::api::TripParameters::source, qi::_r1) = qi::_1];
+
+        destination_rule =
+            qi::lit("destination=") >
+            destination_type[ph::bind(&engine::api::TripParameters::destination, qi::_r1) = qi::_1];
+
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
-                    -('?' > (source_rule(qi::_r1) | destination_rule(qi::_r1) |
-                             roundtrip_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) %
+                    -('?' > (roundtrip_rule(qi::_r1) | source_rule(qi::_r1) |
+                             destination_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) %
                                 '&');
     }
 
@@ -50,6 +56,9 @@ struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Sig
     qi::rule<Iterator, Signature> destination_rule;
     qi::rule<Iterator, Signature> roundtrip_rule;
     qi::rule<Iterator, Signature> root_rule;
+
+    qi::symbols<char, engine::api::TripParameters::SourceType> source_type;
+    qi::symbols<char, engine::api::TripParameters::DestinationType> destination_type;
 };
 }
 }
