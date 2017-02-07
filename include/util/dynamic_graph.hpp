@@ -161,9 +161,13 @@ template <typename EdgeDataT> class DynamicGraph
     EdgeIterator InsertEdge(const NodeIterator from, const NodeIterator to, const EdgeDataT &data)
     {
         Node &node = node_array[from];
-        EdgeIterator newFirstEdge = node.edges + node.first_edge;
-        if (newFirstEdge >= edge_list.size() || !isDummy(newFirstEdge))
+        EdgeIterator one_beyond_last_of_node = node.edges + node.first_edge;
+        // if we can't write at the end of this nodes edges
+        // that is: the end is the end of the edge_list,
+        //          or the beginning of the next nodes edges
+        if (one_beyond_last_of_node == edge_list.size() || !isDummy(one_beyond_last_of_node))
         {
+            // can we write before this nodes edges?
             if (node.first_edge != 0 && isDummy(node.first_edge - 1))
             {
                 node.first_edge--;
@@ -171,20 +175,24 @@ template <typename EdgeDataT> class DynamicGraph
             }
             else
             {
+                // we have to move this nodes edges to the end of the edge_list
                 EdgeIterator newFirstEdge = (EdgeIterator)edge_list.size();
                 unsigned newSize = node.edges * 1.1 + 2;
                 EdgeIterator requiredCapacity = newSize + edge_list.size();
                 EdgeIterator oldCapacity = edge_list.capacity();
+                // make sure there is enough space at the end
                 if (requiredCapacity >= oldCapacity)
                 {
                     edge_list.reserve(requiredCapacity * 1.1);
                 }
                 edge_list.resize(edge_list.size() + newSize);
+                // move the edges over and invalidate the old ones
                 for (const auto i : irange(0u, node.edges))
                 {
                     edge_list[newFirstEdge + i] = edge_list[node.first_edge + i];
                     makeDummy(node.first_edge + i);
                 }
+                // invalidate until the end of edge_list
                 for (const auto i : irange(node.edges + 1, newSize))
                 {
                     makeDummy(newFirstEdge + i);
@@ -192,6 +200,8 @@ template <typename EdgeDataT> class DynamicGraph
                 node.first_edge = newFirstEdge;
             }
         }
+        // get the position for the edge that is to be inserted
+        // and write it
         Edge &edge = edge_list[node.first_edge + node.edges];
         edge.target = to;
         edge.data = data;

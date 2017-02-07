@@ -36,7 +36,7 @@ bool StorageConfig::IsValid() const
                                                       timestamp_path,
                                                       turn_weight_penalties_path,
                                                       turn_duration_penalties_path,
-                                                      datasource_indexes_path,
+                                                      datasource_names_path,
                                                       datasource_indexes_path,
                                                       names_data_path,
                                                       properties_path,

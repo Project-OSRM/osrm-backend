@@ -175,11 +175,11 @@ class GraphContractor
         auto &dijkstra = data->dijkstra;
         std::size_t inserted_edges_size = data->inserted_edges.size();
         std::vector<ContractorEdge> &inserted_edges = data->inserted_edges;
-        const constexpr bool SHORTCUT_ARC = true;
-        const constexpr bool FORWARD_DIRECTION_ENABLED = true;
-        const constexpr bool FORWARD_DIRECTION_DISABLED = false;
-        const constexpr bool REVERSE_DIRECTION_ENABLED = true;
-        const constexpr bool REVERSE_DIRECTION_DISABLED = false;
+        constexpr bool SHORTCUT_ARC = true;
+        constexpr bool FORWARD_DIRECTION_ENABLED = true;
+        constexpr bool FORWARD_DIRECTION_DISABLED = false;
+        constexpr bool REVERSE_DIRECTION_ENABLED = true;
+        constexpr bool REVERSE_DIRECTION_DISABLED = false;
 
         for (auto in_edge : contractor_graph->GetAdjacentEdgeRange(node))
         {
@@ -213,7 +213,9 @@ class GraphContractor
                 }
                 const NodeID target = contractor_graph->GetTarget(out_edge);
                 if (node == target)
+                {
                     continue;
+                }
 
                 const EdgeWeight path_weight = in_data.weight + out_data.weight;
                 if (target == source)
