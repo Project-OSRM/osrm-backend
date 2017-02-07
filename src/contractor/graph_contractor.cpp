@@ -349,11 +349,11 @@ void GraphContractor::Run(double core_factor)
                         edge.data.backward == current_data.backward)
                     {
                         // found a duplicate edge with smaller weight, update it.
-			if (edge.data.weight < current_data.weight)
-			{
-				current_data = edge.data;
-			}
-			// don't insert duplicates
+                        if (edge.data.weight < current_data.weight)
+                        {
+                            current_data = edge.data;
+                        }
+                        // don't insert duplicates
                         continue;
                     }
                 }
