@@ -1,7 +1,5 @@
 #include "engine/plugins/trip.hpp"
 
-#include "extractor/tarjan_scc.hpp"
-
 #include "engine/api/trip_api.hpp"
 #include "engine/api/trip_parameters.hpp"
 #include "engine/trip/trip_brute_force.hpp"
@@ -29,89 +27,10 @@ namespace engine
 namespace plugins
 {
 
-// Object to hold all strongly connected components (scc) of a graph
-// to access all graphs with component ID i, get the iterators by:
-// auto start = std::begin(scc_component.component) + scc_component.range[i];
-// auto end = std::begin(scc_component.component) + scc_component.range[i+1];
-struct SCC_Component
+bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeWeight> &result_table)
 {
-    // in_component: all NodeIDs sorted by component ID
-    // in_range: index where a new component starts
-    //
-    // example: NodeID 0, 1, 2, 4, 5 are in component 0
-    //          NodeID 3, 6, 7, 8    are in component 1
-    //          => in_component = [0, 1, 2, 4, 5, 3, 6, 7, 8]
-    //          => in_range = [0, 5]
-    SCC_Component(std::vector<NodeID> in_component_nodes, std::vector<size_t> in_range)
-        : component(std::move(in_component_nodes)), range(std::move(in_range))
-    {
-        BOOST_ASSERT_MSG(component.size() > 0, "there's no scc component");
-        BOOST_ASSERT_MSG(*std::max_element(range.begin(), range.end()) == component.size(),
-                         "scc component ranges are out of bound");
-        BOOST_ASSERT_MSG(*std::min_element(range.begin(), range.end()) == 0,
-                         "invalid scc component range");
-        BOOST_ASSERT_MSG(std::is_sorted(std::begin(range), std::end(range)),
-                         "invalid component ranges");
-    }
-
-    std::size_t GetNumberOfComponents() const
-    {
-        BOOST_ASSERT_MSG(range.size() > 0, "there's no range");
-        return range.size() - 1;
-    }
-
-    std::vector<NodeID> component;
-    std::vector<std::size_t> range;
-};
-
-// takes the number of locations and its duration matrix,
-// identifies and splits the graph in its strongly connected components (scc)
-// and returns an SCC_Component
-SCC_Component SplitUnaccessibleLocations(const std::size_t number_of_locations,
-                                         const util::DistTableWrapper<EdgeWeight> &result_table)
-{
-    if (std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
-        std::end(result_table))
-    {
-        // whole graph is one scc
-        std::vector<NodeID> location_ids(number_of_locations);
-        std::iota(std::begin(location_ids), std::end(location_ids), 0);
-        std::vector<size_t> range = {0, location_ids.size()};
-        return SCC_Component(std::move(location_ids), std::move(range));
-    }
-
-    // Run TarjanSCC
-    auto wrapper = std::make_shared<util::MatrixGraphWrapper<EdgeWeight>>(result_table.GetTable(),
-                                                                          number_of_locations);
-    auto scc = extractor::TarjanSCC<util::MatrixGraphWrapper<EdgeWeight>>(wrapper);
-    scc.Run();
-
-    const auto number_of_components = scc.GetNumberOfComponents();
-
-    std::vector<std::size_t> range_insertion;
-    std::vector<std::size_t> range;
-    range_insertion.reserve(number_of_components);
-    range.reserve(number_of_components);
-
-    std::vector<NodeID> components(number_of_locations, 0);
-
-    std::size_t prefix = 0;
-    for (std::size_t j = 0; j < number_of_components; ++j)
-    {
-        range_insertion.push_back(prefix);
-        range.push_back(prefix);
-        prefix += scc.GetComponentSize(j);
-    }
-    // senitel
-    range.push_back(components.size());
-
-    for (std::size_t i = 0; i < number_of_locations; ++i)
-    {
-        components[range_insertion[scc.GetComponentID(i)]] = i;
-        ++range_insertion[scc.GetComponentID(i)];
-    }
-
-    return SCC_Component(std::move(components), std::move(range));
+    return std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
+           std::end(result_table);
 }
 
 InternalRouteResult
@@ -145,12 +64,12 @@ TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade>
     if (roundtrip)
     {
         // trip comes out to be something like 0 1 4 3 2 0
-        // BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
     }
     else
     {
         // trip comes out to be something like 0 1 4 3 2, so the sizes don't match
-        // BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
+        BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
     }
 
     shortest_path(facade, min_route.segment_end_coordinates, {false}, min_route);
@@ -216,8 +135,10 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     BOOST_ASSERT_MSG(result_table.size() == number_of_locations * number_of_locations,
                      "Distance Table has wrong size");
 
-    // get scc components
-    SCC_Component scc = SplitUnaccessibleLocations(result_table.GetNumberOfNodes(), result_table);
+    if (!IsStronglyConnectedComponent(result_table))
+    {
+        return Error("NoTrips", "No trip visiting all destinations possible.", json_result);
+    }
 
     if (fixed_start_and_end)
     {
@@ -267,92 +188,34 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
         result_table.InvalidateRoute(parameters.source, parameters.destination);
 
         //*********  End of changes to table  *************************************
-
-        //*********  SCC related errors in tfse ***********************************
-        // if source and destination are in different sccs then return error
-        if (scc.GetNumberOfComponents() > 1)
-        {
-            std::size_t source_component_id = std::numeric_limits<std::size_t>::max();
-            std::size_t destination_component_id = std::numeric_limits<std::size_t>::max();
-
-            for (std::size_t k = 0; k < scc.GetNumberOfComponents(); ++k)
-            {
-                auto route_begin = std::begin(scc.component) + scc.range[k];
-                auto route_end = std::begin(scc.component) + scc.range[k + 1];
-
-                std::for_each(route_begin, route_end, [&](const NodeID &id) {
-                    if ((NodeID)parameters.source == id)
-                        source_component_id = k;
-                    if ((NodeID)parameters.destination == id)
-                        destination_component_id = k;
-                });
-            }
-
-            if (destination_component_id == std::numeric_limits<std::size_t>::max() ||
-                source_component_id == std::numeric_limits<std::size_t>::max() ||
-                source_component_id != destination_component_id)
-            {
-                return Error(
-                    "NoTrips", "No route possible from source to destination", json_result);
-            }
-        }
-        //*********  End of SCC related errors ************************************
     }
 
-    std::vector<std::vector<NodeID>> trips;
-    trips.reserve(scc.GetNumberOfComponents());
-    // run Trip computation for every SCC
-    for (std::size_t k = 0; k < scc.GetNumberOfComponents(); ++k)
+    std::vector<NodeID> trip;
+    trip.reserve(number_of_locations);
+    // get an optimized order in which the destinations should be visited
+    if (number_of_locations < BF_MAX_FEASABLE)
     {
-        const auto component_size = scc.range[k + 1] - scc.range[k];
-
-        BOOST_ASSERT_MSG(component_size > 0, "invalid component size");
-
-        std::vector<NodeID> scc_route;
-        auto route_begin = std::begin(scc.component) + scc.range[k];
-        auto route_end = std::begin(scc.component) + scc.range[k + 1];
-
-        if (component_size > 1)
-        {
-            if (component_size < BF_MAX_FEASABLE)
-            {
-                scc_route =
-                    trip::BruteForceTrip(route_begin, route_end, number_of_locations, result_table);
-            }
-            else
-            {
-                scc_route = trip::FarthestInsertionTrip(
-                    route_begin, route_end, number_of_locations, result_table);
-            }
-        }
-        else
-        {
-            scc_route = std::vector<NodeID>(route_begin, route_end);
-        }
-        // rotate result such that roundtrip starts at node with index 0
-        if (parameters.roundtrip)
-        {
-            auto start_index = std::find(scc_route.begin(), scc_route.end(), 0);
-            // @TODO: Find out whether there is always a 0 == Find out whether we return multiple
-            //        trips if there are more than one SCC
-            // BOOST_ASSERT(start_index != scc_route.end());
-            std::rotate(scc_route.begin(), start_index, scc_route.end());
-        }
-        trips.push_back(std::move(scc_route));
+        trip = trip::BruteForceTrip(number_of_locations, result_table);
     }
-    if (trips.empty())
+    else
     {
-        return Error("NoTrips", "Cannot find trips", json_result);
+        trip = trip::FarthestInsertionTrip(number_of_locations, result_table);
     }
 
-    // compute all round trip routes
-    std::vector<InternalRouteResult> routes;
-    routes.reserve(trips.size());
-    for (const auto &trip : trips)
+    // rotate result such that roundtrip starts at node with index 0
+    if (parameters.roundtrip)
     {
-        routes.push_back(ComputeRoute(facade, snapped_phantoms, trip, parameters.roundtrip));
+        auto desired_start_index = std::find(std::begin(trip), std::end(trip), 0);
+        BOOST_ASSERT(desired_start_index != std::end(trip));
+        std::rotate(std::begin(trip), desired_start_index, std::end(trip));
     }
 
+    // get the route when visiting all destinations in optimized order
+    InternalRouteResult route = ComputeRoute(facade, snapped_phantoms, trip, parameters.roundtrip);
+
+    // get api response
+    const std::vector<std::vector<NodeID>> trips = {trip};
+    const std::vector<InternalRouteResult> routes = {route};
     api::TripAPI trip_api{*facade, parameters};
     trip_api.MakeResponse(trips, routes, snapped_phantoms, json_result);
 
