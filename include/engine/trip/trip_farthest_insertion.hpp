@@ -75,18 +75,14 @@ GetShortestRoundTrip(const NodeID new_loc,
     return std::make_pair(min_trip_distance, next_insert_point_candidate);
 }
 
-template <typename NodeIDIterator>
 // given two initial start nodes, find a roundtrip route using the farthest insertion algorithm
 std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
-                              const std::size_t &component_size,
-                              const NodeIDIterator &start,
-                              const NodeIDIterator &end,
                               const util::DistTableWrapper<EdgeWeight> &dist_table,
                               const NodeID &start1,
                               const NodeID &start2)
 {
-    BOOST_ASSERT_MSG(number_of_locations >= component_size,
-                     "component size bigger than total number of locations");
+    BOOST_ASSERT_MSG(number_of_locations * number_of_locations == dist_table.size(),
+                     "number_of_locations and dist_table size do not match");
 
     std::vector<NodeID> route;
     route.reserve(number_of_locations);
@@ -99,22 +95,21 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
     route.push_back(start1);
     route.push_back(start2);
 
-    // add all other nodes missing (two nodes are already in the initial start trip)
-    for (std::size_t j = 2; j < component_size; ++j)
+    // two nodes are already in the initial start trip, so we need to add all other nodes
+    for (std::size_t added_nodes = 2; added_nodes < number_of_locations; ++added_nodes)
     {
-
         auto farthest_distance = std::numeric_limits<int>::min();
         auto next_node = -1;
         NodeIDIter next_insert_point;
 
-        // find unvisited loc i that is the farthest away from all other visited locs
-        for (auto i = start; i != end; ++i)
+        // find unvisited node that is the farthest away from all other visited locs
+        for (std::size_t id = 0; id < number_of_locations; ++id)
         {
             // find the shortest distance from i to all visited nodes
-            if (!visited[*i])
+            if (!visited[id])
             {
                 const auto insert_candidate =
-                    GetShortestRoundTrip(*i, dist_table, number_of_locations, route);
+                    GetShortestRoundTrip(id, dist_table, number_of_locations, route);
 
                 BOOST_ASSERT_MSG(insert_candidate.first != INVALID_EDGE_WEIGHT,
                                  "shortest round trip is invalid");
@@ -124,7 +119,7 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
                 if (insert_candidate.first > farthest_distance)
                 {
                     farthest_distance = insert_candidate.first;
-                    next_node = *i;
+                    next_node = id;
                     next_insert_point = insert_candidate.second;
                 }
             }
@@ -139,10 +134,7 @@ std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
     return route;
 }
 
-template <typename NodeIDIterator>
-std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
-                                          const NodeIDIterator &end,
-                                          const std::size_t number_of_locations,
+std::vector<NodeID> FarthestInsertionTrip(const std::size_t number_of_locations,
                                           const util::DistTableWrapper<EdgeWeight> &dist_table)
 {
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,57 +153,26 @@ std::vector<NodeID> FarthestInsertionTrip(const NodeIDIterator &start,
     // Guard against dist_table being empty therefore max_element returning the end iterator.
     BOOST_ASSERT(dist_table.size() > 0);
 
-    const auto component_size = std::distance(start, end);
-    BOOST_ASSERT(component_size >= 0);
+    BOOST_ASSERT_MSG(number_of_locations * number_of_locations == dist_table.size(),
+                     "number_of_locations and dist_table size do not match");
 
-    auto max_from = -1;
-    auto max_to = -1;
-
-    if (static_cast<std::size_t>(component_size) == number_of_locations)
-    {
-        // find the pair of location with the biggest distance and make the pair the initial start
-        // trip. Skipping over the very first element (0,0), we make sure not to end up with the
-        // same start/end in the special case where all entries are the same.
-        const auto index =
-            std::distance(std::begin(dist_table),
-                          std::max_element(std::begin(dist_table) + 1, std::end(dist_table)));
-        max_from = index / number_of_locations;
-        max_to = index % number_of_locations;
-    }
-    else
-    {
-        auto max_dist = std::numeric_limits<EdgeWeight>::min();
-
-        for (auto x = start; x != end; ++x)
-        {
-            for (auto y = start; y != end; ++y)
-            {
-                // don't repeat coordinates
-                if (*x == *y)
-                    continue;
-
-                const auto xy_dist = dist_table(*x, *y);
-                // SCC decomposition done correctly?
-                BOOST_ASSERT(xy_dist != INVALID_EDGE_WEIGHT);
-
-                if (xy_dist >= max_dist)
-                {
-                    max_dist = xy_dist;
-                    max_from = *x;
-                    max_to = *y;
-                }
-            }
-        }
-    }
+    // find the pair of location with the biggest distance and make the pair the initial start
+    // trip. Skipping over the very first element (0,0), we make sure not to end up with the
+    // same start/end in the special case where all entries are the same.
+    const auto index = std::distance(
+        std::begin(dist_table), std::max_element(std::begin(dist_table) + 1, std::end(dist_table)));
+    NodeID max_from = index / number_of_locations;
+    NodeID max_to = index % number_of_locations;
 
     BOOST_ASSERT(max_from >= 0);
     BOOST_ASSERT(max_to >= 0);
     BOOST_ASSERT_MSG(static_cast<std::size_t>(max_from) < number_of_locations, "start node");
     BOOST_ASSERT_MSG(static_cast<std::size_t>(max_to) < number_of_locations, "start node");
-    return FindRoute(number_of_locations, component_size, start, end, dist_table, max_from, max_to);
+    return FindRoute(number_of_locations, dist_table, max_from, max_to);
 }
-}
-}
-}
+
+} // namespace trip
+} // namespace engine
+} // namespace osrm
 
 #endif // TRIP_FARTHEST_INSERTION_HPP

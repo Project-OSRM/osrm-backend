@@ -25,14 +25,15 @@ namespace trip
 EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
                           const std::vector<NodeID> &location_order,
                           const EdgeWeight min_route_dist,
-                          const std::size_t component_size)
+                          const std::size_t number_of_locations)
 {
     EdgeWeight route_dist = 0;
     std::size_t i = 0;
     while (i < location_order.size() && (route_dist < min_route_dist))
     {
 
-        auto edge_weight = dist_table(location_order[i], location_order[(i + 1) % component_size]);
+        auto edge_weight =
+            dist_table(location_order[i], location_order[(i + 1) % number_of_locations]);
 
         // If the edge_weight is very large (INVALID_EDGE_WEIGHT) then the algorithm will not choose
         // this edge in final minimal path. So instead of computing all the permutations after this
@@ -47,9 +48,10 @@ EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
         }
 
         // This boost assert should not be reached if TFSE table
-        BOOST_ASSERT_MSG(dist_table(location_order[i], location_order[(i + 1) % component_size]) !=
-                             INVALID_EDGE_WEIGHT,
-                         "invalid route found");
+        BOOST_ASSERT_MSG(
+            dist_table(location_order[i], location_order[(i + 1) % number_of_locations]) !=
+                INVALID_EDGE_WEIGHT,
+            "invalid route found");
         ++i;
     }
 
@@ -57,45 +59,43 @@ EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
 }
 
 // computes the route by computing all permutations and selecting the shortest
-template <typename NodeIDIterator>
-std::vector<NodeID> BruteForceTrip(const NodeIDIterator start,
-                                   const NodeIDIterator end,
-                                   const std::size_t number_of_locations,
+std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
                                    const util::DistTableWrapper<EdgeWeight> &dist_table)
 {
-    (void)number_of_locations; // unused
-
-    const auto component_size = std::distance(start, end);
-
-    std::vector<NodeID> perm(start, end);
-    std::vector<NodeID> route = perm;
+    // set initial order in which nodes are visited to 0, 1, 2, 3, ...
+    std::vector<NodeID> node_order(number_of_locations);
+    std::iota(std::begin(node_order), std::end(node_order), 0);
+    std::vector<NodeID> route = node_order;
 
     EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
 
     // check length of all possible permutation of the component ids
-
-    BOOST_ASSERT_MSG(perm.size() > 0, "no permutation given");
-    BOOST_ASSERT_MSG(*(std::max_element(std::begin(perm), std::end(perm))) < number_of_locations,
+    BOOST_ASSERT_MSG(node_order.size() > 0, "no order permutation given");
+    BOOST_ASSERT_MSG(*(std::max_element(std::begin(node_order), std::end(node_order))) <
+                         number_of_locations,
                      "invalid node id");
-    BOOST_ASSERT_MSG(*(std::min_element(std::begin(perm), std::end(perm))) >= 0, "invalid node id");
+    BOOST_ASSERT_MSG(*(std::min_element(std::begin(node_order), std::end(node_order))) >= 0,
+                     "invalid node id");
 
     do
     {
-        const auto new_distance = ReturnDistance(dist_table, perm, min_route_dist, component_size);
+        const auto new_distance =
+            ReturnDistance(dist_table, node_order, min_route_dist, number_of_locations);
         // we can use `<` instead of `<=` here, since all distances are `!=` INVALID_EDGE_WEIGHT
         // In case we really sum up to invalid edge weight for all permutations, keeping the very
         // first one is fine too.
         if (new_distance < min_route_dist)
         {
             min_route_dist = new_distance;
-            route = perm;
+            route = node_order;
         }
-    } while (std::next_permutation(std::begin(perm), std::end(perm)));
+    } while (std::next_permutation(std::begin(node_order), std::end(node_order)));
 
     return route;
 }
-}
-}
-}
+
+} // namespace trip
+} // namespace engine
+} // namespace osrm
 
 #endif // TRIP_BRUTE_FORCE_HPP
