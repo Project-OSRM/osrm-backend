@@ -188,3 +188,11 @@ Feature: Bike - Access tags on ways
             | highway     | railway | oneway | bothw |
             | residential | tram    | yes    | x     |
 
+    Scenario: Bike - Access combinations
+        Then routability should be
+            | highway    | access     | bothw |
+            | primary    | permissive | x     |
+            | steps      | permissive | x     |
+            | footway    | permissive | x     |
+            | garbagetag | permissive | x     |
+
