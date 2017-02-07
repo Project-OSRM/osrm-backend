@@ -671,6 +671,11 @@ install(TARGETS osrm_extract DESTINATION lib)
 install(TARGETS osrm_contract DESTINATION lib)
 install(TARGETS osrm_store DESTINATION lib)
 
+
+# Install profiles and support library to /usr/local/share/osrm/profiles by default
+set(DefaultProfilesDir profiles)
+install(DIRECTORY ${DefaultProfilesDir} DESTINATION share/osrm)
+
 # Setup exporting variables for pkgconfig and subproject
 #
 
