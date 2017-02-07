@@ -17,73 +17,107 @@ String.prototype.padRight = function(char, length) {
 
 module.exports = function (expected, actual) {
     let headers = expected.raw()[0];
-    let diff = [];
+    let expectedRows = expected.hashes();
     let tableError = false;
+    let statusRows = [];
+    let columnStatus = {}
 
-    expected.hashes().forEach((expectedRow, i) => {        
+    expectedRows.forEach((expectedRow, i) => {
         var rowError = false;
-
+        statusRows[i] = {};
+        var statusRow = statusRows[i];
         for (var key in expectedRow) {
             var actualRow = actual[i]
             var row
             if (unescapeStr(expectedRow[key]) != actualRow[key]) {
-                
-                row = Object.assign({}, expectedRow, {diff_status: 'expected'})
-                diff.push(row);
-                
-                row = Object.assign({}, actualRow, {diff_status: 'actual'})
-                diff.push(row);
-                
+                statusRow[key] = false;
                 tableError = true;
-                rowError = true;
-                break;
+                columnStatus[key] = false;
             }
         }
-        if( !rowError ) diff.push(expectedRow);
+    });
+    
+    if (!tableError) return null;
+
+
+    // determine column widths
+    var widths = {};
+    var wantStr = '(-) ';
+    var gotStr  = '(+) ';
+    var okStr   = '    ';
+
+    headers.forEach( (key) => {
+        widths[key] = key.length;
     });
 
-    if (!tableError) return null;
-    
-    
-    // insert a hash of headers where key=value so we can treat
-    // the header row like other rows in the processing below
-    var header_hash = {}
-    headers.forEach( (key,i) => {
-        header_hash[key] = key;
-    });
-    diff.unshift( header_hash )
-    
-    // determine column widths
-    var widths = [];
-    diff.forEach((row) => {
+    expectedRows.forEach((row,i) => {
         var cells = []
-        headers.forEach( (key,i) => {
-            var s = row[key]
-            var length = s.length;
-            if(widths[i]==null || length > widths[i])
-              widths[i] = length;
+        headers.forEach( (key) => {
+            var content = row[key]
+            var length = content.length;
+            if(widths[key]==null || length > widths[key])
+              widths[key] = length;
        });
     });
 
+
     // format
-    var lines = ['Tables were not identical:'];
-    diff.forEach((row) => {
-        var cells = []
-        headers.forEach( (key,i) => {
-            var s
-            if( row[key] )
-                s = row[key].padRight(' ', widths[i] );
-            else
-                s = ' '.padRight(' ', widths[i] );
-                
-            if(row.diff_status == 'expected')
-                cells.push( chalk.yellow('(-) ' + s) );
-            else if(row.diff_status == 'actual')
-                cells.push( chalk.red(   '(+) ' + s) );
-            else
-                cells.push( chalk.green( '    ' + s) );
+    var lines = [chalk.red('Tables were not identical:')];
+    var cells;
+
+    // header row
+    cells = []
+    headers.forEach( (key) => {
+        var content = key.padRight(' ', widths[key] );
+        if (columnStatus[key] == false )
+            content = okStr + content;
+        cells.push( chalk.white( content ) );
+    });
+    lines.push( '| ' + cells.join(' | ') + ' |');
+
+    // content rows
+    expectedRows.forEach((row,i) => {
+        var cells;
+        var rowError = Object.keys(statusRows[i]).length > 0;
+
+        // expected row
+        cells = []
+        headers.forEach( (key) => {
+            var content = row[key].padRight(' ', widths[key] );
+            if (statusRows[i][key] == false)
+                cells.push( chalk.yellow( wantStr + content) );
+            else {
+                if (rowError) {
+                    if (columnStatus[key]==false)
+                        content = okStr + content
+                    cells.push( chalk.yellow( content) );
+                }
+                else {
+                    if (columnStatus[key]==false)
+                        content = okStr + content
+                    cells.push( chalk.green( content) );
+                }
+            }
         });
         lines.push('| ' + cells.join(' | ') + ' |');
+
+        // if error in row, insert extra row showing actual result
+        if (rowError) {
+            cells = []
+            headers.forEach( (key) => {
+                var content = actual[i][key].padRight(' ', widths[key] );
+                if (statusRows[i][key] == false)
+                    cells.push( chalk.red( gotStr + content) );
+                else {
+                    if (columnStatus[key]==false)
+                        cells.push( chalk.red( okStr + content) );
+                    else
+                        cells.push( chalk.red( content) );
+                }
+            });
+
+            lines.push('| ' + cells.join(' | ') + ' |');
+        }
     });
     return lines.join('\n');
 };
