@@ -29,6 +29,27 @@ Feature: Car - Handle ferry routes
             | c    | f  | cde,efg,efg     | ferry,driving,driving         |
             | c    | g  | cde,efg,efg     | ferry,driving,driving         |
 
+
+    Scenario: Car - Use default speeds to calculate duration if no duration given
+        Given the node map
+            """
+            a b c
+                d
+                e f g
+            """
+
+        And the ways
+            | nodes | highway | route |
+            | abc   | primary |       |
+            | cde   |         | ferry |
+            | efg   | primary |       |
+
+        When I route I should get
+            | from | to | route           | modes                         | speed   | time    |
+            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 12 km/h | 173.4s  |
+            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 9 km/h  | 162.4s  |
+            | c    | e  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.4s  |
+            | e    | c  | cde,cde         | ferry,ferry                   | 5 km/h  | 151.4s  |
     Scenario: Car - Properly handle simple durations
         Given the node map
             """
@@ -44,11 +65,11 @@ Feature: Car - Handle ferry routes
             | efg   | primary |       |          |
 
         When I route I should get
-            | from | to | route           | modes                         | speed   |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 23 km/h |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h |
-            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h |
-            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h |
+            | from | to | route           | modes                         | speed   | time  |
+            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 24 km/h | 89.4s |
+            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h | 78.4s |
+            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |
+            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |
 
     Scenario: Car - Properly handle ISO 8601 durations
         Given the node map
@@ -65,8 +86,8 @@ Feature: Car - Handle ferry routes
             | efg   | primary |       |          |
 
         When I route I should get
-            | from | to | route           | modes                         | speed   |
-            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 23 km/h |
-            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h |
-            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h |
-            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h |
+            | from | to | route           | modes                         | speed   | time  |
+            | a    | g  | abc,cde,efg,efg | driving,ferry,driving,driving | 24 km/h | 89.4s |
+            | b    | f  | abc,cde,efg,efg | driving,ferry,driving,driving | 18 km/h | 78.4s |
+            | c    | e  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |
+            | e    | c  | cde,cde         | ferry,ferry                   | 11 km/h | 67.4s |

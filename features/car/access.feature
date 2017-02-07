@@ -181,10 +181,10 @@ Feature: Car - Restricted access
     @hov
     Scenario: Car - only designated HOV ways are ignored by default
         Then routability should be
-            | highway | hov        | bothw |
-            | primary | designated |       |
-            | primary | yes        | x     |
-            | primary | no         | x     |
+            | highway | hov        | bothw | forw_rate  |
+            | primary | designated | x     | 52.63 km/h |
+            | primary | yes        | x     |            |
+            | primary | no         | x     |            |
 
     @hov
     Scenario: Car - a way with all lanes HOV-designated is inaccessible by default (similar to hov=designated)

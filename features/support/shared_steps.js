@@ -92,7 +92,8 @@ module.exports = function () {
                             }
 
                             var distance = hasRoute && json.routes[0].distance,
-                                time = hasRoute && json.routes[0].duration;
+                                time = hasRoute && json.routes[0].duration,
+                                weight = hasRoute && json.routes[0].weight;
 
                             if (headers.has('distance')) {
                                 if (row.distance.length) {
@@ -101,6 +102,16 @@ module.exports = function () {
                                     got.distance = instructions ? util.format('%dm', distance) : '';
                                 } else {
                                     got.distance = '';
+                                }
+                            }
+
+                            if (headers.has('weight')) {
+                                if (row.weight.length) {
+                                    if (!row.weight.match(/[\d\.]+/))
+                                        return cb(new Error('*** Weight must be specified as a numeric value. (ex: 8)'));
+                                    got.weight = instructions ? util.format('%dm', weight) : '';
+                                } else {
+                                    got.weight = '';
                                 }
                             }
 
@@ -161,6 +172,7 @@ module.exports = function () {
                             putValue('destinations', destinations);
                             putValue('weight_name', weight_name);
                             putValue('weights', weights);
+                            putValue('weight', weight);
                         }
 
                         for (var key in row) {

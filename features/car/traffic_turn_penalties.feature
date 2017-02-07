@@ -89,9 +89,9 @@ Feature: Traffic - turn penalties
         And the contract extra arguments "--turn-penalty-file {penalties_file}"
         When I route I should get
             | from | to | route                 | speed   | time      |
-            | a    | h  | ad,dhk,dhk            | 52 km/h | 14s +-1   |
+            | a    | h  | ad,dhk,dhk            | 65 km/h | 11s +-1   |
                                                                               # straight
-            | i    | g  | fim,fg,fg             | 46 km/h | 15s +-1   |
+            | i    | g  | fim,fg,fg             | 56 km/h | 15s +-1   |
                                                                               # right - ifg penalty
             | a    | e  | ad,def,def            | 53 km/h | 14s +-1   |
                                                                               # left - faster because of negative ade penalty

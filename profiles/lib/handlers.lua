@@ -128,12 +128,15 @@ function Handlers.handle_movables(way,result,data,profile)
     if bridge_speed and bridge_speed > 0 then
       local capacity_car = way:get_value_by_key("capacity:car")
       if capacity_car ~= 0 then
+        result.forward_mode = profile.default_mode
+        result.backward_mode = profile.default_mode
         local duration  = way:get_value_by_key("duration")
         if duration and durationIsValid(duration) then
           result.duration = math.max( parseDuration(duration), 1 )
+        else
+          result.forward_speed = bridge_speed
+          result.backward_speed = bridge_speed
         end
-        result.forward_speed = bridge_speed
-        result.backward_speed = bridge_speed
       end
     end
   end
@@ -236,7 +239,7 @@ function Handlers.handle_speed(way,result,data,profile)
     end
   end
 
-  if result.forward_speed == -1 and result.backward_speed == -1 then
+  if result.forward_speed == -1 and result.backward_speed == -1 and result.duration <= 0 then
     return false
   end
 end
@@ -265,7 +268,7 @@ end
 function Handlers.handle_penalties(way,result,data,profile)
   -- heavily penalize a way tagged with all HOV lanes
   -- in order to only route over them if there is no other option
-  local hov_penalty = 0.1
+  local hov_penalty = 1.0
   if profile.avoid.hov_lanes then
     local hov = way:get_value_by_key("hov")
     local all_lanes_designated = Handlers.has_all_designated_hov_lanes(data.hov_lanes_forward)
@@ -317,10 +320,10 @@ function Handlers.handle_penalties(way,result,data,profile)
 
   if properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
-      result.forward_rate = result.forward_speed * profile.speed_reduction
+      result.forward_rate = result.forward_speed * penalty
     end
     if result.backward_speed > 0 then
-      result.backward_rate = result.backward_speed * profile.speed_reduction
+      result.backward_rate = result.backward_speed * penalty
     end
     if result.duration > 0 then
       result.weight = result.duration / penalty
@@ -483,6 +486,16 @@ function Handlers.run(handlers,way,result,data,profile)
   for i,handler in ipairs(handlers) do
     if Handlers[handler](way,result,data,profile) == false then
       return false
+    else
+      if handler == 'handle_penalties' then
+--        io.write('handler: ', handler, '\n')
+--        io.write('weight ', result.weight, '\n')
+--        io.write('rate ', result.forward_rate, '\n')
+--        io.write('duration ', result.duration, '\n')
+--        io.write('speed ', result.forward_speed, '\n')
+        io.write('forward speed ', result.forward_speed)
+        io.write('forward rate ', result.forward_rate)
+      end
     end
   end
 end
