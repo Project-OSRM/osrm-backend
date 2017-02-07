@@ -25,9 +25,7 @@ DinicMaxFlow::MinCut InertialFlow::ComputePartition(const std::size_t num_slopes
                                                     const double balance,
                                                     const double source_sink_rate)
 {
-    auto cut = BestMinCut(num_slopes, source_sink_rate);
-
-    return cut;
+    return BestMinCut(num_slopes, source_sink_rate, balance);
 }
 
 InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
@@ -86,22 +84,35 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
     return order;
 }
 
-DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double ratio) const
+DinicMaxFlow::MinCut
+InertialFlow::BestMinCut(const std::size_t n, const double ratio, const double balance) const
 {
     DinicMaxFlow::MinCut best;
     best.num_edges = -1;
 
-    const auto get_balance = [this](const auto num_nodes_source) {
-        double ratio = static_cast<double>(view.NumberOfNodes() - num_nodes_source) /
-                       static_cast<double>(num_nodes_source);
-        return std::abs(ratio - 1.0);
+    const auto get_balance = [this, balance](const auto num_nodes_source) {
+        const auto perfect_balance = view.NumberOfNodes() / 2;
+        const auto allowed_balance = balance * perfect_balance;
+        const auto bigger_side =
+            std::max(num_nodes_source, view.NumberOfNodes() - num_nodes_source);
+
+        if (bigger_side > allowed_balance)
+            return bigger_side / static_cast<double>(allowed_balance);
+        else
+            return 1.0;
     };
 
-    auto best_balance = 10000; // get_balance(best.num_nodes_source);
+    auto best_balance = 1;
 
     std::mutex lock;
 
     tbb::blocked_range<std::size_t> range{0, n, 1};
+
+    const auto balance_delta = [this](const auto num_nodes_source) {
+        const std::int64_t difference =
+            static_cast<std::int64_t>(view.NumberOfNodes()) / 2 - num_nodes_source;
+        return std::abs(difference);
+    };
 
     tbb::parallel_for(range, [&, this](const auto &chunk) {
         for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
@@ -116,7 +127,9 @@ DinicMaxFlow::MinCut InertialFlow::BestMinCut(const std::size_t n, const double 
                 std::lock_guard<std::mutex> guard{lock};
 
                 // Swap to keep the destruction of the old object outside of critical section.
-                if (std::tie(cut.num_edges, cut_balance) < std::tie(best.num_edges, best_balance))
+                if (cut.num_edges * cut_balance < best.num_edges * best_balance ||
+                    (cut.num_edges == best.num_edges &&
+                     balance_delta(cut.num_nodes_source) < balance_delta(best.num_nodes_source)))
                 {
                     best_balance = cut_balance;
                     std::swap(best, cut);
