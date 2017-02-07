@@ -81,26 +81,21 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
 
 } // namespace static_graph_details
 
-template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class FlexibleStaticGraph
+template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
-    static_assert(traits::HasFirstEdgeMember<NodeT>::value,
-                  "Model for compatible Node type requires .first_edge member attribute");
-    static_assert(traits::HasTargetMember<EdgeT>::value,
-                  "Model for compatible Node type requires .target member attribute");
-
   public:
     using NodeIterator = static_graph_details::NodeIterator;
     using EdgeIterator = static_graph_details::EdgeIterator;
     using EdgeRange = range<EdgeIterator>;
-    using NodeArrayEntry = NodeT;
-    using EdgeArrayEntry = EdgeT;
+    using NodeArrayEntry = static_graph_details::NodeArrayEntry;
+    using EdgeArrayEntry = static_graph_details::EdgeArrayEntry<EdgeDataT>;
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const
     {
         return irange(BeginEdges(node), EndEdges(node));
     }
 
-    template <typename ContainerT> FlexibleStaticGraph(const int nodes, const ContainerT &graph)
+    template <typename ContainerT> StaticGraph(const int nodes, const ContainerT &graph)
     {
         BOOST_ASSERT(std::is_sorted(const_cast<ContainerT &>(graph).begin(),
                                     const_cast<ContainerT &>(graph).end()));
@@ -128,14 +123,15 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
             for (const auto i : irange(node_array[node].first_edge, e))
             {
                 edge_array[i].target = graph[edge].target;
-                CopyDataIfAvailable(edge_array[i], graph[edge], traits::HasDataMember<EdgeT>{});
+                CopyDataIfAvailable(
+                    edge_array[i], graph[edge], traits::HasDataMember<EdgeArrayEntry>{});
                 edge++;
             }
         }
     }
 
-    FlexibleStaticGraph(typename ShM<NodeT, UseSharedMemory>::vector &nodes,
-                        typename ShM<EdgeT, UseSharedMemory>::vector &edges)
+    StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector &nodes,
+                typename ShM<EdgeArrayEntry, UseSharedMemory>::vector &edges)
     {
         number_of_nodes = static_cast<decltype(number_of_nodes)>(nodes.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(edges.size());
@@ -198,7 +194,7 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
     EdgeIterator
     FindSmallestEdge(const NodeIterator from, const NodeIterator to, FilterFunction &&filter) const
     {
-        static_assert(traits::HasDataMember<EdgeT>::value,
+        static_assert(traits::HasDataMember<EdgeArrayEntry>::value,
                       "Filtering on .data not possible without .data member attribute");
 
         EdgeIterator smallest_edge = SPECIAL_EDGEID;
@@ -243,13 +239,13 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
 
   private:
     template <typename OtherEdge>
-    void CopyDataIfAvailable(EdgeT &into, const OtherEdge &from, std::true_type)
+    void CopyDataIfAvailable(EdgeArrayEntry &into, const OtherEdge &from, std::true_type)
     {
         into.data = from.data;
     }
 
     template <typename OtherEdge>
-    void CopyDataIfAvailable(EdgeT &into, const OtherEdge &from, std::false_type)
+    void CopyDataIfAvailable(EdgeArrayEntry &into, const OtherEdge &from, std::false_type)
     {
         // Graph has no .data member, never copy even if `from` has a .data member.
         (void)into;
@@ -259,15 +255,11 @@ template <typename NodeT, typename EdgeT, bool UseSharedMemory = false> class Fl
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
-    typename ShM<NodeT, UseSharedMemory>::vector node_array;
-    typename ShM<EdgeT, UseSharedMemory>::vector edge_array;
+    typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array;
+    typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array;
 };
 
-template <typename EdgeDataT, bool UseSharedMemory = false>
-using StaticGraph = FlexibleStaticGraph<static_graph_details::NodeArrayEntry,
-                                        static_graph_details::EdgeArrayEntry<EdgeDataT>,
-                                        UseSharedMemory>;
-}
-}
+} // namespace util
+} // namespace osrm
 
 #endif // STATIC_GRAPH_HPP

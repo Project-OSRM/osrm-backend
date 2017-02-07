@@ -20,7 +20,6 @@ class RecursiveBisectionState
 {
   public:
     // The ID in the partition array
-    using BisectionID = std::uint32_t;
     using NodeIterator = BisectionGraph::ConstNodeIterator;
 
     RecursiveBisectionState(BisectionGraph &bisection_graph);
@@ -42,7 +41,11 @@ class RecursiveBisectionState
 
     const std::vector<BisectionID> &BisectionIDs() const;
 
+    // return the depth encoded in the SCCs
+    std::uint32_t SCCDepth() const;
+
   private:
+    std::uint32_t scc_levels;
     BisectionGraph &bisection_graph;
     std::vector<BisectionID> bisection_ids;
 };

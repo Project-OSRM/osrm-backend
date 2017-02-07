@@ -3,11 +3,9 @@
 #include "partition/tarjan_graph_wrapper.hpp"
 
 #include <algorithm>
+#include <climits> // for CHAR_BIT
 #include <numeric>
-
-// TODO remove
-#include <bitset>
-#include <iostream>
+#include <set>
 #include <unordered_map>
 
 namespace osrm
@@ -16,15 +14,14 @@ namespace partition
 {
 
 RecursiveBisectionState::RecursiveBisectionState(BisectionGraph &bisection_graph_)
-    : bisection_graph(bisection_graph_)
+    : scc_levels(0), bisection_graph(bisection_graph_)
 {
     bisection_ids.resize(bisection_graph.NumberOfNodes(), BisectionID{0});
 }
 
 RecursiveBisectionState::~RecursiveBisectionState() {}
 
-RecursiveBisectionState::BisectionID
-RecursiveBisectionState::GetBisectionID(const NodeID node) const
+BisectionID RecursiveBisectionState::GetBisectionID(const NodeID node) const
 {
     return bisection_ids[node];
 }
@@ -35,12 +32,13 @@ RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
                                         const std::size_t depth,
                                         const std::vector<bool> &partition)
 {
+    BOOST_ASSERT(depth >= scc_levels);
     // ensure that the iterators belong to the graph
     BOOST_ASSERT(bisection_graph.GetID(*const_begin) < bisection_graph.NumberOfNodes() &&
                  bisection_graph.GetID(*const_begin) + std::distance(const_begin, const_end) <=
                      bisection_graph.NumberOfNodes());
     // augment the partition ids
-    const auto flag = BisectionID{1} << depth;
+    const auto flag = BisectionID{1} << (sizeof(BisectionID) * CHAR_BIT - depth - 1);
     for (auto itr = const_begin; itr != const_end; ++itr)
     {
         const auto nid = std::distance(const_begin, itr);
@@ -129,9 +127,11 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
     std::vector<GraphView> views;
     auto last = bisection_graph.CBegin();
     auto last_id = transform_id(bisection_graph.Begin()->original_id);
+    std::set<std::size_t> ordered_component_ids;
     for (auto itr = bisection_graph.CBegin(); itr != bisection_graph.CEnd(); ++itr)
     {
         auto itr_id = transform_id(itr->original_id);
+        ordered_component_ids.insert(itr_id);
         if (last_id != itr_id)
         {
             views.push_back(GraphView(bisection_graph, last, itr));
@@ -151,14 +151,34 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
     if (!has_small_component)
         views.push_back(GraphView(bisection_graph, bisection_graph.CEnd(), bisection_graph.CEnd()));
 
+    // apply scc as bisections, we need scc_level bits for this with scc_levels =
+    // ceil(log_2(components))
+    scc_levels = ceil(log(views.size()) / log(2.0));
+
+    const auto conscutive_component_id = [&](const NodeID nid) {
+        const auto component_id = transform_id(nid);
+        const auto itr = ordered_component_ids.find(component_id);
+        BOOST_ASSERT(itr != ordered_component_ids.end());
+        BOOST_ASSERT(static_cast<std::size_t>(std::distance(ordered_component_ids.begin(), itr)) <
+                     ordered_component_ids.size());
+        return std::distance(ordered_component_ids.begin(), itr);
+    };
+
+    const auto shift = sizeof(BisectionID) * CHAR_BIT - scc_levels;
+
+    // store the component ids as first part of the bisection id
+    for (const auto &node : bisection_graph.Nodes())
+        bisection_ids[node.original_id] = conscutive_component_id(node.original_id) << shift;
+
     return views;
 }
 
-const std::vector<RecursiveBisectionState::BisectionID> &
-RecursiveBisectionState::BisectionIDs() const
+const std::vector<BisectionID> &RecursiveBisectionState::BisectionIDs() const
 {
     return bisection_ids;
 }
+
+std::uint32_t RecursiveBisectionState::SCCDepth() const { return scc_levels; }
 
 } // namespace partition
 } // namespace osrm

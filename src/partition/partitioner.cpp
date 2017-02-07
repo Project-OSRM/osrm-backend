@@ -1,7 +1,7 @@
 #include "partition/partitioner.hpp"
+#include "partition/annotated_partition.hpp"
 #include "partition/bisection_graph.hpp"
 #include "partition/recursive_bisection.hpp"
-#include "partition/recursive_bisection_stats.hpp"
 
 #include "storage/io.hpp"
 #include "util/coordinate.hpp"
@@ -19,6 +19,7 @@
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
 #include "util/json_container.hpp"
+#include "util/timing_util.hpp"
 
 namespace osrm
 {
@@ -65,6 +66,27 @@ CompressedNodeBasedGraph LoadCompressedNodeBasedGraph(const std::string &path)
     return graph;
 }
 
+void LogStatistics(const std::string &filename, std::vector<std::uint32_t> bisection_ids)
+{
+    auto compressed_node_based_graph = LoadCompressedNodeBasedGraph(filename);
+
+    util::Log() << "Loaded compressed node based graph: "
+                << compressed_node_based_graph.edges.size() << " edges, "
+                << compressed_node_based_graph.coordinates.size() << " nodes";
+
+    groupEdgesBySource(begin(compressed_node_based_graph.edges),
+                       end(compressed_node_based_graph.edges));
+
+    auto graph =
+        makeBisectionGraph(compressed_node_based_graph.coordinates,
+                           adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
+
+    TIMER_START(annotation);
+    AnnotatedPartition partition(graph, bisection_ids);
+    TIMER_STOP(annotation);
+    std::cout << "Annotation took " << TIMER_SEC(annotation) << " seconds" << std::endl;
+}
+
 void LogGeojson(const std::string &filename, std::vector<std::uint32_t> bisection_ids)
 {
     // reload graph, since we destroyed the old one
@@ -87,18 +109,6 @@ void LogGeojson(const std::string &filename, std::vector<std::uint32_t> bisectio
         return level;
     };
 
-    const auto reverse_bits = [](std::uint32_t x) {
-        x = ((x >> 1) & 0x55555555u) | ((x & 0x55555555u) << 1);
-        x = ((x >> 2) & 0x33333333u) | ((x & 0x33333333u) << 2);
-        x = ((x >> 4) & 0x0f0f0f0fu) | ((x & 0x0f0f0f0fu) << 4);
-        x = ((x >> 8) & 0x00ff00ffu) | ((x & 0x00ff00ffu) << 8);
-        x = ((x >> 16) & 0xffffu) | ((x & 0xffffu) << 16);
-        return x;
-    };
-
-    std::transform(bisection_ids.begin(), bisection_ids.end(), bisection_ids.begin(), reverse_bits);
-
-    printBisectionStats(bisection_ids, graph);
     std::vector<std::vector<util::Coordinate>> border_vertices(33);
 
     for (NodeID nid = 0; nid < graph.NumberOfNodes(); ++nid)
@@ -151,6 +161,10 @@ int Partitioner::Run(const PartitionConfig &config)
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
+    util::Log() << " running partition: " << config.maximum_cell_size << " " << config.balance
+                << " " << config.boundary_factor << " " << config.num_optimizing_cuts << " "
+                << config.small_component_size
+                << " # max_cell_size balance boundary cuts small_component_size";
     RecursiveBisection recursive_bisection(graph,
                                            config.maximum_cell_size,
                                            config.balance,
@@ -158,8 +172,8 @@ int Partitioner::Run(const PartitionConfig &config)
                                            config.num_optimizing_cuts,
                                            config.small_component_size);
 
-    LogGeojson(config.compressed_node_based_graph_path.string(),
-               recursive_bisection.BisectionIDs());
+    LogStatistics(config.compressed_node_based_graph_path.string(),
+                  recursive_bisection.BisectionIDs());
 
     return 0;
 }

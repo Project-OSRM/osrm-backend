@@ -60,8 +60,8 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
     std::vector<TreeNode> forest;
     forest.reserve(last - first);
 
-    std::transform(first, last, std::back_inserter(forest), [](auto graph) {
-        return TreeNode{std::move(graph), 0};
+    std::transform(first, last, std::back_inserter(forest), [this](auto graph) {
+        return TreeNode{std::move(graph), internal_state.SCCDepth()};
     });
 
     using Feeder = tbb::parallel_do_feeder<TreeNode>;
@@ -76,7 +76,7 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
             node.graph.Begin(), node.graph.End(), node.depth, partition.flags);
 
         const auto terminal = [&](const auto &node) {
-            const auto maximum_depth = sizeof(RecursiveBisectionState::BisectionID) * CHAR_BIT;
+            const auto maximum_depth = sizeof(BisectionID) * CHAR_BIT;
             const auto too_small = node.graph.NumberOfNodes() < maximum_cell_size;
             const auto too_deep = node.depth >= maximum_depth;
             return too_small || too_deep;
@@ -100,7 +100,7 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
     util::Log() << "Full bisection done in " << TIMER_SEC(bisection) << "s";
 }
 
-const std::vector<RecursiveBisectionState::BisectionID> &RecursiveBisection::BisectionIDs() const
+const std::vector<BisectionID> &RecursiveBisection::BisectionIDs() const
 {
     return internal_state.BisectionIDs();
 }

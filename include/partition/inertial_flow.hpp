@@ -35,7 +35,7 @@ class InertialFlow
     SpatialOrder MakeSpatialOrder(double ratio, double slope) const;
 
     // Makes n cuts with different spatial orders and returns the best.
-    DinicMaxFlow::MinCut BestMinCut(std::size_t n, double ratio) const;
+    DinicMaxFlow::MinCut BestMinCut(std::size_t n, double ratio, double balance) const;
 
     // The subgraph to partition into two parts.
     const GraphView &view;
