@@ -325,9 +325,9 @@ In addition to the [general options](#general-options) the following options are
 
 |Option      |Values                                          |Description                                                                |
 |------------|------------------------------------------------|---------------------------------------------------------------------------|
-|roundtrip       |`true` (default), `false` | Return route is a round-trip                                    |
-|source       |`any` (default), `first` | Return route starts at `any|first` coordinate
-|destination       |`any` (default), `last`                       |Return route ends at `any|last` coordinate |
+|roundtrip   |`true` (default), `false`                       |Return route is a roundtrip                                                |
+|source      |`any` (default), `first`                        |Return route starts at `any` or `first` coordinate                         |
+|destination |`any` (default), `last`                         |Return route ends at `any` or `last` coordinate                            |
 |steps       |`true`, `false` (default)                       |Return route instructions for each trip                                    |
 |annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.  |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
@@ -340,7 +340,7 @@ It is possible to explicitely set the start or end point of the trip. Depending 
 However, if `source=any&destination=any` the returned round-trip will still start at the first coordinate by default.
 
 Currently, not all combinations of roundtrip, source and destination are supported.
-By now, the following combinations are possible:
+Right now, the following combinations are possible:
 
 | roundtrip | source | destination | supported |
 | :-- | :-- | :-- | :-- |
@@ -377,7 +377,7 @@ In case of error the following `code`s are supported in addition to the general 
 
 | Type              | Description         |
 |-------------------|---------------------|
-| `NoTrips`         | No trips found because input coordinates are not connected.     |
+| `NoTrips`         | No trips found because input coordinates are not connected.|
 | `NotImplemented`  | This request is not supported |
 
 All other properties might be undefined.
