@@ -237,7 +237,7 @@ void GraphContractor::Run(double core_factor)
 
     unsigned current_level = 0;
     bool flushed_contractor = false;
-    while (number_of_nodes > 2 &&
+    while (remaining_nodes.size() > 1 &&
            number_of_contracted_nodes < static_cast<NodeID>(number_of_nodes * core_factor))
     {
         if (!flushed_contractor && (number_of_contracted_nodes >
@@ -341,16 +341,19 @@ void GraphContractor::Run(double core_factor)
             for (const ContractorEdge &edge : data->inserted_edges)
             {
                 const EdgeID current_edge_ID = contractor_graph->FindEdge(edge.source, edge.target);
-                if (current_edge_ID < contractor_graph->EndEdges(edge.source))
+                if (current_edge_ID != SPECIAL_EDGEID)
                 {
                     ContractorGraph::EdgeData &current_data =
                         contractor_graph->GetEdgeData(current_edge_ID);
                     if (current_data.shortcut && edge.data.forward == current_data.forward &&
-                        edge.data.backward == current_data.backward &&
-                        edge.data.weight < current_data.weight)
+                        edge.data.backward == current_data.backward)
                     {
                         // found a duplicate edge with smaller weight, update it.
-                        current_data = edge.data;
+                        if (edge.data.weight < current_data.weight)
+                        {
+                            current_data = edge.data;
+                        }
+                        // don't insert duplicates
                         continue;
                     }
                 }
@@ -387,7 +390,7 @@ void GraphContractor::Run(double core_factor)
 
     if (remaining_nodes.size() > 2)
     {
-        if (orig_node_id_from_new_node_id_map.size() > 0)
+        if (flushed_contractor)
         {
             tbb::parallel_for(tbb::blocked_range<NodeID>(0, remaining_nodes.size(), InitGrainSize),
                               [this, &remaining_nodes](const tbb::blocked_range<NodeID> &range) {

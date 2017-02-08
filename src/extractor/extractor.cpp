@@ -174,10 +174,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         // setup restriction parser
         const RestrictionParser restriction_parser(scripting_environment);
 
-        while (const osmium::memory::Buffer buffer = reader.read())
+        // create a vector of iterators into the buffer
+        for (std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
+             const osmium::memory::Buffer buffer = reader.read();
+             osm_elements.clear())
         {
-            // create a vector of iterators into the buffer
-            std::vector<osmium::memory::Buffer::const_iterator> osm_elements;
             for (auto iter = std::begin(buffer), end = std::end(buffer); iter != end; ++iter)
             {
                 osm_elements.push_back(iter);

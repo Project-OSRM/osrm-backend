@@ -859,18 +859,15 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         const unsigned end = m_geometry_indices.at(id + 1);
 
         std::vector<DatasourceID> result_datasources;
-        result_datasources.resize(end - begin);
 
         // If there was no datasource info, return an array of 0's.
         if (m_datasource_list.empty())
         {
-            for (unsigned i = 0; i < end - begin; ++i)
-            {
-                result_datasources.push_back(0);
-            }
+            result_datasources.resize(end - begin, 0);
         }
         else
         {
+            result_datasources.resize(end - begin);
             std::copy(m_datasource_list.begin() + begin,
                       m_datasource_list.begin() + end,
                       result_datasources.begin());
@@ -902,13 +899,11 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         // If there was no datasource info, return an array of 0's.
         if (m_datasource_list.empty())
         {
-            for (unsigned i = 0; i < end - begin; ++i)
-            {
-                result_datasources.push_back(0);
-            }
+            result_datasources.resize(end - begin, 0);
         }
         else
         {
+            result_datasources.resize(end - begin);
             std::copy(m_datasource_list.rbegin() + (m_datasource_list.size() - end),
                       m_datasource_list.rbegin() + (m_datasource_list.size() - begin),
                       result_datasources.begin());

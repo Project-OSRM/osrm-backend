@@ -91,7 +91,7 @@ class FileReader
         const auto &result = input_stream.read(reinterpret_cast<char *>(dest), count * sizeof(T));
         const std::size_t bytes_read = input_stream.gcount();
 
-        if (bytes_read != count && !result)
+        if (bytes_read != count * sizeof(T) && !result)
         {
             if (result.eof())
             {
