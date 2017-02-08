@@ -167,7 +167,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     bool fixed_start_and_end = fixed_start && fixed_end;
     if (!IsSupportedParameterCombination(fixed_start, fixed_end, parameters.roundtrip))
     {
-        return Error("NotImplemented", "This request is not implemented", json_result);
+        return Error("NotImplemented", "This request is not supported", json_result);
     }
 
     // enforce maximum number of locations for performance reasons
