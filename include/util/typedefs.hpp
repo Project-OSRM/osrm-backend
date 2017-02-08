@@ -60,6 +60,8 @@ using NameID = std::uint32_t;
 using EdgeWeight = std::int32_t;
 using TurnPenalty = std::int16_t; // turn penalty in 100ms units
 
+static const std::size_t INVALID_SIZE_T = std::numeric_limits<std::size_t>::max();
+
 using LaneID = std::uint8_t;
 static const LaneID INVALID_LANEID = std::numeric_limits<LaneID>::max();
 using LaneDataID = std::uint16_t;

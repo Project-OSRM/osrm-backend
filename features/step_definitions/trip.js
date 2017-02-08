@@ -151,12 +151,15 @@ module.exports = function () {
                         });
                         got = { waypoints: row.waypoints };
 
-                        if (row.source && row.destination) {
+                        if (row.source) {
                             params.source = got.source = row.source;
+                        } 
+                        
+                        if (row.destination) {
                             params.destination = got.destination = row.destination;
                         } 
 
-                        if (row.hasOwnProperty('roundtrip')) {
+                        if (row.hasOwnProperty('roundtrip')) { //roundtrip is a boolean so row.roundtrip alone doesn't work as a check here
                             params.roundtrip = got.roundtrip = row.roundtrip;
                         }
 

@@ -312,49 +312,62 @@ All other properties might be undefined.
 ### Trip service
 
 The trip plugin solves the Traveling Salesman Problem using a greedy heuristic (farthest-insertion algorithm) for 10 or more waypoints and uses brute force for less than 10 waypoints.
-The returned path does not have to be the fastest path, as TSP is NP-hard it is only an approximation.
-Note that all input coordinates have to be connected. 
+The returned path does not have to be the fastest path. As TSP is NP-hard it only returns an approximation.
+Note that all input coordinates have to be connected for the trip service to work. 
 
 ```endpoint
-GET /trip/v1/{profile}/{coordinates}?steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}'
+GET /trip/v1/{profile}/{coordinates}?roundtrip={true|false}&source{any|first}&destination{any|last}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}'
 ```
+
+####
 
 In addition to the [general options](#general-options) the following options are supported for this service:
 
 |Option      |Values                                          |Description                                                                |
 |------------|------------------------------------------------|---------------------------------------------------------------------------|
+|roundtrip       |`true` (default), `false` | Return route is a round-trip                                    |
+|source       |`any` (default), `first` | Return route starts at `any|first` coordinate
+|destination       |`any` (default), `last`                       |Return route ends at `any|last` coordinate |
 |steps       |`true`, `false` (default)                       |Return route instructions for each trip                                    |
 |annotations |`true`, `false` (default)                       |Returns additional metadata for each coordinate along the route geometry.  |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|
 
-A second feature of the trip plugin returns the route from a source to a destination while visiting all the other waypoints in the middle. 
-As with the roundtrip service, for fewer than 10 waypoints, the brute force algorithm is used, while for 10 or more waypoints the farthest insertion heuristic is used.
+**Fixing Start and End Points**
 
-|Option      |Values                                          |Description                                                                                                                              |
-|------------|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-|source      |`{index of coordinate in coordinates provided}` |Will error if destination is not provided as well. Returns trip from source to destination routing through all other locations provided.|
-|destination |`{index of coordinate in coordinates provided}` |Will error if source is not provided as well. Returns trip from source to destination routing through all other locations provided.      |
+It is possible to explicitely set the start or end point of the trip. Depending on whether `source` or `destination` is set to `any|first` or `any|last` the resulting output will start/end at the first/last coordinate.
 
+However, if `source=any&destination=any` the returned round-trip will still start at the first coordinate by default.
 
-```endpoint
-GET /trip/v1/{profile}/{coordinates}?source={elem}&destination={elem}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}'
+Currently, not all combinations of roundtrip, source and destination are supported.
+By now, the following combinations are possible:
+
+| roundtrip | source | destination | supported |
+| :-- | :-- | :-- | :-- |
+| true | first | last | **yes** | 
+| true | first | any | **yes** |
+| true | any | last | **yes** |
+| true | any | any | **yes** |
+| false | first | last | **yes** |
+| false | first | any | no |
+| false | any | last | no |
+| false | any | any | no |
+
+#### Example Requests
+
+```curl
+# Round trip in Berlin with three stops:
+curl 'http://router.project-osrm.org/trip/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219'
 ```
 
-**Example:**
-
+```curl
+# Round trip in Berlin with four stops, starting at the first stop, ending at the last:
+curl 'http://router.project-osrm.org/trip/v1/driving/13.388860,52.517037;13.397634,52.529407;13.428555,52.523219;13.418555,52.523215?source=first&destination=last'
 ```
-source=0&destination=5
-```
 
-|Element     |Values                        |
-|------------|------------------------------|
-|index       |`0 <= integer < #coordinates` |
+#### Response
 
-
-**Response**
-
-- `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
+- `code`: if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `waypoints`: Array of `Waypoint` objects representing all waypoints in input order. Each `Waypoint` object has the following additional properties:
   - `trips_index`: Index to `trips` of the sub-trip the point was matched to.
   - `waypoint_index`: Index of the point in the trip.
@@ -365,6 +378,7 @@ In case of error the following `code`s are supported in addition to the general 
 | Type              | Description         |
 |-------------------|---------------------|
 | `NoTrips`         | No trips found because input coordinates are not connected.     |
+| `NotImplemented`  | This request is not supported |
 
 All other properties might be undefined.
 

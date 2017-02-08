@@ -5,7 +5,7 @@ Feature: Basic trip planning
         Given the profile "testbot"
         Given a grid size of 10 meters
 
-    Scenario: Testbot - Roundtrip with waypoints <10
+    Scenario: Testbot - Trip: Roundtrip with waypoints <10
         Given the node map
             """
             a b
@@ -24,7 +24,7 @@ Feature: Basic trip planning
             | a,b,c,d   | abcda  | 7.6       |
             | d,b,c,a   | dbcad  | 7.6       |
 
-    Scenario: Testbot - Roundtrip waypoints >10
+    Scenario: Testbot - Trip: Roundtrip waypoints >10
         Given the node map
             """
             a b c d
@@ -51,7 +51,63 @@ Feature: Basic trip planning
             | waypoints               | trips         |
             | a,b,c,d,e,f,g,h,i,j,k,l | alkjihgfedcba |
 
-    Scenario: Testbot - Unroutable roundtrip with waypoints <10
+    Scenario: Testbot - Trip: Roundtrip FS waypoints >10
+        Given the node map
+            """
+            a b c d
+            l     e
+            k     f
+            j i h g
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | de    |
+            | ef    |
+            | fg    |
+            | gh    |
+            | hi    |
+            | ij    |
+            | jk    |
+            | kl    |
+            | la    |
+
+        When I plan a trip I should get
+            | waypoints               | trips         | source |
+            | a,b,c,d,e,f,g,h,i,j,k,l | alkjihgfedcba | first  |
+
+    Scenario: Testbot - Trip: Roundtrip FE waypoints >10
+        Given the query options
+            | source | last  |
+        Given the node map
+            """
+            a b c d
+            l     e
+            k     f
+            j i h g
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | de    |
+            | ef    |
+            | fg    |
+            | gh    |
+            | hi    |
+            | ij    |
+            | jk    |
+            | kl    |
+            | la    |
+
+        When I plan a trip I should get
+            | waypoints               | trips         |
+            | a,b,c,d,e,f,g,h,i,j,k,l | lkjihgfedcbal |
+
+    Scenario: Testbot - Trip: Unroutable roundtrip with waypoints <10
         Given the node map
             """
             a b
@@ -69,7 +125,7 @@ Feature: Basic trip planning
             |  a,b,c,d      | NoTrips        | No trip visiting all destinations possible.  |
 
 
-    Scenario: Testbot - Unroutable roundtrip with waypoints >10
+    Scenario: Testbot - Trip: Unroutable roundtrip with waypoints >10
         Given the node map
             """
             a b c d
@@ -106,7 +162,7 @@ Feature: Basic trip planning
             | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p | NoTrips        | No trip visiting all destinations possible.  |
 
 # Test TFSE
-    Scenario: Testbot - TFSE with errors
+    Scenario: Testbot - Trip: TFSE with errors
         Given the node map
             """
             a b
@@ -122,9 +178,8 @@ Feature: Basic trip planning
          When I plan a trip I should get
             |  waypoints    | source  | destination | roundtrip | status           | message                                       |
             |  a,b,c,d      | first   | last        | false     | NoTrips          | No trip visiting all destinations possible.   |
-            |  a,b,c,d      | first   | last        | true      | NotImplemented   | This request is not implemented               |
 
-    Scenario: Testbot - TFSE with waypoints <10
+    Scenario: Testbot - Trip: FSE with waypoints <10
         Given the node map
             """
             a  b
@@ -151,7 +206,7 @@ Feature: Basic trip planning
             |  a,b,d,e,c  | first  | last        | false    | abedc  | 8.200000000000001 | 81.6                   |
 
 
-    Scenario: Testbot - TFSE with waypoints >10
+    Scenario: Testbot - Trip: FSE with waypoints >10
         Given the node map
             """
             a b c d e f g h i j k
@@ -174,9 +229,34 @@ Feature: Basic trip planning
             |  waypoints              | source | destination | roundtrip |  trips       | durations  | distance  |
             |  a,b,c,d,e,h,i,j,k,g,f  | first  | last        | false     | abcdeghijkf  | 15         | 149.8     |
 
+    Scenario: Testbot - Trip: FSE roundtrip with waypoints <10
+        Given the node map
+            """
+            a  b
 
-    # Test single node in each component #1850
-    Scenario: Testbot - Trip planning with less than 10 nodes
+                  c
+            e  d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | ac    |
+            | ad    |
+            | ae    |
+            | bc    |
+            | bd    |
+            | be    |
+            | cd    |
+            | ce    |
+            | de    |
+
+        When I plan a trip I should get
+            |  waypoints  | source | destination | roundtrip | trips   |
+            |  a,b,d,e,c  | first  | last        | true      | abedca  |
+
+
+    Scenario: Testbot - Trip: midway points in isoldated roads should return no trips 
         Given the node map
             """
             a 1 b
@@ -193,7 +273,7 @@ Feature: Basic trip planning
             | waypoints | trips |
             | 1,2       |       |
 
-    Scenario: Testbot - Repeated Coordinate
+    Scenario: Testbot - Trip: Repeated Coordinate
         Given the node map
             """
             a   b
@@ -208,7 +288,7 @@ Feature: Basic trip planning
             | a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a |       |
 
 
-    Scenario: Testbot - Trip with geometry details of geojson
+    Scenario: Testbot - Trip: geometry details of geojson
         Given the query options
             | geometries | geojson  |
 
@@ -230,7 +310,7 @@ Feature: Basic trip planning
             | a,b,c,d   | abcda  | 7.6       | 1,1,1.00009,1,1,0.99991,1.00009,1,1,1,1.00009,0.99991,1,1              |
             | d,b,c,a   | dbcad  | 7.6       | 1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1,1,1.00009,0.99991  |
 
-    Scenario: Testbot - Trip with geometry details of polyline
+    Scenario: Testbot - Trip: geometry details of polyline
         Given the query options
             | geometries | polyline  |
 
@@ -252,7 +332,7 @@ Feature: Basic trip planning
             | a,b,c,d   | abcda  | 7.6       | 1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1             |
             | d,b,c,a   | dbcad  | 7.6       | 0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009 |
 
-    Scenario: Testbot - Trip with geometry details of polyline6
+    Scenario: Testbot - Trip: geometry details of polyline6
         Given the query options
             | geometries | polyline6  |
 

@@ -41,7 +41,7 @@ bool IsSupportedParameterCombination(const bool fixed_start,
     {
         return true;
     }
-    else if (!fixed_start && !fixed_end && roundtrip)
+    else if (roundtrip)
     {
         return true;
     }
@@ -51,6 +51,8 @@ bool IsSupportedParameterCombination(const bool fixed_start,
     }
 }
 
+// given the node order in which to visit, compute the actual route (with geometry, travel time and
+// so on) and return the result
 InternalRouteResult
 TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                          const std::vector<PhantomNode> &snapped_phantoms,
@@ -60,27 +62,22 @@ TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade>
     InternalRouteResult min_route;
     // given the final trip, compute total duration and return the route and location permutation
     PhantomNodes viapoint;
-    const auto start = std::begin(trip);
-    const auto end = std::end(trip);
+
     // computes a roundtrip from the nodes in trip
-    for (auto it = start; it != end; ++it)
+    for (auto node = trip.begin(); node < trip.end() - 1; ++node)
     {
-        const auto from_node = *it;
-
-        // if from_node is the last node and it is a fixed start and end trip,
-        // break out of this loop and return the route
-        if (!roundtrip && std::next(it) == end)
-            break;
-
-        // if from_node is the last node, compute the route from the last to the first location
-        const auto to_node = std::next(it) != end ? *std::next(it) : *start;
+        const auto from_node = *node;
+        const auto to_node = *std::next(node);
 
         viapoint = PhantomNodes{snapped_phantoms[from_node], snapped_phantoms[to_node]};
         min_route.segment_end_coordinates.emplace_back(viapoint);
     }
 
+    // return back to the first node if it is a round trip
     if (roundtrip)
     {
+        viapoint = PhantomNodes{snapped_phantoms[trip.back()], snapped_phantoms[trip.front()]};
+        min_route.segment_end_coordinates.emplace_back(viapoint);
         // trip comes out to be something like 0 1 4 3 2 0
         BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size());
     }
@@ -91,7 +88,6 @@ TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade>
     }
 
     shortest_path(facade, min_route.segment_end_coordinates, {false}, min_route);
-
     BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
 }
@@ -171,7 +167,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     bool fixed_start_and_end = fixed_start && fixed_end;
     if (!IsSupportedParameterCombination(fixed_start, fixed_end, parameters.roundtrip))
     {
-        return Error("NotImplemented", "This request is not implemented", json_result);
+        return Error("NotImplemented", "This request is not supported", json_result);
     }
 
     // enforce maximum number of locations for performance reasons
@@ -241,9 +237,15 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     }
 
     // rotate result such that roundtrip starts at node with index 0
-    if (parameters.roundtrip && !fixed_end)
+    if (!(fixed_end && !fixed_start_and_end))
     {
         auto desired_start_index = std::find(std::begin(trip), std::end(trip), 0);
+        BOOST_ASSERT(desired_start_index != std::end(trip));
+        std::rotate(std::begin(trip), desired_start_index, std::end(trip));
+    }
+    else if (fixed_end && !fixed_start_and_end && parameters.roundtrip)
+    {
+        auto desired_start_index = std::find(std::begin(trip), std::end(trip), destination_id);
         BOOST_ASSERT(desired_start_index != std::end(trip));
         std::rotate(std::begin(trip), desired_start_index, std::end(trip));
     }
