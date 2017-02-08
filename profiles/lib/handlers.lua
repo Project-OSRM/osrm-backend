@@ -320,10 +320,10 @@ function Handlers.handle_penalties(way,result,data,profile)
 
   if properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
-      result.forward_rate = result.forward_speed * penalty
+      result.forward_rate = (result.forward_speed * penalty) / 3.6
     end
     if result.backward_speed > 0 then
-      result.backward_rate = result.backward_speed * penalty
+      result.backward_rate = (result.backward_speed * penalty) / 3.6
     end
     if result.duration > 0 then
       result.weight = result.duration / penalty
