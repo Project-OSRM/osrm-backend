@@ -525,16 +525,15 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
          * forward geometries of bi-directional edges, edges 2 to
          * n of that edge need to be read.
          */
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1);
+        const auto begin = m_geometry_indices.at(id);
+        const auto end = m_geometry_indices.at(id + 1);
 
         std::vector<NodeID> result_nodes;
-
-        result_nodes.resize(end - begin);
+        result_nodes.reserve(end - begin);
 
         std::copy(m_geometry_node_list.begin() + begin,
                   m_geometry_node_list.begin() + end,
-                  result_nodes.begin());
+                  std::back_inserter(result_nodes));
 
         return result_nodes;
     }
@@ -548,16 +547,15 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
          * refences to where to find the beginning of the bi-
          * directional edge in the m_geometry_node_list vector.
          * */
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1);
+        const auto begin = m_geometry_indices.at(id);
+        const auto end = m_geometry_indices.at(id + 1);
 
         std::vector<NodeID> result_nodes;
+        result_nodes.reserve(end - begin);
 
-        result_nodes.resize(end - begin);
-
-        std::copy(m_geometry_node_list.rbegin() + (m_geometry_node_list.size() - end),
-                  m_geometry_node_list.rbegin() + (m_geometry_node_list.size() - begin),
-                  result_nodes.begin());
+        std::reverse_copy(m_geometry_node_list.begin() + begin,
+                          m_geometry_node_list.begin() + end,
+                          std::back_inserter(result_nodes));
 
         return result_nodes;
     }
@@ -572,15 +570,15 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
          * refences to where to find the beginning of the bi-
          * directional edge in the m_geometry_fwd_weight_list vector.
          * */
-        const unsigned begin = m_geometry_indices.at(id) + 1;
-        const unsigned end = m_geometry_indices.at(id + 1);
+        const auto begin = m_geometry_indices.at(id) + 1;
+        const auto end = m_geometry_indices.at(id + 1);
 
         std::vector<EdgeWeight> result_durations;
-        result_durations.resize(end - begin);
+        result_durations.reserve(end - begin);
 
         std::copy(m_geometry_fwd_duration_list.begin() + begin,
                   m_geometry_fwd_duration_list.begin() + end,
-                  result_durations.begin());
+                  std::back_inserter(result_durations));
 
         return result_durations;
     }
@@ -597,16 +595,15 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
          * reverse durations of bi-directional edges, edges 1 to
          * n-1 of that edge need to be read in reverse.
          */
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1) - 1;
+        const auto begin = m_geometry_indices.at(id);
+        const auto end = m_geometry_indices.at(id + 1) - 1;
 
         std::vector<EdgeWeight> result_durations;
-        result_durations.resize(end - begin);
+        result_durations.reserve(end - begin);
 
-        std::copy(
-            m_geometry_rev_duration_list.rbegin() + (m_geometry_rev_duration_list.size() - end),
-            m_geometry_rev_duration_list.rbegin() + (m_geometry_rev_duration_list.size() - begin),
-            result_durations.begin());
+        std::reverse_copy(m_geometry_rev_duration_list.begin() + begin,
+                          m_geometry_rev_duration_list.begin() + end,
+                          std::back_inserter(result_durations));
 
         return result_durations;
     }
@@ -621,15 +618,15 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
          * refences to where to find the beginning of the bi-
          * directional edge in the m_geometry_fwd_weight_list vector.
          * */
-        const unsigned begin = m_geometry_indices.at(id) + 1;
-        const unsigned end = m_geometry_indices.at(id + 1);
+        const auto begin = m_geometry_indices.at(id) + 1;
+        const auto end = m_geometry_indices.at(id + 1);
 
         std::vector<EdgeWeight> result_weights;
-        result_weights.resize(end - begin);
+        result_weights.reserve(end - begin);
 
         std::copy(m_geometry_fwd_weight_list.begin() + begin,
                   m_geometry_fwd_weight_list.begin() + end,
-                  result_weights.begin());
+                  std::back_inserter(result_weights));
 
         return result_weights;
     }
@@ -646,15 +643,15 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
          * reverse weights of bi-directional edges, edges 1 to
          * n-1 of that edge need to be read in reverse.
          */
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1) - 1;
+        const auto begin = m_geometry_indices.at(id);
+        const auto end = m_geometry_indices.at(id + 1) - 1;
 
         std::vector<EdgeWeight> result_weights;
-        result_weights.resize(end - begin);
+        result_weights.reserve(end - begin);
 
-        std::copy(m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - end),
-                  m_geometry_rev_weight_list.rbegin() + (m_geometry_rev_weight_list.size() - begin),
-                  result_weights.begin());
+        std::reverse_copy(m_geometry_rev_weight_list.begin() + begin,
+                          m_geometry_rev_weight_list.begin() + end,
+                          std::back_inserter(result_weights));
 
         return result_weights;
     }
@@ -855,10 +852,11 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
          * forward datasources of bi-directional edges, edges 2 to
          * n of that edge need to be read.
          */
-        const unsigned begin = m_geometry_indices.at(id) + 1;
-        const unsigned end = m_geometry_indices.at(id + 1);
+        const auto begin = m_geometry_indices.at(id) + 1;
+        const auto end = m_geometry_indices.at(id + 1);
 
         std::vector<DatasourceID> result_datasources;
+        result_datasources.reserve(end - begin);
 
         // If there was no datasource info, return an array of 0's.
         if (m_datasource_list.empty())
@@ -870,7 +868,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
             result_datasources.resize(end - begin);
             std::copy(m_datasource_list.begin() + begin,
                       m_datasource_list.begin() + end,
-                      result_datasources.begin());
+                      std::back_inserter(result_datasources));
         }
 
         return result_datasources;
@@ -894,7 +892,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         const unsigned end = m_geometry_indices.at(id + 1) - 1;
 
         std::vector<DatasourceID> result_datasources;
-        result_datasources.resize(end - begin);
+        result_datasources.reserve(end - begin);
 
         // If there was no datasource info, return an array of 0's.
         if (m_datasource_list.empty())
@@ -903,10 +901,9 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         }
         else
         {
-            result_datasources.resize(end - begin);
-            std::copy(m_datasource_list.rbegin() + (m_datasource_list.size() - end),
-                      m_datasource_list.rbegin() + (m_datasource_list.size() - begin),
-                      result_datasources.begin());
+            std::reverse_copy(m_datasource_list.begin() + begin,
+                              m_datasource_list.begin() + end,
+                              std::back_inserter(result_datasources));
         }
 
         return result_datasources;
