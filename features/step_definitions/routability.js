@@ -117,7 +117,7 @@ module.exports = function () {
                     if (r.route.split(',')[0] === util.format('w%d', i)) {
                         r.time = r.json.routes[0].duration;
                         r.distance = r.json.routes[0].distance;
-                        r.rate = Math.round(r.distance / r.json.routes[0].weight)
+                        r.rate = Math.round(r.distance / r.json.routes[0].weight);
                         r.speed = r.time > 0 ? parseInt(3.6 * r.distance / r.time) : null;
                     } else {
                         r.status = null;
