@@ -96,6 +96,58 @@ TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade>
     return min_route;
 }
 
+void ManipulateTableForFSE(const std::size_t source_id,
+                           const std::size_t destination_id,
+                           util::DistTableWrapper<EdgeWeight> &result_table)
+{
+    // ****************** Change Table *************************
+    // The following code manipulates the table and produces the new table for
+    // Trip with Fixed Start and End (TFSE). In the example the source is a
+    // and destination is c. The new table forces the roundtrip to start at
+    // source and end at destination by virtually squashing them together.
+    // This way the brute force and the farthest insertion algorithms don't
+    // have to be modified, and instead we can just pass a modified table to
+    // return a non-roundtrip "optimal" route from a start node to an end node.
+
+    // Original Table           // New Table
+    //   a  b  c  d  e          //   a        b         c        d         e
+    // a 0  15 36 34 30         // a 0        15        10000    34        30
+    // b 15 0  25 30 34         // b 10000    0         25       30        34
+    // c 36 25 0  18 32         // c 0        10000     0        10000     10000
+    // d 34 30 18 0  15         // d 10000    30        18       0         15
+    // e 30 34 32 15 0          // e 10000    34        32       15        0
+
+    // change parameters.source column
+    // set any node to source to impossibly high numbers so it will never
+    // try to use any node->source in the middle of the "optimal path"
+    for (std::size_t i = 0; i < result_table.GetNumberOfNodes(); i++)
+    {
+        if (i == source_id)
+            continue;
+        result_table.InvalidateRoute(i, source_id);
+    }
+
+    // change parameters.destination row
+    // set destination to anywhere else to impossibly high numbers so it will
+    // never try to use destination->any node in the middle of the "optimal path"
+    for (std::size_t i = 0; i < result_table.GetNumberOfNodes(); i++)
+    {
+        if (i == destination_id)
+            continue;
+        result_table.ShortcutRoute(destination_id, i);
+    }
+
+    // set destination->source to zero so rountrip treats source and
+    // destination as one location
+    result_table.ShortcutRoute(destination_id, source_id);
+
+    // set source->destination as very high number so algorithm is forced
+    // to find another path to get to destination
+    result_table.InvalidateRoute(source_id, destination_id);
+
+    //*********  End of changes to table  *************************************
+}
+
 Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                  const api::TripParameters &parameters,
                                  util::json::Object &json_result) const
@@ -103,18 +155,19 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     BOOST_ASSERT(parameters.IsValid());
     const auto number_of_locations = parameters.coordinates.size();
 
-    int source_id = -1;
-    int destination_id = -1;
+    std::size_t source_id = INVALID_SIZE_T;
+    std::size_t destination_id = INVALID_SIZE_T;
     if (parameters.source == api::TripParameters::SourceType::First)
     {
         source_id = 0;
     }
     if (parameters.destination == api::TripParameters::DestinationType::Last)
     {
+        BOOST_ASSERT(number_of_locations > 0);
         destination_id = number_of_locations - 1;
     }
-    bool fixed_start = (source_id == int(0));
-    bool fixed_end = (destination_id == static_cast<int>(number_of_locations - 1));
+    bool fixed_start = (source_id == 0);
+    bool fixed_end = (destination_id == number_of_locations - 1);
     bool fixed_start_and_end = fixed_start && fixed_end;
     if (!IsSupportedParameterCombination(fixed_start, fixed_end, parameters.roundtrip))
     {
@@ -142,8 +195,8 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     }
     BOOST_ASSERT(phantom_node_pairs.size() == number_of_locations);
 
-    if (source_id >= static_cast<int>(parameters.coordinates.size()) ||
-        destination_id >= static_cast<int>(parameters.coordinates.size()))
+    if (fixed_start_and_end && (source_id >= parameters.coordinates.size() ||
+                                destination_id >= parameters.coordinates.size()))
     {
         return Error("InvalidValue", "Invalid source or destination value.", json_result);
     }
@@ -172,52 +225,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
 
     if (fixed_start_and_end)
     {
-        // ****************** Change Table *************************
-        // The following code manipulates the table and produces the new table for
-        // Trip with Fixed Start and End (TFSE). In the example the source is a
-        // and destination is c. The new table forces the roundtrip to start at
-        // source and end at destination by virtually squashing them together.
-        // This way the brute force and the farthest insertion algorithms don't
-        // have to be modified, and instead we can just pass a modified table to
-        // return a non-roundtrip "optimal" route from a start node to an end node.
-
-        // Original Table           // New Table
-        //   a  b  c  d  e          //   a        b         c        d         e
-        // a 0  15 36 34 30         // a 0        15        10000    34        30
-        // b 15 0  25 30 34         // b 10000    0         25       30        34
-        // c 36 25 0  18 32         // c 0        10000     0        10000     10000
-        // d 34 30 18 0  15         // d 10000    30        18       0         15
-        // e 30 34 32 15 0          // e 10000    34        32       15        0
-
-        // change parameters.source column
-        // set any node to source to impossibly high numbers so it will never
-        // try to use any node->source in the middle of the "optimal path"
-        for (int i = 0; i < static_cast<int>(result_table.GetNumberOfNodes()); i++)
-        {
-            if (i == source_id)
-                continue;
-            result_table.InvalidateRoute(i, source_id);
-        }
-
-        // change parameters.destination row
-        // set destination to anywhere else to impossibly high numbers so it will
-        // never try to use destination->any node in the middle of the "optimal path"
-        for (int i = 0; i < static_cast<int>(result_table.GetNumberOfNodes()); i++)
-        {
-            if (i == destination_id)
-                continue;
-            result_table.ShortcutRoute(destination_id, i);
-        }
-
-        // set destination->source to zero so rountrip treats source and
-        // destination as one location
-        result_table.ShortcutRoute(destination_id, source_id);
-
-        // set source->destination as very high number so algorithm is forced
-        // to find another path to get to destination
-        result_table.InvalidateRoute(source_id, destination_id);
-
-        //*********  End of changes to table  *************************************
+        ManipulateTableForFSE(source_id, destination_id, result_table);
     }
 
     std::vector<NodeID> trip;
