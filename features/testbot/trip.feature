@@ -256,8 +256,7 @@ Feature: Basic trip planning
             |  a,b,d,e,c  | first  | last        | true      | abedca  |
 
 
-    # Test single node in each component #1850
-    Scenario: Testbot - Trip: look at 
+    Scenario: Testbot - Trip: midway points in isoldated roads should return no trips 
         Given the node map
             """
             a 1 b
