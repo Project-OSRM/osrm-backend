@@ -13,6 +13,7 @@
 #include "util/json_container.hpp"
 #include "util/log.hpp"
 
+#include <algorithm>
 #include <iterator>
 #include <vector>
 
@@ -137,6 +138,12 @@ int Partitioner::Run(const PartitionConfig &config)
     LogStatistics(config.compressed_node_based_graph_path.string(),
                   recursive_bisection.BisectionIDs());
 
+    // Up until now we worked on the compressed node based graph.
+    // But what we actually need is a partition for the edge based graph to work on.
+    // The following loads a mapping from node based graph to edge based graph.
+    // Then loads the edge based graph tanslates the partition and modifies it.
+    // For details see #3205
+
     auto mapping = LoadNodeBasedGraphToEdgeBasedGraphMapping(config.nbg_ebg_mapping_path.string());
     util::Log() << "Loaded node based graph to edge based graph mapping";
 
@@ -145,6 +152,14 @@ int Partitioner::Run(const PartitionConfig &config)
                 << edge_based_graph->GetNumberOfEdges() << " edges, "
                 << edge_based_graph->GetNumberOfNodes() << " nodes";
 
+    // TODO: put translation into own function / file
+
+    const auto &partition_ids = recursive_bisection.BisectionIDs();
+
+    // Keyed by ebg node - stores flag if ebg node is border node or not.
+    std::vector<bool> is_edge_based_border_node(edge_based_graph->GetNumberOfNodes());
+
+    // Extract edge based border nodes, based on node based partition and mapping.
     for (const auto node_id : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
     {
         const auto node_based_nodes = mapping.Lookup(node_id);
@@ -152,13 +167,47 @@ int Partitioner::Run(const PartitionConfig &config)
         const auto u = node_based_nodes.u;
         const auto v = node_based_nodes.v;
 
-        auto partition_id = [](auto) {
-            return 0; /*dummy*/
-        };
-
-        if (partition_id(u) != partition_id(v))
+        if (partition_ids[u] == partition_ids[v])
         {
-            // TODO: resolve border nodes u, v
+            // Can use partition_ids[u/v] as partition for edge based graph `node_id`
+            is_edge_based_border_node[node_id] = false;
+        }
+        else
+        {
+            // Border nodes u,v - need to be resolved. What we can do:
+            // - 1) Pick one of the partitions randomly or by minimizing border edges.
+            // - 2) Or: modify edge based graph, introducing artificial edges. We do this.
+            is_edge_based_border_node[node_id] = true;
+        }
+    }
+
+    const auto num_border_nodes =
+        std::count(begin(is_edge_based_border_node), end(is_edge_based_border_node), true);
+
+    util::Log() << "Fixing " << num_border_nodes << " edge based graph border nodes";
+
+    // Keyed by ebg node - stores associated border nodes for nodes
+    std::unordered_map<NodeID, NodeID> edge_based_border_node;
+    edge_based_border_node.reserve(num_border_nodes);
+
+    // For all edges in the edge based graph: if they start and end in different partitions
+    // introduce artificial nodes and re-wire incoming / outgoing edges to these artificial ones.
+    for (const auto source : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
+    {
+        for (auto edge : edge_based_graph->GetAdjacentEdgeRange(source))
+        {
+            const auto target = edge_based_graph->GetTarget(edge);
+
+            const auto opposite_edge = edge_based_graph->FindEdge(target, source);
+
+            if (!is_edge_based_border_node[source] || !is_edge_based_border_node[target])
+                continue;
+
+            // TODO: assign and store partition ids to new nodes
+
+            const auto artificial_node = edge_based_graph->InsertNode();
+
+            EdgeBasedGraphEdgeData dummy{SPECIAL_EDGEID, /*is_boundary_arc=*/1, 0, 0, false, false};
         }
     }
 
