@@ -52,23 +52,23 @@ Feature: Traffic - turn penalties
 
     Scenario: Weighting not based on turn penalty file
         When I route I should get
-            | from | to | route           | speed   | time      |
-            | a    | h  | ad,dhk,dhk      | 65 km/h | 11s +-1   |
-                                                                  # straight
-            | i    | g  | fim,fg,fg       | 55 km/h | 13s +-1 |
-                                                                  # right
-            | a    | e  | ad,def,def      | 44 km/h | 16.3s +-1 |
-                                                                  # left
-            | c    | g  | cd,def,fg,fg    | 65 km/h | 22s +-1   |
-                                                                  # double straight
-            | p    | g  | mp,fim,fg,fg    | 60 km/h | 24s +-1   |
-                                                                  # straight-right
-            | a    | l  | ad,dhk,klm,klm  | 53 km/h | 27s +-1   |
-                                                                  # straight-left
-            | l    | e  | klm,dhk,def,def | 55 km/h | 26s +-1   |
-                                                                  # double right
-            | g    | n  | fg,fim,mn,mn    | 44 km/h | 32s +-1   |
-                                                                  # double left
+            | from | to | route           | speed   | weight    | time      |
+            | a    | h  | ad,dhk,dhk      | 65 km/h | 11s +-1   | 11s +-1   |
+                                                                                # straight
+            | i    | g  | fim,fg,fg       | 55 km/h | 13s +-1   | 13s +-1   |
+                                                                                # right
+            | a    | e  | ad,def,def      | 44 km/h | 16.3s +-1 | 16.3s +-1 |
+                                                                                # left
+            | c    | g  | cd,def,fg,fg    | 65 km/h | 22s +-1   | 22s +-1   |
+                                                                                # double straight
+            | p    | g  | mp,fim,fg,fg    | 60 km/h | 24s +-1   | 24s +-1   |
+                                                                                # straight-right
+            | a    | l  | ad,dhk,klm,klm  | 53 km/h | 27s +-1   | 27s +-1   |
+                                                                                # straight-left
+            | l    | e  | klm,dhk,def,def | 55 km/h | 26s +-1   | 26s +-1   |
+                                                                                # double right
+            | g    | n  | fg,fim,mn,mn    | 44 km/h | 32s +-1   | 32s +-1   |
+                                                                                # double left
 
     Scenario: Weighting based on turn penalty file
         Given the turn penalty file
@@ -88,25 +88,25 @@ Feature: Traffic - turn penalties
             # ade left turn
         And the contract extra arguments "--turn-penalty-file {penalties_file}"
         When I route I should get
-            | from | to | route                 | speed   | time      |
-            | a    | h  | ad,dhk,dhk            | 65 km/h | 11s +-1   |
-                                                                              # straight
-            | i    | g  | fim,fg,fg             | 56 km/h | 15s +-1   |
-                                                                              # right - ifg penalty
-            | a    | e  | ad,def,def            | 53 km/h | 14s +-1   |
-                                                                              # left - faster because of negative ade penalty
-            | c    | g  | cd,def,fg,fg          | 52 km/h | 27s +-1   |
-                                                                              # double straight
-            | p    | g  | mp,fim,fg,fg          | 49 km/h | 29s +-1   |
-                                                                              # straight-right - ifg penalty
-            | a    | l  | ad,def,fim,klm,klm    | 48 km/h | 45s +-1   |
-                                                                              # was straight-left - forced around by hkl penalty
-            | l    | e  | klm,fim,def,def       | 38 km/h | 38s +-1   |
-                                                                              # double right - forced left by lkh penalty
-            | g    | n  | fg,fim,mn,mn          | 25 km/h | 57s +-1   |
-                                                                              # double left - imn penalty
-            | j    | c  | jk,klm,fim,def,cd,cd  | 44 km/h | 65.8s +-1 |
-                                                                              # double left - hdc penalty ever so slightly higher than imn; forces all the way around
+            | from | to | route                 | speed   | weight  | time      |
+            | a    | h  | ad,dhk,dhk            | 65 km/h | 11      | 11s +-1   |
+                                                                                # straight
+            | i    | g  | fim,fg,fg             | 56 km/h | 12.8    | 12s +-1   |
+                                                                                # right - ifg penalty
+            | a    | e  | ad,def,def            | 67 km/h | 10.8    | 10s +-1   |
+                                                                                # left - faster because of negative ade penalty
+            | c    | g  | cd,def,fg,fg          | 65 km/h | 22      | 22s +-1   |
+                                                                                # double straight
+            | p    | g  | mp,fim,fg,fg          | 61 km/h | 23.8    | 23s +-1   |
+                                                                                # straight-right - ifg penalty
+            | a    | l  | ad,def,fim,klm,klm    | 58 km/h | 37      | 37s +-1   |
+                                                                                # was straight-left - forced around by hkl penalty
+            | l    | e  | klm,fim,def,def       | 44 km/h | 32.6    | 32s +-1   |
+                                                                                # double right - forced left by lkh penalty
+            | g    | n  | fg,fim,mn,mn          | 28 km/h | 51.8    | 51s +-1   |
+                                                                                 # double left - imn penalty
+            | j    | c  | jk,klm,fim,def,cd,cd  | 53 km/h | 54.6    | 54s +-1   |
+                                                                                  # double left - hdc penalty ever so slightly higher than imn; forces all the way around
 
     Scenario: Too-negative penalty clamps, but does not fail
         Given the contract extra arguments "--turn-penalty-file {penalties_file}"

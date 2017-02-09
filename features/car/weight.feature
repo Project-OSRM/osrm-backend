@@ -21,8 +21,8 @@ Feature: Car - weights
             | bdf   | service     |
         When I route I should get
             | from | to | route          | speed   | weight |
-            | a    | e  | abc,cg,efg,efg | 28 km/h | 38 +-1 |
-            | a    | d  | abc,bdf,bdf    | 18 km/h | 21 +-1 |
+            | a    | e  | abc,cg,efg,efg | 28 km/h | 126.6  |
+            | a    | d  | abc,bdf,bdf    | 18 km/h | 71.7   |
 
     Scenario: Does not jump off the highway to go down service road
         Given the node map
@@ -59,5 +59,5 @@ Feature: Car - weights
             """
         When I route I should get
             | from | to | route       | speed   | weight |
-            | a    | d  | ab,bc,cd,cd | 65 km/h | 12 +-1 |
-            | a    | e  | ab,be,be    | 14 km/h | 104    |
+            | a    | d  | ab,bc,cd,cd | 65 km/h | 44.4   |
+            | a    | e  | ab,be,be    | 14 km/h | 112    |
