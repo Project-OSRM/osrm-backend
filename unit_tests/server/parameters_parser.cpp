@@ -350,6 +350,21 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                       true);
     BOOST_CHECK_EQUAL(result_15->annotations, true);
 
+    RouteParameters reference_speed{};
+    reference_speed.annotations_type = RouteParameters::AnnotationsType::Duration;
+    reference_speed.coordinates = coords_1;
+    auto result_speed =
+        parseParameters<RouteParameters>("1,2;3,4?geometries=polyline&"
+                                         "overview=simplified&annotations=duration,distance,speed");
+    BOOST_CHECK(result_speed);
+    BOOST_CHECK_EQUAL(reference_speed.geometries, result_speed->geometries);
+    BOOST_CHECK_EQUAL(reference_speed.overview, result_speed->overview);
+    BOOST_CHECK_EQUAL(result_speed->annotations_type == (RouteParameters::AnnotationsType::Duration |
+                          RouteParameters::AnnotationsType::Distance |
+                          RouteParameters::AnnotationsType::Speed),
+                      true);
+    BOOST_CHECK_EQUAL(result_speed->annotations, true);
+
     // parse multiple annotations correctly
     RouteParameters reference_16{};
     reference_16.annotations_type = RouteParameters::AnnotationsType::Duration |
