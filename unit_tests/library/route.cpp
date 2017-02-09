@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
               {{"distance", 0.},
                {"duration", 0.},
                {"weight", 0.},
-               {"weight_name", "duration"},
+               {"weight_name", "routability"},
                {"geometry", "yw_jGupkl@??"},
                {"legs",
                 json::Array{{json::Object{

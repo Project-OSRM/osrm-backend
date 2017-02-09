@@ -109,7 +109,7 @@ module.exports = function () {
                                 if (row.weight.length) {
                                     if (!row.weight.match(/[\d\.]+/))
                                         return cb(new Error('*** Weight must be specified as a numeric value. (ex: 8)'));
-                                    got.weight = instructions ? util.format('%dm', weight) : '';
+                                    got.weight = instructions ? util.format('%d', weight) : '';
                                 } else {
                                     got.weight = '';
                                 }

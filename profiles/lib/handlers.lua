@@ -486,16 +486,6 @@ function Handlers.run(handlers,way,result,data,profile)
   for i,handler in ipairs(handlers) do
     if Handlers[handler](way,result,data,profile) == false then
       return false
-    else
-      if handler == 'handle_penalties' then
---        io.write('handler: ', handler, '\n')
---        io.write('weight ', result.weight, '\n')
---        io.write('rate ', result.forward_rate, '\n')
---        io.write('duration ', result.duration, '\n')
---        io.write('speed ', result.forward_speed, '\n')
-        io.write('forward speed ', result.forward_speed)
-        io.write('forward rate ', result.forward_rate)
-      end
     end
   end
 end

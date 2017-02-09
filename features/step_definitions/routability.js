@@ -6,9 +6,10 @@ module.exports = function () {
     this.Then(/^routability should be$/, (table, callback) => {
         this.buildWaysFromTable(table, () => {
             var directions = ['forw','backw','bothw'],
+                testedHeaders = ['forw','backw','bothw','forw_rate','backw_rate','bothw_rate'],
                 headers = new Set(Object.keys(table.hashes()[0]));
 
-            if (!['forw','backw','bothw','forw_rate','backw_rate','bothw_rate'].some(k => !!headers.has(k))) {
+            if (!testedHeaders.some(k => !!headers.has(k))) {
                 throw new Error('*** routability table must contain either "forw", "backw", "bothw", "forw_rate" or "backw_rate" column');
             }
 
@@ -16,19 +17,33 @@ module.exports = function () {
                 if (e) return callback(e);
                 var testRow = (row, i, cb) => {
                     var outputRow = Object.assign({}, row);
+                    // clear the fields that are tested for in the copied response object
+                    for (var field in outputRow) {
+                        if (testedHeaders.indexOf(field) != -1)
+                            outputRow[field] = '';
+                    }
 
                     testRoutabilityRow(i, (err, result) => {
                         if (err) return cb(err);
                         directions.filter(d => headers.has(d + '_rate')).forEach((direction) => {
-                            var want = row[direction + '_rate'];
-                            if (/^\d+ km\/h/.test(want)) {
+                            var rate = direction + '_rate';
+                            var want = row[rate];
+                            switch (true) {
+                            case '' === want:
+                                outputRow[rate] = result[direction].status ?
+                                    result[direction].status.toString() : '';
+                                break;
+                            case /^\d+$/.test(want):
                                 if (result[direction].rate) {
-                                    outputRow[direction + '_rate'] = !isNaN(result[direction].rate) ?
-                                        result[direction].rate.toString()+' km/h' :
+                                    outputRow[rate] = !isNaN(result[direction].rate) ?
+                                        result[direction].rate.toString() :
                                         result[direction].rate.toString() || '';
                                 } else {
-                                    outputRow[direction + '_rate'] = '';
+                                    outputRow[rate] = '';
                                 }
+                                break;
+                            default:
+                                throw new Error(util.format('*** Unknown expectation format: %s for header %s', want, rate));
                             }
                         });
 
