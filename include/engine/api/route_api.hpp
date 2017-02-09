@@ -235,6 +235,14 @@ class RouteAPI : public BaseAPI
                 auto &leg_geometry = leg_geometries[idx];
                 util::json::Object annotation;
 
+                if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
+                {
+                    annotation.values["speed"] = GetAnnotations(
+                        leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
+                            return anno.distance / anno.duration;
+                        });
+                }
+
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Duration)
                 {
                     annotation.values["duration"] = GetAnnotations(

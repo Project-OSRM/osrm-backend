@@ -147,7 +147,7 @@ module.exports = function () {
                             // if header matches 'a:*', parse out the values for *
                             // and return in that header
                             headers.forEach((k) => {
-                                let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight'];
+                                let whitelist = ['duration', 'distance', 'datasources', 'nodes', 'weight', 'speed'];
                                 if (k.match(/^a:/)) {
                                     let a_type = k.slice(2);
                                     if (whitelist.indexOf(a_type) == -1)
