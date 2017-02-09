@@ -222,7 +222,7 @@ function node_function (node, result)
   end
 
   -- check if node is a traffic light
-  local tag = node:get_value_by_key("highway")
+  local tag = node:get_value_by_key("traffic_signals")
   if tag and "traffic_signals" == tag then
     result.traffic_lights = true
   end
