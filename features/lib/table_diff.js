@@ -15,85 +15,88 @@ String.prototype.padRight = function(char, length) {
     return this + char.repeat(Math.max(0, length - this.length));
 }
 
-module.exports = function (expected, actual) {
-    let headers = expected.raw()[0];
-    let expectedRows = expected.hashes();
+module.exports = function (expectedWithHeaders, actual) {
+    let headers = expectedWithHeaders.raw()[0];
+    let expected = expectedWithHeaders.rows();
     let tableError = false;
-    let statusRows = [];
-    let columnStatus = {}
+    let status = [];
+    let columnStatus = []
 
-    expectedRows.forEach((expectedRow, i) => {
+    expected.forEach((expectedRow, i) => {
         var rowError = false;
-        statusRows[i] = {};
-        var statusRow = statusRows[i];
-        for (var key in expectedRow) {
-            var actualRow = actual[i]
-            var row
-            if (unescapeStr(expectedRow[key]) != actualRow[key]) {
-                statusRow[key] = false;
+        status[i] = [];
+        expectedRow.forEach((value, j) => {
+            if (unescapeStr(value) != actual[i][j]) {
+                status[i][j] = false;
+                columnStatus[j] = false;
                 tableError = true;
-                columnStatus[key] = false;
             }
-        }
+        });
     });
     
     if (!tableError) return null;
 
-
     // determine column widths
-    var widths = {};
+    var widths = [];
     var wantStr = '(-) ';
     var gotStr  = '(+) ';
     var okStr   = '    ';
 
-    headers.forEach( (key) => {
-        widths[key] = key.length;
+    headers.forEach( (value,i) => {
+        widths[i] = value.length;
     });
 
-    expectedRows.forEach((row,i) => {
+    expected.forEach((row,i) => {
         var cells = []
-        headers.forEach( (key) => {
-            var content = row[key]
-            var length = content.length;
-            if(widths[key]==null || length > widths[key])
-              widths[key] = length;
+        row.forEach( (value,j) => {
+            var length
+            
+            if (status[i][j]==false)
+                length = Math.max( value.length, actual[i][j].length );
+            else
+                length = value.length;
+                
+            if(widths[j]==null || length > widths[j])
+              widths[j] = length;
        });
     });
-
 
     // format
     var lines = [chalk.red('Tables were not identical:')];
     var cells;
 
+
     // header row
     cells = []
-    headers.forEach( (key) => {
-        var content = key.padRight(' ', widths[key] );
-        if (columnStatus[key] == false )
+    headers.forEach( (value,i) => {
+        var content = value.padRight(' ', widths[i] );
+        if (columnStatus[i] == false )
             content = okStr + content;
         cells.push( chalk.white( content ) );
     });
     lines.push( '| ' + cells.join(' | ') + ' |');
-
+      
     // content rows
-    expectedRows.forEach((row,i) => {
+    expected.forEach((row,i) => {
         var cells;
-        var rowError = Object.keys(statusRows[i]).length > 0;
-
+        var rowError = Object.keys(status[i]).length > 0;
+        
+        
         // expected row
         cells = []
-        headers.forEach( (key) => {
-            var content = row[key].padRight(' ', widths[key] );
-            if (statusRows[i][key] == false)
+        row.forEach( (value,j) => {
+            var content = value.padRight(' ', widths[j] );
+            
+            if (status[i][j] == false)
                 cells.push( chalk.yellow( wantStr + content) );
             else {
                 if (rowError) {
-                    if (columnStatus[key]==false)
+                    if (columnStatus[j]==false)
                         content = okStr + content
                     cells.push( chalk.yellow( content) );
                 }
                 else {
-                    if (columnStatus[key]==false)
+                    if (columnStatus[j]==false)
                         content = okStr + content
                     cells.push( chalk.green( content) );
                 }
@@ -104,12 +107,16 @@ module.exports = function (expected, actual) {
         // if error in row, insert extra row showing actual result
         if (rowError) {
             cells = []
-            headers.forEach( (key) => {
-                var content = actual[i][key].padRight(' ', widths[key] );
-                if (statusRows[i][key] == false)
+            row.forEach( (value,j) => {
+                var content
+                if (actual[i][j])
+                    content = actual[i][j].toString().padRight(' ', widths[j] );
+                else
+                    content = ''.padRight(' ', widths[j] );
+                if (status[i][j] == false)
                     cells.push( chalk.red( gotStr + content) );
                 else {
-                    if (columnStatus[key]==false)
+                    if (columnStatus[j]==false)
                         cells.push( chalk.red( okStr + content) );
                     else
                         cells.push( chalk.red( content) );
