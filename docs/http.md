@@ -701,7 +701,7 @@ location of the StepManeuver. Further intersections are listed for every cross-w
     "in":0,
     "out":2,
     "bearings":[60,150,240,330],
-    "entry":["false","true","true","true"]
+    "entry":["false","true","true","true"],
     "lanes":{
         "indications": ["left", "straight"],
         "valid": "false"
