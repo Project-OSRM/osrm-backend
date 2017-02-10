@@ -34,10 +34,8 @@ module.exports = function () {
                                     result[direction].status.toString() : '';
                                 break;
                             case /^\d+$/.test(want):
-                                if (result[direction].rate) {
-                                    outputRow[rate] = !isNaN(result[direction].rate) ?
-                                        result[direction].rate.toString() :
-                                        result[direction].rate.toString() || '';
+                                if (result[direction].rate && !isNaN(result[direction].rate)) {
+                                    outputRow[rate] = result[direction].rate.toString();
                                 } else {
                                     outputRow[rate] = '';
                                 }
