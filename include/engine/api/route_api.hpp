@@ -228,8 +228,16 @@ class RouteAPI : public BaseAPI
 
         std::vector<util::json::Object> annotations;
 
-        if (parameters.annotations_type != RouteParameters::AnnotationsType::None)
+        if (parameters.annotations_type != RouteParameters::AnnotationsType::None ||
+            parameters.annotations == true)
         {
+            auto requested_annotations = parameters.annotations_type;
+            if ((parameters.annotations == true) &&
+                (parameters.annotations_type == RouteParameters::AnnotationsType::None))
+            {
+                requested_annotations = RouteParameters::AnnotationsType::All;
+            }
+
             for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
             {
                 auto &leg_geometry = leg_geometries[idx];
@@ -243,7 +251,8 @@ class RouteAPI : public BaseAPI
                         });
                 }
 
-                if (parameters.annotations_type & RouteParameters::AnnotationsType::Duration)
+                // AnnotationsType uses bit flags, & operator checks if a property is set
+                if (ReqAnnotations & RouteParameters::AnnotationsType::Duration)
                 {
                     annotation.values["duration"] = GetAnnotations(
                         leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
@@ -251,27 +260,27 @@ class RouteAPI : public BaseAPI
                         });
                 }
 
-                if (parameters.annotations_type & RouteParameters::AnnotationsType::Distance)
+                if (requested_annotations & RouteParameters::AnnotationsType::Distance)
                 {
                     annotation.values["distance"] = GetAnnotations(
                         leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
                             return anno.distance;
                         });
                 }
-                if (parameters.annotations_type & RouteParameters::AnnotationsType::Weight)
+                if (requested_annotations & RouteParameters::AnnotationsType::Weight)
                 {
                     annotation.values["weight"] = GetAnnotations(
                         leg_geometry,
                         [](const guidance::LegGeometry::Annotation &anno) { return anno.weight; });
                 }
-                if (parameters.annotations_type & RouteParameters::AnnotationsType::Datasources)
+                if (requested_annotations & RouteParameters::AnnotationsType::Datasources)
                 {
                     annotation.values["datasources"] = GetAnnotations(
                         leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
                             return anno.datasource;
                         });
                 }
-                if (parameters.annotations_type & RouteParameters::AnnotationsType::Nodes)
+                if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
                 {
                     util::json::Array nodes;
                     nodes.values.reserve(leg_geometry.osm_node_ids.size());
