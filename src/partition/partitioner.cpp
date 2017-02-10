@@ -156,8 +156,7 @@ int Partitioner::Run(const PartitionConfig &config)
 
     const auto &partition_ids = recursive_bisection.BisectionIDs();
 
-    // Keyed by ebg node - stores flag if ebg node is border node or not.
-    std::vector<bool> is_edge_based_border_node(edge_based_graph->GetNumberOfNodes());
+    std::vector<NodeID> edge_based_border_nodes;
 
     // Extract edge based border nodes, based on node based partition and mapping.
     for (const auto node_id : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
@@ -170,45 +169,41 @@ int Partitioner::Run(const PartitionConfig &config)
         if (partition_ids[u] == partition_ids[v])
         {
             // Can use partition_ids[u/v] as partition for edge based graph `node_id`
-            is_edge_based_border_node[node_id] = false;
         }
         else
         {
-            // Border nodes u,v - need to be resolved. What we can do:
-            // - 1) Pick one of the partitions randomly or by minimizing border edges.
-            // - 2) Or: modify edge based graph, introducing artificial edges. We do this.
-            is_edge_based_border_node[node_id] = true;
+            // Border nodes u,v - need to be resolved.
+            edge_based_border_nodes.push_back(node_id);
         }
     }
 
-    const auto num_border_nodes =
-        std::count(begin(is_edge_based_border_node), end(is_edge_based_border_node), true);
+    util::Log() << "Fixing " << edge_based_border_nodes.size() << " edge based graph border nodes";
 
-    util::Log() << "Fixing " << num_border_nodes << " edge based graph border nodes";
+    std::vector<std::pair<NodeID, EdgeBasedGraphEdgeData>> incoming_edges;
 
-    // Keyed by ebg node - stores associated border nodes for nodes
-    std::unordered_map<NodeID, NodeID> edge_based_border_node;
-    edge_based_border_node.reserve(num_border_nodes);
-
-    // For all edges in the edge based graph: if they start and end in different partitions
-    // introduce artificial nodes and re-wire incoming / outgoing edges to these artificial ones.
-    for (const auto source : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
+    for (const auto border_node : edge_based_border_nodes)
     {
-        for (auto edge : edge_based_graph->GetAdjacentEdgeRange(source))
+        for (const auto edge : edge_based_graph->GetAdjacentEdgeRange(border_node))
         {
-            const auto target = edge_based_graph->GetTarget(edge);
+            const auto &data = edge_based_graph->GetEdgeData(edge);
 
-            const auto opposite_edge = edge_based_graph->FindEdge(target, source);
-
-            if (!is_edge_based_border_node[source] || !is_edge_based_border_node[target])
-                continue;
-
-            // TODO: assign and store partition ids to new nodes
-
-            const auto artificial_node = edge_based_graph->InsertNode();
-
-            EdgeBasedGraphEdgeData dummy{SPECIAL_EDGEID, /*is_boundary_arc=*/1, 0, 0, false, false};
+            if (data.backward)
+            {
+                incoming_edges.emplace_back(edge_based_graph->GetTarget(edge), data);
+                edge_based_graph->DeleteEdge(border_node, edge);
+            }
         }
+
+        const auto artificial = edge_based_graph->InsertNode();
+
+        EdgeBasedGraphEdgeData dummy{SPECIAL_EDGEID, /*is_boundary_arc=*/true, 0, 0, false, false};
+
+        for (const auto edge : incoming_edges)
+        {
+            edge_based_graph->InsertEdge(edge.first, artificial, edge.second);
+        }
+
+        incoming_edges.clear();
     }
 
     return 0;

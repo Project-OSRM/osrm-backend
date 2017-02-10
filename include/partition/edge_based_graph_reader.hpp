@@ -23,7 +23,7 @@ struct EdgeBasedGraphEdgeData
     NodeID edge_id : 31;
     // Artificial edge used to fixup partitioning, see #3205.
     // These artificial edges have invalid weight / duration.
-    std::uint32_t is_boundary_arc : 1;
+    bool is_boundary_arc : 1;
     EdgeWeight weight;
     EdgeWeight duration : 30;
     std::uint32_t forward : 1;
@@ -139,7 +139,6 @@ struct EdgeBasedGraphReader
             forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
             forward_edge.data.forward = reverse_edge.data.backward = true;
             forward_edge.data.backward = reverse_edge.data.forward = false;
-
 
             // remove parallel edges
             while (i < edges.size() && edges[i].source == source && edges[i].target == target)
