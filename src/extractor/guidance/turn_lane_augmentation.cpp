@@ -40,7 +40,6 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
                                LaneDataVector lane_data,
                                const Intersection &intersection)
 {
-
     // a none-turn is allowing multiple turns. we have to add a lane-data entry for
     // every possible turn. This should, hopefully, only be the case for single lane
     // entries?
@@ -107,20 +106,65 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
         util::Log(logWARNING) << "Failed lane assignment. Reached bad situation.";
         return std::make_pair(std::size_t{0}, std::size_t{0});
     }();
-    for (auto intersection_index = range.first; intersection_index < range.second;
-         ++intersection_index)
+
+    const auto allowed_in_range =
+        std::count_if(intersection.begin() + range.first,
+                      intersection.begin() + range.second,
+                      [](const auto &road) { return road.entry_allowed; });
+
+    if (allowed_in_range > 1 && lane_data[none_index].to - lane_data[none_index].from >= 1)
     {
-        if (intersection[intersection_index].entry_allowed)
+        // check if there is a straight turn
+        auto straight_itr = std::find_if(intersection.begin() + range.first,
+                                         intersection.begin() + range.second,
+                                         [](const auto &road) {
+                                             return road.instruction.direction_modifier ==
+                                                    DirectionModifier::Straight;
+                                         });
+
+        // we have a straight turn?
+        if (straight_itr != intersection.begin() + range.second)
         {
-            // FIXME this probably can be only a subset of these turns here?
-            lane_data.push_back(
-                {tag_by_modifier[intersection[intersection_index].instruction.direction_modifier],
-                 lane_data[none_index].from,
-                 lane_data[none_index].to,
-                 false});
+            for (auto itr = intersection.begin() + range.first; itr != straight_itr; ++itr)
+            {
+                lane_data.push_back({tag_by_modifier[itr->instruction.direction_modifier],
+                                     lane_data[none_index].from,
+                                     lane_data[none_index].from,
+                                     false});
+            }
+            lane_data.push_back({tag_by_modifier[straight_itr->instruction.direction_modifier],
+                                 lane_data[none_index].from,
+                                 lane_data[none_index].to,
+                                 false});
+            for (auto itr = straight_itr + 1; itr != intersection.begin() + range.second; ++itr)
+            {
+                lane_data.push_back({tag_by_modifier[itr->instruction.direction_modifier],
+                                     lane_data[none_index].to,
+                                     lane_data[none_index].to,
+                                     false});
+            }
+
+            lane_data.erase(lane_data.begin() + none_index);
         }
+        return lane_data;
     }
-    lane_data.erase(lane_data.begin() + none_index);
+    else
+    {
+        for (auto intersection_index = range.first; intersection_index < range.second;
+             ++intersection_index)
+        {
+            if (intersection[intersection_index].entry_allowed)
+            {
+                // FIXME this probably can be only a subset of these turns here?
+                lane_data.push_back({tag_by_modifier[intersection[intersection_index]
+                                                         .instruction.direction_modifier],
+                                     lane_data[none_index].from,
+                                     lane_data[none_index].to,
+                                     false});
+            }
+        }
+        lane_data.erase(lane_data.begin() + none_index);
+    }
     return lane_data;
 }
 
