@@ -387,4 +387,39 @@ BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
         BOOST_CHECK_EQUAL(waypoint.get<json::Object>().values.count("hint"), 0);
 }
 
+BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
+{
+    const auto args = get_args();
+    auto osrm = getOSRM(args.at(0));
+
+    using namespace osrm;
+
+    RouteParameters params{};
+    params.annotations_type = RouteParameters::AnnotationsType::Duration |
+                              RouteParameters::AnnotationsType::Distance |
+                              RouteParameters::AnnotationsType::Speed;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    json::Object result;
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto &routes = result.values["routes"].get<json::Array>().values;
+    const auto &legs = routes[0].get<json::Object>().values.at("legs").get<json::Array>().values;
+    const auto &annotation =
+        legs[0].get<json::Object>().values.at("annotation").get<json::Object>();
+    const auto &speeds = annotation.values.at("speed").get<json::Array>().values;
+    const auto &durations = annotation.values.at("duration").get<json::Array>().values;
+    const auto &distances = annotation.values.at("distance").get<json::Array>().values;
+    int length = speeds.size();
+    for (int i = 0; i < length; i++)
+    {
+        auto speed = speeds[i].get<json::Number>().value;
+        auto duration = durations[i].get<json::Number>().value;
+        auto distance = distances[i].get<json::Number>().value;
+        BOOST_CHECK_EQUAL(speed, distance / duration);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
