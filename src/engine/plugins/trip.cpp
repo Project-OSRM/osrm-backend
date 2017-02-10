@@ -191,7 +191,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     BOOST_ASSERT(phantom_node_pairs.size() == number_of_locations);
 
     if (fixed_start && fixed_end && (source_id >= parameters.coordinates.size() ||
-                                destination_id >= parameters.coordinates.size()))
+                                     destination_id >= parameters.coordinates.size()))
     {
         return Error("InvalidValue", "Invalid source or destination value.", json_result);
     }
