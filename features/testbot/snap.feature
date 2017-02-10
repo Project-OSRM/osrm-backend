@@ -180,3 +180,33 @@ Feature: Snap start/end point to the nearest way
             | x    | n  | xf,xf |
             | x    | o  | xg,xg |
             | x    | p  | xh,xh |
+
+    Scenario: Snapping in viaroute
+        Given the extract extra arguments "--small-component-size 2"
+        Given the node map
+            """
+            a - - b - - c
+            |           |
+            d - -1e - - f
+            |     |     |
+            g - - h - - i
+            """
+
+        And the ways
+            | nodes | name  | oneway |
+            | abc   | round | yes    |
+            | cf    | round | yes    |
+            | fi    | round | yes    |
+            | ihgda | round | yes    |
+            | he    | in    | yes    |
+            | ed    | left  | yes    |
+            | ef    | right | no     |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | cf       | fi     | f        | only_straight |
+            | restriction | he       | ef     | e        | only_right    |
+
+        When I route I should get
+            | waypoints | route       |
+            | i,1       | round,in,in |
