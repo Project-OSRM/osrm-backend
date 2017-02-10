@@ -1,6 +1,0 @@
-language: cpp
-sudo: false
-
-script:
-- ./mason build ${MASON_NAME} ${MASON_VERSION}
-- ./mason publish ${MASON_NAME} ${MASON_VERSION}

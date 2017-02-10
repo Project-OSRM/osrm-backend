@@ -27,7 +27,7 @@ env:
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
    - CCACHE_VERSION=3.3.1
    - CMAKE_VERSION=3.6.2
-   - MASON="$(pwd)/third_party/mason/mason"
+   - MASON="$(pwd)/scripts/mason.sh"
 
 matrix:
   fast_finish: true
@@ -135,8 +135,13 @@ before_install:
   - source ./scripts/install_node.sh 4
   - npm install -g "npm@>=3" # Upgrade to npm >v2 to reduce size of downloaded dependencies
   - npm install
+    # Bootstrap cmake to be able to run mason
+  - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}.tar.gz"
+  - CMAKE_DIR="mason_packages/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}"
+  - mkdir -p ${CMAKE_DIR}
+  - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR} || exit 1
+  - export PATH=${CMAKE_DIR}/bin:${PATH}
   - ${MASON} install ccache ${CCACHE_VERSION} && export PATH=$(${MASON} prefix ccache ${CCACHE_VERSION})/bin:${PATH}
-  - ${MASON} install cmake ${CMAKE_VERSION} && export PATH=$(${MASON} prefix cmake ${CMAKE_VERSION})/bin:${PATH}
   - |
     if [[ ! -z ${CLANG_VERSION} ]]; then
       export CCOMPILER='clang'
