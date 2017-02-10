@@ -1178,3 +1178,25 @@ Feature: Turn Lane Guidance
         When I route I should get
             | waypoints | route            | turns                    | lanes                             |
             | a,e       | road,cross,cross | depart,turn right,arrive | ,left:false none:false none:true, |
+            | a,c       | road,road        | depart,arrive            | ,                                 |
+
+    @3379
+    Scenario: Don't Turn through potential through lanes
+        Given the node map
+            """
+                      d
+                      |
+            a - - - - b - - - - - c
+                      |
+                      e
+            """
+        And the ways
+            | nodes | name  | oneway | turn:lanes:forward |
+            | ab    | road  | yes    | none\|none\|right  |
+            | bc    | road  | yes    |                    |
+            | ebd   | cross | no     |                    |
+
+        When I route I should get
+            | waypoints | route            | turns                   | lanes                              |
+            | a,d       | road,cross,cross | depart,turn left,arrive | ,none:true none:false right:false, |
+            | a,c       | road,road        | depart,arrive           | ,                                  |
