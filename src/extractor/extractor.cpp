@@ -364,26 +364,14 @@ void Extractor::FindComponents(unsigned max_edge_id,
         }
     }
 
-    // connect forward and backward nodes of each edge
-    for (const auto &node : input_nodes)
-    {
-        if (node.reverse_segment_id.enabled)
-        {
-            BOOST_ASSERT(node.forward_segment_id.id <= max_edge_id);
-            BOOST_ASSERT(node.reverse_segment_id.id <= max_edge_id);
-            edges.push_back({node.forward_segment_id.id, node.reverse_segment_id.id, {}});
-            edges.push_back({node.reverse_segment_id.id, node.forward_segment_id.id, {}});
-        }
-    }
-
     tbb::parallel_sort(edges.begin(), edges.end());
     auto new_end = std::unique(edges.begin(), edges.end());
     edges.resize(new_end - edges.begin());
 
-    auto uncontractor_graph = std::make_shared<UncontractedGraph>(max_edge_id + 1, edges);
+    auto uncontracted_graph = std::make_shared<UncontractedGraph>(max_edge_id + 1, edges);
 
     TarjanSCC<UncontractedGraph> component_search(
-        std::const_pointer_cast<const UncontractedGraph>(uncontractor_graph));
+        std::const_pointer_cast<const UncontractedGraph>(uncontracted_graph));
     component_search.Run();
 
     for (auto &node : input_nodes)
