@@ -181,32 +181,42 @@ Feature: Car - Restricted access
     @hov
     Scenario: Car - designated HOV ways are rated low
         Then routability should be
-            | highway | hov        | bothw | forw_rate  |
-            | primary | designated | x     | 2          |
-            | primary | yes        | x     | 18         |
-            | primary | no         | x     | 18         |
+            | highway | hov        | bothw | forw_rate  | backw_rate  |
+            | primary | designated | x     | 2          | 2           |
+            | primary | yes        | x     | 18         | 18          |
+            | primary | no         | x     | 18         | 18          |
+
+    # Models:
+    # https://www.openstreetmap.org/way/124891268
+    # https://www.openstreetmap.org/way/237173472
+    @hov
+    Scenario: Car - I-66 use HOV-only roads with heavy penalty
+        Then routability should be
+            | highway  | hov         | hov:lanes                          | lanes | access     | oneway | forw | backw | forw_rate  |
+            | motorway | designated  | designated\|designated\|designated | 3     | hov        | yes    | x    |       | 3          |
+            | motorway | lane        |                                    | 3     | designated | yes    | x    |       | 25         |
 
     @hov
-    Scenario: Car - a way with all lanes HOV-designated is inaccessible by default (similar to hov=designated)
+    Scenario: Car - a way with all lanes HOV-designated is highly penalized by default (similar to hov=designated)
         Then routability should be
-            | highway | hov:lanes:forward      | hov:lanes:backward     | hov:lanes              | oneway | forw | backw |
-            | primary | designated             | designated             |                        |        |      |       |
-            | primary |                        | designated             |                        |        | x    |       |
-            | primary | designated             |                        |                        |        |      | x     |
-            | primary | designated\|designated | designated\|designated |                        |        |      |       |
-            | primary | designated\|no         | designated\|no         |                        |        | x    | x     |
-            | primary | yes\|no                | yes\|no                |                        |        | x    | x     |
-            | primary |                        |                        |                        |        | x    | x     |
-            | primary | designated             |                        |                        | -1     |      | x     |
-            | primary |                        | designated             |                        | -1     |      |       |
-            | primary |                        |                        | designated             | yes    |      |       |
-            | primary |                        |                        | designated             | -1     |      |       |
-            | primary |                        |                        | designated\|           | yes    | x    |       |
-            | primary |                        |                        | designated\|           | -1     |      | x     |
-            | primary |                        |                        | designated\|designated | yes    |      |       |
-            | primary |                        |                        | designated\|designated | -1     |      |       |
-            | primary |                        |                        | designated\|yes        | yes    | x    |       |
-            | primary |                        |                        | designated\|no         | -1     |      | x     |
+            | highway | hov:lanes:forward      | hov:lanes:backward     | hov:lanes              | oneway | forw | backw | forw_rate | backw_rate |
+            | primary | designated             | designated             |                        |        | x    | x     | 2         | 2          |
+            | primary |                        | designated             |                        |        | x    | x     | 18        | 2          |
+            | primary | designated             |                        |                        |        | x    | x     | 2         | 18         |
+            | primary | designated\|designated | designated\|designated |                        |        | x    | x     | 2         | 2          |
+            | primary | designated\|no         | designated\|no         |                        |        | x    | x     | 18        | 18         |
+            | primary | yes\|no                | yes\|no                |                        |        | x    | x     | 18        | 18         |
+            | primary |                        |                        |                        |        | x    | x     | 18        | 18         |
+            | primary | designated             |                        |                        | -1     |      | x     |           | 18         |
+            | primary |                        | designated             |                        | -1     |      | x     |           | 2          |
+            | primary |                        |                        | designated             | yes    | x    |       | 2         |            |
+            | primary |                        |                        | designated             | -1     |      | x     |           | 2          |
+            | primary |                        |                        | designated\|           | yes    | x    |       | 18        |            |
+            | primary |                        |                        | designated\|           | -1     |      | x     |           | 18         |
+            | primary |                        |                        | designated\|designated | yes    | x    |       | 2         |            |
+            | primary |                        |                        | designated\|designated | -1     |      | x     |           | 2          |
+            | primary |                        |                        | designated\|yes        | yes    | x    |       | 18        |            |
+            | primary |                        |                        | designated\|no         | -1     |      | x     |           | 18         |
 
      Scenario: Car - these toll roads always work
         Then routability should be

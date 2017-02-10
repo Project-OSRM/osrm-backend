@@ -173,7 +173,12 @@ end
 -- handle high occupancy vehicle tags
 function Handlers.handle_hov(way,result,data,profile)
   -- respect user-preference for HOV
-  if not profile.avoid.hov_lanes or properties.weight_name ~= 'routability' then
+  if not profile.avoid.hov_lanes then
+    return
+  end
+
+  -- in this case we will use penalties instead of filtering out
+  if properties.weight_name == 'routability' then
     return
   end
 
@@ -268,19 +273,28 @@ end
 function Handlers.handle_penalties(way,result,data,profile)
   -- heavily penalize a way tagged with all HOV lanes
   -- in order to only route over them if there is no other option
-  local hov_penalty = 1.0
+  local forward_hov_penalty = 1.0
+  local backward_hov_penalty = 1.0
   if profile.avoid.hov_lanes then
     local hov = way:get_value_by_key("hov")
-    local all_lanes_designated = Handlers.has_all_designated_hov_lanes(data.hov_lanes_forward)
-    if "designated" == hov or all_lanes_designated then
-      hov_penalty = 0.1
+    if "designated" == hov then
+      forward_hov_penalty = 0.1
+      backward_hov_penalty = 0.1
+    else
+      data.hov_lanes_forward, data.hov_lanes_backward = Tags.get_forward_backward_by_key(way,data,'hov:lanes')
+      if Handlers.has_all_designated_hov_lanes(data.hov_lanes_forward) then
+          forward_hov_penalty = 0.1
+      end
+      if Handlers.has_all_designated_hov_lanes(data.hov_lanes_backward) then
+          backward_hov_penalty = 0.1
+      end
     end
   end
 
   local service_penalty = 1.0
   local service = way:get_value_by_key("service")
   if service and profile.service_penalties[service] then
-      service_penalty = profile.service_penalties[service]
+    service_penalty = profile.service_penalties[service]
   end
 
   local width_penalty = 1.0
@@ -316,17 +330,18 @@ function Handlers.handle_penalties(way,result,data,profile)
     sideroad_penalty = side_road_multiplier;
   end
 
-  local penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, hov_penalty)
+  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, forward_hov_penalty)
+  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, backward_hov_penalty)
 
   if properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
-      result.forward_rate = (result.forward_speed * penalty) / 3.6
+      result.forward_rate = (result.forward_speed * forward_penalty) / 3.6
     end
     if result.backward_speed > 0 then
-      result.backward_rate = (result.backward_speed * penalty) / 3.6
+      result.backward_rate = (result.backward_speed * backward_penalty) / 3.6
     end
     if result.duration > 0 then
-      result.weight = result.duration / penalty
+      result.weight = result.duration / forward_penalty
     end
   end
 end
