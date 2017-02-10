@@ -25,6 +25,8 @@ option(ENABLE_LTO "Use LTO if available" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 if(ENABLE_MASON)
   # versions in use
   set(MASON_BOOST_VERSION "1.63.0")
@@ -41,8 +43,7 @@ if(ENABLE_MASON)
     message(FATAL_ERROR "curl command required with -DENABLE_MASON")
   endif()
 
-  set(MASON_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/third_party/mason/mason.cmake)
+  include(mason)
 endif()
 
 # be compatible with version handling before cmake 3.x
@@ -77,8 +78,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 include(GNUInstallDirs)
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(bitness 32)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
