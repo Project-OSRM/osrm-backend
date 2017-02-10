@@ -285,3 +285,37 @@ Feature: Weight tests
             | a,d       | ,     | 59.9m    | 62,0      | 24s,0s       |
             | a,e       | ,,    | 60.1m    | 68.7,10,0 | 38.5s,11s,0s |
             | d,e       | ,,    | 39.9m    | 10,10,0   | 11s,11s,0s   |
+
+    Scenario: Step weights -- segment_function with speed and turn updates with fallback to durations
+        Given the profile file "testbot" extended with
+        """
+        api_version = 1
+        properties.weight_precision = 3
+        """
+
+        And the node map
+            """
+            a---b---c---d
+                    .
+                    e
+            """
+        And the ways
+            | nodes |
+            | abcd  |
+            | ce    |
+        And the speed file
+            """
+            1,2,24
+            2,1,24
+            """
+        And the turn penalty file
+            """
+            2,3,5,1
+            """
+        And the contract extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
+
+        When I route I should get
+            | waypoints | route      | distance | weights       | times    |
+            | a,d       | abcd,abcd  | 59.9m    | 6.993,0       | 7s,0s    |
+            | a,e       | abcd,ce,ce | 60.1m    | 6.002,2.002,0 | 6s,2s,0s |
+            | d,e       | abcd,ce,ce | 39.9m    | 1.991,2.002,0 | 2s,2s,0s |

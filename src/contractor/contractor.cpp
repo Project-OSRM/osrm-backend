@@ -291,11 +291,20 @@ template <typename Key, typename Value> struct CSVFilesParser
 inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_kmh)
 {
     if (speed_in_kmh <= 0.)
-        return INVALID_EDGE_WEIGHT;
+        return MAXIMAL_EDGE_DURATION;
 
     const double speed_in_ms = speed_in_kmh / 3.6;
     const double duration = distance_in_meters / speed_in_ms;
     return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10.)));
+}
+
+inline EdgeWeight ConvertToWeight(double weight, double weight_multiplier, EdgeWeight duration)
+{
+    if (std::isfinite(weight))
+        return std::round(weight * weight_multiplier);
+
+    return duration == MAXIMAL_EDGE_DURATION ? INVALID_EDGE_WEIGHT
+                                             : duration * weight_multiplier / 10.;
 }
 
 // Returns updated edge weight
@@ -312,9 +321,8 @@ void GetNewWeight(const ContractorConfig &config,
     new_segment_duration = ConvertToDuration(segment_length, value.speed);
 
     // Update the edge weight or fallback to the new edge duration
-    new_segment_weight = std::isfinite(value.weight)
-                             ? std::round(value.weight * config.weight_multiplier)
-                             : new_segment_duration;
+    new_segment_weight =
+        ConvertToWeight(value.weight, config.weight_multiplier, new_segment_duration);
 
     // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a warning
     // if the new duration exceeds a heuristic of what a reasonable duration update is
@@ -362,6 +370,14 @@ int Contractor::Run()
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
     EdgeID max_edge_id = LoadEdgeExpandedGraph(config, edge_based_edge_list, node_weights);
+
+#if !defined(NDEBUG)
+    if (config.turn_penalty_lookup_paths.empty())
+    { // don't check weights consistency with turn updates that can break assertion
+        // condition with turn weight penalties negative updates
+        CheckWeightsConsistency(config, edge_based_edge_list);
+    }
+#endif
 
     // Contracting the edge-expanded graph
 
@@ -838,9 +854,8 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
                         segment_duration = ConvertToDuration(segment.segment_length, value->speed);
 
-                        segment_weight = std::isfinite(value->weight)
-                                             ? std::round(value->weight * config.weight_multiplier)
-                                             : segment_duration;
+                        segment_weight = ConvertToWeight(
+                            value->weight, config.weight_multiplier, segment_duration);
                     }
 
                     // Update the edge weight and the next OSM node ID
@@ -868,10 +883,10 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
             {
                 turn_duration_penalty =
                     boost::numeric_cast<TurnPenalty>(std::round(value->duration * 10.));
-                turn_weight_penalty = std::isfinite(value->weight)
-                                          ? boost::numeric_cast<TurnPenalty>(std::round(
-                                                value->weight * config.weight_multiplier))
-                                          : turn_duration_penalty;
+                turn_weight_penalty = boost::numeric_cast<TurnPenalty>(
+                    std::round(std::isfinite(value->weight)
+                                   ? value->weight * config.weight_multiplier
+                                   : turn_duration_penalty * config.weight_multiplier / 10.));
 
                 const auto weight_min_value = static_cast<EdgeWeight>(header->num_osm_nodes);
                 if (turn_weight_penalty + new_weight < weight_min_value)
@@ -917,14 +932,6 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
             [&] { save_penalties(config.turn_weight_penalties_path, turn_weight_penalties); },
             [&] { save_penalties(config.turn_duration_penalties_path, turn_duration_penalties); });
     }
-
-#if !defined(NDEBUG)
-    if (!update_turn_penalties)
-    { // don't check weights consistency with turn updates that can break assertion
-        // condition with turn weight penalties negative updates
-        CheckWeightsConsistency(config, edge_based_edge_list);
-    }
-#endif
 
     util::Log() << "Done reading edges";
     return graph_header.max_edge_id;
