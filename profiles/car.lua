@@ -63,7 +63,8 @@ local profile = {
     'vehicle',
     'permissive',
     'designated',
-    'destination'
+    'destination',
+    'hov' -- we might filter hov out later depending on the avoid settings or add penalties
   },
 
   access_tag_blacklist = Set {
