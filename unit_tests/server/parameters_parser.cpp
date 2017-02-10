@@ -495,9 +495,43 @@ BOOST_AUTO_TEST_CASE(valid_trip_urls)
     reference_1.coordinates = coords_1;
     auto result_1 = parseParameters<TripParameters>("1,2;3,4");
     BOOST_CHECK(result_1);
-    CHECK_EQUAL_RANGE(reference_1.bearings, result_1->bearings);
     CHECK_EQUAL_RANGE(reference_1.radiuses, result_1->radiuses);
     CHECK_EQUAL_RANGE(reference_1.coordinates, result_1->coordinates);
+
+    TripParameters reference_2{};
+    reference_2.coordinates = coords_1;
+    reference_2.source = TripParameters::SourceType::First;
+    reference_2.destination = TripParameters::DestinationType::Last;
+    auto result_2 = parseParameters<TripParameters>("1,2;3,4?source=first&destination=last");
+    BOOST_CHECK(result_2);
+    CHECK_EQUAL_RANGE(reference_2.radiuses, result_2->radiuses);
+    CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
+
+    // check supported source/destination/rountrip combinations
+    auto param_fse_r =
+        parseParameters<TripParameters>("1,2;3,4?source=first&destination=last&roundtrip=true");
+    BOOST_CHECK(param_fse_r->IsValid());
+    auto param_fse_nr_ =
+        parseParameters<TripParameters>("1,2;3,4?source=first&destination=last&roundtrip=false");
+    BOOST_CHECK(param_fse_nr_->IsValid());
+    auto param_fs_r = parseParameters<TripParameters>("1,2;3,4?source=first&roundtrip=true");
+    BOOST_CHECK(param_fs_r->IsValid());
+    auto param_fs_nr = parseParameters<TripParameters>("1,2;3,4?source=first&roundtrip=false");
+    BOOST_CHECK(param_fs_nr->IsValid());
+    auto param_fe_r = parseParameters<TripParameters>("1,2;3,4?destination=last&roundtrip=true");
+    BOOST_CHECK(param_fe_r->IsValid());
+    auto param_fe_nr = parseParameters<TripParameters>("1,2;3,4?destination=last&roundtrip=false");
+    BOOST_CHECK(param_fe_nr->IsValid());
+    auto param_r = parseParameters<TripParameters>("1,2;3,4?roundtrip=true");
+    BOOST_CHECK(param_r->IsValid());
+    auto param_nr = parseParameters<TripParameters>("1,2;3,4?roundtrip=false");
+    BOOST_CHECK(param_nr->IsValid());
+
+    auto param_fail_1 =
+        testInvalidOptions<TripParameters>("1,2;3,4?source=blubb&destination=random");
+    BOOST_CHECK_EQUAL(param_fail_1, 15UL);
+    auto param_fail_2 = testInvalidOptions<TripParameters>("1,2;3,4?source=first&destination=nah");
+    BOOST_CHECK_EQUAL(param_fail_2, 33UL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

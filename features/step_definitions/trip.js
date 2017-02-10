@@ -24,7 +24,6 @@ module.exports = function () {
                             } else if (row[k]) {
                                 params[match[1]] = [row[k]];
                             }
-
                             got[k] = row[k];
                         }
                     }
@@ -35,11 +34,11 @@ module.exports = function () {
                     }
 
                     if (headers.has('status')) {
-                        got.status = json.status.toString();
+                        got.status = json.code;
                     }
 
                     if (headers.has('message')) {
-                        got.message = json.status_message;
+                        got.message = json.message;
                     }
 
                     if (headers.has('geometry')) {
@@ -59,6 +58,7 @@ module.exports = function () {
 
                     var subTrips;
                     var trip_durations;
+                    var trip_distance;
                     if (res.statusCode === 200) {
                         if (headers.has('trips')) {
                             subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
@@ -74,13 +74,19 @@ module.exports = function () {
                             })));
                             trip_durations = all_durations.map( a => a.reduce(add, 0));
                         }
+                        if(headers.has('distance')) {
+                            var all_distance = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map(sl => {
+                                return sl.distance;
+                            })));
+                            trip_distance = all_distance.map( a => a.reduce(add, 0));
+                        }
                     }
 
                     var ok = true,
                         encodedResult = '',
                         extendedTarget = '';
 
-                    row.trips.split(',').forEach((sub, si) => {
+                    if (json.trips) row.trips.split(',').forEach((sub, si) => {
                         if (si >= subTrips.length) {
                             ok = false;
                         } else {
@@ -105,10 +111,10 @@ module.exports = function () {
                         got.via_points = row.via_points;
                     } else {
                         got.trips = encodedResult;
-                        got.trips = extendedTarget;
                     }
 
                     got.durations = trip_durations;
+                    got.distance = trip_distance;
 
                     for (var key in row) {
                         if (this.FuzzyMatch.match(got[key], row[key])) {
@@ -144,6 +150,19 @@ module.exports = function () {
                             waypoints.push(node);
                         });
                         got = { waypoints: row.waypoints };
+
+                        if (row.source) {
+                            params.source = got.source = row.source;
+                        } 
+                        
+                        if (row.destination) {
+                            params.destination = got.destination = row.destination;
+                        } 
+
+                        if (row.hasOwnProperty('roundtrip')) { //roundtrip is a boolean so row.roundtrip alone doesn't work as a check here
+                            params.roundtrip = got.roundtrip = row.roundtrip;
+                        }
+
                         this.requestTrip(waypoints, params, afterRequest);
                     } else {
                         throw new Error('*** no waypoints');
