@@ -19,8 +19,8 @@ struct HeapData
 
 struct ManyToManyHeapData : HeapData
 {
-    EdgeWeight duration;
-    ManyToManyHeapData(NodeID p, EdgeWeight duration) : HeapData(p), duration(duration) {}
+    EdgeDuration duration;
+    ManyToManyHeapData(NodeID p, EdgeDuration duration) : HeapData(p), duration(duration) {}
 };
 
 struct SearchEngineData

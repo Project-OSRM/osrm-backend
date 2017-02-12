@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 
 // OpenStreetMap node ids are higher than 2^32
 OSRM_STRONG_TYPEDEF(std::uint64_t, OSMNodeID)
@@ -57,8 +56,19 @@ using OSMEdgeID_weak = std::uint64_t;
 using NodeID = std::uint32_t;
 using EdgeID = std::uint32_t;
 using NameID = std::uint32_t;
-using EdgeWeight = std::int32_t;
-using TurnPenalty = std::int16_t; // turn penalty in 100ms units
+OSRM_STRONG_TYPEDEF(std::int32_t, EdgeWeight)
+OSRM_STRONG_TYPEDEF(std::int16_t, TurnPenalty)
+OSRM_STRONG_TYPEDEF(std::int32_t, EdgeDuration)
+OSRM_STRONG_TYPEDEF(std::int16_t, TurnDuration)
+OSRM_STRONG_TYPEDEF_LIMITS(EdgeWeight,
+                           std::numeric_limits<std::int32_t>::min(),
+                           std::numeric_limits<std::int32_t>::max())
+OSRM_STRONG_TYPEDEF_LIMITS(EdgeDuration, std::numeric_limits<std::int32_t>::min(), (1 << 30) - 1)
+OSRM_STRONG_TYPEDEF_LIMITS(TurnPenalty,
+                           std::numeric_limits<std::int16_t>::min(),
+                           std::numeric_limits<std::int16_t>::max())
+OSRM_STRONG_TYPEDEF_HASHABLE(std::int32_t, EdgeWeight)
+OSRM_STRONG_TYPEDEF_HASHABLE(std::int32_t, EdgeDuration)
 
 static const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
 
@@ -86,7 +96,7 @@ static const NameID INVALID_NAMEID = std::numeric_limits<NameID>::max();
 static const NameID EMPTY_NAMEID = 0;
 static const unsigned INVALID_COMPONENTID = 0;
 static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::max();
-static const EdgeWeight MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeWeight>::max();
+static const EdgeDuration MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeDuration>::max();
 static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>::max();
 
 using DatasourceID = std::uint8_t;

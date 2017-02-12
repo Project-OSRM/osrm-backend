@@ -60,7 +60,7 @@ GraphContractor::GraphContractor(int nodes,
         // merge edges (s,t) and (t,s) into bidirectional edge
         if (forward_edge.data.weight == reverse_edge.data.weight)
         {
-            if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
+            if (forward_edge.data.weight != INVALID_EDGE_WEIGHT)
             {
                 forward_edge.data.backward = true;
                 edges[edge++] = forward_edge;
@@ -68,11 +68,11 @@ GraphContractor::GraphContractor(int nodes,
         }
         else
         { // insert seperate edges
-            if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
+            if ((forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
             {
                 edges[edge++] = forward_edge;
             }
-            if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
+            if (reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
             {
                 edges[edge++] = reverse_edge;
             }

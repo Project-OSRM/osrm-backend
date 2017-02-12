@@ -36,7 +36,7 @@ class TableAPI final : public BaseAPI
     {
     }
 
-    virtual void MakeResponse(const std::vector<EdgeWeight> &durations,
+    virtual void MakeResponse(const std::vector<EdgeDuration> &durations,
                               const std::vector<PhantomNode> &phantoms,
                               util::json::Object &response) const
     {
@@ -98,7 +98,7 @@ class TableAPI final : public BaseAPI
         return json_waypoints;
     }
 
-    virtual util::json::Array MakeTable(const std::vector<EdgeWeight> &values,
+    virtual util::json::Array MakeTable(const std::vector<EdgeDuration> &values,
                                         std::size_t number_of_rows,
                                         std::size_t number_of_columns) const
     {
@@ -112,12 +112,13 @@ class TableAPI final : public BaseAPI
             std::transform(row_begin_iterator,
                            row_end_iterator,
                            json_row.values.begin(),
-                           [](const EdgeWeight duration) {
+                           [](const EdgeDuration duration) {
                                if (duration == MAXIMAL_EDGE_DURATION)
                                {
                                    return util::json::Value(util::json::Null());
                                }
-                               return util::json::Value(util::json::Number(duration / 10.));
+                               return util::json::Value(util::json::Number(
+                                   static_cast<EdgeDuration::value_type>(duration) / 10.));
                            });
             json_table.values.push_back(std::move(json_row));
         }

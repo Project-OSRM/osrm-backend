@@ -27,7 +27,7 @@ struct PathData
     // weight that is traveled on the segment until the turn is reached
     EdgeWeight weight_until_turn;
     // duration that is traveled on the segment until the turn is reached
-    EdgeWeight duration_until_turn;
+    EdgeDuration duration_until_turn;
     // instruction to execute at the turn
     extractor::guidance::TurnInstruction turn_instruction;
     // turn lane data
@@ -55,8 +55,8 @@ struct InternalRouteResult
     std::vector<bool> target_traversed_in_reverse;
     std::vector<bool> alt_source_traversed_in_reverse;
     std::vector<bool> alt_target_traversed_in_reverse;
-    int shortest_path_length;
-    int alternative_path_length;
+    EdgeWeight shortest_path_length;
+    EdgeWeight alternative_path_length;
 
     bool is_valid() const { return INVALID_EDGE_WEIGHT != shortest_path_length; }
 
@@ -68,7 +68,7 @@ struct InternalRouteResult
     }
 
     InternalRouteResult()
-        : shortest_path_length(INVALID_EDGE_WEIGHT), alternative_path_length(INVALID_EDGE_WEIGHT)
+        : shortest_path_length{INVALID_EDGE_WEIGHT}, alternative_path_length{INVALID_EDGE_WEIGHT}
     {
     }
 };

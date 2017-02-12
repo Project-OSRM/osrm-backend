@@ -53,10 +53,10 @@ struct PhantomNode
                 EdgeWeight reverse_weight,
                 EdgeWeight forward_weight_offset,
                 EdgeWeight reverse_weight_offset,
-                EdgeWeight forward_duration,
-                EdgeWeight reverse_duration,
-                EdgeWeight forward_duration_offset,
-                EdgeWeight reverse_duration_offset,
+                EdgeDuration forward_duration,
+                EdgeDuration reverse_duration,
+                EdgeDuration forward_duration_offset,
+                EdgeDuration reverse_duration_offset,
                 unsigned packed_geometry_id_,
                 bool is_tiny_component,
                 unsigned component_id,
@@ -81,11 +81,12 @@ struct PhantomNode
         : forward_segment_id{SPECIAL_SEGMENTID, false},
           reverse_segment_id{SPECIAL_SEGMENTID, false},
           name_id(std::numeric_limits<unsigned>::max()), forward_weight(INVALID_EDGE_WEIGHT),
-          reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset(0), reverse_weight_offset(0),
-          forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
-          forward_duration_offset(0), reverse_duration_offset(0),
-          packed_geometry_id(SPECIAL_GEOMETRYID), component{INVALID_COMPONENTID, false},
-          fwd_segment_position(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
+          reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset(EdgeWeight{0}),
+          reverse_weight_offset(EdgeWeight{0}), forward_duration(MAXIMAL_EDGE_DURATION),
+          reverse_duration(MAXIMAL_EDGE_DURATION), forward_duration_offset(EdgeDuration{0}),
+          reverse_duration_offset(EdgeDuration{0}), packed_geometry_id(SPECIAL_GEOMETRYID),
+          component{INVALID_COMPONENTID, false}, fwd_segment_position(0),
+          forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
           backward_travel_mode(TRAVEL_MODE_INACCESSIBLE)
     {
     }
@@ -102,13 +103,13 @@ struct PhantomNode
         return reverse_weight_offset + reverse_weight;
     }
 
-    EdgeWeight GetForwardDuration() const
+    EdgeDuration GetForwardDuration() const
     {
         BOOST_ASSERT(forward_segment_id.enabled);
         return forward_duration + forward_duration_offset;
     }
 
-    EdgeWeight GetReverseDuration() const
+    EdgeDuration GetReverseDuration() const
     {
         BOOST_ASSERT(reverse_segment_id.enabled);
         return reverse_duration + reverse_duration_offset;
@@ -142,10 +143,10 @@ struct PhantomNode
                          EdgeWeight reverse_weight,
                          EdgeWeight forward_weight_offset,
                          EdgeWeight reverse_weight_offset,
-                         EdgeWeight forward_duration,
-                         EdgeWeight reverse_duration,
-                         EdgeWeight forward_duration_offset,
-                         EdgeWeight reverse_duration_offset,
+                         EdgeDuration forward_duration,
+                         EdgeDuration reverse_duration,
+                         EdgeDuration forward_duration_offset,
+                         EdgeDuration reverse_duration_offset,
                          const util::Coordinate location,
                          const util::Coordinate input_location)
         : forward_segment_id{other.forward_segment_id},
@@ -170,10 +171,10 @@ struct PhantomNode
     EdgeWeight reverse_weight;
     EdgeWeight forward_weight_offset; // TODO: try to remove -> requires path unpacking changes
     EdgeWeight reverse_weight_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight forward_duration;
-    EdgeWeight reverse_duration;
-    EdgeWeight forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeDuration forward_duration;
+    EdgeDuration reverse_duration;
+    EdgeDuration forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeDuration reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
     unsigned packed_geometry_id;
     struct ComponentType
     {

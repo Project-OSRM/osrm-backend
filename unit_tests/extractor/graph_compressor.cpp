@@ -25,10 +25,10 @@ inline InputEdge MakeUnitEdge(const NodeID from, const NodeID to)
     // src, tgt, dist, edge_id, name_id, fwd, bkwd, roundabout, circular, travel_mode
     return {from,
             to,
+            EdgeWeight{1},
+            EdgeDuration{1},
             1,
             SPECIAL_EDGEID,
-            0,
-            0,
             false,
             false,
             false,

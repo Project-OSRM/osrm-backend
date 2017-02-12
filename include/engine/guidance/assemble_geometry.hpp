@@ -75,11 +75,13 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         }
 
         prev_coordinate = coordinate;
-        geometry.annotations.emplace_back(
-            LegGeometry::Annotation{current_distance,
-                                    path_point.duration_until_turn / 10.,
-                                    path_point.weight_until_turn / facade.GetWeightMultiplier(),
-                                    path_point.datasource_id});
+        geometry.annotations.emplace_back(LegGeometry::Annotation{
+            current_distance,
+            static_cast<EdgeDuration::value_type>(path_point.duration_until_turn) /
+                10., // TODO: make over lambdas
+            static_cast<EdgeWeight::value_type>(path_point.weight_until_turn) /
+                facade.GetWeightMultiplier(),
+            path_point.datasource_id});
         geometry.locations.push_back(std::move(coordinate));
         geometry.osm_node_ids.push_back(facade.GetOSMNodeIDOfNode(path_point.turn_via_node));
     }
@@ -97,8 +99,11 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     // testbot/weight.feature:Start and target on the same and adjacent edge
     geometry.annotations.emplace_back(LegGeometry::Annotation{
         current_distance,
-        (reversed_target ? target_node.reverse_duration : target_node.forward_duration) / 10.,
-        (reversed_target ? target_node.reverse_weight : target_node.forward_weight) /
+        static_cast<EdgeDuration::value_type>(reversed_target ? target_node.reverse_duration
+                                                              : target_node.forward_duration) /
+            10.,
+        static_cast<EdgeWeight::value_type>(reversed_target ? target_node.reverse_weight
+                                                            : target_node.forward_weight) /
             facade.GetWeightMultiplier(),
         forward_datasources[target_node.fwd_segment_position]});
 

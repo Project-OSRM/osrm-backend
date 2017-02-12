@@ -21,7 +21,7 @@ class ContractorDijkstra
     // search the graph up
     void Run(const unsigned number_of_targets,
              const int node_limit,
-             const int weight_limit,
+             const EdgeWeight weight_limit,
              const NodeID forbidden_node,
              const ContractorGraph &graph);
 
@@ -37,7 +37,7 @@ class ContractorDijkstra
 
   private:
     void RelaxNode(const NodeID node,
-                   const int node_weight,
+                   const EdgeWeight node_weight,
                    const NodeID forbidden_node,
                    const ContractorGraph &graph);
 

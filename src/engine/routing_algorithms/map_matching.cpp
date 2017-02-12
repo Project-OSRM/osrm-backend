@@ -157,9 +157,9 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
 
             const auto haversine_distance = util::coordinate_calculation::haversineDistance(
                 prev_coordinate, current_coordinate);
-            // assumes minumum of 0.1 m/s
-            const int duration_upper_bound =
-                ((haversine_distance + max_distance_delta) * 0.25) * 10;
+            // TODO: duration used as weight assumes minumum of 0.1 m/s
+            const EdgeWeight duration_upper_bound = EdgeWeight{static_cast<EdgeWeight::value_type>(
+                ((haversine_distance + max_distance_delta) * 0.25) * 10)};
 
             // compute d_t for this timestamp and the next one
             for (const auto s : util::irange<std::size_t>(0UL, prev_viterbi.size()))

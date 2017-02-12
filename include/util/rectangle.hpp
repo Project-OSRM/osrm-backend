@@ -67,8 +67,8 @@ struct RectangleInt2D
         Coordinate centroid;
         // The coordinates of the midpoints are given by:
         // x = (x1 + x2) /2 and y = (y1 + y2) /2.
-        centroid.lon = (min_lon + max_lon) / FixedLongitude{2};
-        centroid.lat = (min_lat + max_lat) / FixedLatitude{2};
+        centroid.lon = (min_lon + max_lon) / 2.;
+        centroid.lat = (min_lat + max_lat) / 2.;
         return centroid;
     }
 

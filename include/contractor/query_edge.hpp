@@ -17,14 +17,14 @@ struct QueryEdge
     struct EdgeData
     {
         explicit EdgeData()
-            : id(0), shortcut(false), weight(0), duration(0), forward(false), backward(false)
+            : id(0), shortcut(false), weight{0}, duration{0}, forward(false), backward(false)
         {
         }
 
         template <class OtherT> EdgeData(const OtherT &other)
         {
             weight = other.weight;
-            duration = other.duration;
+            duration = static_cast<std::int32_t>(other.duration); // TODO check 30 bit
             shortcut = other.shortcut;
             id = other.id;
             forward = other.forward;
@@ -36,7 +36,7 @@ struct QueryEdge
         NodeID id : 31;
         bool shortcut : 1;
         EdgeWeight weight;
-        EdgeWeight duration : 30;
+        std::int32_t duration : 30;
         std::uint32_t forward : 1;
         std::uint32_t backward : 1;
     } data;

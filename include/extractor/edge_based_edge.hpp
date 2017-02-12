@@ -21,7 +21,7 @@ struct EdgeBasedEdge
                   const NodeID target,
                   const NodeID edge_id,
                   const EdgeWeight weight,
-                  const EdgeWeight duration,
+                  const EdgeDuration duration,
                   const bool forward,
                   const bool backward);
 
@@ -31,7 +31,7 @@ struct EdgeBasedEdge
     NodeID target;
     NodeID edge_id;
     EdgeWeight weight;
-    EdgeWeight duration : 30;
+    std::int32_t duration : 30;
     std::uint32_t forward : 1;
     std::uint32_t backward : 1;
 };
@@ -43,7 +43,7 @@ static_assert(sizeof(extractor::EdgeBasedEdge) == 20,
 // Impl.
 
 inline EdgeBasedEdge::EdgeBasedEdge()
-    : source(0), target(0), edge_id(0), weight(0), duration(0), forward(false), backward(false)
+    : source(0), target(0), edge_id(0), weight{0}, duration{0}, forward(false), backward(false)
 {
 }
 
@@ -51,7 +51,7 @@ inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const NodeID target,
                                     const NodeID edge_id,
                                     const EdgeWeight weight,
-                                    const EdgeWeight duration,
+                                    const EdgeDuration duration,
                                     const bool forward,
                                     const bool backward)
     : source(source), target(target), edge_id(edge_id), weight(weight), duration(duration),

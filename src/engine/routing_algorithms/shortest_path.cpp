@@ -21,9 +21,9 @@ void ShortestPathRouting::SearchWithUTurn(
     const bool search_to_reverse_node,
     const PhantomNode &source_phantom,
     const PhantomNode &target_phantom,
-    const int total_weight_to_forward,
-    const int total_weight_to_reverse,
-    int &new_total_weight,
+    const EdgeWeight total_weight_to_forward,
+    const EdgeWeight total_weight_to_reverse,
+    EdgeWeight &new_total_weight,
     std::vector<NodeID> &leg_packed_path) const
 {
     forward_heap.Clear();
@@ -111,10 +111,10 @@ void ShortestPathRouting::Search(const std::shared_ptr<const datafacade::BaseDat
                                  const bool search_to_reverse_node,
                                  const PhantomNode &source_phantom,
                                  const PhantomNode &target_phantom,
-                                 const int total_weight_to_forward,
-                                 const int total_weight_to_reverse,
-                                 int &new_total_weight_to_forward,
-                                 int &new_total_weight_to_reverse,
+                                 const EdgeWeight total_weight_to_forward,
+                                 const EdgeWeight total_weight_to_reverse,
+                                 EdgeWeight &new_total_weight_to_forward,
+                                 EdgeWeight &new_total_weight_to_reverse,
                                  std::vector<NodeID> &leg_packed_path_forward,
                                  std::vector<NodeID> &leg_packed_path_reverse) const
 {
@@ -227,7 +227,7 @@ void ShortestPathRouting::UnpackLegs(const std::shared_ptr<const datafacade::Bas
                                      const std::vector<PhantomNodes> &phantom_nodes_vector,
                                      const std::vector<NodeID> &total_packed_path,
                                      const std::vector<std::size_t> &packed_leg_begin,
-                                     const int shortest_path_length,
+                                     const EdgeWeight shortest_path_length,
                                      InternalRouteResult &raw_route_data) const
 {
     raw_route_data.unpacked_path_segments.resize(packed_leg_begin.size() - 1);
@@ -270,8 +270,8 @@ void ShortestPathRouting::operator()(const std::shared_ptr<const datafacade::Bas
     QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
     QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
 
-    int total_weight_to_forward = 0;
-    int total_weight_to_reverse = 0;
+    EdgeWeight total_weight_to_forward{0};
+    EdgeWeight total_weight_to_reverse{0};
     bool search_from_forward_node =
         phantom_nodes_vector.front().source_phantom.forward_segment_id.enabled;
     bool search_from_reverse_node =
@@ -290,8 +290,8 @@ void ShortestPathRouting::operator()(const std::shared_ptr<const datafacade::Bas
     // a list of vias
     for (const auto &phantom_node_pair : phantom_nodes_vector)
     {
-        int new_total_weight_to_forward = INVALID_EDGE_WEIGHT;
-        int new_total_weight_to_reverse = INVALID_EDGE_WEIGHT;
+        auto new_total_weight_to_forward = INVALID_EDGE_WEIGHT;
+        auto new_total_weight_to_reverse = INVALID_EDGE_WEIGHT;
 
         std::vector<NodeID> packed_leg_to_forward;
         std::vector<NodeID> packed_leg_to_reverse;

@@ -122,19 +122,19 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 // Get weights before graph is modified
                 const EdgeWeight forward_weight1 = fwd_edge_data1.weight;
                 const EdgeWeight forward_weight2 = fwd_edge_data2.weight;
-                const EdgeWeight forward_duration1 = fwd_edge_data1.duration;
-                const EdgeWeight forward_duration2 = fwd_edge_data2.duration;
+                const EdgeDuration forward_duration1 = fwd_edge_data1.duration;
+                const EdgeDuration forward_duration2 = fwd_edge_data2.duration;
 
-                BOOST_ASSERT(0 != forward_weight1);
-                BOOST_ASSERT(0 != forward_weight2);
+                BOOST_ASSERT(forward_weight1 != EdgeWeight{0});
+                BOOST_ASSERT(forward_weight2 != EdgeWeight{0});
 
                 const EdgeWeight reverse_weight1 = rev_edge_data1.weight;
                 const EdgeWeight reverse_weight2 = rev_edge_data2.weight;
-                const EdgeWeight reverse_duration1 = rev_edge_data1.duration;
-                const EdgeWeight reverse_duration2 = rev_edge_data2.duration;
+                const EdgeDuration reverse_duration1 = rev_edge_data1.duration;
+                const EdgeDuration reverse_duration2 = rev_edge_data2.duration;
 
-                BOOST_ASSERT(0 != reverse_weight1);
-                BOOST_ASSERT(0 != reverse_weight2);
+                BOOST_ASSERT(reverse_weight1 != EdgeWeight{0});
+                BOOST_ASSERT(reverse_weight2 != EdgeWeight{0});
 
                 // add weight of e2's to e1
                 graph.GetEdgeData(forward_e1).weight += forward_weight2;

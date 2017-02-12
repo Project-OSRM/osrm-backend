@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <type_traits>
 
 namespace osrm
@@ -43,22 +44,39 @@ namespace osrm
 #define OSRM_STRONG_TYPEDEF(From, To)                                                              \
     struct To final                                                                                \
     {                                                                                              \
+        using value_type = From;                                                                   \
         static_assert(std::is_arithmetic<From>(), "");                                             \
         From __value;                                                                              \
         friend std::ostream &operator<<(std::ostream &stream, const To &inst);                     \
                                                                                                    \
         explicit operator From &() { return __value; }                                             \
         explicit operator From() const { return __value; }                                         \
-        To operator+(const To rhs_) const { return To{__value + static_cast<const From>(rhs_)}; }  \
-        To operator-(const To rhs_) const { return To{__value - static_cast<const From>(rhs_)}; }  \
-        To operator*(const To rhs_) const { return To{__value * static_cast<const From>(rhs_)}; }  \
-        To operator/(const To rhs_) const { return To{__value / static_cast<const From>(rhs_)}; }  \
-        bool operator<(const To z_) const { return __value < static_cast<const From>(z_); }        \
-        bool operator>(const To z_) const { return __value > static_cast<const From>(z_); }        \
-        bool operator<=(const To z_) const { return __value <= static_cast<const From>(z_); }      \
-        bool operator>=(const To z_) const { return __value >= static_cast<const From>(z_); }      \
-        bool operator==(const To z_) const { return __value == static_cast<const From>(z_); }      \
-        bool operator!=(const To z_) const { return __value != static_cast<const From>(z_); }      \
+        To operator+(const To rhs) const { return To{static_cast<From>(__value + rhs.__value)}; }  \
+        To operator-(const To rhs) const { return To{static_cast<From>(__value - rhs.__value)}; }  \
+        To operator*(const To rhs) const { return To{static_cast<From>(__value * rhs.__value)}; }  \
+        To operator*(const double rhs) const { return To{static_cast<From>(__value * rhs)}; }      \
+        To operator/(const double rhs) const { return To{static_cast<From>(__value / rhs)}; }      \
+        bool operator<(const To rhs) const { return __value < rhs.__value; }                       \
+        bool operator>(const To rhs) const { return __value > rhs.__value; }                       \
+        bool operator<=(const To rhs) const { return __value <= rhs.__value; }                     \
+        bool operator>=(const To rhs) const { return __value >= rhs.__value; }                     \
+        bool operator==(const To rhs) const { return __value == rhs.__value; }                     \
+        bool operator!=(const To rhs) const { return __value != rhs.__value; }                     \
+        To &operator+=(const To rhs)                                                               \
+        {                                                                                          \
+            __value += rhs.__value;                                                                \
+            return *this;                                                                          \
+        }                                                                                          \
+        To &operator-=(const To rhs)                                                               \
+        {                                                                                          \
+            __value -= rhs.__value;                                                                \
+            return *this;                                                                          \
+        }                                                                                          \
+        template <typename T = From>                                                               \
+        typename std::enable_if<std::is_signed<T>::value, To>::type operator-() const              \
+        {                                                                                          \
+            return To{-__value};                                                                   \
+        }                                                                                          \
     };                                                                                             \
     static_assert(std::is_trivial<To>(), #To " is not a trivial type");                            \
     static_assert(std::is_standard_layout<To>(), #To " is not a standart layout");                 \
@@ -77,6 +95,16 @@ namespace osrm
         {                                                                                          \
             return std::hash<From>()(static_cast<const From>(k));                                  \
         }                                                                                          \
+    };                                                                                             \
+    }
+
+#define OSRM_STRONG_TYPEDEF_LIMITS(To, Min, Max)                                                   \
+    namespace std                                                                                  \
+    {                                                                                              \
+    template <> struct numeric_limits<To>                                                          \
+    {                                                                                              \
+        static To min() { return To{Min}; }                                                        \
+        static To max() { return To{Max}; }                                                        \
     };                                                                                             \
     }
 }

@@ -119,7 +119,7 @@ inline NodeID loadEdgesFromFile(storage::io::FileReader &file_reader,
         const auto &edge = edge_list[i];
         const auto &prev_edge = edge_list[i - 1];
 
-        BOOST_ASSERT_MSG(edge.weight > 0, "loaded null weight");
+        BOOST_ASSERT_MSG(edge.weight > EdgeWeight{0}, "loaded null weight");
         BOOST_ASSERT_MSG(edge.forward, "edge must be oriented in forward direction");
         BOOST_ASSERT_MSG(edge.travel_mode != TRAVEL_MODE_INACCESSIBLE, "loaded non-accessible");
 

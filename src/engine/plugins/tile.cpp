@@ -282,10 +282,10 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     // vector holds all the actual used values, the feature refernce offsets in
     // this vector.
     // for integer values
-    std::vector<int> used_line_ints;
+    std::vector<EdgeDuration> used_line_ints;
     // While constructing the tile, we keep track of which integers we have in our table
     // and their offsets, so multiple features can re-use the same values
-    std::unordered_map<int, std::size_t> line_int_offsets;
+    std::unordered_map<EdgeDuration, std::size_t> line_int_offsets;
 
     // Same idea for street names - one lookup table for names for all features
     std::vector<util::StringView> names;
@@ -307,7 +307,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     // Helper function for adding a new value to the line_ints lookup table.  Returns
     // the index of the value in the table, adding the value if it doesn't already
     // exist
-    const auto use_line_value = [&used_line_ints, &line_int_offsets](const int value) {
+    const auto use_line_value = [&used_line_ints, &line_int_offsets](const EdgeDuration value) {
         const auto found = line_int_offsets.find(value);
 
         if (found == line_int_offsets.end())
@@ -598,8 +598,9 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         // And, same for the actual turn cost value - it goes in the lookup
                         // table,
                         // not directly on the feature itself.
-                        const auto turn_cost_index = use_point_float_value(
-                            turn_cost / 10.0); // Note conversion to float here
+                        const auto turn_cost_index =
+                            use_point_float_value(static_cast<EdgeWeight::value_type>(turn_cost) /
+                                                  10.0); // Note conversion to float here
 
                         // Save everything we need to later add all the points to the tile.
                         // We need the coordinate of the intersection, the angle in, the turn
@@ -672,15 +673,16 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
             for (const auto &edge_index : sorted_edge_indexes)
             {
                 const auto &edge = edges[edge_index];
-                const auto forward_weight_vector =
-                    facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
-                const auto reverse_weight_vector =
-                    facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
-                const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
-                const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
-                                                                  edge.fwd_segment_position - 1];
-                use_line_value(reverse_weight);
-                use_line_value(forward_weight);
+                const auto forward_duration_vector =
+                    facade->GetUncompressedForwardDurations(edge.packed_geometry_id);
+                const auto reverse_duration_vector =
+                    facade->GetUncompressedReverseDurations(edge.packed_geometry_id);
+                const auto forward_duration = forward_duration_vector[edge.fwd_segment_position];
+                const auto reverse_duration =
+                    reverse_duration_vector[reverse_duration_vector.size() -
+                                            edge.fwd_segment_position - 1];
+                use_line_value(reverse_duration);
+                use_line_value(forward_duration);
             }
 
             // Begin the layer features block
@@ -697,18 +699,19 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                     const double length =
                         osrm::util::coordinate_calculation::haversineDistance(a, b);
 
-                    const auto forward_weight_vector =
-                        facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
-                    const auto reverse_weight_vector =
-                        facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    const auto forward_duration_vector =
+                        facade->GetUncompressedForwardDurations(edge.packed_geometry_id);
+                    const auto reverse_duration_vector =
+                        facade->GetUncompressedReverseDurations(edge.packed_geometry_id);
                     const auto forward_datasource_vector =
                         facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
                     const auto reverse_datasource_vector =
                         facade->GetUncompressedReverseDatasources(edge.packed_geometry_id);
-                    const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
-                    const auto reverse_weight =
-                        reverse_weight_vector[reverse_weight_vector.size() -
-                                              edge.fwd_segment_position - 1];
+                    const auto forward_duration =
+                        forward_duration_vector[edge.fwd_segment_position];
+                    const auto reverse_duration =
+                        reverse_duration_vector[reverse_duration_vector.size() -
+                                                edge.fwd_segment_position - 1];
                     const auto forward_datasource =
                         forward_datasource_vector[edge.fwd_segment_position];
                     const auto reverse_datasource =
@@ -788,21 +791,22 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                     };
 
                     // If this is a valid forward edge, go ahead and add it to the tile
-                    if (forward_weight != 0 && edge.forward_segment_id.enabled)
+                    if (forward_duration != EdgeDuration{0} && edge.forward_segment_id.enabled)
                     {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh =
-                            static_cast<std::uint32_t>(round(length / forward_weight * 10 * 3.6));
+                        std::uint32_t speed_kmh = static_cast<std::uint32_t>(
+                            round(length / static_cast<EdgeDuration::value_type>(forward_duration) *
+                                  10 * 3.6));
 
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
                                              speed_kmh,
-                                             line_int_offsets[forward_weight],
+                                             line_int_offsets[forward_duration],
                                              forward_datasource,
                                              name_offset,
                                              start_x,
@@ -812,21 +816,22 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
 
                     // Repeat the above for the coordinates reversed and using the `reverse`
                     // properties
-                    if (reverse_weight != 0 && edge.reverse_segment_id.enabled)
+                    if (reverse_duration != EdgeDuration{0} && edge.reverse_segment_id.enabled)
                     {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
-                        std::uint32_t speed_kmh =
-                            static_cast<std::uint32_t>(round(length / reverse_weight * 10 * 3.6));
+                        std::uint32_t speed_kmh = static_cast<std::uint32_t>(
+                            round(length / static_cast<EdgeDuration::value_type>(reverse_duration) *
+                                  10 * 3.6));
 
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
                         {
                             encode_tile_line(tile_line,
                                              speed_kmh,
-                                             line_int_offsets[reverse_weight],
+                                             line_int_offsets[reverse_duration],
                                              reverse_datasource,
                                              name_offset,
                                              start_x,
@@ -885,7 +890,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                 // Attribute value 2 == float type
                 // Durations come out of OSRM in integer deciseconds, so we convert them
                 // to seconds with a simple /10 for display
-                values_writer.add_double(util::vector_tile::VARIANT_TYPE_DOUBLE, value / 10.);
+                values_writer.add_double(util::vector_tile::VARIANT_TYPE_DOUBLE,
+                                         static_cast<EdgeDuration::value_type>(value) / 10.);
             }
 
             for (const auto &name : names)

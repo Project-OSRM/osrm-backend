@@ -19,7 +19,7 @@ struct NodeBasedEdge
                   NodeID target,
                   NodeID name_id,
                   EdgeWeight weight,
-                  EdgeWeight duration,
+                  EdgeDuration duration,
                   bool forward,
                   bool backward,
                   bool roundabout,
@@ -36,7 +36,7 @@ struct NodeBasedEdge
     NodeID target;
     NodeID name_id;
     EdgeWeight weight;
-    EdgeWeight duration;
+    EdgeDuration duration; // TODO: repack
     std::uint8_t forward : 1;
     std::uint8_t backward : 1;
     std::uint8_t roundabout : 1;
@@ -54,7 +54,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          OSMNodeID target,
                          NodeID name_id,
                          EdgeWeight weight,
-                         EdgeWeight duration,
+                         EdgeDuration duration,
                          bool forward,
                          bool backward,
                          bool roundabout,
@@ -72,7 +72,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 // Impl.
 
 inline NodeBasedEdge::NodeBasedEdge()
-    : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), duration(0),
+    : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight{0}, duration{0},
       forward(false), backward(false), roundabout(false), circular(false), startpoint(true),
       is_split(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
       lane_description_id(INVALID_LANE_DESCRIPTIONID)
@@ -83,7 +83,7 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     NodeID target,
                                     NodeID name_id,
                                     EdgeWeight weight,
-                                    EdgeWeight duration,
+                                    EdgeDuration duration,
                                     bool forward,
                                     bool backward,
                                     bool roundabout,
@@ -121,7 +121,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   OSMNodeID target,
                                                   NodeID name_id,
                                                   EdgeWeight weight,
-                                                  EdgeWeight duration,
+                                                  EdgeDuration duration,
                                                   bool forward,
                                                   bool backward,
                                                   bool roundabout,

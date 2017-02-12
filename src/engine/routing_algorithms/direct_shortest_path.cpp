@@ -62,7 +62,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                             target_phantom.reverse_segment_id.id);
     }
 
-    int weight = INVALID_EDGE_WEIGHT;
+    auto weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_leg;
 
     const bool constexpr DO_NOT_FORCE_LOOPS =

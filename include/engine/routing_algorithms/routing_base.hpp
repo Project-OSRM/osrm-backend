@@ -71,18 +71,18 @@ class BasicRoutingInterface
                      SearchEngineData::QueryHeap &forward_heap,
                      SearchEngineData::QueryHeap &reverse_heap,
                      NodeID &middle_node_id,
-                     std::int32_t &upper_bound,
-                     std::int32_t min_edge_offset,
+                     EdgeWeight &upper_bound,
+                     EdgeWeight min_edge_offset,
                      const bool forward_direction,
                      const bool stalling,
                      const bool force_loop_forward,
                      const bool force_loop_reverse) const;
 
-    template <bool UseDuration>
-    EdgeWeight GetLoopWeight(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
-                             NodeID node) const
+    std::pair<EdgeWeight, EdgeDuration>
+    GetLoopWeight(const std::shared_ptr<const datafacade::BaseDataFacade> facade, NodeID node) const
     {
-        EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
+        EdgeWeight loop_weight = INVALID_EDGE_WEIGHT;
+        EdgeDuration loop_duration = MAXIMAL_EDGE_DURATION;
         for (auto edge : facade->GetAdjacentEdgeRange(node))
         {
             const auto &data = facade->GetEdgeData(edge);
@@ -91,12 +91,15 @@ class BasicRoutingInterface
                 const NodeID to = facade->GetTarget(edge);
                 if (to == node)
                 {
-                    const auto value = UseDuration ? data.duration : data.weight;
-                    loop_weight = std::min(loop_weight, value);
+                    if (data.weight < loop_weight)
+                    {
+                        loop_weight = data.weight;
+                        loop_duration = EdgeDuration{data.duration};
+                    }
                 }
             }
         }
-        return loop_weight;
+        return std::make_pair(loop_weight, loop_duration);
     }
 
     template <typename RandomIter>
@@ -143,7 +146,7 @@ class BasicRoutingInterface
                 std::vector<NodeID> id_vector;
 
                 std::vector<EdgeWeight> weight_vector;
-                std::vector<EdgeWeight> duration_vector;
+                std::vector<EdgeDuration> duration_vector;
                 std::vector<DatasourceID> datasource_vector;
                 if (geometry_index.forward)
                 {
@@ -199,10 +202,10 @@ class BasicRoutingInterface
 
                 unpacked_path.back().entry_classid = facade->GetEntryClassID(edge_data.id);
                 unpacked_path.back().turn_instruction = turn_instruction;
-                unpacked_path.back().duration_until_turn +=
-                    facade->GetDurationPenaltyForEdgeID(edge_data.id);
                 unpacked_path.back().weight_until_turn +=
                     facade->GetWeightPenaltyForEdgeID(edge_data.id);
+                unpacked_path.back().duration_until_turn +=
+                    facade->GetDurationPenaltyForEdgeID(edge_data.id);
                 unpacked_path.back().pre_turn_bearing = facade->PreTurnBearing(edge_data.id);
                 unpacked_path.back().post_turn_bearing = facade->PostTurnBearing(edge_data.id);
             });
@@ -210,7 +213,7 @@ class BasicRoutingInterface
         std::size_t start_index = 0, end_index = 0;
         std::vector<unsigned> id_vector;
         std::vector<EdgeWeight> weight_vector;
-        std::vector<EdgeWeight> duration_vector;
+        std::vector<EdgeDuration> duration_vector;
         std::vector<DatasourceID> datasource_vector;
         const bool is_local_path = (phantom_node_pair.source_phantom.packed_geometry_id ==
                                     phantom_node_pair.target_phantom.packed_geometry_id) &&
@@ -308,9 +311,9 @@ class BasicRoutingInterface
             // node to the first turn would be the same as from end to end of a segment,
             // which is obviously incorrect and not ideal...
             unpacked_path.front().weight_until_turn =
-                std::max(unpacked_path.front().weight_until_turn - source_weight, 0);
-            unpacked_path.front().duration_until_turn =
-                std::max(unpacked_path.front().duration_until_turn - source_duration, 0);
+                std::max(unpacked_path.front().weight_until_turn - source_weight, EdgeWeight{0});
+            unpacked_path.front().duration_until_turn = std::max(
+                unpacked_path.front().duration_until_turn - source_duration, EdgeDuration{0});
         }
 
         // there is no equivalent to a node-based node in an edge-expanded graph.
@@ -368,11 +371,11 @@ class BasicRoutingInterface
     void Search(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                 SearchEngineData::QueryHeap &forward_heap,
                 SearchEngineData::QueryHeap &reverse_heap,
-                std::int32_t &weight,
+                EdgeWeight &weight,
                 std::vector<NodeID> &packed_leg,
                 const bool force_loop_forward,
                 const bool force_loop_reverse,
-                const int duration_upper_bound = INVALID_EDGE_WEIGHT) const;
+                const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT) const;
 
     // assumes that heaps are already setup correctly.
     // A forced loop might be necessary, if source and target are on the same segment.
@@ -388,11 +391,11 @@ class BasicRoutingInterface
                         SearchEngineData::QueryHeap &reverse_heap,
                         SearchEngineData::QueryHeap &forward_core_heap,
                         SearchEngineData::QueryHeap &reverse_core_heap,
-                        int &weight,
+                        EdgeWeight &weight,
                         std::vector<NodeID> &packed_leg,
                         const bool force_loop_forward,
                         const bool force_loop_reverse,
-                        int duration_upper_bound = INVALID_EDGE_WEIGHT) const;
+                        EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT) const;
 
     bool NeedsLoopForward(const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom) const;
@@ -416,7 +419,7 @@ class BasicRoutingInterface
                                SearchEngineData::QueryHeap &reverse_core_heap,
                                const PhantomNode &source_phantom,
                                const PhantomNode &target_phantom,
-                               int duration_upper_bound = INVALID_EDGE_WEIGHT) const;
+                               EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT) const;
 
     // Requires the heaps for be empty
     // If heaps should be adjusted to be initialized outside of this function,
@@ -426,7 +429,7 @@ class BasicRoutingInterface
                               SearchEngineData::QueryHeap &reverse_heap,
                               const PhantomNode &source_phantom,
                               const PhantomNode &target_phantom,
-                              int duration_upper_bound = INVALID_EDGE_WEIGHT) const;
+                              EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT) const;
 };
 
 } // namespace routing_algorithms
