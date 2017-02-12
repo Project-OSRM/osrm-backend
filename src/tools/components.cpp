@@ -1,3 +1,4 @@
+#include "extractor/pearce_scc.hpp"
 #include "extractor/tarjan_scc.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -12,6 +13,7 @@
 #include <boost/function_output_iterator.hpp>
 
 #include <tbb/parallel_sort.h>
+#include <tbb/task_scheduler_init.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -28,11 +30,11 @@ namespace osrm
 namespace tools
 {
 
-struct TarjanEdgeData
+struct ComponentEdgeData
 {
-    TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
+    ComponentEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
 
-    TarjanEdgeData(std::uint32_t distance, std::uint32_t name_id)
+    ComponentEdgeData(std::uint32_t distance, std::uint32_t name_id)
         : distance(distance), name_id(name_id)
     {
     }
@@ -41,12 +43,12 @@ struct TarjanEdgeData
     std::uint32_t name_id;
 };
 
-using TarjanGraph = util::StaticGraph<TarjanEdgeData>;
-using TarjanEdge = TarjanGraph::InputEdge;
+using ComponentsGraph = util::StaticGraph<ComponentEdgeData>;
+using ComponentsEdge = ComponentsGraph::InputEdge;
 
 std::size_t loadGraph(const std::string &path,
                       std::vector<extractor::QueryNode> &coordinate_list,
-                      std::vector<TarjanEdge> &graph_edge_list)
+                      std::vector<ComponentsEdge> &graph_edge_list)
 {
     storage::io::FileReader file_reader(path, storage::io::FileReader::VerifyFingerprint);
 
@@ -129,6 +131,8 @@ int main(int argc, char *argv[])
 {
     using namespace osrm;
 
+    tbb::task_scheduler_init init(tbb::task_scheduler_init::default_num_threads());
+
     std::vector<extractor::QueryNode> coordinate_list;
     util::LogPolicy::GetInstance().Unmute();
 
@@ -155,34 +159,34 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    std::vector<tools::TarjanEdge> graph_edge_list;
+    std::vector<tools::ComponentsEdge> graph_edge_list;
     auto number_of_nodes = tools::loadGraph(inpath, coordinate_list, graph_edge_list);
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
 
-    const auto graph = std::make_shared<osrm::tools::TarjanGraph>(number_of_nodes, graph_edge_list);
+    osrm::tools::ComponentsGraph graph(number_of_nodes, graph_edge_list);
     graph_edge_list.clear();
     graph_edge_list.shrink_to_fit();
 
     util::Log() << "Starting SCC graph traversal";
 
-    extractor::TarjanSCC<tools::TarjanGraph> tarjan{graph};
-    tarjan.Run();
+    extractor::PearceSCC<tools::ComponentsGraph> scc{graph};
+    scc.Run();
 
-    util::Log() << "Identified: " << tarjan.GetNumberOfComponents() << " components";
-    util::Log() << "Identified " << tarjan.GetSizeOneCount() << " size one components";
+    util::Log() << "Identified: " << scc.GetNumberOfComponents() << " components";
+    util::Log() << "Identified " << scc.GetSizeOneCount() << " size one components";
 
     std::uint64_t total_network_length = 0;
 
     tools::FeatureWriter writer{outfile};
 
-    for (const NodeID source : osrm::util::irange(0u, graph->GetNumberOfNodes()))
+    for (const NodeID source : osrm::util::irange(0u, graph.GetNumberOfNodes()))
     {
-        for (const auto current_edge : graph->GetAdjacentEdgeRange(source))
+        for (const auto current_edge : graph.GetAdjacentEdgeRange(source))
         {
-            const auto target = graph->GetTarget(current_edge);
+            const auto target = graph.GetTarget(current_edge);
 
-            if (source < target || SPECIAL_EDGEID == graph->FindEdge(target, source))
+            if (source < target || SPECIAL_EDGEID == graph.FindEdge(target, source))
             {
                 BOOST_ASSERT(current_edge != SPECIAL_EDGEID);
                 BOOST_ASSERT(source != SPECIAL_NODEID);
@@ -191,11 +195,11 @@ int main(int argc, char *argv[])
                 total_network_length += 100 * util::coordinate_calculation::greatCircleDistance(
                                                   coordinate_list[source], coordinate_list[target]);
 
-                auto source_component_id = tarjan.GetComponentID(source);
-                auto target_component_id = tarjan.GetComponentID(target);
+                auto source_component_id = scc.GetComponentID(source);
+                auto target_component_id = scc.GetComponentID(target);
 
-                auto source_component_size = tarjan.GetComponentSize(source_component_id);
-                auto target_component_size = tarjan.GetComponentSize(target_component_id);
+                auto source_component_size = scc.GetComponentSize(source_component_id);
+                auto target_component_size = scc.GetComponentSize(target_component_id);
 
                 const auto smallest = std::min(source_component_size, target_component_size);
 

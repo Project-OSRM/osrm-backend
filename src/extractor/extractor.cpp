@@ -27,7 +27,7 @@
 // Keep debug include to make sure the debug header is in sync with types.
 #include "util/debug.hpp"
 
-#include "extractor/tarjan_scc.hpp"
+#include "extractor/pearce_scc.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -380,10 +380,9 @@ void Extractor::FindComponents(unsigned max_edge_id,
     auto new_end = std::unique(edges.begin(), edges.end());
     edges.resize(new_end - edges.begin());
 
-    auto uncontractor_graph = std::make_shared<UncontractedGraph>(max_edge_id + 1, edges);
+    UncontractedGraph uncontractor_graph(max_edge_id + 1, edges);
 
-    TarjanSCC<UncontractedGraph> component_search(
-        std::const_pointer_cast<const UncontractedGraph>(uncontractor_graph));
+    PearceSCC<UncontractedGraph> component_search(uncontractor_graph);
     component_search.Run();
 
     for (auto &node : input_nodes)

@@ -46,21 +46,21 @@ template <typename GraphT> class TarjanSCC
 
     std::vector<unsigned> components_index;
     std::vector<NodeID> component_size_vector;
-    std::shared_ptr<const GraphT> m_graph;
+    const GraphT &m_graph;
     std::size_t size_one_counter;
 
   public:
-    TarjanSCC(std::shared_ptr<const GraphT> graph)
-        : components_index(graph->GetNumberOfNodes(), SPECIAL_NODEID), m_graph(graph),
+    TarjanSCC(const GraphT &graph)
+        : components_index(graph.GetNumberOfNodes(), SPECIAL_NODEID), m_graph(graph),
           size_one_counter(0)
     {
-        BOOST_ASSERT(m_graph->GetNumberOfNodes() > 0);
+        BOOST_ASSERT(m_graph.GetNumberOfNodes() > 0);
     }
 
     void Run()
     {
         TIMER_START(SCC_RUN);
-        const NodeID max_node_id = m_graph->GetNumberOfNodes();
+        const NodeID max_node_id = m_graph.GetNumberOfNodes();
 
         // The following is a hack to distinguish between stuff that happens
         // before the recursive call and stuff that happens after
@@ -105,9 +105,9 @@ template <typename GraphT> class TarjanSCC
                     tarjan_node_list[v].on_stack = true;
                     ++index;
 
-                    for (const auto current_edge : m_graph->GetAdjacentEdgeRange(v))
+                    for (const auto current_edge : m_graph.GetAdjacentEdgeRange(v))
                     {
-                        const auto vprime = m_graph->GetTarget(current_edge);
+                        const auto vprime = m_graph.GetTarget(current_edge);
 
                         if (SPECIAL_NODEID == tarjan_node_list[vprime].index)
                         {
