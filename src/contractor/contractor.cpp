@@ -268,7 +268,7 @@ template <typename Key, typename Value> struct CSVFilesParser
         qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
             (key_rule >> ',' >> value_source) >> -(',' >> *(qi::char_ - qi::eol));
         std::vector<std::pair<Key, Value>> result;
-        const auto ok = qi::parse(first, last, (csv_line % qi::eol) >> *qi::eol, result);
+        const auto ok = qi::parse(first, last, -(csv_line % qi::eol) >> *qi::eol, result);
 
         if (!ok || first != last)
         {
