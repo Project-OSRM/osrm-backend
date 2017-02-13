@@ -45,3 +45,9 @@ Feature: Car - speeds
             | primary | 60       | 47 km/h | 47 km/h  |
             | primary | 60       | 47 km/h | 47 km/h  |
             | primary | 60       | 47 km/h | 47 km/h  |
+
+    Scenario: Car - Side road penalties
+        Then routability should be
+
+            | highway | side_road | forw    | backw    | forw_rate | backw_rate |
+            | primary | yes       | 64 km/h | 64 km/h  | 14        | 14         |
