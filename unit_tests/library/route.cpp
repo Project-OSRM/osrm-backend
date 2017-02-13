@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
 
     using namespace osrm;
 
-    RouteParameters params{};
+    RouteParameters params;
     params.annotations_type = RouteParameters::AnnotationsType::Duration |
                               RouteParameters::AnnotationsType::Distance |
                               RouteParameters::AnnotationsType::Speed;
@@ -420,6 +420,39 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
         auto distance = distances[i].get<json::Number>().value;
         BOOST_CHECK_EQUAL(speed, std::round(distance / duration * 10.) / 10.);
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
+{
+    const auto args = get_args();
+    auto osrm = getOSRM(args.at(0));
+
+    using namespace osrm;
+
+    RouteParameters params{};
+    params.annotations = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    json::Object result;
+    const auto rc = osrm.Route(params, result);
+    BOOST_CHECK(rc == Status::Ok);
+
+    const auto code = result.values.at("code").get<json::String>().value;
+    BOOST_CHECK_EQUAL(code, "Ok");
+
+    auto annotations = result.values["routes"]
+                           .get<json::Array>()
+                           .values[0]
+                           .get<json::Object>()
+                           .values["legs"]
+                           .get<json::Array>()
+                           .values[0]
+                           .get<json::Object>()
+                           .values["annotation"]
+                           .get<json::Object>()
+                           .values;
+    BOOST_CHECK_EQUAL(annotations.size(), 5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
