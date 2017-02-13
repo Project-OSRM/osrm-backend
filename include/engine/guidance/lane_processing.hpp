@@ -20,7 +20,7 @@ namespace guidance
 // as separate maneuvers.
 OSRM_ATTR_WARN_UNUSED
 std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
-                                            const double min_duration_needed_for_lane_change = 15);
+                                            const double min_duration_needed_for_lane_change = 10);
 
 } // namespace guidance
 } // namespace engine

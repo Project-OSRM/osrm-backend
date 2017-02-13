@@ -74,6 +74,15 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
 
         // We're walking backwards over all adjacent turns:
         // the current turn lanes constrain the lanes we have to take in the previous turn.
+
+        // state for the lamda
+        // the number of lanes we have to change depends on the number of lanes that are allowed for
+        // a turn (in general) and the set of lanes which would allow for us to do the turn without
+        // a problem. In a sequence of turns, we have to look at how much time we need to switch the
+        // sequence. Given the turns in between, we would expect a bit longer than on a straight
+        // segment for a lane switch, but the total time shouldn't be unlimited.
+        double time_to_constrained = 0.0;
+
         util::for_each_pair(rev_first, rev_last, [&](RouteStep &current, RouteStep &previous) {
             const auto current_inst = current.maneuver.instruction;
             const auto current_lanes = current.intersections.front().lanes;
@@ -88,7 +97,18 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             const bool lanes_to_constrain = previous_lanes.lanes_in_turn > 1;
             const bool lanes_fan_in = previous_lanes.lanes_in_turn > current_lanes.lanes_in_turn;
 
-            if (!lanes_to_constrain || !lanes_fan_in)
+            // only prevent use lanes due to making all turns. don't make turns during curvy
+            // segments
+            if (previous_inst.type == TurnType::UseLane)
+                time_to_constrained += previous.duration;
+            else
+                time_to_constrained = 0;
+
+            const auto lane_delta = previous_lanes.lanes_in_turn - current_lanes.lanes_in_turn;
+            const auto can_make_all_turns =
+                time_to_constrained > lane_delta * min_duration_needed_for_lane_change;
+
+            if (!lanes_to_constrain || !lanes_fan_in || can_make_all_turns)
                 return;
 
             // We do not have a mapping from lanes to lanes. All we have is the lanes in the turn
@@ -98,9 +118,6 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
             // not possible at the moment. In the following we implement a heuristic instead.
             const LaneID current_num_lanes_right_of_turn = current.NumLanesToTheRight();
             const LaneID current_num_lanes_left_of_turn = current.NumLanesToTheLeft();
-
-            const LaneID num_shared_lanes = std::min(current_lanes.lanes_in_turn,   //
-                                                     previous_lanes.lanes_in_turn); //
 
             // 0/ Tag keep straight with the next turn's direction if available
             const auto previous_is_straight =
@@ -121,14 +138,14 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                 LaneID new_first_lane_from_the_right =
                     previous_lanes.first_lane_from_the_right // start from rightmost lane
                     + previous_lanes.lanes_in_turn           // one past leftmost lane
-                    - num_shared_lanes;                      // back number of new lanes
+                    - current_lanes.lanes_in_turn;           // back number of new lanes
 
                 // The leftmost target lanes might not be involved in the turn. Figure out
                 // how many lanes are to the left and not in the turn.
                 new_first_lane_from_the_right -=
-                    std::min(current_num_lanes_left_of_turn, num_shared_lanes);
+                    std::min(current_num_lanes_left_of_turn, current_lanes.lanes_in_turn);
 
-                previous_lanes = {num_shared_lanes, new_first_lane_from_the_right};
+                previous_lanes = {current_lanes.lanes_in_turn, new_first_lane_from_the_right};
             };
 
             const auto anticipate_for_right_turn = [&] {
@@ -139,9 +156,9 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                 // The rightmost target lanes might not be involved in the turn. Figure out
                 // how many lanes are to the right and not in the turn.
                 new_first_lane_from_the_right +=
-                    std::min(current_num_lanes_right_of_turn, num_shared_lanes);
+                    std::min(current_num_lanes_right_of_turn, current_lanes.lanes_in_turn);
 
-                previous_lanes = {num_shared_lanes, new_first_lane_from_the_right};
+                previous_lanes = {current_lanes.lanes_in_turn, new_first_lane_from_the_right};
             };
 
             // 2/ When to anticipate a left, right turn
@@ -179,13 +196,11 @@ std::vector<RouteStep> anticipateLaneChange(std::vector<RouteStep> steps,
                     anticipate_for_right_turn();
             }
 
-            // We might have constrained the previous step in a way that makes it compatible
-            // with the current step. If we did so we collapse it here and mark the current
-            // step as invalid, scheduled for later removal.
-            if (collapsable(previous, current))
+            if (previous_inst.type == TurnType::UseLane && current_inst.type == TurnType::UseLane &&
+                previous.mode == current.mode && previous_lanes == current_lanes)
             {
                 previous.ElongateBy(current);
-                current.maneuver.instruction = TurnInstruction::NO_TURN();
+                current.Invalidate();
             }
         });
     };
