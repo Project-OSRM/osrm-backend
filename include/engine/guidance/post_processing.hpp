@@ -28,6 +28,7 @@ std::vector<RouteStep> collapseTurns(std::vector<RouteStep> steps);
 
 // A check whether two instructions can be treated as one. This is only the case for very short
 // maneuvers that can, in some form, be seen as one. Lookahead of one step.
+// This is only a pre-check and does not necessarily allow collapsing turns!!!
 bool collapsable(const RouteStep &step, const RouteStep &next);
 
 // trim initial/final segment of very short length.
