@@ -28,6 +28,29 @@ This dataset is a small extract and may not even contain all tags or edge cases.
 Furthermore this dataset is not in sync with what you see in up-to-date OSM maps or on the demo server.
 See the library tests for how to add new dataset dependent tests.
 
+To prepare the test data simply `cd test/data/` and then run `make`.
+
+## Running Tests
+
+To build the unit tests:
+
+```
+cd build
+cmake ..
+make tests
+```
+
+You should see the compiled binaries in `build/unit_tests`, you can then run each suite individually:
+
+```
+./engine-tests
+```
+
+For `library-tests` you will need to provide a path to the test data:
+
+```
+./library-tests ../../test/data/monaco.osrm
+```
 
 ## Cucumber
 
