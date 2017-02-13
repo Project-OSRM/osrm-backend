@@ -818,3 +818,37 @@ Feature: Turn Lane Guidance
        When I route I should get
             | waypoints | route               | turns                                   | lanes                                                                        |
             | a,e       | MySt,MySt,MySt,MySt | depart,continue right,turn right,arrive | ,straight:false straight:false right:false right:true,left:false right:true, |
+
+    @anticipate
+    Scenario: Don't Overdo It
+        Given the node map
+            """
+                                  q                     r                     s                     t                     u                     v
+                                  |                     |                     |                     |                     |                     |
+            a - - - - - - - - - - b - - - - - - - - - - c - - - - - - - - - - d - - - - - - - - - - e - - - - - - - - - - f - - - - - - - - - - g - h - i
+                                  |                     |                     |                     |                     |                     |   |
+                                  p                     o                     n                     m                     l                     k   j
+            """
+
+        And the ways
+            | nodes | name | turn:lanes:forward | oneway |
+            | ab    | road | left\|\|\|         | yes    |
+            | bc    | road | left\|\|\|         | yes    |
+            | cd    | road | left\|\|\|         | yes    |
+            | de    | road | left\|\|\|         | yes    |
+            | ef    | road | left\|\|\|         | yes    |
+            | fg    | road | left\|\|\|         | yes    |
+            | gh    | road | \|\|right          | yes    |
+            | hi    | road |                    | yes    |
+            | qbp   | 1st  |                    | no     |
+            | rco   | 2nd  |                    | no     |
+            | sdn   | 3rd  |                    | no     |
+            | tem   | 4th  |                    | no     |
+            | ufl   | 5th  |                    | no     |
+            | vgk   | 6th  |                    | no     |
+            | hj    | 7th  |                    | no     |
+
+        When I route I should get
+            | waypoints | route             | turns                                      | locations | lanes                                                                         |
+            | a,i       | road,road,road    | depart,use lane straight,arrive            | a,g,i     | ,left:false none:true none:true none:false,                                   |
+            | a,j       | road,road,7th,7th | depart,use lane straight,turn right,arrive | a,f,h,j   | ,left:false none:false none:false none:true,none:false none:false right:true, |
