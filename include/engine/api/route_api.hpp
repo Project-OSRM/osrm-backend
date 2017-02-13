@@ -228,21 +228,23 @@ class RouteAPI : public BaseAPI
 
         std::vector<util::json::Object> annotations;
 
-        if (parameters.annotations_type != RouteParameters::AnnotationsType::None ||
-            parameters.annotations == true)
+        // To maintain support for uses of the old default constructors, we check
+        // if annotations property was set manually after default construction
+        auto requested_annotations = parameters.annotations_type;
+        if ((parameters.annotations == true) &&
+            (parameters.annotations_type == RouteParameters::AnnotationsType::None))
         {
-            auto requested_annotations = parameters.annotations_type;
-            if ((parameters.annotations == true) &&
-                (parameters.annotations_type == RouteParameters::AnnotationsType::None))
-            {
-                requested_annotations = RouteParameters::AnnotationsType::All;
-            }
+            requested_annotations = RouteParameters::AnnotationsType::All;
+        }
 
+        if (requested_annotations != RouteParameters::AnnotationsType::None)
+        {
             for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
             {
                 auto &leg_geometry = leg_geometries[idx];
                 util::json::Object annotation;
 
+                // AnnotationsType uses bit flags, & operator checks if a property is set
                 if (parameters.annotations_type & RouteParameters::AnnotationsType::Speed)
                 {
                     annotation.values["speed"] = GetAnnotations(
@@ -251,15 +253,13 @@ class RouteAPI : public BaseAPI
                         });
                 }
 
-                // AnnotationsType uses bit flags, & operator checks if a property is set
-                if (ReqAnnotations & RouteParameters::AnnotationsType::Duration)
+                if (requested_annotations & RouteParameters::AnnotationsType::Duration)
                 {
                     annotation.values["duration"] = GetAnnotations(
                         leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
                             return anno.duration;
                         });
                 }
-
                 if (requested_annotations & RouteParameters::AnnotationsType::Distance)
                 {
                     annotation.values["distance"] = GetAnnotations(
