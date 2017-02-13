@@ -107,25 +107,25 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
         return std::make_pair(std::size_t{0}, std::size_t{0});
     }();
 
+    const auto intersection_range_first = intersection.begin() + range.first;
+    const auto intersection_range_end = intersection.begin() + range.second;
     const auto allowed_in_range =
-        std::count_if(intersection.begin() + range.first,
-                      intersection.begin() + range.second,
-                      [](const auto &road) { return road.entry_allowed; });
+        std::count_if(intersection_range_first, intersection_range_end, [](const auto &road) {
+            return road.entry_allowed;
+        });
 
     if (allowed_in_range > 1 && lane_data[none_index].to - lane_data[none_index].from >= 1)
     {
         // check if there is a straight turn
-        auto straight_itr = std::find_if(intersection.begin() + range.first,
-                                         intersection.begin() + range.second,
-                                         [](const auto &road) {
-                                             return road.instruction.direction_modifier ==
-                                                    DirectionModifier::Straight;
-                                         });
+        auto straight_itr =
+            std::find_if(intersection_range_first, intersection_range_end, [](const auto &road) {
+                return road.instruction.direction_modifier == DirectionModifier::Straight;
+            });
 
         // we have a straight turn?
-        if (straight_itr != intersection.begin() + range.second)
+        if (straight_itr != intersection_range_end)
         {
-            for (auto itr = intersection.begin() + range.first; itr != straight_itr; ++itr)
+            for (auto itr = intersection_range_first; itr != straight_itr; ++itr)
             {
                 lane_data.push_back({tag_by_modifier[itr->instruction.direction_modifier],
                                      lane_data[none_index].from,
@@ -136,7 +136,7 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
                                  lane_data[none_index].from,
                                  lane_data[none_index].to,
                                  false});
-            for (auto itr = straight_itr + 1; itr != intersection.begin() + range.second; ++itr)
+            for (auto itr = straight_itr + 1; itr != intersection_range_end; ++itr)
             {
                 lane_data.push_back({tag_by_modifier[itr->instruction.direction_modifier],
                                      lane_data[none_index].to,
@@ -155,7 +155,6 @@ LaneDataVector augmentMultiple(const std::size_t none_index,
         {
             if (intersection[intersection_index].entry_allowed)
             {
-                // FIXME this probably can be only a subset of these turns here?
                 lane_data.push_back({tag_by_modifier[intersection[intersection_index]
                                                          .instruction.direction_modifier],
                                      lane_data[none_index].from,
