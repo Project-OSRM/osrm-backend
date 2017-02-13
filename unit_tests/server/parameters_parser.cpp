@@ -359,9 +359,10 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     BOOST_CHECK(result_speed);
     BOOST_CHECK_EQUAL(reference_speed.geometries, result_speed->geometries);
     BOOST_CHECK_EQUAL(reference_speed.overview, result_speed->overview);
-    BOOST_CHECK_EQUAL(result_speed->annotations_type == (RouteParameters::AnnotationsType::Duration |
-                          RouteParameters::AnnotationsType::Distance |
-                          RouteParameters::AnnotationsType::Speed),
+    BOOST_CHECK_EQUAL(result_speed->annotations_type ==
+                          (RouteParameters::AnnotationsType::Duration |
+                           RouteParameters::AnnotationsType::Distance |
+                           RouteParameters::AnnotationsType::Speed),
                       true);
     BOOST_CHECK_EQUAL(result_speed->annotations, true);
 
