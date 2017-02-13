@@ -30,7 +30,7 @@ See the library tests for how to add new dataset dependent tests.
 
 To prepare the test data simply `cd test/data/` and then run `make`.
 
-## Running Tests
+### Running Tests
 
 To build the unit tests:
 
