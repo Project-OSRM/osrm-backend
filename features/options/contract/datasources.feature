@@ -28,3 +28,11 @@ Feature: osrm-contract command line options: datasources
         When I run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
         Then datasource names should contain "lua profile,27_osrmcontract_passing_base_file_speeds"
         And it should exit successfully
+
+    Scenario: osrm-contract - Passing base file
+        Given the speed file
+        """
+        """
+        And the data has been extracted
+        When I run "osrm-contract --segment-speed-file {speeds_file} {processed_file}"
+        Then it should exit successfully
