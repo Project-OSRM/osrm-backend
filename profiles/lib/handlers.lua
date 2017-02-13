@@ -327,7 +327,7 @@ function Handlers.handle_penalties(way,result,data,profile)
   local sideroad_penalty = 1.0
   data.sideroad = way:get_value_by_key("side_road")
   if "yes" == data.sideroad or "rotary" == data.sideroad then
-    sideroad_penalty = side_road_multiplier;
+    sideroad_penalty = profile.side_road_multiplier
   end
 
   local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, forward_hov_penalty)
