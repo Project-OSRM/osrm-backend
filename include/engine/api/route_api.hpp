@@ -239,7 +239,7 @@ class RouteAPI : public BaseAPI
                 {
                     annotation.values["speed"] = GetAnnotations(
                         leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return anno.distance / anno.duration;
+                            return std::round(anno.distance / anno.duration * 10.) / 10.;
                         });
                 }
 
