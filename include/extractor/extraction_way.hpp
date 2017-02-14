@@ -58,6 +58,8 @@ struct ExtractionWay
         turn_lanes_forward.clear();
         turn_lanes_backward.clear();
         road_classification = guidance::RoadClassification();
+        backward_restricted = false;
+        forward_restricted = false;
     }
 
     // These accessors exists because it's not possible to take the address of a bitfield,
@@ -106,6 +108,8 @@ struct ExtractionWay
     bool roundabout;
     bool circular;
     bool is_startpoint;
+    bool backward_restricted;
+    bool forward_restricted;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
     guidance::RoadClassification road_classification;

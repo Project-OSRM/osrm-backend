@@ -34,6 +34,9 @@ local profile = {
   speed_reduction            = 0.8,
   traffic_light_penalty      = 2,
   u_turn_penalty             = 20,
+  restricted_penalty         = 3000,
+  -- Note^: abstract value but in seconds correlates approximately to 50 min
+  -- meaning that a route through a local access way is > 50 min faster than around
 
   -- Note: this biases right-side driving.
   -- Should be inverted for left-driving countries.
@@ -63,18 +66,21 @@ local profile = {
     'vehicle',
     'permissive',
     'designated',
-    'destination',
-    'hov' -- we might filter hov out later depending on the avoid settings or add penalties
+    'hov'
   },
 
   access_tag_blacklist = Set {
     'no',
-    'private',
     'agricultural',
     'forestry',
     'emergency',
-    'psv',
-    'delivery'
+    'psv'
+  },
+
+  restricted_access_tag_list = Set {
+    'private',
+    'delivery',
+    'destination'
   },
 
   access_tags_hierarchy = Sequence {
@@ -331,7 +337,7 @@ function way_function(way, result)
     -- handle service road restrictions
     'handle_service',
 
-    -- check high occupancy vehicle restrictions
+    -- handle hov
     'handle_hov',
 
     -- compute speed taking into account way type, maxspeed tags, etc.
@@ -385,6 +391,12 @@ function turn_function (turn)
        turn.weight = 0
     else
        turn.weight = turn.duration
+    end
+    if properties.weight_name == 'routability' then
+        -- penalize turns from non-local access only segments onto local access only tags
+        if not turn.source_restricted and turn.target_restricted then
+            turn.weight = turn.weight + profile.restricted_penalty
+        end
     end
   end
 end

@@ -121,6 +121,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
 
     const auto toValueByEdgeOrByMeter = [&nodes](const double by_way, const double by_meter) {
         using Value = detail::ByEdgeOrByMeterValue;
+        // get value by weight per edge
         if (by_way >= 0)
         {
             // FIXME We divide by the number of edges here, but should rather consider
@@ -132,6 +133,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         }
         else
         {
+            // get value by deriving weight from speed per edge
             return Value(Value::by_meter, by_meter);
         }
     };
@@ -320,6 +322,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
          parsed_way.weight > 0) &&
         (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
 
+    // split an edge into two edges if forwards/backwards behavior differ
     const bool split_edge = in_forward_direction && in_backward_direction &&
                             ((parsed_way.forward_rate != parsed_way.backward_rate) ||
                              (parsed_way.forward_speed != parsed_way.backward_speed) ||
@@ -343,8 +346,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                           parsed_way.roundabout,
                                           parsed_way.circular,
                                           parsed_way.is_startpoint,
-                                          parsed_way.forward_travel_mode,
+                                          parsed_way.forward_restricted,
                                           split_edge,
+                                          parsed_way.forward_travel_mode,
                                           turn_lane_id_forward,
                                           road_classification,
                                           {}));
@@ -368,8 +372,9 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                           parsed_way.roundabout,
                                           parsed_way.circular,
                                           parsed_way.is_startpoint,
-                                          parsed_way.backward_travel_mode,
+                                          parsed_way.backward_restricted,
                                           split_edge,
+                                          parsed_way.backward_travel_mode,
                                           turn_lane_id_backward,
                                           road_classification,
                                           {}));

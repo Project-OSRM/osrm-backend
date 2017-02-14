@@ -25,27 +25,29 @@ struct NodeBasedEdge
                   bool roundabout,
                   bool circular,
                   bool startpoint,
-                  TravelMode travel_mode,
+                  bool restricted,
                   bool is_split,
+                  TravelMode travel_mode,
                   const LaneDescriptionID lane_description_id,
                   guidance::RoadClassification road_classification);
 
     bool operator<(const NodeBasedEdge &other) const;
 
-    NodeID source;
-    NodeID target;
-    NodeID name_id;
-    EdgeWeight weight;
-    EdgeWeight duration;
-    std::uint8_t forward : 1;
-    std::uint8_t backward : 1;
-    std::uint8_t roundabout : 1;
-    std::uint8_t circular : 1;
-    std::uint8_t startpoint : 1;
-    std::uint8_t is_split : 1;
-    TravelMode travel_mode : 4;
-    LaneDescriptionID lane_description_id;
-    guidance::RoadClassification road_classification;
+    NodeID source;                                    // 32 4
+    NodeID target;                                    // 32 4
+    NodeID name_id;                                   // 32 4
+    EdgeWeight weight;                                // 32 4
+    EdgeWeight duration;                              // 32 4
+    std::uint8_t forward : 1;                         // 1
+    std::uint8_t backward : 1;                        // 1
+    std::uint8_t roundabout : 1;                      // 1
+    std::uint8_t circular : 1;                        // 1
+    std::uint8_t startpoint : 1;                      // 1
+    std::uint8_t restricted : 1;                      // 1
+    std::uint8_t is_split : 1;                        // 1
+    TravelMode travel_mode : 4;                       // 4
+    LaneDescriptionID lane_description_id;            // 16 2
+    guidance::RoadClassification road_classification; // 16 2
 };
 
 struct NodeBasedEdgeWithOSM : NodeBasedEdge
@@ -60,8 +62,9 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          bool roundabout,
                          bool circular,
                          bool startpoint,
-                         TravelMode travel_mode,
+                         bool restricted,
                          bool is_split,
+                         TravelMode travel_mode,
                          const LaneDescriptionID lane_description_id,
                          guidance::RoadClassification road_classification);
 
@@ -74,7 +77,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
 inline NodeBasedEdge::NodeBasedEdge()
     : source(SPECIAL_NODEID), target(SPECIAL_NODEID), name_id(0), weight(0), duration(0),
       forward(false), backward(false), roundabout(false), circular(false), startpoint(true),
-      is_split(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
+      restricted(false), is_split(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
       lane_description_id(INVALID_LANE_DESCRIPTIONID)
 {
 }
@@ -89,13 +92,14 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     bool roundabout,
                                     bool circular,
                                     bool startpoint,
-                                    TravelMode travel_mode,
+                                    bool restricted,
                                     bool is_split,
+                                    TravelMode travel_mode,
                                     const LaneDescriptionID lane_description_id,
                                     guidance::RoadClassification road_classification)
     : source(source), target(target), name_id(name_id), weight(weight), duration(duration),
       forward(forward), backward(backward), roundabout(roundabout), circular(circular),
-      startpoint(startpoint), is_split(is_split), travel_mode(travel_mode),
+      startpoint(startpoint), restricted(restricted), is_split(is_split), travel_mode(travel_mode),
       lane_description_id(lane_description_id), road_classification(std::move(road_classification))
 {
 }
@@ -127,8 +131,9 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   bool roundabout,
                                                   bool circular,
                                                   bool startpoint,
-                                                  TravelMode travel_mode,
+                                                  bool restricted,
                                                   bool is_split,
+                                                  TravelMode travel_mode,
                                                   const LaneDescriptionID lane_description_id,
                                                   guidance::RoadClassification road_classification)
     : NodeBasedEdge(SPECIAL_NODEID,
@@ -141,8 +146,9 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                     roundabout,
                     circular,
                     startpoint,
-                    travel_mode,
+                    restricted,
                     is_split,
+                    travel_mode,
                     lane_description_id,
                     std::move(road_classification)),
       osm_source_id(std::move(source)), osm_target_id(std::move(target))

@@ -343,7 +343,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "forward_mode",
         sol::property(&ExtractionWay::get_forward_mode, &ExtractionWay::set_forward_mode),
         "backward_mode",
-        sol::property(&ExtractionWay::get_backward_mode, &ExtractionWay::set_backward_mode));
+        sol::property(&ExtractionWay::get_backward_mode, &ExtractionWay::set_backward_mode),
+        "forward_restricted",
+        &ExtractionWay::forward_restricted,
+        "backward_restricted",
+        &ExtractionWay::backward_restricted);
 
     context.state.new_usertype<ExtractionSegment>("ExtractionSegment",
                                                   "source",
@@ -369,7 +373,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                "weight",
                                                &ExtractionTurn::weight,
                                                "duration",
-                                               &ExtractionTurn::duration);
+                                               &ExtractionTurn::duration,
+                                               "source_restricted",
+                                               &ExtractionTurn::source_restricted,
+                                               "target_restricted",
+                                               &ExtractionTurn::target_restricted);
 
     // Keep in mind .location is undefined since we're not using libosmium's location cache
     context.state.new_usertype<osmium::NodeRef>("NodeRef", "id", &osmium::NodeRef::ref);

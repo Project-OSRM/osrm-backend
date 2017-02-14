@@ -70,8 +70,9 @@ struct InternalExtractorEdge
                  false, // roundabout
                  false, // circular
                  true,  // can be startpoint
+                 false, // local access only
+                 false, // split edge
                  TRAVEL_MODE_INACCESSIBLE,
-                 false,
                  guidance::TurnLaneType::empty,
                  guidance::RoadClassification()),
           weight_data(), duration_data()
@@ -88,8 +89,9 @@ struct InternalExtractorEdge
                                    bool roundabout,
                                    bool circular,
                                    bool startpoint,
-                                   TravelMode travel_mode,
+                                   bool restricted,
                                    bool is_split,
+                                   TravelMode travel_mode,
                                    LaneDescriptionID lane_description,
                                    guidance::RoadClassification road_classification,
                                    util::Coordinate source_coordinate)
@@ -103,8 +105,9 @@ struct InternalExtractorEdge
                  roundabout,
                  circular,
                  startpoint,
-                 travel_mode,
+                 restricted,
                  is_split,
+                 travel_mode,
                  lane_description,
                  std::move(road_classification)),
           weight_data(std::move(weight_data)), duration_data(std::move(duration_data)),
@@ -134,8 +137,9 @@ struct InternalExtractorEdge
                                      false, // roundabout
                                      false, // circular
                                      true,  // can be startpoint
+                                     false, // local access only
+                                     false, // split edge
                                      TRAVEL_MODE_INACCESSIBLE,
-                                     false,
                                      INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassification(),
                                      util::Coordinate());
@@ -152,8 +156,9 @@ struct InternalExtractorEdge
                                      false, // roundabout
                                      false, // circular
                                      true,  // can be startpoint
+                                     false, // local access only
+                                     false, // split edge
                                      TRAVEL_MODE_INACCESSIBLE,
-                                     false,
                                      INVALID_LANE_DESCRIPTIONID,
                                      guidance::RoadClassification(),
                                      util::Coordinate());

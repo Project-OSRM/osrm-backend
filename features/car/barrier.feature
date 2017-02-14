@@ -29,14 +29,14 @@ Feature: Car - Barriers
             | gate         | permissive    | x     |
             | gate         | designated    | x     |
             | gate         | no            |       |
-            | gate         | private       |       |
+            | gate         | private       | x     |
             | gate         | agricultural  |       |
             | wall         |               |       |
             | wall         | yes           | x     |
             | wall         | permissive    | x     |
             | wall         | designated    | x     |
             | wall         | no            |       |
-            | wall         | private       |       |
+            | wall         | private       | x     |
             | wall         | agricultural  |       |
 
     Scenario: Car - Rising bollard exception for barriers
