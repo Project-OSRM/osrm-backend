@@ -96,7 +96,7 @@ local profile = {
 
   avoid = Set {
     'area',
-    'toll',
+    -- 'toll',    -- uncomment this to avoid tolls
     'reversible',
     'impassable',
     'hov_lanes',
