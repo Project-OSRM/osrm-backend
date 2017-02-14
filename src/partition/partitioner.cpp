@@ -14,8 +14,6 @@
 
 #include <boost/assert.hpp>
 
-#include <tbb/task_scheduler_init.h>
-
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
 #include "util/json_container.hpp"

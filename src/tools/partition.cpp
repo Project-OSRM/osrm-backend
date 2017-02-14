@@ -153,6 +153,8 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
+    tbb::task_scheduler_init init(partition_config.requested_num_threads);
+
     auto exitcode = partition::Partitioner().Run(partition_config);
 
     util::DumpMemoryStats();
