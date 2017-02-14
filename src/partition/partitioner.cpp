@@ -152,58 +152,33 @@ int Partitioner::Run(const PartitionConfig &config)
                 << edge_based_graph->GetNumberOfEdges() << " edges, "
                 << edge_based_graph->GetNumberOfNodes() << " nodes";
 
-    // TODO: put translation into own function / file
+    // TODO: node based graph to edge based graph partition id mapping should be done split off.
 
-    const auto &partition_ids = recursive_bisection.BisectionIDs();
+    // Partition ids, keyed by node based graph nodes
+    const auto &node_based_partition_ids = recursive_bisection.BisectionIDs();
 
-    std::vector<NodeID> edge_based_border_nodes;
+    // Partition ids, keyed by edge based graph nodes
+    std::vector<NodeID> edge_based_partition_ids(edge_based_graph->GetNumberOfNodes());
 
     // Extract edge based border nodes, based on node based partition and mapping.
-    for (const auto node_id : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
+    for (const auto node : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
     {
-        const auto node_based_nodes = mapping.Lookup(node_id);
+        const auto node_based_nodes = mapping.Lookup(node);
 
         const auto u = node_based_nodes.u;
         const auto v = node_based_nodes.v;
 
-        if (partition_ids[u] == partition_ids[v])
+        if (node_based_partition_ids[u] == node_based_partition_ids[v])
         {
             // Can use partition_ids[u/v] as partition for edge based graph `node_id`
+            edge_based_partition_ids[node] = node_based_partition_ids[u];
         }
         else
         {
             // Border nodes u,v - need to be resolved.
-            edge_based_border_nodes.push_back(node_id);
+            // FIXME: just pick one side for now. See #3205.
+            edge_based_partition_ids[node] = node_based_partition_ids[u];
         }
-    }
-
-    util::Log() << "Fixing " << edge_based_border_nodes.size() << " edge based graph border nodes";
-
-    std::vector<std::pair<NodeID, EdgeBasedGraphEdgeData>> incoming_edges;
-
-    for (const auto border_node : edge_based_border_nodes)
-    {
-        for (const auto edge : edge_based_graph->GetAdjacentEdgeRange(border_node))
-        {
-            const auto &data = edge_based_graph->GetEdgeData(edge);
-
-            if (data.backward)
-            {
-                incoming_edges.emplace_back(edge_based_graph->GetTarget(edge), data);
-                edge_based_graph->DeleteEdge(border_node, edge);
-            }
-        }
-
-        const auto artificial = edge_based_graph->InsertNode();
-
-        EdgeBasedGraphEdgeData dummy{SPECIAL_EDGEID, /*is_boundary_arc=*/true, 0, 0, false, false};
-
-        for (const auto edge : incoming_edges)
-        {
-            edge_based_graph->InsertEdge(edge.first, artificial, edge.second);
-        }
-
-        incoming_edges.clear();
     }
 
     return 0;
