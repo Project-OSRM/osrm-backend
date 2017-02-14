@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_EQUAL(result.size(), 113824);
+    BOOST_CHECK(result.size() > 115000);
 
     protozero::pbf_reader tile_message(result);
     tile_message.next();
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
     }
 
     BOOST_CHECK_EQUAL(number_of_turn_keys, 3);
-    BOOST_CHECK_EQUAL(number_of_turns_found, 732);
+    BOOST_CHECK(number_of_turns_found > 700);
 }
 
 BOOST_AUTO_TEST_CASE(test_tile_turns)

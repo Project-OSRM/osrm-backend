@@ -40,13 +40,13 @@ Feature: Car - Surfaces
             | highway  | access       | tracktype | smoothness | surface | forw | backw |
             | motorway |              |           |            |         | x    |       |
             | motorway | no           | grade1    | excellent  | asphalt |      |       |
-            | motorway | private      | grade1    | excellent  | asphalt |      |       |
+            | motorway | private      | grade1    | excellent  | asphalt | x    |       |
             | motorway | agricultural | grade1    | excellent  | asphalt |      |       |
             | motorway | forestry     | grade1    | excellent  | asphalt |      |       |
             | motorway | emergency    | grade1    | excellent  | asphalt |      |       |
             | primary  |              |           |            |         | x    | x     |
+            | primary  | private      | grade1    | excellent  | asphalt | x    | x     |
             | primary  | no           | grade1    | excellent  | asphalt |      |       |
-            | primary  | private      | grade1    | excellent  | asphalt |      |       |
             | primary  | agricultural | grade1    | excellent  | asphalt |      |       |
             | primary  | forestry     | grade1    | excellent  | asphalt |      |       |
             | primary  | emergency    | grade1    | excellent  | asphalt |      |       |
