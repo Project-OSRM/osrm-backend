@@ -12,6 +12,7 @@ properties.max_speed_for_map_matching    = 40/3.6 -- kmph -> m/s
 properties.use_turn_restrictions         = false
 properties.continue_straight_at_waypoint = false
 properties.weight_name                   = 'duration'
+--properties.weight_name                   = 'routability'
 
 local walking_speed = 5
 
@@ -44,11 +45,13 @@ local profile = {
 
   access_tag_blacklist = Set {
     'no',
-    'private',
     'agricultural',
     'forestry',
-    'delivery'
+    'private',
+    'delivery',
   },
+
+  restricted_access_tag_list = Set { },
 
   access_tags_hierarchy = Sequence {
     'foot',
@@ -243,5 +246,11 @@ function turn_function (turn)
 
   if turn.has_traffic_light then
      turn.duration = profile.traffic_light_penalty
+  end
+  if properties.weight_name == 'routability' then
+      -- penalize turns from non-local access only segments onto local access only tags
+      if not turn.source_restricted and turn.target_restricted then
+          turn.weight = turn.weight + 3000
+      end
   end
 end
