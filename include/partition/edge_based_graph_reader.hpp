@@ -18,16 +18,11 @@ namespace osrm
 namespace partition
 {
 
-struct EdgeBasedGraphEdgeData
+struct EdgeBasedGraphEdgeData : extractor::EdgeBasedEdge
 {
-    NodeID edge_id : 31;
-    // Artificial edge used to fixup partitioning, see #3205.
-    // These artificial edges have invalid weight / duration.
-    bool is_boundary_arc : 1;
-    EdgeWeight weight;
-    EdgeWeight duration : 30;
-    std::uint32_t forward : 1;
-    std::uint32_t backward : 1;
+    // We need to write out the full edge based graph again.
+
+    // TODO: in case we want to modify the graph we need to store a boundary_arc flag here
 };
 
 struct EdgeBasedGraph : util::DynamicGraph<EdgeBasedGraphEdgeData>
@@ -134,7 +129,6 @@ struct EdgeBasedGraphReader
             forward_edge.source = reverse_edge.source = source;
             forward_edge.target = reverse_edge.target = target;
             forward_edge.data.edge_id = reverse_edge.data.edge_id = edges[i].edge_id;
-            forward_edge.data.is_boundary_arc = reverse_edge.data.is_boundary_arc = false;
             forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
             forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
             forward_edge.data.forward = reverse_edge.data.backward = true;
