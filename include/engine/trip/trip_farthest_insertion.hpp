@@ -167,8 +167,6 @@ std::vector<NodeID> FarthestInsertionTrip(const std::size_t number_of_locations,
     NodeID max_from = index_of_farthest_distance / number_of_locations;
     NodeID max_to = index_of_farthest_distance % number_of_locations;
 
-    BOOST_ASSERT(max_from >= 0);
-    BOOST_ASSERT(max_to >= 0);
     BOOST_ASSERT_MSG(static_cast<std::size_t>(max_from) < number_of_locations, "start node");
     BOOST_ASSERT_MSG(static_cast<std::size_t>(max_to) < number_of_locations, "start node");
     return FindRoute(number_of_locations, dist_table, max_from, max_to);

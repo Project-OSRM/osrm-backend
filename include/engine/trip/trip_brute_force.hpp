@@ -74,8 +74,6 @@ std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
     BOOST_ASSERT_MSG(*(std::max_element(std::begin(node_order), std::end(node_order))) <
                          number_of_locations,
                      "invalid node id");
-    BOOST_ASSERT_MSG(*(std::min_element(std::begin(node_order), std::end(node_order))) >= 0,
-                     "invalid node id");
 
     do
     {

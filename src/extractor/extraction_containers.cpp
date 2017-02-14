@@ -112,8 +112,6 @@ namespace osrm
 namespace extractor
 {
 
-static const int WRITE_BLOCK_BUFFER_SIZE = 8000;
-
 ExtractionContainers::ExtractionContainers()
 {
     // Check if stxxl can be instantiated
