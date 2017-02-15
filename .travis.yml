@@ -58,7 +58,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_SANITIZER=ON
+      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON
 
     # Release Builds
     - os: linux

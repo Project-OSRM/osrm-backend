@@ -3,10 +3,12 @@
 
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
+#include "util/timing_util.hpp"
 #include "util/version.hpp"
 
 #include <tbb/task_scheduler_init.h>
 
+#include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -154,8 +156,13 @@ int main(int argc, char *argv[]) try
     }
 
     tbb::task_scheduler_init init(partition_config.requested_num_threads);
+    BOOST_ASSERT(init.is_active());
+    util::Log() << "Computing recursive bisection";
 
+    TIMER_START(bisect);
     auto exitcode = partition::Partitioner().Run(partition_config);
+    TIMER_STOP(bisect);
+    util::Log() << "Bisection took " << TIMER_SEC(bisect) << " seconds.";
 
     util::DumpMemoryStats();
 
