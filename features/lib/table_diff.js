@@ -36,7 +36,7 @@ module.exports = function (expected, actual) {
             }
         }
     });
-    
+
     if (!tableError) return null;
 
 
@@ -68,7 +68,7 @@ module.exports = function (expected, actual) {
     // header row
     cells = []
     headers.forEach( (key) => {
-        var content = key.padRight(' ', widths[key] );
+        var content = String(key).padRight(' ', widths[key] );
         if (columnStatus[key] == false )
             content = okStr + content;
         cells.push( chalk.white( content ) );
@@ -83,7 +83,7 @@ module.exports = function (expected, actual) {
         // expected row
         cells = []
         headers.forEach( (key) => {
-            var content = row[key].padRight(' ', widths[key] );
+            var content = String(row[key]).padRight(' ', widths[key] );
             if (statusRows[i][key] == false)
                 cells.push( chalk.yellow( wantStr + content) );
             else {
@@ -105,7 +105,7 @@ module.exports = function (expected, actual) {
         if (rowError) {
             cells = []
             headers.forEach( (key) => {
-                var content = actual[i][key].padRight(' ', widths[key] );
+                var content = String(actual[i][key]).padRight(' ', widths[key] );
                 if (statusRows[i][key] == false)
                     cells.push( chalk.red( gotStr + content) );
                 else {
