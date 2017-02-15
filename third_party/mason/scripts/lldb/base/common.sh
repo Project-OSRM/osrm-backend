@@ -6,6 +6,8 @@ function mason_build {
     # copy bin
     mkdir -p "${MASON_PREFIX}/bin"
     cp "${CLANG_PREFIX}/bin/${MASON_NAME}" "${MASON_PREFIX}/bin/"
+    cp "${CLANG_PREFIX}/bin/lldb-server" "${MASON_PREFIX}/bin/"
+    cp "${CLANG_PREFIX}/bin/lldb-argdumper" "${MASON_PREFIX}/bin/"
     # copy lib
     mkdir -p "${MASON_PREFIX}/lib"
     if [[ $(uname -s) == 'Darwin' ]]; then

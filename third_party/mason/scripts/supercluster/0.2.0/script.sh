@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 MASON_NAME=supercluster
-MASON_VERSION=0.2.0
+MASON_VERSION=0.2.0-1
 MASON_HEADER_ONLY=true
 
 . ${MASON_DIR}/mason.sh

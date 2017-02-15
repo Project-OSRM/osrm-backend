@@ -1,0 +1,48 @@
+diff --git a/build/linux.gcc.inc b/build/linux.gcc.inc
+index b7ed0c5..588fcd2 100644
+--- a/build/linux.gcc.inc
++++ b/build/linux.gcc.inc
+@@ -32,8 +32,8 @@ DYLIB_KEY = -shared
+ EXPORT_KEY = -Wl,--version-script,
+ LIBDL = -ldl
+ 
+-CPLUS = g++
+-CONLY = gcc
++CPLUS = $(CXX)
++CONLY = $(CC)
+ LIB_LINK_FLAGS = $(DYLIB_KEY) -Wl,-soname=$(BUILDING_LIBRARY)
+ LIBS += -lpthread -lrt
+ LINK_FLAGS = -Wl,-rpath-link=. -rdynamic
+@@ -68,7 +68,7 @@ ifneq (,$(shell gcc -dumpversion | egrep  "^([6-9])"))
+ endif
+ 
+ ifeq ($(cfg), release)
+-        CPLUS_FLAGS = $(ITT_NOTIFY) -g -O2 -DUSE_PTHREAD
++        CPLUS_FLAGS = $(ITT_NOTIFY) -O3 -DNDEBUG -DUSE_PTHREAD
+ endif
+ ifeq ($(cfg), debug)
+         CPLUS_FLAGS = -DTBB_USE_DEBUG $(ITT_NOTIFY) -g -O0 -DUSE_PTHREAD
+diff --git a/build/macos.clang.inc b/build/macos.clang.inc
+index 330c721..4d7d568 100644
+--- a/build/macos.clang.inc
++++ b/build/macos.clang.inc
+@@ -16,8 +16,8 @@
+ #
+ #
+ 
+-CPLUS = clang++
+-CONLY = clang
++CPLUS = $(CXX)
++CONLY = $(CC)
+ COMPILE_ONLY = -c -MMD
+ PREPROC_ONLY = -E -x c++
+ INCLUDE_KEY = -I
+@@ -39,7 +39,7 @@ LIB_LINK_FLAGS = -dynamiclib -install_name @rpath/$(BUILDING_LIBRARY)
+ C_FLAGS = $(CPLUS_FLAGS)
+ 
+ ifeq ($(cfg), release)
+-    CPLUS_FLAGS = -g -O2
++    CPLUS_FLAGS = -O3 -DNDEBUG
+ else
+     CPLUS_FLAGS = -g -O0 -DTBB_USE_DEBUG
+ endif

@@ -2,7 +2,7 @@
 
 MASON_NAME=gcc
 MASON_VERSION=5.3.0-i686
-MASON_LIB_FILE=root/bin/arm-i686-linux-gnueabi-gcc
+MASON_LIB_FILE=root/bin/i686-pc-linux-gnu-gcc
 
 . ${MASON_DIR}/mason.sh
 
@@ -33,6 +33,10 @@ function mason_cflags {
 }
 
 function mason_ldflags {
+    :
+}
+
+function mason_static_libs {
     :
 }
 

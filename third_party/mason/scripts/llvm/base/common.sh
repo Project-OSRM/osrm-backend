@@ -5,7 +5,8 @@ MASON_LIB_FILE=bin/clang
 
 . ${MASON_DIR}/mason.sh
 
-export MAJOR_MINOR=$(echo ${MASON_VERSION} | cut -d '.' -f1-2)
+export MASON_BASE_VERSION=${MASON_BASE_VERSION:-${MASON_VERSION}}
+export MAJOR_MINOR=$(echo ${MASON_BASE_VERSION} | cut -d '.' -f1-2)
 
 if [[ $(uname -s) == 'Darwin' ]]; then
     export BUILD_AND_LINK_LIBCXX=false
@@ -72,24 +73,24 @@ function get_llvm_project() {
 
 # Note: override this function to set custom hash
 function setup_release() {
-    get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/llvm-${MASON_VERSION}.src.tar.xz"              ${MASON_BUILD_PATH}/
-    get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/cfe-${MASON_VERSION}.src.tar.xz"               ${MASON_BUILD_PATH}/tools/clang
-    get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/compiler-rt-${MASON_VERSION}.src.tar.xz"       ${MASON_BUILD_PATH}/projects/compiler-rt
+    get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/llvm-${MASON_BASE_VERSION}.src.tar.xz"              ${MASON_BUILD_PATH}/
+    get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/cfe-${MASON_BASE_VERSION}.src.tar.xz"               ${MASON_BUILD_PATH}/tools/clang
+    get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/compiler-rt-${MASON_BASE_VERSION}.src.tar.xz"       ${MASON_BUILD_PATH}/projects/compiler-rt
     if [[ ${BUILD_AND_LINK_LIBCXX} == true ]]; then
-        get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/libcxx-${MASON_VERSION}.src.tar.xz"        ${MASON_BUILD_PATH}/projects/libcxx
-        get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/libcxxabi-${MASON_VERSION}.src.tar.xz"     ${MASON_BUILD_PATH}/projects/libcxxabi
-        get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/libunwind-${MASON_VERSION}.src.tar.xz"     ${MASON_BUILD_PATH}/projects/libunwind
+        get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/libcxx-${MASON_BASE_VERSION}.src.tar.xz"        ${MASON_BUILD_PATH}/projects/libcxx
+        get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/libcxxabi-${MASON_BASE_VERSION}.src.tar.xz"     ${MASON_BUILD_PATH}/projects/libcxxabi
+        get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/libunwind-${MASON_BASE_VERSION}.src.tar.xz"     ${MASON_BUILD_PATH}/projects/libunwind
     fi
-    get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/lld-${MASON_VERSION}.src.tar.xz"               ${MASON_BUILD_PATH}/tools/lld
-    get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/clang-tools-extra-${MASON_VERSION}.src.tar.xz" ${MASON_BUILD_PATH}/tools/clang/tools/extra
-    get_llvm_project "http://llvm.org/releases/${MASON_VERSION}/lldb-${MASON_VERSION}.src.tar.xz"              ${MASON_BUILD_PATH}/tools/lldb
+    get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/lld-${MASON_BASE_VERSION}.src.tar.xz"               ${MASON_BUILD_PATH}/tools/lld
+    get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/clang-tools-extra-${MASON_BASE_VERSION}.src.tar.xz" ${MASON_BUILD_PATH}/tools/clang/tools/extra
+    get_llvm_project "http://llvm.org/releases/${MASON_BASE_VERSION}/lldb-${MASON_BASE_VERSION}.src.tar.xz"              ${MASON_BUILD_PATH}/tools/lldb
     get_llvm_project "https://github.com/include-what-you-use/include-what-you-use/archive/clang_${MAJOR_MINOR}.tar.gz" ${MASON_BUILD_PATH}/tools/clang/tools/include-what-you-use
 }
 
 function mason_load_source {
     mkdir -p "${MASON_ROOT}/.cache"
     cd "${MASON_ROOT}/.cache"
-    export MASON_BUILD_PATH=${MASON_ROOT}/.build/llvm-${MASON_VERSION}
+    export MASON_BUILD_PATH=${MASON_ROOT}/.build/llvm-${MASON_BASE_VERSION}
     mkdir -p "${MASON_ROOT}/.build"
     if [[ -d ${MASON_BUILD_PATH}/ ]]; then
         rm -rf ${MASON_BUILD_PATH}/

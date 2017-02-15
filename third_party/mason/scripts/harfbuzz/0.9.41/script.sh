@@ -27,13 +27,18 @@ function mason_prepare_compile {
     export C_INCLUDE_PATH="${MASON_FREETYPE}/include/freetype2"
     export CPLUS_INCLUDE_PATH="${MASON_FREETYPE}/include/freetype2"
     export LIBRARY_PATH="${MASON_FREETYPE}/lib"
+    if [[ ! `which pkg-config` ]]; then
+        echo "harfbuzz configure needs pkg-config, please install pkg-config"
+        exit 1
+    fi
 }
 
 function mason_compile {
     export FREETYPE_CFLAGS="-I${MASON_FREETYPE}/include/freetype2"
     export FREETYPE_LIBS="-L${MASON_FREETYPE}/lib -lfreetype -lz"
-    export CXXFLAGS="${CXXFLAGS} -DHB_NO_MT ${FREETYPE_CFLAGS}"
-    export CFLAGS="${CFLAGS} -DHB_NO_MT ${FREETYPE_CFLAGS}"
+    # Note CXXFLAGS overrides the harbuzz default with is `-O2 -g`
+    export CXXFLAGS="${CXXFLAGS} ${FREETYPE_CFLAGS} -O3 -DNDEBUG"
+    export CFLAGS="${CFLAGS} ${FREETYPE_CFLAGS} -O3 -DNDEBUG"
     export LDFLAGS="${LDFLAGS} ${FREETYPE_LIBS}"
 
     mason_step "Loading patch 'https://github.com/mapbox/mason/blob/${MASON_SLUG}/patch.diff'..."

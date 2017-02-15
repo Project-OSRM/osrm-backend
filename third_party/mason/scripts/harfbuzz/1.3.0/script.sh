@@ -36,8 +36,9 @@ function mason_prepare_compile {
 function mason_compile {
     export FREETYPE_CFLAGS="-I${MASON_FREETYPE}/include/freetype2"
     export FREETYPE_LIBS="-L${MASON_FREETYPE}/lib -lfreetype -lz"
-    export CXXFLAGS="${CXXFLAGS} ${FREETYPE_CFLAGS}"
-    export CFLAGS="${CFLAGS} ${FREETYPE_CFLAGS}"
+    # Note CXXFLAGS overrides the harbuzz default with is `-O2 -g`
+    export CXXFLAGS="${CXXFLAGS} ${FREETYPE_CFLAGS} -O3 -DNDEBUG"
+    export CFLAGS="${CFLAGS} ${FREETYPE_CFLAGS} -O3 -DNDEBUG"
     export LDFLAGS="${LDFLAGS} ${FREETYPE_LIBS}"
 
     ./configure --prefix=${MASON_PREFIX} ${MASON_HOST_ARG} \

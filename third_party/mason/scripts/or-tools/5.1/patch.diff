@@ -1,0 +1,145 @@
+diff --git a/makefiles/Makefile.third_party.unix b/makefiles/Makefile.third_party.unix
+index f2b3403..c82d55d 100755
+--- a/makefiles/Makefile.third_party.unix
++++ b/makefiles/Makefile.third_party.unix
+@@ -285,7 +285,7 @@ dependencies/sources/cbc-$(CBC_TAG)/Makefile: dependencies/sources/cbc-$(CBC_TAG
+ 	cd dependencies/sources/cbc-$(CBC_TAG) && $(SET_PATH) $(SET_COMPILER) ./configure --prefix=$(OR_ROOT_FULL)/dependencies/install --disable-bzlib --without-lapack --enable-static --enable-shared --with-pic ADD_CXXFLAGS="-DCBC_THREAD_SAFE -DCBC_NO_INTERRUPT $(MAC_VERSION)"
+ 
+ dependencies/sources/cbc-$(CBC_TAG)/Makefile.in:
+-	svn co https://projects.coin-or.org/svn/Cbc/releases/$(CBC_TAG) dependencies/sources/cbc-$(CBC_TAG)
++	svn co --trust-server-cert --non-interactive https://projects.coin-or.org/svn/Cbc/releases/$(CBC_TAG) dependencies/sources/cbc-$(CBC_TAG)
+ 
+ # Install pcre (dependency of SWIG).
+ dependencies/install/bin/pcretest: dependencies/sources/pcre-$(PCRE_TAG)/Makefile $(ACLOCAL_TARGET)
+@@ -351,6 +351,8 @@ dependencies/install/bin/bison: dependencies/sources/bison-$(BISON_TAG)/Makefile
+ 
+ dependencies/sources/bison-$(BISON_TAG)/Makefile: dependencies/sources/bison-$(BISON_TAG)/configure $(ACLOCAL_TARGET)
+ 	cd dependencies/sources/bison-$(BISON_TAG) && $(SET_PATH) autoreconf
++	sed -e "s/^INFO_DEPS = .*/INFO_DEPS =/g" < dependencies/sources/bison-$(BISON_TAG)/Makefile.in > dependencies/sources/bison-$(BISON_TAG)/Makefile.in.new
++	mv -f dependencies/sources/bison-$(BISON_TAG)/Makefile.in.new dependencies/sources/bison-$(BISON_TAG)/Makefile.in
+ 	cd dependencies/sources/bison-$(BISON_TAG) && $(SET_PATH) ./configure --prefix=$(OR_ROOT_FULL)/dependencies/install
+ 
+ dependencies/sources/bison-$(BISON_TAG)/configure: dependencies/archives/bison-$(BISON_TAG).tar.gz
+@@ -396,18 +398,22 @@ dependencies/sources/libtool-$(LIBTOOL_TAG)/Makefile: dependencies/sources/libto
+ 
+ dependencies/sources/libtool-$(LIBTOOL_TAG)/configure: dependencies/archives/libtool-$(LIBTOOL_TAG).tar.gz
+ 	cd dependencies/sources && tar xvzmf ../archives/libtool-$(LIBTOOL_TAG).tar.gz
++	sed -e "s/^INFO_DEPS = .*/INFO_DEPS =/g" < dependencies/sources/libtool-$(LIBTOOL_TAG)/Makefile.in > dependencies/sources/libtool-$(LIBTOOL_TAG)/Makefile.in.new
++	mv -f dependencies/sources/libtool-$(LIBTOOL_TAG)/Makefile.in.new dependencies/sources/libtool-$(LIBTOOL_TAG)/Makefile.in
+ 
+ dependencies/archives/libtool-$(LIBTOOL_TAG).tar.gz:
+ 	cd dependencies/archives && curl -OL http://ftpmirror.gnu.org/libtool/libtool-$(LIBTOOL_TAG).tar.gz
+ 
+ # Install automake
+ dependencies/install/bin/automake: dependencies/sources/automake-$(AUTOMAKE_TAG)/Makefile
+-	cd dependencies/sources/automake-$(AUTOMAKE_TAG) && $(SET_PATH) ./bootstrap.sh
+ 	cd dependencies/sources/automake-$(AUTOMAKE_TAG) && $(SET_PATH) make
+ 	cd dependencies/sources/automake-$(AUTOMAKE_TAG) && $(SET_PATH) make install
+ 
+ 
+ dependencies/sources/automake-$(AUTOMAKE_TAG)/Makefile: dependencies/sources/automake-$(AUTOMAKE_TAG)/configure dependencies/install/bin/autoconf
++	cd dependencies/sources/automake-$(AUTOMAKE_TAG) && $(SET_PATH) ./bootstrap.sh
++	sed -e "s/^INFO_DEPS =.*/INFO_DEPS =/g" -e 's/^.*automake-history.info$$//g' < dependencies/sources/automake-$(AUTOMAKE_TAG)/Makefile.in > dependencies/sources/automake-$(AUTOMAKE_TAG)/Makefile.in.new
++	mv -f dependencies/sources/automake-$(AUTOMAKE_TAG)/Makefile.in.new dependencies/sources/automake-$(AUTOMAKE_TAG)/Makefile.in
+ 	cd dependencies/sources/automake-$(AUTOMAKE_TAG) && $(SET_PATH) ./configure --prefix=$(OR_ROOT_FULL)/dependencies/install
+ 
+ dependencies/sources/automake-$(AUTOMAKE_TAG)/configure: dependencies/archives/automake-$(AUTOMAKE_TAG).tar.gz
+@@ -471,22 +477,22 @@ makefile_third_party: Makefile.local
+ Makefile.local: makefiles/Makefile.third_party.unix
+ 	-$(DEL) Makefile.local
+ 	@echo Generating Makefile.local
+-	@echo $(SELECTED_JDK_DEF)>> Makefile.local
+-	@echo UNIX_PYTHON_VER = $(DETECTED_PYTHON_VERSION)>> Makefile.local
+-	@echo PATH_TO_CSHARP_COMPILER = $(DETECTED_MCS_BINARY)>> Makefile.local
+-	@echo CLR_KEYFILE = bin/or-tools.snk>> Makefile.local
++	#@echo $(SELECTED_JDK_DEF)>> Makefile.local
++	#@echo UNIX_PYTHON_VER = $(DETECTED_PYTHON_VERSION)>> Makefile.local
++	#@echo PATH_TO_CSHARP_COMPILER = $(DETECTED_MCS_BINARY)>> Makefile.local
++	#@echo CLR_KEYFILE = bin/or-tools.snk>> Makefile.local
+ 	@echo >> Makefile.local
+-	@echo $(GLPK_MAKEFILE)>> Makefile.local
+-	@echo $(SCIP_MAKEFILE)>> Makefile.local
+-	@echo \# Define UNIX_SLM_DIR to use Sulum Optimization.>> Makefile.local
+-	@echo \# Define UNIX_GUROBI_DIR and GUROBI_LIB_VERSION to use Gurobi.>> Makefile.local
+-	@echo \# Define UNIX_CPLEX_DIR to use CPLEX.>> Makefile.local
++	#@echo $(GLPK_MAKEFILE)>> Makefile.local
++	#@echo $(SCIP_MAKEFILE)>> Makefile.local
++	#@echo \# Define UNIX_SLM_DIR to use Sulum Optimization.>> Makefile.local
++	#@echo \# Define UNIX_GUROBI_DIR and GUROBI_LIB_VERSION to use Gurobi.>> Makefile.local
++	#@echo \# Define UNIX_CPLEX_DIR to use CPLEX.>> Makefile.local
+ 	@echo >> Makefile.local
+ 	@echo UNIX_GFLAGS_DIR = $(OR_ROOT_FULL)/dependencies/install>> Makefile.local
+ 	@echo UNIX_PROTOBUF_DIR = $(OR_ROOT_FULL)/dependencies/install>> Makefile.local
+ 	@echo UNIX_SPARSEHASH_DIR = $(OR_ROOT_FULL)/dependencies/install>> Makefile.local
+-	@echo UNIX_SWIG_BINARY = $(OR_ROOT_FULL)/dependencies/install/bin/swig>> Makefile.local
+-	@echo UNIX_CLP_DIR = $(OR_ROOT_FULL)/dependencies/install>> Makefile.local
+-	@echo UNIX_CBC_DIR = $(OR_ROOT_FULL)/dependencies/install>> Makefile.local
+-	@echo UNIX_SCIP_TAG = $(SCIP_TAG)>> Makefile.local
+-	@echo UNIX_SULUM_VERSION = $(SULUM_TAG) >> Makefile.local
+\ No newline at end of file
++	#@echo UNIX_SWIG_BINARY = $(OR_ROOT_FULL)/dependencies/install/bin/swig>> Makefile.local
++	#@echo UNIX_CLP_DIR = $(OR_ROOT_FULL)/dependencies/install>> Makefile.local
++	#@echo UNIX_CBC_DIR = $(OR_ROOT_FULL)/dependencies/install>> Makefile.local
++	#@echo UNIX_SCIP_TAG = $(SCIP_TAG)>> Makefile.local
++	#@echo UNIX_SULUM_VERSION = $(SULUM_TAG) >> Makefile.local
+\ No newline at end of file
+diff --git a/makefiles/Makefile.unix b/makefiles/Makefile.unix
+index 003352c..b3f3ee1 100755
+--- a/makefiles/Makefile.unix
++++ b/makefiles/Makefile.unix
+@@ -102,7 +102,7 @@ endif
+ SWIG_INC = $(GLPK_SWIG) $(CLP_SWIG) $(CBC_SWIG) $(SCIP_SWIG) $(SLM_SWIG) $(GUROBI_SWIG) $(CPLEX_SWIG) -DUSE_GLOP -DUSE_BOP
+ 
+ # Compilation flags
+-DEBUG = -O4 -DNDEBUG
++DEBUG = -O3 -DNDEBUG
+ JNIDEBUG = -O1 -DNDEBUG
+ 
+ # Check wether CBC/CLP need a coin subdir in library.
+@@ -118,8 +118,8 @@ ifdef UNIX_CLP_DIR
+ endif
+ 
+ ifeq ($(PLATFORM),LINUX)
+-  CCC = g++ -fPIC -std=c++0x -fwrapv
+-  DYNAMIC_LD = g++ -shared
++  CCC = clang++ -fPIC -std=c++11 -fwrapv
++  DYNAMIC_LD = clang++ -shared
+   CMAKE = cmake
+   ifeq ($(PTRLENGTH),64)
+     ARCH = -DARCH_K8
+@@ -181,9 +181,9 @@ ifeq ($(PLATFORM),LINUX)
+   JNI_LIB_EXT = so
+   LIB_SUFFIX = so
+   SWIG_LIB_SUFFIX = so
+-  LINK_CMD = g++ -shared
++  LINK_CMD = clang++ -shared
+   LINK_PREFIX = -o # Need the space.
+-  PRE_LIB = -Wl,-rpath $(OR_ROOT_FULL)/lib -L$(OR_ROOT_FULL)/lib -l
++  PRE_LIB = -Wl,-z,origin -Wl,-rpath=\$$ORIGIN
+   POST_LIB =
+   BISON = dependencies/install/bin/bison
+   FLEX = dependencies/install/bin/flex
+diff --git a/src/constraint_solver/constraint_solveri.h b/src/constraint_solver/constraint_solveri.h
+index 1a5efbd..8f1419c 100644
+--- a/src/constraint_solver/constraint_solveri.h
++++ b/src/constraint_solver/constraint_solveri.h
+@@ -63,6 +63,7 @@
+ #include "base/integral_types.h"
+ #include "base/logging.h"
+ #include "base/sysinfo.h"
++#include "base/casts.h"
+ #include "base/timer.h"
+ #include "base/join.h"
+ #include "base/sparse_hash.h"
+@@ -252,9 +253,9 @@ inline uint64 Hash1(int value) { return Hash1(static_cast<uint32>(value)); }
+ 
+ inline uint64 Hash1(void* const ptr) {
+ #if defined(ARCH_K8) || defined(__powerpc64__) || defined(__aarch64__)
+-  return Hash1(reinterpret_cast<uint64>(ptr));
++  return Hash1(bit_cast<uint64>(ptr));
+ #else
+-  return Hash1(reinterpret_cast<uint32>(ptr));
++  return Hash1(bit_cast<uint32>(ptr));
+ #endif
+ }
+ 

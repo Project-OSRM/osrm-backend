@@ -9,8 +9,8 @@ MASON_PKGCONFIG_FILE=lib/pkgconfig/zlib.pc
 
 function mason_load_source {
     mason_download \
-        http://zlib.net/zlib-1.2.8.tar.gz \
-        ed88885bd4027806753656d64006ab86a29e967e
+        https://github.com/madler/zlib/archive/v1.2.8.tar.gz \
+        72509ccfd1708e0073c84e8ee09de7a869816823
 
     mason_extract_tar_gz
 
@@ -23,20 +23,6 @@ function mason_compile {
         --static
 
     make install -j${MASON_CONCURRENCY}
-}
-
-function mason_strip_ldflags {
-    shift # -L...
-    shift # -lz
-    echo "$@"
-}
-
-function mason_ldflags {
-    mason_strip_ldflags $(`mason_pkgconfig` --static --libs)
-}
-
-function mason_clean {
-    make clean
 }
 
 mason_run "$@"

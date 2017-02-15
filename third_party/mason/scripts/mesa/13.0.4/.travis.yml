@@ -1,0 +1,28 @@
+language: generic
+
+matrix:
+  include:
+    - os: linux
+      sudo: false
+      dist: trusty
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - libstdc++-4.8-dev
+           - pkg-config
+           - libpthread-stubs0-dev
+           - libssl-dev
+           - x11proto-gl-dev
+           - libx11-dev
+           - libxext-dev
+           - libxcb1-dev
+           - libdrm-dev
+           - valgrind
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

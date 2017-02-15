@@ -69,7 +69,9 @@ function mason_cflags {
 }
 
 function mason_ldflags {
-    echo -lpthread
+    if [ ${MASON_PLATFORM} != 'android' ]; then
+        echo -lpthread
+    fi
 }
 
 function mason_static_libs {

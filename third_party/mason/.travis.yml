@@ -10,13 +10,20 @@ matrix:
 
 install:
 - |
+  export
   if [[ ${MASON_PLATFORM:-unset} == 'unset' ]] || [[ ${MASON_PLATFORM} == 'osx' ]] || [[ ${MASON_PLATFORM} == 'linux' ]]; then
-    echo "Installing clang for OSX/Linux via 'install' target"
-    source utils/toolchain.sh
-    which ${CC}
-    ${CC} -v
-    which ${CXX}
-    ${CXX} -v
+    # If platform is Linux or OSX, we might still be cross compiling if the
+    # MASON_PLATFORM_VERSION is not the same as the host platform.
+    if [[ ${CXX:-unset} == 'unset' ]] || [[ ${CXX} == "clang" ]] ; then
+      if [[ ${MASON_PLATFORM_VERSION} == `uname -m` ]] || [[ -z ${MASON_PLATFORM_VERSION} ]]; then
+        echo "Installing clang for OSX/Linux via 'install' target"
+        source utils/toolchain.sh
+        which ${CC}
+        ${CC} -v
+        which ${CXX}
+        ${CXX} -v
+      fi
+    fi
   fi
 
 script:

@@ -4,6 +4,7 @@ set -eu
 set -o pipefail
 
 $(dirname $0)/unit.sh
+$(dirname $0)/llvm.sh
 $(dirname $0)/c_install.sh
 $(dirname $0)/c_build.sh
 $(dirname $0)/c_build_android.sh

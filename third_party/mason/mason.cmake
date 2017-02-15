@@ -51,7 +51,7 @@ elseif(MASON_PLATFORM STREQUAL "android")
     else()
         set(MASON_PLATFORM_VERSION "arm-v7-9")
     endif()
-else()
+elseif(NOT MASON_PLATFORM_VERSION)
     execute_process(
         COMMAND uname -m
         OUTPUT_VARIABLE MASON_PLATFORM_VERSION
