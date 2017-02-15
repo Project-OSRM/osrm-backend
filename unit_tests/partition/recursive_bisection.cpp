@@ -8,6 +8,10 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
+// make sure not to leak in recursive bisection
+#include <tbb/task_scheduler_init.h>
+tbb::task_scheduler_init init(2);
+
 using namespace osrm::partition;
 using namespace osrm::util;
 
