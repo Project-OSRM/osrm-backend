@@ -64,17 +64,17 @@ Feature: Bearing parameter
             | ha    | yes    |
 
         When I route I should get
-            | from | to | bearings | route             | bearing                                   |
-            | 0    | b  | 10 10    | bc,bc             | 0->0,0->0                                 |
-            | 0    | b  | 90 90    | ab,ab             | 0->90,90->0                               |
-            | 0    | b  | 170 170  | da,da             | 0->0,0->0                                 |
-            | 0    | b  | 189 189  | da,da             | 0->0,0->0                                 |
-            | 0    | 1  | 90 270   | ab,bc,cd,cd       | 0->90,90->0,0->270,270->0                 |
-            | 1    | 2  | 10 10    | bc,bc             | 0->0,0->0                                 |
-            | 1    | 2  | 90 90    | ab,bc,cd,da,ab,ab | 0->90,90->0,0->270,270->180,180->90,90->0 |
-            | 1    | 0  | 189 189  | da,da             | 0->180,180->0                             |
-            | 1    | 2  | 270 270  | cd,cd             | 0->270,270->0                             |
-            | 1    | 2  | 349 349  |                   |                                           |
+            | from | to | bearings | route       | bearing                    |
+            | 0    | b  | 10 10    | bc,bc       | 0->0,0->0                  |
+            | 0    | b  | 90 90    | ab,ab       | 0->90,90->0                |
+            | 0    | b  | 170 170  | da,da       | 0->0,0->0                  |
+            | 0    | b  | 189 189  | da,da       | 0->0,0->0                  |
+            | 0    | 1  | 90 270   | ab,cd,cd    | 0->90,90->0,270->0         |
+            | 1    | 2  | 10 10    | bc,bc       | 0->0,0->0                  |
+            | 1    | 2  | 90 90    | ab,cd,ab,ab | 0->90,90->0,270->180,90->0 |
+            | 1    | 0  | 189 189  | da,da       | 0->180,180->0              |
+            | 1    | 2  | 270 270  | cd,cd       | 0->270,270->0              |
+            | 1    | 2  | 349 349  |             |                            |
 
     Scenario: Testbot - Initial bearing in all direction
         Given the node map

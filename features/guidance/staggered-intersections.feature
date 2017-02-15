@@ -79,7 +79,7 @@ Feature: Staggered Intersections
             | a,g       | Oak St,Oak St,Oak St | depart,continue uturn,arrive | a,c,g     |
             | g,a       | Oak St,Oak St,Oak St | depart,continue uturn,arrive | g,e,a     |
 
-    Scenario: Staggered Intersection: do not collapse if the names are not the same
+    Scenario: Staggered Intersection: use new-name if the names are not the same
         Given the node map
             """
                 j
@@ -97,9 +97,9 @@ Feature: Staggered Intersections
             | jcdehi | residential | Cedar Dr |
 
         When I route I should get
-            | waypoints | route                         | turns                              | locations |
-            | a,g       | Oak St,Cedar Dr,Elm St,Elm St | depart,turn right,turn left,arrive | a,c,e,g   |
-            | g,a       | Elm St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | g,e,c,a   |
+            | waypoints | route         | turns         | locations |
+            | a,g       | Oak St,Elm St | depart,arrive | a,g       |
+            | g,a       | Elm St,Oak St | depart,arrive | g,a       |
 
     Scenario: Staggered Intersection: do not collapse if a mode change is involved
         Given the node map
@@ -107,7 +107,7 @@ Feature: Staggered Intersections
                 j
             a b c
                 d
-                e  f  g
+                e~~f - - - - g
                 h
             """
 

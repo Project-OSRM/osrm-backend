@@ -233,9 +233,9 @@ Feature: Ramp Guidance
             | cd    | motorway      |
 
         When I route I should get
-            | waypoints | route    | turns                               |
-            | a,d       | ac,cd,cd | depart,new name slight left,arrive  |
-            | b,d       | bc,cd,cd | depart,new name slight right,arrive |
+            | waypoints | route | turns         |
+            | a,d       | ac,cd | depart,arrive |
+            | b,d       | bc,cd | depart,arrive |
 
     Scenario: Two Ramps Joining into common Motorway Unnamed
         Given the node map

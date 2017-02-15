@@ -5,6 +5,7 @@ Feature: Bike - Turn restrictions
 
     Background:
         Given the profile "bicycle"
+        Given a grid size of 200 meters
 
     @no_turning
     Scenario: Bike - No left turn

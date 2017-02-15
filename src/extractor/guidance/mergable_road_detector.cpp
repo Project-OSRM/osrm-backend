@@ -251,6 +251,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
                               connector_turn->eid,
                               connect_accumulator,
                               selector);
+
     // the if both items are connected
     return node_based_graph.GetTarget(connect_accumulator.via_edge_id) ==
            node_based_graph.GetTarget(right_accumulator.via_edge_id);

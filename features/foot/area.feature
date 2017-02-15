@@ -3,6 +3,7 @@ Feature: Foot - Squares and other areas
 
     Background:
         Given the profile "foot"
+        Given a grid size of 200 meters
 
     @square
     Scenario: Foot - Route along edge of a squares

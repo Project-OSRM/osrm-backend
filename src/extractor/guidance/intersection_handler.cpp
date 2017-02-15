@@ -146,8 +146,11 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
         // name has not changed, suppress a turn here or indicate mode change
         else
         {
-            return {in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification,
-                    getTurnDirection(road.angle)};
+            if (in_mode != out_mode)
+                return {TurnType::Notification, getTurnDirection(road.angle)};
+            else
+                return {num_roads == 2 ? TurnType::NoTurn : TurnType::Suppressed,
+                        getTurnDirection(road.angle)};
         }
     }
     BOOST_ASSERT(type == TurnType::Continue);

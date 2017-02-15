@@ -64,9 +64,10 @@ Feature: Slipways and Dedicated Turn Lanes
             | type        | way:from | way:to | node:via | restriction   |
             | restriction | abc      | cfg    | c        | no_right_turn |
 
-       When I route I should get
-            | waypoints | route                | turns                                  |
-            | a,g       | first,,second,second | depart,turn right,turn straight,arrive |
+        #this is very ugly :(, but we don't have a way to overrule ramps right now, also: this tagging sucks
+        When I route I should get
+            | waypoints | route                | turns                                      |
+            | a,g       | first,,second,second | depart,off ramp right,turn straight,arrive |
 
     Scenario: Turning Sliproad onto a ferry
         Given the node map
@@ -99,9 +100,9 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | abc      | cf     | c        | no_right_turn |
 
        When I route I should get
-            | waypoints | route                       | turns                                                        |
-            | a,i       | first,,second,second,second | depart,turn right,turn straight,notification straight,arrive |
-            | a,1       | first,,                     | depart,turn right,arrive                                     |
+            | waypoints | route                       | turns                                                            |
+            | a,i       | first,,second,second,second | depart,off ramp right,turn straight,notification straight,arrive |
+            | a,1       | first,,                     | depart,off ramp right,arrive                                     |
 
     Scenario: Turn Instead of Ramp - Max-Speed
         Given the node map
@@ -315,8 +316,8 @@ Feature: Slipways and Dedicated Turn Lanes
             | qe    | secondary_link | Ettlinger Allee    |      | yes    |
 
         When I route I should get
-            | waypoints | route                                              | turns                    | ref        | locations |
-            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive | L561,L561, | a,b,o     |
+            | waypoints | route                                              | turns                    | ref    | locations |
+            | a,o       | Schwarzwaldstrasse,Ettlinger Allee,Ettlinger Allee | depart,turn right,arrive | L561,, | a,b,o     |
 
     Scenario: Traffic Lights everywhere
         #http://map.project-osrm.org/?z=18&center=48.995336%2C8.383813&loc=48.995467%2C8.384548&loc=48.995115%2C8.382761&hl=en&alt=0
@@ -341,9 +342,17 @@ Feature: Slipways and Dedicated Turn Lanes
 
         And the ways
             | nodes  | highway        | name          | oneway |
-            | aklbci | secondary      | Ebertstrasse  | yes    |
+            | ak     | secondary      | Ebertstrasse  | yes    |
+            | klbc   | secondary      | Ebertstrasse  | yes    |
+            | ci     | secondary      | Ebertstrasse  | yes    |
             | kdeh   | secondary_link |               | yes    |
-            | jcghf  | primary        | Brauerstrasse | yes    |
+            | jc     | primary        | Brauerstrasse | yes    |
+            | cgh    | primary        | Brauerstrasse | yes    |
+            | hf     | primary        | Brauerstrasse | yes    |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | klbc     | cgh    | c        | no_right_turn |
 
         When I route I should get
             | waypoints | route                                    | turns                           | locations |
@@ -933,5 +942,5 @@ Feature: Slipways and Dedicated Turn Lanes
             | restriction | bc       | cd     | c        | only_straight |
 
         When I route I should get
-            | waypoints | route     | turns                                                     | locations |
-            | a,k       | road,,,   | depart,continue right,roundabout turn right exit-1,arrive | a,b,h,k   |
+            | waypoints | route     | turns                                                 | locations |
+            | a,k       | road,,,   | depart,turn right,roundabout turn right exit-1,arrive | a,b,h,k   |

@@ -3,7 +3,7 @@ Feature: New-Name Instructions
 
     Background:
         Given the profile "car"
-        Given a grid size of 100 meters
+        Given a grid size of 150 meters
 
     Scenario: Undisturbed name Change
         Given the node map

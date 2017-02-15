@@ -98,6 +98,6 @@ Feature: Avoid weird loops caused by rounding errors
             | bh    | primary     |
 
         When I route I should get
-            | waypoints | route                   |
-            | a,2,d     | ab,be,ef,ef,ef,cf,cd,cd |
-            | a,1,d     | ab,be,ef,ef,ef,cf,cd,cd |
+            | waypoints | route                |
+            | a,2,d     | ab,be,ef,ef,ef,cd,cd |
+            | a,1,d     | ab,be,ef,ef,ef,cd,cd |

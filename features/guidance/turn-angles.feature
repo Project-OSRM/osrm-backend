@@ -150,7 +150,7 @@ Feature: Simple Turns
             | nodes   | highway      | name | lanes | oneway |
             | akb     | primary      | road | 4     | yes    |
             | hgi     | primary      | road | 4     | yes    |
-            | akcdefg | primary_link |      | 1     | yes    |
+            | kcdefg  | primary_link |      | 1     | yes    |
             | gj      | tertiary     | turn | 1     |        |
 
        When I route I should get
@@ -444,7 +444,7 @@ Feature: Simple Turns
 
        When I route I should get
             | waypoints | route          | turns                        | locations | #                                                                                       |
-            | g,f       | turn,road      | depart,arrive                | g,f       | #could offer an additional turn at `e` if you don't detect the turn in between as curve |
+            | g,f       | turn,road,road | depart,turn left,arrive      | g,e,f     | #could offer an additional turn at `e` if you don't detect the turn in between as curve |
             | c,f       | road,road,road | depart,continue right,arrive | c,b,f     |                                                                                         |
 
     #http://www.openstreetmap.org/search?query=52.479264%2013.295617#map=19/52.47926/13.29562
@@ -808,15 +808,15 @@ Feature: Simple Turns
             | cjk    | Friede | no     |       | tertiary      |
 
         When I route I should get
-            | waypoints | route               | turns                           | intersections |
-            | a,g       | Perle,Heide,Heide   | depart,turn right,arrive        | true:90;true:90 true:180 false:270 true:345;true:18   |
-            | a,k       | Perle,Friede,Friede | depart,turn left,arrive         | true:90;true:90 true:180 false:270 true:345;true:153  |
-            | a,e       | Perle,Perle         | depart,arrive                   | true:90,true:90 true:180 false:270 true:345;true:270  |
-            | e,k       | Perle,Friede,Friede | depart,turn right,arrive        | true:270;false:90 true:180 true:270 true:345;true:153 |
-            | e,g       | Perle,Heide,Heide   | depart,turn left,arrive         | true:270;false:90 true:180 true:270 true:345;true:18  |
-            | h,k       | Heide,Friede,Friede | depart,new name straight,arrive | true:16;true:90 true:180 true:270 true:345;true:153   |
-            | h,e       | Heide,Perle,Perle   | depart,turn right,arrive        | true:16;true:90 true:180 true:270 true:345;true:270   |
-            | h,a       | Heide,Perle,Perle   | depart,turn left,arrive         | true:16;true:90 true:180 true:270 true:345;true:90    |
+            | waypoints | route               | turns                    | intersections                                         |
+            | a,g       | Perle,Heide,Heide   | depart,turn right,arrive | true:90;true:90 true:180 false:270 true:345;true:18   |
+            | a,k       | Perle,Friede,Friede | depart,turn left,arrive  | true:90;true:90 true:180 false:270 true:345;true:153  |
+            | a,e       | Perle,Perle         | depart,arrive            | true:90,true:90 true:180 false:270 true:345;true:270  |
+            | e,k       | Perle,Friede,Friede | depart,turn right,arrive | true:270;false:90 true:180 true:270 true:345;true:153 |
+            | e,g       | Perle,Heide,Heide   | depart,turn left,arrive  | true:270;false:90 true:180 true:270 true:345;true:18  |
+            | h,k       | Heide,Friede        | depart,arrive            | true:16,true:90 true:180 true:270 true:345;true:153   |
+            | h,e       | Heide,Perle,Perle   | depart,turn right,arrive | true:16;true:90 true:180 true:270 true:345;true:270   |
+            | h,a       | Heide,Perle,Perle   | depart,turn left,arrive  | true:16;true:90 true:180 true:270 true:345;true:90    |
 
     #http://www.openstreetmap.org/#map=19/52.53293/13.32956
     Scenario: Curved Exit from Curved Road
@@ -852,9 +852,9 @@ Feature: Simple Turns
         When I route I should get
             | waypoints | route                   | turns                               |
             | a,j       | Siemens,Siemens,Siemens | depart,continue slight right,arrive |
-            | a,g       | Siemens,Erna,Erna       | depart,new name slight left,arrive  |
+            | a,g       | Siemens,Erna            | depart,arrive                       |
             | g,j       | Erna,Siemens,Siemens    | depart,turn left,arrive             |
-            | g,a       | Erna,Siemens,Siemens    | depart,new name slight right,arrive |
+            | g,a       | Erna,Siemens            | depart,arrive                       |
 
      #http://www.openstreetmap.org/#map=19/52.51303/13.32170
      Scenario: Ernst Reuter Platz
@@ -1188,12 +1188,12 @@ Feature: Simple Turns
             | j    | traffic_signals |
 
         When I route I should get
-            | waypoints | route             | turns                              |
-            | a,c       | rose,trift,trift  | depart,new name slight left,arrive |
-            | a,k       | rose,muhle,muhle  | depart,turn slight right,arrive    |
-            | d,f       | trift,rose,rose   | depart,new name straight,arrive    |
-            | d,k       | trift,muhle,muhle | depart,turn sharp left,arrive      |
-            | d,c       | trift,trift,trift | depart,continue uturn,arrive       |
+            | waypoints | route             | turns                           |
+            | a,c       | rose,trift        | depart,arrive                   |
+            | a,k       | rose,muhle,muhle  | depart,turn slight right,arrive |
+            | d,f       | trift,rose        | depart,arrive                   |
+            | d,k       | trift,muhle,muhle | depart,turn sharp left,arrive   |
+            | d,c       | trift,trift,trift | depart,continue uturn,arrive    |
 
     #http://www.openstreetmap.org/#map=19/52.50740/13.44824
     Scenario: Turning Loop at the end of the road
@@ -1275,8 +1275,8 @@ Feature: Simple Turns
             | bcde  | 6             |
 
         When I route I should get
-            | waypoints | route        |
-            | a,e       | ab,bcde,bcde |
+            | waypoints | route   |
+            | a,e       | ab,bcde |
 
 
     @3401
@@ -1312,8 +1312,8 @@ Feature: Simple Turns
 
         # we don't care for turn instructions, this is a coordinate extraction bug check
         When I route I should get
-            | waypoints | route              | intersections                                |
-            | a,g       | ab,bcdefgh,bcdefgh | true:90;true:45 false:180 false:270;true:180 |
+            | waypoints | route      | intersections                                |
+            | a,g       | ab,bcdefgh | true:90,true:45 false:180 false:270;true:180 |
 
     #https://github.com/Project-OSRM/osrm-backend/pull/3469#issuecomment-270806580
     Scenario: Oszillating Lower Priority Road

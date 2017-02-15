@@ -3,6 +3,7 @@ Feature: Alternative route
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 200 meters
 
     Scenario: Alternative Loop Paths
         Given the node map

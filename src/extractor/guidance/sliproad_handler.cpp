@@ -248,6 +248,20 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
 
         sliproad_edge = intersection_finder.via_edge_id;
         const auto target_intersection = intersection_finder.intersection;
+        if (target_intersection.isDeadEnd())
+            continue;
+
+        const auto find_valid = [](const IntersectionView &view) {
+            // according to our current sliproad idea, there should only be one valid turn
+            auto itr = std::find_if(
+                view.begin(), view.end(), [](const auto &road) { return road.entry_allowed; });
+            BOOST_ASSERT(itr != view.end());
+            return itr;
+        };
+
+        // require all to be same mode, don't allow changes
+        if (!allSameMode(source_edge_id, sliproad.eid, find_valid(target_intersection)->eid))
+            continue;
 
         // Constrain the Sliproad's target to sliproad, outgoing, incoming from main intersection
         if (target_intersection.size() != 3)
@@ -671,6 +685,16 @@ bool SliproadHandler::isValidSliproadLink(const IntersectionViewData &sliproad,
     }
 
     return true;
+}
+
+bool SliproadHandler::allSameMode(const EdgeID from,
+                                  const EdgeID sliproad_candidate,
+                                  const EdgeID target_road) const
+{
+    return node_based_graph.GetEdgeData(from).travel_mode ==
+               node_based_graph.GetEdgeData(sliproad_candidate).travel_mode &&
+           node_based_graph.GetEdgeData(sliproad_candidate).travel_mode ==
+               node_based_graph.GetEdgeData(target_road).travel_mode;
 }
 
 bool SliproadHandler::canBeTargetOfSliproad(const IntersectionView &intersection)

@@ -80,8 +80,8 @@ Feature: Exceptions for routing onto low-priority roads
             | bc     | service     | service |
 
        When I route I should get
-            | waypoints | route                | turns                           |
-            | a,c       | road,service,service | depart,new name straight,arrive |
+            | waypoints | route        | turns         |
+            | a,c       | road,service | depart,arrive |
 
     Scenario: Straight onto low-priority, with driveway
         Given the node map
@@ -114,6 +114,6 @@ Feature: Exceptions for routing onto low-priority roads
             | bf     | driveway    |       |
 
        When I route I should get
-            | waypoints | route      | turns                           |
-            | a,c       | road,      | depart,arrive                   |
-            | c,a       | ,road,road | depart,new name straight,arrive |
+            | waypoints | route | turns         |
+            | a,c       | road, | depart,arrive |
+            | c,a       | ,road | depart,arrive |

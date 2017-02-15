@@ -4,6 +4,7 @@ Feature: Foot - Turn restrictions
 
     Background:
         Given the profile "foot"
+        Given a grid size of 200 meters
 
     @no_turning
     Scenario: Foot - No left turn

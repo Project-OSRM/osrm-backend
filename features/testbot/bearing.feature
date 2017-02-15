@@ -3,6 +3,7 @@ Feature: Compass bearing
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 200 meters
 
     Scenario: Bearing when going northwest
         Given the node map
