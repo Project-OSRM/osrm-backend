@@ -399,7 +399,9 @@ Feature: Collapse
             | waypoints | route | turns         |
             | a,d       | ,     | depart,arrive |
 
-     Scenario: Crossing Bridge into Segregated Turn
+    # This scenario could be considered to require a `turn left`. The danger to create random/unwanted instructions 
+    # from a setting like this are just to big, though. Therefore I opted to use `depart,arrive` only
+    Scenario: Crossing Bridge into Segregated Turn
         Given the node map
             """
                       f
@@ -419,8 +421,8 @@ Feature: Collapse
             | hi    | primary | yes    | to_bridge   |
 
         When I route I should get
-            | waypoints | route                             | turns                   | locations |
-            | a,f       | to_bridge,target_road,target_road | depart,turn left,arrive | a,d,f     |
+            | waypoints | route                 | turns         | locations |
+            | a,f       | to_bridge,target_road | depart,arrive | a,f       |
 
     Scenario: Pankenbruecke
         Given the node map
@@ -435,6 +437,9 @@ Feature: Collapse
              d
              e
              f-i
+             |
+             |
+             |
              |
              |
              |
@@ -528,25 +533,6 @@ Feature: Collapse
         When I route I should get
             | waypoints | route     | turns         |
             | a,d       | road,road | depart,arrive |
-
-    Scenario: Pulled Back Turn
-        Given the node map
-            """
-                d
-            a b c
-              e
-            """
-
-        And the ways
-            | nodes | highway  | name  |
-            | abc   | tertiary | road  |
-            | cd    | tertiary | left  |
-            | be    | tertiary | right |
-
-        When I route I should get
-            | waypoints | route            | turns                    |
-            | a,d       | road,left,left   | depart,turn left,arrive  |
-            | a,e       | road,right,right | depart,turn right,arrive |
 
     Scenario: No Name During Turns, keep important turns
         Given the node map
@@ -708,41 +694,6 @@ Feature: Collapse
             | a,g       | road,cross,cross | depart,turn left,arrive | a,b,g     |
             | a,e       | road,road        | depart,arrive           | a,e       |
 
-    Scenario: Forking before a turn (forky)
-        Given the node map
-            """
-                      g
-                      .
-                      c
-            a . . b .'
-                      ` d.
-                        f e
-            """
-            # as it is right now we don't classify this as a sliproad,
-            # check collapse-detail.feature for a similar test case
-            # which removes the fork here due to it being a Sliproad.
-
-        And the ways
-            | nodes | name  | oneway | highway   |
-            | ab    | road  | yes    | primary   |
-            | bd    | road  | yes    | primary   |
-            | bc    | road  | yes    | primary   |
-            | de    | road  | yes    | primary   |
-            | fd    | cross | no     | secondary |
-            | dc    | cross | no     | secondary |
-            | cg    | cross | no     | secondary |
-
-        And the relations
-            | type        | way:from | way:to | node:via | restriction   |
-            | restriction | bd       | dc     | d        | no_left_turn  |
-            | restriction | bc       | dc     | c        | no_right_turn |
-
-        When I route I should get
-            | waypoints | route                 | turns                                      | locations |
-            | a,g       | road,cross,cross      | depart,fork left,arrive                    | a,b,g     |
-            | a,e       | road,road,road        | depart,fork slight right,arrive            | a,b,e     |
-            | a,f       | road,road,cross,cross | depart,fork slight right,turn right,arrive | a,b,d,f   |
-
     Scenario: On-Off on Highway
         Given the node map
             """
@@ -857,7 +808,7 @@ Feature: Collapse
 
        When I route I should get
             | waypoints | route          | turns                           | locations |
-            | a,e       | main,main,main | depart,use lane straight,arrive | a,b,e     |
+            | a,e       | main,main,main | depart,use lane straight,arrive | a,c,e     |
 
     Scenario: But _do_ collapse UseLane step when lanes stay the same
         Given the node map
@@ -931,8 +882,8 @@ Feature: Collapse
             | ej    | primary |       | off   | yes    |
 
         When I route I should get
-            | waypoints | route                            | turns                                                                                                        | locations       |
-            | k,j       | on,ferry,road,road,ferry,off,off | depart,notification straight,notification straight,continue uturn,turn straight,notification straight,arrive | k,g,a,b,c,d,e,j |
+            | waypoints | route                            | turns                                                                                                        | locations     |
+            | k,j       | on,ferry,road,road,ferry,off,off | depart,notification straight,notification straight,continue uturn,turn straight,notification straight,arrive | k,g,a,b,d,e,j |
 
     # http://www.openstreetmap.org/#map=19/37.78090/-122.41251
     Scenario: U-Turn onto unnamed-road
@@ -956,7 +907,7 @@ Feature: Collapse
 
         When I route I should get
             | waypoints | route     | turns                                     | locations |
-            | a,1       | up,turn,, | depart,turn right,turn sharp right,arrive | a,b,e,f,_ |
+            | a,1       | up,turn,, | depart,turn right,turn sharp right,arrive | a,b,e,_   |
 
     #http://www.openstreetmap.org/#map=19/52.48778/13.30024
     Scenario: Hohenzollerdammbrücke
@@ -1008,23 +959,21 @@ Feature: Collapse
             | os    | motorway_link | a100        | yes    |
 
         And the relations
-            | type        | way:from | way:to | node:via | restriction   |
-            | restriction | ck       | kh     | k        | no_right_turn |
-            | restriction | bk       | ki     | k        | no_left_turn  |
-            | restriction | hl       | lc     | l        | no_right_turn |
-            | restriction | gl       | ld     | l        | no_left_turn  |
-            | restriction | bc       | cm     | c        | no_right_turn |
-            | restriction | bc       | ck     | c        | no_left_turn  |
-            | restriction | nc       | cm     | c        | no_left_turn  |
-            | restriction | nc       | cd     | c        | no_right_turn |
-            | restriction | lc       | ck     | c        | no_left_turn  |
-            | restriction | lc       | cd     | c        | no_right_turn |
-            | restriction | gh       | ho     | h        | no_right_turn |
-            | restriction | gh       | hl     | h        | no_left_turn  |
-            | restriction | kh       | hi     | h        | no_left_turn  |
-            | restriction | kh       | hl     | h        | no_right_turn |
-            | restriction | ph       | ho     | h        | no_left_turn  |
-            | restriction | ph       | hi     | h        | no_right_turn |
+            | type        | way:from | way:to | node:via | restriction   	|
+            | restriction | ck       | ki     | k        | only_straight_on |
+            | restriction | bk       | kh     | k        | only_straight_on |
+            | restriction | hl       | ld     | l        | only_straight_on	|
+            | restriction | gl       | lc     | l        | only_straight_on |
+            | restriction | bc       | cm     | c        | no_right_turn 	|
+            | restriction | bc       | ck     | c        | no_left_turn  	|
+            | restriction | nc       | cm     | c        | no_left_turn  	|
+            | restriction | nc       | cd     | c        | no_right_turn 	|
+            | restriction | lc       | cm     | c        | only_straight_on	|
+            | restriction | gh       | ho     | h        | no_right_turn 	|
+            | restriction | gh       | hl     | h        | no_left_turn  	|
+            | restriction | kh       | ho     | h        | only_straight_on |
+            | restriction | ph       | ho     | h        | no_left_turn  	|
+            | restriction | ph       | hi     | h        | no_right_turn 	|
 
         When I route I should get
             | waypoints | route                 | turns                       | locations |
@@ -1037,3 +986,36 @@ Feature: Collapse
             | f,e       |                       |                             |           |
             | q,j       | a100,hohe,hohe        | depart,turn right,arrive    | q,p,j     |
             | q,e       | a100,hohebruecke,hohe | depart,turn left,arrive     | q,p,e     |
+
+    Scenario: Forking before a turn (forky)
+        Given the node map
+            """
+                      g
+                      .
+                      c
+            a . . b .'
+                      ` d.
+                        f e
+			"""
+			#Check collapse.detail for a similar case (shorter) that does not classify these turns as a sliproad anymore
+
+        And the ways
+            | nodes | name  | oneway | highway   |
+            | ab    | road  | yes    | primary   |
+            | bd    | road  | yes    | primary   |
+            | bc    | road  | yes    | primary   |
+            | de    | road  | yes    | primary   |
+            | fd    | cross | no     | secondary |
+            | dc    | cross | no     | secondary |
+            | cg    | cross | no     | secondary |
+
+        And the relations
+            | type        | way:from | way:to | node:via | restriction   |
+            | restriction | bd       | dc     | d        | no_left_turn  |
+            | restriction | bc       | dc     | c        | no_right_turn |
+
+        When I route I should get
+            | waypoints | route                 | turns                                      | locations |
+			|       a,g | road,cross,cross	    | depart,fork left,arrive 			         | a,b,g 	 |
+     		|       a,e | road,road,road 		| depart,fork slight right,arrive 			 | a,b,e 	 |
+     		|       a,f | road,road,cross,cross | depart,fork slight right,turn right,arrive | a,b,d,f 	 |

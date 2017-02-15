@@ -2,17 +2,14 @@
 #include "util/group_by.hpp"
 
 #include "extractor/guidance/turn_instruction.hpp"
-#include "engine/guidance/post_processing.hpp"
+#include "engine/guidance/collapsing_utility.hpp"
 
 #include <algorithm>
 #include <iterator>
 #include <unordered_set>
 #include <utility>
 
-using TurnInstruction = osrm::extractor::guidance::TurnInstruction;
-namespace TurnType = osrm::extractor::guidance::TurnType;
-namespace DirectionModifier = osrm::extractor::guidance::DirectionModifier;
-
+using osrm::extractor::guidance::TurnInstruction;
 using osrm::extractor::guidance::isLeftTurn;
 using osrm::extractor::guidance::isRightTurn;
 

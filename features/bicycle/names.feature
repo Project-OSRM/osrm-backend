@@ -17,8 +17,8 @@ Feature: Bike - Street names in instructions
             | bc    | Your Way | A7  |
 
         When I route I should get
-            | from | to | route                                   | ref      |
-            | a    | c  | My Way,Your Way,Your Way                | A6,A7,A7 |
+            | from | to | route           | ref   |
+            | a    | c  | My Way,Your Way | A6,A7 |
 
     @unnamed
     Scenario: Bike - No longer use way type to describe unnamed ways, see #3231

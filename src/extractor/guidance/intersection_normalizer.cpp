@@ -120,12 +120,39 @@ IntersectionShapeData IntersectionNormalizer::MergeRoads(const IntersectionShape
 IntersectionShapeData
 IntersectionNormalizer::MergeRoads(const IntersectionNormalizationOperation direction,
                                    const IntersectionShapeData &lhs,
-                                   const IntersectionShapeData &rhs) const
+                                   const IntersectionShapeData &rhs,
+                                   const double opposite_bearing) const
 {
+    // In some intersections, turning roads can introduce artificial turns if we merge here.
+    // Consider a scenario like:
+    // 
+    //  a     .  g - f
+    //  |   .
+    //  | .
+    //  |.
+    // d-b--------e
+    //  |
+    //  c
+    // 
+    // Merging `bgf` and `be` would introduce an angle, even though d-b-e is perfectly straight
+    // We don't change the angle, if such an opposite road exists
     if (direction.merged_eid == lhs.eid)
-        return MergeRoads(rhs, lhs);
+    {
+        // change the angle only if the opposite direction is not nearly straight
+        if (angularDeviation(opposite_bearing, rhs.bearing) >
+            (STRAIGHT_ANGLE - MAXIMAL_ALLOWED_NO_TURN_DEVIATION))
+            return rhs;
+        else
+            return MergeRoads(rhs, lhs);
+    }
     else
-        return MergeRoads(lhs, rhs);
+    {
+        if (angularDeviation(opposite_bearing, lhs.bearing) >
+            (STRAIGHT_ANGLE - MAXIMAL_ALLOWED_NO_TURN_DEVIATION))
+            return lhs;
+        else
+            return MergeRoads(lhs, rhs);
+    }
 }
 
 /*
@@ -163,7 +190,8 @@ IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersection_node,
     // end up in the end. We only store what we have merged into other edges.
     std::vector<IntersectionNormalizationOperation> merging_map;
     const auto merge = [this, &merging_map](const IntersectionShapeData &first,
-                                            const IntersectionShapeData &second) {
+                                            const IntersectionShapeData &second,
+                                            const double opposite_bearing) {
 
         const auto direction = DetermineMergeDirection(first, second);
         BOOST_ASSERT(
@@ -171,13 +199,27 @@ IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersection_node,
                 return pair.merged_eid == direction.merged_eid;
             }) == merging_map.end());
         merging_map.push_back(direction);
-        return MergeRoads(direction, first, second);
+        return MergeRoads(direction, first, second, opposite_bearing);
     };
 
     if (intersection.size() <= 1)
         return {intersection, merging_map};
 
     const auto intersection_copy = intersection;
+    const auto opposite_bearing = [this, intersection_copy](const IntersectionShapeData &lhs,
+                                                            const IntersectionShapeData &rhs) {
+        if (node_based_graph.GetEdgeData(lhs.eid).reversed)
+        {
+            return intersection_copy.FindClosestBearing(util::bearing::reverse(rhs.bearing))
+                ->bearing;
+        }
+        else
+        {
+            BOOST_ASSERT(node_based_graph.GetEdgeData(rhs.eid).reversed);
+            return intersection_copy.FindClosestBearing(util::bearing::reverse(lhs.bearing))
+                ->bearing;
+        }
+    };
     // check for merges including the basic u-turn
     // these result in an adjustment of all other angles. This is due to how these angles are
     // perceived. Considering the following example:
@@ -213,14 +255,16 @@ IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersection_node,
     if (CanMerge(intersection_node, intersection, intersection.size() - 1, 0))
     {
         // moving `a` to the left
-        intersection[0] = merge(intersection.front(), intersection.back());
+        const auto opposite = opposite_bearing(intersection.front(), intersection.back());
+        intersection[0] = merge(intersection.front(), intersection.back(), opposite);
         // FIXME if we have a left-sided country, we need to switch this off and enable it
         // below
         intersection.pop_back();
     }
     else if (CanMerge(intersection_node, intersection, 0, 1))
     {
-        intersection[0] = merge(intersection.front(), intersection[1]);
+        const auto opposite = opposite_bearing(intersection.front(), intersection[1]);
+        intersection[0] = merge(intersection.front(), intersection[1], opposite);
         intersection.erase(intersection.begin() + 1);
     }
 
@@ -230,8 +274,10 @@ IntersectionNormalizer::MergeSegregatedRoads(const NodeID intersection_node,
     {
         if (CanMerge(intersection_node, intersection, getRight(index), index))
         {
+            const auto opposite =
+                opposite_bearing(intersection[getRight(index)], intersection[index]);
             intersection[getRight(index)] =
-                merge(intersection[getRight(index)], intersection[index]);
+                merge(intersection[getRight(index)], intersection[index], opposite);
             intersection.erase(intersection.begin() + index);
             --index;
         }

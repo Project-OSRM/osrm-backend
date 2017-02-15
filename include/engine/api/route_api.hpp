@@ -12,8 +12,10 @@
 #include "engine/guidance/assemble_overview.hpp"
 #include "engine/guidance/assemble_route.hpp"
 #include "engine/guidance/assemble_steps.hpp"
+#include "engine/guidance/collapse_turns.hpp"
 #include "engine/guidance/lane_processing.hpp"
 #include "engine/guidance/post_processing.hpp"
+#include "engine/guidance/verbosity_reduction.hpp"
 
 #include "engine/internal_route_result.hpp"
 
@@ -165,9 +167,10 @@ class RouteAPI : public BaseAPI
                  */
 
                 guidance::trimShortSegments(steps, leg_geometry);
-                leg.steps = guidance::postProcess(std::move(steps));
-                leg.steps = guidance::collapseTurns(std::move(leg.steps));
+                leg.steps = guidance::collapseTurnInstructions(std::move(steps));
+                leg.steps = guidance::postProcess(std::move(leg.steps));
                 leg.steps = guidance::buildIntersections(std::move(leg.steps));
+                leg.steps = guidance::suppressShortNameSegments(std::move(leg.steps));
                 leg.steps = guidance::assignRelativeLocations(std::move(leg.steps),
                                                               leg_geometry,
                                                               phantoms.source_phantom,

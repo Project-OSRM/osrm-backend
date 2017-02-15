@@ -65,6 +65,11 @@ class SliproadHandler final : public IntersectionHandler
                              const IntersectionViewData &first,
                              const IntersectionViewData &second) const;
 
+    // check if no mode changes are involved
+    bool allSameMode(const EdgeID in_road,
+                     const EdgeID sliproad_candidate,
+                     const EdgeID target_road) const;
+
     // Could a Sliproad reach this intersection?
     static bool canBeTargetOfSliproad(const IntersectionView &intersection);
 

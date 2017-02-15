@@ -63,4 +63,4 @@ end
            | from | to | route    | time  |
            | a    | b  | ac,cb,cb | 19.2s |
            | a    | d  | ac,cd,cd | 19.2s |
-           | a    | e  | ac,ce,ce | 20s   |
+           | a    | e  | ac,ce    | 20s   |

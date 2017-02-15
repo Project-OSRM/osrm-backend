@@ -29,12 +29,12 @@ Feature: Weight tests
             | cde   |
 
         When I route I should get
-            | waypoints | route       | a:weight  |
-            | s,t       | abc,cde,cde | 1.1:2:2:1 |
+            | waypoints | route   | a:weight  |
+            | s,t       | abc,cde | 1.1:2:2:1 |
 
         When I route I should get
-            | waypoints | route       | times      | weight_name | weights |
-            | s,t       | abc,cde,cde | 3.1s,3s,0s | duration    | 3.1,3,0 |
+            | waypoints | route   | times   | weight_name | weights |
+            | s,t       | abc,cde | 6.1s,0s | duration    | 6.1,0   |
 
     # FIXME include/engine/guidance/assemble_geometry.hpp:95
     Scenario: Start and target on the same and adjacent edge

@@ -56,10 +56,13 @@ Feature: Snap start/end point to the nearest way
     Scenario: Snap to edge right under start/end point
         Given the node map
             """
-            d e f g
-            c     h
-            b     i
-            a l k j
+            d   e   f   g
+
+            c           h
+
+            b           i
+
+            a   l   k   j
             """
 
         And the ways

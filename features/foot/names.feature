@@ -3,6 +3,7 @@ Feature: Foot - Street names in instructions
 
     Background:
         Given the profile "foot"
+        Given a grid size of 200 meters
 
     Scenario: Foot - A named street
         Given the node map

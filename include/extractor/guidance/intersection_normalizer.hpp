@@ -83,7 +83,8 @@ class IntersectionNormalizer
                                      const IntersectionShapeData &source) const;
     IntersectionShapeData MergeRoads(const IntersectionNormalizationOperation direction,
                                      const IntersectionShapeData &lhs,
-                                     const IntersectionShapeData &rhs) const;
+                                     const IntersectionShapeData &rhs,
+                                     const double opposite_bearing) const;
 
     // Merge segregated roads to omit invalid turns in favor of treating segregated roads as
     // one.

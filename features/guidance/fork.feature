@@ -39,8 +39,8 @@ Feature: Fork Instructions
             | bd     | primary | yes    |
 
        When I route I should get
-            | waypoints | route    | turns                               |
-            | a,d       | ab,bd,bd | depart,new name slight right,arrive |
+            | waypoints | route | turns         |
+            | a,d       | ab,bd | depart,arrive |
 
     Scenario: Don't Fork On Single Road
         Given the node map
@@ -56,8 +56,8 @@ Feature: Fork Instructions
             | bd     | primary | yes    | turn |
 
        When I route I should get
-            | waypoints | route          | turns                           |
-            | a,d       | road,turn,turn | depart,new name straight,arrive |
+            | waypoints | route     | turns         |
+            | a,d       | road,turn | depart,arrive |
 
     Scenario: Do not fork on link type
         Given the node map
@@ -382,6 +382,6 @@ Feature: Fork Instructions
             | ab    | on   | motorway_link |
 
         When I route I should get
-            | waypoints | route      | turns                           |
-            | a,j       | on,xbcj    | depart,arrive                   |
-            | a,i       | on,off,off | depart,turn slight right,arrive |
+            | waypoints | route      | turns                    |
+            | a,j       | on,xbcj    | depart,arrive            |
+            | a,i       | on,off,off | depart,turn right,arrive |

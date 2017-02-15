@@ -3,6 +3,7 @@ Feature: Turn Penalties
 
     Background:
         Given the profile "turnbot"
+        Given a grid size of 200 meters
 
     Scenario: Bike - turns should incur a delay that depend on the angle
 
@@ -26,10 +27,10 @@ Feature: Turn Penalties
 
         When I route I should get
             | from | to | route    | time    | distance |
-            | s    | a  | sj,ja,ja | 39s +-1 | 242m +-1 |
-            | s    | b  | sj,jb,jb | 30s +-1 | 200m +-1 |
-            | s    | c  | sj,jc,jc | 29s +-1 | 242m +-1 |
-            | s    | d  | sj,jd,jd | 20s +-1 | 200m +-1 |
-            | s    | e  | sj,je,je | 29s +-1 | 242m +-1 |
-            | s    | f  | sj,jf,jf | 30s +-1 | 200m +-1 |
-            | s    | g  | sj,jg,jg | 39s +-1 | 242m +-1 |
+            | s    | a  | sj,ja,ja | 63s +-1 | 483m +-1 |
+            | s    | b  | sj,jb,jb | 50s +-1 | 400m +-1 |
+            | s    | c  | sj,jc,jc | 54s +-1 | 483m +-1 |
+            | s    | d  | sj,jd,jd | 40s +-1 | 400m +-1 |
+            | s    | e  | sj,je,je | 53s +-1 | 483m +-1 |
+            | s    | f  | sj,jf,jf | 50s +-1 | 400m +-1 |
+            | s    | g  | sj,jg,jg | 63s +-1 | 483m +-1 |

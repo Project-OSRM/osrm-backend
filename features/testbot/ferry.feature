@@ -168,9 +168,9 @@ Feature: Testbot - Handle ferry routes
             | defg  |         | ferry | 0:02     |
 
         When I route I should get
-            | from | to | route       | time      |
-            | a    | g  | xa,xy,yg,yg | 60s +-25% |
-            | g    | a  | yg,xy,xa,xa | 60s +-25% |
+            | from | to | route    | time      |
+            | a    | g  | xa,xy,yg | 60s +-25% |
+            | g    | a  | yg,xy,xa | 60s +-25% |
 
     Scenario: Testbot - Long winding ferry route
         Given the node map

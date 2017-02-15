@@ -3,6 +3,7 @@ Feature: Choosing fastest route
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 200 meters
 
     Scenario: Pick the geometrically shortest route, way types being equal
         Given the node map

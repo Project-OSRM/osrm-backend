@@ -33,8 +33,8 @@ Feature: Features related to bugs
             | e    | traffic_signals |
 
         When I route I should get
-            | waypoints | route           | turns                        |
-            | 1,2       | top,right,right | depart,new name right,arrive |
+            | waypoints | route     | turns         |
+            | 1,2       | top,right | depart,arrive |
 
     @3156
     Scenario: Incorrect lanes tag

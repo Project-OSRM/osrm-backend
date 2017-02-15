@@ -104,4 +104,4 @@ end
            | from | to | route    | time  |
            | a    | b  | ac,cb,cb | 24.2s |
            | a    | d  | ac,cd,cd | 24.2s |
-           | a    | e  | ac,ce,ce | 20s   |
+           | a    | e  | ac,ce    | 20s   |

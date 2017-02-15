@@ -209,7 +209,7 @@ Feature: Estimation of travel time
             | from | to | route       | time    |
             | b    | c  | abc,abc     | 10s +-1 |
             | c    | e  | cde,cde     | 60s +-1 |
-            | b    | d  | abc,cde,cde | 40s +-1 |
+            | b    | d  | abc,cde     | 40s +-1 |
             | a    | e  | abc,cde,cde | 80s +-1 |
 
     Scenario: Time of travel on part of a way

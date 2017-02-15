@@ -3,6 +3,7 @@ Feature: Basic Routing
 
     Background:
         Given the profile "testbot"
+        Given a grid size of 100 meters
 
     @smallest
     Scenario: A single way with two nodes
@@ -145,7 +146,6 @@ Feature: Basic Routing
             | c    | b  | bc,bc  |
 
     Scenario: 3 connected triangles
-        Given a grid size of 100 meters
         Given the node map
             """
             x a   b s
@@ -178,12 +178,14 @@ Feature: Basic Routing
             | c    | a  | ca,ca |
             | c    | b  | bc,bc |
 
-    Scenario: To ways connected at a 45 degree angle
+    Scenario: To ways connected at a 90 degree angle
         Given the node map
             """
             a
+            |
             b
-            c d e
+            |
+            c----d----e
             """
 
         And the ways
@@ -270,7 +272,7 @@ Feature: Basic Routing
             | de    | primary |        |
 
         When I route I should get
-            | from | to | route |
+            | from | to | route    |
             | d    | c  | de,ce,ce |
             | e    | d  | de,de    |
 
@@ -294,7 +296,7 @@ Feature: Basic Routing
     Scenario: Ambiguous edge names - Use lexicographically smallest name
         Given the node map
             """
-            a b c
+            a-------b-------c
             """
 
         And the ways

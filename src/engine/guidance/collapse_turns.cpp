@@ -1,0 +1,460 @@
+#include "engine/guidance/collapse_turns.hpp"
+#include "extractor/guidance/constants.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
+#include "engine/guidance/collapse_scenario_detection.hpp"
+#include "engine/guidance/collapsing_utility.hpp"
+#include "util/bearing.hpp"
+#include "util/guidance/name_announcements.hpp"
+
+#include <cstddef>
+
+#include <boost/assert.hpp>
+
+using osrm::extractor::guidance::TurnInstruction;
+using osrm::util::angularDeviation;
+using namespace osrm::extractor::guidance;
+
+namespace osrm
+{
+namespace engine
+{
+namespace guidance
+{
+
+namespace
+{
+const constexpr double MAX_COLLAPSE_DISTANCE = 30;
+
+// find the combined turn angle for two turns. Not in all scenarios we can easily add both angles
+// (e.g 90 degree left followed by 90 degree right would be no turn at all).
+double findTotalTurnAngle(const RouteStep &entry_step, const RouteStep &exit_step)
+{
+    if (entry_step.geometry_begin > exit_step.geometry_begin)
+        return findTotalTurnAngle(exit_step, entry_step);
+
+    const auto exit_intersection = exit_step.intersections.front();
+    const auto exit_step_exit_bearing = exit_intersection.bearings[exit_intersection.out];
+    const auto exit_step_entry_bearing =
+        util::bearing::reverse(exit_intersection.bearings[exit_intersection.in]);
+
+    const auto entry_intersection = entry_step.intersections.front();
+    const auto entry_step_entry_bearing =
+        util::bearing::reverse(entry_intersection.bearings[entry_intersection.in]);
+    const auto entry_step_exit_bearing = entry_intersection.bearings[entry_intersection.out];
+
+    const auto exit_angle =
+        util::bearing::angleBetween(exit_step_entry_bearing, exit_step_exit_bearing);
+    const auto entry_angle =
+        util::bearing::angleBetween(entry_step_entry_bearing, entry_step_exit_bearing);
+
+    const double total_angle =
+        util::bearing::angleBetween(entry_step_entry_bearing, exit_step_exit_bearing);
+
+    // both angles are in the same direction, the total turn gets increased
+    // 
+    // a ---- b
+    //           \
+    //              c
+    //              |
+    //              d
+    //
+    // Will be considered just like
+    // 
+    // a -----b
+    //        |
+    //        c
+    //        |
+    //        d
+    const auto use_total_angle = [&]() {
+        // only consider actual turns in combination:
+        if (angularDeviation(total_angle, 180) < 0.5 * NARROW_TURN_ANGLE)
+            return false;
+
+        // entry step is short and the exit and the exit step does not have intersections??
+        if (entry_step.distance < MAX_COLLAPSE_DISTANCE)
+            return true;
+
+        if (entry_step.distance > 2 * MAX_COLLAPSE_DISTANCE)
+            return false;
+
+        // both go roughly in the same direction
+        if ((entry_angle <= 185 && exit_angle <= 185) || (entry_angle >= 175 && exit_angle >= 175))
+            return true;
+
+        return false;
+    }();
+
+    // We allow for minor deviations from a straight line
+    if (use_total_angle)
+    {
+        return total_angle;
+    }
+    else
+    {
+        // to prevent ignoring angles like
+        // 
+        // a -- b
+        //      |
+        //      c -- d
+        // 
+        // We don't combine both turn angles here but keep the very first turn angle.
+        // We choose the first one, since we consider the first maneuver in a merge range the
+        // important one
+        return entry_angle;
+    }
+}
+
+inline void handleSliproad(RouteStepIterator sliproad_step)
+{
+    // find the next step after the sliproad step itself (this is not necessarily the next step,
+    // since we might have to skip over traffic lights/node penalties)
+    auto next_step = [&sliproad_step]() {
+        auto next_step = findNextTurn(sliproad_step);
+        while (isTrafficLightStep(*next_step))
+        {
+            // in sliproad checks, we should have made sure not to include invalid modes
+            BOOST_ASSERT(haveSameMode(*sliproad_step, *next_step));
+            sliproad_step->ElongateBy(*next_step);
+            next_step->Invalidate();
+            next_step = findNextTurn(next_step);
+        }
+        BOOST_ASSERT(haveSameMode(*sliproad_step, *next_step));
+        return next_step;
+    }();
+
+    // have we reached the end?
+    if (hasWaypointType(*next_step))
+    {
+        setInstructionType(*sliproad_step, TurnType::Turn);
+    }
+    else
+    {
+        const auto previous_step = findPreviousTurn(sliproad_step);
+        const auto connecting_same_name_roads = haveSameName(*previous_step, *next_step);
+        auto sliproad_turn_type = connecting_same_name_roads ? TurnType::Continue : TurnType::Turn;
+        setInstructionType(*sliproad_step, sliproad_turn_type);
+        combineRouteSteps(*sliproad_step,
+                          *next_step,
+                          AdjustToCombinedTurnAngleStrategy(),
+                          TransferSignageStrategy(),
+                          TransferLanesStrategy());
+    }
+}
+
+} // namespace
+
+// STRATEGIES
+
+// keep signage/other entries in route step intact
+void NoModificationStrategy::operator()(RouteStep &, const RouteStep &) const
+{
+    // actually do nothing.
+}
+
+// transfer turn type from a different turn
+void TransferTurnTypeStrategy::operator()(RouteStep &step_at_turn_location,
+                                          const RouteStep &transfer_from_step) const
+{
+    step_at_turn_location.maneuver = transfer_from_step.maneuver;
+}
+
+void AdjustToCombinedTurnAngleStrategy::operator()(RouteStep &step_at_turn_location,
+                                                   const RouteStep &transfer_from_step) const
+{
+    // TODO assert transfer_from_step == step_at_turn_location + 1
+    const auto angle = findTotalTurnAngle(step_at_turn_location, transfer_from_step);
+    step_at_turn_location.maneuver.instruction.direction_modifier = getTurnDirection(angle);
+}
+
+AdjustToCombinedTurnStrategy::AdjustToCombinedTurnStrategy(
+    const RouteStep &step_prior_to_intersection)
+    : step_prior_to_intersection(step_prior_to_intersection)
+{
+}
+
+void AdjustToCombinedTurnStrategy::operator()(RouteStep &step_at_turn_location,
+                                              const RouteStep &transfer_from_step) const
+{
+    const auto angle = findTotalTurnAngle(step_at_turn_location, transfer_from_step);
+    const auto new_modifier = getTurnDirection(angle);
+
+    // a turn that is a new name or straight (turn/continue)
+    const auto is_non_turn = [](const RouteStep &step) {
+        return hasTurnType(step, TurnType::NewName) ||
+               (hasTurnType(step, TurnType::Turn) &&
+                hasModifier(step, DirectionModifier::Straight)) ||
+               (hasTurnType(step, TurnType::Continue) &&
+                hasModifier(step, DirectionModifier::Straight));
+    };
+
+    // check if the first part is the actual turn
+    const auto transferring_from_non_turn = is_non_turn(transfer_from_step);
+
+    // or if the maneuver location does not perform an actual turn
+    const auto maneuver_at_non_turn = is_non_turn(step_at_turn_location) ||
+                                      hasTurnType(step_at_turn_location, TurnType::Suppressed);
+
+    // creating turns if the original instrution wouldn't be a maneuver (also for turn straights)`
+    if (transferring_from_non_turn || maneuver_at_non_turn)
+    {
+        if (hasTurnType(step_at_turn_location, TurnType::Suppressed))
+        {
+            if (new_modifier == DirectionModifier::Straight)
+                setInstructionType(step_at_turn_location, TurnType::NewName);
+            else
+                step_at_turn_location.maneuver.instruction.type =
+                    haveSameName(step_prior_to_intersection, transfer_from_step)
+                        ? TurnType::Continue
+                        : TurnType::Turn;
+        }
+        else if (hasTurnType(step_at_turn_location, TurnType::NewName) &&
+                 hasTurnType(transfer_from_step, TurnType::Suppressed) &&
+                 new_modifier != DirectionModifier::Straight)
+        {
+            setInstructionType(step_at_turn_location, TurnType::Turn);
+        }
+        else if (hasTurnType(step_at_turn_location, TurnType::Continue) &&
+                 !haveSameName(step_prior_to_intersection, transfer_from_step))
+        {
+            setInstructionType(step_at_turn_location, TurnType::Turn);
+        }
+        else if (hasTurnType(step_at_turn_location, TurnType::Turn) &&
+                 haveSameName(step_prior_to_intersection, transfer_from_step))
+        {
+            setInstructionType(step_at_turn_location, TurnType::Continue);
+        }
+    }
+    // if we are turning onto a ramp, we carry the ramp (e.g. a turn onto a ramp that is modelled
+    // later only)
+    else if (hasTurnType(transfer_from_step, TurnType::OnRamp))
+    {
+        setInstructionType(step_at_turn_location, TurnType::OnRamp);
+    }
+    // switch two turns to a single continue, if necessary
+    else if (hasTurnType(step_at_turn_location, TurnType::Turn) &&
+             hasTurnType(transfer_from_step, TurnType::Turn) &&
+             haveSameName(step_prior_to_intersection, transfer_from_step))
+    {
+        setInstructionType(step_at_turn_location, TurnType::Continue);
+    }
+    // switch continue to turn, if possible
+    else if (hasTurnType(step_at_turn_location, TurnType::Continue) &&
+             hasTurnType(transfer_from_step, TurnType::Turn) &&
+             !haveSameName(step_prior_to_intersection, transfer_from_step))
+    {
+        setInstructionType(step_at_turn_location, TurnType::Turn);
+    }
+
+    // finally set our new modifier
+    step_at_turn_location.maneuver.instruction.direction_modifier = new_modifier;
+}
+
+StaggeredTurnStrategy::StaggeredTurnStrategy(const RouteStep &step_prior_to_intersection)
+    : step_prior_to_intersection(step_prior_to_intersection)
+{
+}
+
+void StaggeredTurnStrategy::operator()(RouteStep &step_at_turn_location,
+                                       const RouteStep &transfer_from_step) const
+{
+    step_at_turn_location.maneuver.instruction.direction_modifier = DirectionModifier::Straight;
+    step_at_turn_location.maneuver.instruction.type =
+        haveSameName(step_prior_to_intersection, transfer_from_step) ? TurnType::Suppressed
+                                                                     : TurnType::NewName;
+}
+
+SetFixedInstructionStrategy::SetFixedInstructionStrategy(
+    const extractor::guidance::TurnInstruction instruction)
+    : instruction(instruction)
+{
+}
+
+void SetFixedInstructionStrategy::operator()(RouteStep &step_at_turn_location,
+                                             const RouteStep &) const
+{
+    step_at_turn_location.maneuver.instruction = instruction;
+}
+
+void TransferSignageStrategy::operator()(RouteStep &step_at_turn_location,
+                                         const RouteStep &transfer_from_step) const
+{
+    step_at_turn_location.AdaptStepSignage(transfer_from_step);
+    step_at_turn_location.rotary_name = transfer_from_step.rotary_name;
+    step_at_turn_location.rotary_pronunciation = transfer_from_step.rotary_pronunciation;
+}
+
+void TransferLanesStrategy::operator()(RouteStep &step_at_turn_location,
+                                       const RouteStep &transfer_from_step) const
+{
+    step_at_turn_location.intersections.front().lanes =
+        transfer_from_step.intersections.front().lanes;
+    step_at_turn_location.intersections.front().lane_description =
+        transfer_from_step.intersections.front().lane_description;
+}
+
+void suppressStep(RouteStep &step_at_turn_location, RouteStep &step_after_turn_location)
+{
+    return combineRouteSteps(step_at_turn_location,
+                             step_after_turn_location,
+                             NoModificationStrategy(),
+                             NoModificationStrategy(),
+                             NoModificationStrategy());
+}
+
+// OTHER IMPLEMENTATIONS
+OSRM_ATTR_WARN_UNUSED
+RouteSteps collapseTurnInstructions(RouteSteps steps)
+{
+    // make sure we can safely iterate over all steps (has depart/arrive with TurnType::NoTurn)
+    BOOST_ASSERT(!hasTurnType(steps.front()) && !hasTurnType(steps.back()));
+    BOOST_ASSERT(hasWaypointType(steps.front()) && hasWaypointType(steps.back()));
+
+    if (steps.size() <= 2)
+        return steps;
+
+    // start of with no-op
+    for (auto current_step = steps.begin() + 1; current_step + 1 != steps.end(); ++current_step)
+    {
+        if (entersRoundabout(current_step->maneuver.instruction) ||
+            staysOnRoundabout(current_step->maneuver.instruction))
+        {
+            // Skip over all instructions within the roundabout
+            for (; current_step + 1 != steps.end(); ++current_step)
+                if (leavesRoundabout(current_step->maneuver.instruction))
+                    break;
+
+            // are we done for good?
+            if (current_step + 1 == steps.end())
+                break;
+            else
+                continue;
+        }
+
+        // only operate on actual turns
+        if (!hasTurnType(*current_step))
+            continue;
+
+        // handle all situations involving the sliproad turn type
+        if (hasTurnType(*current_step, TurnType::Sliproad))
+        {
+            handleSliproad(current_step);
+            continue;
+        }
+
+        // don't collapse next step if it is a waypoint alread
+        const auto next_step = findNextTurn(current_step);
+        if (hasWaypointType(*next_step))
+            break;
+
+        const auto previous_step = findPreviousTurn(current_step);
+
+        // don't collapse anything that does change modes
+        if (current_step->mode != next_step->mode)
+            continue;
+
+        // handle staggered intersections:
+        // a staggered intersection describes to turns in rapid succession that go in opposite
+        // directions (e.g. right + left) with a very short segment in between
+        if (isStaggeredIntersection(previous_step, current_step, next_step))
+        {
+            combineRouteSteps(*current_step,
+                              *next_step,
+                              StaggeredTurnStrategy(*previous_step),
+                              TransferSignageStrategy(),
+                              NoModificationStrategy());
+        }
+        else if (isUTurn(previous_step, current_step, next_step))
+        {
+            combineRouteSteps(
+                *current_step,
+                *next_step,
+                SetFixedInstructionStrategy({TurnType::Continue, DirectionModifier::UTurn}),
+                TransferSignageStrategy(),
+                NoModificationStrategy());
+        }
+        else if (isNameOszillation(previous_step, current_step, next_step))
+        {
+            // first deactivate the second name switch
+            suppressStep(*current_step, *next_step);
+            // and then the first (to ensure both iterators to be valid)
+            suppressStep(*previous_step, *current_step);
+        }
+        else if (maneuverPreceededByNameChange(previous_step, current_step, next_step) ||
+                 maneuverPreceededBySuppressedDirection(current_step, next_step))
+        {
+            const auto strategy = AdjustToCombinedTurnStrategy(*previous_step);
+            strategy(*next_step, *current_step);
+            // suppress previous step
+            suppressStep(*previous_step, *current_step);
+        }
+        else if (maneuverSucceededByNameChange(current_step, next_step) ||
+                 nameChangeImmediatelyAfterSuppressed(current_step, next_step) ||
+                 maneuverSucceededBySuppressedDirection(current_step, next_step) ||
+                 closeChoicelessTurnAfterTurn(current_step, next_step))
+        {
+            combineRouteSteps(*current_step,
+                              *next_step,
+                              AdjustToCombinedTurnStrategy(*previous_step),
+                              TransferSignageStrategy(),
+                              NoModificationStrategy());
+        }
+        else if (straightTurnFollowedByChoiceless(current_step, next_step))
+        {
+            combineRouteSteps(*current_step,
+                              *next_step,
+                              AdjustToCombinedTurnStrategy(*previous_step),
+                              TransferSignageStrategy(),
+                              NoModificationStrategy());
+        }
+        else if (suppressedStraightBetweenTurns(previous_step, current_step, next_step))
+        {
+            const auto far_back_step = findPreviousTurn(previous_step);
+            previous_step->ElongateBy(*current_step);
+            current_step->Invalidate();
+            combineRouteSteps(*previous_step,
+                              *next_step,
+                              AdjustToCombinedTurnStrategy(*far_back_step),
+                              TransferSignageStrategy(),
+                              NoModificationStrategy());
+        }
+        // if the current collapsing triggers, we can check for advanced scenarios that only are
+        // possible after an inital collapse step (e.g. name change right after a u-turn)
+        // 
+        // f - e - d
+        //     |   |
+        // a - b - c
+        // 
+        // In this scenario, bc and de might belong to a different road than a-b and f-e (since
+        // there are no fix conventions how to label them in segregated intersections). These steps
+        // might only become apparent after some initial collapsing
+        const auto new_next_step = findNextTurn(current_step);
+        if (doubleChoiceless(current_step, new_next_step))
+        {
+            combineRouteSteps(*current_step,
+                              *new_next_step,
+                              AdjustToCombinedTurnStrategy(*previous_step),
+                              TransferSignageStrategy(),
+                              NoModificationStrategy());
+        }
+        if (!hasWaypointType(*previous_step))
+        {
+            const auto far_back_step = findPreviousTurn(previous_step);
+            // due to name changes, we can find u-turns a bit late. Thats why we check far back as
+            // well
+            if (isUTurn(far_back_step, previous_step, current_step))
+            {
+                combineRouteSteps(
+                    *previous_step,
+                    *current_step,
+                    SetFixedInstructionStrategy({TurnType::Continue, DirectionModifier::UTurn}),
+                    TransferSignageStrategy(),
+                    NoModificationStrategy());
+            }
+        }
+    }
+    return steps;
+}
+
+} // namespace guidance
+} // namespace engine
+} // namespace osrm

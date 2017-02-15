@@ -410,10 +410,10 @@ Feature: Basic Roundabout
             | h    | give_way |
 
         When I route I should get
-            | waypoints | route            | turns                                                |
-            # since we cannot handle these invalid roundabout tags yet, we cannout output roundabout taggings. This will hopefully change some day
+            | waypoints | route            | turns                                                | locations |
+            # since we cannot handle these invalid roundabout tags yet, we cannot output roundabout taggings. This will hopefully change some day
             #| w,x       | ll,egg,egg,tr,tr | depart,roundabout-exit-1,roundabout-exit-2,arrive       |
-            | w,x       | ll,egg,egg,tr,tr | depart,turn right,continue left,turn straight,arrive |
+            | w,x       | ll,egg,egg,tr,tr | depart,turn right,continue left,turn straight,arrive | w,b,d,f,x |
 
     Scenario: Use Lane in Roundabout
         Given the node map

@@ -3,7 +3,7 @@ Feature: Turn Lane Guidance
 
     Background:
         Given the profile "car"
-        Given a grid size of 20 meters
+        Given a grid size of 5 meters
 
     @simple
     Scenario: Basic Turn Lane 3-way Turn with empty lanes
@@ -602,6 +602,17 @@ Feature: Turn Lane Guidance
                  a e
                  | |
                  | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
+                 | |
                  b d
             h     c
              ' -- g - - f
@@ -609,8 +620,8 @@ Feature: Turn Lane Guidance
 
         And the ways
             | nodes | name     | turn:lanes:forward                 | oneway | highway   | lanes |
-            | abc   | road     | left\|left\|left\|through\|through | yes    | primary   | 5     |
-            | cde   | road     |                                    | yes    | primary   | 3     |
+            | abc   | road     | left\|left\|left\|through\|through | yes    | primary   | 2     |
+            | cde   | road     |                                    | yes    | primary   | 2     |
             | hc    | cross    |                                    | yes    | secondary |       |
             | cg    | straight |                                    | no     | tertiary  |       |
             | cf    | left     |                                    | yes    | primary   |       |
@@ -808,6 +819,10 @@ Feature: Turn Lane Guidance
             """
             a   b   e
 
+
+
+
+
             d   c   f
             """
 
@@ -858,9 +873,9 @@ Feature: Turn Lane Guidance
             | ab    | on   | motorway_link |                    |
 
         When I route I should get
-            | waypoints | route        | turns                           | lanes                          |
-            | a,j       | on,xbcj      | depart,arrive                   | ,                              |
-            | a,i       | on,off,off   | depart,turn slight right,arrive | ,none:false slight right:true, |
+            | waypoints | route        | turns                    | lanes                          |
+            | a,j       | on,xbcj      | depart,arrive            | ,                              |
+            | a,i       | on,off,off   | depart,turn right,arrive | ,none:false slight right:true, |
 
     #http://www.openstreetmap.org/#map=17/52.47414/13.35712
     @todo @ramp @2645
@@ -937,9 +952,9 @@ Feature: Turn Lane Guidance
             | dce   | cross | primary | yes    |                    | 1        |
 
         When I route I should get
-            | waypoints | route            | turns                    | lanes                   |
-            | a,g       | road,cross,cross | depart,turn right,arrive | ,left:false right:true, |
-            | a,e       | road,cross,cross | depart,turn left,arrive  | ,left:true right:false, |
+            | waypoints | route            | turns                          | lanes                   | locations |
+            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true, | a,b,g     |
+            | a,e       | road,cross,cross | depart,end of road left,arrive | ,left:true right:false, | a,c,e     |
 
     Scenario: Partitioned turn, Slight Curve
         Given the node map
@@ -960,9 +975,9 @@ Feature: Turn Lane Guidance
             | dce   | cross | primary | yes    |                    |
 
         When I route I should get
-            | waypoints | route            | turns                    | lanes                   |
-            | a,g       | road,cross,cross | depart,turn right,arrive | ,left:false right:true, |
-            | a,e       | road,cross,cross | depart,turn left,arrive  | ,left:true right:false, |
+            | waypoints | route            | turns                          | lanes                   | locations |
+            | a,g       | road,cross,cross | depart,turn right,arrive       | ,left:false right:true, | a,b,g     |
+            | a,e       | road,cross,cross | depart,end of road left,arrive | ,left:true right:false, | a,c,e     |
 
     Scenario: Lane Parsing Issue #2694
         Given the node map
