@@ -148,10 +148,22 @@ int main(int argc, char *argv[]) try
         return EXIT_FAILURE;
     }
 
-    if (!boost::filesystem::is_regular_file(partition_config.base_path))
+    auto check_file = [](const boost::filesystem::path &path) {
+        if (!boost::filesystem::is_regular_file(path))
+        {
+            util::Log(logERROR) << "Input file " << path << " not found!";
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    };
+
+    if (!check_file(partition_config.edge_based_graph_path) ||
+        !check_file(partition_config.nbg_ebg_mapping_path) ||
+        !check_file(partition_config.compressed_node_based_graph_path))
     {
-        util::Log(logERROR) << "Input file " << partition_config.base_path.string()
-                            << " not found!";
         return EXIT_FAILURE;
     }
 
