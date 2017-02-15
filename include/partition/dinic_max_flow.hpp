@@ -52,7 +52,7 @@ class DinicMaxFlow
     // (starting with 0 for all source nodes) and assign the hop distance in the residual graph as
     // the level of the node.
     //    a
-    //  /   \
+    //  /   \ 
     // s     t
     //  \   /
     //    b

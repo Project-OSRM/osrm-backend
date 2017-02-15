@@ -3,6 +3,7 @@
 
 #include "storage/io.hpp"
 #include "util/coordinate.hpp"
+#include "util/typedefs.hpp"
 
 #include <string>
 #include <vector>

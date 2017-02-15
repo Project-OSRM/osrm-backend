@@ -90,6 +90,13 @@ static const EdgeWeight INVALID_EDGE_WEIGHT = std::numeric_limits<EdgeWeight>::m
 static const EdgeWeight MAXIMAL_EDGE_DURATION = std::numeric_limits<EdgeWeight>::max();
 static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>::max();
 
+// FIXME the bitfields we use require a reduced maximal duration, this should be kept consistent
+// within the code base. For now we have to ensure that we don't case 30 bit to -1 and break any
+// min() / operator< checks due to the invalid truncation. In addition, using signed and unsigned
+// weights produces problems. As a result we can only store 1 << 29 since the MSB is still reserved
+// for the sign bit. See https://github.com/Project-OSRM/osrm-backend/issues/3677
+static const EdgeWeight MAXIMAL_EDGE_DURATION_INT_30 = (1 << 29) - 1;
+
 using DatasourceID = std::uint8_t;
 
 struct SegmentID

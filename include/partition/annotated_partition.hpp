@@ -31,13 +31,13 @@ namespace partition
 // layout into:
 //
 //            _____o__________
-//           /        |       \
-//          o         |        \
-//         / \        |         \
+//           /        |       \ 
+//          o         |        \ 
+//         / \        |         \ 
 //        a   b       o         _o_
-//                   / \       /   \
+//                   / \       /   \ 
 //                  c   d     o     o
-//                           / \   / \
+//                           / \   / \ 
 //                          e  f   g  h
 class AnnotatedPartition
 {
