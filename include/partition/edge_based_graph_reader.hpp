@@ -1,6 +1,7 @@
 #ifndef OSRM_EDGE_BASED_GRAPH_READER_HPP
 #define OSRM_EDGE_BASED_GRAPH_READER_HPP
 
+#include "extractor/edge_based_edge.hpp"
 #include "storage/io.hpp"
 #include "util/coordinate.hpp"
 #include "util/dynamic_graph.hpp"
@@ -130,7 +131,7 @@ struct EdgeBasedGraphReader
             forward_edge.target = reverse_edge.target = target;
             forward_edge.data.edge_id = reverse_edge.data.edge_id = edges[i].edge_id;
             forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
-            forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
+            forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION_INT_30;
             forward_edge.data.forward = reverse_edge.data.backward = true;
             forward_edge.data.backward = reverse_edge.data.forward = false;
 

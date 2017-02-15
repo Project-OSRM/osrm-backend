@@ -42,7 +42,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-6', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON BUILD_COMPONENTS=ON
+      env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON BUILD_COMPONENTS=ON
 
     - os: linux
       compiler: "clang-3.9-debug"
@@ -52,11 +52,13 @@ matrix:
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
       env: CLANG_VERSION='3.9.1' BUILD_TYPE='Debug' BUILD_COMPONENTS=ON CUCUMBER_TIMEOUT=60000
 
-    - os: osx
-      osx_image: xcode8.2
-      compiler: "mason-osx-release"
-      # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON
+    - os: linux
+      compiler: "mason-linux-debug-santize"
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-5-dev']
+      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_SANITIZER=ON
 
     # Release Builds
     - os: linux
@@ -88,6 +90,12 @@ matrix:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['g++-4.9', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev', 'ccache']
       env: CCOMPILER='gcc-4.9' CXXCOMPILER='g++-4.9' BUILD_TYPE='Release'
+
+    - os: osx
+      osx_image: xcode8.2
+      compiler: "mason-osx-release"
+      # we use the xcode provides clang and don't install our own
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON
 
       # Disabled because of CI slowness
       #- os: linux
@@ -141,6 +149,7 @@ before_install:
   - mkdir -p ${CMAKE_DIR}
   - travis_retry wget --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${CMAKE_DIR} || exit 1
   - export PATH=${CMAKE_DIR}/bin:${PATH}
+  - ${MASON} install tbb 2017_20161128 && export LD_LIBRARY_PATH=$(${MASON} prefix tbb 2017_20161128)/lib/:${LD_LIBRARY_PATH}
   - ${MASON} install ccache ${CCACHE_VERSION} && export PATH=$(${MASON} prefix ccache ${CCACHE_VERSION})/bin:${PATH}
   - |
     if [[ ! -z ${CLANG_VERSION} ]]; then

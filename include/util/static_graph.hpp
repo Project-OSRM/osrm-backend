@@ -74,7 +74,7 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
 
     template <typename... Ts>
     SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
-        : Base{source, target}, data{std::forward<Ts>(data)...}
+        : Base{source, target}, data(std::forward<Ts>(data)...)
     {
     }
 };
