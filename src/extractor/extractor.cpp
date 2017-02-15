@@ -376,10 +376,11 @@ void Extractor::FindComponents(unsigned max_edge_id,
 
     for (auto &node : input_nodes)
     {
+        // the component IDs here don't necessarily match for forward and backward edge. Since we
+        // only store a single component ID, the edge itself can end up in either of both
+        // components. Snapping will behave more or less randomly around it.
+        // https://github.com/Project-OSRM/osrm-backend/issues/3689
         auto forward_component = component_search.GetComponentID(node.forward_segment_id.id);
-        BOOST_ASSERT(!node.reverse_segment_id.enabled ||
-                     forward_component ==
-                         component_search.GetComponentID(node.reverse_segment_id.id));
 
         const unsigned component_size = component_search.GetComponentSize(forward_component);
         node.component.is_tiny = component_size < config.small_component_size;
