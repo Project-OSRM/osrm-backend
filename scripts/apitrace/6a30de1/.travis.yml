@@ -1,0 +1,18 @@
+language: generic
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: false
+      env: CXX=g++-5 CC=gcc-5
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - g++-5
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

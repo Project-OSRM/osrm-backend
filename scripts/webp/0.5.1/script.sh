@@ -19,6 +19,14 @@ function mason_load_source {
 
 function mason_compile {
     export CFLAGS="${CFLAGS:-} -Os"
+
+    # -mfpu=neon is not enabled by default for cortex_a9 because
+    # it affects floating point precision. webp is fine with it.
+    # See: https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html
+    if [[ ${MASON_PLATFORM_VERSION} == "cortex_a9" ]]; then
+        CFLAGS="${CFLAGS:-} -mfloat-abi=softfp -mfpu=neon"
+    fi
+
     ./configure \
         --prefix=${MASON_PREFIX} \
         ${MASON_HOST_ARG} \

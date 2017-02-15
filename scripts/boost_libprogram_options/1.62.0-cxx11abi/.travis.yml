@@ -1,0 +1,19 @@
+language: cpp
+
+matrix:
+  include:
+    - os: linux
+      sudo: true
+      addons:
+        apt:
+          sources:
+           - ubuntu-toolchain-r-test
+          packages:
+           - libstdc++-5-dev
+
+script:
+- sudo perl -i -p -e "s/# define _GLIBCXX_USE_DUAL_ABI 0/# define _GLIBCXX_USE_DUAL_ABI 1/g;" /usr/include/x86_64-linux-gnu/c++/5/bits/c++config.h
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

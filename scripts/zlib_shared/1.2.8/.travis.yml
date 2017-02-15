@@ -1,0 +1,19 @@
+language: cpp
+
+sudo: false
+
+compiler: clang
+
+matrix:
+  include:
+    - os: linux
+      env: MASON_PLATFORM_VERSION=cortex_a9
+    - os: linux
+      env: MASON_PLATFORM_VERSION=i686
+    - os: linux
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

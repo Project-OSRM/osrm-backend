@@ -1,7 +1,6 @@
 # Release process
 
 - Increment version at the top of `mason`
-- Increment version in test/unit.sh
 - Update changelog
 - Ensure tests are passing
 - Tag a release:

@@ -1,0 +1,14 @@
+language: cpp
+
+sudo: false
+
+matrix:
+  include:
+    - os: linux
+      compiler: clang
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+
+after_success:
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}
