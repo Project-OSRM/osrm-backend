@@ -1,0 +1,14 @@
+language: generic
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8.2
+      compiler: clang
+    - os: linux
+      compiler: clang
+      sudo: false
+
+script:
+- ./mason build ${MASON_NAME} ${MASON_VERSION}
+- ./mason publish ${MASON_NAME} ${MASON_VERSION}

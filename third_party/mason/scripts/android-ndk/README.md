@@ -1,0 +1,4 @@
+- Versions are a concatenation of the architecture slug and the NDK release version
+- Starting with r13, they are named "<mason platform version>-<api level>-<ndk version>"
+- They contain a toolchain.sh + toolchain.cmake file
+- Eventually we're going to remove Android-vars from mason.sh

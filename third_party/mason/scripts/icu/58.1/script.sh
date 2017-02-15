@@ -23,7 +23,7 @@ function mason_load_source {
 }
 
 function mason_prepare_compile {
-    if [[ ${MASON_PLATFORM} == 'ios' || ${MASON_PLATFORM} == 'android' ]]; then
+    if [[ ${MASON_PLATFORM} == 'ios' || ${MASON_PLATFORM} == 'android' || ${MASON_PLATFORM_VERSION} != `uname -m` ]]; then
         mason_substep "Cross-compiling ICU. Starting with host build of ICU to generate tools."
 
         pushd ${MASON_ROOT}/..
@@ -40,7 +40,7 @@ function mason_prepare_compile {
 }
 
 function mason_compile {
-    if [[ ${MASON_PLATFORM} == 'ios' || ${MASON_PLATFORM} == 'android' ]]; then
+    if [[ ${MASON_PLATFORM} == 'ios' || ${MASON_PLATFORM} == 'android' || ${MASON_PLATFORM_VERSION} != `uname -m` ]]; then
         MASON_CROSS_BUILD=1
     fi
     mason_compile_base

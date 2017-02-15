@@ -8,6 +8,13 @@ matrix:
       env: MASON_PLATFORM=osx
       compiler: clang
     - os: linux
+      env: MASON_PLATFORM_VERSION=cortex_a9
+    - os: linux
+      env: MASON_PLATFORM_VERSION=i686
+      addons:
+        apt:
+          packages: [ 'zlib1g-dev:i386' ]
+    - os: linux
       env: MASON_PLATFORM=linux
       compiler: clang
       addons:
