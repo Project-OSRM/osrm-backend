@@ -397,6 +397,11 @@ function Handlers.handle_oneway(way,result,data,profile)
     oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
   elseif profile.oneway_handling == 'specific' then
     oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway')
+  elseif profile.oneway_handling == 'conditional' then
+    oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
+    if way:get_value_by_key("oneway:conditional") then
+        oneway = "no"
+    end
   end
 
   data.oneway = oneway
