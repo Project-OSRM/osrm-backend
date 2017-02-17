@@ -398,9 +398,15 @@ function Handlers.handle_oneway(way,result,data,profile)
   elseif profile.oneway_handling == 'specific' then
     oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway')
   elseif profile.oneway_handling == 'conditional' then
-    oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
+    -- Following code assumes that `oneway` and `oneway:conditional` tags have opposite values and takes weakest (always `no`).
+    -- So if we will have:
+    -- oneway=yes, oneway:conditional=no @ (condition1)
+    -- oneway=no, oneway:conditional=yes @ (condition2)
+    -- condition1 will be always true and condition2 will be always false.
     if way:get_value_by_key("oneway:conditional") then
         oneway = "no"
+    else
+        oneway = Tags.get_value_by_prefixed_sequence(way,profile.restrictions,'oneway') or way:get_value_by_key("oneway")
     end
   end
 
