@@ -8,6 +8,7 @@
 #include <queue>
 #include <iomanip>
 #include <cmath>
+#include <unordered_set>
 
 namespace osrm
 {
@@ -15,6 +16,8 @@ namespace engine
 {
 namespace plugins
 {
+
+IsochronePlugin::IsochronePlugin() : shortest_path(heaps) {}
 
 Status
 IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
@@ -58,275 +61,123 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
     util::Log() << "Fetch RTree " << TIMER_MSEC(GET_EDGES_TIMER);
 
     auto startpoints = facade->NearestPhantomNodes(startcoord, 1);
-    // Struct to hold info on all the EdgeBasedNodes that are visible in our tile
-    // When we create these, we insure that (source, target) and packed_geometry_id
-    // are all pointed in the same direction.
-    struct EdgeBasedNodeInfo
-    {
-        bool is_geometry_forward; // Is the geometry forward or reverse?
-        unsigned packed_geometry_id;
-    };
-    // Lookup table for edge-based-nodes
-    std::unordered_map<NodeID, EdgeBasedNodeInfo> edge_based_node_info;
 
-    struct SegmentData
-    {
-        NodeID target_node;
-        EdgeID edge_based_node_id;
-    };
+    // Perform the initial upwards search
+    heaps.InitializeOrClearFirstThreadLocalStorage(facade->GetNumberOfNodes());
+    auto &forward_heap = *(heaps.forward_heap_1);
+    forward_heap.Clear();
 
-    std::unordered_map<NodeID, std::vector<SegmentData>> node_based_graph;
-    // Reserve enough space for unique edge-based-nodes on every edge.
-    // Only a tile with all unique edges will use this much, but
-    // it saves us a bunch of re-allocations during iteration.
-    node_based_graph.reserve(edges.size() * 2);
-
-    TIMER_START(CONSTRUCT_LOOKUP);
-    // Build an adjacency list for all the road segments visible in
-    // the tile
-    for (const auto &edge : edges)
-    {
-        if (edge.forward_segment_id.enabled)
-        {
-            // operator[] will construct an empty vector at [edge.u] if there is no value.
-            node_based_graph[edge.u].push_back({edge.v, edge.forward_segment_id.id});
-            if (edge_based_node_info.count(edge.forward_segment_id.id) == 0)
-            {
-                edge_based_node_info[edge.forward_segment_id.id] = {true, edge.packed_geometry_id};
-            }
-            else
-            {
-                BOOST_ASSERT(edge_based_node_info[edge.forward_segment_id.id].is_geometry_forward ==
-                             true);
-                BOOST_ASSERT(edge_based_node_info[edge.forward_segment_id.id].packed_geometry_id ==
-                             edge.packed_geometry_id);
-            }
-        }
-        if (edge.reverse_segment_id.enabled)
-        {
-            node_based_graph[edge.v].push_back({edge.u, edge.reverse_segment_id.id});
-            if (edge_based_node_info.count(edge.reverse_segment_id.id) == 0)
-            {
-                edge_based_node_info[edge.reverse_segment_id.id] = {false, edge.packed_geometry_id};
-            }
-            else
-            {
-                BOOST_ASSERT(edge_based_node_info[edge.reverse_segment_id.id].is_geometry_forward ==
-                             false);
-                BOOST_ASSERT(edge_based_node_info[edge.reverse_segment_id.id].packed_geometry_id ==
-                             edge.packed_geometry_id);
-            }
-        }
-    }
-    TIMER_STOP(CONSTRUCT_LOOKUP);
-    util::Log() << "Create lookup table " << TIMER_MSEC(CONSTRUCT_LOOKUP);
-
-    // Given a turn:
-    //     u---v
-    //         |
-    //         w
-    //  uv is the "approach"
-    //  vw is the "exit"
-    std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
-    std::vector<EdgeWeight> approach_weight_vector;
-
-    // Make sure we traverse the startnodes in a consistent order
-    // to ensure identical PBF encoding on all platforms.
-    std::vector<NodeID> sorted_startnodes;
-    sorted_startnodes.reserve(node_based_graph.size());
-    for (const auto &startnode : node_based_graph)
-        sorted_startnodes.push_back(startnode.first);
-    std::sort(sorted_startnodes.begin(), sorted_startnodes.end());
-
-    struct SimpleEdgeData
-    {
-        NodeID target;
-        std::uint64_t weight;
-        SimpleEdgeData(NodeID target_, std::uint64_t weight_) : target(target_), weight(weight_) {}
-    };
-
-    // Our edge-based-graph
-    std::unordered_map<NodeID, std::vector<SimpleEdgeData>> edge_based_graph;
-
-    TIMER_START(CONSTRUCT_GRAPH);
-    // Look at every node in the directed graph we created
-    for (const auto &startnode : sorted_startnodes)
-    {
-        const auto &nodedata = node_based_graph[startnode];
-        // For all the outgoing edges from the node
-        for (const auto &approachedge : nodedata)
-        {
-            // If the target of this edge doesn't exist in our directed
-            // graph, it's probably outside the tile, so we can skip it
-            if (node_based_graph.count(approachedge.target_node) == 0)
-            {
-                continue;
-            }
-
-            // For each of the outgoing edges from our target coordinate
-            for (const auto &exit_edge : node_based_graph[approachedge.target_node])
-            {
-                // If the next edge has the same edge_based_node_id, then it's
-                // not a turn, so skip it
-                if (approachedge.edge_based_node_id == exit_edge.edge_based_node_id)
-                    continue;
-
-                // Skip u-turns
-                if (startnode == exit_edge.target_node)
-                    continue;
-
-                // Find the connection between our source road and the target node
-                // Since we only want to find direct edges, we cannot check shortcut edges here.
-                // Otherwise we might find a forward edge even though a shorter backward edge
-                // exists (due to oneways).
-                //
-                // a > - > - > - b
-                // |             |
-                // |------ c ----|
-                //
-                // would offer a backward edge at `b` to `a` (due to the oneway from a to b)
-                // but could also offer a shortcut (b-c-a) from `b` to `a` which is longer.
-                EdgeID smaller_edge_id =
-                    facade->FindSmallestEdge(approachedge.edge_based_node_id,
-                                             exit_edge.edge_based_node_id,
-                                             [](const contractor::QueryEdge::EdgeData &data) {
-                                                 return data.forward && !data.shortcut;
-                                             });
-
-                // Depending on how the graph is constructed, we might have to look for
-                // a backwards edge instead.  They're equivalent, just one is available for
-                // a forward routing search, and one is used for the backwards dijkstra
-                // steps.  Their weight should be the same, we can use either one.
-                // If we didn't find a forward edge, try for a backward one
-                if (SPECIAL_EDGEID == smaller_edge_id)
-                {
-                    smaller_edge_id =
-                        facade->FindSmallestEdge(exit_edge.edge_based_node_id,
-                                                 approachedge.edge_based_node_id,
-                                                 [](const contractor::QueryEdge::EdgeData &data) {
-                                                     return data.backward && !data.shortcut;
-                                                 });
-                }
-
-                // If no edge was found, it means that there's no connection between these
-                // nodes, due to oneways or turn restrictions. Given the edge-based-nodes
-                // that we're examining here, we *should* only find directly-connected
-                // edges, not shortcuts
-                if (smaller_edge_id != SPECIAL_EDGEID)
-                {
-                    const auto &data = facade->GetEdgeData(smaller_edge_id);
-                    BOOST_ASSERT_MSG(!data.shortcut, "Connecting edge must not be a shortcut");
-
-                    edge_based_graph[approachedge.edge_based_node_id].emplace_back(
-                        exit_edge.edge_based_node_id, data.weight);
-                }
-            }
-        }
-    }
-    TIMER_STOP(CONSTRUCT_GRAPH);
-    util::Log() << "Building graph" << TIMER_MSEC(CONSTRUCT_GRAPH);
-
-    // Begin the isochrone search
-
-    // Structure to hold the parent nodes
-    std::unordered_map<NodeID, NodeID> parent;
-    std::unordered_map<NodeID, std::uint64_t> cheapest_path_so_far;
-
-    auto comparator = [&cheapest_path_so_far](const NodeID &lhs, const NodeID &rhs) {
-        return cheapest_path_so_far.at(lhs) < cheapest_path_so_far.at(rhs);
-    };
-
-    /***************************************************************/
-    // This bit is the actual traversal
-    TIMER_START(DO_SEARCH);
-
-    std::priority_queue<NodeID,
-                        std::vector<NodeID>,
-                        std::function<bool(const NodeID &, const NodeID &)>>
-        priority_queue(comparator);
+    std::unordered_set<NodeID> visited;
 
     for (const auto &phantom_node : startpoints)
     {
         if (phantom_node.phantom_node.forward_segment_id.enabled)
         {
-            cheapest_path_so_far[phantom_node.phantom_node.forward_segment_id.id] = 0;
-            priority_queue.push(phantom_node.phantom_node.forward_segment_id.id);
+            forward_heap.Insert(phantom_node.phantom_node.forward_segment_id.id,
+                                0,
+                                phantom_node.phantom_node.forward_segment_id.id);
+            visited.insert(phantom_node.phantom_node.forward_segment_id.id);
         }
         if (phantom_node.phantom_node.reverse_segment_id.enabled)
         {
-            cheapest_path_so_far[phantom_node.phantom_node.reverse_segment_id.id] = 0;
-            priority_queue.push(phantom_node.phantom_node.reverse_segment_id.id);
+            forward_heap.Insert(phantom_node.phantom_node.reverse_segment_id.id,
+                                0,
+                                phantom_node.phantom_node.reverse_segment_id.id);
+            visited.insert(phantom_node.phantom_node.reverse_segment_id.id);
         }
     }
 
-    while (priority_queue.size() > 0)
+    // Dijkstra forward from the source
+    while (!forward_heap.Empty())
     {
-        const auto thisnode = priority_queue.top();
-        priority_queue.pop();
-        const auto weight_so_far = cheapest_path_so_far[thisnode];
-
-        for (const auto &edge : edge_based_graph[thisnode])
+        const NodeID node = forward_heap.DeleteMin();
+        const EdgeWeight weight = forward_heap.GetKey(node);
+        for (const auto edge : facade->GetAdjacentEdgeRange(node))
         {
-            // If the target hasn't been visited yet, or if we find a shorter path
-            if (cheapest_path_so_far.count(edge.target) == 0 ||
-                weight_so_far + edge.weight < cheapest_path_so_far[edge.target])
+            const auto &data = facade->GetEdgeData(edge);
+            if (data.forward)
             {
-                if (weight_so_far + edge.weight < range * 10)
+                const NodeID to = facade->GetTarget(edge);
+                const EdgeWeight edge_weight = data.weight;
+
+                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+                const EdgeWeight to_weight = weight + edge_weight;
+
+                // New Node discovered -> Add to Heap + Node Info Storage
+                if (!forward_heap.WasInserted(to) && weight < range)
                 {
-                    cheapest_path_so_far[edge.target] = weight_so_far + edge.weight;
-                    parent[edge.target] = thisnode;
-                    priority_queue.push(edge.target);
+                    forward_heap.Insert(to, to_weight, node);
+                    visited.insert(to);
+                }
+                // Found a shorter Path -> Update weight
+                else if (to_weight < forward_heap.GetKey(to))
+                {
+                    // new parent
+                    forward_heap.GetData(to).parent = node;
+                    forward_heap.DecreaseKey(to, to_weight);
                 }
             }
-
-            // TODO: if we hit the edge of our graph, we may need to extend it by
-            // fetching a tile
         }
     }
-    TIMER_STOP(DO_SEARCH);
-    util::Log() << "Dijkstra search" << TIMER_MSEC(DO_SEARCH);
-    /********************************************************************/
 
-    // Serialize it out
     std::stringstream buf;
-
+    buf << std::setprecision(12);
     buf << "{\"type\":\"FeatureCollection\",\"features\":[";
+    bool firstline = true;
+    std::for_each(visited.begin(), visited.end(), [&](const NodeID n) {
+        auto data = forward_heap.GetData(n);
 
-    // TODO: now, unpacking.  This is just a quick demo
-    bool first = true;
-    for (const auto &p : parent)
-    {
+        // Skip the self loops at the start
+        if (data.parent == n)
+            return;
 
-        if (edge_based_node_info.count(p.first) > 0)
-        {
-            const auto &info = edge_based_node_info[p.first];
-            const auto &geomnodes =
-                info.is_geometry_forward
-                    ? facade->GetUncompressedForwardGeometry(info.packed_geometry_id)
-                    : facade->GetUncompressedReverseGeometry(info.packed_geometry_id);
+        std::vector<NodeID> unpacked_path;
 
-            if (!first)
-                buf << ",";
+        using EdgeData = datafacade::BaseDataFacade::EdgeData;
 
-            first = false;
+        std::array<NodeID, 2> path{{data.parent, n}};
+        UnpackCHPath(
+            *facade,
+            path.begin(),
+            path.end(),
+            [&](const std::pair<NodeID, NodeID> & /* edge */, const EdgeData &edge_data) {
+                const auto geometry_index = facade->GetGeometryIndexForEdgeID(edge_data.id);
+                std::vector<NodeID> id_vector;
+                if (geometry_index.forward)
+                {
+                    id_vector = facade->GetUncompressedForwardGeometry(geometry_index.id);
+                }
+                else
+                {
+                    id_vector = facade->GetUncompressedReverseGeometry(geometry_index.id);
+                }
+                std::copy(id_vector.begin(), id_vector.end(), std::back_inserter(unpacked_path));
+            });
 
-            buf << "{\"type\":\"Feature\",\"properties\":{\"edge_based_node_id\":" << p.first
-                << "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
+        if (!firstline)
+            buf << ",";
+        firstline = false;
+        buf << "{\"type\":\"Feature\",\"properties\":{"
+            << "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
 
-            bool firstcoord = true;
-            for (const auto &nodeid : geomnodes)
-            {
-                if (!firstcoord)
-                    buf << ",";
-                firstcoord = false;
+        bool firstcoord = true;
+        std::for_each(unpacked_path.begin(), unpacked_path.end(), [&](const NodeID n) {
+            auto coord = facade->GetCoordinateOfNode(n);
+            buf << (firstcoord ? "" : ",") << "[" << toFloating(coord.lon) << ","
+                << toFloating(coord.lat) << "]";
+            firstcoord = false;
+        });
+        buf << "]}}";
+    });
 
-                const auto coordinate = facade->GetCoordinateOfNode(nodeid);
-                buf << std::setprecision(12) << "[" << toFloating(coordinate.lon) << ","
-                    << toFloating(coordinate.lat) << "]";
-            }
-            buf << "]}}";
-        }
-    }
+    // **********************************************************************
+    // NOTE: this implementation is not complete yet
+    // TODO: Step 2 - reverse search up the CH from remaining edge-based-nodes in the RTree
+    // that weren't found in the initial forward search
+    // Also, need to properly offset the start coordinate, and properly trim
+    // the geometry for the maximum range value
+    // **********************************************************************
+
     buf << "]}";
 
     pbf_buffer = buf.str();
