@@ -178,6 +178,120 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
     // the geometry for the maximum range value
     // **********************************************************************
 
+    // Now do the reverse search for every remaining target, basically dijkstra until
+    // it hits something in `visited()`
+    std::unordered_set<NodeID> seen_ebn;
+    for (const auto &edge : edges)
+    {
+        auto &reverse_heap = *(heaps.reverse_heap_1);
+        reverse_heap.Clear();
+        if (edge.forward_segment_id.enabled && seen_ebn.count(edge.forward_segment_id.id) == 0 &&
+            visited.count(edge.forward_segment_id.id) == 0)
+        {
+            reverse_heap.Insert(edge.forward_segment_id.id, 0, edge.forward_segment_id.id);
+            visited.insert(edge.forward_segment_id.id);
+            seen_ebn.insert(edge.forward_segment_id.id);
+        }
+        if (edge.reverse_segment_id.enabled && seen_ebn.count(edge.reverse_segment_id.id) == 0 &&
+            visited.count(edge.reverse_segment_id.id) == 0)
+        {
+            reverse_heap.Insert(edge.reverse_segment_id.id, 0, edge.reverse_segment_id.id);
+            visited.insert(edge.reverse_segment_id.id);
+            seen_ebn.insert(edge.reverse_segment_id.id);
+        }
+        if (reverse_heap.Empty())
+            continue;
+
+        NodeID node = 0;
+        // Dijkstra forward from the source
+        while (!reverse_heap.Empty())
+        {
+            node = reverse_heap.DeleteMin();
+            const EdgeWeight weight = reverse_heap.GetKey(node);
+
+            // They met!
+            if (forward_heap.WasInserted(node))
+            {
+                reverse_heap.DeleteAll();
+                break;
+            }
+
+            for (const auto edge : facade->GetAdjacentEdgeRange(node))
+            {
+                const auto &data = facade->GetEdgeData(edge);
+                if (data.backward)
+                {
+                    const NodeID to = facade->GetTarget(edge);
+                    const EdgeWeight edge_weight = data.weight;
+
+                    BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+                    const EdgeWeight to_weight = weight + edge_weight;
+
+                    // New Node discovered -> Add to Heap + Node Info Storage
+                    if (!reverse_heap.WasInserted(to) && weight < range)
+                    {
+                        reverse_heap.Insert(to, to_weight, node);
+                    }
+                    // Found a shorter Path -> Update weight
+                    else if (to_weight < reverse_heap.GetKey(to))
+                    {
+                        // new parent
+                        reverse_heap.GetData(to).parent = node;
+                        reverse_heap.DecreaseKey(to, to_weight);
+                    }
+                }
+            }
+        }
+
+        if (forward_heap.WasInserted(node))
+        {
+            auto data = reverse_heap.GetData(node);
+            // Trace back along the path
+            while (data.parent != node)
+            {
+                std::vector<NodeID> unpacked_path;
+                using EdgeData = datafacade::BaseDataFacade::EdgeData;
+                // Note, values are reversed because we're looking at backward edges
+                std::array<NodeID, 2> path{{node, data.parent}};
+                UnpackCHPath(
+                    *facade,
+                    path.begin(),
+                    path.end(),
+                    [&](const std::pair<NodeID, NodeID> & /* edge */, const EdgeData &edge_data) {
+                        const auto geometry_index = facade->GetGeometryIndexForEdgeID(edge_data.id);
+                        std::vector<NodeID> id_vector;
+                        if (geometry_index.forward)
+                        {
+                            id_vector = facade->GetUncompressedForwardGeometry(geometry_index.id);
+                        }
+                        else
+                        {
+                            id_vector = facade->GetUncompressedReverseGeometry(geometry_index.id);
+                        }
+                        std::copy(
+                            id_vector.begin(), id_vector.end(), std::back_inserter(unpacked_path));
+                    });
+
+                if (!firstline)
+                    buf << ",";
+                firstline = false;
+                buf << "{\"type\":\"Feature\",\"properties\":{"
+                    << "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
+
+                bool firstcoord = true;
+                std::for_each(unpacked_path.begin(), unpacked_path.end(), [&](const NodeID n) {
+                    auto coord = facade->GetCoordinateOfNode(n);
+                    buf << (firstcoord ? "" : ",") << "[" << toFloating(coord.lon) << ","
+                        << toFloating(coord.lat) << "]";
+                    firstcoord = false;
+                });
+                buf << "]}}";
+                node = data.parent;
+                data = reverse_heap.GetData(node);
+            }
+        }
+    }
+
     buf << "]}";
 
     pbf_buffer = buf.str();
