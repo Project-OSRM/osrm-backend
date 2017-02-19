@@ -16,7 +16,7 @@ VARIANT_REPO="https://github.com/mapbox/variant.git"
 VARIANT_TAG=v1.1.0
 
 SOL_REPO="https://github.com/ThePhD/sol2.git"
-SOL_TAG=v2.15.5
+SOL_TAG=v2.15.8
 
 VARIANT_LATEST=$(curl "https://api.github.com/repos/mapbox/variant/releases/latest" | jq ".tag_name")
 OSMIUM_LATEST=$(curl "https://api.github.com/repos/osmcode/libosmium/releases/latest" | jq ".tag_name")
