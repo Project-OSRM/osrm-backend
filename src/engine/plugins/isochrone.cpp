@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <cmath>
 #include <unordered_set>
+#include <numeric>
 
 namespace osrm
 {
@@ -28,11 +29,11 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
 {
 
     // const auto range = parameters.range;
-    const auto range = 30;
+    const auto range = 300;
 
     util::Coordinate startcoord = parameters.coordinates.front();
 
-    const auto MAX_SPEED_METERS_PER_SECOND = 200 / 3.6;
+    const auto MAX_SPEED_METERS_PER_SECOND = 90 / 3.6;
     const auto MAX_TRAVEL_DISTANCE_METERS = MAX_SPEED_METERS_PER_SECOND * range;
 
     const auto latitude_range = MAX_TRAVEL_DISTANCE_METERS /
@@ -65,11 +66,25 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
 
     TIMER_START(PHANTOM_TIMER);
     // Convert edges to phantom nodes
-    std::vector<PhantomNode> phantoms(edges.size() + 1);
+    std::vector<PhantomNode> phantoms;
     auto startpoints = facade->NearestPhantomNodes(startcoord, 1);
-    phantoms[0] = startpoints.front().phantom_node;
+    phantoms.push_back(startpoints.front().phantom_node);
 
-    std::transform(edges.begin(), edges.end(), phantoms.begin() + 1, [&](const auto &data) {
+    std::unordered_set<unsigned> seen_roads;
+
+    // For every road, add two phantom nodes (one for each travel direction),
+    // located at the "end" of the road.  When the distance to a node
+    // comes back from the one-to-many search and the distance exceeds our range,
+    // we will fetch the geometry for that road, and step backwards until we
+    // are inside our range.  This needs to be done for both travel directions
+    // on a road to get the full isochrone.
+    std::for_each(edges.begin(), edges.end(), [&](const auto &data) {
+
+        if (seen_roads.count(data.packed_geometry_id) != 0)
+            return;
+
+        seen_roads.insert(data.packed_geometry_id);
+
         EdgeWeight forward_weight_offset = 0, forward_weight = 0;
         EdgeWeight reverse_weight_offset = 0, reverse_weight = 0;
         EdgeWeight forward_duration_offset = 0, forward_duration = 0;
@@ -83,88 +98,82 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
             facade->GetUncompressedForwardDurations(data.packed_geometry_id);
         const std::vector<EdgeWeight> reverse_duration_vector =
             facade->GetUncompressedReverseDurations(data.packed_geometry_id);
-        for (std::size_t i = 0; i < data.fwd_segment_position; i++)
-        {
-            forward_weight_offset += forward_weight_vector[i];
-            forward_duration_offset += forward_duration_vector[i];
-        }
+
+        forward_weight_offset =
+            std::accumulate(forward_weight_vector.begin(), forward_weight_vector.end(), 0);
+        forward_duration_offset =
+            std::accumulate(forward_duration_vector.begin(), forward_duration_vector.end(), 0);
+
         forward_weight = forward_weight_vector[data.fwd_segment_position];
         forward_duration = forward_duration_vector[data.fwd_segment_position];
 
         BOOST_ASSERT(data.fwd_segment_position < reverse_weight_vector.size());
 
-        for (std::size_t i = 0; i < reverse_weight_vector.size() - data.fwd_segment_position - 1;
-             i++)
-        {
-            reverse_weight_offset += reverse_weight_vector[i];
-            reverse_duration_offset += reverse_duration_vector[i];
-        }
+        reverse_weight_offset =
+            std::accumulate(reverse_weight_vector.begin(), reverse_weight_vector.end(), 0);
+        reverse_duration_offset =
+            std::accumulate(reverse_duration_vector.begin(), reverse_duration_vector.end(), 0);
+
         reverse_weight =
             reverse_weight_vector[reverse_weight_vector.size() - data.fwd_segment_position - 1];
         reverse_duration =
             reverse_duration_vector[reverse_duration_vector.size() - data.fwd_segment_position - 1];
 
-        double ratio = 0.;
-        if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
-        {
-            forward_weight = static_cast<EdgeWeight>(forward_weight * ratio);
-            forward_duration = static_cast<EdgeWeight>(forward_duration * ratio);
-        }
-        if (data.reverse_segment_id.id != SPECIAL_SEGMENTID)
-        {
-            reverse_weight -= static_cast<EdgeWeight>(reverse_weight * ratio);
-            reverse_duration -= static_cast<EdgeWeight>(reverse_duration * ratio);
-        }
+        auto coord = facade->GetCoordinateOfNode(data.v);
 
-        auto coord = facade->GetCoordinateOfNode(data.u);
+        // TODO: add *two* phantom nodes for two-way roads - we want our isochrone to include
+        //       both paths
 
-        return PhantomNode{data,
-                           forward_weight,
-                           reverse_weight,
-                           forward_weight_offset,
-                           reverse_weight_offset,
-                           forward_duration,
-                           reverse_duration,
-                           forward_duration_offset,
-                           reverse_duration_offset,
-                           coord,
-                           coord};
+        phantoms.emplace_back(data,
+                              forward_weight,
+                              reverse_weight,
+                              forward_weight_offset,
+                              reverse_weight_offset,
+                              forward_duration,
+                              reverse_duration,
+                              forward_duration_offset,
+                              reverse_duration_offset,
+                              coord,
+                              coord);
     });
 
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
 
     sources.push_back(0);
-    destinations.resize(edges.size());
+    destinations.resize(phantoms.size() - 1);
     std::iota(destinations.begin(), destinations.end(), 1);
 
     TIMER_STOP(PHANTOM_TIMER);
     util::Log() << "Make phantom nodes " << TIMER_MSEC(PHANTOM_TIMER);
 
     TIMER_START(TABLE_TIMER);
-    auto table = distance_table(facade, phantoms, sources, destinations, range * 100);
+    auto table = distance_table(facade, phantoms, sources, destinations, range * 10 + 1);
     TIMER_STOP(TABLE_TIMER);
     util::Log() << "Distance table " << TIMER_MSEC(TABLE_TIMER);
 
     std::clog << "Phantoms size: " << phantoms.size() << std::endl;
     std::clog << "Table size: " << table.size() << std::endl;
 
-    /*
-        for (const auto n : table)
-        {
-            std::clog << n << " ";
-        }
-        std::clog << std::endl;
-        */
-
     std::stringstream buf;
     buf << std::setprecision(12);
     buf << "{\"type\":\"FeatureCollection\",\"features\":[";
     bool firstline = true;
-    for (std::size_t i = 1; i < phantoms.size(); i++)
+
+    std::vector<std::size_t> sorted_idx(phantoms.size() - 1);
+    std::iota(sorted_idx.begin(), sorted_idx.end(), 1);
+
+    std::sort(sorted_idx.begin(), sorted_idx.end(), [&](const auto a, const auto b) {
+        return table[a - 1] > table[b - 1];
+    });
+
+    for (const auto i : sorted_idx)
     {
         const auto &phantom = phantoms[i];
         const auto weight = table[i - 1];
+
+        if (weight > range * 10)
+            continue;
 
         if (!firstline)
             buf << ",";
