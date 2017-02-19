@@ -119,22 +119,49 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
         reverse_duration =
             reverse_duration_vector[reverse_duration_vector.size() - data.fwd_segment_position - 1];
 
-        auto coord = facade->GetCoordinateOfNode(data.v);
+        auto vcoord = facade->GetCoordinateOfNode(data.v);
+        auto ucoord = facade->GetCoordinateOfNode(data.u);
 
-        // TODO: add *two* phantom nodes for two-way roads - we want our isochrone to include
-        //       both paths
-
-        phantoms.emplace_back(data,
-                              forward_weight,
-                              reverse_weight,
-                              forward_weight_offset,
-                              reverse_weight_offset,
-                              forward_duration,
-                              reverse_duration,
-                              forward_duration_offset,
-                              reverse_duration_offset,
-                              coord,
-                              coord);
+        if (data.forward_segment_id.enabled)
+        {
+            // We fetched a rectangle from the RTree - the corners will be out of range.
+            // This filters those out.
+            if (util::coordinate_calculation::haversineDistance(ucoord, startcoord) >
+                MAX_TRAVEL_DISTANCE_METERS)
+                return;
+            auto datacopy = data;
+            datacopy.reverse_segment_id.enabled = false;
+            phantoms.emplace_back(datacopy,
+                                  forward_weight,
+                                  reverse_weight,
+                                  forward_weight_offset,
+                                  reverse_weight_offset,
+                                  forward_duration,
+                                  reverse_duration,
+                                  forward_duration_offset,
+                                  reverse_duration_offset,
+                                  vcoord,
+                                  vcoord);
+        }
+        if (data.reverse_segment_id.enabled)
+        {
+            if (util::coordinate_calculation::haversineDistance(vcoord, startcoord) >
+                MAX_TRAVEL_DISTANCE_METERS)
+                return;
+            auto datacopy = data;
+            datacopy.forward_segment_id.enabled = false;
+            phantoms.emplace_back(datacopy,
+                                  forward_weight,
+                                  reverse_weight,
+                                  forward_weight_offset,
+                                  reverse_weight_offset,
+                                  forward_duration,
+                                  reverse_duration,
+                                  forward_duration_offset,
+                                  reverse_duration_offset,
+                                  ucoord,
+                                  ucoord);
+        }
     });
 
     std::vector<std::size_t> sources;
