@@ -3,7 +3,7 @@
 
 #include "engine/api/isochrone_parameters.hpp"
 #include "engine/plugins/plugin_base.hpp"
-#include "engine/routing_algorithms/shortest_path.hpp"
+#include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/search_engine_data.hpp"
 
 #include <string>
@@ -22,7 +22,7 @@ class IsochronePlugin final : public BasePlugin
 {
   private:
     mutable SearchEngineData heaps;
-    mutable routing_algorithms::ShortestPathRouting shortest_path;
+    mutable routing_algorithms::ManyToManyRouting distance_table;
 
   public:
     explicit IsochronePlugin();

@@ -11,7 +11,8 @@ std::vector<EdgeWeight> ManyToManyRouting::
 operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
            const std::vector<PhantomNode> &phantom_nodes,
            const std::vector<std::size_t> &source_indices,
-           const std::vector<std::size_t> &target_indices) const
+           const std::vector<std::size_t> &target_indices,
+           const EdgeWeight max_weight) const
 {
     const auto number_of_sources =
         source_indices.empty() ? phantom_nodes.size() : source_indices.size();
@@ -49,7 +50,8 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
         // explore search space
         while (!query_heap.Empty())
         {
-            BackwardRoutingStep(facade, column_idx, query_heap, search_space_with_buckets);
+            BackwardRoutingStep(
+                facade, column_idx, query_heap, search_space_with_buckets, max_weight);
         }
         ++column_idx;
     };
@@ -82,13 +84,15 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                query_heap,
                                search_space_with_buckets,
                                weights_table,
-                               durations_table);
+                               durations_table,
+                               max_weight);
         }
         ++row_idx;
     };
 
     if (target_indices.empty())
     {
+        std::clog << "Searching all targets " << phantom_nodes.size() << std::endl;
         for (const auto &phantom : phantom_nodes)
         {
             search_target_phantom(phantom);
@@ -96,6 +100,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     }
     else
     {
+        std::clog << "Target count " << target_indices.size() << std::endl;
         for (const auto index : target_indices)
         {
             const auto &phantom = phantom_nodes[index];
@@ -105,6 +110,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
 
     if (source_indices.empty())
     {
+        std::clog << "Searching all sources " << phantom_nodes.size() << std::endl;
         for (const auto &phantom : phantom_nodes)
         {
             search_source_phantom(phantom);
@@ -112,6 +118,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     }
     else
     {
+        std::clog << "Source count " << source_indices.size() << std::endl;
         for (const auto index : source_indices)
         {
             const auto &phantom = phantom_nodes[index];
@@ -129,7 +136,8 @@ void ManyToManyRouting::ForwardRoutingStep(
     QueryHeap &query_heap,
     const SearchSpaceWithBuckets &search_space_with_buckets,
     std::vector<EdgeWeight> &weights_table,
-    std::vector<EdgeWeight> &durations_table) const
+    std::vector<EdgeWeight> &durations_table,
+    const EdgeWeight max_weight) const
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight source_weight = query_heap.GetKey(node);
@@ -176,14 +184,15 @@ void ManyToManyRouting::ForwardRoutingStep(
     {
         return;
     }
-    RelaxOutgoingEdges<true>(facade, node, source_weight, source_duration, query_heap);
+    RelaxOutgoingEdges<true>(facade, node, source_weight, source_duration, query_heap, max_weight);
 }
 
 void ManyToManyRouting::BackwardRoutingStep(
     const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     const unsigned column_idx,
     QueryHeap &query_heap,
-    SearchSpaceWithBuckets &search_space_with_buckets) const
+    SearchSpaceWithBuckets &search_space_with_buckets,
+    const EdgeWeight max_weight) const
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight target_weight = query_heap.GetKey(node);
@@ -197,7 +206,7 @@ void ManyToManyRouting::BackwardRoutingStep(
         return;
     }
 
-    RelaxOutgoingEdges<false>(facade, node, target_weight, target_duration, query_heap);
+    RelaxOutgoingEdges<false>(facade, node, target_weight, target_duration, query_heap, max_weight);
 }
 
 } // namespace routing_algorithms

@@ -50,7 +50,8 @@ class ManyToManyRouting final : public BasicRoutingInterface
     operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                const std::vector<PhantomNode> &phantom_nodes,
                const std::vector<std::size_t> &source_indices,
-               const std::vector<std::size_t> &target_indices) const;
+               const std::vector<std::size_t> &target_indices,
+               const EdgeWeight max_weight = std::numeric_limits<EdgeWeight>::max()) const;
 
     void ForwardRoutingStep(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                             const unsigned row_idx,
@@ -58,19 +59,22 @@ class ManyToManyRouting final : public BasicRoutingInterface
                             QueryHeap &query_heap,
                             const SearchSpaceWithBuckets &search_space_with_buckets,
                             std::vector<EdgeWeight> &weights_table,
-                            std::vector<EdgeWeight> &durations_table) const;
+                            std::vector<EdgeWeight> &durations_table,
+                            const EdgeWeight max_weight) const;
 
     void BackwardRoutingStep(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                              const unsigned column_idx,
                              QueryHeap &query_heap,
-                             SearchSpaceWithBuckets &search_space_with_buckets) const;
+                             SearchSpaceWithBuckets &search_space_with_buckets,
+                             const EdgeWeight max_weight) const;
 
     template <bool forward_direction>
     inline void RelaxOutgoingEdges(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                    const NodeID node,
                                    const EdgeWeight weight,
                                    const EdgeWeight duration,
-                                   QueryHeap &query_heap) const
+                                   QueryHeap &query_heap,
+                                   const EdgeWeight max_weight) const
     {
         for (auto edge : facade->GetAdjacentEdgeRange(node))
         {
@@ -81,6 +85,9 @@ class ManyToManyRouting final : public BasicRoutingInterface
                 const NodeID to = facade->GetTarget(edge);
                 const EdgeWeight edge_weight = data.weight;
                 const EdgeWeight edge_duration = data.duration;
+
+                if (edge_weight >= max_weight)
+                    continue;
 
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 const EdgeWeight to_weight = weight + edge_weight;
