@@ -83,13 +83,19 @@ template <bool UseShareMemory> class CellStorageImpl
         class ColumnIterator : public std::iterator<std::random_access_iterator_tag, EdgeWeight>
         {
           public:
+            explicit ColumnIterator() : current(nullptr), stride(1) {}
+
             explicit ColumnIterator(WeightPtrT begin, std::size_t row_length)
                 : current(begin), stride(row_length)
             {
                 BOOST_ASSERT(begin != nullptr);
             }
 
-            WeightRefT operator*() const { return *current; }
+            WeightRefT operator*() const
+            {
+                BOOST_ASSERT(current);
+                return *current;
+            }
 
             ColumnIterator &operator++()
             {
@@ -117,25 +123,14 @@ template <bool UseShareMemory> class CellStorageImpl
             std::size_t stride;
         };
 
-        std::size_t GetRow(NodeID node) const
-        {
-            auto iter = std::find(source_boundary, source_boundary + num_source_nodes, node);
-            BOOST_ASSERT(iter != source_boundary + num_source_nodes);
-            return iter - source_boundary;
-        }
-
-        std::size_t GetColumn(NodeID node) const
-        {
-            auto iter =
-                std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
-            BOOST_ASSERT(iter != destination_boundary + num_destination_nodes);
-            return iter - destination_boundary;
-        }
-
       public:
         auto GetOutWeight(NodeID node) const
         {
-            auto row = GetRow(node);
+            auto iter = std::find(source_boundary, source_boundary + num_source_nodes, node);
+            if (iter == source_boundary + num_source_nodes)
+                return boost::make_iterator_range(weights, weights);
+
+            auto row = std::distance(source_boundary, iter);
             auto begin = weights + num_destination_nodes * row;
             auto end = begin + num_destination_nodes;
             return boost::make_iterator_range(begin, end);
@@ -143,7 +138,12 @@ template <bool UseShareMemory> class CellStorageImpl
 
         auto GetInWeight(NodeID node) const
         {
-            auto column = GetColumn(node);
+            auto iter =
+                std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
+            if (iter == destination_boundary + num_destination_nodes)
+                return boost::make_iterator_range(ColumnIterator{}, ColumnIterator{});
+
+            auto column = std::distance(destination_boundary, iter);
             auto begin = ColumnIterator{weights + column, num_destination_nodes};
             auto end = ColumnIterator{weights + column + num_source_nodes * num_destination_nodes,
                                       num_destination_nodes};

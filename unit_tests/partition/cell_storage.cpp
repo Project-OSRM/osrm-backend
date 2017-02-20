@@ -16,6 +16,8 @@
 using namespace osrm;
 using namespace osrm::partition;
 
+namespace
+{
 struct MockEdge
 {
     NodeID start;
@@ -40,6 +42,7 @@ auto makeGraph(const std::vector<MockEdge> &mock_edges)
     }
     std::sort(edges.begin(), edges.end());
     return util::StaticGraph<EdgeData>(max_id + 1, edges);
+}
 }
 
 BOOST_AUTO_TEST_SUITE(cell_storage_tests)
