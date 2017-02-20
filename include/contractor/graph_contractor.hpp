@@ -134,7 +134,7 @@ class GraphContractor
                     BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.source, "Source id invalid");
                     BOOST_ASSERT_MSG(SPECIAL_NODEID != new_edge.target, "Target id invalid");
                     new_edge.data.weight = data.weight;
-                    new_edge.data.duration = data.duration;
+                    new_edge.data.duration = static_cast<EdgeDuration::value_type>(data.duration);
                     new_edge.data.shortcut = data.shortcut;
                     if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
@@ -200,8 +200,8 @@ class GraphContractor
             }
 
             dijkstra.Clear();
-            dijkstra.Insert(source, 0, ContractorHeapData{});
-            EdgeWeight max_weight = 0;
+            dijkstra.Insert(source, EdgeWeight{0}, ContractorHeapData{});
+            EdgeWeight max_weight{0};
             unsigned number_of_targets = 0;
 
             for (auto out_edge : contractor_graph->GetAdjacentEdgeRange(node))
@@ -229,7 +229,7 @@ class GraphContractor
                             // CAREFUL: This only works due to the independent node-setting. This
                             // guarantees that source is not connected to another node that is
                             // contracted
-                            node_weights[source] = path_weight + 1;
+                            node_weights[source] = path_weight + EdgeWeight{1};
                             BOOST_ASSERT(stats != nullptr);
                             stats->edges_added_count += 2;
                             stats->original_edges_added_count +=

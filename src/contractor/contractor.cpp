@@ -155,7 +155,7 @@ void CheckWeightsConsistency(
         const int shift = static_cast<int>(geometry_id.forward);
         const auto first = weights.begin() + geometry_indices.at(geometry_id.id) + shift;
         const auto last = weights.begin() + geometry_indices.at(geometry_id.id + 1) - 1 + shift;
-        EdgeWeight weight = std::accumulate(first, last, 0);
+        auto weight = std::accumulate(first, last, EdgeWeight{0});
 
         BOOST_ASSERT(weight <= edge.weight);
     }
@@ -288,34 +288,40 @@ template <typename Key, typename Value> struct CSVFilesParser
 };
 
 // Returns duration in deci-seconds
-inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_kmh)
+inline EdgeDuration ConvertToDuration(double distance_in_meters, double speed_in_kmh)
 {
     if (speed_in_kmh <= 0.)
         return MAXIMAL_EDGE_DURATION;
 
     const double speed_in_ms = speed_in_kmh / 3.6;
     const double duration = distance_in_meters / speed_in_ms;
-    return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10.)));
+    return EdgeDuration{std::max<EdgeDuration::value_type>(1, std::round(duration * 10.))};
 }
 
-inline EdgeWeight ConvertToWeight(double weight, double weight_multiplier, EdgeWeight duration)
+inline EdgeWeight ConvertToWeight(double weight, double weight_multiplier, EdgeDuration duration)
 {
     if (std::isfinite(weight))
-        return std::round(weight * weight_multiplier);
+        return EdgeWeight{
+            static_cast<EdgeWeight::value_type>(std::round(weight * weight_multiplier))};
 
-    return duration == MAXIMAL_EDGE_DURATION ? INVALID_EDGE_WEIGHT
-                                             : duration * weight_multiplier / 10.;
+    if (duration == MAXIMAL_EDGE_DURATION)
+        return INVALID_EDGE_WEIGHT;
+
+    // fallback weight to duration, weight_name must be "duration"
+    // TODO: assert weight_name
+    return EdgeWeight{static_cast<EdgeWeight::value_type>(
+        static_cast<EdgeDuration::value_type>(duration) * weight_multiplier / 10.)};
 }
 
 // Returns updated edge weight
 void GetNewWeight(const ContractorConfig &config,
                   const SpeedSource &value,
                   const double &segment_length,
-                  const EdgeWeight current_duration,
+                  const EdgeDuration current_duration,
                   const OSMNodeID from,
                   const OSMNodeID to,
                   EdgeWeight &new_segment_weight,
-                  EdgeWeight &new_segment_duration)
+                  EdgeDuration &new_segment_duration)
 {
     // Update the edge duration as distance/speed
     new_segment_duration = ConvertToDuration(segment_length, value.speed);
@@ -326,12 +332,12 @@ void GetNewWeight(const ContractorConfig &config,
 
     // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a warning
     // if the new duration exceeds a heuristic of what a reasonable duration update is
-    if (config.log_edge_updates_factor > 0 && current_duration != 0)
+    if (config.log_edge_updates_factor > 0 && current_duration != EdgeDuration{0})
     {
         if (current_duration >= (new_segment_duration * config.log_edge_updates_factor))
         {
-            auto new_secs = new_segment_duration / 10.;
-            auto old_secs = current_duration / 10.;
+            auto new_secs = static_cast<EdgeDuration::value_type>(new_segment_duration) / 10.;
+            auto old_secs = static_cast<EdgeDuration::value_type>(current_duration) / 10.;
             auto approx_original_speed = (segment_length / old_secs) * 3.6;
             auto speed_file = config.segment_speed_lookup_paths.at(value.source - 1);
             util::Log(logWARNING) << "[weight updates] Edge weight update from " << old_secs
@@ -536,8 +542,8 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
     std::vector<NodeID> geometry_node_list;
     std::vector<EdgeWeight> geometry_fwd_weight_list;
     std::vector<EdgeWeight> geometry_rev_weight_list;
-    std::vector<EdgeWeight> geometry_fwd_duration_list;
-    std::vector<EdgeWeight> geometry_rev_duration_list;
+    std::vector<EdgeDuration> geometry_fwd_duration_list;
+    std::vector<EdgeDuration> geometry_rev_duration_list;
 
     const auto maybe_load_internal_to_external_node_map = [&] {
         if (!update_edge_weights)
@@ -642,7 +648,8 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
                 auto fwd_source = LUA_SOURCE, rev_source = LUA_SOURCE;
                 if (auto value = segment_speed_lookup({u.node_id, v.node_id}))
                 {
-                    EdgeWeight new_segment_weight, new_segment_duration;
+                    EdgeWeight new_segment_weight;
+                    EdgeDuration new_segment_duration;
                     GetNewWeight(config,
                                  *value,
                                  segment_length,
@@ -660,7 +667,8 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
                 if (auto value = segment_speed_lookup({v.node_id, u.node_id}))
                 {
-                    EdgeWeight new_segment_weight, new_segment_duration;
+                    EdgeWeight new_segment_weight;
+                    EdgeDuration new_segment_duration;
                     GetNewWeight(config,
                                  *value,
                                  segment_length,
@@ -778,7 +786,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
     tbb::parallel_invoke(maybe_save_geometries, save_datasource_indexes, save_datastore_names);
 
     std::vector<TurnPenalty> turn_weight_penalties;
-    std::vector<TurnPenalty> turn_duration_penalties;
+    std::vector<TurnDuration> turn_duration_penalties;
 
     const auto maybe_load_turn_weight_penalties = [&] {
         if (!update_edge_weights && !update_turn_penalties)
@@ -800,7 +808,13 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
     if ((update_edge_weights || update_turn_penalties) && turn_duration_penalties.empty())
     { // Copy-on-write for duration penalties as turn weight penalties
-        turn_duration_penalties = turn_weight_penalties;
+        turn_duration_penalties.reserve(turn_weight_penalties.size());
+        std::transform(turn_weight_penalties.begin(),
+                       turn_weight_penalties.end(),
+                       std::back_inserter(turn_duration_penalties),
+                       [](const auto &value) {
+                           return TurnDuration{static_cast<TurnPenalty::value_type>(value)};
+                       });
     }
 
     // Mapped file pointer for turn indices
@@ -838,8 +852,8 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
             auto last = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
 
             // Find a segment with zero speed and simultaneously compute the new edge weight
-            EdgeWeight new_weight = 0;
-            EdgeWeight new_duration = 0;
+            EdgeWeight new_weight{0};
+            EdgeDuration new_duration{0};
             auto osm_node_id = header->previous_osm_node_id;
             bool skip_edge =
                 std::find_if(first, last, [&](const auto &segment) {
@@ -877,19 +891,21 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
             // Get the turn penalty and update to the new value if required
             const auto &turn_index = turn_index_blocks[edge_index];
-            auto turn_weight_penalty = turn_weight_penalties[edge_index];
-            auto turn_duration_penalty = turn_duration_penalties[edge_index];
+            EdgeWeight::value_type turn_weight_penalty =
+                static_cast<TurnPenalty::value_type>(turn_weight_penalties[edge_index]);
+            EdgeDuration::value_type turn_duration_penalty =
+                static_cast<TurnDuration::value_type>(turn_duration_penalties[edge_index]);
             if (auto value = turn_penalty_lookup(turn_index))
             {
-                turn_duration_penalty =
-                    boost::numeric_cast<TurnPenalty>(std::round(value->duration * 10.));
-                turn_weight_penalty = boost::numeric_cast<TurnPenalty>(
+                turn_duration_penalty = std::round(value->duration * 10.);
+                turn_weight_penalty =
                     std::round(std::isfinite(value->weight)
                                    ? value->weight * config.weight_multiplier
-                                   : turn_duration_penalty * config.weight_multiplier / 10.));
+                                   : turn_duration_penalty * config.weight_multiplier / 10.);
 
-                const auto weight_min_value = static_cast<EdgeWeight>(header->num_osm_nodes);
-                if (turn_weight_penalty + new_weight < weight_min_value)
+                const auto weight_min_value =
+                    EdgeWeight{static_cast<EdgeWeight::value_type>(header->num_osm_nodes)};
+                if (EdgeWeight{turn_weight_penalty} + new_weight < weight_min_value)
                 {
                     util::Log(logWARNING) << "turn penalty " << turn_weight_penalty << " for turn "
                                           << turn_index.from_id << ", " << turn_index.via_id << ", "
@@ -897,19 +913,24 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
                                           << " is too negative: clamping turn weight to "
                                           << weight_min_value;
 
-                    turn_weight_penalty = weight_min_value - new_weight;
+                    turn_weight_penalty =
+                        static_cast<EdgeWeight::value_type>(weight_min_value - new_weight);
                 }
 
-                turn_duration_penalties[edge_index] = turn_duration_penalty;
-                turn_weight_penalties[edge_index] = turn_weight_penalty;
+                turn_duration_penalties[edge_index] = TurnDuration{
+                    boost::numeric_cast<TurnDuration::value_type>(turn_duration_penalty)};
+                turn_weight_penalties[edge_index] =
+                    TurnPenalty{boost::numeric_cast<TurnPenalty::value_type>(turn_weight_penalty)};
 
                 // Is fallback of duration to weight values allowed
                 fallback_to_duration &= (turn_duration_penalty == turn_weight_penalty);
             }
 
             // Update edge weight
-            inbuffer.weight = new_weight + turn_weight_penalty;
-            inbuffer.duration = new_duration + turn_duration_penalty;
+            inbuffer.weight = new_weight + EdgeWeight{turn_weight_penalty};
+            // TODO: check for 30 bits
+            inbuffer.duration =
+                static_cast<EdgeDuration::value_type>(new_duration) + turn_duration_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
@@ -1069,7 +1090,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
         // every target needs to be valid
         BOOST_ASSERT(current_edge.target <= max_used_node_id);
 #ifndef NDEBUG
-        if (current_edge.data.weight <= 0)
+        if (current_edge.data.weight <= EdgeWeight{0})
         {
             util::Log(logWARNING) << "Edge: " << edge
                                   << ",source: " << contracted_edge_list[edge].source

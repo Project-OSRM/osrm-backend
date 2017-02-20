@@ -18,7 +18,7 @@ namespace util
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
+        : weight{INVALID_EDGE_WEIGHT}, duration{MAXIMAL_EDGE_DURATION}, edge_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), reversed(false), roundabout(false),
           circular(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
           lane_description_id(INVALID_LANE_DESCRIPTIONID)
@@ -26,7 +26,7 @@ struct NodeBasedEdgeData
     }
 
     NodeBasedEdgeData(EdgeWeight weight,
-                      EdgeWeight duration,
+                      EdgeDuration duration,
                       unsigned edge_id,
                       unsigned name_id,
                       bool reversed,
@@ -42,7 +42,7 @@ struct NodeBasedEdgeData
     }
 
     EdgeWeight weight;
-    EdgeWeight duration;
+    EdgeDuration duration;
     unsigned edge_id;
     unsigned name_id;
     bool reversed : 1;
@@ -90,8 +90,8 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             output_edge.data.road_classification = input_edge.road_classification;
             output_edge.data.lane_description_id = input_edge.lane_description_id;
 
-            BOOST_ASSERT(output_edge.data.weight > 0);
-            BOOST_ASSERT(output_edge.data.duration > 0);
+            BOOST_ASSERT(output_edge.data.weight > EdgeWeight{0});
+            BOOST_ASSERT(output_edge.data.duration > EdgeDuration{0});
         });
 
     tbb::parallel_sort(edges_list.begin(), edges_list.end());

@@ -120,8 +120,8 @@ Coordinate centroid(const Coordinate lhs, const Coordinate rhs)
     Coordinate centroid;
     // The coordinates of the midpoints are given by:
     // x = (x1 + x2) /2 and y = (y1 + y2) /2.
-    centroid.lon = (lhs.lon + rhs.lon) / FixedLongitude{2};
-    centroid.lat = (lhs.lat + rhs.lat) / FixedLatitude{2};
+    centroid.lon = (lhs.lon + rhs.lon) / 2.;
+    centroid.lat = (lhs.lat + rhs.lat) / 2.;
     return centroid;
 }
 

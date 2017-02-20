@@ -32,7 +32,7 @@ void BasicRoutingInterface::RoutingStep(
                 (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
                 // in this case we are looking at a bi-directional way where the source
                 // and target phantom are on the same edge based node
-                new_weight < 0)
+                new_weight < EdgeWeight{0})
             {
                 // check whether there is a loop present at the node
                 for (const auto edge : facade->GetAdjacentEdgeRange(node))
@@ -46,7 +46,7 @@ void BasicRoutingInterface::RoutingStep(
                         {
                             const EdgeWeight edge_weight = data.weight;
                             const EdgeWeight loop_weight = new_weight + edge_weight;
-                            if (loop_weight >= 0 && loop_weight < upper_bound)
+                            if (loop_weight >= EdgeWeight{0} && loop_weight < upper_bound)
                             {
                                 middle_node_id = node;
                                 upper_bound = loop_weight;
@@ -57,7 +57,7 @@ void BasicRoutingInterface::RoutingStep(
             }
             else
             {
-                BOOST_ASSERT(new_weight >= 0);
+                BOOST_ASSERT(new_weight >= EdgeWeight{0});
 
                 middle_node_id = node;
                 upper_bound = new_weight;
@@ -67,7 +67,7 @@ void BasicRoutingInterface::RoutingStep(
 
     // make sure we don't terminate too early if we initialize the weight
     // for the nodes in the forward heap with the forward/reverse offset
-    BOOST_ASSERT(min_edge_offset <= 0);
+    BOOST_ASSERT(min_edge_offset <= EdgeWeight{0});
     if (weight + min_edge_offset > upper_bound)
     {
         forward_heap.DeleteAll();
@@ -86,7 +86,7 @@ void BasicRoutingInterface::RoutingStep(
                 const NodeID to = facade->GetTarget(edge);
                 const EdgeWeight edge_weight = data.weight;
 
-                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+                BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
 
                 if (forward_heap.WasInserted(to))
                 {
@@ -108,7 +108,7 @@ void BasicRoutingInterface::RoutingStep(
             const NodeID to = facade->GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
 
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+            BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
             const EdgeWeight to_weight = weight + edge_weight;
 
             // New Node discovered -> Add to Heap + Node Info Storage
@@ -206,10 +206,10 @@ void BasicRoutingInterface::Search(const std::shared_ptr<const datafacade::BaseD
     weight = weight_upper_bound;
 
     // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
-    BOOST_ASSERT(min_edge_offset <= 0);
+    const auto min_edge_offset = std::min(EdgeWeight{0}, forward_heap.MinKey());
+    BOOST_ASSERT(min_edge_offset <= EdgeWeight{0});
     // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.MinKey() >= EdgeWeight{0});
 
     // run two-Target Dijkstra routing step.
     const constexpr bool STALLING_ENABLED = true;
@@ -295,9 +295,9 @@ void BasicRoutingInterface::SearchWithCore(
     std::vector<CoreEntryPoint> reverse_entry_points;
 
     // get offset to account for offsets on phantom nodes on compressed edges
-    const auto min_edge_offset = std::min(0, forward_heap.MinKey());
+    const auto min_edge_offset = std::min(EdgeWeight{0}, forward_heap.MinKey());
     // we only every insert negative offsets for nodes in the forward heap
-    BOOST_ASSERT(reverse_heap.MinKey() >= 0);
+    BOOST_ASSERT(reverse_heap.MinKey() >= EdgeWeight{0});
 
     const constexpr bool STALLING_ENABLED = true;
     // run two-Target Dijkstra routing step.
@@ -372,16 +372,16 @@ void BasicRoutingInterface::SearchWithCore(
     }
 
     // get offset to account for offsets on phantom nodes on compressed edges
-    EdgeWeight min_core_edge_offset = 0;
+    EdgeWeight min_core_edge_offset{0};
     if (forward_core_heap.Size() > 0)
     {
         min_core_edge_offset = std::min(min_core_edge_offset, forward_core_heap.MinKey());
     }
-    if (reverse_core_heap.Size() > 0 && reverse_core_heap.MinKey() < 0)
+    if (reverse_core_heap.Size() > 0 && reverse_core_heap.MinKey() < EdgeWeight{0})
     {
         min_core_edge_offset = std::min(min_core_edge_offset, reverse_core_heap.MinKey());
     }
-    BOOST_ASSERT(min_core_edge_offset <= 0);
+    BOOST_ASSERT(min_core_edge_offset <= EdgeWeight{0});
 
     // run two-target Dijkstra routing step on core with termination criterion
     const constexpr bool STALLING_DISABLED = false;

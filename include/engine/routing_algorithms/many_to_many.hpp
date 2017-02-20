@@ -30,8 +30,8 @@ class ManyToManyRouting final : public BasicRoutingInterface
     {
         unsigned target_id; // essentially a row in the weight matrix
         EdgeWeight weight;
-        EdgeWeight duration;
-        NodeBucket(const unsigned target_id, const EdgeWeight weight, const EdgeWeight duration)
+        EdgeDuration duration;
+        NodeBucket(const unsigned target_id, const EdgeWeight weight, const EdgeDuration duration)
             : target_id(target_id), weight(weight), duration(duration)
         {
         }
@@ -46,7 +46,7 @@ class ManyToManyRouting final : public BasicRoutingInterface
     {
     }
 
-    std::vector<EdgeWeight>
+    std::vector<EdgeDuration>
     operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                const std::vector<PhantomNode> &phantom_nodes,
                const std::vector<std::size_t> &source_indices,
@@ -58,7 +58,7 @@ class ManyToManyRouting final : public BasicRoutingInterface
                             QueryHeap &query_heap,
                             const SearchSpaceWithBuckets &search_space_with_buckets,
                             std::vector<EdgeWeight> &weights_table,
-                            std::vector<EdgeWeight> &durations_table) const;
+                            std::vector<EdgeDuration> &durations_table) const;
 
     void BackwardRoutingStep(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                              const unsigned column_idx,
@@ -69,7 +69,7 @@ class ManyToManyRouting final : public BasicRoutingInterface
     inline void RelaxOutgoingEdges(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                    const NodeID node,
                                    const EdgeWeight weight,
-                                   const EdgeWeight duration,
+                                   const EdgeDuration duration,
                                    QueryHeap &query_heap) const
     {
         for (auto edge : facade->GetAdjacentEdgeRange(node))
@@ -79,12 +79,12 @@ class ManyToManyRouting final : public BasicRoutingInterface
             if (direction_flag)
             {
                 const NodeID to = facade->GetTarget(edge);
-                const EdgeWeight edge_weight = data.weight;
-                const EdgeWeight edge_duration = data.duration;
+                const auto edge_weight = data.weight;
+                const auto edge_duration = EdgeDuration{data.duration};
 
-                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-                const EdgeWeight to_weight = weight + edge_weight;
-                const EdgeWeight to_duration = duration + edge_duration;
+                BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
+                const auto to_weight = weight + edge_weight;
+                const auto to_duration = duration + edge_duration;
 
                 // New Node discovered -> Add to Heap + Node Info Storage
                 if (!query_heap.WasInserted(to))
@@ -117,7 +117,7 @@ class ManyToManyRouting final : public BasicRoutingInterface
             {
                 const NodeID to = facade->GetTarget(edge);
                 const EdgeWeight edge_weight = data.weight;
-                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+                BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
                 if (query_heap.WasInserted(to))
                 {
                     if (query_heap.GetKey(to) + edge_weight < weight)

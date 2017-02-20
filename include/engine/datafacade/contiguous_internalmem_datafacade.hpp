@@ -86,8 +86,8 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
     util::ShM<NodeID, true>::vector m_geometry_node_list;
     util::ShM<EdgeWeight, true>::vector m_geometry_fwd_weight_list;
     util::ShM<EdgeWeight, true>::vector m_geometry_rev_weight_list;
-    util::ShM<EdgeWeight, true>::vector m_geometry_fwd_duration_list;
-    util::ShM<EdgeWeight, true>::vector m_geometry_rev_duration_list;
+    util::ShM<EdgeDuration, true>::vector m_geometry_fwd_duration_list;
+    util::ShM<EdgeDuration, true>::vector m_geometry_rev_duration_list;
     util::ShM<bool, true>::vector m_is_core_node;
     util::ShM<DatasourceID, true>::vector m_datasource_list;
     util::ShM<std::uint32_t, true>::vector m_lane_description_offsets;
@@ -358,16 +358,16 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
             datasources_list_ptr, data_layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
         m_datasource_list = std::move(datasources_list);
 
-        auto geometries_fwd_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
+        auto geometries_fwd_duration_list_ptr = data_layout.GetBlockPtr<EdgeDuration>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
-        util::ShM<EdgeWeight, true>::vector geometry_fwd_duration_list(
+        util::ShM<EdgeDuration, true>::vector geometry_fwd_duration_list(
             geometries_fwd_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
         m_geometry_fwd_duration_list = std::move(geometry_fwd_duration_list);
 
-        auto geometries_rev_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
+        auto geometries_rev_duration_list_ptr = data_layout.GetBlockPtr<EdgeDuration>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
-        util::ShM<EdgeWeight, true>::vector geometry_rev_duration_list(
+        util::ShM<EdgeDuration, true>::vector geometry_rev_duration_list(
             geometries_rev_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
         m_geometry_rev_duration_list = std::move(geometry_rev_duration_list);
@@ -560,7 +560,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         return result_nodes;
     }
 
-    virtual std::vector<EdgeWeight>
+    virtual std::vector<EdgeDuration>
     GetUncompressedForwardDurations(const EdgeID id) const override final
     {
         /*
@@ -573,7 +573,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         const auto begin = m_geometry_indices.at(id) + 1;
         const auto end = m_geometry_indices.at(id + 1);
 
-        std::vector<EdgeWeight> result_durations;
+        std::vector<EdgeDuration> result_durations;
         result_durations.reserve(end - begin);
 
         std::copy(m_geometry_fwd_duration_list.begin() + begin,
@@ -583,7 +583,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         return result_durations;
     }
 
-    virtual std::vector<EdgeWeight>
+    virtual std::vector<EdgeDuration>
     GetUncompressedReverseDurations(const EdgeID id) const override final
     {
         /*
@@ -598,7 +598,7 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         const auto begin = m_geometry_indices.at(id);
         const auto end = m_geometry_indices.at(id + 1) - 1;
 
-        std::vector<EdgeWeight> result_durations;
+        std::vector<EdgeDuration> result_durations;
         result_durations.reserve(end - begin);
 
         std::reverse_copy(m_geometry_rev_duration_list.begin() + begin,
@@ -661,16 +661,16 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         return m_via_geometry_list.at(id);
     }
 
-    virtual TurnPenalty GetWeightPenaltyForEdgeID(const unsigned id) const override final
+    virtual EdgeWeight GetWeightPenaltyForEdgeID(const unsigned id) const override final
     {
         BOOST_ASSERT(m_turn_weight_penalties.size() > id);
-        return m_turn_weight_penalties[id];
+        return EdgeWeight{static_cast<TurnPenalty::value_type>(m_turn_weight_penalties[id])};
     }
 
-    virtual TurnPenalty GetDurationPenaltyForEdgeID(const unsigned id) const override final
+    virtual EdgeDuration GetDurationPenaltyForEdgeID(const unsigned id) const override final
     {
         BOOST_ASSERT(m_turn_duration_penalties.size() > id);
-        return m_turn_duration_penalties[id];
+        return EdgeDuration{static_cast<TurnDuration::value_type>(m_turn_duration_penalties[id])};
     }
 
     extractor::guidance::TurnInstruction

@@ -63,8 +63,8 @@ struct InternalExtractorEdge
         : result(MIN_OSM_NODEID,
                  MIN_OSM_NODEID,
                  SPECIAL_NODEID,
-                 0,
-                 0,
+                 EdgeWeight{0},
+                 EdgeDuration{0},
                  false, // forward
                  false, // backward
                  false, // roundabout
@@ -96,8 +96,8 @@ struct InternalExtractorEdge
         : result(source,
                  target,
                  name_id,
-                 0,
-                 0,
+                 EdgeWeight{0},
+                 EdgeDuration{0},
                  forward,
                  backward,
                  roundabout,

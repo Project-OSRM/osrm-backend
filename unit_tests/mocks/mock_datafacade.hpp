@@ -68,13 +68,13 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     {
         return GeometryID{SPECIAL_GEOMETRYID, false};
     }
-    TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /* id */) const override final
+    EdgeWeight GetWeightPenaltyForEdgeID(const unsigned /* id */) const override final
     {
-        return 0;
+        return EdgeWeight{0};
     }
-    TurnPenalty GetDurationPenaltyForEdgeID(const unsigned /* id */) const override final
+    EdgeDuration GetDurationPenaltyForEdgeID(const unsigned /* id */) const override final
     {
-        return 0;
+        return EdgeDuration{0};
     }
     std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID /* id */) const override
     {
@@ -86,22 +86,19 @@ class MockDataFacade final : public engine::datafacade::BaseDataFacade
     }
     std::vector<EdgeWeight> GetUncompressedForwardWeights(const EdgeID /* id */) const override
     {
-        std::vector<EdgeWeight> result_weights;
-        result_weights.resize(1);
-        result_weights[0] = 1;
-        return result_weights;
+        return std::vector<EdgeWeight>(1, EdgeWeight{1});
     }
     std::vector<EdgeWeight> GetUncompressedReverseWeights(const EdgeID id) const override
     {
         return GetUncompressedForwardWeights(id);
     }
-    std::vector<EdgeWeight> GetUncompressedForwardDurations(const EdgeID id) const override
+    std::vector<EdgeDuration> GetUncompressedForwardDurations(const EdgeID /* id */) const override
     {
-        return GetUncompressedForwardWeights(id);
+        return std::vector<EdgeDuration>(1, EdgeDuration{1});
     }
-    std::vector<EdgeWeight> GetUncompressedReverseDurations(const EdgeID id) const override
+    std::vector<EdgeDuration> GetUncompressedReverseDurations(const EdgeID id) const override
     {
-        return GetUncompressedForwardWeights(id);
+        return GetUncompressedForwardDurations(id);
     }
     std::vector<DatasourceID> GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
     {

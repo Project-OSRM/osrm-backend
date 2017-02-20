@@ -7,7 +7,7 @@ namespace engine
 namespace routing_algorithms
 {
 
-std::vector<EdgeWeight> ManyToManyRouting::
+std::vector<EdgeDuration> ManyToManyRouting::
 operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
            const std::vector<PhantomNode> &phantom_nodes,
            const std::vector<std::size_t> &source_indices,
@@ -20,7 +20,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
     const auto number_of_entries = number_of_sources * number_of_targets;
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
-    std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+    std::vector<EdgeDuration> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
 
     engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade->GetNumberOfNodes());
 
@@ -119,7 +119,7 @@ operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
         }
     }
 
-    return durations_table;
+    return std::move(durations_table);
 }
 
 void ManyToManyRouting::ForwardRoutingStep(
@@ -129,11 +129,11 @@ void ManyToManyRouting::ForwardRoutingStep(
     QueryHeap &query_heap,
     const SearchSpaceWithBuckets &search_space_with_buckets,
     std::vector<EdgeWeight> &weights_table,
-    std::vector<EdgeWeight> &durations_table) const
+    std::vector<EdgeDuration> &durations_table) const
 {
     const NodeID node = query_heap.DeleteMin();
-    const EdgeWeight source_weight = query_heap.GetKey(node);
-    const EdgeWeight source_duration = query_heap.GetData(node).duration;
+    const auto source_weight = query_heap.GetKey(node);
+    const auto source_duration = query_heap.GetData(node).duration;
 
     // check if each encountered node has an entry
     const auto bucket_iterator = search_space_with_buckets.find(node);
@@ -145,24 +145,24 @@ void ManyToManyRouting::ForwardRoutingStep(
         {
             // get target id from bucket entry
             const unsigned column_idx = current_bucket.target_id;
-            const EdgeWeight target_weight = current_bucket.weight;
-            const EdgeWeight target_duration = current_bucket.duration;
+            const auto target_weight = current_bucket.weight;
+            const auto target_duration = current_bucket.duration;
 
             auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
             auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
 
             // check if new weight is better
-            const EdgeWeight new_weight = source_weight + target_weight;
-            if (new_weight < 0)
+            const auto new_weight = source_weight + target_weight;
+            if (new_weight < EdgeWeight{0})
             {
-                const EdgeWeight loop_weight = super::GetLoopWeight<false>(facade, node);
-                const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
-                if (loop_weight != INVALID_EDGE_WEIGHT && new_weight_with_loop >= 0)
+                const auto loop_weight = super::GetLoopWeight(facade, node);
+                const auto new_weight_with_loop = new_weight + loop_weight.first;
+                if (loop_weight.first != INVALID_EDGE_WEIGHT &&
+                    new_weight_with_loop >= EdgeWeight{0})
                 {
                     current_weight = std::min(current_weight, new_weight_with_loop);
-                    current_duration = std::min(current_duration,
-                                                source_duration + target_duration +
-                                                    super::GetLoopWeight<true>(facade, node));
+                    current_duration = std::min(
+                        current_duration, source_duration + target_duration + loop_weight.second);
                 }
             }
             else if (new_weight < current_weight)
@@ -186,8 +186,8 @@ void ManyToManyRouting::BackwardRoutingStep(
     SearchSpaceWithBuckets &search_space_with_buckets) const
 {
     const NodeID node = query_heap.DeleteMin();
-    const EdgeWeight target_weight = query_heap.GetKey(node);
-    const EdgeWeight target_duration = query_heap.GetData(node).duration;
+    const auto target_weight = query_heap.GetKey(node);
+    const auto target_duration = query_heap.GetData(node).duration;
 
     // store settled nodes in search space bucket
     search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);

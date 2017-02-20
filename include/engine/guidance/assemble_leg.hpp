@@ -33,7 +33,7 @@ namespace detail
 const constexpr std::size_t MAX_USED_SEGMENTS = 2;
 struct NamedSegment
 {
-    EdgeWeight duration;
+    EdgeDuration duration;
     std::uint32_t position;
     std::uint32_t name_id;
 };
@@ -80,7 +80,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const std::vector<PathDa
         });
     const auto target_duration =
         target_traversed_in_reverse ? target_node.reverse_duration : target_node.forward_duration;
-    if (target_duration > 1)
+    if (target_duration > EdgeDuration{1})
         segments.push_back({target_duration, index++, target_node.name_id});
     // this makes sure that the segment with the lowest position comes first
     std::sort(
@@ -137,13 +137,15 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     auto distance = std::accumulate(
         leg_geometry.segment_distances.begin(), leg_geometry.segment_distances.end(), 0.);
     auto duration = std::accumulate(
-        route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
-            return sum + data.duration_until_turn;
-        });
+        route_data.begin(),
+        route_data.end(),
+        EdgeDuration{0},
+        [](const auto sum, const PathData &data) { return sum + data.duration_until_turn; });
     auto weight = std::accumulate(
-        route_data.begin(), route_data.end(), 0, [](const double sum, const PathData &data) {
-            return sum + data.weight_until_turn;
-        });
+        route_data.begin(),
+        route_data.end(),
+        EdgeWeight{0},
+        [](const auto sum, const PathData &data) { return sum + data.weight_until_turn; });
 
     //                 s
     //                 |
@@ -206,8 +208,8 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     }
 
     return RouteLeg{std::round(distance * 10.) / 10.,
-                    duration / 10.,
-                    weight / facade.GetWeightMultiplier(),
+                    static_cast<EdgeDuration::value_type>(duration) / 10.,
+                    static_cast<EdgeWeight::value_type>(weight) / facade.GetWeightMultiplier(),
                     summary,
                     {}};
 }

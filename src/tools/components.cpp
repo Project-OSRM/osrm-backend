@@ -32,13 +32,10 @@ struct TarjanEdgeData
 {
     TarjanEdgeData() : distance(INVALID_EDGE_WEIGHT), name_id(INVALID_NAMEID) {}
 
-    TarjanEdgeData(std::uint32_t distance, std::uint32_t name_id)
-        : distance(distance), name_id(name_id)
-    {
-    }
+    TarjanEdgeData(EdgeWeight distance, NameID name_id) : distance(distance), name_id(name_id) {}
 
-    std::uint32_t distance;
-    std::uint32_t name_id;
+    EdgeWeight distance;
+    NameID name_id;
 };
 
 using TarjanGraph = util::StaticGraph<TarjanEdgeData>;
@@ -68,18 +65,16 @@ std::size_t loadGraph(const std::string &path,
 
         if (input_edge.forward)
         {
-            graph_edge_list.emplace_back(input_edge.source,
-                                         input_edge.target,
-                                         (std::max)(input_edge.weight, 1),
-                                         input_edge.name_id);
+            BOOST_ASSERT(input_edge.weight > EdgeWeight{0});
+            graph_edge_list.emplace_back(
+                input_edge.source, input_edge.target, input_edge.weight, input_edge.name_id);
         }
 
         if (input_edge.backward)
         {
-            graph_edge_list.emplace_back(input_edge.target,
-                                         input_edge.source,
-                                         (std::max)(input_edge.weight, 1),
-                                         input_edge.name_id);
+            BOOST_ASSERT(input_edge.weight > EdgeWeight{0});
+            graph_edge_list.emplace_back(
+                input_edge.target, input_edge.source, input_edge.weight, input_edge.name_id);
         }
     }
 

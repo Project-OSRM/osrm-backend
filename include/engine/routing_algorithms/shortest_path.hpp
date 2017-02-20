@@ -48,9 +48,9 @@ class ShortestPathRouting final : public BasicRoutingInterface
                          const bool search_to_reverse_node,
                          const PhantomNode &source_phantom,
                          const PhantomNode &target_phantom,
-                         const int total_weight_to_forward,
-                         const int total_weight_to_reverse,
-                         int &new_total_weight,
+                         const EdgeWeight total_weight_to_forward,
+                         const EdgeWeight total_weight_to_reverse,
+                         EdgeWeight &new_total_weight,
                          std::vector<NodeID> &leg_packed_path) const;
 
     // searches shortest path between:
@@ -67,10 +67,10 @@ class ShortestPathRouting final : public BasicRoutingInterface
                 const bool search_to_reverse_node,
                 const PhantomNode &source_phantom,
                 const PhantomNode &target_phantom,
-                const int total_weight_to_forward,
-                const int total_weight_to_reverse,
-                int &new_total_weight_to_forward,
-                int &new_total_weight_to_reverse,
+                const EdgeWeight total_weight_to_forward,
+                const EdgeWeight total_weight_to_reverse,
+                EdgeWeight &new_total_weight_to_forward,
+                EdgeWeight &new_total_weight_to_reverse,
                 std::vector<NodeID> &leg_packed_path_forward,
                 std::vector<NodeID> &leg_packed_path_reverse) const;
 
@@ -78,7 +78,7 @@ class ShortestPathRouting final : public BasicRoutingInterface
                     const std::vector<PhantomNodes> &phantom_nodes_vector,
                     const std::vector<NodeID> &total_packed_path,
                     const std::vector<std::size_t> &packed_leg_begin,
-                    const int shortest_path_length,
+                    const EdgeWeight shortest_path_length,
                     InternalRouteResult &raw_route_data) const;
 
     void operator()(const std::shared_ptr<const datafacade::BaseDataFacade> facade,

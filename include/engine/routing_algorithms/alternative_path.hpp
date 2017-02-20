@@ -35,18 +35,18 @@ class AlternativeRouting final : private BasicRoutingInterface
 
     struct RankedCandidateNode
     {
-        RankedCandidateNode(const NodeID node, const int length, const int sharing)
+        RankedCandidateNode(const NodeID node, const EdgeWeight length, const EdgeWeight sharing)
             : node(node), length(length), sharing(sharing)
         {
         }
 
         NodeID node;
-        int length;
-        int sharing;
+        EdgeWeight length;
+        EdgeWeight sharing;
 
         bool operator<(const RankedCandidateNode &other) const
         {
-            return (2 * length + sharing) < (2 * other.length + other.sharing);
+            return (length * 2. + sharing) < (other.length * 2. + other.sharing);
         }
     };
     SearchEngineData &engine_working_data;
@@ -80,8 +80,8 @@ class AlternativeRouting final : private BasicRoutingInterface
     void
     ComputeLengthAndSharingOfViaPath(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
                                      const NodeID via_node,
-                                     int *real_length_of_via_path,
-                                     int *sharing_of_via_path,
+                                     EdgeWeight &real_length_of_via_path,
+                                     EdgeWeight &sharing_of_via_path,
                                      const std::vector<NodeID> &packed_shortest_path,
                                      const EdgeWeight min_edge_offset);
 
@@ -106,8 +106,7 @@ class AlternativeRouting final : private BasicRoutingInterface
         // edge ("
         // << parentnode << "," << node << "), dist: " << weight;
 
-        const auto scaled_weight =
-            static_cast<EdgeWeight>((weight + min_edge_offset) / (1. + VIAPATH_EPSILON));
+        const auto scaled_weight = (weight + min_edge_offset) / (1. + VIAPATH_EPSILON);
         if ((INVALID_EDGE_WEIGHT != *upper_bound_to_shortest_path_weight) &&
             (scaled_weight > *upper_bound_to_shortest_path_weight))
         {
@@ -123,7 +122,7 @@ class AlternativeRouting final : private BasicRoutingInterface
             const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
             if (new_weight < *upper_bound_to_shortest_path_weight)
             {
-                if (new_weight >= 0)
+                if (new_weight >= EdgeWeight{0})
                 {
                     *middle_node = node;
                     *upper_bound_to_shortest_path_weight = new_weight;
@@ -138,13 +137,12 @@ class AlternativeRouting final : private BasicRoutingInterface
                 else
                 {
                     // check whether there is a loop present at the node
-                    const auto loop_weight = super::GetLoopWeight<false>(facade, node);
-                    const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
-                    if (loop_weight != INVALID_EDGE_WEIGHT &&
-                        new_weight_with_loop <= *upper_bound_to_shortest_path_weight)
+                    const auto loop_weight = super::GetLoopWeight(facade, node);
+                    if (loop_weight.first != INVALID_EDGE_WEIGHT &&
+                        new_weight + loop_weight.first <= *upper_bound_to_shortest_path_weight)
                     {
                         *middle_node = node;
-                        *upper_bound_to_shortest_path_weight = loop_weight;
+                        *upper_bound_to_shortest_path_weight = loop_weight.first;
                     }
                 }
             }
@@ -160,7 +158,7 @@ class AlternativeRouting final : private BasicRoutingInterface
                 const NodeID to = facade->GetTarget(edge);
                 const EdgeWeight edge_weight = data.weight;
 
-                BOOST_ASSERT(edge_weight > 0);
+                BOOST_ASSERT(edge_weight > EdgeWeight{0});
                 const EdgeWeight to_weight = weight + edge_weight;
 
                 // New Node discovered -> Add to Heap + Node Info Storage
@@ -187,10 +185,10 @@ class AlternativeRouting final : private BasicRoutingInterface
                                      QueryHeap &new_forward_heap,
                                      QueryHeap &new_reverse_heap,
                                      const RankedCandidateNode &candidate,
-                                     const int length_of_shortest_path,
-                                     int *length_of_via_path,
-                                     NodeID *s_v_middle,
-                                     NodeID *v_t_middle,
+                                     const EdgeWeight length_of_shortest_path,
+                                     EdgeWeight &length_of_via_path,
+                                     NodeID &s_v_middle,
+                                     NodeID &v_t_middle,
                                      const EdgeWeight min_edge_offset) const;
 };
 

@@ -61,7 +61,7 @@ struct SegmentBlock
     OSMNodeID this_osm_node_id;
     double segment_length;
     EdgeWeight segment_weight;
-    EdgeWeight segment_duration;
+    EdgeDuration segment_duration;
 };
 #pragma pack(pop)
 static_assert(sizeof(SegmentBlock) == 24, "SegmentBlock is not packed correctly");

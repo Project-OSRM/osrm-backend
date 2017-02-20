@@ -368,7 +368,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
     // FIXME these need to be tuned in pre-allocated size
     std::vector<TurnPenalty> turn_weight_penalties;
-    std::vector<TurnPenalty> turn_duration_penalties;
+    std::vector<TurnDuration> turn_duration_penalties;
 
     const auto weight_multiplier =
         scripting_environment.GetProfileProperties().GetWeightMultiplier();
@@ -530,10 +530,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                     // turn penalties are limited to [-2^15, 2^15) which roughly
                     // translates to 54 minutes and fits signed 16bit deci-seconds
-                    auto weight_penalty =
-                        boost::numeric_cast<TurnPenalty>(extracted_turn.weight * weight_multiplier);
+                    auto weight_penalty = TurnPenalty{boost::numeric_cast<TurnPenalty::value_type>(
+                        extracted_turn.weight * weight_multiplier)};
                     auto duration_penalty =
-                        boost::numeric_cast<TurnPenalty>(extracted_turn.duration * 10.);
+                        TurnDuration{boost::numeric_cast<TurnDuration::value_type>(
+                            extracted_turn.duration * 10.)};
 
                     BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
                     BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
@@ -543,9 +544,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                  std::numeric_limits<NodeID>::max());
                     auto turn_id = m_edge_based_edge_list.size();
                     auto weight =
-                        boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
+                        EdgeWeight{static_cast<EdgeWeight::value_type>(edge_data1.weight) +
+                                   static_cast<TurnPenalty::value_type>(weight_penalty)};
                     auto duration =
-                        boost::numeric_cast<EdgeWeight>(edge_data1.duration + duration_penalty);
+                        EdgeDuration{static_cast<EdgeDuration::value_type>(edge_data1.duration) +
+                                     static_cast<TurnDuration::value_type>(duration_penalty)};
                     m_edge_based_edge_list.emplace_back(edge_data1.edge_id,
                                                         edge_data2.edge_id,
                                                         turn_id,

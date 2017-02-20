@@ -23,34 +23,35 @@ namespace trip
 {
 
 // computes the distance of a given permutation
-EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
-                          const std::vector<NodeID> &location_order,
-                          const EdgeWeight min_route_dist,
-                          const std::size_t number_of_locations)
+EdgeDuration ReturnDistance(const util::DistTableWrapper<EdgeDuration> &dist_table,
+                            const std::vector<NodeID> &location_order,
+                            const EdgeDuration min_route_dist,
+                            const std::size_t number_of_locations)
 {
-    EdgeWeight route_dist = 0;
+    EdgeDuration route_dist{0};
     std::size_t current_index = 0;
     while (current_index < location_order.size() && (route_dist < min_route_dist))
     {
 
         std::size_t next_index = (current_index + 1) % number_of_locations;
-        auto edge_weight = dist_table(location_order[current_index], location_order[next_index]);
+        auto edge_duration = dist_table(location_order[current_index], location_order[next_index]);
 
-        // If the edge_weight is very large (INVALID_EDGE_WEIGHT) then the algorithm will not choose
+        // If the edge_duration is very large (MAXIMAL_EDGE_DURATION) then the algorithm will not
+        // choose
         // this edge in final minimal path. So instead of computing all the permutations after this
         // large edge, discard this edge right here and don't consider the path after this edge.
-        if (edge_weight == INVALID_EDGE_WEIGHT)
+        if (edge_duration == MAXIMAL_EDGE_DURATION)
         {
-            return INVALID_EDGE_WEIGHT;
+            return MAXIMAL_EDGE_DURATION;
         }
         else
         {
-            route_dist += edge_weight;
+            route_dist += edge_duration;
         }
 
         // This boost assert should not be reached if TFSE table
         BOOST_ASSERT_MSG(dist_table(location_order[current_index], location_order[next_index]) !=
-                             INVALID_EDGE_WEIGHT,
+                             MAXIMAL_EDGE_DURATION,
                          "invalid route found");
         ++current_index;
     }
@@ -60,21 +61,22 @@ EdgeWeight ReturnDistance(const util::DistTableWrapper<EdgeWeight> &dist_table,
 
 // computes the route by computing all permutations and selecting the shortest
 std::vector<NodeID> BruteForceTrip(const std::size_t number_of_locations,
-                                   const util::DistTableWrapper<EdgeWeight> &dist_table)
+                                   const util::DistTableWrapper<EdgeDuration> &dist_table)
 {
     // set initial order in which nodes are visited to 0, 1, 2, 3, ...
     std::vector<NodeID> node_order(number_of_locations);
     std::iota(std::begin(node_order), std::end(node_order), 0);
     std::vector<NodeID> route = node_order;
 
-    EdgeWeight min_route_dist = INVALID_EDGE_WEIGHT;
+    EdgeDuration min_route_dist = MAXIMAL_EDGE_DURATION;
 
     // check length of all possible permutation of the component ids
     BOOST_ASSERT_MSG(node_order.size() > 0, "no order permutation given");
     BOOST_ASSERT_MSG(*(std::max_element(std::begin(node_order), std::end(node_order))) <
                          number_of_locations,
                      "invalid node id");
-    BOOST_ASSERT_MSG(*(std::min_element(std::begin(node_order), std::end(node_order))) >= 0,
+    BOOST_ASSERT_MSG(*(std::min_element(std::begin(node_order), std::end(node_order))) !=
+                         SPECIAL_NODEID,
                      "invalid node id");
 
     do

@@ -126,8 +126,8 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
                                            const NodeID target_node_id,
                                            const EdgeWeight weight1,
                                            const EdgeWeight weight2,
-                                           const EdgeWeight duration1,
-                                           const EdgeWeight duration2)
+                                           const EdgeDuration duration1,
+                                           const EdgeDuration duration2)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
@@ -210,7 +210,7 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
 void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
                                                   const NodeID target_node_id,
                                                   const EdgeWeight weight,
-                                                  const EdgeWeight duration)
+                                                  const EdgeDuration duration)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id);
@@ -278,7 +278,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     m_compressed_geometry_nodes.emplace_back(first_node.node_id);
     m_compressed_geometry_fwd_weights.emplace_back(INVALID_EDGE_WEIGHT);
     m_compressed_geometry_rev_weights.emplace_back(first_node.weight);
-    m_compressed_geometry_fwd_durations.emplace_back(INVALID_EDGE_WEIGHT);
+    m_compressed_geometry_fwd_durations.emplace_back(MAXIMAL_EDGE_DURATION);
     m_compressed_geometry_rev_durations.emplace_back(first_node.duration);
 
     for (std::size_t i = 0; i < forward_bucket.size() - 1; ++i)
@@ -301,7 +301,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     m_compressed_geometry_fwd_weights.emplace_back(last_node.weight);
     m_compressed_geometry_rev_weights.emplace_back(INVALID_EDGE_WEIGHT);
     m_compressed_geometry_fwd_durations.emplace_back(last_node.duration);
-    m_compressed_geometry_rev_durations.emplace_back(INVALID_EDGE_WEIGHT);
+    m_compressed_geometry_rev_durations.emplace_back(MAXIMAL_EDGE_DURATION);
 
     return zipped_geometry_id;
 }

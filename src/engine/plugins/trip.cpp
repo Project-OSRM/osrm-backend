@@ -27,9 +27,9 @@ namespace engine
 namespace plugins
 {
 
-bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeWeight> &result_table)
+bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeDuration> &result_table)
 {
-    return std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
+    return std::find(std::begin(result_table), std::end(result_table), MAXIMAL_EDGE_DURATION) ==
            std::end(result_table);
 }
 
@@ -94,7 +94,7 @@ TripPlugin::ComputeRoute(const std::shared_ptr<const datafacade::BaseDataFacade>
 
 void ManipulateTableForFSE(const std::size_t source_id,
                            const std::size_t destination_id,
-                           util::DistTableWrapper<EdgeWeight> &result_table)
+                           util::DistTableWrapper<EdgeDuration> &result_table)
 {
     // ****************** Change Table *************************
     // The following code manipulates the table and produces the new table for
@@ -120,7 +120,7 @@ void ManipulateTableForFSE(const std::size_t source_id,
     {
         if (i == source_id)
             continue;
-        result_table.SetValue(i, source_id, INVALID_EDGE_WEIGHT);
+        result_table.SetValue(i, source_id, MAXIMAL_EDGE_DURATION);
     }
 
     // change parameters.destination row
@@ -130,16 +130,16 @@ void ManipulateTableForFSE(const std::size_t source_id,
     {
         if (i == destination_id)
             continue;
-        result_table.SetValue(destination_id, i, INVALID_EDGE_WEIGHT);
+        result_table.SetValue(destination_id, i, MAXIMAL_EDGE_DURATION);
     }
 
     // set destination->source to zero so rountrip treats source and
     // destination as one location
-    result_table.SetValue(destination_id, source_id, 0);
+    result_table.SetValue(destination_id, source_id, EdgeDuration{0});
 
     // set source->destination as very high number so algorithm is forced
     // to find another path to get to destination
-    result_table.SetValue(source_id, destination_id, INVALID_EDGE_WEIGHT);
+    result_table.SetValue(source_id, destination_id, MAXIMAL_EDGE_DURATION);
 
     //*********  End of changes to table  *************************************
 }
@@ -201,7 +201,7 @@ Status TripPlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
     BOOST_ASSERT(snapped_phantoms.size() == number_of_locations);
 
     // compute the duration table of all phantom nodes
-    auto result_table = util::DistTableWrapper<EdgeWeight>(
+    auto result_table = util::DistTableWrapper<EdgeDuration>(
         duration_table(facade, snapped_phantoms, {}, {}), number_of_locations);
 
     if (result_table.size() == 0)

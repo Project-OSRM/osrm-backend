@@ -21,19 +21,17 @@ std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge
     for (const auto &input_edge : input_edge_list)
     {
 #ifndef NDEBUG
-        const unsigned int constexpr DAY_IN_DECI_SECONDS = 24 * 60 * 60 * 10;
-        if (static_cast<unsigned int>(std::max(input_edge.weight, 1)) > DAY_IN_DECI_SECONDS)
+        if (input_edge.duration > 24 * 60 * 60 * 10)
         {
-            util::Log(logWARNING) << "Edge weight large -> "
-                                  << static_cast<unsigned int>(std::max(input_edge.weight, 1))
-                                  << " : " << static_cast<unsigned int>(input_edge.source) << " -> "
-                                  << static_cast<unsigned int>(input_edge.target);
+            util::Log(logWARNING) << "Edge duration large -> " << input_edge.duration << ", weight "
+                                  << input_edge.weight << " : " << input_edge.source << " -> "
+                                  << input_edge.target;
         }
 #endif
         edges.emplace_back(input_edge.source,
                            input_edge.target,
-                           std::max(input_edge.weight, 1),
-                           input_edge.duration,
+                           std::max(input_edge.weight, EdgeWeight{1}),
+                           EdgeDuration{input_edge.duration},
                            1,
                            input_edge.edge_id,
                            false,
@@ -42,8 +40,8 @@ std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge
 
         edges.emplace_back(input_edge.target,
                            input_edge.source,
-                           std::max(input_edge.weight, 1),
-                           input_edge.duration,
+                           std::max(input_edge.weight, EdgeWeight{1}),
+                           EdgeDuration{input_edge.duration},
                            1,
                            input_edge.edge_id,
                            false,
