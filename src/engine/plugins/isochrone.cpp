@@ -199,6 +199,15 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
         const auto &phantom = phantoms[i];
         const auto weight = table[i - 1];
 
+        // If INVALID_EDGE_WEIGHT, it means that the phantom couldn't be reached
+        // from the isochrone centerpoint
+        if (weight == INVALID_EDGE_WEIGHT)
+            continue;
+
+        // If the weight is > the max range, it means that this edge crosses
+        // the range, but the start of it is inside the range. We need
+        // to chop this line somewhere.
+        // TODO: actually do that.
         if (weight > range * 10)
             continue;
 

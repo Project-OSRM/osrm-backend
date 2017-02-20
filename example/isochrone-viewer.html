@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+    <style type='text/css'>
+        #info {
+            display: block;
+            position: relative;
+            margin: 0px auto;
+            width: 50%;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+            color: #222;
+            background: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id='map'></div>
+    <div id="info"></div>
+    <script>
+        mapboxgl.accessToken = 'YOUR_TOKEN_HERE';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v9',
+            center: [-122.43376611457057, 37.788998452552065],
+            zoom: 13
+        });
+
+        map.on('mousemove', function (e) {
+            document.getElementById('info').innerHTML =
+                // e.point is the x, y coordinates of the mousemove event relative
+                // to the top-left corner of the map
+                JSON.stringify(e.point) + '<br />' +
+                // e.lngLat is the longitude, latitude geographical position of the event
+                JSON.stringify(e.lngLat);
+        });
+
+        map.on('click', function (e) {
+            console.log(JSON.stringify(e.lngLat));
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var j = JSON.parse(this.responseText);
+
+                    if (map.getSource("isochrone")) {
+                        map.removeSource("isochrone");
+                    }
+                    map.addSource("isochrone", {
+                        "type": "geojson",
+                        "data": j
+                    });
+
+                    if (!map.getLayer("isochrone-layer")) {
+                        /*
+                        map.addLayer({
+                            "id": "isochrone-layer",
+                            "type": "line",
+                            "source": "isochrone",
+                            "layout": {
+                                "line-join": "round",
+                                "line-cap": "round"
+                            },
+                            "paint": {
+                                "line-color": "#f00",
+                                "line-width": 4,
+                                "line-offset": 2
+                            },
+                            "filter": [
+                                "==", "direction", "forward"
+                            ]
+                        });
+                        map.addLayer({
+                            "id": "isochrone-layer-bk",
+                            "type": "line",
+                            "source": "isochrone",
+                            "layout": {
+                                "line-join": "round",
+                                "line-cap": "round"
+                            },
+                            "paint": {
+                                "line-color": "#00f",
+                                "line-width": 4,
+                                "line-offset": 4
+                            },
+                            "filter": [
+                                "==", "direction", "backward"
+                            ]
+                        });
+                        */
+                        map.addLayer({
+                            "id": "isochrone-points",
+                            "type": "circle",
+                            "source": "isochrone",
+                            "paint": {
+                                "circle-radius": 15,
+                                "circle-color": {
+                                    "property": "weight",
+                                    "stops": [
+                                        [0, 'blue'],
+                                        [2000, 'red'],
+                                        [4000, 'yellow'],
+                                        [6000, 'green'],
+                                        [8000, 'orange']
+                                    ]
+                                }
+                            }
+                        });
+                    }
+                }
+            };
+            xhttp.open("GET", "http://localhost:5000/isochrone/v1/driving/" + e.lngLat.lng + "," + e.lngLat.lat, true);
+            xhttp.send();
+        });
+    </script>
+
+</body>
+
+</html>

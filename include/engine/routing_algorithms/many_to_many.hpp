@@ -73,8 +73,7 @@ class ManyToManyRouting final : public BasicRoutingInterface
                                    const NodeID node,
                                    const EdgeWeight weight,
                                    const EdgeWeight duration,
-                                   QueryHeap &query_heap,
-                                   const EdgeWeight max_weight) const
+                                   QueryHeap &query_heap) const
     {
         for (auto edge : facade->GetAdjacentEdgeRange(node))
         {
@@ -85,9 +84,6 @@ class ManyToManyRouting final : public BasicRoutingInterface
                 const NodeID to = facade->GetTarget(edge);
                 const EdgeWeight edge_weight = data.weight;
                 const EdgeWeight edge_duration = data.duration;
-
-                if (edge_weight >= max_weight)
-                    continue;
 
                 BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
                 const EdgeWeight to_weight = weight + edge_weight;

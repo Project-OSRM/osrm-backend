@@ -143,6 +143,10 @@ void ManyToManyRouting::ForwardRoutingStep(
     const EdgeWeight source_weight = query_heap.GetKey(node);
     const EdgeWeight source_duration = query_heap.GetData(node).duration;
 
+    // Early termination is used by the isochrone search
+    if (source_weight > max_weight)
+        return;
+
     // check if each encountered node has an entry
     const auto bucket_iterator = search_space_with_buckets.find(node);
     // iterate bucket if there exists one
@@ -184,7 +188,7 @@ void ManyToManyRouting::ForwardRoutingStep(
     {
         return;
     }
-    RelaxOutgoingEdges<true>(facade, node, source_weight, source_duration, query_heap, max_weight);
+    RelaxOutgoingEdges<true>(facade, node, source_weight, source_duration, query_heap);
 }
 
 void ManyToManyRouting::BackwardRoutingStep(
@@ -198,6 +202,9 @@ void ManyToManyRouting::BackwardRoutingStep(
     const EdgeWeight target_weight = query_heap.GetKey(node);
     const EdgeWeight target_duration = query_heap.GetData(node).duration;
 
+    if (target_weight > max_weight)
+        return;
+
     // store settled nodes in search space bucket
     search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);
 
@@ -206,7 +213,7 @@ void ManyToManyRouting::BackwardRoutingStep(
         return;
     }
 
-    RelaxOutgoingEdges<false>(facade, node, target_weight, target_duration, query_heap, max_weight);
+    RelaxOutgoingEdges<false>(facade, node, target_weight, target_duration, query_heap);
 }
 
 } // namespace routing_algorithms
