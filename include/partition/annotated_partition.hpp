@@ -16,17 +16,17 @@ namespace partition
 // annotated partitions provide a mapping from every node in the graph to a consecutively
 // numbered cell in each level of the multi level partition. Instead of using the bisection directly
 // (which can result in a unbalanced tree structure)
-// 
+//
 //            _____o______
-//           /            \
+//           /            \ 
 //          o          ____o____
-//         / \        /         \
+//         / \        /         \ 
 //        a   b       o         _o_
-//                   / \       /   \
+//                   / \       /   \ 
 //                  c   d     o     o
-//                           / \   / \
+//                           / \   / \ 
 //                          e  f   g  h
-// 
+//
 // we build a balanced structure that will result in a multi-cut on any level. We transform this
 // layout into:
 //
