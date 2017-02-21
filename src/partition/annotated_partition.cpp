@@ -73,7 +73,7 @@ auto getChildrenRange(const std::vector<AnnotatedPartition::SizedID> &implicit_t
         --range.second;
 
     return range;
-};
+}
 
 auto getCellSize(const std::vector<AnnotatedPartition::SizedID> &implicit_tree,
                  const BisectionID id_prefix,
