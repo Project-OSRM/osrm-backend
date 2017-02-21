@@ -270,13 +270,15 @@ function way_function (way, result)
   local railway = way:get_value_by_key("railway")
   local amenity = way:get_value_by_key("amenity")
   local public_transport = way:get_value_by_key("public_transport")
+  local bridge = way:get_value_by_key("bridge")
 
   if (not data.highway or data.highway == '') and
   (not route or route == '') and
   (not profile.use_public_transport or not railway or railway=='') and
   (not amenity or amenity=='') and
   (not man_made or man_made=='') and
-  (not public_transport or public_transport=='')
+  (not public_transport or public_transport=='') and
+  (not bridge or bridge=='')
   then
     return
   end
