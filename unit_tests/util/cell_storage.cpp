@@ -55,14 +55,14 @@ auto makeGraph(const std::vector<MockEdge> &mock_edges)
         bool forward;
         bool backward;
     };
-    using Edge = util::StaticGraph<EdgeData>::InputEdge;
+    using Edge = static_graph_details::SortableEdgeWithData<EdgeData>;
     std::vector<Edge> edges;
     std::size_t max_id = 0;
     for (const auto &m : mock_edges)
     {
         max_id = std::max<std::size_t>(max_id, std::max(m.start, m.target));
-        edges.push_back(Edge{m.start, m.target, EdgeData{true, false}});
-        edges.push_back(Edge{m.target, m.start, EdgeData{false, true}});
+        edges.push_back(Edge{m.start, m.target, true, false});
+        edges.push_back(Edge{m.target, m.start, false, true});
     }
     std::sort(edges.begin(), edges.end());
     return util::StaticGraph<EdgeData>(max_id + 1, edges);

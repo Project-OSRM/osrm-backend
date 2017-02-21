@@ -60,8 +60,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
         std::uniform_int_distribution<> node_udist(0, NUM_NODES - 1);
         for (unsigned i = 0; i < NUM_EDGES; i++)
         {
-            edges.emplace_back(
-                TestEdgeArrayEntry{static_cast<unsigned>(node_udist(g)), TestData{i}});
+            edges.emplace_back(TestEdgeArrayEntry{static_cast<unsigned>(node_udist(g)), EdgeID{i}});
         }
 
         for (unsigned i = 0; i < NUM_NODES; i++)
@@ -96,8 +95,8 @@ BOOST_FIXTURE_TEST_CASE(array_test, TestRandomArrayEntryFixture)
 
 BOOST_AUTO_TEST_CASE(target_test)
 {
-    std::vector<TestInputEdge> input_edges = {TestInputEdge{0, 1, TestData{1}},
-                                              TestInputEdge{3, 0, TestData{2}}};
+    std::vector<TestInputEdge> input_edges = {TestInputEdge{0, 1, EdgeID{1}},
+                                              TestInputEdge{3, 0, EdgeID{2}}};
     TestStaticGraph simple_graph = TestStaticGraph(4, input_edges);
 
     auto target = simple_graph.GetTarget(simple_graph.FindEdge(3, 0));
@@ -114,11 +113,11 @@ BOOST_AUTO_TEST_CASE(find_test)
      *  (3) -3-> (4)
      *      <-4-
      */
-    std::vector<TestInputEdge> input_edges = {TestInputEdge{0, 1, TestData{1}},
-                                              TestInputEdge{3, 0, TestData{2}},
-                                              TestInputEdge{3, 0, TestData{5}},
-                                              TestInputEdge{3, 4, TestData{3}},
-                                              TestInputEdge{4, 3, TestData{4}}};
+    std::vector<TestInputEdge> input_edges = {TestInputEdge{0, 1, EdgeID{1}},
+                                              TestInputEdge{3, 0, EdgeID{2}},
+                                              TestInputEdge{3, 0, EdgeID{5}},
+                                              TestInputEdge{3, 4, EdgeID{3}},
+                                              TestInputEdge{4, 3, EdgeID{4}}};
     TestStaticGraph simple_graph(5, input_edges);
 
     auto eit = simple_graph.FindEdge(0, 1);
