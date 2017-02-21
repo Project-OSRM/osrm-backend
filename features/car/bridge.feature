@@ -15,7 +15,7 @@ Feature: Car - Handle driving
         And the ways
             | nodes | highway | bridge  | bicycle |
             | abc   | primary |         |         |
-            | cde   |         | movable | yes     |
+            | cde   | primary | movable | yes     |
             | efg   | primary |         |         |
 
         When I route I should get
@@ -40,7 +40,7 @@ Feature: Car - Handle driving
         And the ways
             | nodes | highway | bridge  |
             | abc   | primary |         |
-            | cde   |         | movable |
+            | cde   | primary | movable |
             | efg   | primary |         |
 
         When I route I should get
@@ -61,7 +61,7 @@ Feature: Car - Handle driving
         And the ways
             | nodes | highway | bridge  | duration |
             | abc   | primary |         |          |
-            | cde   |         | movable | 00:05:00 |
+            | cde   | primary | movable | 00:05:00 |
             | efg   | primary |         |          |
 
         When I route I should get
