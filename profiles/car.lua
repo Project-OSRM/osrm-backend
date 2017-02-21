@@ -298,14 +298,16 @@ function way_function(way, result)
   local data = {
     -- prefetch tags
     highway = way:get_value_by_key('highway'),
+    bridge = way:get_value_by_key('bridge'),
     route = way:get_value_by_key('route')
   }
 
   -- perform an quick initial check and abort if the way is
-  -- obviously not routable. here we require at least one
-  -- of the prefetched tags to be present, ie. the data table
-  -- cannot be empty
-  if next(data) == nil then     -- is the data table empty?
+  -- obviously not routable. 
+  -- highway or route tags must be in data table, bridge is optional
+  if (not data.highway or data.highway == '') and
+  (not data.route or data.route == '')
+  then
     return
   end
 
