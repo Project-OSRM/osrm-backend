@@ -298,7 +298,6 @@ function way_function(way, result)
   local data = {
     -- prefetch tags
     highway = way:get_value_by_key('highway'),
-    bridge = way:get_value_by_key('bridge'),
     route = way:get_value_by_key('route')
   }
 
