@@ -68,15 +68,15 @@ struct EdgeBasedGraphReader
         // and should really be abstracted over.
 
         auto directed = SplitBidirectionalEdges(edges);
-        auto tidied = PrepareEdgesForUsageInGraph(directed);
+        auto tidied = PrepareEdgesForUsageInGraph(std::move(directed));
 
-        return std::make_unique<EdgeBasedGraph>(num_nodes, tidied);
+        return std::make_unique<EdgeBasedGraph>(num_nodes, std::move(tidied));
     }
 
   private:
     // Bidirectional (s,t) to (s,t) and (t,s)
-    static std::vector<extractor::EdgeBasedEdge>
-    SplitBidirectionalEdges(std::vector<extractor::EdgeBasedEdge> edges)
+    std::vector<extractor::EdgeBasedEdge>
+    SplitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
     {
         std::vector<extractor::EdgeBasedEdge> directed;
         directed.reserve(edges.size() * 2);
@@ -100,12 +100,10 @@ struct EdgeBasedGraphReader
                                   edge.forward);
         }
 
-        std::swap(directed, edges);
-
         return directed;
     }
 
-    static std::vector<EdgeBasedGraphEdge>
+    std::vector<EdgeBasedGraphEdge>
     PrepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
     {
         std::sort(begin(edges), end(edges));
