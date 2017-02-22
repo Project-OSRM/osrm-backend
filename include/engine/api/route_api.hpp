@@ -19,6 +19,7 @@
 
 #include "util/coordinate.hpp"
 #include "util/integer_range.hpp"
+#include "util/json_util.hpp"
 
 #include <iterator>
 #include <vector>
@@ -249,7 +250,8 @@ class RouteAPI : public BaseAPI
                 {
                     annotation.values["speed"] = GetAnnotations(
                         leg_geometry, [](const guidance::LegGeometry::Annotation &anno) {
-                            return std::round(anno.distance / anno.duration * 10.) / 10.;
+                            auto val = std::round(anno.distance / anno.duration * 10.) / 10.;
+                            return util::json::clamp_float(val);
                         });
                 }
 
