@@ -58,11 +58,12 @@ template <> struct SortableEdgeWithData<void>
 
     bool operator<(const SortableEdgeWithData &right) const
     {
-        if (source != right.source)
-        {
-            return source < right.source;
-        }
-        return target < right.target;
+        return std::tie(source, target) < std::tie(right.source, right.target);
+    }
+
+    bool operator==(const SortableEdgeWithData &right) const
+    {
+        return std::tie(source, target) == std::tie(right.source, right.target);
     }
 };
 
