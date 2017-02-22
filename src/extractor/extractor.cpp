@@ -326,27 +326,8 @@ void Extractor::FindComponents(unsigned max_edge_id,
                                const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
                                std::vector<EdgeBasedNode> &input_nodes) const
 {
-    struct UncontractedEdgeData
-    {
-        EdgeWeight duration;
-    };
-    struct InputEdge
-    {
-        unsigned source;
-        unsigned target;
-        UncontractedEdgeData data;
-
-        bool operator<(const InputEdge &rhs) const
-        {
-            return source < rhs.source || (source == rhs.source && target < rhs.target);
-        }
-
-        bool operator==(const InputEdge &rhs) const
-        {
-            return source == rhs.source && target == rhs.target;
-        }
-    };
-    using UncontractedGraph = util::StaticGraph<UncontractedEdgeData>;
+    using InputEdge = util::static_graph_details::SortableEdgeWithData<void>;
+    using UncontractedGraph = util::StaticGraph<void>;
     std::vector<InputEdge> edges;
     edges.reserve(input_edge_list.size() * 2);
 
@@ -358,12 +339,12 @@ void Extractor::FindComponents(unsigned max_edge_id,
         BOOST_ASSERT(edge.target <= max_edge_id);
         if (edge.forward)
         {
-            edges.push_back({edge.source, edge.target, {edge.duration}});
+            edges.push_back({edge.source, edge.target});
         }
 
         if (edge.backward)
         {
-            edges.push_back({edge.target, edge.source, {edge.duration}});
+            edges.push_back({edge.target, edge.source});
         }
     }
 
@@ -374,14 +355,13 @@ void Extractor::FindComponents(unsigned max_edge_id,
         {
             BOOST_ASSERT(node.forward_segment_id.id <= max_edge_id);
             BOOST_ASSERT(node.reverse_segment_id.id <= max_edge_id);
-            edges.push_back({node.forward_segment_id.id, node.reverse_segment_id.id, {}});
-            edges.push_back({node.reverse_segment_id.id, node.forward_segment_id.id, {}});
+            edges.push_back({node.forward_segment_id.id, node.reverse_segment_id.id});
+            edges.push_back({node.reverse_segment_id.id, node.forward_segment_id.id});
         }
     }
 
     tbb::parallel_sort(edges.begin(), edges.end());
-    auto new_end = std::unique(edges.begin(), edges.end());
-    edges.resize(new_end - edges.begin());
+    edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
 
     auto uncontracted_graph = UncontractedGraph(max_edge_id + 1, edges);
 
