@@ -3,8 +3,12 @@
 
 #include "util/assert.hpp"
 #include "util/for_each_range.hpp"
+#include "util/log.hpp"
 #include "util/multi_level_partition.hpp"
+#include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
+
+#include "storage/io.hpp"
 
 #include <boost/range/iterator_range.hpp>
 #include <tbb/parallel_sort.h>
@@ -19,7 +23,7 @@ namespace osrm
 namespace util
 {
 
-class CellStorage
+template <bool UseShareMemory> class CellStorage
 {
   public:
     using WeightOffset = std::uint32_t;
@@ -161,6 +165,8 @@ class CellStorage
     using Cell = CellImpl<EdgeWeight>;
     using ConstCell = CellImpl<const EdgeWeight>;
 
+    CellStorage() {}
+
     template <typename GraphT>
     CellStorage(const MultiLevelPartition &partition, const GraphT &base_graph)
     {
@@ -286,6 +292,8 @@ class CellStorage
     {
     }
 
+    CellStorage(const boost::filesystem::path &path) { Read(path); }
+
     ConstCell GetCell(LevelID level, CellID id) const
     {
         const auto level_index = LevelIDToIndex(level);
@@ -308,12 +316,100 @@ class CellStorage
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
+    std::size_t GetRequiredMemorySize(const boost::filesystem::path &path) const
+    {
+        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+        storage::io::FileReader reader{path, fingerprint};
+
+        std::size_t memory_size = 0;
+        memory_size += reader.GetVectorMemorySize<decltype(weights[0])>();
+        memory_size += reader.GetVectorMemorySize<decltype(source_boundary[0])>();
+        memory_size += reader.GetVectorMemorySize<decltype(destination_boundary[0])>();
+        memory_size += reader.GetVectorMemorySize<decltype(cells[0])>();
+        memory_size += reader.GetVectorMemorySize<decltype(level_to_cell_offset[0])>();
+        return memory_size;
+    }
+
+    template <bool Q = UseShareMemory>
+    typename std::enable_if<Q>::type
+    Read(const boost::filesystem::path &path, void *begin, const void *end) const
+    {
+        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+        storage::io::FileReader reader{path, fingerprint};
+
+        begin = reader.DeserializeVector<typename decltype(weights)::value_type>(begin, end);
+        begin =
+            reader.DeserializeVector<typename decltype(source_boundary)::value_type>(begin, end);
+        begin = reader.DeserializeVector<typename decltype(destination_boundary)::value_type>(begin,
+                                                                                              end);
+        begin = reader.DeserializeVector<typename decltype(cells)::value_type>(begin, end);
+        begin = reader.DeserializeVector<typename decltype(level_to_cell_offset)::value_type>(begin,
+                                                                                              end);
+    }
+
+    template <bool Q = UseShareMemory>
+    typename std::enable_if<Q>::type InitializePointers(char *begin, const char *end)
+    {
+        auto weights_size = *reinterpret_cast<std::uint64_t *>(begin);
+        begin += sizeof(weights_size);
+        weights.reset(reinterpret_cast<EdgeWeight *>(begin), weights_size);
+        begin += sizeof(decltype(weights[0])) * weights_size;
+
+        auto source_boundary_size = *reinterpret_cast<std::uint64_t *>(begin);
+        begin += sizeof(source_boundary_size);
+        source_boundary.reset(reinterpret_cast<NodeID *>(begin), source_boundary_size);
+        begin += sizeof(decltype(source_boundary[0])) * source_boundary_size;
+
+        auto destination_boundary_size = *reinterpret_cast<std::uint64_t *>(begin);
+        begin += sizeof(destination_boundary_size);
+        destination_boundary.reset(reinterpret_cast<NodeID *>(begin), destination_boundary_size);
+        begin += sizeof(decltype(destination_boundary[0])) * destination_boundary_size;
+
+        auto cells_size = *reinterpret_cast<std::uint64_t *>(begin);
+        begin += sizeof(cells_size);
+        cells.reset(reinterpret_cast<CellData *>(begin), cells_size);
+        begin += sizeof(decltype(cells[0])) * cells_size;
+
+        auto level_to_cell_offset_size = *reinterpret_cast<std::uint64_t *>(begin);
+        begin += sizeof(level_to_cell_offset_size);
+        level_to_cell_offset.reset(reinterpret_cast<std::size_t *>(begin),
+                                   level_to_cell_offset_size);
+        begin += sizeof(decltype(level_to_cell_offset[0])) * level_to_cell_offset_size;
+
+        BOOST_ASSERT(begin <= end);
+    }
+
+    template <bool Q = UseShareMemory>
+    typename std::enable_if<!Q>::type Read(const boost::filesystem::path &path)
+    {
+        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+        storage::io::FileReader reader{path, fingerprint};
+
+        reader.DeserializeVector(weights);
+        reader.DeserializeVector(source_boundary);
+        reader.DeserializeVector(destination_boundary);
+        reader.DeserializeVector(cells);
+        reader.DeserializeVector(level_to_cell_offset);
+    }
+
+    void Write(const boost::filesystem::path &path) const
+    {
+        const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+        storage::io::FileWriter writer{path, fingerprint};
+
+        writer.SerializeVector(weights);
+        writer.SerializeVector(source_boundary);
+        writer.SerializeVector(destination_boundary);
+        writer.SerializeVector(cells);
+        writer.SerializeVector(level_to_cell_offset);
+    }
+
   private:
-    std::vector<EdgeWeight> weights;
-    std::vector<NodeID> source_boundary;
-    std::vector<NodeID> destination_boundary;
-    std::vector<CellData> cells;
-    std::vector<std::size_t> level_to_cell_offset;
+    typename util::ShM<EdgeWeight, UseShareMemory>::vector weights;
+    typename util::ShM<NodeID, UseShareMemory>::vector source_boundary;
+    typename util::ShM<NodeID, UseShareMemory>::vector destination_boundary;
+    typename util::ShM<CellData, UseShareMemory>::vector cells;
+    typename util::ShM<std::size_t, UseShareMemory>::vector level_to_cell_offset;
 };
 }
 }

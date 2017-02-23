@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(packed_mlp)
     std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3}};
     std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}};
     std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    PackedMultiLevelPartition mlp{{l1, l2, l3, l4}, {6, 4, 2, 1}};
+    PackedMultiLevelPartition<false> mlp{{l1, l2, l3, l4}, {6, 4, 2, 1}};
 
     BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(1), 6);
     BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(2), 4);

@@ -26,6 +26,8 @@ class RecursiveBisection
 
     const std::vector<BisectionID> &BisectionIDs() const;
 
+    std::uint32_t SCCDepth() const;
+
   private:
     BisectionGraph &bisection_graph;
     RecursiveBisectionState internal_state;

@@ -6,18 +6,22 @@
 #include "partition/node_based_graph_to_edge_based_graph_mapping_reader.hpp"
 #include "partition/recursive_bisection.hpp"
 
+#include "util/cell_storage.hpp"
 #include "util/coordinate.hpp"
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
 #include "util/integer_range.hpp"
 #include "util/json_container.hpp"
 #include "util/log.hpp"
+#include "util/multi_level_partition.hpp"
 
 #include <algorithm>
 #include <iterator>
+#include <unordered_set>
 #include <vector>
 
 #include <boost/assert.hpp>
+#include <boost/container/small_vector.hpp>
 
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
@@ -179,6 +183,88 @@ int Partitioner::Run(const PartitionConfig &config)
             // FIXME: just pick one side for now. See #3205.
             edge_based_partition_ids[node] = node_based_partition_ids[u];
         }
+    }
+
+    // FIXME The CellID computation code need to be replaced by a more sophisticated method
+    {
+        BOOST_ASSERT(edge_based_partition_ids.size() == edge_based_graph->GetNumberOfNodes());
+
+        using namespace osrm::partition;
+
+        // find bit size of bisection ids
+        int first_nonzero_position = sizeof(BisectionID) * CHAR_BIT;
+        for (auto id : edge_based_partition_ids)
+        {
+            first_nonzero_position = id == 0 ? first_nonzero_position
+                                             : std::min(first_nonzero_position, __builtin_ctz(id));
+        }
+        BOOST_ASSERT(first_nonzero_position != sizeof(BisectionID) * CHAR_BIT);
+
+        // split bisection id bits into groups starting from SCC and stop at level 1
+        BOOST_ASSERT(recursive_bisection.SCCDepth() != 0);
+        int mask_from = sizeof(BisectionID) * CHAR_BIT - recursive_bisection.SCCDepth();
+        boost::container::small_vector<BisectionID, 8> level_masks;
+        for (int mask_to = sizeof(BisectionID) * CHAR_BIT; mask_to > first_nonzero_position;
+             mask_to = mask_from, mask_from -= 3) // TODO: find better grouping
+        {
+            auto bit = std::max(first_nonzero_position, mask_from);
+            level_masks.push_back(((1u << (sizeof(BisectionID) * CHAR_BIT - bit)) - 1) << bit);
+        }
+
+        util::Log() << "Bisection IDs split for SCC depth " << recursive_bisection.SCCDepth()
+                    << " and first non-zero bit position " << first_nonzero_position
+                    << " number of levels is " << level_masks.size();
+        for (auto x : level_masks)
+            std::cout << std::setw(8) << std::hex << x << std::dec << "\n";
+
+        // collect cell ids as masked bisection ids
+        std::vector<std::vector<osrm::util::CellID>> partitions(
+            level_masks.size(), std::vector<osrm::util::CellID>(edge_based_partition_ids.size()));
+        std::vector<std::unordered_set<osrm::util::CellID>> partition_sets(level_masks.size());
+        for (std::size_t index = 0; index < edge_based_partition_ids.size(); ++index)
+        {
+            auto bisection_id = edge_based_partition_ids[index];
+            for (std::size_t level = 0; level < level_masks.size(); ++level)
+            {
+                osrm::util::CellID cell_id =
+                    bisection_id & level_masks[level_masks.size() - 1 - level];
+                partitions[level][index] = cell_id;
+                partition_sets[level].insert(cell_id);
+            }
+        }
+
+        std::vector<std::uint32_t> level_to_num_cells;
+        std::transform(partition_sets.begin(),
+                       partition_sets.end(),
+                       std::back_inserter(level_to_num_cells),
+                       [](const std::unordered_set<osrm::util::CellID> &partition_set) {
+                           return partition_set.size();
+                       });
+        std::cout << "# of cell on levels\n";
+        for (std::size_t level = 0; level < partition_sets.size(); ++level)
+        {
+            std::cout << level_to_num_cells[level] << ": ";
+            for (auto x : partition_sets[level])
+                std::cout << " " << x;
+            std::cout << "\n";
+        }
+
+        TIMER_START(packed_mlp);
+        osrm::util::PackedMultiLevelPartition<false> mlp{partitions, level_to_num_cells};
+        TIMER_STOP(packed_mlp);
+        util::Log() << "PackedMultiLevelPartition constructed in " << TIMER_SEC(packed_mlp)
+                    << " seconds";
+
+        TIMER_START(cell_storage);
+        osrm::util::CellStorage<false> storage(mlp, *edge_based_graph);
+        TIMER_STOP(cell_storage);
+        util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
+
+        TIMER_START(writing_mld_data);
+        mlp.Write(config.mld_partition_path);
+        storage.Write(config.mld_storage_path);
+        TIMER_STOP(writing_mld_data);
+        util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";
     }
 
     return 0;

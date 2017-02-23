@@ -58,6 +58,7 @@ template <typename DataT> class SharedMemoryWrapper
     std::size_t m_size;
 
   public:
+    using value_type = DataT;
     using iterator = ShMemIterator<DataT>;
     using reverse_iterator = boost::reverse_iterator<iterator>;
 
@@ -68,6 +69,12 @@ template <typename DataT> class SharedMemoryWrapper
     void reset(DataT *ptr, std::size_t size)
     {
         m_ptr = ptr;
+        m_size = size;
+    }
+
+    void reset(void *ptr, std::size_t size)
+    {
+        m_ptr = reinterpret_cast<DataT *>(ptr);
         m_size = size;
     }
 

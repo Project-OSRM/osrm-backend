@@ -69,6 +69,8 @@ struct StorageConfig final
     boost::filesystem::path intersection_class_path;
     boost::filesystem::path turn_lane_data_path;
     boost::filesystem::path turn_lane_description_path;
+    boost::filesystem::path mld_partition_path;
+    boost::filesystem::path mld_storage_path;
 };
 }
 }

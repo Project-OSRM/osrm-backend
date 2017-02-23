@@ -134,6 +134,26 @@ class FileReader
         ReadInto(data.data(), count);
     }
 
+    template <typename T> std::size_t GetVectorMemorySize()
+    {
+        const auto count = ReadElementCount64();
+        Skip<T>(count);
+        return sizeof(count) + sizeof(T) * count;
+    }
+
+    template <typename T> void *DeserializeVector(void *begin, const void *end)
+    {
+        auto count = ReadElementCount64();
+        auto required = reinterpret_cast<char *>(begin) + sizeof(count) + sizeof(T) * count;
+        if (required > end)
+            throw util::exception("Not enough memory ");
+
+        *reinterpret_cast<decltype(count) *>(begin) = count;
+        ReadInto(reinterpret_cast<T *>(reinterpret_cast<char *>(begin) + sizeof(decltype(count))),
+                 count);
+        return required;
+    }
+
     bool ReadAndCheckFingerprint()
     {
         auto loaded_fingerprint = ReadOne<util::FingerPrint>();
