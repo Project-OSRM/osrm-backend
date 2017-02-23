@@ -105,5 +105,7 @@ const std::vector<BisectionID> &RecursiveBisection::BisectionIDs() const
     return internal_state.BisectionIDs();
 }
 
+std::uint32_t RecursiveBisection::SCCDepth() const { return internal_state.SCCDepth(); }
+
 } // namespace partition
 } // namespace osrm

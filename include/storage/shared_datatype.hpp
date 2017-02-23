@@ -56,7 +56,9 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "LANE_DESCRIPTION_OFFSETS",
                                             "LANE_DESCRIPTION_MASKS",
                                             "TURN_WEIGHT_PENALTIES",
-                                            "TURN_DURATION_PENALTIES"};
+                                            "TURN_DURATION_PENALTIES",
+                                            "MLD_CELL_PARTITION",
+                                            "MLD_CELL_STORAGE"};
 
 struct DataLayout
 {
@@ -101,6 +103,8 @@ struct DataLayout
         LANE_DESCRIPTION_MASKS,
         TURN_WEIGHT_PENALTIES,
         TURN_DURATION_PENALTIES,
+        MLD_CELL_PARTITION,
+        MLD_CELL_STORAGE,
         NUM_BLOCKS
     };
 

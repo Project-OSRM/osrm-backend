@@ -12,12 +12,14 @@
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
+#include "util/cell_storage.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
 #include "util/log.hpp"
+#include "util/multi_level_partition.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
@@ -392,6 +394,27 @@ void Storage::PopulateLayout(DataLayout &layout)
         const auto lane_tuple_count = lane_data_file.ReadElementCount64();
         layout.SetBlockSize<util::guidance::LaneTupleIdPair>(DataLayout::TURN_LANE_DATA,
                                                              lane_tuple_count);
+    }
+
+    {
+        // Loading MLD Data
+        if (boost::filesystem::exists(config.mld_partition_path))
+        {
+            auto mld_partition_size = util::PackedMultiLevelPartition<true>().GetRequiredMemorySize(
+                config.mld_partition_path);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_PARTITION, mld_partition_size);
+        }
+        else
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_PARTITION, 0);
+
+        if (boost::filesystem::exists(config.mld_storage_path))
+        {
+            auto mld_cell_storage_size =
+                util::CellStorage<true>().GetRequiredMemorySize(config.mld_storage_path);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_STORAGE, mld_cell_storage_size);
+        }
+        else
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_STORAGE, 0);
     }
 }
 
@@ -838,6 +861,28 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                          std::distance(entry_class_table.begin(), entry_class_table.end()) *
                              sizeof(decltype(entry_class_table)::value_type));
             std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
+        }
+    }
+
+    {
+        // Loading MLD Data
+        const auto mld_partition_ptr =
+            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::MLD_CELL_PARTITION);
+        const auto mld_partition_size = layout.GetBlockSize(DataLayout::MLD_CELL_PARTITION);
+        if (boost::filesystem::exists(config.mld_partition_path))
+        {
+            util::PackedMultiLevelPartition<true>().Read(
+                config.mld_partition_path, mld_partition_ptr, mld_partition_ptr + mld_partition_size);
+        }
+
+        const auto mld_cell_storage_ptr =
+            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::MLD_CELL_STORAGE);
+        const auto mld_cell_storage_size = layout.GetBlockSize(DataLayout::MLD_CELL_STORAGE);
+        if (boost::filesystem::exists(config.mld_storage_path))
+        {
+            util::CellStorage<true>().Read(config.mld_storage_path,
+                                       mld_cell_storage_ptr,
+                                       mld_cell_storage_ptr + mld_cell_storage_size);
         }
     }
 }
