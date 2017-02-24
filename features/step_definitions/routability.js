@@ -64,7 +64,7 @@ module.exports = function () {
                             case '' === want:
                             case 'x' === want:
                                 outputRow[direction] = result[direction].status ?
-                                    result[direction].status.toString() : '';
+                                    result[direction].mode : '';
                                 break;
                             case /^[\d\.]+ s/.test(want):
                                 // the result here can come back as a non-number value like
