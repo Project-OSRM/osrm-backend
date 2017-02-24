@@ -10,7 +10,7 @@ module.exports = function () {
                 headers = new Set(Object.keys(table.hashes()[0]));
 
             if (!testedHeaders.some(k => !!headers.has(k))) {
-                throw new Error('*** routability table must contain either "forw", "backw", "bothw", "forw_rate" or "backw_rate" column');
+                throw new Error('*** routability table must contain either "forw", "backw", "bothw", "forw_rate" or "backw_mode" column');
             }
 
             this.reprocessAndLoadData((e) => {
@@ -88,7 +88,7 @@ module.exports = function () {
                                 }
                                 break;
                             default:
-                                throw new Error(util.format('*** Unknown expectation format: %s', want));
+                                outputRow[direction] = result[direction].mode || ''
                             }
 
                             if (this.FuzzyMatch.match(outputRow[direction], want)) {
@@ -106,7 +106,7 @@ module.exports = function () {
 
     // makes simple a-b request using the given cucumber test routability conditions
     // result is an object containing the calculated values for 'rate', 'status',
-    // 'time', 'distance', and 'speed' for forwards and backwards routing, as well as
+    // 'time', 'distance', 'speed' and 'mode', for forwards and backwards routing, as well as
     // a bothw object that diffs forwards/backwards
     var testRoutabilityRow = (i, cb) => {
         var result = {};
@@ -133,6 +133,13 @@ module.exports = function () {
                         r.distance = r.json.routes[0].distance;
                         r.rate = Math.round(r.distance / r.json.routes[0].weight);
                         r.speed = r.time > 0 ? parseInt(3.6 * r.distance / r.time) : null;
+
+                        // use the mode of the first step of the route
+                        // for routability table test, we can assume the mode is the same throughout the route,
+                        // since the route is just a single way
+                        if( r.json.routes[0].legs[0] && r.json.routes[0].legs[0].steps[0] ) {
+                            r.mode = r.json.routes[0].legs[0].steps[0].mode
+                        }
                     } else {
                         r.status = null;
                     }
@@ -167,7 +174,7 @@ module.exports = function () {
                     scb();
                 };
 
-                ['rate', 'status', 'time', 'distance', 'speed'].forEach((key) => {
+                ['rate', 'status', 'time', 'distance', 'speed' ,'mode'].forEach((key) => {
                     sq.defer(parseRes, key);
                 });
 

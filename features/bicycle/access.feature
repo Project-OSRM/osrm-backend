@@ -7,193 +7,179 @@ Feature: Bike - Access tags on ways
 
     Scenario: Bike - Access tag hierarchy on ways
         Then routability should be
-            | highway | access | vehicle | bicycle | bothw |
-            |         |        |         |         | x     |
-            |         | yes    |         |         | x     |
-            |         | no     |         |         |       |
-            |         |        | yes     |         | x     |
-            |         |        | no      |         |       |
-            |         | no     | yes     |         | x     |
-            |         | yes    | no      |         |       |
-            |         |        |         | yes     | x     |
-            |         |        |         | no      |       |
-            |         | no     |         | yes     | x     |
-            |         | yes    |         | no      |       |
-            |         |        | no      | yes     | x     |
-            |         |        | yes     | no      |       |
-            | runway  |        |         |         |       |
-            | runway  | yes    |         |         | x     |
-            | runway  | no     |         |         |       |
-            | runway  |        | yes     |         | x     |
-            | runway  |        | no      |         |       |
-            | runway  | no     | yes     |         | x     |
-            | runway  | yes    | no      |         |       |
-            | runway  |        |         | yes     | x     |
-            | runway  |        |         | no      |       |
-            | runway  | no     |         | yes     | x     |
-            | runway  | yes    |         | no      |       |
-            | runway  |        | no      | yes     | x     |
-            | runway  |        | yes     | no      |       |
+            | highway | access | vehicle | bicycle | bothw   |
+            | primary |        |         |         | cycling |
+            | primary | yes    |         |         | cycling |
+            | primary | no     |         |         |         |
+            | primary |        | yes     |         | cycling |
+            | primary |        | no      |         |         |
+            | primary | no     | yes     |         | cycling |
+            | primary | yes    | no      |         |         |
+            | primary |        |         | yes     | cycling |
+            | primary |        |         | no      |         |
+            | primary | no     |         | yes     | cycling |
+            | primary | yes    |         | no      |         |
+            | primary |        | no      | yes     | cycling |
+            | primary |        | yes     | no      |         |
 
     @todo
     Scenario: Bike - Access tag in forward direction
         Then routability should be
-            | highway | access:forward | vehicle:forward | bicycle:forward | forw | backw |
-            |         |                |                 |                 | x    |       |
-            |         | yes            |                 |                 | x    |       |
-            |         | no             |                 |                 |      |       |
-            |         |                | yes             |                 | x    |       |
-            |         |                | no              |                 |      |       |
-            |         | no             | yes             |                 | x    |       |
-            |         | yes            | no              |                 |      |       |
-            |         |                |                 | yes             | x    |       |
-            |         |                |                 | no              |      |       |
-            |         | no             |                 | yes             | x    |       |
-            |         | yes            |                 | no              |      |       |
-            |         |                | no              | yes             | x    |       |
-            |         |                | yes             | no              |      |       |
-            | runway  |                |                 |                 | x    |       |
-            | runway  | yes            |                 |                 | x    |       |
-            | runway  | no             |                 |                 |      |       |
-            | runway  |                | yes             |                 | x    |       |
-            | runway  |                | no              |                 |      |       |
-            | runway  | no             | yes             |                 | x    |       |
-            | runway  | yes            | no              |                 |      |       |
-            | runway  |                |                 | yes             | x    |       |
-            | runway  |                |                 | no              |      |       |
-            | runway  | no             |                 | yes             | x    |       |
-            | runway  | yes            |                 | no              |      |       |
-            | runway  |                | no              | yes             | x    |       |
-            | runway  |                | yes             | no              |      |       |
+            | highway | access:forward | vehicle:forward | bicycle:forward | forw    | backw |
+            | primary |                |                 |                 | cycling |       |
+            | primary | yes            |                 |                 | cycling |       |
+            | primary | no             |                 |                 |         |       |
+            | primary |                | yes             |                 | cycling |       |
+            | primary |                | no              |                 |         |       |
+            | primary | no             | yes             |                 | cycling |       |
+            | primary | yes            | no              |                 |         |       |
+            | primary |                |                 | yes             | cycling |       |
+            | primary |                |                 | no              |         |       |
+            | primary | no             |                 | yes             | cycling |       |
+            | primary | yes            |                 | no              |         |       |
+            | primary |                | no              | yes             | cycling |       |
+            | primary |                | yes             | no              |         |       |
+            | runway  |                |                 |                 | cycling |       |
+            | runway  | yes            |                 |                 | cycling |       |
+            | runway  | no             |                 |                 |         |       |
+            | runway  |                | yes             |                 | cycling |       |
+            | runway  |                | no              |                 |         |       |
+            | runway  | no             | yes             |                 | cycling |       |
+            | runway  | yes            | no              |                 |         |       |
+            | runway  |                |                 | yes             | cycling |       |
+            | runway  |                |                 | no              |         |       |
+            | runway  | no             |                 | yes             | cycling |       |
+            | runway  | yes            |                 | no              |         |       |
+            | runway  |                | no              | yes             | cycling |       |
+            | runway  |                | yes             | no              |         |       |
 
     @todo
     Scenario: Bike - Access tag in backward direction
         Then routability should be
-            | highway | access:forward | vehicle:forward | bicycle:forward | forw | backw |
-            |         |                |                 |                 |      | x     |
-            |         | yes            |                 |                 |      | x     |
-            |         | no             |                 |                 |      |       |
-            |         |                | yes             |                 |      | x     |
-            |         |                | no              |                 |      |       |
-            |         | no             | yes             |                 |      | x     |
-            |         | yes            | no              |                 |      |       |
-            |         |                |                 | yes             |      | x     |
-            |         |                |                 | no              |      |       |
-            |         | no             |                 | yes             |      | x     |
-            |         | yes            |                 | no              |      |       |
-            |         |                | no              | yes             |      | x     |
-            |         |                | yes             | no              |      |       |
-            | runway  |                |                 |                 |      | x     |
-            | runway  | yes            |                 |                 |      | x     |
-            | runway  | no             |                 |                 |      |       |
-            | runway  |                | yes             |                 |      | x     |
-            | runway  |                | no              |                 |      |       |
-            | runway  | no             | yes             |                 |      | x     |
-            | runway  | yes            | no              |                 |      |       |
-            | runway  |                |                 | yes             |      | x     |
-            | runway  |                |                 | no              |      |       |
-            | runway  | no             |                 | yes             |      | x     |
-            | runway  | yes            |                 | no              |      |       |
-            | runway  |                | no              | yes             |      | x     |
-            | runway  |                | yes             | no              |      |       |
+            | highway | access:forward | vehicle:forward | bicycle:forward | forw | backw   |
+            | primary |                |                 |                 |      | cycling |
+            | primary | yes            |                 |                 |      | cycling |
+            | primary | no             |                 |                 |      |         |
+            | primary |                | yes             |                 |      | cycling |
+            | primary |                | no              |                 |      |         |
+            | primary | no             | yes             |                 |      | cycling |
+            | primary | yes            | no              |                 |      |         |
+            | primary |                |                 | yes             |      | cycling |
+            | primary |                |                 | no              |      |         |
+            | primary | no             |                 | yes             |      | cycling |
+            | primary | yes            |                 | no              |      |         |
+            | primary |                | no              | yes             |      | cycling |
+            | primary |                | yes             | no              |      |         |
+            | runway  |                |                 |                 |      | cycling |
+            | runway  | yes            |                 |                 |      | cycling |
+            | runway  | no             |                 |                 |      |         |
+            | runway  |                | yes             |                 |      | cycling |
+            | runway  |                | no              |                 |      |         |
+            | runway  | no             | yes             |                 |      | cycling |
+            | runway  | yes            | no              |                 |      |         |
+            | runway  |                |                 | yes             |      | cycling |
+            | runway  |                |                 | no              |      |         |
+            | runway  | no             |                 | yes             |      | cycling |
+            | runway  | yes            |                 | no              |      |         |
+            | runway  |                | no              | yes             |      | cycling |
+            | runway  |                | yes             | no              |      |         |
 
     Scenario: Bike - Overwriting implied acccess on ways
         Then routability should be
-            | highway  | access | vehicle | bicycle | bothw |
-            | cycleway |        |         |         | x     |
-            | runway   |        |         |         |       |
-            | cycleway | no     |         |         |       |
-            | cycleway |        | no      |         |       |
-            | cycleway |        |         | no      |       |
-            | runway   | yes    |         |         | x     |
-            | runway   |        | yes     |         | x     |
-            | runway   |        |         | yes     | x     |
+            | highway  | access | vehicle | bicycle | bothw   |
+            | cycleway |        |         |         | cycling |
+            | runway   |        |         |         |         |
+            | cycleway | no     |         |         |         |
+            | cycleway |        | no      |         |         |
+            | cycleway |        |         | no      |         |
+            | runway   | yes    |         |         | cycling |
+            | runway   |        | yes     |         | cycling |
+            | runway   |        |         | yes     | cycling |
 
     Scenario: Bike - Access tags on ways
         Then routability should be
-            | access       | vehicle      | bicycle      | bothw |
-            |              |              |              | x     |
-            | yes          |              |              | x     |
-            | permissive   |              |              | x     |
-            | designated   |              |              | x     |
-            | some_tag     |              |              | x     |
-            | no           |              |              |       |
-            | private      |              |              |       |
-            | agricultural |              |              |       |
-            | forestry     |              |              |       |
-            | delivery     |              |              |       |
-            |              | yes          |              | x     |
-            |              | permissive   |              | x     |
-            |              | designated   |              | x     |
-            |              | some_tag     |              | x     |
-            |              | no           |              |       |
-            |              | private      |              |       |
-            |              | agricultural |              |       |
-            |              | forestry     |              |       |
-            |              | delivery     |              |       |
-            |              |              | yes          | x     |
-            |              |              | permissive   | x     |
-            |              |              | designated   | x     |
-            |              |              | some_tag     | x     |
-            |              |              | no           |       |
-            |              |              | private      |       |
-            |              |              | agricultural |       |
-            |              |              | forestry     |       |
-            |              |              | delivery     |       |
+            | access       | vehicle      | bicycle      | bothw   |
+            |              |              |              | cycling |
+            | yes          |              |              | cycling |
+            | permissive   |              |              | cycling |
+            | designated   |              |              | cycling |
+            | some_tag     |              |              | cycling |
+            | no           |              |              |         |
+            | private      |              |              |         |
+            | agricultural |              |              |         |
+            | forestry     |              |              |         |
+            | delivery     |              |              |         |
+            |              | yes          |              | cycling |
+            |              | permissive   |              | cycling |
+            |              | designated   |              | cycling |
+            |              | some_tag     |              | cycling |
+            |              | no           |              |         |
+            |              | private      |              |         |
+            |              | agricultural |              |         |
+            |              | forestry     |              |         |
+            |              | delivery     |              |         |
+            |              |              | yes          | cycling |
+            |              |              | permissive   | cycling |
+            |              |              | designated   | cycling |
+            |              |              | some_tag     | cycling |
+            |              |              | no           |         |
+            |              |              | private      |         |
+            |              |              | agricultural |         |
+            |              |              | forestry     |         |
+            |              |              | delivery     |         |
 
     Scenario: Bike - Access tags on both node and way
         Then routability should be
-            | access   | node/access | bothw |
-            | yes      | yes         | x     |
-            | yes      | no          |       |
-            | yes      | some_tag    | x     |
-            | no       | yes         |       |
-            | no       | no          |       |
-            | no       | some_tag    |       |
-            | some_tag | yes         | x     |
-            | some_tag | no          |       |
-            | some_tag | some_tag    | x     |
+            | access   | node/access | bothw   |
+            | yes      | yes         | cycling |
+            | yes      | no          |         |
+            | yes      | some_tag    | cycling |
+            | no       | yes         |         |
+            | no       | no          |         |
+            | no       | some_tag    |         |
+            | some_tag | yes         | cycling |
+            | some_tag | no          |         |
+            | some_tag | some_tag    | cycling |
 
     Scenario: Bike - Access combinations
         Then routability should be
-            | highway     | access     | vehicle    | bicycle    | forw | backw |
-            | runway      | private    |            | yes        | x    | x     |
-            | footway     |            | no         | permissive | x    | x     |
-            | motorway    |            |            | yes        | x    |       |
-            | track       | forestry   |            | permissive | x    | x     |
-            | cycleway    | yes        | designated | no         |      |       |
-            | primary     |            | yes        | private    |      |       |
-            | residential | permissive |            | no         |      |       |
+            | highway     | access     | vehicle    | bicycle    | forw    | backw   |
+            | runway      | private    |            | yes        | cycling | cycling |
+            | footway     |            | no         | permissive | cycling | cycling |
+            | motorway    |            |            | yes        | cycling |         |
+            | track       | forestry   |            | permissive | cycling | cycling |
+            | cycleway    | yes        | designated | no         |         |         |
+            | primary     |            | yes        | private    |         |         |
+            | residential | permissive |            | no         |         |         |
 
     Scenario: Bike - Ignore access tags for other modes
         Then routability should be
-            | highway  | boat | motor_vehicle | moped | bothw |
-            | river    | yes  |               |       |       |
-            | cycleway | no   |               |       | x     |
-            | runway   |      | yes           |       |       |
-            | cycleway |      | no            |       | x     |
-            | runway   |      |               | yes   |       |
-            | cycleway |      |               | no    | x     |
+            | highway  | boat | motor_vehicle | moped | bothw   |
+            | river    | yes  |               |       |         |
+            | cycleway | no   |               |       | cycling |
+            | runway   |      | yes           |       |         |
+            | cycleway |      | no            |       | cycling |
+            | runway   |      |               | yes   |         |
+            | cycleway |      |               | no    | cycling |
 
     Scenario: Bike - Bridleways when access is explicit
         Then routability should be
-            | highway   | horse      | foot | bicycle | bothw |
-            | bridleway |            |      | yes     | x     |
-            | bridleway |            | yes  |         | x     |
-            | bridleway | designated |      |         |       |
-            | bridleway |            |      |         |       |
+            | highway   | horse      | foot | bicycle | bothw        |
+            | bridleway |            |      | yes     | cycling      |
+            | bridleway |            | yes  |         | pushing bike |
+            | bridleway | designated |      |         |              |
+            | bridleway |            |      |         |              |
 
     Scenario: Bike - Tram with oneway when access is implicit
         Then routability should be
-            | highway     | railway | access | oneway | bothw |
-            | residential | tram    |        | yes    | x     |
-            | service     | tram    | psv    | yes    | x     |
+            | highway     | railway | access | oneway | forw    | backw        |
+            | residential | tram    |        | yes    | cycling | pushing bike |
+            | service     | tram    | psv    | yes    | cycling | pushing bike |
 
     Scenario: Bike - Access combinations
         Then routability should be
-            | highway    | access     | bothw |
-            | primary    | permissive | x     |
-            | steps      | permissive | x     |
-            | footway    | permissive | x     |
-            | garbagetag | permissive | x     |
-
+            | highway    | access     | bothw   |
+            | primary    | permissive | cycling |
+            | steps      | permissive | cycling |
+            | footway    | permissive | cycling |
+            | garbagetag | permissive | cycling |
