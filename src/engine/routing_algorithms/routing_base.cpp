@@ -7,16 +7,16 @@ namespace engine
 namespace routing_algorithms
 {
 
-void BasicRouting<algorithm::CH>::RoutingStep(const FacadeT &facade,
-                                              SearchEngineData::QueryHeap &forward_heap,
-                                              SearchEngineData::QueryHeap &reverse_heap,
-                                              NodeID &middle_node_id,
-                                              EdgeWeight &upper_bound,
-                                              EdgeWeight min_edge_offset,
-                                              const bool forward_direction,
-                                              const bool stalling,
-                                              const bool force_loop_forward,
-                                              const bool force_loop_reverse) const
+void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                 SearchEngineData::QueryHeap &forward_heap,
+                 SearchEngineData::QueryHeap &reverse_heap,
+                 NodeID &middle_node_id,
+                 EdgeWeight &upper_bound,
+                 EdgeWeight min_edge_offset,
+                 const bool forward_direction,
+                 const bool stalling,
+                 const bool force_loop_forward,
+                 const bool force_loop_reverse)
 {
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
@@ -36,7 +36,7 @@ void BasicRouting<algorithm::CH>::RoutingStep(const FacadeT &facade,
                 // check whether there is a loop present at the node
                 for (const auto edge : facade.GetAdjacentEdgeRange(node))
                 {
-                    const EdgeData &data = facade.GetEdgeData(edge);
+                    const auto &data = facade.GetEdgeData(edge);
                     bool forward_directionFlag = (forward_direction ? data.forward : data.backward);
                     if (forward_directionFlag)
                     {
@@ -78,7 +78,7 @@ void BasicRouting<algorithm::CH>::RoutingStep(const FacadeT &facade,
     {
         for (const auto edge : facade.GetAdjacentEdgeRange(node))
         {
-            const EdgeData &data = facade.GetEdgeData(edge);
+            const auto &data = facade.GetEdgeData(edge);
             const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
             if (reverse_flag)
             {
@@ -100,7 +100,7 @@ void BasicRouting<algorithm::CH>::RoutingStep(const FacadeT &facade,
 
     for (const auto edge : facade.GetAdjacentEdgeRange(node))
     {
-        const EdgeData &data = facade.GetEdgeData(edge);
+        const auto &data = facade.GetEdgeData(edge);
         bool forward_directionFlag = (forward_direction ? data.forward : data.backward);
         if (forward_directionFlag)
         {
@@ -133,38 +133,35 @@ void BasicRouting<algorithm::CH>::RoutingStep(const FacadeT &facade,
  * @param to the node the CH edge finishes at
  * @param unpacked_path the sequence of original NodeIDs that make up the expanded CH edge
  */
-void BasicRouting<algorithm::CH>::UnpackEdge(const FacadeT &facade,
-                                             const NodeID from,
-                                             const NodeID to,
-                                             std::vector<NodeID> &unpacked_path) const
+void unpackEdge(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                const NodeID from,
+                const NodeID to,
+                std::vector<NodeID> &unpacked_path)
 {
     std::array<NodeID, 2> path{{from, to}};
-    UnpackCHPath(
-        facade,
-        path.begin(),
-        path.end(),
-        [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const EdgeData & /* data */) {
-            unpacked_path.emplace_back(edge.first);
-        });
+    unpackPath(facade,
+               path.begin(),
+               path.end(),
+               [&unpacked_path](const std::pair<NodeID, NodeID> &edge, const auto & /* data */) {
+                   unpacked_path.emplace_back(edge.first);
+               });
     unpacked_path.emplace_back(to);
 }
 
-void BasicRouting<algorithm::CH>::RetrievePackedPathFromHeap(
-    const SearchEngineData::QueryHeap &forward_heap,
-    const SearchEngineData::QueryHeap &reverse_heap,
-    const NodeID middle_node_id,
-    std::vector<NodeID> &packed_path) const
+void retrievePackedPathFromHeap(const SearchEngineData::QueryHeap &forward_heap,
+                                const SearchEngineData::QueryHeap &reverse_heap,
+                                const NodeID middle_node_id,
+                                std::vector<NodeID> &packed_path)
 {
-    RetrievePackedPathFromSingleHeap(forward_heap, middle_node_id, packed_path);
+    retrievePackedPathFromSingleHeap(forward_heap, middle_node_id, packed_path);
     std::reverse(packed_path.begin(), packed_path.end());
     packed_path.emplace_back(middle_node_id);
-    RetrievePackedPathFromSingleHeap(reverse_heap, middle_node_id, packed_path);
+    retrievePackedPathFromSingleHeap(reverse_heap, middle_node_id, packed_path);
 }
 
-void BasicRouting<algorithm::CH>::RetrievePackedPathFromSingleHeap(
-    const SearchEngineData::QueryHeap &search_heap,
-    const NodeID middle_node_id,
-    std::vector<NodeID> &packed_path) const
+void retrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_heap,
+                                      const NodeID middle_node_id,
+                                      std::vector<NodeID> &packed_path)
 {
     NodeID current_node_id = middle_node_id;
     // all initial nodes will have itself as parent, or a node not in the heap
@@ -191,14 +188,14 @@ void BasicRouting<algorithm::CH>::RetrievePackedPathFromSingleHeap(
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
-void BasicRouting<algorithm::CH>::Search(const FacadeT &facade,
-                                         SearchEngineData::QueryHeap &forward_heap,
-                                         SearchEngineData::QueryHeap &reverse_heap,
-                                         EdgeWeight &weight,
-                                         std::vector<NodeID> &packed_leg,
-                                         const bool force_loop_forward,
-                                         const bool force_loop_reverse,
-                                         const EdgeWeight weight_upper_bound) const
+void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+            SearchEngineData::QueryHeap &forward_heap,
+            SearchEngineData::QueryHeap &reverse_heap,
+            EdgeWeight &weight,
+            std::vector<NodeID> &packed_leg,
+            const bool force_loop_forward,
+            const bool force_loop_reverse,
+            const EdgeWeight weight_upper_bound)
 {
     NodeID middle = SPECIAL_NODEID;
     weight = weight_upper_bound;
@@ -215,7 +212,7 @@ void BasicRouting<algorithm::CH>::Search(const FacadeT &facade,
     {
         if (!forward_heap.Empty())
         {
-            RoutingStep(facade,
+            routingStep(facade,
                         forward_heap,
                         reverse_heap,
                         middle,
@@ -228,7 +225,7 @@ void BasicRouting<algorithm::CH>::Search(const FacadeT &facade,
         }
         if (!reverse_heap.Empty())
         {
-            RoutingStep(facade,
+            routingStep(facade,
                         reverse_heap,
                         forward_heap,
                         middle,
@@ -260,7 +257,7 @@ void BasicRouting<algorithm::CH>::Search(const FacadeT &facade,
     }
     else
     {
-        RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
+        retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
     }
 }
 
@@ -273,16 +270,16 @@ void BasicRouting<algorithm::CH>::Search(const FacadeT &facade,
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
-void BasicRouting<algorithm::CH>::SearchWithCore(const FacadeT &facade,
-                                                 SearchEngineData::QueryHeap &forward_heap,
-                                                 SearchEngineData::QueryHeap &reverse_heap,
-                                                 SearchEngineData::QueryHeap &forward_core_heap,
-                                                 SearchEngineData::QueryHeap &reverse_core_heap,
-                                                 EdgeWeight &weight,
-                                                 std::vector<NodeID> &packed_leg,
-                                                 const bool force_loop_forward,
-                                                 const bool force_loop_reverse,
-                                                 EdgeWeight weight_upper_bound) const
+void searchWithCore(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                    SearchEngineData::QueryHeap &forward_heap,
+                    SearchEngineData::QueryHeap &reverse_heap,
+                    SearchEngineData::QueryHeap &forward_core_heap,
+                    SearchEngineData::QueryHeap &reverse_core_heap,
+                    EdgeWeight &weight,
+                    std::vector<NodeID> &packed_leg,
+                    const bool force_loop_forward,
+                    const bool force_loop_reverse,
+                    EdgeWeight weight_upper_bound)
 {
     NodeID middle = SPECIAL_NODEID;
     weight = weight_upper_bound;
@@ -310,7 +307,7 @@ void BasicRouting<algorithm::CH>::SearchWithCore(const FacadeT &facade,
             }
             else
             {
-                RoutingStep(facade,
+                routingStep(facade,
                             forward_heap,
                             reverse_heap,
                             middle,
@@ -332,7 +329,7 @@ void BasicRouting<algorithm::CH>::SearchWithCore(const FacadeT &facade,
             }
             else
             {
-                RoutingStep(facade,
+                routingStep(facade,
                             reverse_heap,
                             forward_heap,
                             middle,
@@ -385,7 +382,7 @@ void BasicRouting<algorithm::CH>::SearchWithCore(const FacadeT &facade,
     while (0 < forward_core_heap.Size() && 0 < reverse_core_heap.Size() &&
            weight > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
     {
-        RoutingStep(facade,
+        routingStep(facade,
                     forward_core_heap,
                     reverse_core_heap,
                     middle,
@@ -396,7 +393,7 @@ void BasicRouting<algorithm::CH>::SearchWithCore(const FacadeT &facade,
                     force_loop_forward,
                     force_loop_reverse);
 
-        RoutingStep(facade,
+        routingStep(facade,
                     reverse_core_heap,
                     forward_core_heap,
                     middle,
@@ -432,13 +429,13 @@ void BasicRouting<algorithm::CH>::SearchWithCore(const FacadeT &facade,
         else
         {
             std::vector<NodeID> packed_core_leg;
-            RetrievePackedPathFromHeap(
+            retrievePackedPathFromHeap(
                 forward_core_heap, reverse_core_heap, middle, packed_core_leg);
             BOOST_ASSERT(packed_core_leg.size() > 0);
-            RetrievePackedPathFromSingleHeap(forward_heap, packed_core_leg.front(), packed_leg);
+            retrievePackedPathFromSingleHeap(forward_heap, packed_core_leg.front(), packed_leg);
             std::reverse(packed_leg.begin(), packed_leg.end());
             packed_leg.insert(packed_leg.end(), packed_core_leg.begin(), packed_core_leg.end());
-            RetrievePackedPathFromSingleHeap(reverse_heap, packed_core_leg.back(), packed_leg);
+            retrievePackedPathFromSingleHeap(reverse_heap, packed_core_leg.back(), packed_leg);
         }
     }
     else
@@ -453,13 +450,12 @@ void BasicRouting<algorithm::CH>::SearchWithCore(const FacadeT &facade,
         }
         else
         {
-            RetrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
+            retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
         }
     }
 }
 
-bool BasicRouting<algorithm::CH>::NeedsLoopForward(const PhantomNode &source_phantom,
-                                                   const PhantomNode &target_phantom) const
+bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom)
 {
     return source_phantom.forward_segment_id.enabled && target_phantom.forward_segment_id.enabled &&
            source_phantom.forward_segment_id.id == target_phantom.forward_segment_id.id &&
@@ -467,8 +463,7 @@ bool BasicRouting<algorithm::CH>::NeedsLoopForward(const PhantomNode &source_pha
                target_phantom.GetForwardWeightPlusOffset();
 }
 
-bool BasicRouting<algorithm::CH>::NeedsLoopBackwards(const PhantomNode &source_phantom,
-                                                     const PhantomNode &target_phantom) const
+bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom)
 {
     return source_phantom.reverse_segment_id.enabled && target_phantom.reverse_segment_id.enabled &&
            source_phantom.reverse_segment_id.id == target_phantom.reverse_segment_id.id &&
@@ -476,16 +471,16 @@ bool BasicRouting<algorithm::CH>::NeedsLoopBackwards(const PhantomNode &source_p
                target_phantom.GetReverseWeightPlusOffset();
 }
 
-double BasicRouting<algorithm::CH>::GetPathDistance(const FacadeT &facade,
-                                                    const std::vector<NodeID> &packed_path,
-                                                    const PhantomNode &source_phantom,
-                                                    const PhantomNode &target_phantom) const
+double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                       const std::vector<NodeID> &packed_path,
+                       const PhantomNode &source_phantom,
+                       const PhantomNode &target_phantom)
 {
     std::vector<PathData> unpacked_path;
     PhantomNodes nodes;
     nodes.source_phantom = source_phantom;
     nodes.target_phantom = target_phantom;
-    UnpackPath(facade, packed_path.begin(), packed_path.end(), nodes, unpacked_path);
+    unpackPath(facade, packed_path.begin(), packed_path.end(), nodes, unpacked_path);
 
     using util::coordinate_calculation::detail::DEGREE_TO_RAD;
     using util::coordinate_calculation::detail::EARTH_RADIUS;
@@ -535,15 +530,15 @@ double BasicRouting<algorithm::CH>::GetPathDistance(const FacadeT &facade,
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
-double BasicRouting<algorithm::CH>::GetNetworkDistanceWithCore(
-    const FacadeT &facade,
+double getNetworkDistanceWithCore(
+    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
     SearchEngineData::QueryHeap &forward_heap,
     SearchEngineData::QueryHeap &reverse_heap,
     SearchEngineData::QueryHeap &forward_core_heap,
     SearchEngineData::QueryHeap &reverse_core_heap,
     const PhantomNode &source_phantom,
     const PhantomNode &target_phantom,
-    EdgeWeight weight_upper_bound) const
+    EdgeWeight weight_upper_bound)
 {
     BOOST_ASSERT(forward_heap.Empty());
     BOOST_ASSERT(reverse_heap.Empty());
@@ -579,7 +574,7 @@ double BasicRouting<algorithm::CH>::GetNetworkDistanceWithCore(
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
-    SearchWithCore(facade,
+    searchWithCore(facade,
                    forward_heap,
                    reverse_heap,
                    forward_core_heap,
@@ -593,7 +588,7 @@ double BasicRouting<algorithm::CH>::GetNetworkDistanceWithCore(
     double distance = std::numeric_limits<double>::max();
     if (weight != INVALID_EDGE_WEIGHT)
     {
-        return GetPathDistance(facade, packed_path, source_phantom, target_phantom);
+        return getPathDistance(facade, packed_path, source_phantom, target_phantom);
     }
     return distance;
 }
@@ -601,12 +596,13 @@ double BasicRouting<algorithm::CH>::GetNetworkDistanceWithCore(
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
-double BasicRouting<algorithm::CH>::GetNetworkDistance(const FacadeT &facade,
-                                                       SearchEngineData::QueryHeap &forward_heap,
-                                                       SearchEngineData::QueryHeap &reverse_heap,
-                                                       const PhantomNode &source_phantom,
-                                                       const PhantomNode &target_phantom,
-                                                       EdgeWeight weight_upper_bound) const
+double
+getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                   SearchEngineData::QueryHeap &forward_heap,
+                   SearchEngineData::QueryHeap &reverse_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   EdgeWeight weight_upper_bound)
 {
     BOOST_ASSERT(forward_heap.Empty());
     BOOST_ASSERT(reverse_heap.Empty());
@@ -642,7 +638,7 @@ double BasicRouting<algorithm::CH>::GetNetworkDistance(const FacadeT &facade,
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
-    Search(facade,
+    search(facade,
            forward_heap,
            reverse_heap,
            weight,
@@ -656,7 +652,7 @@ double BasicRouting<algorithm::CH>::GetNetworkDistance(const FacadeT &facade,
         return std::numeric_limits<double>::max();
     }
 
-    return GetPathDistance(facade, packed_path, source_phantom, target_phantom);
+    return getPathDistance(facade, packed_path, source_phantom, target_phantom);
 }
 
 } // namespace routing_algorithms

@@ -1,5 +1,4 @@
 #include "engine/plugins/tile.hpp"
-#include "engine/edge_unpacker.hpp"
 #include "engine/plugins/plugin_base.hpp"
 
 #include "util/coordinate_calculation.hpp"

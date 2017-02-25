@@ -1,4 +1,20 @@
 #include "engine/routing_algorithms/map_matching.hpp"
+#include "engine/routing_algorithms/routing_base.hpp"
+
+#include "engine/map_matching/hidden_markov_model.hpp"
+#include "engine/map_matching/matching_confidence.hpp"
+#include "engine/map_matching/sub_matching.hpp"
+
+#include "util/coordinate_calculation.hpp"
+#include "util/for_each_pair.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <deque>
+#include <iomanip>
+#include <memory>
+#include <numeric>
+#include <utility>
 
 namespace osrm
 {
@@ -7,8 +23,15 @@ namespace engine
 namespace routing_algorithms
 {
 
-unsigned
-MapMatching<algorithm::CH>::GetMedianSampleTime(const std::vector<unsigned> &timestamps) const
+namespace
+{
+using HMM = map_matching::HiddenMarkovModel<CandidateLists>;
+
+constexpr static const unsigned MAX_BROKEN_STATES = 10;
+constexpr static const double MATCHING_BETA = 10;
+constexpr static const double MAX_DISTANCE_DELTA = 2000.;
+
+unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 {
     BOOST_ASSERT(timestamps.size() > 1);
 
@@ -22,14 +45,20 @@ MapMatching<algorithm::CH>::GetMedianSampleTime(const std::vector<unsigned> &tim
     std::nth_element(first_elem, median, sample_times.end());
     return *median;
 }
+}
 
-SubMatchingList MapMatching<algorithm::CH>::
-operator()(const FacadeT &facade,
-           const CandidateLists &candidates_list,
-           const std::vector<util::Coordinate> &trace_coordinates,
-           const std::vector<unsigned> &trace_timestamps,
-           const std::vector<boost::optional<double>> &trace_gps_precision) const
+SubMatchingList
+mapMatching(SearchEngineData &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+            const CandidateLists &candidates_list,
+            const std::vector<util::Coordinate> &trace_coordinates,
+            const std::vector<unsigned> &trace_timestamps,
+            const std::vector<boost::optional<double>> &trace_gps_precision)
 {
+    map_matching::MatchingConfidence confidence;
+    map_matching::EmissionLogProbability default_emission_log_probability(DEFAULT_GPS_PRECISION);
+    map_matching::TransitionLogProbability transition_log_probability(MATCHING_BETA);
+
     SubMatchingList sub_matchings;
 
     BOOST_ASSERT(candidates_list.size() == trace_coordinates.size());
@@ -40,7 +69,7 @@ operator()(const FacadeT &facade,
     const auto median_sample_time = [&] {
         if (use_timestamps)
         {
-            return std::max(1u, GetMedianSampleTime(trace_timestamps));
+            return std::max(1u, getMedianSampleTime(trace_timestamps));
         }
         else
         {
@@ -68,7 +97,7 @@ operator()(const FacadeT &facade,
             std::transform(candidates_list[t].begin(),
                            candidates_list[t].end(),
                            emission_log_probabilities[t].begin(),
-                           [this](const PhantomNodeWithDistance &candidate) {
+                           [&](const PhantomNodeWithDistance &candidate) {
                                return default_emission_log_probability(candidate.distance);
                            });
         }
@@ -95,7 +124,7 @@ operator()(const FacadeT &facade,
                 std::transform(candidates_list[t].begin(),
                                candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
-                               [this](const PhantomNodeWithDistance &candidate) {
+                               [&](const PhantomNodeWithDistance &candidate) {
                                    return default_emission_log_probability(candidate.distance);
                                });
             }
@@ -113,10 +142,10 @@ operator()(const FacadeT &facade,
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
-    QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
-    QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
-    QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
-    QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
+    auto &forward_heap = *(engine_working_data.forward_heap_1);
+    auto &reverse_heap = *(engine_working_data.reverse_heap_1);
+    auto &forward_core_heap = *(engine_working_data.forward_heap_2);
+    auto &reverse_core_heap = *(engine_working_data.reverse_heap_2);
 
     std::size_t breakage_begin = map_matching::INVALID_STATE;
     std::vector<std::size_t> split_points;
@@ -187,7 +216,7 @@ operator()(const FacadeT &facade,
                     {
                         forward_core_heap.Clear();
                         reverse_core_heap.Clear();
-                        network_distance = super::GetNetworkDistanceWithCore(
+                        network_distance = getNetworkDistanceWithCore(
                             facade,
                             forward_heap,
                             reverse_heap,
@@ -199,12 +228,12 @@ operator()(const FacadeT &facade,
                     }
                     else
                     {
-                        network_distance = super::GetNetworkDistance(
-                            facade,
-                            forward_heap,
-                            reverse_heap,
-                            prev_unbroken_timestamps_list[s].phantom_node,
-                            current_timestamps_list[s_prime].phantom_node);
+                        network_distance =
+                            getNetworkDistance(facade,
+                                               forward_heap,
+                                               reverse_heap,
+                                               prev_unbroken_timestamps_list[s].phantom_node,
+                                               current_timestamps_list[s_prime].phantom_node);
                     }
 
                     // get distance diff between loc1/2 and locs/s_prime

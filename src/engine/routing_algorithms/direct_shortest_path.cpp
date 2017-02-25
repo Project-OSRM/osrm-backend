@@ -1,5 +1,7 @@
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
 
+#include "engine/routing_algorithms/routing_base.hpp"
+
 namespace osrm
 {
 namespace engine
@@ -13,11 +15,12 @@ namespace routing_algorithms
 /// by the previous route.
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
-void DirectShortestPathRouting<algorithm::CH>::
-operator()(const FacadeT &facade,
-           const std::vector<PhantomNodes> &phantom_nodes_vector,
-           InternalRouteResult &raw_route_data) const
+InternalRouteResult directShortestPathSearch(
+    SearchEngineData &engine_working_data,
+    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+    const std::vector<PhantomNodes> &phantom_nodes_vector)
 {
+    InternalRouteResult raw_route_data;
     // Get weight to next pair of target nodes.
     BOOST_ASSERT_MSG(1 == phantom_nodes_vector.size(),
                      "Direct Shortest Path Query only accepts a single source and target pair. "
@@ -27,8 +30,8 @@ operator()(const FacadeT &facade,
     const auto &target_phantom = phantom_node_pair.target_phantom;
 
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
-    QueryHeap &forward_heap = *(engine_working_data.forward_heap_1);
-    QueryHeap &reverse_heap = *(engine_working_data.reverse_heap_1);
+    auto &forward_heap = *(engine_working_data.forward_heap_1);
+    auto &reverse_heap = *(engine_working_data.reverse_heap_1);
     forward_heap.Clear();
     reverse_heap.Clear();
 
@@ -71,30 +74,30 @@ operator()(const FacadeT &facade,
     if (facade.GetCoreSize() > 0)
     {
         engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
-        QueryHeap &forward_core_heap = *(engine_working_data.forward_heap_2);
-        QueryHeap &reverse_core_heap = *(engine_working_data.reverse_heap_2);
+        auto &forward_core_heap = *(engine_working_data.forward_heap_2);
+        auto &reverse_core_heap = *(engine_working_data.reverse_heap_2);
         forward_core_heap.Clear();
         reverse_core_heap.Clear();
 
-        super::SearchWithCore(facade,
-                              forward_heap,
-                              reverse_heap,
-                              forward_core_heap,
-                              reverse_core_heap,
-                              weight,
-                              packed_leg,
-                              DO_NOT_FORCE_LOOPS,
-                              DO_NOT_FORCE_LOOPS);
+        searchWithCore(facade,
+                       forward_heap,
+                       reverse_heap,
+                       forward_core_heap,
+                       reverse_core_heap,
+                       weight,
+                       packed_leg,
+                       DO_NOT_FORCE_LOOPS,
+                       DO_NOT_FORCE_LOOPS);
     }
     else
     {
-        super::Search(facade,
-                      forward_heap,
-                      reverse_heap,
-                      weight,
-                      packed_leg,
-                      DO_NOT_FORCE_LOOPS,
-                      DO_NOT_FORCE_LOOPS);
+        search(facade,
+               forward_heap,
+               reverse_heap,
+               weight,
+               packed_leg,
+               DO_NOT_FORCE_LOOPS,
+               DO_NOT_FORCE_LOOPS);
     }
 
     // No path found for both target nodes?
@@ -102,7 +105,7 @@ operator()(const FacadeT &facade,
     {
         raw_route_data.shortest_path_length = INVALID_EDGE_WEIGHT;
         raw_route_data.alternative_path_length = INVALID_EDGE_WEIGHT;
-        return;
+        return raw_route_data;
     }
 
     BOOST_ASSERT_MSG(!packed_leg.empty(), "packed path empty");
@@ -114,11 +117,13 @@ operator()(const FacadeT &facade,
     raw_route_data.target_traversed_in_reverse.push_back(
         (packed_leg.back() != phantom_node_pair.target_phantom.forward_segment_id.id));
 
-    super::UnpackPath(facade,
-                      packed_leg.begin(),
-                      packed_leg.end(),
-                      phantom_node_pair,
-                      raw_route_data.unpacked_path_segments.front());
+    unpackPath(facade,
+               packed_leg.begin(),
+               packed_leg.end(),
+               phantom_node_pair,
+               raw_route_data.unpacked_path_segments.front());
+
+    return raw_route_data;
 }
 } // namespace routing_algorithms
 } // namespace engine

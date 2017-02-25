@@ -7,10 +7,10 @@ namespace engine
 namespace routing_algorithms
 {
 
-std::vector<TurnData> TileTurns<algorithm::CH>::
-operator()(const FacadeT &facade,
-           const std::vector<RTreeLeaf> &edges,
-           const std::vector<std::size_t> &sorted_edge_indexes) const
+std::vector<TurnData>
+getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+             const std::vector<RTreeLeaf> &edges,
+             const std::vector<std::size_t> &sorted_edge_indexes)
 {
     std::vector<TurnData> all_turn_data;
 
