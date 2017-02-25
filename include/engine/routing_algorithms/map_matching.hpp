@@ -39,6 +39,14 @@ mapMatching(SearchEngineData &engine_working_data,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision);
+
+SubMatchingList
+mapMatching(SearchEngineData &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+            const CandidateLists &candidates_list,
+            const std::vector<util::Coordinate> &trace_coordinates,
+            const std::vector<unsigned> &trace_timestamps,
+            const std::vector<boost::optional<double>> &trace_gps_precision);
 }
 }
 }

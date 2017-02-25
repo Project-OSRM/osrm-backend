@@ -34,7 +34,12 @@ directShortestPathSearch(SearchEngineData &,
 InternalRouteResult directShortestPathSearch(
     SearchEngineData &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-    const std::vector<PhantomNodes> &phantom_nodes_vector);
+    const PhantomNodes &phantom_nodes);
+
+InternalRouteResult directShortestPathSearch(
+    SearchEngineData &engine_working_data,
+    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+    const PhantomNodes &phantom_nodes);
 
 } // namespace routing_algorithms
 } // namespace engine

@@ -19,19 +19,20 @@ namespace engine
 class RoutingAlgorithmsInterface
 {
   public:
-    virtual InternalRouteResult AlternativePathSearch(const PhantomNodes &phantom_node_pair) const = 0;
+    virtual InternalRouteResult
+    AlternativePathSearch(const PhantomNodes &phantom_node_pair) const = 0;
 
     virtual InternalRouteResult
     ShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair,
-                    const boost::optional<bool> continue_straight_at_waypoint) const = 0;
+                       const boost::optional<bool> continue_straight_at_waypoint) const = 0;
 
     virtual InternalRouteResult
-    DirectShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair) const = 0;
+    DirectShortestPathSearch(const PhantomNodes &phantom_node_pair) const = 0;
 
     virtual std::vector<EdgeWeight>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
-                      const std::vector<std::size_t> &source_indices,
-                      const std::vector<std::size_t> &target_indices) const = 0;
+                     const std::vector<std::size_t> &source_indices,
+                     const std::vector<std::size_t> &target_indices) const = 0;
 
     virtual routing_algorithms::SubMatchingList
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
@@ -41,7 +42,7 @@ class RoutingAlgorithmsInterface
 
     virtual std::vector<routing_algorithms::TurnData>
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
-              const std::vector<std::size_t> &sorted_edge_indexes) const = 0;
+                 const std::vector<std::size_t> &sorted_edge_indexes) const = 0;
 
     virtual bool HasAlternativePathSearch() const = 0;
     virtual bool HasShortestPathSearch() const = 0;
@@ -54,8 +55,9 @@ class RoutingAlgorithmsInterface
 namespace detail
 {
 
-struct NotImplementedException : public std::runtime_error {};
-
+struct NotImplementedException : public std::runtime_error
+{
+};
 }
 
 // Short-lived object passed to each plugin in request to wrap routing algorithms
@@ -74,24 +76,24 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
         return routing_algorithms::alternativePathSearch(heaps, facade, phantom_node_pair);
     }
 
-    InternalRouteResult
-    ShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair,
-                    const boost::optional<bool> continue_straight_at_waypoint) const final override
+    InternalRouteResult ShortestPathSearch(
+        const std::vector<PhantomNodes> &phantom_node_pair,
+        const boost::optional<bool> continue_straight_at_waypoint) const final override
     {
         return routing_algorithms::shortestPathSearch(
             heaps, facade, phantom_node_pair, continue_straight_at_waypoint);
     }
 
-    InternalRouteResult DirectShortestPathSearch(
-        const std::vector<PhantomNodes> &phantom_node_pair) const final override
+    InternalRouteResult
+    DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const final override
     {
-        return routing_algorithms::directShortestPathSearch(heaps, facade, phantom_node_pair);
+        return routing_algorithms::directShortestPathSearch(heaps, facade, phantom_nodes);
     }
 
     std::vector<EdgeWeight>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
-                      const std::vector<std::size_t> &source_indices,
-                      const std::vector<std::size_t> &target_indices) const final override
+                     const std::vector<std::size_t> &source_indices,
+                     const std::vector<std::size_t> &target_indices) const final override
     {
         return routing_algorithms::manyToManySearch(
             heaps, facade, phantom_nodes, source_indices, target_indices);
@@ -113,7 +115,7 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
 
     std::vector<routing_algorithms::TurnData>
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
-              const std::vector<std::size_t> &sorted_edge_indexes) const final override
+                 const std::vector<std::size_t> &sorted_edge_indexes) const final override
     {
         return routing_algorithms::getTileTurns(facade, edges, sorted_edge_indexes);
     }

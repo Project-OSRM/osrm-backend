@@ -270,16 +270,16 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> 
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
-void searchWithCore(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-                    SearchEngineData::QueryHeap &forward_heap,
-                    SearchEngineData::QueryHeap &reverse_heap,
-                    SearchEngineData::QueryHeap &forward_core_heap,
-                    SearchEngineData::QueryHeap &reverse_core_heap,
-                    EdgeWeight &weight,
-                    std::vector<NodeID> &packed_leg,
-                    const bool force_loop_forward,
-                    const bool force_loop_reverse,
-                    EdgeWeight weight_upper_bound)
+void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+            SearchEngineData::QueryHeap &forward_heap,
+            SearchEngineData::QueryHeap &reverse_heap,
+            SearchEngineData::QueryHeap &forward_core_heap,
+            SearchEngineData::QueryHeap &reverse_core_heap,
+            EdgeWeight &weight,
+            std::vector<NodeID> &packed_leg,
+            const bool force_loop_forward,
+            const bool force_loop_reverse,
+            EdgeWeight weight_upper_bound)
 {
     NodeID middle = SPECIAL_NODEID;
     weight = weight_upper_bound;
@@ -530,18 +530,20 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<algo
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
-double getNetworkDistanceWithCore(
-    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-    SearchEngineData::QueryHeap &forward_heap,
-    SearchEngineData::QueryHeap &reverse_heap,
-    SearchEngineData::QueryHeap &forward_core_heap,
-    SearchEngineData::QueryHeap &reverse_core_heap,
-    const PhantomNode &source_phantom,
-    const PhantomNode &target_phantom,
-    EdgeWeight weight_upper_bound)
+double
+getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+                   SearchEngineData::QueryHeap &forward_heap,
+                   SearchEngineData::QueryHeap &reverse_heap,
+                   SearchEngineData::QueryHeap &forward_core_heap,
+                   SearchEngineData::QueryHeap &reverse_core_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   EdgeWeight weight_upper_bound)
 {
-    BOOST_ASSERT(forward_heap.Empty());
-    BOOST_ASSERT(reverse_heap.Empty());
+    forward_heap.Clear();
+    reverse_heap.Clear();
+    forward_core_heap.Clear();
+    reverse_core_heap.Clear();
 
     if (source_phantom.forward_segment_id.enabled)
     {
@@ -574,16 +576,16 @@ double getNetworkDistanceWithCore(
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
-    searchWithCore(facade,
-                   forward_heap,
-                   reverse_heap,
-                   forward_core_heap,
-                   reverse_core_heap,
-                   weight,
-                   packed_path,
-                   DO_NOT_FORCE_LOOPS,
-                   DO_NOT_FORCE_LOOPS,
-                   weight_upper_bound);
+    search(facade,
+           forward_heap,
+           reverse_heap,
+           forward_core_heap,
+           reverse_core_heap,
+           weight,
+           packed_path,
+           DO_NOT_FORCE_LOOPS,
+           DO_NOT_FORCE_LOOPS,
+           weight_upper_bound);
 
     double distance = std::numeric_limits<double>::max();
     if (weight != INVALID_EDGE_WEIGHT)
@@ -604,8 +606,8 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorith
                    const PhantomNode &target_phantom,
                    EdgeWeight weight_upper_bound)
 {
-    BOOST_ASSERT(forward_heap.Empty());
-    BOOST_ASSERT(reverse_heap.Empty());
+    forward_heap.Clear();
+    reverse_heap.Clear();
 
     if (source_phantom.forward_segment_id.enabled)
     {

@@ -49,6 +49,12 @@ template <> class AlgorithmDataFacade<algorithm::CH>
     virtual EdgeID FindSmallestEdge(const NodeID from,
                                     const NodeID to,
                                     const std::function<bool(EdgeData)> filter) const = 0;
+};
+
+template <> class AlgorithmDataFacade<algorithm::CoreCH>
+{
+  public:
+    using EdgeData = contractor::QueryEdge::EdgeData;
 
     virtual bool IsCoreNode(const NodeID id) const = 0;
 

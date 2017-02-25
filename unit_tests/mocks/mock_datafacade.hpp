@@ -278,12 +278,30 @@ class MockAlgorithmDataFacade<engine::algorithm::CH>
     {
         return SPECIAL_EDGEID;
     }
+};
+
+template <>
+class MockAlgorithmDataFacade<engine::algorithm::CoreCH>
+    : public engine::datafacade::AlgorithmDataFacade<engine::algorithm::CoreCH>
+{
+  private:
+    EdgeData foo;
+
+  public:
     bool IsCoreNode(const NodeID /* id */) const override { return false; }
     std::size_t GetCoreSize() const override { return 0; }
 };
 
 template <typename AlgorithmT>
 class MockDataFacade final : public MockBaseDataFacade, public MockAlgorithmDataFacade<AlgorithmT>
+{
+};
+
+template <>
+class MockDataFacade<engine::algorithm::CoreCH> final
+    : public MockBaseDataFacade,
+      public MockAlgorithmDataFacade<engine::algorithm::CH>,
+      public MockAlgorithmDataFacade<engine::algorithm::CoreCH>
 {
 };
 

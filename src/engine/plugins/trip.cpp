@@ -149,11 +149,15 @@ Status TripPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
 {
     if (!algorithms.HasShortestPathSearch())
     {
-        return Error("NotImplemented", "Shortest path search is not implemented for the chosen search algorithm.", json_result);
+        return Error("NotImplemented",
+                     "Shortest path search is not implemented for the chosen search algorithm.",
+                     json_result);
     }
     if (!algorithms.HasManyToManySearch())
     {
-        return Error("NotImplemented", "Many to many search is not implemented for the chosen search algorithm.", json_result);
+        return Error("NotImplemented",
+                     "Many to many search is not implemented for the chosen search algorithm.",
+                     json_result);
     }
 
     BOOST_ASSERT(parameters.IsValid());

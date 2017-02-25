@@ -125,6 +125,8 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
         return tile_plugin.HandleRequest(*facade, algorithms, params, result);
     }
 
+    static bool CheckCompability(const EngineConfig &config);
+
   private:
     std::unique_ptr<DataFacadeProvider<AlgorithmT>> facade_provider;
     mutable SearchEngineData heaps;
@@ -136,6 +138,54 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
 };
+
+template <> bool Engine<algorithm::CH>::CheckCompability(const EngineConfig &config)
+{
+    if (config.use_shared_memory)
+    {
+        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
+        using mutex_type = typename decltype(barrier)::mutex_type;
+        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
+
+        auto mem = storage::makeSharedMemory(barrier.data().region);
+        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
+        return layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) > 0 &&
+               layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) > 0;
+    }
+    else
+    {
+        std::ifstream in(config.storage_config.hsgr_data_path.string().c_str());
+        in.seekg(std::ios::end);
+        auto size = in.tellg();
+        return size > 0;
+    }
+}
+
+template <> bool Engine<algorithm::CoreCH>::CheckCompability(const EngineConfig &config)
+{
+    if (!Engine<algorithm::CH>::CheckCompability(config))
+    {
+        return false;
+    }
+
+    if (config.use_shared_memory)
+    {
+        storage::SharedMonitor<storage::SharedDataTimestamp> barrier;
+        using mutex_type = typename decltype(barrier)::mutex_type;
+        boost::interprocess::scoped_lock<mutex_type> current_region_lock(barrier.get_mutex());
+
+        auto mem = storage::makeSharedMemory(barrier.data().region);
+        auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
+        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > 0;
+    }
+    else
+    {
+        std::ifstream in(config.storage_config.core_data_path.string().c_str());
+        in.seekg(std::ios::end);
+        auto size = in.tellg();
+        return size > 0;
+    }
+}
 }
 }
 

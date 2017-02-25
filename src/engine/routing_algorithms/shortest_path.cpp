@@ -12,12 +12,16 @@ namespace engine
 namespace routing_algorithms
 {
 
+namespace
+{
+
 const static constexpr bool DO_NOT_FORCE_LOOP = false;
 using QueryHeap = SearchEngineData::QueryHeap;
 
 // allows a uturn at the target_phantom
 // searches source forward/reverse -> target forward/reverse
-void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+template <typename AlgorithmT>
+void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
                      QueryHeap &forward_heap,
                      QueryHeap &reverse_heap,
                      QueryHeap &forward_core_heap,
@@ -70,32 +74,21 @@ void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<algori
     auto needs_loop_forwad = is_oneway_source && needsLoopForward(source_phantom, target_phantom);
     auto needs_loop_backwards =
         is_oneway_target && needsLoopBackwards(source_phantom, target_phantom);
-    if (facade.GetCoreSize() > 0)
-    {
-        forward_core_heap.Clear();
-        reverse_core_heap.Clear();
-        BOOST_ASSERT(forward_core_heap.Size() == 0);
-        BOOST_ASSERT(reverse_core_heap.Size() == 0);
-        searchWithCore(facade,
-                       forward_heap,
-                       reverse_heap,
-                       forward_core_heap,
-                       reverse_core_heap,
-                       new_total_weight,
-                       leg_packed_path,
-                       needs_loop_forwad,
-                       needs_loop_backwards);
-    }
-    else
-    {
-        search(facade,
-               forward_heap,
-               reverse_heap,
-               new_total_weight,
-               leg_packed_path,
-               needs_loop_forwad,
-               needs_loop_backwards);
-    }
+
+    forward_core_heap.Clear();
+    reverse_core_heap.Clear();
+    BOOST_ASSERT(forward_core_heap.Size() == 0);
+    BOOST_ASSERT(reverse_core_heap.Size() == 0);
+    routing_algorithms::search(facade,
+                               forward_heap,
+                               reverse_heap,
+                               forward_core_heap,
+                               reverse_core_heap,
+                               new_total_weight,
+                               leg_packed_path,
+                               needs_loop_forwad,
+                               needs_loop_backwards);
+
     // if no route is found between two parts of the via-route, the entire route becomes
     // invalid. Adding to invalid edge weight sadly doesn't return an invalid edge weight. Here
     // we prevent the possible overflow, faking the addition of infinity + x == infinity
@@ -106,7 +99,8 @@ void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<algori
 // searches shortest path between:
 // source forward/reverse -> target forward
 // source forward/reverse -> target reverse
-void Search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+template <typename AlgorithmT>
+void search(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
             QueryHeap &forward_heap,
             QueryHeap &reverse_heap,
             QueryHeap &forward_core_heap,
@@ -149,32 +143,19 @@ void Search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> 
         BOOST_ASSERT(forward_heap.Size() > 0);
         BOOST_ASSERT(reverse_heap.Size() > 0);
 
-        if (facade.GetCoreSize() > 0)
-        {
-            forward_core_heap.Clear();
-            reverse_core_heap.Clear();
-            BOOST_ASSERT(forward_core_heap.Size() == 0);
-            BOOST_ASSERT(reverse_core_heap.Size() == 0);
-            searchWithCore(facade,
-                           forward_heap,
-                           reverse_heap,
-                           forward_core_heap,
-                           reverse_core_heap,
-                           new_total_weight_to_forward,
-                           leg_packed_path_forward,
-                           needsLoopForward(source_phantom, target_phantom),
-                           DO_NOT_FORCE_LOOP);
-        }
-        else
-        {
-            search(facade,
-                   forward_heap,
-                   reverse_heap,
-                   new_total_weight_to_forward,
-                   leg_packed_path_forward,
-                   needsLoopForward(source_phantom, target_phantom),
-                   DO_NOT_FORCE_LOOP);
-        }
+        forward_core_heap.Clear();
+        reverse_core_heap.Clear();
+        BOOST_ASSERT(forward_core_heap.Size() == 0);
+        BOOST_ASSERT(reverse_core_heap.Size() == 0);
+        routing_algorithms::search(facade,
+                                   forward_heap,
+                                   reverse_heap,
+                                   forward_core_heap,
+                                   reverse_core_heap,
+                                   new_total_weight_to_forward,
+                                   leg_packed_path_forward,
+                                   needsLoopForward(source_phantom, target_phantom),
+                                   DO_NOT_FORCE_LOOP);
     }
 
     if (search_to_reverse_node)
@@ -200,32 +181,19 @@ void Search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> 
         }
         BOOST_ASSERT(forward_heap.Size() > 0);
         BOOST_ASSERT(reverse_heap.Size() > 0);
-        if (facade.GetCoreSize() > 0)
-        {
-            forward_core_heap.Clear();
-            reverse_core_heap.Clear();
-            BOOST_ASSERT(forward_core_heap.Size() == 0);
-            BOOST_ASSERT(reverse_core_heap.Size() == 0);
-            searchWithCore(facade,
-                           forward_heap,
-                           reverse_heap,
-                           forward_core_heap,
-                           reverse_core_heap,
-                           new_total_weight_to_reverse,
-                           leg_packed_path_reverse,
-                           DO_NOT_FORCE_LOOP,
-                           needsLoopBackwards(source_phantom, target_phantom));
-        }
-        else
-        {
-            search(facade,
-                   forward_heap,
-                   reverse_heap,
-                   new_total_weight_to_reverse,
-                   leg_packed_path_reverse,
-                   DO_NOT_FORCE_LOOP,
-                   needsLoopBackwards(source_phantom, target_phantom));
-        }
+        forward_core_heap.Clear();
+        reverse_core_heap.Clear();
+        BOOST_ASSERT(forward_core_heap.Size() == 0);
+        BOOST_ASSERT(reverse_core_heap.Size() == 0);
+        routing_algorithms::search(facade,
+                                   forward_heap,
+                                   reverse_heap,
+                                   forward_core_heap,
+                                   reverse_core_heap,
+                                   new_total_weight_to_reverse,
+                                   leg_packed_path_reverse,
+                                   DO_NOT_FORCE_LOOP,
+                                   needsLoopBackwards(source_phantom, target_phantom));
     }
 }
 
@@ -259,11 +227,12 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::
     }
 }
 
+template <typename AlgorithmT>
 InternalRouteResult
-shortestPathSearch(SearchEngineData &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-                   const std::vector<PhantomNodes> &phantom_nodes_vector,
-                   const boost::optional<bool> continue_straight_at_waypoint)
+shortestPathSearchImpl(SearchEngineData &engine_working_data,
+                       const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
+                       const std::vector<PhantomNodes> &phantom_nodes_vector,
+                       const boost::optional<bool> continue_straight_at_waypoint)
 {
     InternalRouteResult raw_route_data;
     const bool allow_uturn_at_waypoint =
@@ -351,7 +320,7 @@ shortestPathSearch(SearchEngineData &engine_working_data,
             }
             else
             {
-                Search(facade,
+                search(facade,
                        forward_heap,
                        reverse_heap,
                        forward_core_heap,
@@ -502,6 +471,27 @@ shortestPathSearch(SearchEngineData &engine_working_data,
     }
 
     return raw_route_data;
+}
+}
+
+InternalRouteResult
+shortestPathSearch(SearchEngineData &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                   const std::vector<PhantomNodes> &phantom_nodes_vector,
+                   const boost::optional<bool> continue_straight_at_waypoint)
+{
+    return shortestPathSearchImpl(
+        engine_working_data, facade, phantom_nodes_vector, continue_straight_at_waypoint);
+}
+
+InternalRouteResult
+shortestPathSearch(SearchEngineData &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+                   const std::vector<PhantomNodes> &phantom_nodes_vector,
+                   const boost::optional<bool> continue_straight_at_waypoint)
+{
+    return shortestPathSearchImpl(
+        engine_working_data, facade, phantom_nodes_vector, continue_straight_at_waypoint);
 }
 
 } // namespace routing_algorithms
