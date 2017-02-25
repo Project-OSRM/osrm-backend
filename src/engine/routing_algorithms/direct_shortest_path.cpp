@@ -81,9 +81,6 @@ extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &f
 
     return raw_route_data;
 }
-
-// prevents forcing of loops, since offsets are set correctly
-static const bool constexpr DO_NOT_FORCE_LOOPS = false;
 }
 
 /// This is a striped down version of the general shortest path algorithm.

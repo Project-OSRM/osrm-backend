@@ -33,6 +33,68 @@ namespace engine
 
 namespace routing_algorithms
 {
+static constexpr bool FORWARD_DIRECTION = true;
+static constexpr bool REVERSE_DIRECTION = false;
+
+// Stalling
+template <bool DIRECTION, typename HeapT>
+bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                 const NodeID node,
+                 const EdgeWeight weight,
+                 HeapT &query_heap)
+{
+    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    {
+        const auto &data = facade.GetEdgeData(edge);
+        if (DIRECTION == REVERSE_DIRECTION ? data.forward : data.backward)
+        {
+            const NodeID to = facade.GetTarget(edge);
+            const EdgeWeight edge_weight = data.weight;
+            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+            if (query_heap.WasInserted(to))
+            {
+                if (query_heap.GetKey(to) + edge_weight < weight)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+template <bool DIRECTION>
+void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                        const NodeID node,
+                        const EdgeWeight weight,
+                        SearchEngineData::QueryHeap &heap)
+{
+    for (const auto edge : facade.GetAdjacentEdgeRange(node))
+    {
+        const auto &data = facade.GetEdgeData(edge);
+        if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+        {
+            const NodeID to = facade.GetTarget(edge);
+            const EdgeWeight edge_weight = data.weight;
+
+            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+            const EdgeWeight to_weight = weight + edge_weight;
+
+            // New Node discovered -> Add to Heap + Node Info Storage
+            if (!heap.WasInserted(to))
+            {
+                heap.Insert(to, to_weight, node);
+            }
+            // Found a shorter Path -> Update weight
+            else if (to_weight < heap.GetKey(to))
+            {
+                // new parent
+                heap.GetData(to).parent = node;
+                heap.DecreaseKey(to, to_weight);
+            }
+        }
+    }
+}
 
 /*
 min_edge_offset is needed in case we use multiple
@@ -63,16 +125,81 @@ using edges (y, a) with weight -100, (y, b) with weight 0 and,
 Since we are dealing with a graph that contains _negative_ edges,
 we need to add an offset to the termination criterion.
 */
+static constexpr bool ENABLE_STALLING = true;
+static constexpr bool DISABLE_STALLING = false;
+static constexpr bool DO_NOT_FORCE_LOOPS = false;
+template<bool DIRECTION, bool STALLING=ENABLE_STALLING>
 void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                  SearchEngineData::QueryHeap &forward_heap,
                  SearchEngineData::QueryHeap &reverse_heap,
                  NodeID &middle_node_id,
-                 std::int32_t &upper_bound,
-                 std::int32_t min_edge_offset,
-                 const bool forward_direction,
-                 const bool stalling,
+                 EdgeWeight &upper_bound,
+                 EdgeWeight min_edge_offset,
                  const bool force_loop_forward,
-                 const bool force_loop_reverse);
+                 const bool force_loop_reverse)
+{
+    const NodeID node = forward_heap.DeleteMin();
+    const EdgeWeight weight = forward_heap.GetKey(node);
+
+    if (reverse_heap.WasInserted(node))
+    {
+        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
+        if (new_weight < upper_bound)
+        {
+            // if loops are forced, they are so at the source
+            if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
+                (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
+                // in this case we are looking at a bi-directional way where the source
+                // and target phantom are on the same edge based node
+                new_weight < 0)
+            {
+                // check whether there is a loop present at the node
+                for (const auto edge : facade.GetAdjacentEdgeRange(node))
+                {
+                    const auto &data = facade.GetEdgeData(edge);
+                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                    {
+                        const NodeID to = facade.GetTarget(edge);
+                        if (to == node)
+                        {
+                            const EdgeWeight edge_weight = data.weight;
+                            const EdgeWeight loop_weight = new_weight + edge_weight;
+                            if (loop_weight >= 0 && loop_weight < upper_bound)
+                            {
+                                middle_node_id = node;
+                                upper_bound = loop_weight;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                BOOST_ASSERT(new_weight >= 0);
+
+                middle_node_id = node;
+                upper_bound = new_weight;
+            }
+        }
+    }
+
+    // make sure we don't terminate too early if we initialize the weight
+    // for the nodes in the forward heap with the forward/reverse offset
+    BOOST_ASSERT(min_edge_offset <= 0);
+    if (weight + min_edge_offset > upper_bound)
+    {
+        forward_heap.DeleteAll();
+        return;
+    }
+
+    // Stalling
+    if (STALLING && stallAtNode<DIRECTION>(facade, node, weight, forward_heap))
+    {
+        return;
+    }
+
+    relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap);
+}
 
 template <bool UseDuration>
 EdgeWeight

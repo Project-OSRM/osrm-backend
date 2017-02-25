@@ -7,125 +7,6 @@ namespace engine
 namespace routing_algorithms
 {
 
-void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-                 SearchEngineData::QueryHeap &forward_heap,
-                 SearchEngineData::QueryHeap &reverse_heap,
-                 NodeID &middle_node_id,
-                 EdgeWeight &upper_bound,
-                 EdgeWeight min_edge_offset,
-                 const bool forward_direction,
-                 const bool stalling,
-                 const bool force_loop_forward,
-                 const bool force_loop_reverse)
-{
-    const NodeID node = forward_heap.DeleteMin();
-    const EdgeWeight weight = forward_heap.GetKey(node);
-
-    if (reverse_heap.WasInserted(node))
-    {
-        const EdgeWeight new_weight = reverse_heap.GetKey(node) + weight;
-        if (new_weight < upper_bound)
-        {
-            // if loops are forced, they are so at the source
-            if ((force_loop_forward && forward_heap.GetData(node).parent == node) ||
-                (force_loop_reverse && reverse_heap.GetData(node).parent == node) ||
-                // in this case we are looking at a bi-directional way where the source
-                // and target phantom are on the same edge based node
-                new_weight < 0)
-            {
-                // check whether there is a loop present at the node
-                for (const auto edge : facade.GetAdjacentEdgeRange(node))
-                {
-                    const auto &data = facade.GetEdgeData(edge);
-                    bool forward_directionFlag = (forward_direction ? data.forward : data.backward);
-                    if (forward_directionFlag)
-                    {
-                        const NodeID to = facade.GetTarget(edge);
-                        if (to == node)
-                        {
-                            const EdgeWeight edge_weight = data.weight;
-                            const EdgeWeight loop_weight = new_weight + edge_weight;
-                            if (loop_weight >= 0 && loop_weight < upper_bound)
-                            {
-                                middle_node_id = node;
-                                upper_bound = loop_weight;
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                BOOST_ASSERT(new_weight >= 0);
-
-                middle_node_id = node;
-                upper_bound = new_weight;
-            }
-        }
-    }
-
-    // make sure we don't terminate too early if we initialize the weight
-    // for the nodes in the forward heap with the forward/reverse offset
-    BOOST_ASSERT(min_edge_offset <= 0);
-    if (weight + min_edge_offset > upper_bound)
-    {
-        forward_heap.DeleteAll();
-        return;
-    }
-
-    // Stalling
-    if (stalling)
-    {
-        for (const auto edge : facade.GetAdjacentEdgeRange(node))
-        {
-            const auto &data = facade.GetEdgeData(edge);
-            const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
-            if (reverse_flag)
-            {
-                const NodeID to = facade.GetTarget(edge);
-                const EdgeWeight edge_weight = data.weight;
-
-                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-
-                if (forward_heap.WasInserted(to))
-                {
-                    if (forward_heap.GetKey(to) + edge_weight < weight)
-                    {
-                        return;
-                    }
-                }
-            }
-        }
-    }
-
-    for (const auto edge : facade.GetAdjacentEdgeRange(node))
-    {
-        const auto &data = facade.GetEdgeData(edge);
-        bool forward_directionFlag = (forward_direction ? data.forward : data.backward);
-        if (forward_directionFlag)
-        {
-            const NodeID to = facade.GetTarget(edge);
-            const EdgeWeight edge_weight = data.weight;
-
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            const EdgeWeight to_weight = weight + edge_weight;
-
-            // New Node discovered -> Add to Heap + Node Info Storage
-            if (!forward_heap.WasInserted(to))
-            {
-                forward_heap.Insert(to, to_weight, node);
-            }
-            // Found a shorter Path -> Update weight
-            else if (to_weight < forward_heap.GetKey(to))
-            {
-                // new parent
-                forward_heap.GetData(to).parent = node;
-                forward_heap.DecreaseKey(to, to_weight);
-            }
-        }
-    }
-}
-
 /**
  * Unpacks a single edge (NodeID->NodeID) from the CH graph down to it's original non-shortcut
  * route.
@@ -207,34 +88,29 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> 
     BOOST_ASSERT(reverse_heap.MinKey() >= 0);
 
     // run two-Target Dijkstra routing step.
-    const constexpr bool STALLING_ENABLED = true;
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
     {
         if (!forward_heap.Empty())
         {
-            routingStep(facade,
-                        forward_heap,
-                        reverse_heap,
-                        middle,
-                        weight,
-                        min_edge_offset,
-                        true,
-                        STALLING_ENABLED,
-                        force_loop_forward,
-                        force_loop_reverse);
+            routingStep<FORWARD_DIRECTION>(facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           middle,
+                                           weight,
+                                           min_edge_offset,
+                                           force_loop_forward,
+                                           force_loop_reverse);
         }
         if (!reverse_heap.Empty())
         {
-            routingStep(facade,
-                        reverse_heap,
-                        forward_heap,
-                        middle,
-                        weight,
-                        min_edge_offset,
-                        false,
-                        STALLING_ENABLED,
-                        force_loop_reverse,
-                        force_loop_forward);
+            routingStep<REVERSE_DIRECTION>(facade,
+                                           reverse_heap,
+                                           forward_heap,
+                                           middle,
+                                           weight,
+                                           min_edge_offset,
+                                           force_loop_reverse,
+                                           force_loop_forward);
         }
     }
 
@@ -293,7 +169,6 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::Core
     // we only every insert negative offsets for nodes in the forward heap
     BOOST_ASSERT(reverse_heap.MinKey() >= 0);
 
-    const constexpr bool STALLING_ENABLED = true;
     // run two-Target Dijkstra routing step.
     while (0 < (forward_heap.Size() + reverse_heap.Size()))
     {
@@ -307,14 +182,12 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::Core
             }
             else
             {
-                routingStep(facade,
+                routingStep<FORWARD_DIRECTION>(facade,
                             forward_heap,
                             reverse_heap,
                             middle,
                             weight,
                             min_edge_offset,
-                            true,
-                            STALLING_ENABLED,
                             force_loop_forward,
                             force_loop_reverse);
             }
@@ -329,14 +202,12 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::Core
             }
             else
             {
-                routingStep(facade,
+                routingStep<REVERSE_DIRECTION>(facade,
                             reverse_heap,
                             forward_heap,
                             middle,
                             weight,
                             min_edge_offset,
-                            false,
-                            STALLING_ENABLED,
                             force_loop_reverse,
                             force_loop_forward);
             }
@@ -378,29 +249,24 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::Core
     BOOST_ASSERT(min_core_edge_offset <= 0);
 
     // run two-target Dijkstra routing step on core with termination criterion
-    const constexpr bool STALLING_DISABLED = false;
     while (0 < forward_core_heap.Size() && 0 < reverse_core_heap.Size() &&
            weight > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
     {
-        routingStep(facade,
+        routingStep<FORWARD_DIRECTION, DISABLE_STALLING>(facade,
                     forward_core_heap,
                     reverse_core_heap,
                     middle,
                     weight,
                     min_core_edge_offset,
-                    true,
-                    STALLING_DISABLED,
                     force_loop_forward,
                     force_loop_reverse);
 
-        routingStep(facade,
+        routingStep<REVERSE_DIRECTION, DISABLE_STALLING>(facade,
                     reverse_core_heap,
                     forward_core_heap,
                     middle,
                     weight,
                     min_core_edge_offset,
-                    false,
-                    STALLING_DISABLED,
                     force_loop_reverse,
                     force_loop_forward);
     }
@@ -571,9 +437,6 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorith
                             target_phantom.reverse_segment_id.id);
     }
 
-    const bool constexpr DO_NOT_FORCE_LOOPS =
-        false; // prevents forcing of loops, since offsets are set correctly
-
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
     search(facade,
@@ -634,9 +497,6 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorith
                             target_phantom.GetReverseWeightPlusOffset(),
                             target_phantom.reverse_segment_id.id);
     }
-
-    const bool constexpr DO_NOT_FORCE_LOOPS =
-        false; // prevents forcing of loops, since offsets are set correctly
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;

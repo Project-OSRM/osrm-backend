@@ -15,7 +15,7 @@ namespace engine
 namespace routing_algorithms
 {
 
-using QueryHeap = SearchEngineData::ManyToManyQueryHeap;
+using ManyToManyQueryHeap = SearchEngineData::ManyToManyQueryHeap;
 
 namespace
 {
@@ -29,21 +29,21 @@ struct NodeBucket
     {
     }
 };
+
 // FIXME This should be replaced by an std::unordered_multimap, though this needs benchmarking
 using SearchSpaceWithBuckets = std::unordered_map<NodeID, std::vector<NodeBucket>>;
 
-template <bool forward_direction>
+template <bool DIRECTION>
 void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         const EdgeWeight duration,
-                        QueryHeap &query_heap)
+                        ManyToManyQueryHeap &query_heap)
 {
     for (auto edge : facade.GetAdjacentEdgeRange(node))
     {
         const auto &data = facade.GetEdgeData(edge);
-        const bool direction_flag = (forward_direction ? data.forward : data.backward);
-        if (direction_flag)
+        if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
@@ -69,38 +69,10 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<alg
     }
 }
 
-// Stalling
-template <bool forward_direction>
-bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-                 const NodeID node,
-                 const EdgeWeight weight,
-                 QueryHeap &query_heap)
-{
-    for (auto edge : facade.GetAdjacentEdgeRange(node))
-    {
-        const auto &data = facade.GetEdgeData(edge);
-        const bool reverse_flag = ((!forward_direction) ? data.forward : data.backward);
-        if (reverse_flag)
-        {
-            const NodeID to = facade.GetTarget(edge);
-            const EdgeWeight edge_weight = data.weight;
-            BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
-            if (query_heap.WasInserted(to))
-            {
-                if (query_heap.GetKey(to) + edge_weight < weight)
-                {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-void ForwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                         const unsigned row_idx,
                         const unsigned number_of_targets,
-                        QueryHeap &query_heap,
+                        ManyToManyQueryHeap &query_heap,
                         const SearchSpaceWithBuckets &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
                         std::vector<EdgeWeight> &durations_table)
@@ -146,17 +118,18 @@ void ForwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
             }
         }
     }
-    if (stallAtNode<true>(facade, node, source_weight, query_heap))
+    if (stallAtNode<FORWARD_DIRECTION>(facade, node, source_weight, query_heap))
     {
         return;
     }
-    relaxOutgoingEdges<true>(facade, node, source_weight, source_duration, query_heap);
+
+    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, node, source_weight, source_duration, query_heap);
 }
 
 void backwardRoutingStep(
     const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
     const unsigned column_idx,
-    QueryHeap &query_heap,
+    ManyToManyQueryHeap &query_heap,
     SearchSpaceWithBuckets &search_space_with_buckets)
 {
     const NodeID node = query_heap.DeleteMin();
@@ -166,12 +139,12 @@ void backwardRoutingStep(
     // store settled nodes in search space bucket
     search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);
 
-    if (stallAtNode<false>(facade, node, target_weight, query_heap))
+    if (stallAtNode<REVERSE_DIRECTION>(facade, node, target_weight, query_heap))
     {
         return;
     }
 
-    relaxOutgoingEdges<false>(facade, node, target_weight, target_duration, query_heap);
+    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, node, target_weight, target_duration, query_heap);
 }
 }
 
@@ -245,7 +218,7 @@ manyToManySearch(SearchEngineData &engine_working_data,
         // explore search space
         while (!query_heap.Empty())
         {
-            ForwardRoutingStep(facade,
+            forwardRoutingStep(facade,
                                row_idx,
                                number_of_targets,
                                query_heap,
