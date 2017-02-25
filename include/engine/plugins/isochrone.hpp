@@ -22,7 +22,6 @@ class IsochronePlugin final : public BasePlugin
 {
   private:
     mutable SearchEngineData heaps;
-    mutable routing_algorithms::ManyToManyRouting distance_table;
 
   public:
     explicit IsochronePlugin();

@@ -20,7 +20,7 @@ namespace engine
 namespace plugins
 {
 
-IsochronePlugin::IsochronePlugin() : distance_table(heaps) {}
+IsochronePlugin::IsochronePlugin() {}
 
 Status
 IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataFacade> facade,
@@ -174,30 +174,127 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
     TIMER_STOP(PHANTOM_TIMER);
     util::Log() << "Make phantom nodes " << TIMER_MSEC(PHANTOM_TIMER);
 
+    // Phase 1 - outgoing, upwards dijkstra search, setting d(v) for all v we visit
+    heaps.InitializeOrClearFirstThreadLocalStorage(facade->GetNumberOfNodes());
+    heaps.InitializeOrClearSecondThreadLocalStorage(facade->GetNumberOfNodes());
+
+    auto &query_heap = *(heaps.forward_heap_1);
+    if (phantoms[0].forward_segment_id.enabled)
+    {
+        query_heap.Insert(phantoms[0].forward_segment_id.id,
+                          -phantoms[0].GetForwardWeightPlusOffset(),
+                          phantoms[0].forward_segment_id.id);
+    }
+    if (phantoms[0].reverse_segment_id.enabled)
+    {
+        query_heap.Insert(phantoms[0].reverse_segment_id.id,
+                          -phantoms[0].GetReverseWeightPlusOffset(),
+                          phantoms[0].reverse_segment_id.id);
+    }
+
+    while (query_heap.Size() > 0)
+    {
+        const NodeID node = query_heap.DeleteMin();
+        const EdgeWeight weight = query_heap.GetKey(node);
+
+        for (auto edge : facade->GetAdjacentEdgeRange(node))
+        {
+            const auto &data = facade->GetEdgeData(edge);
+            if (data.forward)
+            {
+                const NodeID to = facade->GetTarget(edge);
+                const EdgeWeight edge_weight = data.weight;
+
+                BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
+                const EdgeWeight to_weight = weight + edge_weight;
+
+                // No need to search further than our maximum radius
+                if (weight > range * 10)
+                    continue;
+
+                // New Node discovered -> Add to Heap + Node Info Storage
+                if (!query_heap.WasInserted(to))
+                {
+                    query_heap.Insert(to, to_weight, node);
+                }
+                // Found a shorter Path -> Update weight
+                else if (to_weight < query_heap.GetKey(to))
+                {
+                    // new parent
+                    query_heap.GetData(to) = node;
+                    query_heap.DecreaseKey(to, to_weight);
+                }
+            }
+        }
+    }
+
+    // Phase 2 - scan nodes in descending CH order, updating d(v) where we can
     TIMER_START(TABLE_TIMER);
-    auto table = distance_table(facade, phantoms, sources, destinations, range * 10 + 1);
+    std::sort(phantoms.begin(), phantoms.end(), [](const auto &a, const auto &b) {
+        const auto &a_id =
+            a.forward_segment_id.enabled ? a.forward_segment_id.id : a.reverse_segment_id.id;
+        const auto &b_id =
+            b.forward_segment_id.enabled ? b.forward_segment_id.id : b.reverse_segment_id.id;
+
+        return a_id < b_id;
+    });
+    // Now, scan over all the phantoms in reverse CH order, updating edge weights as we go
+    for (const auto &p : phantoms)
+    {
+        const auto node =
+            p.forward_segment_id.enabled ? p.forward_segment_id.id : p.reverse_segment_id.id;
+        for (const auto &edge : facade->GetAdjacentEdgeRange(node))
+        {
+            const auto &data = facade->GetEdgeData(edge);
+            if (data.backward)
+            {
+                const NodeID to = facade->GetTarget(edge);
+
+                // New Node discovered -> Add to Heap + Node Info Storage
+                if (!query_heap.WasInserted(to))
+                {
+                    // TODO: hmm, what does this mean? shouldn't be possible in a correct CH
+                    // util::Log() << "WARNING: to not found in reverse scan";
+                }
+                // Found a shorter Path -> Update weight
+                else
+                {
+                    const EdgeWeight weight = query_heap.GetKey(to);
+                    const EdgeWeight edge_weight = data.weight;
+                    const EdgeWeight to_weight = weight + edge_weight;
+
+                    if (!query_heap.WasInserted(node))
+                    {
+                        query_heap.Insert(node, to_weight, to);
+                    }
+                    else if (to_weight < query_heap.GetKey(to))
+                    {
+                        // new parent
+                        query_heap.GetData(node) = to;
+                        query_heap.DecreaseKey(node, to_weight);
+                    }
+                }
+            }
+        }
+    }
+
     TIMER_STOP(TABLE_TIMER);
     util::Log() << "Distance table " << TIMER_MSEC(TABLE_TIMER);
 
     std::clog << "Phantoms size: " << phantoms.size() << std::endl;
-    std::clog << "Table size: " << table.size() << std::endl;
 
     std::stringstream buf;
     buf << std::setprecision(12);
     buf << "{\"type\":\"FeatureCollection\",\"features\":[";
     bool firstline = true;
 
-    std::vector<std::size_t> sorted_idx(phantoms.size() - 1);
-    std::iota(sorted_idx.begin(), sorted_idx.end(), 1);
-
-    std::sort(sorted_idx.begin(), sorted_idx.end(), [&](const auto a, const auto b) {
-        return table[a - 1] > table[b - 1];
-    });
-
-    for (const auto i : sorted_idx)
+    for (const auto &phantom : phantoms)
     {
-        const auto &phantom = phantoms[i];
-        const auto weight = table[i - 1];
+        const auto node = phantom.forward_segment_id.enabled ? phantom.forward_segment_id.id
+                                                             : phantom.reverse_segment_id.id;
+        if (!query_heap.WasInserted(node))
+            continue;
+        const auto weight = query_heap.GetKey(node);
 
         // If INVALID_EDGE_WEIGHT, it means that the phantom couldn't be reached
         // from the isochrone centerpoint
@@ -223,7 +320,6 @@ IsochronePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDataF
     }
 
     buf << "]}";
-
     pbf_buffer = buf.str();
 
     return Status::Ok;
