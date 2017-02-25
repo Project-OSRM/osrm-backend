@@ -208,8 +208,8 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
         // force uturns to be on, since we split the phantom nodes anyway and only have
         // bi-directional
         // phantom nodes for possible uturns
-        algorithms.ShortestRouting(
-            sub_routes[index].segment_end_coordinates, {false}, sub_routes[index]);
+        sub_routes[index] =
+            algorithms.ShortestRouting(sub_routes[index].segment_end_coordinates, {false});
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
 

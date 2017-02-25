@@ -19,15 +19,14 @@ namespace engine
 class RoutingAlgorithmsInterface
 {
   public:
-    virtual void AlternativeRouting(const PhantomNodes &phantom_node_pair,
-                                    InternalRouteResult &raw_route_data) const = 0;
+    virtual InternalRouteResult AlternativeRouting(const PhantomNodes &phantom_node_pair) const = 0;
 
-    virtual void ShortestRouting(const std::vector<PhantomNodes> &phantom_node_pair,
-                                 const boost::optional<bool> continue_straight_at_waypoint,
-                                 InternalRouteResult &raw_route_data) const = 0;
+    virtual InternalRouteResult
+    ShortestRouting(const std::vector<PhantomNodes> &phantom_node_pair,
+                    const boost::optional<bool> continue_straight_at_waypoint) const = 0;
 
-    virtual void DirectShortestPathRouting(const std::vector<PhantomNodes> &phantom_node_pair,
-                                           InternalRouteResult &raw_route_data) const = 0;
+    virtual InternalRouteResult
+    DirectShortestPathRouting(const std::vector<PhantomNodes> &phantom_node_pair) const = 0;
 
     virtual std::vector<EdgeWeight>
     ManyToManyRouting(const std::vector<PhantomNode> &phantom_nodes,
@@ -53,29 +52,28 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
   public:
     RoutingAlgorithms(SearchEngineData &heaps,
                       const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade)
-        : facade(facade), alternative_routing(heaps), shortest_path_routing(heaps),
-          direct_shortest_path_routing(heaps), many_to_many_routing(heaps), map_matching(heaps)
+        : heaps(heaps), facade(facade)
     {
     }
 
-    void AlternativeRouting(const PhantomNodes &phantom_node_pair,
-                            InternalRouteResult &raw_route_data) const final override
+    InternalRouteResult
+    AlternativeRouting(const PhantomNodes &phantom_node_pair) const final override
     {
-        alternative_routing(facade, phantom_node_pair, raw_route_data);
+        return routing_algorithms::alternativePathSearch(heaps, facade, phantom_node_pair);
     }
 
-    void ShortestRouting(const std::vector<PhantomNodes> &phantom_node_pair,
-                         const boost::optional<bool> continue_straight_at_waypoint,
-                         InternalRouteResult &raw_route_data) const final override
+    InternalRouteResult
+    ShortestRouting(const std::vector<PhantomNodes> &phantom_node_pair,
+                    const boost::optional<bool> continue_straight_at_waypoint) const final override
     {
-        shortest_path_routing(
-            facade, phantom_node_pair, continue_straight_at_waypoint, raw_route_data);
+        return routing_algorithms::shortestPathSearch(
+            heaps, facade, phantom_node_pair, continue_straight_at_waypoint);
     }
 
-    void DirectShortestPathRouting(const std::vector<PhantomNodes> &phantom_node_pair,
-                                   InternalRouteResult &raw_route_data) const final override
+    InternalRouteResult DirectShortestPathRouting(
+        const std::vector<PhantomNodes> &phantom_node_pair) const final override
     {
-        direct_shortest_path_routing(facade, phantom_node_pair, raw_route_data);
+        return routing_algorithms::directShortestPathSearch(heaps, facade, phantom_node_pair);
     }
 
     std::vector<EdgeWeight>
@@ -83,7 +81,8 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
                       const std::vector<std::size_t> &source_indices,
                       const std::vector<std::size_t> &target_indices) const final override
     {
-        return many_to_many_routing(facade, phantom_nodes, source_indices, target_indices);
+        return routing_algorithms::manyToManySearch(
+            heaps, facade, phantom_nodes, source_indices, target_indices);
     }
 
     routing_algorithms::SubMatchingList MapMatching(
@@ -92,32 +91,30 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
         const std::vector<unsigned> &trace_timestamps,
         const std::vector<boost::optional<double>> &trace_gps_precision) const final override
     {
-        return map_matching(
-            facade, candidates_list, trace_coordinates, trace_timestamps, trace_gps_precision);
+        return routing_algorithms::mapMatching(heaps,
+                                               facade,
+                                               candidates_list,
+                                               trace_coordinates,
+                                               trace_timestamps,
+                                               trace_gps_precision);
     }
 
     std::vector<routing_algorithms::TurnData>
     TileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
               const std::vector<std::size_t> &sorted_edge_indexes) const final override
     {
-        return tile_turns(facade, edges, sorted_edge_indexes);
+        return routing_algorithms::getTileTurns(facade, edges, sorted_edge_indexes);
     }
 
     bool HasAlternativeRouting() const final override
     {
         return algorithm_trais::HasAlternativeRouting<AlgorithmT>()(facade);
-    };
+    }
 
   private:
+    SearchEngineData &heaps;
     // Owned by shared-ptr passed to the query
     const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade;
-
-    mutable routing_algorithms::AlternativeRouting<AlgorithmT> alternative_routing;
-    mutable routing_algorithms::ShortestPathRouting<AlgorithmT> shortest_path_routing;
-    mutable routing_algorithms::DirectShortestPathRouting<AlgorithmT> direct_shortest_path_routing;
-    mutable routing_algorithms::ManyToManyRouting<AlgorithmT> many_to_many_routing;
-    mutable routing_algorithms::MapMatching<AlgorithmT> map_matching;
-    routing_algorithms::TileTurns<AlgorithmT> tile_turns;
 };
 }
 }

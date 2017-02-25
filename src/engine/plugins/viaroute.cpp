@@ -89,17 +89,17 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
     {
         if (route_parameters.alternatives && algorithms.HasAlternativeRouting())
         {
-            algorithms.AlternativeRouting(raw_route.segment_end_coordinates.front(), raw_route);
+            raw_route = algorithms.AlternativeRouting(raw_route.segment_end_coordinates.front());
         }
         else
         {
-            algorithms.DirectShortestPathRouting(raw_route.segment_end_coordinates, raw_route);
+            raw_route = algorithms.DirectShortestPathRouting(raw_route.segment_end_coordinates);
         }
     }
     else
     {
-        algorithms.ShortestRouting(
-            raw_route.segment_end_coordinates, route_parameters.continue_straight, raw_route);
+        raw_route = algorithms.ShortestRouting(raw_route.segment_end_coordinates,
+                                               route_parameters.continue_straight);
     }
 
     // we can only know this after the fact, different SCC ids still

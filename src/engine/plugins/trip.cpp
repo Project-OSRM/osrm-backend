@@ -85,7 +85,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &a
         BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
     }
 
-    algorithms.ShortestRouting(min_route.segment_end_coordinates, {false}, min_route);
+    min_route = algorithms.ShortestRouting(min_route.segment_end_coordinates, {false});
     BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
 }
