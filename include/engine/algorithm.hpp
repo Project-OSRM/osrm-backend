@@ -1,6 +1,8 @@
 #ifndef OSRM_ENGINE_ALGORITHM_HPP
 #define OSRM_ENGINE_ALGORITHM_HPP
 
+#include <type_traits>
+
 namespace osrm
 {
 namespace engine
@@ -9,27 +11,29 @@ namespace algorithm
 {
 
 // Contraction Hiearchy
-struct CH;
+struct CH final {};
+// Contraction Hiearchy with core
+struct CoreCH final {};
+
 }
 
 namespace algorithm_trais
 {
-template <typename AlgorithmT> struct HasAlternativeRouting final
-{
-    template <template <typename A> class FacadeT> bool operator()(const FacadeT<AlgorithmT> &)
-    {
-        return false;
-    }
-};
 
-template <> struct HasAlternativeRouting<algorithm::CH> final
-{
-    template <template <typename A> class FacadeT>
-    bool operator()(const FacadeT<algorithm::CH> &facade)
-    {
-        return facade.GetCoreSize() == 0;
-    }
-};
+template <typename AlgorithmT> struct HasAlternativePathSearch final : std::false_type {};
+template <typename AlgorithmT> struct HasShortestPathSearch final : std::false_type {};
+template <typename AlgorithmT> struct HasDirectShortestPathSearch final : std::false_type {};
+template <typename AlgorithmT> struct HasMapMatching final : std::false_type {};
+template <typename AlgorithmT> struct HasManyToManySearch final : std::false_type {};
+template <typename AlgorithmT> struct HasGetTileTurns final : std::false_type {};
+
+template <> struct HasAlternativePathSearch<algorithm::CH> final : std::true_type {};
+template <> struct HasShortestPathSearch<algorithm::CH> final : std::true_type {};
+template <> struct HasDirectShortestPathSearch<algorithm::CH> final : std::true_type {};
+template <> struct HasMapMatching<algorithm::CH> final : std::true_type {};
+template <> struct HasManyToManySearch<algorithm::CH> final : std::true_type {};
+template <> struct HasGetTileTurns<algorithm::CH> final : std::true_type {};
+
 }
 }
 }

@@ -27,6 +27,16 @@ struct TurnData final
 
 using RTreeLeaf = datafacade::BaseDataFacade::RTreeLeaf;
 
+template <typename AlgorithmT>
+std::vector<TurnData>
+getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &,
+             const std::vector<RTreeLeaf> &,
+             const std::vector<std::size_t> &)
+{
+    throw util::exception(std::string("getTileTurns is not implemented for ") +
+                          typeid(AlgorithmT).name());
+}
+
 std::vector<TurnData>
 getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
              const std::vector<RTreeLeaf> &edges,

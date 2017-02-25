@@ -20,6 +20,18 @@ using CandidateLists = std::vector<CandidateList>;
 using SubMatchingList = std::vector<map_matching::SubMatching>;
 static const constexpr double DEFAULT_GPS_PRECISION = 5;
 
+template <typename AlgorithmT>
+SubMatchingList mapMatching(SearchEngineData &,
+                            const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &,
+                            const CandidateLists &,
+                            const std::vector<util::Coordinate> &,
+                            const std::vector<unsigned> &,
+                            const std::vector<boost::optional<double>> &)
+{
+    throw util::exception(std::string("mapMatching is not implemented for ") +
+                          typeid(AlgorithmT).name());
+}
+
 SubMatchingList
 mapMatching(SearchEngineData &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,

@@ -113,6 +113,11 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
                                   const api::MatchParameters &parameters,
                                   util::json::Object &json_result) const
 {
+    if (!algorithms.HasMapMatching())
+    {
+        return Error("NotImplemented", "Map matching is not implemented for the chosen search algorithm.", json_result);
+    }
+
     BOOST_ASSERT(parameters.IsValid());
 
     // enforce maximum number of locations for performance reasons
@@ -209,7 +214,7 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
         // bi-directional
         // phantom nodes for possible uturns
         sub_routes[index] =
-            algorithms.ShortestRouting(sub_routes[index].segment_end_coordinates, {false});
+            algorithms.ShortestPathSearch(sub_routes[index].segment_end_coordinates, {false});
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
 
