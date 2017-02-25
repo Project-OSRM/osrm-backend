@@ -36,12 +36,18 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
 
     if (!algorithms.HasShortestPathSearch() && route_parameters.coordinates.size() > 2)
     {
-        return Error("NotImplemented", "Shortest path search is not implemented for the chosen search algorithm. Only two coordinates supported.", json_result);
+        return Error("NotImplemented",
+                     "Shortest path search is not implemented for the chosen search algorithm. "
+                     "Only two coordinates supported.",
+                     json_result);
     }
 
     if (!algorithms.HasDirectShortestPathSearch() && !algorithms.HasShortestPathSearch())
     {
-        return Error("NotImplemented", "Direct shortest path search is not implemented for the chosen search algorithm.", json_result);
+        return Error(
+            "NotImplemented",
+            "Direct shortest path search is not implemented for the chosen search algorithm.",
+            json_result);
     }
 
     if (max_locations_viaroute > 0 &&
@@ -95,18 +101,20 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
-    if (1 == raw_route.segment_end_coordinates.size() && algorithms.HasAlternativePathSearch() && route_parameters.alternatives)
+    if (1 == raw_route.segment_end_coordinates.size() && algorithms.HasAlternativePathSearch() &&
+        route_parameters.alternatives)
     {
         raw_route = algorithms.AlternativePathSearch(raw_route.segment_end_coordinates.front());
     }
-    else if (1 == raw_route.segment_end_coordinates.size() && algorithms.HasDirectShortestPathSearch())
+    else if (1 == raw_route.segment_end_coordinates.size() &&
+             algorithms.HasDirectShortestPathSearch())
     {
-        raw_route = algorithms.DirectShortestPathSearch(raw_route.segment_end_coordinates);
+        raw_route = algorithms.DirectShortestPathSearch(raw_route.segment_end_coordinates.front());
     }
     else
     {
         raw_route = algorithms.ShortestPathSearch(raw_route.segment_end_coordinates,
-                                               route_parameters.continue_straight);
+                                                  route_parameters.continue_straight);
     }
 
     // we can only know this after the fact, different SCC ids still

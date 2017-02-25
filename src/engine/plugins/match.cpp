@@ -115,7 +115,9 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
 {
     if (!algorithms.HasMapMatching())
     {
-        return Error("NotImplemented", "Map matching is not implemented for the chosen search algorithm.", json_result);
+        return Error("NotImplemented",
+                     "Map matching is not implemented for the chosen search algorithm.",
+                     json_result);
     }
 
     BOOST_ASSERT(parameters.IsValid());

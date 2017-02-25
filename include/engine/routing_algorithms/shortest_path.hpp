@@ -30,6 +30,12 @@ shortestPathSearch(SearchEngineData &engine_working_data,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
+InternalRouteResult
+shortestPathSearch(SearchEngineData &engine_working_data,
+                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+                   const std::vector<PhantomNodes> &phantom_nodes_vector,
+                   const boost::optional<bool> continue_straight_at_waypoint);
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

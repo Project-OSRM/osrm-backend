@@ -35,7 +35,9 @@ Status TablePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
 {
     if (!algorithms.HasManyToManySearch())
     {
-        return Error("NotImplemented", "Many to many search is not implemented for the chosen search algorithm.", result);
+        return Error("NotImplemented",
+                     "Many to many search is not implemented for the chosen search algorithm.",
+                     result);
     }
 
     BOOST_ASSERT(params.IsValid());

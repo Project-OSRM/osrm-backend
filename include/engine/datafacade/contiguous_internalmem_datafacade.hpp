@@ -58,7 +58,6 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
     std::unique_ptr<QueryGraph> m_query_graph;
-    util::ShM<bool, true>::vector m_is_core_node;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
@@ -78,15 +77,6 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
         m_query_graph.reset(new QueryGraph(node_list, edge_list));
     }
 
-    void InitializeCoreInformationPointer(storage::DataLayout &data_layout, char *memory_block)
-    {
-        auto core_marker_ptr =
-            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CH_CORE_MARKER);
-        util::ShM<bool, true>::vector is_core_node(
-            core_marker_ptr, data_layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
-        m_is_core_node = std::move(is_core_node);
-    }
-
   public:
     ContiguousInternalMemoryAlgorithmDataFacade(
         std::shared_ptr<ContiguousBlockAllocator> allocator_)
@@ -98,20 +88,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
     void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
     {
         InitializeGraphPointer(data_layout, memory_block);
-        InitializeCoreInformationPointer(data_layout, memory_block);
     }
-
-    bool IsCoreNode(const NodeID id) const override final
-    {
-        if (m_is_core_node.size() > 0)
-        {
-            return m_is_core_node.at(id);
-        }
-
-        return false;
-    }
-
-    std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
 
     // search graph access
     unsigned GetNumberOfNodes() const override final { return m_query_graph->GetNumberOfNodes(); }
@@ -162,6 +139,51 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
     {
         return m_query_graph->FindSmallestEdge(from, to, filter);
     }
+};
+
+template <>
+class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
+    : public datafacade::AlgorithmDataFacade<algorithm::CoreCH>
+{
+  private:
+    util::ShM<bool, true>::vector m_is_core_node;
+
+    // allocator that keeps the allocation data
+    std::shared_ptr<ContiguousBlockAllocator> allocator;
+
+    void InitializeCoreInformationPointer(storage::DataLayout &data_layout, char *memory_block)
+    {
+        auto core_marker_ptr =
+            data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CH_CORE_MARKER);
+        util::ShM<bool, true>::vector is_core_node(
+            core_marker_ptr, data_layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
+        m_is_core_node = std::move(is_core_node);
+    }
+
+  public:
+    ContiguousInternalMemoryAlgorithmDataFacade(
+        std::shared_ptr<ContiguousBlockAllocator> allocator_)
+        : allocator(std::move(allocator_))
+    {
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+    }
+
+    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        InitializeCoreInformationPointer(data_layout, memory_block);
+    }
+
+    bool IsCoreNode(const NodeID id) const override final
+    {
+        if (m_is_core_node.size() > 0)
+        {
+            return m_is_core_node.at(id);
+        }
+
+        return false;
+    }
+
+    std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
 };
 
 /**
@@ -1047,6 +1069,20 @@ class ContiguousInternalMemoryDataFacade<algorithm::CH>
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
         : ContiguousInternalMemoryDataFacadeBase(allocator),
           ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>(allocator)
+
+    {
+    }
+};
+
+template <>
+class ContiguousInternalMemoryDataFacade<algorithm::CoreCH> final
+    : public ContiguousInternalMemoryDataFacade<algorithm::CH>,
+      public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
+{
+  public:
+    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
+        : ContiguousInternalMemoryDataFacade<algorithm::CH>(allocator),
+          ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>(allocator)
 
     {
     }

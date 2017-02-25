@@ -17,8 +17,15 @@ namespace osrm
 // Pimpl idiom
 
 OSRM::OSRM(engine::EngineConfig &config)
-    : engine_(std::make_unique<engine::Engine<engine::algorithm::CH>>(config))
 {
+    if (engine::Engine<engine::algorithm::CoreCH>::CheckCompability(config))
+    {
+        engine_ = std::make_unique<engine::Engine<engine::algorithm::CoreCH>>(config);
+    }
+    else
+    {
+        engine_ = std::make_unique<engine::Engine<engine::algorithm::CH>>(config);
+    }
 }
 OSRM::~OSRM() = default;
 OSRM::OSRM(OSRM &&) noexcept = default;
