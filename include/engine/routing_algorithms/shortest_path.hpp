@@ -13,6 +13,17 @@ namespace engine
 namespace routing_algorithms
 {
 
+template <typename AlgorithmT>
+InternalRouteResult
+shortestPathSearch(SearchEngineData &,
+                   const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &,
+                   const std::vector<PhantomNodes> &,
+                   const boost::optional<bool>)
+{
+    throw util::exception(std::string("shortestPathSearch is not implemented for ") +
+                          typeid(AlgorithmT).name());
+}
+
 InternalRouteResult
 shortestPathSearch(SearchEngineData &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,

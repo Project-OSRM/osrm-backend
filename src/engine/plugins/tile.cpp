@@ -756,9 +756,9 @@ Status TilePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
 
     // If we're zooming into 16 or higher, include turn data.  Why?  Because turns make the map
     // really cramped, so we don't bother including the data for tiles that span a large area.
-    if (parameters.z >= MIN_ZOOM_FOR_TURNS)
+    if (parameters.z >= MIN_ZOOM_FOR_TURNS && algorithms.HasGetTileTurns())
     {
-        turns = algorithms.TileTurns(edges, edge_index);
+        turns = algorithms.GetTileTurns(edges, edge_index);
     }
 
     encodeVectorTile(

@@ -33,6 +33,11 @@ Status TablePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
                                   const api::TableParameters &params,
                                   util::json::Object &result) const
 {
+    if (!algorithms.HasManyToManySearch())
+    {
+        return Error("NotImplemented", "Many to many search is not implemented for the chosen search algorithm.", result);
+    }
+
     BOOST_ASSERT(params.IsValid());
 
     if (!CheckAllCoordinates(params.coordinates))
@@ -62,7 +67,7 @@ Status TablePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
 
     auto snapped_phantoms = SnapPhantomNodes(GetPhantomNodes(facade, params));
     auto result_table =
-        algorithms.ManyToManyRouting(snapped_phantoms, params.sources, params.destinations);
+        algorithms.ManyToManySearch(snapped_phantoms, params.sources, params.destinations);
 
     if (result_table.empty())
     {

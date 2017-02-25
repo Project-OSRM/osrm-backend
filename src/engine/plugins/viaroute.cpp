@@ -34,6 +34,16 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
 {
     BOOST_ASSERT(route_parameters.IsValid());
 
+    if (!algorithms.HasShortestPathSearch() && route_parameters.coordinates.size() > 2)
+    {
+        return Error("NotImplemented", "Shortest path search is not implemented for the chosen search algorithm. Only two coordinates supported.", json_result);
+    }
+
+    if (!algorithms.HasDirectShortestPathSearch() && !algorithms.HasShortestPathSearch())
+    {
+        return Error("NotImplemented", "Direct shortest path search is not implemented for the chosen search algorithm.", json_result);
+    }
+
     if (max_locations_viaroute > 0 &&
         (static_cast<int>(route_parameters.coordinates.size()) > max_locations_viaroute))
     {
@@ -85,20 +95,17 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
-    if (1 == raw_route.segment_end_coordinates.size())
+    if (1 == raw_route.segment_end_coordinates.size() && algorithms.HasAlternativePathSearch() && route_parameters.alternatives)
     {
-        if (route_parameters.alternatives && algorithms.HasAlternativeRouting())
-        {
-            raw_route = algorithms.AlternativeRouting(raw_route.segment_end_coordinates.front());
-        }
-        else
-        {
-            raw_route = algorithms.DirectShortestPathRouting(raw_route.segment_end_coordinates);
-        }
+        raw_route = algorithms.AlternativePathSearch(raw_route.segment_end_coordinates.front());
+    }
+    else if (1 == raw_route.segment_end_coordinates.size() && algorithms.HasDirectShortestPathSearch())
+    {
+        raw_route = algorithms.DirectShortestPathSearch(raw_route.segment_end_coordinates);
     }
     else
     {
-        raw_route = algorithms.ShortestRouting(raw_route.segment_end_coordinates,
+        raw_route = algorithms.ShortestPathSearch(raw_route.segment_end_coordinates,
                                                route_parameters.continue_straight);
     }
 

@@ -17,6 +17,18 @@ namespace engine
 namespace routing_algorithms
 {
 
+template <typename AlgorithmT>
+std::vector<EdgeWeight>
+manyToManySearch(SearchEngineData &,
+                 const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &,
+                 const std::vector<PhantomNode> &,
+                 const std::vector<std::size_t> &,
+                 const std::vector<std::size_t> &)
+{
+    throw util::exception(std::string("manyToManySearch is not implemented for ") +
+                          typeid(AlgorithmT).name());
+}
+
 std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData &engine_working_data,
                  const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,

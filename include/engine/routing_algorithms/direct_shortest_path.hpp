@@ -15,6 +15,16 @@ namespace engine
 namespace routing_algorithms
 {
 
+template <typename AlgorithmT>
+InternalRouteResult
+directShortestPathSearch(SearchEngineData &,
+                         const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &,
+                         const std::vector<PhantomNodes> &)
+{
+    throw util::exception(std::string("directShortestPathSearch is not implemented for ") +
+                          typeid(AlgorithmT).name());
+}
+
 /// This is a striped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
 /// necessary in case of vias, where the directions of the start node is constrainted

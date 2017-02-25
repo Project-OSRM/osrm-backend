@@ -85,7 +85,7 @@ InternalRouteResult TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &a
         BOOST_ASSERT(min_route.segment_end_coordinates.size() == trip.size() - 1);
     }
 
-    min_route = algorithms.ShortestRouting(min_route.segment_end_coordinates, {false});
+    min_route = algorithms.ShortestPathSearch(min_route.segment_end_coordinates, {false});
     BOOST_ASSERT_MSG(min_route.shortest_path_length < INVALID_EDGE_WEIGHT, "unroutable route");
     return min_route;
 }
@@ -147,6 +147,15 @@ Status TripPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
                                  const api::TripParameters &parameters,
                                  util::json::Object &json_result) const
 {
+    if (!algorithms.HasShortestPathSearch())
+    {
+        return Error("NotImplemented", "Shortest path search is not implemented for the chosen search algorithm.", json_result);
+    }
+    if (!algorithms.HasManyToManySearch())
+    {
+        return Error("NotImplemented", "Many to many search is not implemented for the chosen search algorithm.", json_result);
+    }
+
     BOOST_ASSERT(parameters.IsValid());
     const auto number_of_locations = parameters.coordinates.size();
 
@@ -201,7 +210,7 @@ Status TripPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
 
     // compute the duration table of all phantom nodes
     auto result_table = util::DistTableWrapper<EdgeWeight>(
-        algorithms.ManyToManyRouting(snapped_phantoms, {}, {}), number_of_locations);
+        algorithms.ManyToManySearch(snapped_phantoms, {}, {}), number_of_locations);
 
     if (result_table.size() == 0)
     {

@@ -19,17 +19,17 @@ namespace engine
 class RoutingAlgorithmsInterface
 {
   public:
-    virtual InternalRouteResult AlternativeRouting(const PhantomNodes &phantom_node_pair) const = 0;
+    virtual InternalRouteResult AlternativePathSearch(const PhantomNodes &phantom_node_pair) const = 0;
 
     virtual InternalRouteResult
-    ShortestRouting(const std::vector<PhantomNodes> &phantom_node_pair,
+    ShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair,
                     const boost::optional<bool> continue_straight_at_waypoint) const = 0;
 
     virtual InternalRouteResult
-    DirectShortestPathRouting(const std::vector<PhantomNodes> &phantom_node_pair) const = 0;
+    DirectShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair) const = 0;
 
     virtual std::vector<EdgeWeight>
-    ManyToManyRouting(const std::vector<PhantomNode> &phantom_nodes,
+    ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                       const std::vector<std::size_t> &source_indices,
                       const std::vector<std::size_t> &target_indices) const = 0;
 
@@ -40,11 +40,23 @@ class RoutingAlgorithmsInterface
                 const std::vector<boost::optional<double>> &trace_gps_precision) const = 0;
 
     virtual std::vector<routing_algorithms::TurnData>
-    TileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
+    GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
               const std::vector<std::size_t> &sorted_edge_indexes) const = 0;
 
-    virtual bool HasAlternativeRouting() const = 0;
+    virtual bool HasAlternativePathSearch() const = 0;
+    virtual bool HasShortestPathSearch() const = 0;
+    virtual bool HasDirectShortestPathSearch() const = 0;
+    virtual bool HasMapMatching() const = 0;
+    virtual bool HasManyToManySearch() const = 0;
+    virtual bool HasGetTileTurns() const = 0;
 };
+
+namespace detail
+{
+
+struct NotImplementedException : public std::runtime_error {};
+
+}
 
 // Short-lived object passed to each plugin in request to wrap routing algorithms
 template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlgorithmsInterface
@@ -57,27 +69,27 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
     }
 
     InternalRouteResult
-    AlternativeRouting(const PhantomNodes &phantom_node_pair) const final override
+    AlternativePathSearch(const PhantomNodes &phantom_node_pair) const final override
     {
         return routing_algorithms::alternativePathSearch(heaps, facade, phantom_node_pair);
     }
 
     InternalRouteResult
-    ShortestRouting(const std::vector<PhantomNodes> &phantom_node_pair,
+    ShortestPathSearch(const std::vector<PhantomNodes> &phantom_node_pair,
                     const boost::optional<bool> continue_straight_at_waypoint) const final override
     {
         return routing_algorithms::shortestPathSearch(
             heaps, facade, phantom_node_pair, continue_straight_at_waypoint);
     }
 
-    InternalRouteResult DirectShortestPathRouting(
+    InternalRouteResult DirectShortestPathSearch(
         const std::vector<PhantomNodes> &phantom_node_pair) const final override
     {
         return routing_algorithms::directShortestPathSearch(heaps, facade, phantom_node_pair);
     }
 
     std::vector<EdgeWeight>
-    ManyToManyRouting(const std::vector<PhantomNode> &phantom_nodes,
+    ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                       const std::vector<std::size_t> &source_indices,
                       const std::vector<std::size_t> &target_indices) const final override
     {
@@ -100,15 +112,40 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
     }
 
     std::vector<routing_algorithms::TurnData>
-    TileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
+    GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
               const std::vector<std::size_t> &sorted_edge_indexes) const final override
     {
         return routing_algorithms::getTileTurns(facade, edges, sorted_edge_indexes);
     }
 
-    bool HasAlternativeRouting() const final override
+    bool HasAlternativePathSearch() const final override
     {
-        return algorithm_trais::HasAlternativeRouting<AlgorithmT>()(facade);
+        return algorithm_trais::HasAlternativePathSearch<AlgorithmT>::value;
+    }
+
+    bool HasShortestPathSearch() const final override
+    {
+        return algorithm_trais::HasShortestPathSearch<AlgorithmT>::value;
+    }
+
+    bool HasDirectShortestPathSearch() const final override
+    {
+        return algorithm_trais::HasDirectShortestPathSearch<AlgorithmT>::value;
+    }
+
+    bool HasMapMatching() const final override
+    {
+        return algorithm_trais::HasMapMatching<AlgorithmT>::value;
+    }
+
+    bool HasManyToManySearch() const final override
+    {
+        return algorithm_trais::HasManyToManySearch<AlgorithmT>::value;
+    }
+
+    bool HasGetTileTurns() const final override
+    {
+        return algorithm_trais::HasGetTileTurns<AlgorithmT>::value;
     }
 
   private:
