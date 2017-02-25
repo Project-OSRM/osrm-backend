@@ -47,7 +47,7 @@ struct RankedCandidateNode
 };
 
 // todo: reorder parameters
-template <bool is_forward_directed>
+template <bool DIRECTION>
 void alternativeRoutingStep(
     const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
     QueryHeap &heap1,
@@ -58,8 +58,8 @@ void alternativeRoutingStep(
     std::vector<SearchSpaceEdge> &search_space,
     const EdgeWeight min_edge_offset)
 {
-    QueryHeap &forward_heap = (is_forward_directed ? heap1 : heap2);
-    QueryHeap &reverse_heap = (is_forward_directed ? heap2 : heap1);
+    QueryHeap &forward_heap = DIRECTION == FORWARD_DIRECTION ? heap1 : heap2;
+    QueryHeap &reverse_heap = DIRECTION == FORWARD_DIRECTION ? heap2 : heap1;
 
     const NodeID node = forward_heap.DeleteMin();
     const EdgeWeight weight = forward_heap.GetKey(node);
@@ -104,8 +104,7 @@ void alternativeRoutingStep(
     for (auto edge : facade.GetAdjacentEdgeRange(node))
     {
         const auto &data = facade.GetEdgeData(edge);
-        const bool edge_is_forward_directed = (is_forward_directed ? data.forward : data.backward);
-        if (edge_is_forward_directed)
+        if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
@@ -179,20 +178,16 @@ void computeLengthAndSharingOfViaPath(
     int upper_bound_s_v_path_length = INVALID_EDGE_WEIGHT;
     new_reverse_heap.Insert(via_node, 0, via_node);
     // compute path <s,..,v> by reusing forward search from s
-    const bool constexpr STALLING_ENABLED = true;
-    const bool constexpr DO_NOT_FORCE_LOOPS = false;
     while (!new_reverse_heap.Empty())
     {
-        routingStep(facade,
-                    new_reverse_heap,
-                    existing_forward_heap,
-                    s_v_middle,
-                    upper_bound_s_v_path_length,
-                    min_edge_offset,
-                    false,
-                    STALLING_ENABLED,
-                    DO_NOT_FORCE_LOOPS,
-                    DO_NOT_FORCE_LOOPS);
+        routingStep<REVERSE_DIRECTION>(facade,
+                                       new_reverse_heap,
+                                       existing_forward_heap,
+                                       s_v_middle,
+                                       upper_bound_s_v_path_length,
+                                       min_edge_offset,
+                                       DO_NOT_FORCE_LOOPS,
+                                       DO_NOT_FORCE_LOOPS);
     }
     // compute path <v,..,t> by reusing backward search from node t
     NodeID v_t_middle = SPECIAL_NODEID;
@@ -200,16 +195,14 @@ void computeLengthAndSharingOfViaPath(
     new_forward_heap.Insert(via_node, 0, via_node);
     while (!new_forward_heap.Empty())
     {
-        routingStep(facade,
-                    new_forward_heap,
-                    existing_reverse_heap,
-                    v_t_middle,
-                    upper_bound_of_v_t_path_length,
-                    min_edge_offset,
-                    true,
-                    STALLING_ENABLED,
-                    DO_NOT_FORCE_LOOPS,
-                    DO_NOT_FORCE_LOOPS);
+        routingStep<FORWARD_DIRECTION>(facade,
+                                       new_forward_heap,
+                                       existing_reverse_heap,
+                                       v_t_middle,
+                                       upper_bound_of_v_t_path_length,
+                                       min_edge_offset,
+                                       DO_NOT_FORCE_LOOPS,
+                                       DO_NOT_FORCE_LOOPS);
     }
     *real_length_of_via_path = upper_bound_s_v_path_length + upper_bound_of_v_t_path_length;
 
@@ -347,20 +340,16 @@ bool viaNodeCandidatePassesTTest(
     int upper_bound_s_v_path_length = INVALID_EDGE_WEIGHT;
     // compute path <s,..,v> by reusing forward search from s
     new_reverse_heap.Insert(candidate.node, 0, candidate.node);
-    const bool constexpr STALLING_ENABLED = true;
-    const bool constexpr DO_NOT_FORCE_LOOPS = false;
     while (new_reverse_heap.Size() > 0)
     {
-        routingStep(facade,
-                    new_reverse_heap,
-                    existing_forward_heap,
-                    *s_v_middle,
-                    upper_bound_s_v_path_length,
-                    min_edge_offset,
-                    false,
-                    STALLING_ENABLED,
-                    DO_NOT_FORCE_LOOPS,
-                    DO_NOT_FORCE_LOOPS);
+        routingStep<REVERSE_DIRECTION>(facade,
+                                       new_reverse_heap,
+                                       existing_forward_heap,
+                                       *s_v_middle,
+                                       upper_bound_s_v_path_length,
+                                       min_edge_offset,
+                                       DO_NOT_FORCE_LOOPS,
+                                       DO_NOT_FORCE_LOOPS);
     }
 
     if (INVALID_EDGE_WEIGHT == upper_bound_s_v_path_length)
@@ -374,16 +363,14 @@ bool viaNodeCandidatePassesTTest(
     new_forward_heap.Insert(candidate.node, 0, candidate.node);
     while (new_forward_heap.Size() > 0)
     {
-        routingStep(facade,
-                    new_forward_heap,
-                    existing_reverse_heap,
-                    *v_t_middle,
-                    upper_bound_of_v_t_path_length,
-                    min_edge_offset,
-                    true,
-                    STALLING_ENABLED,
-                    DO_NOT_FORCE_LOOPS,
-                    DO_NOT_FORCE_LOOPS);
+        routingStep<FORWARD_DIRECTION>(facade,
+                                       new_forward_heap,
+                                       existing_reverse_heap,
+                                       *v_t_middle,
+                                       upper_bound_of_v_t_path_length,
+                                       min_edge_offset,
+                                       DO_NOT_FORCE_LOOPS,
+                                       DO_NOT_FORCE_LOOPS);
     }
 
     if (INVALID_EDGE_WEIGHT == upper_bound_of_v_t_path_length)
@@ -549,29 +536,25 @@ bool viaNodeCandidatePassesTTest(
     {
         if (!forward_heap3.Empty())
         {
-            routingStep(facade,
-                        forward_heap3,
-                        reverse_heap3,
-                        middle,
-                        upper_bound,
-                        min_edge_offset,
-                        true,
-                        STALLING_ENABLED,
-                        DO_NOT_FORCE_LOOPS,
-                        DO_NOT_FORCE_LOOPS);
+            routingStep<FORWARD_DIRECTION>(facade,
+                                           forward_heap3,
+                                           reverse_heap3,
+                                           middle,
+                                           upper_bound,
+                                           min_edge_offset,
+                                           DO_NOT_FORCE_LOOPS,
+                                           DO_NOT_FORCE_LOOPS);
         }
         if (!reverse_heap3.Empty())
         {
-            routingStep(facade,
-                        reverse_heap3,
-                        forward_heap3,
-                        middle,
-                        upper_bound,
-                        min_edge_offset,
-                        false,
-                        STALLING_ENABLED,
-                        DO_NOT_FORCE_LOOPS,
-                        DO_NOT_FORCE_LOOPS);
+            routingStep<REVERSE_DIRECTION>(facade,
+                                           reverse_heap3,
+                                           forward_heap3,
+                                           middle,
+                                           upper_bound,
+                                           min_edge_offset,
+                                           DO_NOT_FORCE_LOOPS,
+                                           DO_NOT_FORCE_LOOPS);
         }
     }
     return (upper_bound <= t_test_path_length);
@@ -644,25 +627,25 @@ alternativePathSearch(SearchEngineData &engine_working_data,
     {
         if (0 < forward_heap1.Size())
         {
-            alternativeRoutingStep<true>(facade,
-                                         forward_heap1,
-                                         reverse_heap1,
-                                         &middle_node,
-                                         &upper_bound_to_shortest_path_weight,
-                                         via_node_candidate_list,
-                                         forward_search_space,
-                                         min_edge_offset);
+            alternativeRoutingStep<FORWARD_DIRECTION>(facade,
+                                                      forward_heap1,
+                                                      reverse_heap1,
+                                                      &middle_node,
+                                                      &upper_bound_to_shortest_path_weight,
+                                                      via_node_candidate_list,
+                                                      forward_search_space,
+                                                      min_edge_offset);
         }
         if (0 < reverse_heap1.Size())
         {
-            alternativeRoutingStep<false>(facade,
-                                          forward_heap1,
-                                          reverse_heap1,
-                                          &middle_node,
-                                          &upper_bound_to_shortest_path_weight,
-                                          via_node_candidate_list,
-                                          reverse_search_space,
-                                          min_edge_offset);
+            alternativeRoutingStep<REVERSE_DIRECTION>(facade,
+                                                      forward_heap1,
+                                                      reverse_heap1,
+                                                      &middle_node,
+                                                      &upper_bound_to_shortest_path_weight,
+                                                      via_node_candidate_list,
+                                                      reverse_search_space,
+                                                      min_edge_offset);
         }
     }
 
