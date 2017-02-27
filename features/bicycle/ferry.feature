@@ -58,10 +58,10 @@ Feature: Bike - Handle ferry routes
             """
 
         And the ways
-            | nodes | highway | route | bicycle | duration |
-            | xa    | primary |       |         |          |
-            | yd    | primary |       |         |          |
-            | abcd  |         | ferry | yes     | 1:00     |
+            | nodes | highway | route | duration |
+            | xa    | primary |       |          |
+            | yd    | primary |       |          |
+            | abcd  | (nil)   | ferry | 1:00     |
 
         When I route I should get
             | from | to | route     | time  |
