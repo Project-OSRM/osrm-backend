@@ -56,6 +56,7 @@ extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &f
              const PhantomNodes &nodes)
 {
     InternalRouteResult raw_route_data;
+    raw_route_data.segment_end_coordinates = {nodes};
     // No path found for both target nodes?
     if (INVALID_EDGE_WEIGHT == weight)
     {

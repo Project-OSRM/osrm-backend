@@ -183,13 +183,13 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::Core
             else
             {
                 routingStep<FORWARD_DIRECTION>(facade,
-                            forward_heap,
-                            reverse_heap,
-                            middle,
-                            weight,
-                            min_edge_offset,
-                            force_loop_forward,
-                            force_loop_reverse);
+                                               forward_heap,
+                                               reverse_heap,
+                                               middle,
+                                               weight,
+                                               min_edge_offset,
+                                               force_loop_forward,
+                                               force_loop_reverse);
             }
         }
         if (!reverse_heap.Empty())
@@ -203,13 +203,13 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::Core
             else
             {
                 routingStep<REVERSE_DIRECTION>(facade,
-                            reverse_heap,
-                            forward_heap,
-                            middle,
-                            weight,
-                            min_edge_offset,
-                            force_loop_reverse,
-                            force_loop_forward);
+                                               reverse_heap,
+                                               forward_heap,
+                                               middle,
+                                               weight,
+                                               min_edge_offset,
+                                               force_loop_reverse,
+                                               force_loop_forward);
             }
         }
     }
@@ -253,22 +253,22 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::Core
            weight > (forward_core_heap.MinKey() + reverse_core_heap.MinKey()))
     {
         routingStep<FORWARD_DIRECTION, DISABLE_STALLING>(facade,
-                    forward_core_heap,
-                    reverse_core_heap,
-                    middle,
-                    weight,
-                    min_core_edge_offset,
-                    force_loop_forward,
-                    force_loop_reverse);
+                                                         forward_core_heap,
+                                                         reverse_core_heap,
+                                                         middle,
+                                                         weight,
+                                                         min_core_edge_offset,
+                                                         force_loop_forward,
+                                                         force_loop_reverse);
 
         routingStep<REVERSE_DIRECTION, DISABLE_STALLING>(facade,
-                    reverse_core_heap,
-                    forward_core_heap,
-                    middle,
-                    weight,
-                    min_core_edge_offset,
-                    force_loop_reverse,
-                    force_loop_forward);
+                                                         reverse_core_heap,
+                                                         forward_core_heap,
+                                                         middle,
+                                                         weight,
+                                                         min_core_edge_offset,
+                                                         force_loop_reverse,
+                                                         force_loop_forward);
     }
 
     // No path found for both target nodes?

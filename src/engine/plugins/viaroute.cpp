@@ -81,11 +81,11 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
                                                    ? *route_parameters.continue_straight
                                                    : facade.GetContinueStraightDefault();
 
-    InternalRouteResult raw_route;
-    auto build_phantom_pairs = [&raw_route, continue_straight_at_waypoint](
+    std::vector<PhantomNodes> start_end_nodes;
+    auto build_phantom_pairs = [&start_end_nodes, continue_straight_at_waypoint](
         const PhantomNode &first_node, const PhantomNode &second_node) {
-        raw_route.segment_end_coordinates.push_back(PhantomNodes{first_node, second_node});
-        auto &last_inserted = raw_route.segment_end_coordinates.back();
+        start_end_nodes.push_back(PhantomNodes{first_node, second_node});
+        auto &last_inserted = start_end_nodes.back();
         // enable forward direction if possible
         if (last_inserted.source_phantom.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
@@ -101,20 +101,20 @@ ViaRoutePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataFaca
     };
     util::for_each_pair(snapped_phantoms, build_phantom_pairs);
 
-    if (1 == raw_route.segment_end_coordinates.size() && algorithms.HasAlternativePathSearch() &&
+    InternalRouteResult raw_route;
+    if (1 == start_end_nodes.size() && algorithms.HasAlternativePathSearch() &&
         route_parameters.alternatives)
     {
-        raw_route = algorithms.AlternativePathSearch(raw_route.segment_end_coordinates.front());
+        raw_route = algorithms.AlternativePathSearch(start_end_nodes.front());
     }
-    else if (1 == raw_route.segment_end_coordinates.size() &&
-             algorithms.HasDirectShortestPathSearch())
+    else if (1 == start_end_nodes.size() && algorithms.HasDirectShortestPathSearch())
     {
-        raw_route = algorithms.DirectShortestPathSearch(raw_route.segment_end_coordinates.front());
+        raw_route = algorithms.DirectShortestPathSearch(start_end_nodes.front());
     }
     else
     {
-        raw_route = algorithms.ShortestPathSearch(raw_route.segment_end_coordinates,
-                                                  route_parameters.continue_straight);
+        raw_route =
+            algorithms.ShortestPathSearch(start_end_nodes, route_parameters.continue_straight);
     }
 
     // we can only know this after the fact, different SCC ids still
