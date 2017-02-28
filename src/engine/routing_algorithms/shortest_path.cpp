@@ -235,6 +235,7 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
                        const boost::optional<bool> continue_straight_at_waypoint)
 {
     InternalRouteResult raw_route_data;
+    raw_route_data.segment_end_coordinates = phantom_nodes_vector;
     const bool allow_uturn_at_waypoint =
         !(continue_straight_at_waypoint ? *continue_straight_at_waypoint
                                         : facade.GetContinueStraightDefault());

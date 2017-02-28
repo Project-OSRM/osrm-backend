@@ -567,6 +567,7 @@ alternativePathSearch(SearchEngineData &engine_working_data,
                       const PhantomNodes &phantom_node_pair)
 {
     InternalRouteResult raw_route_data;
+    raw_route_data.segment_end_coordinates = {phantom_node_pair};
     std::vector<NodeID> alternative_path;
     std::vector<NodeID> via_node_candidate_list;
     std::vector<SearchSpaceEdge> forward_search_space;

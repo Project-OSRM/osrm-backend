@@ -128,7 +128,7 @@ we need to add an offset to the termination criterion.
 static constexpr bool ENABLE_STALLING = true;
 static constexpr bool DISABLE_STALLING = false;
 static constexpr bool DO_NOT_FORCE_LOOPS = false;
-template<bool DIRECTION, bool STALLING=ENABLE_STALLING>
+template <bool DIRECTION, bool STALLING = ENABLE_STALLING>
 void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                  SearchEngineData::QueryHeap &forward_heap,
                  SearchEngineData::QueryHeap &reverse_heap,

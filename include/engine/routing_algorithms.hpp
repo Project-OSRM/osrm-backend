@@ -70,6 +70,8 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
     {
     }
 
+    virtual ~RoutingAlgorithms() = default;
+
     InternalRouteResult
     AlternativePathSearch(const PhantomNodes &phantom_node_pair) const final override
     {
