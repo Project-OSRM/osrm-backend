@@ -15,23 +15,14 @@ namespace engine
 namespace routing_algorithms
 {
 
+
 using CandidateList = std::vector<PhantomNodeWithDistance>;
 using CandidateLists = std::vector<CandidateList>;
 using SubMatchingList = std::vector<map_matching::SubMatching>;
 static const constexpr double DEFAULT_GPS_PRECISION = 5;
 
-template <typename AlgorithmT>
-SubMatchingList mapMatching(SearchEngineData &,
-                            const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &,
-                            const CandidateLists &,
-                            const std::vector<util::Coordinate> &,
-                            const std::vector<unsigned> &,
-                            const std::vector<boost::optional<double>> &)
-{
-    throw util::exception(std::string("mapMatching is not implemented for ") +
-                          typeid(AlgorithmT).name());
-}
-
+//[1] "Hidden Markov Map Matching Through Noise and Sparseness";
+//     P. Newson and J. Krumm; 2009; ACM GIS
 SubMatchingList
 mapMatching(SearchEngineData &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
@@ -50,8 +41,5 @@ mapMatching(SearchEngineData &engine_working_data,
 }
 }
 }
-
-//[1] "Hidden Markov Map Matching Through Noise and Sparseness"; P. Newson and J. Krumm; 2009; ACM
-// GIS
 
 #endif /* MAP_MATCHING_HPP */

@@ -259,7 +259,7 @@ std::vector<std::size_t> getEdgeIndex(const std::vector<RTreeLeaf> &edges)
     // GetEdgesInBox is marked `const`, so we can't sort the array itself,
     // instead we create an array of indexes and sort that instead.
     std::vector<std::size_t> sorted_edge_indexes(edges.size(), 0);
-    std::iota(sorted_edge_indexes.begin(), sorted_edge_indexes.end(), 0); // fill with 1,2,3,...N
+    std::iota(sorted_edge_indexes.begin(), sorted_edge_indexes.end(), 0); // fill with 0,1,2,3,...N-1
 
     // Now, sort that array based on the edges list, using the u/v node IDs
     // as the sort condition

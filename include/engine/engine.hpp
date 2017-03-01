@@ -35,7 +35,7 @@ namespace engine
 class EngineInterface
 {
   public:
-    virtual ~EngineInterface(){};
+    virtual ~EngineInterface() = default;
     virtual Status Route(const api::RouteParameters &parameters,
                          util::json::Object &result) const = 0;
     virtual Status Table(const api::TableParameters &parameters,
@@ -63,10 +63,12 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
     {
         if (config.use_shared_memory)
         {
+            util::Log(logDEBUG) << "Using shared memory with algorithm " << algorithm::name<AlgorithmT>();
             facade_provider = std::make_unique<WatchingProvider<AlgorithmT>>();
         }
         else
         {
+            util::Log(logDEBUG) << "Using internal memory with algorithm " << algorithm::name<AlgorithmT>();
             facade_provider =
                 std::make_unique<ImmutableProvider<AlgorithmT>>(config.storage_config);
         }
@@ -77,7 +79,7 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
 
     Engine(const Engine &) = delete;
     Engine &operator=(const Engine &) = delete;
-    virtual ~Engine(){};
+    virtual ~Engine() = default;
 
     Status Route(const api::RouteParameters &params,
                  util::json::Object &result) const override final
@@ -155,6 +157,8 @@ template <> bool Engine<algorithm::CH>::CheckCompability(const EngineConfig &con
     else
     {
         std::ifstream in(config.storage_config.hsgr_data_path.string().c_str());
+        if (!in) return false;
+
         in.seekg(0, std::ios::end);
         auto size = in.tellg();
         return size > 0;
@@ -176,12 +180,13 @@ template <> bool Engine<algorithm::CoreCH>::CheckCompability(const EngineConfig 
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        std::cout << layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) << std::endl;
         return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > 4;
     }
     else
     {
         std::ifstream in(config.storage_config.core_data_path.string().c_str());
+        if (!in) return false;
+
         in.seekg(0, std::ios::end);
         std::size_t size = in.tellg();
         // An empty core files is only the 4 byte size header.

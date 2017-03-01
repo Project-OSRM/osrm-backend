@@ -52,14 +52,6 @@ class RoutingAlgorithmsInterface
     virtual bool HasGetTileTurns() const = 0;
 };
 
-namespace detail
-{
-
-struct NotImplementedException : public std::runtime_error
-{
-};
-}
-
 // Short-lived object passed to each plugin in request to wrap routing algorithms
 template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlgorithmsInterface
 {

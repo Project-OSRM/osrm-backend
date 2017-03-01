@@ -145,6 +145,12 @@ class BinaryHeap
         return inserted_nodes[index].weight;
     }
 
+    const Weight &GetKey(NodeID node) const
+    {
+        const Key index = node_index.peek_index(node);
+        return inserted_nodes[index].weight;
+    }
+
     bool WasRemoved(const NodeID node) const
     {
         BOOST_ASSERT(WasInserted(node));
