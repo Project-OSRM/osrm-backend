@@ -5,6 +5,7 @@
 #include "partition/edge_based_graph_reader.hpp"
 #include "partition/node_based_graph_to_edge_based_graph_mapping_reader.hpp"
 #include "partition/recursive_bisection.hpp"
+#include "partition/io.hpp"
 
 #include "util/cell_storage.hpp"
 #include "util/coordinate.hpp"
@@ -21,7 +22,6 @@
 #include <vector>
 
 #include <boost/assert.hpp>
-#include <boost/container/small_vector.hpp>
 
 #include "util/geojson_debug_logger.hpp"
 #include "util/geojson_debug_policies.hpp"
@@ -203,7 +203,7 @@ int Partitioner::Run(const PartitionConfig &config)
         // split bisection id bits into groups starting from SCC and stop at level 1
         BOOST_ASSERT(recursive_bisection.SCCDepth() != 0);
         int mask_from = sizeof(BisectionID) * CHAR_BIT - recursive_bisection.SCCDepth();
-        boost::container::small_vector<BisectionID, 8> level_masks;
+        std::vector<BisectionID> level_masks;
         for (int mask_to = sizeof(BisectionID) * CHAR_BIT; mask_to > first_nonzero_position;
              mask_to = mask_from, mask_from -= 3) // TODO: find better grouping
         {
@@ -250,7 +250,7 @@ int Partitioner::Run(const PartitionConfig &config)
         }
 
         TIMER_START(packed_mlp);
-        osrm::util::PackedMultiLevelPartition<false> mlp{partitions, level_to_num_cells};
+        osrm::util::MultiLevelPartition mlp{partitions, level_to_num_cells};
         TIMER_STOP(packed_mlp);
         util::Log() << "PackedMultiLevelPartition constructed in " << TIMER_SEC(packed_mlp)
                     << " seconds";
@@ -261,7 +261,7 @@ int Partitioner::Run(const PartitionConfig &config)
         util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
 
         TIMER_START(writing_mld_data);
-        mlp.Write(config.mld_partition_path);
+        io::write(config.mld_partition_path, mlp);
         storage.Write(config.mld_storage_path);
         TIMER_STOP(writing_mld_data);
         util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";

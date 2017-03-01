@@ -17,14 +17,83 @@ using namespace osrm::util;
 
 BOOST_AUTO_TEST_SUITE(multi_level_partition_tests)
 
-BOOST_AUTO_TEST_CASE(packed_mlp)
+BOOST_AUTO_TEST_CASE(mlp_one)
+{
+    // node:                0  1  2  3  4  5  6  7  8  9 10 11
+    std::vector<CellID> l1{{4, 4, 2, 2, 1, 1, 3, 3, 2, 2, 5, 5}};
+    MultiLevelPartition mlp{{l1}, {6}};
+
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 0), mlp.GetCell(1, 1));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 2), mlp.GetCell(1, 3));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 4), mlp.GetCell(1, 5));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 6), mlp.GetCell(1, 7));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 8), mlp.GetCell(1, 9));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 10), mlp.GetCell(1, 11));
+}
+
+BOOST_AUTO_TEST_CASE(mlp_shuffled)
+{
+    // node:                0  1  2  3  4  5  6  7  8  9 10 11
+    std::vector<CellID> l1{{4, 4, 2, 2, 1, 1, 3, 3, 2, 2, 5, 5}};
+    std::vector<CellID> l2{{3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 0, 0}};
+    std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}};
+    std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    MultiLevelPartition mlp{{l1, l2, l3, l4}, {6, 4, 2, 1}};
+
+    BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(1), 6);
+    BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(2), 4);
+    BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(3), 2);
+    BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(4), 1);
+
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 0), mlp.GetCell(1, 1));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 2), mlp.GetCell(1, 3));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 4), mlp.GetCell(1, 5));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 6), mlp.GetCell(1, 7));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 8), mlp.GetCell(1, 9));
+    BOOST_CHECK_EQUAL(mlp.GetCell(1, 10), mlp.GetCell(1, 11));
+
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 0), mlp.GetCell(2, 1));
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 0), mlp.GetCell(2, 2));
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 0), mlp.GetCell(2, 3));
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 4), mlp.GetCell(2, 5));
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 4), mlp.GetCell(2, 6));
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 4), mlp.GetCell(2, 7));
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 8), mlp.GetCell(2, 9));
+    BOOST_CHECK_EQUAL(mlp.GetCell(2, 10), mlp.GetCell(2, 11));
+
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 0), mlp.GetCell(3, 1));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 0), mlp.GetCell(3, 2));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 0), mlp.GetCell(3, 3));
+
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 4), mlp.GetCell(3, 5));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 4), mlp.GetCell(3, 6));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 4), mlp.GetCell(3, 7));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 4), mlp.GetCell(3, 8));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 4), mlp.GetCell(3, 9));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 4), mlp.GetCell(3, 10));
+    BOOST_CHECK_EQUAL(mlp.GetCell(3, 4), mlp.GetCell(3, 11));
+
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 1));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 2));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 3));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 4));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 5));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 6));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 7));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 8));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 9));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 10));
+    BOOST_CHECK_EQUAL(mlp.GetCell(4, 0), mlp.GetCell(4, 11));
+}
+
+BOOST_AUTO_TEST_CASE(mlp_sorted)
 {
     // node:                0  1  2  3  4  5  6  7  8  9 10 11
     std::vector<CellID> l1{{0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5}};
     std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3}};
     std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}};
     std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    PackedMultiLevelPartition<false> mlp{{l1, l2, l3, l4}, {6, 4, 2, 1}};
+    MultiLevelPartition mlp{{l1, l2, l3, l4}, {6, 4, 2, 1}};
 
     BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(1), 6);
     BOOST_CHECK_EQUAL(mlp.GetNumberOfCells(2), 4);

@@ -3,7 +3,9 @@
 
 #include "contractor/query_edge.hpp"
 #include "engine/algorithm.hpp"
+#include "util/cell_storage.hpp"
 #include "util/integer_range.hpp"
+#include "util/multi_level_partition.hpp"
 
 namespace osrm
 {
@@ -57,6 +59,14 @@ template <> class AlgorithmDataFacade<algorithm::CoreCH>
     using EdgeData = contractor::QueryEdge::EdgeData;
 
     virtual bool IsCoreNode(const NodeID id) const = 0;
+};
+
+template <> class AlgorithmDataFacade<algorithm::MLD>
+{
+  public:
+    virtual const util::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
+
+    virtual const util::CellStorage<true> &GetCellStorage() const = 0;
 };
 }
 }

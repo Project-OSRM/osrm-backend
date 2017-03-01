@@ -61,6 +61,9 @@ namespace engine
  * now.
  *  - Algorithm::CoreCH
  *    Contractoin Hierachies with partial contraction for faster pre-processing but slower queries.
+ *  - Algorithm::MLD
+ *    Multi Level Dijkstra which is experimental and moderately fast in both pre-processing and
+ * query.
  *
  * Algorithm::CH is specified we will automatically upgrade to CoreCH if we find the data for it.
  * If Algorithm::CoreCH is specified and we don't find the speedup data, we fail hard.
@@ -73,8 +76,9 @@ struct EngineConfig final
 
     enum class Algorithm
     {
-        CH,    // will upgrade to CoreCH if it finds core data
-        CoreCH // will fail hard if there is no core data
+        CH,     // will upgrade to CoreCH if it finds core data
+        CoreCH, // will fail hard if there is no core data
+        MLD
     };
 
     storage::StorageConfig storage_config;

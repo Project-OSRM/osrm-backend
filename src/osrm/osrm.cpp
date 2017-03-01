@@ -45,6 +45,9 @@ OSRM::OSRM(engine::EngineConfig &config)
     case EngineConfig::Algorithm::CoreCH:
         engine_ = std::make_unique<engine::Engine<engine::algorithm::CoreCH>>(config);
         break;
+    case EngineConfig::Algorithm::MLD:
+        engine_ = std::make_unique<engine::Engine<engine::algorithm::MLD>>(config);
+        break;
     default:
         util::exception("Algorithm not implemented!");
     }

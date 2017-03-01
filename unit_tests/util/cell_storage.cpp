@@ -16,32 +16,6 @@
 using namespace osrm;
 using namespace osrm::util;
 
-class MockMLP final : public MultiLevelPartition
-{
-  public:
-    CellID GetCell(LevelID level, NodeID node) const { return levels[level - 1][node]; };
-
-    LevelID GetHighestDifferentLevel(NodeID, NodeID) const { return 3; };
-    LevelID GetQueryLevel(NodeID, NodeID, NodeID) const { return 3; };
-
-    std::uint8_t GetNumberOfLevels() const { return levels.size() + 1; }
-
-    std::uint32_t GetNumberOfCells(LevelID level) const
-    {
-        auto max_id = 0;
-        for (auto cell : levels[level - 1])
-            max_id = std::max<CellID>(max_id, cell);
-        return max_id + 1;
-    }
-
-    CellID BeginChildren(LevelID, CellID) const { return 0; }
-    CellID EndChildren(LevelID, CellID) const { return 0; }
-
-    MockMLP(std::vector<std::vector<CellID>> levels_) : levels(std::move(levels_)) {}
-
-    std::vector<std::vector<CellID>> levels;
-};
-
 struct MockEdge
 {
     NodeID start;
@@ -84,7 +58,7 @@ BOOST_AUTO_TEST_CASE(mutable_cell_storage)
     std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3}};
     std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}};
     std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MockMLP mlp{{l1, l2, l3, l4}};
+    MultiLevelPartition mlp{{l1, l2, l3, l4}, {2, 4, 8, 12}};
 
     std::vector<MockEdge> edges = {
         // edges sorted into border/internal by level
@@ -193,7 +167,7 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
     std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3}};
     std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}};
     std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MockMLP mlp{{l1, l2, l3, l4}};
+    MultiLevelPartition mlp{{l1, l2, l3, l4}, {2, 4, 8, 12}};
 
     std::vector<MockEdge> edges = {
         // edges sorted into border/internal by level

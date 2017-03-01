@@ -20,6 +20,27 @@
 
 namespace osrm
 {
+
+namespace util
+{
+namespace detail
+{
+template <bool UseShareMemory> class MultiLevelPartitionImpl;
+}
+using MultiLevelPartition = detail::MultiLevelPartitionImpl<false>;
+using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<true>;
+}
+
+namespace partition
+{
+namespace io
+{
+template <bool UseShareMemory>
+void write(const boost::filesystem::path &file,
+           const util::detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
+}
+}
+
 namespace util
 {
 namespace detail
@@ -49,187 +70,121 @@ inline std::size_t highestMSB(std::uint64_t v)
 
 using LevelID = std::uint8_t;
 using CellID = std::uint32_t;
+using PartitionID = std::uint64_t;
 
 static constexpr CellID INVALID_CELL_ID = std::numeric_limits<CellID>::max();
 
-// Mock interface, can be removed when we have an actual implementation
-class MultiLevelPartition
+namespace detail
 {
-  public:
-    // Returns the cell id of `node` at `level`
-    virtual CellID GetCell(LevelID level, NodeID node) const = 0;
 
-    // Returns the lowest cell id (at `level - 1`) of all children `cell` at `level`
-    virtual CellID BeginChildren(LevelID level, CellID cell) const = 0;
-
-    // Returns the highest cell id (at `level - 1`) of all children `cell` at `level`
-    virtual CellID EndChildren(LevelID level, CellID cell) const = 0;
-
-    // Returns the highest level in which `first` and `second` are still in different cells
-    virtual LevelID GetHighestDifferentLevel(NodeID first, NodeID second) const = 0;
-
-    // Returns the level at which a `node` is relevant for a query from start to target
-    virtual LevelID GetQueryLevel(NodeID start, NodeID target, NodeID node) const = 0;
-
-    virtual std::uint8_t GetNumberOfLevels() const = 0;
-
-    virtual std::uint32_t GetNumberOfCells(LevelID level) const = 0;
-};
-
-template <bool UseShareMemory> class PackedMultiLevelPartition final : public MultiLevelPartition
+template <bool UseShareMemory> class MultiLevelPartitionImpl final
 {
-    using PartitionID = std::uint64_t;
+    // we will support at most 16 levels
+    static const constexpr std::uint8_t MAX_NUM_LEVEL = 16;
     static const constexpr std::uint8_t NUM_PARTITION_BITS = sizeof(PartitionID) * CHAR_BIT;
 
+    template <typename T> using Vector = typename util::ShM<T, UseShareMemory>::vector;
+
   public:
-    PackedMultiLevelPartition() {}
+    // Contains all data necessary to describe the level hierarchy
+    struct LevelData
+    {
+
+        std::uint32_t num_level;
+        std::array<std::uint8_t, MAX_NUM_LEVEL - 1> lidx_to_offset;
+        std::array<PartitionID, MAX_NUM_LEVEL - 1> lidx_to_mask;
+        std::array<LevelID, NUM_PARTITION_BITS> bit_to_level;
+        std::array<std::uint32_t, MAX_NUM_LEVEL - 1> lidx_to_children_offsets;
+    };
+
+    MultiLevelPartitionImpl() = default;
 
     // cell_sizes is index by level (starting at 0, the base graph).
     // However level 0 always needs to have cell size 1, since it is the
     // basegraph.
-    PackedMultiLevelPartition(const std::vector<std::vector<CellID>> &partitions,
-                              const std::vector<std::uint32_t> &level_to_num_cells)
-        : level_offsets(makeLevelOffsets(level_to_num_cells)), level_masks(makeLevelMasks()),
-          bit_to_level(makeBitToLevel())
+    template <typename = typename std::enable_if<!UseShareMemory>>
+    MultiLevelPartitionImpl(const std::vector<std::vector<CellID>> &partitions,
+                            const std::vector<std::uint32_t> &lidx_to_num_cells)
+        : level_data(MakeLevelData(lidx_to_num_cells))
     {
-        initializePartitionIDs(partitions);
+        InitializePartitionIDs(partitions);
     }
 
-    PackedMultiLevelPartition(const boost::filesystem::path &file_name) { Read(file_name); }
+    template <typename = typename std::enable_if<UseShareMemory>>
+    MultiLevelPartitionImpl(LevelData level_data,
+                            Vector<PartitionID> partition_,
+                            Vector<CellID> cell_to_children_)
+        : level_data(std::move(level_data)), partition(std::move(partition_)),
+          cell_to_children(std::move(cell_to_children_))
+    {
+    }
 
     // returns the index of the cell the vertex is contained at level l
-    CellID GetCell(LevelID l, NodeID node) const final override
+    CellID GetCell(LevelID l, NodeID node) const
     {
         auto p = partition[node];
         auto lidx = LevelIDToIndex(l);
-        auto masked = p & level_masks[lidx];
-        return masked >> level_offsets[lidx];
+        auto masked = p & level_data.lidx_to_mask[lidx];
+        return masked >> level_data.lidx_to_offset[lidx];
     }
 
-    LevelID GetQueryLevel(NodeID start, NodeID target, NodeID node) const final override
+    LevelID GetQueryLevel(NodeID start, NodeID target, NodeID node) const
     {
         return std::min(GetHighestDifferentLevel(start, node),
                         GetHighestDifferentLevel(target, node));
     }
 
-    LevelID GetHighestDifferentLevel(NodeID first, NodeID second) const final override
+    LevelID GetHighestDifferentLevel(NodeID first, NodeID second) const
     {
         if (partition[first] == partition[second])
             return 0;
 
         auto msb = detail::highestMSB(partition[first] ^ partition[second]);
-        return bit_to_level[msb];
+        return level_data.bit_to_level[msb];
     }
 
-    std::uint8_t GetNumberOfLevels() const final override { return level_offsets.size(); }
+    std::uint8_t GetNumberOfLevels() const { return level_data.num_level; }
 
-    std::uint32_t GetNumberOfCells(LevelID level) const final override
+    std::uint32_t GetNumberOfCells(LevelID level) const
     {
         return GetCell(level, GetSenitileNode());
     }
 
     // Returns the lowest cell id (at `level - 1`) of all children `cell` at `level`
-    CellID BeginChildren(LevelID level, CellID cell) const final override
+    CellID BeginChildren(LevelID level, CellID cell) const
     {
         BOOST_ASSERT(level > 1);
         auto lidx = LevelIDToIndex(level);
-        auto offset = level_to_children_offset[lidx];
+        auto offset = level_data.lidx_to_children_offsets[lidx];
         return cell_to_children[offset + cell];
     }
 
     // Returns the highest cell id (at `level - 1`) of all children `cell` at `level`
-    CellID EndChildren(LevelID level, CellID cell) const final override
+    CellID EndChildren(LevelID level, CellID cell) const
     {
         BOOST_ASSERT(level > 1);
         auto lidx = LevelIDToIndex(level);
-        auto offset = level_to_children_offset[lidx];
+        auto offset = level_data.lidx_to_children_offsets[lidx];
         return cell_to_children[offset + cell + 1];
     }
 
-    std::size_t GetRequiredMemorySize(const boost::filesystem::path &path) const
-    {
-        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-        storage::io::FileReader reader{path, fingerprint};
-
-        std::size_t memory_size = 0;
-        memory_size += reader.GetVectorMemorySize<decltype(level_offsets[0])>();
-        memory_size += reader.GetVectorMemorySize<decltype(partition[0])>();
-        memory_size += reader.GetVectorMemorySize<decltype(level_to_children_offset[0])>();
-        memory_size += reader.GetVectorMemorySize<decltype(cell_to_children[0])>();
-        return memory_size;
-    }
-
-    template <bool Q = UseShareMemory>
-    typename std::enable_if<Q>::type
-    Read(const boost::filesystem::path &path, void *begin, const void *end) const
-    {
-        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-        storage::io::FileReader reader{path, fingerprint};
-
-        begin = reader.DeserializeVector<typename decltype(level_offsets)::value_type>(begin, end);
-        begin = reader.DeserializeVector<typename decltype(partition)::value_type>(begin, end);
-        begin = reader.DeserializeVector<typename decltype(level_to_children_offset)::value_type>(
-            begin, end);
-        begin =
-            reader.DeserializeVector<typename decltype(cell_to_children)::value_type>(begin, end);
-    }
-
-    template <bool Q = UseShareMemory>
-    typename std::enable_if<Q>::type InitializePointers(char *begin, const char *end)
-    {
-        auto level_offsets_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(level_offsets_size);
-        level_offsets.reset(begin, level_offsets_size);
-        begin += sizeof(decltype(level_offsets[0])) * level_offsets_size;
-
-        auto partition_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(partition_size);
-        partition.reset(begin, partition_size);
-        begin += sizeof(decltype(partition[0])) * partition_size;
-
-        auto level_to_children_offset_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(level_to_children_offset_size);
-        level_to_children_offset.reset(begin, level_to_children_offset_size);
-        begin += sizeof(decltype(level_to_children_offset[0])) * level_to_children_offset_size;
-
-        auto cell_to_children_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(cell_to_children_size);
-        cell_to_children.reset(begin, cell_to_children_size);
-        begin += sizeof(decltype(cell_to_children[0])) * level_to_children_offset_size;
-
-        BOOST_ASSERT(begin <= end);
-
-        level_masks = makeLevelMasks();
-        bit_to_level = makeBitToLevel();
-    }
-
-    template <bool Q = UseShareMemory>
-    typename std::enable_if<!Q>::type Read(const boost::filesystem::path &path)
-    {
-        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-        storage::io::FileReader reader{path, fingerprint};
-
-        reader.DeserializeVector(level_offsets);
-        reader.DeserializeVector(partition);
-        reader.DeserializeVector(level_to_children_offset);
-        reader.DeserializeVector(cell_to_children);
-
-        level_masks = makeLevelMasks();
-        bit_to_level = makeBitToLevel();
-    }
-
-    void Write(const boost::filesystem::path &path) const
-    {
-        const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-        storage::io::FileWriter writer{path, fingerprint};
-
-        writer.SerializeVector(level_offsets);
-        writer.SerializeVector(partition);
-        writer.SerializeVector(level_to_children_offset);
-        writer.SerializeVector(cell_to_children);
-    }
+    friend void partition::io::write<UseShareMemory>(const boost::filesystem::path &file,
+                                                     const MultiLevelPartitionImpl &mlp);
 
   private:
+    auto MakeLevelData(const std::vector<std::uint32_t> &lidx_to_num_cells)
+    {
+        std::uint32_t num_level = lidx_to_num_cells.size() + 1;
+        auto offsets = MakeLevelOffsets(lidx_to_num_cells);
+        auto masks = MakeLevelMasks(offsets, num_level);
+        auto bits = MakeBitToLevel(offsets, num_level);
+        return LevelData{num_level,
+                         offsets,
+                         masks,
+                         bits,
+                         {0}};
+    }
+
     inline std::size_t LevelIDToIndex(LevelID l) const { return l - 1; }
 
     // We save the sentinel as last node in the partition information.
@@ -241,46 +196,45 @@ template <bool UseShareMemory> class PackedMultiLevelPartition final : public Mu
     {
         auto lidx = LevelIDToIndex(l);
 
-        auto shifted_id = cell_id << level_offsets[lidx];
-        auto cleared_cell = partition[node] & ~level_masks[lidx];
+        auto shifted_id = cell_id << level_data.lidx_to_offset[lidx];
+        auto cleared_cell = partition[node] & ~level_data.lidx_to_mask[lidx];
         partition[node] = cleared_cell | shifted_id;
     }
 
     // If we have N cells per level we need log_2 bits for every cell ID
-    std::vector<std::uint8_t>
-    makeLevelOffsets(const std::vector<std::uint32_t> &level_to_num_cells) const
+    auto MakeLevelOffsets(const std::vector<std::uint32_t> &lidx_to_num_cells) const
     {
-        std::vector<std::uint8_t> offsets;
-        offsets.reserve(level_to_num_cells.size());
+        std::array<std::uint8_t, MAX_NUM_LEVEL - 1> offsets;
 
+        auto lidx = 0UL;
         auto sum_bits = 0;
-        for (auto num_cells : level_to_num_cells)
+        for (auto num_cells : lidx_to_num_cells)
         {
             // bits needed to number all contained vertexes
             auto bits = static_cast<std::uint64_t>(std::ceil(std::log2(num_cells + 1)));
-            offsets.push_back(sum_bits);
+            offsets[lidx++] = sum_bits;
             sum_bits += bits;
             if (sum_bits > 64)
             {
-                throw util::exception("Can't pack the partition information at level " +
-                                      std::to_string(offsets.size()) +
-                                      " into a 64bit integer. Would require " +
-                                      std::to_string(sum_bits) + " bits.");
+                throw util::exception(
+                    "Can't pack the partition information at level " + std::to_string(lidx) +
+                    " into a 64bit integer. Would require " + std::to_string(sum_bits) + " bits.");
             }
         }
         // sentinel
-        offsets.push_back(sum_bits);
+        offsets[lidx++] = sum_bits;
+        BOOST_ASSERT(lidx < MAX_NUM_LEVEL);
 
         return offsets;
     }
 
-    std::vector<PartitionID> makeLevelMasks() const
+    auto MakeLevelMasks(const std::array<std::uint8_t, MAX_NUM_LEVEL - 1> &level_offsets, std::uint32_t num_level) const
     {
-        std::vector<PartitionID> masks;
-        masks.reserve(level_offsets.size());
+        std::array<PartitionID, MAX_NUM_LEVEL - 1> masks;
 
+        auto lidx = 0UL;
         util::for_each_pair(level_offsets.begin(),
-                            level_offsets.end(),
+                            level_offsets.begin() + num_level,
                             [&](const auto offset, const auto next_offset) {
                                 // create mask that has `bits` ones at its LSBs.
                                 // 000011
@@ -290,31 +244,30 @@ template <bool UseShareMemory> class PackedMultiLevelPartition final : public Mu
                                 BOOST_ASSERT(next_offset < NUM_PARTITION_BITS);
                                 PartitionID next_mask = (1UL << next_offset) - 1UL;
                                 // 001100
-                                masks.push_back(next_mask ^ mask);
+                                masks[lidx++] = next_mask ^ mask;
                             });
 
         return masks;
     }
 
-    std::array<LevelID, NUM_PARTITION_BITS> makeBitToLevel() const
+    auto MakeBitToLevel(const std::array<std::uint8_t, MAX_NUM_LEVEL - 1> &level_offsets, std::uint32_t num_level) const
     {
         std::array<LevelID, NUM_PARTITION_BITS> bit_to_level;
 
-        LevelID l = 1;
-        for (auto bits : level_offsets)
+        for (auto l = 1u; l < num_level; ++l)
         {
+            auto bits = level_offsets[l-1];
             // set all bits to point to the correct level.
             for (auto idx = bits; idx < NUM_PARTITION_BITS; ++idx)
             {
                 bit_to_level[idx] = l;
             }
-            l++;
         }
 
         return bit_to_level;
     }
 
-    void initializePartitionIDs(const std::vector<std::vector<CellID>> &partitions)
+    void InitializePartitionIDs(const std::vector<std::vector<CellID>> &partitions)
     {
         auto num_nodes = partitions.front().size();
         std::vector<NodeID> permutation(num_nodes);
@@ -370,14 +323,13 @@ template <bool UseShareMemory> class PackedMultiLevelPartition final : public Mu
             level--;
         }
 
-        // level 1 does not have child cells
-        level_to_children_offset.push_back(0);
+        level_data.lidx_to_children_offsets[0] = 0;
 
         for (auto level_idx = 0UL; level_idx < partitions.size() - 1; ++level_idx)
         {
             const auto &parent_partition = partitions[level_idx + 1];
 
-            level_to_children_offset.push_back(cell_to_children.size());
+            level_data.lidx_to_children_offsets[level_idx+1] = cell_to_children.size();
 
             CellID last_parent_id = parent_partition[permutation.front()];
             cell_to_children.push_back(GetCell(level_idx + 1, permutation.front()));
@@ -396,13 +348,12 @@ template <bool UseShareMemory> class PackedMultiLevelPartition final : public Mu
         }
     }
 
-    typename util::ShM<std::uint8_t, UseShareMemory>::vector level_offsets;
-    typename util::ShM<PartitionID, UseShareMemory>::vector partition;
-    typename util::ShM<std::uint32_t, UseShareMemory>::vector level_to_children_offset;
-    typename util::ShM<CellID, UseShareMemory>::vector cell_to_children;
-    std::vector<PartitionID> level_masks;
-    std::array<LevelID, NUM_PARTITION_BITS> bit_to_level;
+    //! this is always owned by this class because it is so small
+    LevelData level_data;
+    Vector<PartitionID> partition;
+    Vector<CellID> cell_to_children;
 };
+}
 }
 }
 
