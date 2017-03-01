@@ -158,6 +158,13 @@ if(ENABLE_GOLD_LINKER)
     endif()
 endif()
 
+# Disable LTO when mason+gcc is detected before testing for / setting any flags.
+# Mason builds libraries with Clang, mixing does not work in the context of lto.
+if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(ENABLE_LTO Off)
+  message(WARNING "Mason and GCC's LTO not work together. Disabling LTO.")
+endif()
+
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
