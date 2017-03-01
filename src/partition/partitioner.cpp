@@ -144,7 +144,7 @@ int Partitioner::Run(const PartitionConfig &config)
     // Then loads the edge based graph tanslates the partition and modifies it.
     // For details see #3205
 
-    auto mapping = LoadNodeBasedGraphToEdgeBasedGraphMapping(config.nbg_ebg_mapping_path.string());
+    auto mapping = LoadNodeBasedGraphToEdgeBasedGraphMapping(config.cnbg_ebg_mapping_path.string());
     util::Log() << "Loaded node based graph to edge based graph mapping";
 
     auto edge_based_graph = LoadEdgeBasedGraph(config.edge_based_graph_path.string());

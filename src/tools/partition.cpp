@@ -60,7 +60,7 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &p
         ("small-component-size",
          boost::program_options::value<std::size_t>(&partition_config.small_component_size)
              ->default_value(1000),
-         "Number of cuts to use for optimizing a single bisection");
+         "Size threshold for small components.");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) try
     };
 
     if (!check_file(partition_config.edge_based_graph_path) ||
-        !check_file(partition_config.nbg_ebg_mapping_path) ||
+        !check_file(partition_config.cnbg_ebg_mapping_path) ||
         !check_file(partition_config.compressed_node_based_graph_path))
     {
         return EXIT_FAILURE;
