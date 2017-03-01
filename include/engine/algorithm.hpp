@@ -23,10 +23,10 @@ struct MLD final
 {
 };
 
-template<typename AlgorithmT> const char* name();
-template<> inline const char* name<CH>() { return "CH"; }
-template<> inline const char* name<CoreCH>() { return "CoreCH"; }
-template<> inline const char* name<MLD>() { return "MLD"; }
+template <typename AlgorithmT> const char *name();
+template <> inline const char *name<CH>() { return "CH"; }
+template <> inline const char *name<CoreCH>() { return "CoreCH"; }
+template <> inline const char *name<MLD>() { return "MLD"; }
 }
 
 namespace algorithm_trais

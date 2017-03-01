@@ -57,7 +57,9 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "LANE_DESCRIPTION_MASKS",
                                             "TURN_WEIGHT_PENALTIES",
                                             "TURN_DURATION_PENALTIES",
-                                            "MLD_CELL_PARTITION",
+                                            "MLD_LEVEL_DATA",
+                                            "MLD_PARTITION",
+                                            "MLD_CELL_TO_CHILDREN",
                                             "MLD_CELL_STORAGE"};
 
 struct DataLayout
@@ -103,7 +105,9 @@ struct DataLayout
         LANE_DESCRIPTION_MASKS,
         TURN_WEIGHT_PENALTIES,
         TURN_DURATION_PENALTIES,
-        MLD_CELL_PARTITION,
+        MLD_LEVEL_DATA,
+        MLD_PARTITION,
+        MLD_CELL_TO_CHILDREN,
         MLD_CELL_STORAGE,
         NUM_BLOCKS
     };
@@ -120,6 +124,11 @@ struct DataLayout
         num_entries[bid] = entries;
         entry_size[bid] = sizeof(T);
         entry_align[bid] = alignof(T);
+    }
+
+    inline uint64_t GetBlockEntries(BlockID bid) const
+    {
+        return num_entries[bid];
     }
 
     inline uint64_t GetBlockSize(BlockID bid) const
@@ -167,6 +176,13 @@ struct DataLayout
         ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         ptr = align(entry_align[bid], entry_size[bid], ptr);
         return ptr;
+    }
+
+    template <typename T>
+    inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
+    {
+        auto begin = GetBlockPtr<T>(shared_memory, bid);
+        return begin + GetBlockEntries(bid);
     }
 
     template <typename T, bool WRITE_CANARY = false>

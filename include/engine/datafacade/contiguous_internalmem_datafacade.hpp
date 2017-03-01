@@ -251,10 +251,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::shared_ptr<util::RangeTable<16, true>> m_bearing_ranges_table;
     util::ShM<DiscreteBearing, true>::vector m_bearing_values_table;
 
-    // MLD data
-    util::PackedMultiLevelPartition<true> mld_partition;
-    util::CellStorage<true> mld_cell_storage;
-
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
 
@@ -540,27 +536,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_entry_class_table = std::move(entry_class_table);
     }
 
-    void InitializeMLDDataPointers(storage::DataLayout &data_layout, char *memory_block)
-    {
-        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_PARTITION) > 0)
-        {
-            auto mld_partition_ptr =
-                data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::MLD_CELL_PARTITION);
-            mld_partition.InitializePointers(
-                mld_partition_ptr,
-                mld_partition_ptr + data_layout.num_entries[storage::DataLayout::MLD_CELL_PARTITION]);
-        }
-
-        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_STORAGE) > 0)
-        {
-            auto mld_cell_storage_ptr =
-                data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::MLD_CELL_STORAGE);
-            mld_cell_storage.InitializePointers(
-                mld_cell_storage_ptr,
-                mld_cell_storage_ptr + data_layout.num_entries[storage::DataLayout::MLD_CELL_STORAGE]);
-        }
-    }
-
     void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
     {
         InitializeChecksumPointer(data_layout, memory_block);
@@ -574,7 +549,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         InitializeProfilePropertiesPointer(data_layout, memory_block);
         InitializeRTreePointers(data_layout, memory_block);
         InitializeIntersectionClassPointers(data_layout, memory_block);
-        InitializeMLDDataPointers(data_layout, memory_block);
     }
 
   public:
@@ -1077,13 +1051,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                 m_lane_description_masks.begin() +
                     m_lane_description_offsets[lane_description_id + 1]);
     }
-
-    const util::PackedMultiLevelPartition<true> &GetMultiLevelPartition() const
-    {
-        return mld_partition;
-    }
-
-    const util::CellStorage<true> &GetCellStorage() const { return mld_cell_storage; }
 };
 
 template <typename AlgorithmT> class ContiguousInternalMemoryDataFacade;
@@ -1111,6 +1078,83 @@ class ContiguousInternalMemoryDataFacade<algorithm::CoreCH> final
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
         : ContiguousInternalMemoryDataFacade<algorithm::CH>(allocator),
           ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>(allocator)
+
+    {
+    }
+};
+
+template <>
+class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
+    : public datafacade::AlgorithmDataFacade<algorithm::MLD>
+{
+    // MLD data
+    util::MultiLevelPartitionView mld_partition;
+    util::CellStorage<true> mld_cell_storage;
+
+    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        InitializeMLDDataPointers(data_layout, memory_block);
+    }
+
+    void InitializeMLDDataPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        if (data_layout.GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0)
+        {
+            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
+            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
+
+            auto level_data = *data_layout.GetBlockPtr<util::MultiLevelPartitionView::LevelData>(memory_block, storage::DataLayout::MLD_PARTITION);
+
+            auto mld_partition_ptr = data_layout.GetBlockPtr<util::PartitionID>(memory_block, storage::DataLayout::MLD_PARTITION);
+            auto partition_entries_count = data_layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
+            util::ShM<util::PartitionID, true>::vector partition(mld_partition_ptr, partition_entries_count);
+
+            auto mld_chilren_ptr = data_layout.GetBlockPtr<util::CellID>(memory_block, storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            auto children_entries_count = data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            util::ShM<util::CellID, true>::vector cell_to_children(mld_chilren_ptr, children_entries_count);
+
+            mld_partition = util::MultiLevelPartitionView{level_data, partition, cell_to_children};
+        }
+
+        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_STORAGE) > 0)
+        {
+            auto mld_cell_storage_ptr =
+                data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::MLD_CELL_STORAGE);
+            mld_cell_storage.InitializePointers(
+                mld_cell_storage_ptr,
+                mld_cell_storage_ptr +
+                    data_layout.num_entries[storage::DataLayout::MLD_CELL_STORAGE]);
+        }
+    }
+
+    // allocator that keeps the allocation data
+    std::shared_ptr<ContiguousBlockAllocator> allocator;
+
+  public:
+    ContiguousInternalMemoryAlgorithmDataFacade(
+        std::shared_ptr<ContiguousBlockAllocator> allocator_)
+        : allocator(std::move(allocator_))
+    {
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+    }
+
+    const util::MultiLevelPartitionView &GetMultiLevelPartition() const
+    {
+        return mld_partition;
+    }
+
+    const util::CellStorage<true> &GetCellStorage() const { return mld_cell_storage; }
+};
+
+template <>
+class ContiguousInternalMemoryDataFacade<algorithm::MLD>
+    : public ContiguousInternalMemoryDataFacadeBase,
+      public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
+{
+  public:
+    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
+        : ContiguousInternalMemoryDataFacadeBase(allocator),
+          ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>(allocator)
 
     {
     }

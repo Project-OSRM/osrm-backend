@@ -141,6 +141,13 @@ class FileReader
         return sizeof(count) + sizeof(T) * count;
     }
 
+    template <typename T> std::size_t ReadVectorSize()
+    {
+        const auto count = ReadElementCount64();
+        Skip<T>(count);
+        return count;
+    }
+
     template <typename T> void *DeserializeVector(void *begin, const void *end)
     {
         auto count = ReadElementCount64();

@@ -20,8 +20,8 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"},
       intersection_class_path{base.string() + ".icd"}, turn_lane_data_path{base.string() + ".tld"},
       turn_lane_description_path{base.string() + ".tls"},
-      mld_partition_path{base.string() + ".mld_partition"},
-      mld_storage_path{base.string() + ".mld_storage"}
+      mld_partition_path{base.string() + ".partition"},
+      mld_storage_path{base.string() + ".cell"}
 {
 }
 
