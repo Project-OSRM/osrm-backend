@@ -1,5 +1,6 @@
 #include "server/server.hpp"
 #include "util/log.hpp"
+#include "util/exception.hpp"
 #include "util/version.hpp"
 
 #include "osrm/engine_config.hpp"
@@ -48,6 +49,15 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
+EngineConfig::Algorithm stringToAlgorithm(const std::string &algorithm)
+{
+    if (algorithm == "CH")
+        return EngineConfig::Algorithm::CH;
+    if (algorithm == "CoreCH")
+        return EngineConfig::Algorithm::CoreCH;
+    throw util::exception("Invalid algorithm name: " + algorithm);
+}
+
 // generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
                                              const char *argv[],
@@ -56,6 +66,7 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              int &ip_port,
                                              int &requested_num_threads,
                                              bool &use_shared_memory,
+                                             std::string &algorithm,
                                              bool &trial,
                                              int &max_locations_trip,
                                              int &max_locations_viaroute,
@@ -87,6 +98,9 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("shared-memory,s",
          value<bool>(&use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
+        ("algorithm,a",
+         value<std::string>(&algorithm)->default_value("CH"),
+         "Algorithm to use for the data. Can be CH, CoreCH") //
         ("max-viaroute-size",
          value<int>(&max_locations_viaroute)->default_value(500),
          "Max. locations supported in viaroute query") //
@@ -178,6 +192,7 @@ int main(int argc, const char *argv[]) try
 
     EngineConfig config;
     boost::filesystem::path base_path;
+    std::string algorithm;
     const unsigned init_result = generateServerProgramOptions(argc,
                                                               argv,
                                                               base_path,
@@ -185,6 +200,7 @@ int main(int argc, const char *argv[]) try
                                                               ip_port,
                                                               requested_thread_num,
                                                               config.use_shared_memory,
+                                                              algorithm,
                                                               trial_run,
                                                               config.max_locations_trip,
                                                               config.max_locations_viaroute,
@@ -264,6 +280,7 @@ int main(int argc, const char *argv[]) try
         }
         return EXIT_FAILURE;
     }
+    config.algorithm = stringToAlgorithm(algorithm);
 
     util::Log() << "starting up engines, " << OSRM_VERSION;
 
