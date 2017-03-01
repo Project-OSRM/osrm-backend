@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(nearest)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 

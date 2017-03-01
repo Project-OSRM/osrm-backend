@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(route)
 
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -25,44 +25,38 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
     params.steps = true;
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_dummy_location());
+    params.generate_hints = false;
 
     json::Object result;
     const auto rc = osrm.Route(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    // unset snapping dependent hint
-    for (auto &itr : result.values["waypoints"].get<json::Array>().values)
-        itr.get<json::Object>().values["hint"] = "";
-
-    const auto location = json::Array{{{7.437070}, {43.749248}}};
+    const auto location = json::Array{{{13.3888}, {52.517033}}};
 
     json::Object reference{
         {{"code", "Ok"},
          {"waypoints",
-          json::Array{
-              {json::Object{
-                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}},
-               json::Object{
-                   {{"name", "Boulevard du Larvotto"}, {"location", location}, {"hint", ""}}}}}},
+          json::Array{{json::Object{{{"name", "Friedrichstraße"}, {"location", location}}},
+                       json::Object{{{"name", "Friedrichstraße"}, {"location", location}}}}}},
          {"routes",
           json::Array{{json::Object{
               {{"distance", 0.},
                {"duration", 0.},
                {"weight", 0.},
                {"weight_name", "routability"},
-               {"geometry", "yw_jGupkl@??"},
+               {"geometry", "mfp_I__vpA??"},
                {"legs",
                 json::Array{{json::Object{
                     {{"distance", 0.},
                      {"duration", 0.},
                      {"weight", 0.},
-                     {"summary", "Boulevard du Larvotto"},
+                     {"summary", "Friedrichstraße"},
                      {"steps",
                       json::Array{{{json::Object{{{"duration", 0.},
                                                   {"distance", 0.},
                                                   {"weight", 0.},
-                                                  {"geometry", "yw_jGupkl@??"},
-                                                  {"name", "Boulevard du Larvotto"},
+                                                  {"geometry", "mfp_I__vpA??"},
+                                                  {"name", "Friedrichstraße"},
                                                   {"mode", "driving"},
                                                   {"maneuver",
                                                    json::Object{{
@@ -81,8 +75,8 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
                                    json::Object{{{"duration", 0.},
                                                  {"distance", 0.},
                                                  {"weight", 0.},
-                                                 {"geometry", "yw_jGupkl@"},
-                                                 {"name", "Boulevard du Larvotto"},
+                                                 {"geometry", "mfp_I__vpA"},
+                                                 {"name", "Friedrichstraße"},
                                                  {"mode", "driving"},
                                                  {"maneuver",
                                                   json::Object{{{"location", location},
@@ -103,7 +97,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture)
 
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -255,7 +249,7 @@ BOOST_AUTO_TEST_CASE(test_route_same_coordinates)
 
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -290,7 +284,7 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component)
 
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -325,7 +319,7 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component)
 
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -362,7 +356,7 @@ BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components)
 
 BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -382,7 +376,7 @@ BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints)
 
 BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 
@@ -416,7 +410,7 @@ BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance)
 
 BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property)
 {
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
 
     using namespace osrm;
 

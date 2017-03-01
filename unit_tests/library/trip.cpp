@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
     const auto locations = get_locations_in_small_component();
 
     TripParameters params;
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
     const auto locations = get_locations_in_big_component();
 
     TripParameters params;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
     const auto small = get_locations_in_small_component();
     const auto big = get_locations_in_big_component();
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_tfse_1)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
     const auto locations = get_locations_in_small_component();
 
     TripParameters params;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_tfse_2)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
     const auto locations = get_locations_in_big_component();
 
     TripParameters params;
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
     const auto locations = get_locations_in_big_component();
     auto params = osrm::TripParameters();
 
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters)
 BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters)
 {
     using namespace osrm;
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
     const auto locations = get_locations_in_big_component();
     json::Object result;
     TripParameters params;

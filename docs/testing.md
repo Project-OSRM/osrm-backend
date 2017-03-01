@@ -46,12 +46,6 @@ You should see the compiled binaries in `build/unit_tests`, you can then run eac
 ./engine-tests
 ```
 
-For `library-tests` you will need to provide a path to the test data:
-
-```
-./library-tests ../../test/data/monaco.osrm
-```
-
 ## Cucumber
 
 For a general introduction on cucumber in our testsuite, have a look at [the wiki](https://github.com/Project-OSRM/osrm-backend/wiki/Cucumber-Test-Suite).

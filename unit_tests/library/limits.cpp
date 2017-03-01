@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(test_trip_limits)
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/berlin_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_trip = 2;
 
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test_route_limits)
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/berlin_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_viaroute = 2;
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(test_table_limits)
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/berlin_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_distance_table = 2;
 
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test_match_limits)
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/berlin_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_map_matching = 2;
 
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_limits)
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/berlin_CH.osrm"};
     config.use_shared_memory = false;
     config.max_results_nearest = 2;
 

@@ -58,7 +58,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON ENABLE_NODE_BINDINGS=ON
 
     # Release Builds
     - os: linux
@@ -67,7 +67,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON
 
     - os: linux
       compiler: "gcc-6-release"
@@ -81,7 +81,7 @@ matrix:
       compiler: "gcc-6-release-i686"
       env: >
         TARGET_ARCH='i686' CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
-        CFLAGS='-m32 -msse2 -mfpmath=sse' CXXFLAGS='-m32 -msse2 -mfpmath=sse' CHECK_HEADERS=yes
+        CFLAGS='-m32 -msse2 -mfpmath=sse' CXXFLAGS='-m32 -msse2 -mfpmath=sse'
 
     - os: linux
       compiler: "gcc-4.9-release"
@@ -142,7 +142,7 @@ before_install:
   - echo "Using ${JOBS} jobs"
   - source ./scripts/install_node.sh 4
   - npm install -g "npm@>=3" # Upgrade to npm >v2 to reduce size of downloaded dependencies
-  - npm install
+  - npm install --ignore-scripts
     # Bootstrap cmake to be able to run mason
   - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}.tar.gz"
   - CMAKE_DIR="mason_packages/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}"
@@ -173,7 +173,7 @@ install:
   - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
   - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DENABLE_CCACHE=ON
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DENABLE_CCACHE=ON -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF}
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
@@ -185,7 +185,6 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
-  - if [[ ${CHECK_HEADERS} == yes ]] ; then make check-headers ; fi
   - popd
   - mkdir example/build && pushd example/build
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
@@ -196,7 +195,7 @@ install:
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
   - make -C test/data benchmark
-  - ./example/build/osrm-example test/data/monaco_CH.osrm
+  - ./example/build/osrm-example test/data/berlin_CH.osrm
   # All tests assume to be run from the build directory
   - pushd ${OSRM_BUILD_DIR}
   - ./unit_tests/library-tests
@@ -212,4 +211,12 @@ after_success:
   - |
     if [ -n "${ENABLE_COVERAGE}" ]; then
       bash <(curl -s https://codecov.io/bash)
+    fi
+
+  - |
+    if [ -n "${ENABLE_NODE_BINDINGS}" ]; then
+      nvm install 4
+      nvm use 4
+      source ./scripts/travis/build.sh
+      ./scripts/travis/publish.sh
     fi

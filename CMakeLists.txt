@@ -24,6 +24,7 @@ option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_LTO "Use LTO if available" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_GOLD_LINKER "Use GNU gold linker if available" ON)
+option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -800,6 +801,11 @@ add_custom_target(uninstall
 add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
 
+if (ENABLE_NODE_BINDINGS)
+  add_subdirectory(src/nodejs)
+endif()
+
+
 if (ENABLE_FUZZING)
   # Requires libosrm being built with sanitizers; make configurable and default to ubsan
   set(FUZZ_SANITIZER "undefined" CACHE STRING "Sanitizer to be used for Fuzz testing")
@@ -815,18 +821,21 @@ if (ENABLE_FUZZING)
 endif ()
 
 
-## add headers sanity check target that includes all headers independently
-set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
-file(GLOB_RECURSE headers_to_check
-  ${PROJECT_BINARY_DIR}/*.hpp
-  ${PROJECT_SOURCE_DIR}/include/*.hpp)
-foreach(header ${headers_to_check})
-  get_filename_component(filename ${header} NAME_WE)
-  set(filename "${check_headers_dir}/${filename}.cpp")
-  if (NOT EXISTS ${filename})
-    file(WRITE ${filename} "#include \"${header}\"\n")
-  endif()
-  list(APPEND sources ${filename})
-endforeach()
-add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
-set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
+# add headers sanity check target that includes all headers independently
+# make sure we have all deps for the nodejs sub project's includes (nan, node)
+if (ENABLE_NODE_BINDINGS)
+  set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
+  file(GLOB_RECURSE headers_to_check
+    ${PROJECT_BINARY_DIR}/*.hpp
+    ${PROJECT_SOURCE_DIR}/include/*.hpp)
+  foreach(header ${headers_to_check})
+    get_filename_component(filename ${header} NAME_WE)
+    set(filename "${check_headers_dir}/${filename}.cpp")
+    if (NOT EXISTS ${filename})
+      file(WRITE ${filename} "#include \"${header}\"\n")
+    endif()
+    list(APPEND sources ${filename})
+  endforeach()
+  add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
+  set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
+endif()
