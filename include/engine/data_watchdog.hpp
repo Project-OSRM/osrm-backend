@@ -44,7 +44,7 @@ template <typename AlgorithmT> class DataWatchdog final
         watcher = std::thread(&DataWatchdog::Run, this);
     }
 
-    virtual ~DataWatchdog()
+    ~DataWatchdog()
     {
         active = false;
         barrier.notify_all();

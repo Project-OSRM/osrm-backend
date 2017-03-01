@@ -41,7 +41,7 @@ template <bool DIRECTION, typename HeapT>
 bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                  const NodeID node,
                  const EdgeWeight weight,
-                 HeapT &query_heap)
+                 const HeapT &query_heap)
 {
     for (auto edge : facade.GetAdjacentEdgeRange(node))
     {

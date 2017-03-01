@@ -16,16 +16,6 @@ namespace engine
 namespace routing_algorithms
 {
 
-template <typename AlgorithmT>
-InternalRouteResult
-alternativePathSearch(SearchEngineData &,
-                      const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &,
-                      const PhantomNodes &)
-{
-    throw util::exception(std::string("alternativePathSearch is not implemented for ") +
-                          typeid(AlgorithmT).name());
-}
-
 InternalRouteResult
 alternativePathSearch(SearchEngineData &search_engine_data,
                       const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
