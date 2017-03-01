@@ -9,7 +9,9 @@
 #include <mutex>
 #include <set>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
@@ -18,18 +20,19 @@ namespace osrm
 {
 namespace partition
 {
-
-InertialFlow::InertialFlow(const GraphView &view_) : view(view_) {}
-
-DinicMaxFlow::MinCut InertialFlow::ComputePartition(const std::size_t num_slopes,
-                                                    const double balance,
-                                                    const double source_sink_rate)
+namespace
 {
-    return BestMinCut(num_slopes, source_sink_rate, balance);
-}
+// Spatially ordered sources and sink ids.
+// The node ids refer to nodes in the GraphView.
+struct SpatialOrder
+{
+    std::unordered_set<NodeID> sources;
+    std::unordered_set<NodeID> sinks;
+};
 
-InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
-                                                          const double slope) const
+// Creates a spatial order of n * sources "first" and n * sink "last" node ids.
+// The slope determines the spatial order for sorting node coordinates.
+SpatialOrder makeSpatialOrder(const GraphView &view, const double ratio, const double slope)
 {
     struct NodeWithCoordinate
     {
@@ -70,7 +73,7 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
 
     reorderFirstLast(embedding, n, spatially);
 
-    InertialFlow::SpatialOrder order;
+    SpatialOrder order;
 
     order.sources.reserve(n);
     order.sinks.reserve(n);
@@ -84,13 +87,14 @@ InertialFlow::SpatialOrder InertialFlow::MakeSpatialOrder(const double ratio,
     return order;
 }
 
+// Makes n cuts with different spatial orders and returns the best.
 DinicMaxFlow::MinCut
-InertialFlow::BestMinCut(const std::size_t n, const double ratio, const double balance) const
+bestMinCut(const GraphView &view, const std::size_t n, const double ratio, const double balance)
 {
     DinicMaxFlow::MinCut best;
     best.num_edges = -1;
 
-    const auto get_balance = [this, balance](const auto num_nodes_source) {
+    const auto get_balance = [&view, balance](const auto num_nodes_source) {
         const auto perfect_balance = view.NumberOfNodes() / 2;
         const auto allowed_balance = balance * perfect_balance;
         const auto bigger_side =
@@ -108,18 +112,18 @@ InertialFlow::BestMinCut(const std::size_t n, const double ratio, const double b
 
     tbb::blocked_range<std::size_t> range{0, n, 1};
 
-    const auto balance_delta = [this](const auto num_nodes_source) {
+    const auto balance_delta = [&view](const auto num_nodes_source) {
         const std::int64_t difference =
             static_cast<std::int64_t>(view.NumberOfNodes()) / 2 - num_nodes_source;
         return std::abs(difference);
     };
 
-    tbb::parallel_for(range, [&, this](const auto &chunk) {
+    tbb::parallel_for(range, [&](const auto &chunk) {
         for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
         {
             const auto slope = -1. + round * (2. / n);
 
-            auto order = this->MakeSpatialOrder(ratio, slope);
+            auto order = makeSpatialOrder(view, ratio, slope);
             auto cut = DinicMaxFlow()(view, order.sources, order.sinks);
             auto cut_balance = get_balance(cut.num_nodes_source);
 
@@ -140,6 +144,15 @@ InertialFlow::BestMinCut(const std::size_t n, const double ratio, const double b
     });
 
     return best;
+}
+}
+
+DinicMaxFlow::MinCut computeInertialFlowCut(const GraphView &view,
+                                            const std::size_t num_slopes,
+                                            const double balance,
+                                            const double source_sink_rate)
+{
+    return bestMinCut(view, num_slopes, source_sink_rate, balance);
 }
 
 } // namespace partition
