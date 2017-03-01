@@ -20,54 +20,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 - [node-osrm](https://github.com/Project-OSRM/node-osrm) - Production-ready NodeJs bindings for the routing engine
 - [osrm-frontend](https://github.com/Project-OSRM/osrm-frontend) - User-facing frontend with map. The demo server runs this on top of the backend
 - [osrm-text-instructions](https://github.com/Project-OSRM/osrm-text-instructions) - Text instructions from OSRM route response
-
-## Contact
-
-- IRC: `irc.oftc.net`, channel: `#osrm` ([Webchat](https://webchat.oftc.net))
-- Mailinglist: `https://lists.openstreetmap.org/listinfo/osrm-talk`
-
-## Quick Start
-
-The following targets Ubuntu 16.04.
-For instructions how to build on different distributions, macOS or Windows see our [Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
-
-#### Install dependencies
-
-```bash
-sudo apt install build-essential git cmake pkg-config \
-libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
-libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
-```
-
-#### Compile and install OSRM binaries:
-
-```bash
-mkdir -p build
-cd build
-cmake ..
-cmake --build .
-sudo cmake --build . --target install
-```
-
-#### Grab a `.osm.pbf` extract from [Geofabrik](http://download.geofabrik.de/index.html) or [Mapzen's Metro Extracts](https://mapzen.com/data/metro-extracts/)
-
-```bash
-wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
-```
-
-#### Pre-process the extract and start the HTTP server
-
-```
-osrm-extract berlin-latest.osm.pbf -p profiles/car.lua
-osrm-contract berlin-latest.osrm
-osrm-routed berlin-latest.osrm
-```
-
-#### Running Queries
-
-```
-curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true
-```
+- [osrm-backend-docker](https://hub.docker.com/r/osrm/osrm-backend/) - Ready to use Docker images
 
 ## Documentation
 
@@ -77,8 +30,74 @@ curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496
 - [osrm-routed HTTP API documentation](docs/http.md)
 - [libosrm API documentation](docs/libosrm.md)
 
+## Contact
 
-### Running a request against the Demo Server
+- IRC: `irc.oftc.net`, channel: `#osrm` ([Webchat](https://webchat.oftc.net))
+- Mailinglist: `https://lists.openstreetmap.org/listinfo/osrm-talk`
+
+## Quick Start
+
+The easiest and quickest way to setup your own routing engine backend is to use Docker images we provide.
+
+### Using Docker
+
+We base the Docker images on Alpine Linux and make sure they are as lightweight as possible (around 10-15 MB).
+In the following, replace `X.Y.Z` with the current stable release version.
+
+```
+wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+
+docker run -t -v $(pwd):/data osrm/osrm-backend:vX.Y.Z osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
+docker run -t -v $(pwd):/data osrm/osrm-backend:vX.Y.Z osrm-contract /data/berlin-latest.osrm
+docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend:vX.Y.Z osrm-routed /data/berlin-latest.osrm
+
+curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true
+```
+
+### Building from Source
+
+The following targets Ubuntu 16.04.
+For instructions how to build on different distributions, macOS or Windows see our [Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
+
+Install dependencies
+
+```bash
+sudo apt install build-essential git cmake pkg-config \
+libbz2-dev libstxxl-dev libstxxl1v5 libxml2-dev \
+libzip-dev libboost-all-dev lua5.2 liblua5.2-dev libtbb-dev
+```
+
+Compile and install OSRM binaries
+
+```bash
+mkdir -p build
+cd build
+cmake ..
+cmake --build .
+sudo cmake --build . --target install
+```
+
+Grab a `.osm.pbf` extract from [Geofabrik](http://download.geofabrik.de/index.html) or [Mapzen's Metro Extracts](https://mapzen.com/data/metro-extracts/)
+
+```bash
+wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
+```
+
+Pre-process the extract and start the HTTP server
+
+```
+osrm-extract berlin-latest.osm.pbf -p profiles/car.lua
+osrm-contract berlin-latest.osrm
+osrm-routed berlin-latest.osrm
+```
+
+Running Queries
+
+```
+curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true
+```
+
+### Request Against the Demo Server
 
 Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Api-usage-policy).
 Simple query with instructions and alternatives on Berlin:
