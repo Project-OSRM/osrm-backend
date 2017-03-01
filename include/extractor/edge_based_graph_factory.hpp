@@ -114,9 +114,8 @@ class EdgeBasedGraphFactory
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
-             const bool generate_edge_lookup,
-             const bool generate_nbg_ebg_mapping,
-             const std::string &nbg_ebg_mapping_path);
+             const std::string &cnbg_ebg_mapping_path,
+             const bool generate_edge_lookup);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
@@ -176,8 +175,7 @@ class EdgeBasedGraphFactory
 
     unsigned RenumberEdges();
 
-    void GenerateEdgeExpandedNodes(const bool generate_nbg_ebg_mapping,
-                                   const std::string &nbg_ebg_mapping_path);
+    void GenerateEdgeExpandedNodes(const std::string &nbg_ebg_mapping_path);
 
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
                                    const std::string &original_edge_data_filename,

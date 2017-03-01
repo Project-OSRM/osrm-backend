@@ -484,9 +484,8 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
                                  config.turn_weight_penalties_path,
                                  config.turn_duration_penalties_path,
                                  config.turn_penalties_index_path,
-                                 config.generate_edge_lookup,
-                                 config.dump_compressed_node_based_graph,
-                                 config.nbg_ebg_graph_mapping_output_path);
+                                 config.cnbg_ebg_graph_mapping_output_path,
+                                 config.generate_edge_lookup);
 
     // The osrm-partition tool requires the compressed node based graph with an embedding.
     //
@@ -505,14 +504,11 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
             compressed_node_based_graph_writing.wait();
     };
 
-    if (config.dump_compressed_node_based_graph)
-    {
-        compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
-            WriteCompressedNodeBasedGraph(config.compressed_node_based_graph_output_path,
-                                          *node_based_graph,
-                                          internal_to_external_node_map);
-        });
-    }
+    compressed_node_based_graph_writing = std::async(std::launch::async, [&] {
+        WriteCompressedNodeBasedGraph(config.compressed_node_based_graph_output_path,
+                                      *node_based_graph,
+                                      internal_to_external_node_map);
+    });
 
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);
     compressed_edge_container.SerializeInternalVector(config.geometry_output_path);

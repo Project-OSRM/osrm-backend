@@ -78,7 +78,7 @@ struct ExtractorConfig
         profile_properties_output_path = basepath + ".osrm.properties";
         intersection_class_data_output_path = basepath + ".osrm.icd";
         compressed_node_based_graph_output_path = basepath + ".osrm.cnbg";
-        nbg_ebg_graph_mapping_output_path = basepath + ".osrm.nbg_to_ebg";
+        cnbg_ebg_graph_mapping_output_path = basepath + ".osrm.cnbg_to_ebg";
     }
 
     boost::filesystem::path input_path;
@@ -101,6 +101,8 @@ struct ExtractorConfig
     std::string intersection_class_data_output_path;
     std::string turn_weight_penalties_path;
     std::string turn_duration_penalties_path;
+    std::string compressed_node_based_graph_output_path;
+    std::string cnbg_ebg_graph_mapping_output_path;
 
     unsigned requested_num_threads;
     unsigned small_component_size;
@@ -110,11 +112,6 @@ struct ExtractorConfig
     std::string edge_segment_lookup_path;
 
     bool use_metadata;
-
-    // Auxiliary data for osrm-partition
-    bool dump_compressed_node_based_graph;
-    std::string compressed_node_based_graph_output_path;
-    std::string nbg_ebg_graph_mapping_output_path;
 };
 }
 }

@@ -196,9 +196,8 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const std::string &turn_weight_penalties_filename,
                                 const std::string &turn_duration_penalties_filename,
                                 const std::string &turn_penalties_index_filename,
-                                const bool generate_edge_lookup,
-                                const bool generate_nbg_ebg_mapping,
-                                const std::string &nbg_ebg_mapping_path)
+                                const std::string &cnbg_ebg_mapping_path,
+                                const bool generate_edge_lookup)
 {
     TIMER_START(renumber);
     m_max_edge_id = RenumberEdges() - 1;
@@ -206,7 +205,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 
     TIMER_START(generate_nodes);
     m_edge_based_node_weights.reserve(m_max_edge_id + 1);
-    GenerateEdgeExpandedNodes(generate_nbg_ebg_mapping, nbg_ebg_mapping_path);
+    GenerateEdgeExpandedNodes(cnbg_ebg_mapping_path);
     TIMER_STOP(generate_nodes);
 
     TIMER_START(generate_edges);
@@ -260,15 +259,12 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
 }
 
 /// Creates the nodes in the edge expanded graph from edges in the node-based graph.
-void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const bool generate_nbg_ebg_mapping,
-                                                      const std::string &nbg_ebg_mapping_path)
+void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const std::string &cnbg_ebg_mapping_path)
 {
     // Optional writer, for writing out a mapping. Neither default ctor not boost::optional work
     // with the underlying FileWriter, so hack around that limitation with a unique_ptr.
     std::unique_ptr<NodeBasedGraphToEdgeBasedGraphMappingWriter> writer;
-    if (generate_nbg_ebg_mapping)
-        writer =
-            std::make_unique<NodeBasedGraphToEdgeBasedGraphMappingWriter>(nbg_ebg_mapping_path);
+    writer = std::make_unique<NodeBasedGraphToEdgeBasedGraphMappingWriter>(cnbg_ebg_mapping_path);
 
     util::Log() << "Generating edge expanded nodes ... ";
     {
@@ -311,8 +307,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const bool generate_nbg_eb
                     mapping = InsertEdgeBasedNode(node_u, node_v);
                 }
 
-                if (generate_nbg_ebg_mapping)
-                    writer->WriteMapping(mapping->u, mapping->v, mapping->head, mapping->tail);
+                writer->WriteMapping(mapping->u, mapping->v, mapping->head, mapping->tail);
             }
         }
     }
