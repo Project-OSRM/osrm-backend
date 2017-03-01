@@ -1,0 +1,10 @@
+*
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.MD
+!LICENCE.TXT
+!package.json
+!example
+!lib/*.js
+!profiles/*
+!profiles/lib/*

@@ -51,8 +51,8 @@ else if (process.argv.length > 2 && process.argv[2] == "dc")
 }
 else if (process.argv.length > 2)
 {
-  let monaco_poly_path = process.argv[2];
-  let poly_data = fs.readFileSync(monaco_poly_path, 'utf-8');
+  let poly_path = process.argv[2];
+  let poly_data = fs.readFileSync(poly_path, 'utf-8');
 
   // lets assume there is only one ring
   // cut of name and ring number and the two END statements

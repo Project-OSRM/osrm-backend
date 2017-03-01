@@ -133,12 +133,12 @@ unit_tests\%Configuration%\server-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
 ECHO running library-tests.exe ...
-SET test_region=monaco
+SET test_region=berlin
 SET test_osm=%test_region%.osm.pbf
 SET test_osm_ch=%test_region%_CH.osm.pbf
 SET test_osm_corech=%test_region%_CoreCH.osm.pbf
 SET test_osm_mld=%test_region%_MLD.osm.pbf
-IF NOT EXIST %test_osm% powershell Invoke-WebRequest https://s3.amazonaws.com/mapbox/osrm/testing/monaco.osm.pbf -OutFile %test_osm%
+IF NOT EXIST %test_osm% powershell Invoke-WebRequest https://s3.amazonaws.com/mapbox/osrm/testing/berlin.osm.pbf -OutFile %test_osm%
 COPY %test_osm% %test_osm_ch%
 COPY %test_osm% %test_osm_corech%
 COPY %test_osm% %test_osm_mld%

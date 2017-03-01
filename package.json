@@ -1,6 +1,6 @@
 {
-  "name": "osrm-backend-test-suite",
-  "version": "0.0.0",
+  "name": "osrm",
+  "version": "5.7.0",
   "private": true,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++14 designed to run on OpenStreetMap data.",
   "dependencies": {
@@ -12,7 +12,11 @@
     "polyline": "^0.2.0",
     "request": "^2.69.0",
     "rimraf": "^2.5.4",
-    "xmlbuilder": "^4.2.1"
+    "xmlbuilder": "^4.2.1",
+
+    "nan": "^2.1.0",
+    "node-cmake": "^1.2.1",
+    "node-pre-gyp": "~0.6.30"
   },
   "bin": {
     "cucumber": "./node_modules/cucumber/bin/cucumber.js"
@@ -28,7 +32,10 @@
     "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
     "clean-test": "rm -rf test/cache",
     "cucumber": "./node_modules/cucumber/bin/cucumber.js",
-    "build-api-docs": "./scripts/build_api_docs.sh"
+    "build-api-docs": "./scripts/build_api_docs.sh",
+
+    "preinstall": "npm install node-pre-gyp",
+    "install": "node-pre-gyp install --fallback-to-build=false"
   },
   "repository": {
     "type": "git",
@@ -45,6 +52,17 @@
   },
   "devDependencies": {
     "docbox": "^1.0.2",
-    "eslint": "^2.4.0"
+    "eslint": "^2.4.0",
+
+    "aws-sdk": "~2.0.31",
+    "tape": "^4.2.2"
+  },
+  "main": "lib/index.js",
+  "binary": {
+    "module_name": "node-osrm",
+    "module_path": "./lib/binding/",
+    "host": "https://mapbox-node-binary.s3.amazonaws.com",
+    "remote_path": "./{name}/v{version}/{configuration}/",
+    "package_name": "{node_abi}-{platform}-{arch}.tar.gz"
   }
 }
