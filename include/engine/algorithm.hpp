@@ -18,10 +18,15 @@ struct CH final
 struct CoreCH final
 {
 };
+// Multi-Level Dijkstra
+struct MLD final
+{
+};
 
-template <typename AlgorithmT> const char *name();
-template <> inline const char *name<CH>() { return "CH"; }
-template <> inline const char *name<CoreCH>() { return "CoreCH"; }
+template<typename AlgorithmT> const char* name();
+template<> inline const char* name<CH>() { return "CH"; }
+template<> inline const char* name<CoreCH>() { return "CoreCH"; }
+template<> inline const char* name<MLD>() { return "MLD"; }
 }
 
 namespace algorithm_trais
@@ -82,6 +87,26 @@ template <> struct HasMapMatching<algorithm::CoreCH> final : std::true_type
 {
 };
 template <> struct HasGetTileTurns<algorithm::CoreCH> final : std::true_type
+{
+};
+
+// disbaled because of perfomance reasons
+template <> struct HasAlternativePathSearch<algorithm::MLD> final : std::false_type
+{
+};
+template <> struct HasManyToManySearch<algorithm::MLD> final : std::false_type
+{
+};
+template <> struct HasShortestPathSearch<algorithm::MLD> final : std::false_type
+{
+};
+template <> struct HasDirectShortestPathSearch<algorithm::MLD> final : std::false_type
+{
+};
+template <> struct HasMapMatching<algorithm::MLD> final : std::false_type
+{
+};
+template <> struct HasGetTileTurns<algorithm::MLD> final : std::false_type
 {
 };
 }
