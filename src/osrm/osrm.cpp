@@ -18,14 +18,34 @@ namespace osrm
 
 OSRM::OSRM(engine::EngineConfig &config)
 {
-    if (engine::Engine<engine::algorithm::CoreCH>::CheckCompability(config))
+    if (config.algorithm == EngineConfig::Algorithm::CoreCH ||
+        config.algorithm == EngineConfig::Algorithm::CH)
     {
-        engine_ = std::make_unique<engine::Engine<engine::algorithm::CoreCH>>(config);
+        bool corech_compatible = engine::Engine<engine::algorithm::CoreCH>::CheckCompability(config);
+
+        // Activate CoreCH if we can because it is faster
+        if (config.algorithm == EngineConfig::Algorithm::CH && corech_compatible)
+        {
+            config.algorithm = EngineConfig::Algorithm::CoreCH;
+        }
+
+        // throw error if dataset is not usable with CoreCH
+        if (config.algorithm == EngineConfig::Algorithm::CoreCH && !corech_compatible)
+        {
+            throw util::exception("Dataset is not compatible with CoreCH.");
+        }
     }
-    else
+
+    switch (config.algorithm)
     {
-        // Will fail hard if there is no CH data
+    case EngineConfig::Algorithm::CH:
         engine_ = std::make_unique<engine::Engine<engine::algorithm::CH>>(config);
+        break;
+    case EngineConfig::Algorithm::CoreCH:
+        engine_ = std::make_unique<engine::Engine<engine::algorithm::CoreCH>>(config);
+        break;
+    default:
+        util::exception("Algorithm not implemented!");
     }
 }
 OSRM::~OSRM() = default;

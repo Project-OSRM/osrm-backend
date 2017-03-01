@@ -55,11 +55,26 @@ namespace engine
  *
  * In addition, shared memory can be used for datasets loaded with osrm-datastore.
  *
+ * You can chose between three algorithms:
+ *  - Algorithm::CH
+ *    Contraction Hierarchies, extremely fast queries but slow pre-processing. The default right now.
+ *  - Algorithm::CoreCH
+ *    Contractoin Hierachies with partial contraction for faster pre-processing but slower queries.
+ *
+ * Algorithm::CH is specified we will automatically upgrade to CoreCH if we find the data for it.
+ * If Algorithm::CoreCH is specified and we don't find the speedup data, we fail hard.
+ *
  * \see OSRM, StorageConfig
  */
 struct EngineConfig final
 {
     bool IsValid() const;
+
+    enum class Algorithm
+    {
+        CH,     // will upgrade to CoreCH if it finds core data
+        CoreCH  // will fail hard if there is no core data
+    };
 
     storage::StorageConfig storage_config;
     int max_locations_trip = -1;
@@ -68,6 +83,7 @@ struct EngineConfig final
     int max_locations_map_matching = -1;
     int max_results_nearest = -1;
     bool use_shared_memory = true;
+    Algorithm algorithm = Algorithm::CH;
 };
 }
 }
