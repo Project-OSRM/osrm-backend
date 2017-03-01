@@ -24,6 +24,7 @@ OSRM::OSRM(engine::EngineConfig &config)
     }
     else
     {
+        // Will fail hard if there is no CH data
         engine_ = std::make_unique<engine::Engine<engine::algorithm::CH>>(config);
     }
 }
