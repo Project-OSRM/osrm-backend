@@ -70,10 +70,10 @@ RecursiveBisection::RecursiveBisection(BisectionGraph &bisection_graph_,
 
     // Bisect graph into two parts. Get partition point and recurse left and right in parallel.
     tbb::parallel_do(begin(forest), end(forest), [&](const TreeNode &node, Feeder &feeder) {
-        InertialFlow flow{node.graph};
-        const auto partition = flow.ComputePartition(num_optimizing_cuts, balance, boundary_factor);
+        const auto cut =
+            computeInertialFlowCut(node.graph, num_optimizing_cuts, balance, boundary_factor);
         const auto center = internal_state.ApplyBisection(
-            node.graph.Begin(), node.graph.End(), node.depth, partition.flags);
+            node.graph.Begin(), node.graph.End(), node.depth, cut.flags);
 
         const auto terminal = [&](const auto &node) {
             const auto maximum_depth = sizeof(BisectionID) * CHAR_BIT;
