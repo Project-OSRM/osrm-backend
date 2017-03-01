@@ -149,13 +149,13 @@ template <> bool Engine<algorithm::CH>::CheckCompability(const EngineConfig &con
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) > 0 &&
-               layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) > 0;
+        return layout->GetBlockSize(storage::DataLayout::CH_GRAPH_NODE_LIST) > 4 &&
+               layout->GetBlockSize(storage::DataLayout::CH_GRAPH_EDGE_LIST) > 4;
     }
     else
     {
         std::ifstream in(config.storage_config.hsgr_data_path.string().c_str());
-        in.seekg(std::ios::end);
+        in.seekg(0, std::ios::end);
         auto size = in.tellg();
         return size > 0;
     }
@@ -176,14 +176,16 @@ template <> bool Engine<algorithm::CoreCH>::CheckCompability(const EngineConfig 
 
         auto mem = storage::makeSharedMemory(barrier.data().region);
         auto layout = reinterpret_cast<storage::DataLayout *>(mem->Ptr());
-        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > 0;
+        std::cout << layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) << std::endl;
+        return layout->GetBlockSize(storage::DataLayout::CH_CORE_MARKER) > 4;
     }
     else
     {
         std::ifstream in(config.storage_config.core_data_path.string().c_str());
-        in.seekg(std::ios::end);
-        auto size = in.tellg();
-        return size > 0;
+        in.seekg(0, std::ios::end);
+        std::size_t size = in.tellg();
+        // An empty core files is only the 4 byte size header.
+        return size > sizeof(std::uint32_t);
     }
 }
 }
