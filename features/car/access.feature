@@ -202,8 +202,8 @@ Feature: Car - Restricted access
         Then routability should be
             | highway | hov:lanes:forward      | hov:lanes:backward     | hov:lanes              | oneway | forw | backw | forw_rate | backw_rate |
             | primary | designated             | designated             |                        |        | x    | x     | 18        | 18         |
-            | primary |                        | designated             |                        |        | x    | x     | 18        | 18         |
             # This test is flaky because non-deterministic turn generation sometimes emits a NoTurn here that is marked as restricted. #3769
+            #| primary |                        | designated             |                        |        | x    | x     | 18        | 18         |
             #| primary | designated             |                        |                        |        | x    | x     | 18        | 18         |
             | primary | designated\|designated | designated\|designated |                        |        | x    | x     | 18        | 18         |
             | primary | designated\|no         | designated\|no         |                        |        | x    | x     | 18        | 18         |
