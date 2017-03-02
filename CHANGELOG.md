@@ -1,3 +1,8 @@
+# 5.6.1
+  - Changes from 5.6.0
+    - Bugfixes
+      - Fix #3754 restricted access roads not penalized if restriction begins non at an intersection
+
 # 5.6.0
   - Changes from 5.5
     - Bugfixes
