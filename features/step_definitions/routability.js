@@ -28,13 +28,14 @@ module.exports = function () {
                         directions.filter(d => headers.has(d + '_rate')).forEach((direction) => {
                             var rate = direction + '_rate';
                             var want = row[rate];
+
                             switch (true) {
                             case '' === want:
                                 outputRow[rate] = result[direction].status ?
                                     result[direction].status.toString() : '';
                                 break;
                             case /^\d+$/.test(want):
-                                if (result[direction].rate && !isNaN(result[direction].rate)) {
+                                if (result[direction].rate !== undefined && !isNaN(result[direction].rate)) {
                                     outputRow[rate] = result[direction].rate.toString();
                                 } else {
                                     outputRow[rate] = '';
