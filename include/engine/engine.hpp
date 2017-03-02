@@ -63,12 +63,14 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
     {
         if (config.use_shared_memory)
         {
-            util::Log(logDEBUG) << "Using shared memory with algorithm " << algorithm::name<AlgorithmT>();
+            util::Log(logDEBUG) << "Using shared memory with algorithm "
+                                << algorithm::name<AlgorithmT>();
             facade_provider = std::make_unique<WatchingProvider<AlgorithmT>>();
         }
         else
         {
-            util::Log(logDEBUG) << "Using internal memory with algorithm " << algorithm::name<AlgorithmT>();
+            util::Log(logDEBUG) << "Using internal memory with algorithm "
+                                << algorithm::name<AlgorithmT>();
             facade_provider =
                 std::make_unique<ImmutableProvider<AlgorithmT>>(config.storage_config);
         }
@@ -157,7 +159,8 @@ template <> bool Engine<algorithm::CH>::CheckCompability(const EngineConfig &con
     else
     {
         std::ifstream in(config.storage_config.hsgr_data_path.string().c_str());
-        if (!in) return false;
+        if (!in)
+            return false;
 
         in.seekg(0, std::ios::end);
         auto size = in.tellg();
@@ -185,7 +188,8 @@ template <> bool Engine<algorithm::CoreCH>::CheckCompability(const EngineConfig 
     else
     {
         std::ifstream in(config.storage_config.core_data_path.string().c_str());
-        if (!in) return false;
+        if (!in)
+            return false;
 
         in.seekg(0, std::ios::end);
         std::size_t size = in.tellg();

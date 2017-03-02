@@ -259,7 +259,8 @@ std::vector<std::size_t> getEdgeIndex(const std::vector<RTreeLeaf> &edges)
     // GetEdgesInBox is marked `const`, so we can't sort the array itself,
     // instead we create an array of indexes and sort that instead.
     std::vector<std::size_t> sorted_edge_indexes(edges.size(), 0);
-    std::iota(sorted_edge_indexes.begin(), sorted_edge_indexes.end(), 0); // fill with 0,1,2,3,...N-1
+    std::iota(
+        sorted_edge_indexes.begin(), sorted_edge_indexes.end(), 0); // fill with 0,1,2,3,...N-1
 
     // Now, sort that array based on the edges list, using the u/v node IDs
     // as the sort condition
@@ -653,17 +654,19 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
         {
             // we need to pre-encode all values here because we need the full offsets later
             // for encoding the actual features.
-            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned>> encoded_turn_data(all_turn_data.size());
-            std::transform(all_turn_data.begin(),
-                           all_turn_data.end(),
-                           encoded_turn_data.begin(),
-                           [&](const routing_algorithms::TurnData &t) {
-                               auto angle_idx = use_point_int_value(t.in_angle);
-                               auto turn_idx = use_point_int_value(t.turn_angle);
-                               auto weight_idx = use_point_float_value(t.weight /
-                                                     10.0); // Note conversion to float here
-                               return std::make_tuple(t.coordinate, angle_idx, turn_idx, weight_idx);
-                           });
+            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned>>
+                encoded_turn_data(all_turn_data.size());
+            std::transform(
+                all_turn_data.begin(),
+                all_turn_data.end(),
+                encoded_turn_data.begin(),
+                [&](const routing_algorithms::TurnData &t) {
+                    auto angle_idx = use_point_int_value(t.in_angle);
+                    auto turn_idx = use_point_int_value(t.turn_angle);
+                    auto weight_idx =
+                        use_point_float_value(t.weight / 10.0); // Note conversion to float here
+                    return std::make_tuple(t.coordinate, angle_idx, turn_idx, weight_idx);
+                });
 
             // Now write the points layer for turn penalty data:
             // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec
@@ -680,9 +683,8 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 int id = 1;
 
                 // Helper function to encode a new point feature on a vector tile.
-                const auto encode_tile_point = [&](
-                    const FixedPoint &tile_point,
-                    const auto &point_turn_data) {
+                const auto encode_tile_point = [&](const FixedPoint &tile_point,
+                                                   const auto &point_turn_data) {
                     protozero::pbf_writer feature_writer(point_layer_writer,
                                                          util::vector_tile::FEATURE_TAG);
                     // Field 3 is the "geometry type" field.  Value 1 is "point"
@@ -714,7 +716,8 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 // Loop over all the turns we found and add them as features to the layer
                 for (const auto &turndata : encoded_turn_data)
                 {
-                    const auto tile_point = coordinatesToTilePoint(std::get<0>(turndata), tile_bbox);
+                    const auto tile_point =
+                        coordinatesToTilePoint(std::get<0>(turndata), tile_bbox);
                     if (!boost::geometry::within(point_t(tile_point.x, tile_point.y), clip_box))
                     {
                         continue;

@@ -1,6 +1,6 @@
 #include "server/server.hpp"
-#include "util/log.hpp"
 #include "util/exception.hpp"
+#include "util/log.hpp"
 #include "util/version.hpp"
 
 #include "osrm/engine_config.hpp"
