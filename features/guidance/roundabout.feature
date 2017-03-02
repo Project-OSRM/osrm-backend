@@ -681,3 +681,27 @@ Feature: Basic Roundabout
            | u,r       | ug,ar,ar | depart,roundabout-exit-3,arrive |
            | u,s       | ug,ds,ds | depart,roundabout-exit-4,arrive |
            | u,t       | ug,ft,ft | depart,roundabout-exit-5,arrive |
+
+
+    @3762
+    Scenario: Only Enter
+        Given the node map
+            """
+                a
+                b
+              c   e ~ ~ ~ f - h
+                d
+                g
+            """
+
+        And the ways
+            | nodes | junction   | route |
+            | ab    |            |       |
+            | ef    |            | ferry |
+            | fh    |            |       |
+            | dg    |            |       |
+            | bcdeb | roundabout |       |
+
+        When I route I should get
+            | waypoints | route    | turns                           |
+            | a,h       | ab,ef,fh | depart,roundabout-exit-2,arrive |
