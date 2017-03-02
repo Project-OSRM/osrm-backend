@@ -15,7 +15,6 @@ namespace engine
 namespace routing_algorithms
 {
 
-
 using CandidateList = std::vector<PhantomNodeWithDistance>;
 using CandidateLists = std::vector<CandidateList>;
 using SubMatchingList = std::vector<map_matching::SubMatching>;

@@ -21,7 +21,8 @@ OSRM::OSRM(engine::EngineConfig &config)
     if (config.algorithm == EngineConfig::Algorithm::CoreCH ||
         config.algorithm == EngineConfig::Algorithm::CH)
     {
-        bool corech_compatible = engine::Engine<engine::algorithm::CoreCH>::CheckCompability(config);
+        bool corech_compatible =
+            engine::Engine<engine::algorithm::CoreCH>::CheckCompability(config);
 
         // Activate CoreCH if we can because it is faster
         if (config.algorithm == EngineConfig::Algorithm::CH && corech_compatible)

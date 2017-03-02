@@ -57,7 +57,8 @@ namespace engine
  *
  * You can chose between three algorithms:
  *  - Algorithm::CH
- *    Contraction Hierarchies, extremely fast queries but slow pre-processing. The default right now.
+ *    Contraction Hierarchies, extremely fast queries but slow pre-processing. The default right
+ * now.
  *  - Algorithm::CoreCH
  *    Contractoin Hierachies with partial contraction for faster pre-processing but slower queries.
  *
@@ -72,8 +73,8 @@ struct EngineConfig final
 
     enum class Algorithm
     {
-        CH,     // will upgrade to CoreCH if it finds core data
-        CoreCH  // will fail hard if there is no core data
+        CH,    // will upgrade to CoreCH if it finds core data
+        CoreCH // will fail hard if there is no core data
     };
 
     storage::StorageConfig storage_config;
