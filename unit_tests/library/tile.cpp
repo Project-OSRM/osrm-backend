@@ -16,6 +16,9 @@
 
 #include <protozero/pbf_reader.hpp>
 
+#define CHECK_EQUAL_RANGE(R1, R2)                                                                  \
+    BOOST_CHECK_EQUAL_COLLECTIONS(R1.begin(), R1.end(), R2.begin(), R2.end());
+
 BOOST_AUTO_TEST_SUITE(tile)
 
 BOOST_AUTO_TEST_CASE(test_tile)
@@ -331,7 +334,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     std::sort(actual_turn_penalties.begin(), actual_turn_penalties.end());
     const std::vector<float> expected_turn_penalties = {
         0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
-    BOOST_CHECK(actual_turn_penalties == expected_turn_penalties);
+    CHECK_EQUAL_RANGE(actual_turn_penalties, expected_turn_penalties);
 
     // Verify the expected turn angles
     std::vector<std::int64_t> actual_turn_angles;
@@ -343,7 +346,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     std::sort(actual_turn_angles.begin(), actual_turn_angles.end());
     const std::vector<std::int64_t> expected_turn_angles = {
         -122, -120, -117, -65, -57, -30, -28, -3, -2, 2, 3, 28, 30, 57, 65, 117, 120, 122};
-    BOOST_CHECK(actual_turn_angles == expected_turn_angles);
+    CHECK_EQUAL_RANGE(actual_turn_angles, expected_turn_angles);
 
     // Verify the expected bearings
     std::vector<std::int64_t> actual_turn_bearings;
@@ -355,7 +358,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     std::sort(actual_turn_bearings.begin(), actual_turn_bearings.end());
     const std::vector<std::int64_t> expected_turn_bearings = {
         49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 352, 352};
-    BOOST_CHECK(actual_turn_bearings == expected_turn_bearings);
+    CHECK_EQUAL_RANGE(actual_turn_bearings, expected_turn_bearings);
 }
 
 BOOST_AUTO_TEST_CASE(test_tile_speeds)

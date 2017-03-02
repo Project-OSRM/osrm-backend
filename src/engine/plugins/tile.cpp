@@ -748,7 +748,7 @@ Status TilePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
 {
     BOOST_ASSERT(parameters.IsValid());
 
-    auto edges = getEdges(facade, parameters.x, parameters.y, parameters.y);
+    auto edges = getEdges(facade, parameters.x, parameters.y, parameters.z);
 
     auto edge_index = getEdgeIndex(edges);
 
@@ -762,7 +762,7 @@ Status TilePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
     }
 
     encodeVectorTile(
-        facade, parameters.x, parameters.y, parameters.y, edges, edge_index, turns, pbf_buffer);
+        facade, parameters.x, parameters.y, parameters.z, edges, edge_index, turns, pbf_buffer);
 
     return Status::Ok;
 }
