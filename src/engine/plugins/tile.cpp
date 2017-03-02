@@ -651,6 +651,20 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
         // for tiles of z<16, and tiles that don't show any intersections)
         if (!all_turn_data.empty())
         {
+            // we need to pre-encode all values here because we need the full offsets later
+            // for encoding the actual features.
+            std::vector<std::tuple<util::Coordinate, unsigned, unsigned, unsigned>> encoded_turn_data(all_turn_data.size());
+            std::transform(all_turn_data.begin(),
+                           all_turn_data.end(),
+                           encoded_turn_data.begin(),
+                           [&](const routing_algorithms::TurnData &t) {
+                               auto angle_idx = use_point_int_value(t.in_angle);
+                               auto turn_idx = use_point_int_value(t.turn_angle);
+                               auto weight_idx = use_point_float_value(t.weight /
+                                                     10.0); // Note conversion to float here
+                               return std::make_tuple(t.coordinate, angle_idx, turn_idx, weight_idx);
+                           });
+
             // Now write the points layer for turn penalty data:
             // Add a layer object to the PBF stream.  3=='layer' from the vector tile spec
             // (2.1)
@@ -668,7 +682,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 // Helper function to encode a new point feature on a vector tile.
                 const auto encode_tile_point = [&](
                     const FixedPoint &tile_point,
-                    const routing_algorithms::TurnData &point_turn_data) {
+                    const auto &point_turn_data) {
                     protozero::pbf_writer feature_writer(point_layer_writer,
                                                          util::vector_tile::FEATURE_TAG);
                     // Field 3 is the "geometry type" field.  Value 1 is "point"
@@ -677,23 +691,17 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         util::vector_tile::GEOMETRY_TYPE_POINT);                // geometry type
                     feature_writer.add_uint64(util::vector_tile::ID_TAG, id++); // id
                     {
-                        const auto in_angle_offset = use_point_int_value(point_turn_data.in_angle);
-                        const auto turn_angle_offset =
-                            use_point_int_value(point_turn_data.turn_angle);
-                        const auto weight_offset = use_point_float_value(
-                            point_turn_data.weight / 10.0); // Note conversion to float here
-
                         // Write out the 3 properties we want on the feature.  These
                         // refer to indexes in the properties lookup table, which we
                         // add to the tile after we add all features.
                         protozero::packed_field_uint32 field(
                             feature_writer, util::vector_tile::FEATURE_ATTRIBUTES_TAG);
                         field.add_element(0); // "bearing_in" tag key offset
-                        field.add_element(in_angle_offset);
+                        field.add_element(std::get<1>(point_turn_data));
                         field.add_element(1); // "turn_angle" tag key offset
-                        field.add_element(turn_angle_offset);
+                        field.add_element(std::get<2>(point_turn_data));
                         field.add_element(2); // "cost" tag key offset
-                        field.add_element(used_point_ints.size() + weight_offset);
+                        field.add_element(used_point_ints.size() + std::get<3>(point_turn_data));
                     }
                     {
                         // Add the geometry as the last field in this feature
@@ -704,9 +712,9 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 };
 
                 // Loop over all the turns we found and add them as features to the layer
-                for (const auto &turndata : all_turn_data)
+                for (const auto &turndata : encoded_turn_data)
                 {
-                    const auto tile_point = coordinatesToTilePoint(turndata.coordinate, tile_bbox);
+                    const auto tile_point = coordinatesToTilePoint(std::get<0>(turndata), tile_bbox);
                     if (!boost::geometry::within(point_t(tile_point.x, tile_point.y), clip_box))
                     {
                         continue;
