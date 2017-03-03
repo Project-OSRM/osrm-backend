@@ -3,6 +3,16 @@
     - Bugfixes
       - Fix #3754 restricted access roads not penalized if restriction begins non at an intersection
 
+# 5.6.2
+  - Changes from 5.6.0
+    - Bugfixes
+      - Fix incorrect forward datasources getter in facade
+
+# 5.6.1
+  - Changes from 5.6.0
+    - Bugfixes
+      - Fix #3754 add restricted penalty on NoTurn turns
+
 # 5.6.0
   - Changes from 5.5
     - Bugfixes
