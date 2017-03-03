@@ -74,7 +74,11 @@ local profile = {
     'agricultural',
     'forestry',
     'emergency',
-    'psv'
+    'psv',
+    'customer',
+    'private',
+    'delivery',
+    'destination'
   },
 
   restricted_access_tag_list = Set {
@@ -135,6 +139,21 @@ local profile = {
     driveway          = 0.5,
     ["drive-through"] = 0.5,
     ["drive-thru"] = 0.5
+  },
+
+ restricted_highway_whitelist = Set {
+      'motorway',
+      'motorway_link',
+      'trunk',
+      'trunk_link',
+      'primary',
+      'primary_link',
+      'secondary',
+      'secondary_link',
+      'tertiary',
+      'tertiary_link',
+      'residential',
+      'living_street',
   },
 
   route_speeds = {
@@ -259,7 +278,7 @@ function node_function (node, result)
   -- parse access and barrier tags
   local access = find_access_tag(node, profile.access_tags_hierarchy)
   if access then
-    if profile.access_tag_blacklist[access] then
+    if profile.access_tag_blacklist[access] and not profile.restricted_access_tag_list[access] then
       result.barrier = true
     end
   else
