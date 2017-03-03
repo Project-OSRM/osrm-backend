@@ -289,7 +289,6 @@ class MockAlgorithmDataFacade<engine::algorithm::CoreCH>
 
   public:
     bool IsCoreNode(const NodeID /* id */) const override { return false; }
-    std::size_t GetCoreSize() const override { return 0; }
 };
 
 template <typename AlgorithmT>
