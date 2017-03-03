@@ -67,6 +67,8 @@ local profile = {
 
   restricted_access_tag_list = Set { },
 
+  restricted_highway_whitelist = Set { },
+
   access_tags_hierarchy = Sequence {
   	'bicycle',
   	'vehicle',
