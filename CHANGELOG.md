@@ -3,6 +3,16 @@
     - Internals
       - Shared memory notification via conditional variables on Linux or semaphore queue on OS X and Windows with a limit of 128 OSRM Engine instances
 
+# 5.6.2
+  - Changes from 5.6.0
+    - Bugfixes
+      - Fix incorrect forward datasources getter in facade
+
+# 5.6.1
+  - Changes from 5.6.0
+    - Bugfixes
+      - Fix #3754 add restricted penalty on NoTurn turns
+
 # 5.6.0
   - Changes from 5.5
     - Bugfixes
