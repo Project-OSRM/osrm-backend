@@ -165,7 +165,7 @@ Feature: Car - Restricted access
             | motorway    | yes          | permissive |               | private     | x    |       | implied oneway  |
             | trunk       | agricultural | designated | permissive    | no          |      |       |   |
             | pedestrian  |              |            |               |             |      |       |   |
-            | pedestrian  |              |            |               | destination | x    | x     |   |
+            | pedestrian  |              |            |               | destination |      |       | temporary disabled #3773 |
 
     Scenario: Car - Ignore access tags for other modes
         Then routability should be
@@ -262,9 +262,11 @@ Feature: Car - Restricted access
 
     Scenario: Car - a way with a list of tags
         Then routability should be
-            | highway | motor_vehicle            | motor_vehicle:forward | motor_vehicle:backward | forw | backw |
-            | footway |                          |                       | destination            |      | x     |
-            | track   | destination;agricultural | destination           |                        | x    | x     |
+            | highway | motor_vehicle            | motor_vehicle:forward | motor_vehicle:backward | forw | backw | # |
+            | primary |                          | no                    | destination            |      | x     |   |
+            | primary | destination;agricultural | destination           |                        | x    | x     |   |
+            | footway |                          |                       | destination            |      |       | temporary #3373 |
+            | track   | destination;agricultural | destination           |                        |      | x     | temporary #3373 |
 
     Scenario: Car - Don't route over steps even if marked as accessible
         Then routability should be
@@ -280,3 +282,24 @@ Feature: Car - Restricted access
             | steps      | permissive |       |
             | footway    | permissive | x     |
             | garbagetag | permissive | x     |
+
+    Scenario: Car - Access private blacklist
+        Then routability should be
+            | highway    | access     | bothw |
+            | footway    | yes        |   x   |
+            | pedestrian | private    |       |
+            | footway    | private    |       |
+            | service    | private    |       |
+            | cycleway   | private    |       |
+            | track      | private    |       |
+
+    Scenario: Car - Access blacklist
+        Then routability should be
+            | highway    | access       | bothw |
+            | primary    |              |   x   |
+            | primary    | customer     |       |
+            | primary    | emergency    |       |
+            | primary    | forestry     |       |
+            | primary    | agricultural |       |
+            | primary    | psv          |       |
+            | primary    | no           |       |

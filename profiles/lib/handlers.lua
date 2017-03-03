@@ -212,24 +212,27 @@ function Handlers.handle_access(way,result,data,profile)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
 
-  if profile.access_tag_blacklist[data.forward_access] then
+  -- only allow a subset of roads that are marked as restricted
+  if profile.restricted_highway_whitelist[data.highway] then
+      if profile.restricted_access_tag_list[data.forward_access] then
+          result.forward_restricted = true
+      end
+
+      if profile.restricted_access_tag_list[data.backward_access] then
+          result.backward_restricted = true
+      end
+  end
+
+  if profile.access_tag_blacklist[data.forward_access] and not result.forward_restricted then
     result.forward_mode = mode.inaccessible
   end
 
-  if profile.access_tag_blacklist[data.backward_access] then
+  if profile.access_tag_blacklist[data.backward_access] and not result.backward_restricted then
     result.backward_mode = mode.inaccessible
   end
 
   if result.forward_mode == mode.inaccessible and result.backward_mode == mode.inaccessible then
     return false
-  end
-
-  if profile.restricted_access_tag_list[data.forward_access] then
-      result.forward_restricted = true
-  end
-
-  if profile.restricted_access_tag_list[data.backward_access] then
-      result.backward_restricted = true
   end
 end
 
