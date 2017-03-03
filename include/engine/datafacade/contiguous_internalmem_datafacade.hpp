@@ -864,7 +864,6 @@ class ContiguousInternalMemoryDataFacade : public BaseDataFacade
         }
         else
         {
-            result_datasources.resize(end - begin);
             std::copy(m_datasource_list.begin() + begin,
                       m_datasource_list.begin() + end,
                       std::back_inserter(result_datasources));
