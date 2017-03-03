@@ -57,8 +57,6 @@ template <> class AlgorithmDataFacade<algorithm::CoreCH>
     using EdgeData = contractor::QueryEdge::EdgeData;
 
     virtual bool IsCoreNode(const NodeID id) const = 0;
-
-    virtual std::size_t GetCoreSize() const = 0;
 };
 }
 }

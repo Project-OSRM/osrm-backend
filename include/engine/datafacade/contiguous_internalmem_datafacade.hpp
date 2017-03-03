@@ -175,15 +175,9 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
 
     bool IsCoreNode(const NodeID id) const override final
     {
-        if (m_is_core_node.size() > 0)
-        {
-            return m_is_core_node.at(id);
-        }
-
-        return false;
+        BOOST_ASSERT(id < m_is_core_node.size());
+        return m_is_core_node[id];
     }
-
-    std::size_t GetCoreSize() const override final { return m_is_core_node.size(); }
 };
 
 /**
