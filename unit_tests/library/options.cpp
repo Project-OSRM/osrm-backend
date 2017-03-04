@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(test_ch)
     EngineConfig config;
     config.storage_config = storage::StorageConfig(args.at(0));
     config.algorithm = EngineConfig::Algorithm::CH;
-    OSRM osrm {config};
+    OSRM osrm{config};
 }
 
 BOOST_AUTO_TEST_CASE(test_corech)
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(test_corech)
     EngineConfig config;
     config.storage_config = storage::StorageConfig(args.at(0));
     config.algorithm = EngineConfig::Algorithm::CoreCH;
-    OSRM osrm {config};
+    OSRM osrm{config};
 }
 
 BOOST_AUTO_TEST_CASE(test_mld)
@@ -40,8 +40,7 @@ BOOST_AUTO_TEST_CASE(test_mld)
     EngineConfig config;
     config.storage_config = storage::StorageConfig(args.at(0));
     config.algorithm = EngineConfig::Algorithm::MLD;
-    OSRM osrm {config};
+    OSRM osrm{config};
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()

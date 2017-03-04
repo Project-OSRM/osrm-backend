@@ -126,10 +126,7 @@ struct DataLayout
         entry_align[bid] = alignof(T);
     }
 
-    inline uint64_t GetBlockEntries(BlockID bid) const
-    {
-        return num_entries[bid];
-    }
+    inline uint64_t GetBlockEntries(BlockID bid) const { return num_entries[bid]; }
 
     inline uint64_t GetBlockSize(BlockID bid) const
     {
@@ -178,8 +175,7 @@ struct DataLayout
         return ptr;
     }
 
-    template <typename T>
-    inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
+    template <typename T> inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
     {
         auto begin = GetBlockPtr<T>(shared_memory, bid);
         return begin + GetBlockEntries(bid);
