@@ -6,13 +6,14 @@ PROFILE_ROOT:=../../profiles
 SCRIPT_ROOT:=../../scripts
 OSRM_EXTRACT:=$(OSRM_BUILD_DIR)/osrm-extract
 OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract
+OSRM_PARTITION:=$(OSRM_BUILD_DIR)/osrm-partition
 OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed
 POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
 MD5SUM:=$(SCRIPT_ROOT)/md5sum.js
 TIMER:=$(SCRIPT_ROOT)/timer.sh
 PROFILE:=$(PROFILE_ROOT)/car.lua
 
-all: $(DATA_NAME).osrm.hsgr
+all: $(DATA_NAME).osrm.hsgr $(DATA_NAME).osrm.partition
 
 clean:
 	-rm $(DATA_NAME).*
@@ -32,6 +33,10 @@ $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTR
 $(DATA_NAME).osrm.hsgr: $(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
 	$(TIMER) "osrm-contract" $(OSRM_CONTRACT) $(DATA_NAME).osrm
+
+$(DATA_NAME).osrm.partition: $(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
+	@echo "Running osrm-partition..."
+	$(TIMER) "osrm-partition" $(OSRM_PARTITION) $(DATA_NAME).osrm
 
 $(DATA_NAME).requests: $(DATA_NAME).poly
 	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests
