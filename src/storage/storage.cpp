@@ -422,12 +422,29 @@ void Storage::PopulateLayout(DataLayout &layout)
 
         if (boost::filesystem::exists(config.mld_storage_path))
         {
-            auto mld_cell_storage_size =
-                util::CellStorage<true>().GetRequiredMemorySize(config.mld_storage_path);
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_STORAGE, mld_cell_storage_size);
+            io::FileReader reader(config.mld_storage_path, io::FileReader::VerifyFingerprint);
+
+            const auto weights_count = reader.ReadVectorSize<EdgeWeight>();
+            layout.SetBlockSize<EdgeWeight>(DataLayout::MLD_CELL_WEIGHTS, weights_count);
+            const auto source_node_count = reader.ReadVectorSize<NodeID>();
+            layout.SetBlockSize<NodeID>(DataLayout::MLD_CELL_SOURCE_BOUNDARY, source_node_count);
+            const auto destination_node_count = reader.ReadVectorSize<NodeID>();
+            layout.SetBlockSize<NodeID>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY,
+                                        destination_node_count);
+            const auto cell_count = reader.ReadVectorSize<util::CellStorage::CellData>();
+            layout.SetBlockSize<util::CellStorage::CellData>(DataLayout::MLD_CELLS, cell_count);
+            const auto level_offsets_count = reader.ReadVectorSize<std::uint64_t>();
+            layout.SetBlockSize<std::uint64_t>(DataLayout::MLD_CELL_LEVEL_OFFSETS,
+                                               level_offsets_count);
         }
         else
-            layout.SetBlockSize<char>(DataLayout::MLD_CELL_STORAGE, 0);
+        {
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_SOURCE_BOUNDARY, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELLS, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_LEVEL_OFFSETS, 0);
+        }
     }
 }
 
@@ -897,14 +914,29 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                             layout.GetBlockEntries(DataLayout::MLD_CELL_TO_CHILDREN));
         }
 
-        const auto mld_cell_storage_ptr =
-            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::MLD_CELL_STORAGE);
-        const auto mld_cell_storage_size = layout.GetBlockSize(DataLayout::MLD_CELL_STORAGE);
         if (boost::filesystem::exists(config.mld_storage_path))
         {
-            util::CellStorage<true>().Read(config.mld_storage_path,
-                                           mld_cell_storage_ptr,
-                                           mld_cell_storage_ptr + mld_cell_storage_size);
+            io::FileReader reader(config.mld_storage_path, io::FileReader::VerifyFingerprint);
+            auto mld_cell_weights_ptr =
+                layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, DataLayout::MLD_CELL_WEIGHTS);
+            auto mld_source_boundary_ptr =
+                layout.GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
+                memory_ptr, DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto mld_cells_ptr = layout.GetBlockPtr<util::CellStorage::CellData, true>(
+                memory_ptr, DataLayout::MLD_CELLS);
+            auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
+                memory_ptr, DataLayout::MLD_CELL_LEVEL_OFFSETS);
+
+            reader.ReadInto(mld_cell_weights_ptr,
+                            layout.GetBlockEntries(DataLayout::MLD_CELL_WEIGHTS));
+            reader.ReadInto(mld_source_boundary_ptr,
+                            layout.GetBlockEntries(DataLayout::MLD_CELL_SOURCE_BOUNDARY));
+            reader.ReadInto(mld_destination_boundary_ptr,
+                            layout.GetBlockEntries(DataLayout::MLD_CELL_DESTINATION_BOUNDARY));
+            reader.ReadInto(mld_cells_ptr, layout.GetBlockEntries(DataLayout::MLD_CELLS));
+            reader.ReadInto(mld_cell_level_offsets_ptr,
+                            layout.GetBlockEntries(DataLayout::MLD_CELL_LEVEL_OFFSETS));
         }
     }
 }

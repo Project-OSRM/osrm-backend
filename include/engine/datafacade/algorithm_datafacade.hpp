@@ -66,7 +66,7 @@ template <> class AlgorithmDataFacade<algorithm::MLD>
   public:
     virtual const util::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 
-    virtual const util::CellStorage<true> &GetCellStorage() const = 0;
+    virtual const util::CellStorageView &GetCellStorage() const = 0;
 };
 }
 }
