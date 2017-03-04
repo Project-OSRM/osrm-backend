@@ -8,6 +8,8 @@
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
+#include "storage/io.hpp"
+
 #include <cstdint>
 #include <stxxl/vector>
 #include <unordered_map>
@@ -37,9 +39,9 @@ class ExtractionContainers
     void PrepareRestrictions();
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
-    void WriteNodes(std::ofstream &file_out_stream) const;
+    void WriteNodes(storage::io::FileWriter &file_out) const;
     void WriteRestrictions(const std::string &restrictions_file_name) const;
-    void WriteEdges(std::ofstream &file_out_stream) const;
+    void WriteEdges(storage::io::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
   public:

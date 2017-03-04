@@ -21,6 +21,8 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include "storage/io.hpp"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -196,7 +198,7 @@ class EdgeBasedGraphFactory
 
     boost::optional<Mapping> InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
-    void FlushVectorToStream(std::ofstream &edge_data_file,
+    void FlushVectorToStream(storage::io::FileWriter &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
 
     std::size_t restricted_turns_counter;

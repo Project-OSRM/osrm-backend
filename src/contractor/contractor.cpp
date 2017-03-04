@@ -713,47 +713,27 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
             return;
 
         // Now save out the updated compressed geometries
-        std::ofstream geometry_stream(config.geometry_path, std::ios::binary);
-        if (!geometry_stream)
-        {
-            const std::string message{"Failed to open " + config.geometry_path + " for writing"};
-            throw util::exception(message + SOURCE_REF);
-        }
+        storage::io::FileWriter geometry_file(config.geometry_path,
+                                              storage::io::FileWriter::HasNoFingerprint);
+
         const unsigned number_of_indices = geometry_indices.size();
         const unsigned number_of_compressed_geometries = geometry_node_list.size();
-        geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices), sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_indices[0])),
-                              number_of_indices * sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries),
-                              sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_node_list[0])),
-                              number_of_compressed_geometries * sizeof(NodeID));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_fwd_weight_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_rev_weight_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_fwd_duration_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_rev_duration_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
+
+        geometry_file.WriteOne(number_of_indices);
+        geometry_file.WriteFrom(geometry_indices.data(), number_of_indices);
+
+        geometry_file.WriteOne(number_of_compressed_geometries);
+        geometry_file.WriteFrom(geometry_node_list.data(), number_of_compressed_geometries);
+        geometry_file.WriteFrom(geometry_fwd_weight_list.data(), number_of_compressed_geometries);
+        geometry_file.WriteFrom(geometry_rev_weight_list.data(), number_of_compressed_geometries);
+        geometry_file.WriteFrom(geometry_fwd_duration_list.data(), number_of_compressed_geometries);
+        geometry_file.WriteFrom(geometry_rev_duration_list.data(), number_of_compressed_geometries);
     };
 
     const auto save_datasource_indexes = [&] {
-        std::ofstream datasource_stream(config.datasource_indexes_path, std::ios::binary);
-        if (!datasource_stream)
-        {
-            const std::string message{"Failed to open " + config.datasource_indexes_path +
-                                      " for writing"};
-            throw util::exception(message + SOURCE_REF);
-        }
-        std::uint64_t number_of_datasource_entries = geometry_datasource.size();
-        datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
-                                sizeof(number_of_datasource_entries));
-        if (number_of_datasource_entries > 0)
-        {
-            datasource_stream.write(reinterpret_cast<char *>(&(geometry_datasource[0])),
-                                    number_of_datasource_entries * sizeof(uint8_t));
-        }
+        storage::io::FileWriter datasource_file(config.datasource_indexes_path,
+                                                storage::io::FileWriter::HasNoFingerprint);
+        datasource_file.SerializeVector(geometry_datasource);
     };
 
     const auto save_datastore_names = [&] {
@@ -951,11 +931,10 @@ void Contractor::WriteNodeLevels(std::vector<float> &&in_node_levels) const
 {
     std::vector<float> node_levels(std::move(in_node_levels));
 
-    boost::filesystem::ofstream order_output_stream(config.level_output_path, std::ios::binary);
+    storage::io::FileWriter node_level_file(config.level_output_path,
+                                            storage::io::FileWriter::HasNoFingerprint);
 
-    unsigned level_size = node_levels.size();
-    order_output_stream.write((char *)&level_size, sizeof(unsigned));
-    order_output_stream.write((char *)node_levels.data(), sizeof(float) * node_levels.size());
+    node_level_file.SerializeVector(node_levels);
 }
 
 void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
@@ -967,12 +946,12 @@ void Contractor::WriteCoreNodeMarker(std::vector<bool> &&in_is_core_node) const
         unpacked_bool_flags[i] = is_core_node[i] ? 1 : 0;
     }
 
-    boost::filesystem::ofstream core_marker_output_stream(config.core_output_path,
-                                                          std::ios::binary);
-    unsigned size = unpacked_bool_flags.size();
-    core_marker_output_stream.write((char *)&size, sizeof(unsigned));
-    core_marker_output_stream.write((char *)unpacked_bool_flags.data(),
-                                    sizeof(char) * unpacked_bool_flags.size());
+    storage::io::FileWriter core_marker_output_file(config.core_output_path,
+                                                    storage::io::FileWriter::HasNoFingerprint);
+
+    const std::size_t count = unpacked_bool_flags.size();
+    core_marker_output_file.WriteElementCount32(count);
+    core_marker_output_file.WriteFrom(unpacked_bool_flags.data(), count);
 }
 
 std::size_t
@@ -984,9 +963,9 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
     const std::uint64_t contracted_edge_count = contracted_edge_list.size();
     util::Log() << "Serializing compacted graph of " << contracted_edge_count << " edges";
 
-    const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
-    boost::filesystem::ofstream hsgr_output_stream(config.graph_output_path, std::ios::binary);
-    hsgr_output_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+    storage::io::FileWriter hsgr_output_file(config.graph_output_path,
+                                             storage::io::FileWriter::GenerateFingerprint);
+
     const NodeID max_used_node_id = [&contracted_edge_list] {
         NodeID tmp_max = 0;
         for (const QueryEdge &edge : contracted_edge_list)
@@ -1038,17 +1017,15 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
 
     const std::uint64_t node_array_size = node_array.size();
     // serialize crc32, aka checksum
-    hsgr_output_stream.write((char *)&edges_crc32, sizeof(unsigned));
+    hsgr_output_file.WriteOne(edges_crc32);
     // serialize number of nodes
-    hsgr_output_stream.write((char *)&node_array_size, sizeof(std::uint64_t));
+    hsgr_output_file.WriteOne(node_array_size);
     // serialize number of edges
-    hsgr_output_stream.write((char *)&contracted_edge_count, sizeof(std::uint64_t));
+    hsgr_output_file.WriteOne(contracted_edge_count);
     // serialize all nodes
     if (node_array_size > 0)
     {
-        hsgr_output_stream.write((char *)&node_array[0],
-                                 sizeof(util::StaticGraph<EdgeData>::NodeArrayEntry) *
-                                     node_array_size);
+        hsgr_output_file.WriteFrom(node_array.data(), node_array_size);
     }
 
     // serialize all edges
@@ -1082,8 +1059,7 @@ Contractor::WriteContractedGraph(unsigned max_node_id,
             throw util::exception("Edge weight is <= 0" + SOURCE_REF);
         }
 #endif
-        hsgr_output_stream.write((char *)&current_edge,
-                                 sizeof(util::StaticGraph<EdgeData>::EdgeArrayEntry));
+        hsgr_output_file.WriteOne(current_edge);
 
         ++number_of_used_edges;
     }

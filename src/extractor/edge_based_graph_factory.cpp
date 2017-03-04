@@ -5,6 +5,9 @@
 #include "extractor/node_based_graph_to_edge_based_graph_mapping_writer.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/suffix_table.hpp"
+
+#include "storage/io.hpp"
+
 #include "util/bearing.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
@@ -20,7 +23,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <fstream>
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -178,14 +180,16 @@ EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID nod
 }
 
 void EdgeBasedGraphFactory::FlushVectorToStream(
-    std::ofstream &edge_data_file, std::vector<OriginalEdgeData> &original_edge_data_vector) const
+    storage::io::FileWriter &edge_data_file,
+    std::vector<OriginalEdgeData> &original_edge_data_vector) const
 {
     if (original_edge_data_vector.empty())
     {
         return;
     }
-    edge_data_file.write((char *)&(original_edge_data_vector[0]),
-                         original_edge_data_vector.size() * sizeof(OriginalEdgeData));
+
+    edge_data_file.WriteFrom(original_edge_data_vector.data(), original_edge_data_vector.size());
+
     original_edge_data_vector.clear();
 }
 
@@ -337,20 +341,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     skipped_uturns_counter = 0;
     skipped_barrier_turns_counter = 0;
 
-    std::ofstream edge_data_file(original_edge_data_filename.c_str(), std::ios::binary);
-    std::ofstream edge_segment_file;
-    std::ofstream turn_penalties_index_file;
+    storage::io::FileWriter edge_data_file(original_edge_data_filename,
+                                           storage::io::FileWriter::HasNoFingerprint);
 
-    if (generate_edge_lookup)
-    {
-        edge_segment_file.open(edge_segment_lookup_filename.c_str(), std::ios::binary);
-        turn_penalties_index_file.open(turn_penalties_index_filename.c_str(), std::ios::binary);
-    }
+    storage::io::FileWriter edge_segment_file(edge_segment_lookup_filename,
+                                              storage::io::FileWriter::HasNoFingerprint);
+
+    storage::io::FileWriter turn_penalties_index_file(turn_penalties_index_filename,
+                                                      storage::io::FileWriter::HasNoFingerprint);
 
     // Writes a dummy value at the front that is updated later with the total length
-    const std::uint64_t length_prefix_empty_space{0};
-    edge_data_file.write(reinterpret_cast<const char *>(&length_prefix_empty_space),
-                         sizeof(length_prefix_empty_space));
+    edge_data_file.WriteElementCount64(0);
 
     std::vector<OriginalEdgeData> original_edge_data_vector;
     original_edge_data_vector.reserve(1024 * 1024);
@@ -604,8 +605,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                         lookup::SegmentHeaderBlock header = {node_count, first_node.node_id};
 
-                        edge_segment_file.write(reinterpret_cast<const char *>(&header),
-                                                sizeof(header));
+                        edge_segment_file.WriteOne(header);
 
                         for (auto target_node : node_based_edges)
                         {
@@ -619,8 +619,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                            target_node.weight,
                                                            target_node.duration};
 
-                            edge_segment_file.write(reinterpret_cast<const char *>(&nodeblock),
-                                                    sizeof(nodeblock));
+                            edge_segment_file.WriteOne(nodeblock);
                             previous = target_node.node_id;
                         }
 
@@ -651,12 +650,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                         lookup::TurnIndexBlock turn_index_block = {
                             from_node.node_id, via_node.node_id, to_node.node_id};
-                        BOOST_ASSERT(turn_penalties_index_file.tellp() /
-                                         (sizeof(turn_index_block)) ==
-                                     turn_id);
-                        turn_penalties_index_file.write(
-                            reinterpret_cast<const char *>(&turn_index_block),
-                            sizeof(turn_index_block));
+
+                        turn_penalties_index_file.WriteOne(turn_index_block);
                     }
                 }
             }
@@ -664,59 +659,53 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     }
 
     // write weight penalties per turn
-    std::ofstream turn_weight_penalties_file(turn_weight_penalties_filename.c_str(),
-                                             std::ios::binary);
+    storage::io::FileWriter turn_weight_penalties_file(turn_weight_penalties_filename,
+                                                       storage::io::FileWriter::HasNoFingerprint);
+
     lookup::TurnPenaltiesHeader turn_weight_penalties_header{turn_weight_penalties.size()};
-    turn_weight_penalties_file.write(reinterpret_cast<const char *>(&turn_weight_penalties_header),
-                                     sizeof(turn_weight_penalties_header));
-    turn_weight_penalties_file.write(reinterpret_cast<const char *>(turn_weight_penalties.data()),
-                                     sizeof(decltype(turn_weight_penalties)::value_type) *
+    turn_weight_penalties_file.WriteOne(turn_weight_penalties_header);
+    turn_weight_penalties_file.WriteFrom(turn_weight_penalties.data(),
                                          turn_weight_penalties.size());
 
     // write duration penalties per turn if we need them
     BOOST_ASSERT(!profile_properties.fallback_to_duration || turn_duration_penalties.size() == 0);
-    std::ofstream turn_duration_penalties_file(turn_duration_penalties_filename.c_str(),
-                                               std::ios::binary);
+
+    storage::io::FileWriter turn_duration_penalties_file(turn_duration_penalties_filename,
+                                                         storage::io::FileWriter::HasNoFingerprint);
     lookup::TurnPenaltiesHeader turn_duration_penalties_header{turn_duration_penalties.size()};
-    turn_duration_penalties_file.write(
-        reinterpret_cast<const char *>(&turn_duration_penalties_header),
-        sizeof(turn_duration_penalties_header));
+    turn_duration_penalties_file.WriteOne(turn_duration_penalties_header);
+
     if (!profile_properties.fallback_to_duration)
     {
         BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
-        turn_duration_penalties_file.write(
-            reinterpret_cast<const char *>(turn_duration_penalties.data()),
-            sizeof(decltype(turn_duration_penalties)::value_type) * turn_duration_penalties.size());
+        turn_duration_penalties_file.WriteFrom(turn_duration_penalties.data(),
+                                               turn_duration_penalties.size());
     }
 
     util::Log() << "Created " << entry_class_hash.size() << " entry classes and "
                 << bearing_class_hash.size() << " Bearing Classes";
 
     util::Log() << "Writing Turn Lane Data to File...";
-    std::ofstream turn_lane_data_file(turn_lane_data_filename.c_str(), std::ios::binary);
+
+    storage::io::FileWriter turn_lane_data_file(turn_lane_data_filename,
+                                                storage::io::FileWriter::HasNoFingerprint);
+
     std::vector<util::guidance::LaneTupleIdPair> lane_data(lane_data_map.size());
     // extract lane data sorted by ID
     for (auto itr : lane_data_map)
         lane_data[itr.second] = itr.first;
 
-    std::uint64_t size = lane_data.size();
-    turn_lane_data_file.write(reinterpret_cast<const char *>(&size), sizeof(size));
-
-    if (!lane_data.empty())
-        turn_lane_data_file.write(reinterpret_cast<const char *>(&lane_data[0]),
-                                  sizeof(util::guidance::LaneTupleIdPair) * lane_data.size());
+    turn_lane_data_file.SerializeVector(lane_data);
 
     util::Log() << "done.";
 
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
 
     // Finally jump back to the empty space at the beginning and write length prefix
-    edge_data_file.seekp(std::ios::beg);
+    edge_data_file.SkipToBeginning();
 
     const auto length_prefix = boost::numeric_cast<std::uint64_t>(original_edges_counter);
-    static_assert(sizeof(length_prefix_empty_space) == sizeof(length_prefix), "type mismatch");
-
-    edge_data_file.write(reinterpret_cast<const char *>(&length_prefix), sizeof(length_prefix));
+    edge_data_file.WriteElementCount64(length_prefix);
 
     util::Log() << "Generated " << m_edge_based_node_list.size() << " edge based nodes";
     util::Log() << "Node-based graph contains " << node_based_edge_counter << " edges";
