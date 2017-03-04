@@ -60,7 +60,11 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "MLD_LEVEL_DATA",
                                             "MLD_PARTITION",
                                             "MLD_CELL_TO_CHILDREN",
-                                            "MLD_CELL_STORAGE"};
+                                            "MLD_CELL_WEIGHTS",
+                                            "MLD_CELL_SOURCE_BOUNDARY",
+                                            "MLD_CELL_DESTINATION_BOUNDARY",
+                                            "MLD_CELLS",
+                                            "MLD_CELL_LEVEL_OFFSETS"};
 
 struct DataLayout
 {
@@ -108,7 +112,11 @@ struct DataLayout
         MLD_LEVEL_DATA,
         MLD_PARTITION,
         MLD_CELL_TO_CHILDREN,
-        MLD_CELL_STORAGE,
+        MLD_CELL_WEIGHTS,
+        MLD_CELL_SOURCE_BOUNDARY,
+        MLD_CELL_DESTINATION_BOUNDARY,
+        MLD_CELLS,
+        MLD_CELL_LEVEL_OFFSETS,
         NUM_BLOCKS
     };
 

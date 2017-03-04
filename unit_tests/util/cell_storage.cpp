@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(mutable_cell_storage)
     auto graph = makeGraph(edges);
 
     // test non-const storage
-    CellStorage<false> storage(mlp, graph);
+    CellStorage storage(mlp, graph);
 
     // Level 1
     auto cell_1_0 = storage.GetCell(1, 0);
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
     // 3/0: 3 : 1,0,1
 
     // test const storage
-    const CellStorage<false> const_storage(mlp, graph);
+    const CellStorage const_storage(mlp, graph);
 
     auto const_cell_1_0 = const_storage.GetCell(1, 0);
     auto const_cell_1_1 = const_storage.GetCell(1, 1);

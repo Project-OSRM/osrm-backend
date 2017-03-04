@@ -22,8 +22,24 @@ namespace osrm
 {
 namespace util
 {
+namespace detail {
+template <bool UseShareMemory> class CellStorageImpl;
+}
+using CellStorage = detail::CellStorageImpl<false>;
+using CellStorageView = detail::CellStorageImpl<true>;
+}
+namespace partition {
+namespace io {
+template <bool UseShareMemory>
+inline void write(const boost::filesystem::path &path, const util::detail::CellStorageImpl<UseShareMemory> &storage);
+}
+}
 
-template <bool UseShareMemory> class CellStorage
+namespace util
+{
+namespace detail
+{
+template <bool UseShareMemory> class CellStorageImpl
 {
   public:
     using WeightOffset = std::uint32_t;
@@ -35,7 +51,6 @@ template <bool UseShareMemory> class CellStorage
     static constexpr auto INVALID_WEIGHT_OFFSET = std::numeric_limits<WeightOffset>::max();
     static constexpr auto INVALID_BOUNDARY_OFFSET = std::numeric_limits<BoundaryOffset>::max();
 
-  private:
     struct CellData
     {
         WeightOffset weight_offset = INVALID_WEIGHT_OFFSET;
@@ -44,6 +59,9 @@ template <bool UseShareMemory> class CellStorage
         BoundarySize num_source_nodes = 0;
         BoundarySize num_destination_nodes = 0;
     };
+
+  private:
+    template <typename T> using Vector = typename util::ShM<T, UseShareMemory>::vector;
 
     // Implementation of the cell view. We need a template parameter here
     // because we need to derive a read-only and read-write view from this.
@@ -165,10 +183,10 @@ template <bool UseShareMemory> class CellStorage
     using Cell = CellImpl<EdgeWeight>;
     using ConstCell = CellImpl<const EdgeWeight>;
 
-    CellStorage() {}
+    CellStorageImpl() {}
 
-    template <typename GraphT>
-    CellStorage(const MultiLevelPartition &partition, const GraphT &base_graph)
+    template <typename GraphT, typename = std::enable_if<!UseShareMemory>>
+    CellStorageImpl(const MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
         unsigned number_of_cells = 0;
@@ -281,18 +299,17 @@ template <bool UseShareMemory> class CellStorage
         weights.resize(weight_offset + 1, INVALID_EDGE_WEIGHT);
     }
 
-    CellStorage(std::vector<EdgeWeight> weights_,
-                std::vector<NodeID> source_boundary_,
-                std::vector<NodeID> destination_boundary_,
-                std::vector<CellData> cells_,
-                std::vector<std::size_t> level_to_cell_offset_)
+    template <typename = std::enable_if<UseShareMemory>>
+    CellStorageImpl(Vector<EdgeWeight> weights_,
+                Vector<NodeID> source_boundary_,
+                Vector<NodeID> destination_boundary_,
+                Vector<CellData> cells_,
+                Vector<std::uint64_t> level_to_cell_offset_)
         : weights(std::move(weights_)), source_boundary(std::move(source_boundary_)),
           destination_boundary(std::move(destination_boundary_)), cells(std::move(cells_)),
           level_to_cell_offset(std::move(level_to_cell_offset_))
     {
     }
-
-    CellStorage(const boost::filesystem::path &path) { Read(path); }
 
     ConstCell GetCell(LevelID level, CellID id) const
     {
@@ -305,6 +322,7 @@ template <bool UseShareMemory> class CellStorage
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
+    template <typename = std::enable_if<!UseShareMemory>>
     Cell GetCell(LevelID level, CellID id)
     {
         const auto level_index = LevelIDToIndex(level);
@@ -316,101 +334,16 @@ template <bool UseShareMemory> class CellStorage
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    std::size_t GetRequiredMemorySize(const boost::filesystem::path &path) const
-    {
-        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-        storage::io::FileReader reader{path, fingerprint};
-
-        std::size_t memory_size = 0;
-        memory_size += reader.GetVectorMemorySize<decltype(weights[0])>();
-        memory_size += reader.GetVectorMemorySize<decltype(source_boundary[0])>();
-        memory_size += reader.GetVectorMemorySize<decltype(destination_boundary[0])>();
-        memory_size += reader.GetVectorMemorySize<decltype(cells[0])>();
-        memory_size += reader.GetVectorMemorySize<decltype(level_to_cell_offset[0])>();
-        return memory_size;
-    }
-
-    template <bool Q = UseShareMemory>
-    typename std::enable_if<Q>::type
-    Read(const boost::filesystem::path &path, void *begin, const void *end) const
-    {
-        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-        storage::io::FileReader reader{path, fingerprint};
-
-        begin = reader.DeserializeVector<typename decltype(weights)::value_type>(begin, end);
-        begin =
-            reader.DeserializeVector<typename decltype(source_boundary)::value_type>(begin, end);
-        begin = reader.DeserializeVector<typename decltype(destination_boundary)::value_type>(begin,
-                                                                                              end);
-        begin = reader.DeserializeVector<typename decltype(cells)::value_type>(begin, end);
-        begin = reader.DeserializeVector<typename decltype(level_to_cell_offset)::value_type>(begin,
-                                                                                              end);
-    }
-
-    template <bool Q = UseShareMemory>
-    typename std::enable_if<Q>::type InitializePointers(char *begin, const char *end)
-    {
-        auto weights_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(weights_size);
-        weights.reset(reinterpret_cast<EdgeWeight *>(begin), weights_size);
-        begin += sizeof(decltype(weights[0])) * weights_size;
-
-        auto source_boundary_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(source_boundary_size);
-        source_boundary.reset(reinterpret_cast<NodeID *>(begin), source_boundary_size);
-        begin += sizeof(decltype(source_boundary[0])) * source_boundary_size;
-
-        auto destination_boundary_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(destination_boundary_size);
-        destination_boundary.reset(reinterpret_cast<NodeID *>(begin), destination_boundary_size);
-        begin += sizeof(decltype(destination_boundary[0])) * destination_boundary_size;
-
-        auto cells_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(cells_size);
-        cells.reset(reinterpret_cast<CellData *>(begin), cells_size);
-        begin += sizeof(decltype(cells[0])) * cells_size;
-
-        auto level_to_cell_offset_size = *reinterpret_cast<std::uint64_t *>(begin);
-        begin += sizeof(level_to_cell_offset_size);
-        level_to_cell_offset.reset(reinterpret_cast<std::size_t *>(begin),
-                                   level_to_cell_offset_size);
-        begin += sizeof(decltype(level_to_cell_offset[0])) * level_to_cell_offset_size;
-
-        BOOST_ASSERT(begin <= end);
-    }
-
-    template <bool Q = UseShareMemory>
-    typename std::enable_if<!Q>::type Read(const boost::filesystem::path &path)
-    {
-        const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-        storage::io::FileReader reader{path, fingerprint};
-
-        reader.DeserializeVector(weights);
-        reader.DeserializeVector(source_boundary);
-        reader.DeserializeVector(destination_boundary);
-        reader.DeserializeVector(cells);
-        reader.DeserializeVector(level_to_cell_offset);
-    }
-
-    void Write(const boost::filesystem::path &path) const
-    {
-        const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-        storage::io::FileWriter writer{path, fingerprint};
-
-        writer.SerializeVector(weights);
-        writer.SerializeVector(source_boundary);
-        writer.SerializeVector(destination_boundary);
-        writer.SerializeVector(cells);
-        writer.SerializeVector(level_to_cell_offset);
-    }
+    friend void partition::io::write<UseShareMemory>(const boost::filesystem::path &path, const util::detail::CellStorageImpl<UseShareMemory> &storage);
 
   private:
-    typename util::ShM<EdgeWeight, UseShareMemory>::vector weights;
-    typename util::ShM<NodeID, UseShareMemory>::vector source_boundary;
-    typename util::ShM<NodeID, UseShareMemory>::vector destination_boundary;
-    typename util::ShM<CellData, UseShareMemory>::vector cells;
-    typename util::ShM<std::size_t, UseShareMemory>::vector level_to_cell_offset;
+    Vector<EdgeWeight> weights;
+    Vector<NodeID> source_boundary;
+    Vector<NodeID> destination_boundary;
+    Vector<CellData> cells;
+    Vector<std::uint64_t> level_to_cell_offset;
 };
+}
 }
 }
 
