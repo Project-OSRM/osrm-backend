@@ -3,9 +3,9 @@
 #include "partition/bisection_graph.hpp"
 #include "partition/compressed_node_based_graph_reader.hpp"
 #include "partition/edge_based_graph_reader.hpp"
+#include "partition/io.hpp"
 #include "partition/node_based_graph_to_edge_based_graph_mapping_reader.hpp"
 #include "partition/recursive_bisection.hpp"
-#include "partition/io.hpp"
 
 #include "util/cell_storage.hpp"
 #include "util/coordinate.hpp"

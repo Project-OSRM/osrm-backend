@@ -178,11 +178,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         auto offsets = MakeLevelOffsets(lidx_to_num_cells);
         auto masks = MakeLevelMasks(offsets, num_level);
         auto bits = MakeBitToLevel(offsets, num_level);
-        return LevelData{num_level,
-                         offsets,
-                         masks,
-                         bits,
-                         {0}};
+        return LevelData{num_level, offsets, masks, bits, {0}};
     }
 
     inline std::size_t LevelIDToIndex(LevelID l) const { return l - 1; }
@@ -228,7 +224,8 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         return offsets;
     }
 
-    auto MakeLevelMasks(const std::array<std::uint8_t, MAX_NUM_LEVEL - 1> &level_offsets, std::uint32_t num_level) const
+    auto MakeLevelMasks(const std::array<std::uint8_t, MAX_NUM_LEVEL - 1> &level_offsets,
+                        std::uint32_t num_level) const
     {
         std::array<PartitionID, MAX_NUM_LEVEL - 1> masks;
 
@@ -250,13 +247,14 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         return masks;
     }
 
-    auto MakeBitToLevel(const std::array<std::uint8_t, MAX_NUM_LEVEL - 1> &level_offsets, std::uint32_t num_level) const
+    auto MakeBitToLevel(const std::array<std::uint8_t, MAX_NUM_LEVEL - 1> &level_offsets,
+                        std::uint32_t num_level) const
     {
         std::array<LevelID, NUM_PARTITION_BITS> bit_to_level;
 
         for (auto l = 1u; l < num_level; ++l)
         {
-            auto bits = level_offsets[l-1];
+            auto bits = level_offsets[l - 1];
             // set all bits to point to the correct level.
             for (auto idx = bits; idx < NUM_PARTITION_BITS; ++idx)
             {
@@ -329,7 +327,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         {
             const auto &parent_partition = partitions[level_idx + 1];
 
-            level_data.lidx_to_children_offsets[level_idx+1] = cell_to_children.size();
+            level_data.lidx_to_children_offsets[level_idx + 1] = cell_to_children.size();
 
             CellID last_parent_id = parent_partition[permutation.front()];
             cell_to_children.push_back(GetCell(level_idx + 1, permutation.front()));

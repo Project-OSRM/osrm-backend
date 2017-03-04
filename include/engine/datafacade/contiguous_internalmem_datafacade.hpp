@@ -1103,15 +1103,22 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
 
-            auto level_data = *data_layout.GetBlockPtr<util::MultiLevelPartitionView::LevelData>(memory_block, storage::DataLayout::MLD_PARTITION);
+            auto level_data = *data_layout.GetBlockPtr<util::MultiLevelPartitionView::LevelData>(
+                memory_block, storage::DataLayout::MLD_PARTITION);
 
-            auto mld_partition_ptr = data_layout.GetBlockPtr<util::PartitionID>(memory_block, storage::DataLayout::MLD_PARTITION);
-            auto partition_entries_count = data_layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
-            util::ShM<util::PartitionID, true>::vector partition(mld_partition_ptr, partition_entries_count);
+            auto mld_partition_ptr = data_layout.GetBlockPtr<util::PartitionID>(
+                memory_block, storage::DataLayout::MLD_PARTITION);
+            auto partition_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
+            util::ShM<util::PartitionID, true>::vector partition(mld_partition_ptr,
+                                                                 partition_entries_count);
 
-            auto mld_chilren_ptr = data_layout.GetBlockPtr<util::CellID>(memory_block, storage::DataLayout::MLD_CELL_TO_CHILDREN);
-            auto children_entries_count = data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
-            util::ShM<util::CellID, true>::vector cell_to_children(mld_chilren_ptr, children_entries_count);
+            auto mld_chilren_ptr = data_layout.GetBlockPtr<util::CellID>(
+                memory_block, storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            auto children_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            util::ShM<util::CellID, true>::vector cell_to_children(mld_chilren_ptr,
+                                                                   children_entries_count);
 
             mld_partition = util::MultiLevelPartitionView{level_data, partition, cell_to_children};
         }
@@ -1138,10 +1145,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
         InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
     }
 
-    const util::MultiLevelPartitionView &GetMultiLevelPartition() const
-    {
-        return mld_partition;
-    }
+    const util::MultiLevelPartitionView &GetMultiLevelPartition() const { return mld_partition; }
 
     const util::CellStorage<true> &GetCellStorage() const { return mld_cell_storage; }
 };
