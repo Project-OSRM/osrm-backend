@@ -3,9 +3,11 @@
 
 #include "contractor/query_edge.hpp"
 #include "engine/algorithm.hpp"
-#include "util/cell_storage.hpp"
+
+#include "partition/multi_level_partition.hpp"
+#include "partition/cell_storage.hpp"
+
 #include "util/integer_range.hpp"
-#include "util/multi_level_partition.hpp"
 
 namespace osrm
 {
@@ -64,9 +66,9 @@ template <> class AlgorithmDataFacade<algorithm::CoreCH>
 template <> class AlgorithmDataFacade<algorithm::MLD>
 {
   public:
-    virtual const util::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
+    virtual const partition::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 
-    virtual const util::CellStorageView &GetCellStorage() const = 0;
+    virtual const partition::CellStorageView &GetCellStorage() const = 0;
 };
 }
 }

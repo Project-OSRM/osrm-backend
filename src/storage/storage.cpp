@@ -6,20 +6,20 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+#include "partition/cell_storage.hpp"
+#include "partition/multi_level_partition.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
-#include "util/cell_storage.hpp"
 #include "util/coordinate.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 #include "util/io.hpp"
 #include "util/log.hpp"
-#include "util/multi_level_partition.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
@@ -402,22 +402,22 @@ void Storage::PopulateLayout(DataLayout &layout)
         {
             io::FileReader reader(config.mld_partition_path, io::FileReader::VerifyFingerprint);
 
-            reader.Skip<util::MultiLevelPartition::LevelData>(1);
-            layout.SetBlockSize<util::MultiLevelPartition::LevelData>(DataLayout::MLD_LEVEL_DATA,
-                                                                      1);
-            const auto partition_entries_count = reader.ReadVectorSize<util::PartitionID>();
-            layout.SetBlockSize<util::PartitionID>(DataLayout::MLD_PARTITION,
-                                                   partition_entries_count);
-            const auto children_entries_count = reader.ReadVectorSize<util::CellID>();
-            layout.SetBlockSize<util::CellID>(DataLayout::MLD_CELL_TO_CHILDREN,
-                                              children_entries_count);
+            reader.Skip<partition::MultiLevelPartition::LevelData>(1);
+            layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
+                DataLayout::MLD_LEVEL_DATA, 1);
+            const auto partition_entries_count = reader.ReadVectorSize<partition::PartitionID>();
+            layout.SetBlockSize<partition::PartitionID>(DataLayout::MLD_PARTITION,
+                                                        partition_entries_count);
+            const auto children_entries_count = reader.ReadVectorSize<partition::CellID>();
+            layout.SetBlockSize<partition::CellID>(DataLayout::MLD_CELL_TO_CHILDREN,
+                                                   children_entries_count);
         }
         else
         {
-            layout.SetBlockSize<util::MultiLevelPartition::LevelData>(DataLayout::MLD_LEVEL_DATA,
-                                                                      0);
-            layout.SetBlockSize<util::PartitionID>(DataLayout::MLD_PARTITION, 0);
-            layout.SetBlockSize<util::CellID>(DataLayout::MLD_CELL_TO_CHILDREN, 0);
+            layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
+                DataLayout::MLD_LEVEL_DATA, 0);
+            layout.SetBlockSize<partition::PartitionID>(DataLayout::MLD_PARTITION, 0);
+            layout.SetBlockSize<partition::CellID>(DataLayout::MLD_CELL_TO_CHILDREN, 0);
         }
 
         if (boost::filesystem::exists(config.mld_storage_path))
@@ -431,8 +431,9 @@ void Storage::PopulateLayout(DataLayout &layout)
             const auto destination_node_count = reader.ReadVectorSize<NodeID>();
             layout.SetBlockSize<NodeID>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY,
                                         destination_node_count);
-            const auto cell_count = reader.ReadVectorSize<util::CellStorage::CellData>();
-            layout.SetBlockSize<util::CellStorage::CellData>(DataLayout::MLD_CELLS, cell_count);
+            const auto cell_count = reader.ReadVectorSize<partition::CellStorage::CellData>();
+            layout.SetBlockSize<partition::CellStorage::CellData>(DataLayout::MLD_CELLS,
+                                                                  cell_count);
             const auto level_offsets_count = reader.ReadVectorSize<std::uint64_t>();
             layout.SetBlockSize<std::uint64_t>(DataLayout::MLD_CELL_LEVEL_OFFSETS,
                                                level_offsets_count);
@@ -899,11 +900,11 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         if (boost::filesystem::exists(config.mld_partition_path))
         {
             auto mld_level_data_ptr =
-                layout.GetBlockPtr<util::MultiLevelPartition::LevelData, true>(
+                layout.GetBlockPtr<partition::MultiLevelPartition::LevelData, true>(
                     memory_ptr, DataLayout::MLD_LEVEL_DATA);
-            auto mld_partition_ptr =
-                layout.GetBlockPtr<util::PartitionID, true>(memory_ptr, DataLayout::MLD_PARTITION);
-            auto mld_chilren_ptr = layout.GetBlockPtr<util::CellID, true>(
+            auto mld_partition_ptr = layout.GetBlockPtr<partition::PartitionID, true>(
+                memory_ptr, DataLayout::MLD_PARTITION);
+            auto mld_chilren_ptr = layout.GetBlockPtr<partition::CellID, true>(
                 memory_ptr, DataLayout::MLD_CELL_TO_CHILDREN);
 
             io::FileReader reader(config.mld_partition_path, io::FileReader::VerifyFingerprint);
@@ -923,7 +924,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 layout.GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
                 memory_ptr, DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
-            auto mld_cells_ptr = layout.GetBlockPtr<util::CellStorage::CellData, true>(
+            auto mld_cells_ptr = layout.GetBlockPtr<partition::CellStorage::CellData, true>(
                 memory_ptr, DataLayout::MLD_CELLS);
             auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
                 memory_ptr, DataLayout::MLD_CELL_LEVEL_OFFSETS);

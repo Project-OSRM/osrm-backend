@@ -20,8 +20,7 @@
 
 namespace osrm
 {
-
-namespace util
+namespace partition
 {
 namespace detail
 {
@@ -29,20 +28,14 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl;
 }
 using MultiLevelPartition = detail::MultiLevelPartitionImpl<false>;
 using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<true>;
-}
 
-namespace partition
-{
 namespace io
 {
 template <bool UseShareMemory>
 void write(const boost::filesystem::path &file,
-           const util::detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
-}
+           const detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
 }
 
-namespace util
-{
 namespace detail
 {
 // get the msb of an integer
@@ -168,8 +161,8 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         return cell_to_children[offset + cell + 1];
     }
 
-    friend void partition::io::write<UseShareMemory>(const boost::filesystem::path &file,
-                                                     const MultiLevelPartitionImpl &mlp);
+    friend void io::write<UseShareMemory>(const boost::filesystem::path &file,
+                                          const MultiLevelPartitionImpl &mlp);
 
   private:
     auto MakeLevelData(const std::vector<std::uint32_t> &lidx_to_num_cells)
