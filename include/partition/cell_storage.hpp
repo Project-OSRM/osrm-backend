@@ -1,10 +1,11 @@
 #ifndef OSRM_UTIL_CELL_STORAGE_HPP
 #define OSRM_UTIL_CELL_STORAGE_HPP
 
+#include "partition/multi_level_partition.hpp"
+
 #include "util/assert.hpp"
 #include "util/for_each_range.hpp"
 #include "util/log.hpp"
-#include "util/multi_level_partition.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
@@ -20,23 +21,22 @@
 
 namespace osrm
 {
-namespace util
+namespace partition
 {
-namespace detail {
+namespace detail
+{
 template <bool UseShareMemory> class CellStorageImpl;
 }
 using CellStorage = detail::CellStorageImpl<false>;
 using CellStorageView = detail::CellStorageImpl<true>;
-}
-namespace partition {
-namespace io {
+
+namespace io
+{
 template <bool UseShareMemory>
-inline void write(const boost::filesystem::path &path, const util::detail::CellStorageImpl<UseShareMemory> &storage);
-}
+inline void write(const boost::filesystem::path &path,
+                  const detail::CellStorageImpl<UseShareMemory> &storage);
 }
 
-namespace util
-{
 namespace detail
 {
 template <bool UseShareMemory> class CellStorageImpl
@@ -301,10 +301,10 @@ template <bool UseShareMemory> class CellStorageImpl
 
     template <typename = std::enable_if<UseShareMemory>>
     CellStorageImpl(Vector<EdgeWeight> weights_,
-                Vector<NodeID> source_boundary_,
-                Vector<NodeID> destination_boundary_,
-                Vector<CellData> cells_,
-                Vector<std::uint64_t> level_to_cell_offset_)
+                    Vector<NodeID> source_boundary_,
+                    Vector<NodeID> destination_boundary_,
+                    Vector<CellData> cells_,
+                    Vector<std::uint64_t> level_to_cell_offset_)
         : weights(std::move(weights_)), source_boundary(std::move(source_boundary_)),
           destination_boundary(std::move(destination_boundary_)), cells(std::move(cells_)),
           level_to_cell_offset(std::move(level_to_cell_offset_))
@@ -322,8 +322,7 @@ template <bool UseShareMemory> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    template <typename = std::enable_if<!UseShareMemory>>
-    Cell GetCell(LevelID level, CellID id)
+    template <typename = std::enable_if<!UseShareMemory>> Cell GetCell(LevelID level, CellID id)
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
@@ -334,7 +333,8 @@ template <bool UseShareMemory> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    friend void partition::io::write<UseShareMemory>(const boost::filesystem::path &path, const util::detail::CellStorageImpl<UseShareMemory> &storage);
+    friend void io::write<UseShareMemory>(const boost::filesystem::path &path,
+                                          const detail::CellStorageImpl<UseShareMemory> &storage);
 
   private:
     Vector<EdgeWeight> weights;

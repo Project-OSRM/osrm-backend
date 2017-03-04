@@ -1,7 +1,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "util/cell_storage.hpp"
+#include "partition/cell_storage.hpp"
 #include "util/static_graph.hpp"
 
 #define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL(range.end() - range.begin(), ref)
@@ -14,7 +14,7 @@
     } while (0)
 
 using namespace osrm;
-using namespace osrm::util;
+using namespace osrm::partition;
 
 struct MockEdge
 {
@@ -29,7 +29,7 @@ auto makeGraph(const std::vector<MockEdge> &mock_edges)
         bool forward;
         bool backward;
     };
-    using Edge = static_graph_details::SortableEdgeWithData<EdgeData>;
+    using Edge = util::static_graph_details::SortableEdgeWithData<EdgeData>;
     std::vector<Edge> edges;
     std::size_t max_id = 0;
     for (const auto &m : mock_edges)

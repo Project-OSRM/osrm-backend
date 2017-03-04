@@ -1,7 +1,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "util/multi_level_partition.hpp"
+#include "partition/multi_level_partition.hpp"
 
 #define CHECK_SIZE_RANGE(range, ref) BOOST_CHECK_EQUAL(range.second - range.first, ref)
 #define CHECK_EQUAL_RANGE(range, ref)                                                              \
@@ -13,7 +13,7 @@
     } while (0)
 
 using namespace osrm;
-using namespace osrm::util;
+using namespace osrm::partition;
 
 BOOST_AUTO_TEST_SUITE(multi_level_partition_tests)
 

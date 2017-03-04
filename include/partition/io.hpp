@@ -1,9 +1,10 @@
 #ifndef OSRM_PARTITION_IO_HPP
 #define OSRM_PARTITION_IO_HPP
 
+#include "partition/multi_level_partition.hpp"
+#include "partition/cell_storage.hpp"
+
 #include "storage/io.hpp"
-#include "util/multi_level_partition.hpp"
-#include "util/cell_storage.hpp"
 
 namespace osrm
 {
@@ -13,7 +14,7 @@ namespace io
 {
 
 template <>
-inline void write(const boost::filesystem::path &path, const util::MultiLevelPartition &mlp)
+inline void write(const boost::filesystem::path &path, const partition::MultiLevelPartition &mlp)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -24,7 +25,7 @@ inline void write(const boost::filesystem::path &path, const util::MultiLevelPar
 }
 
 template <>
-inline void write(const boost::filesystem::path &path, const util::CellStorage &storage)
+inline void write(const boost::filesystem::path &path, const partition::CellStorage &storage)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
