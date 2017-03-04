@@ -75,7 +75,7 @@ local profile = {
     'forestry',
     'emergency',
     'psv',
-    'customer',
+    'customers',
     'private',
     'delivery',
     'destination'
@@ -84,7 +84,8 @@ local profile = {
   restricted_access_tag_list = Set {
     'private',
     'delivery',
-    'destination'
+    'destination',
+    'customers',
   },
 
   access_tags_hierarchy = Sequence {
