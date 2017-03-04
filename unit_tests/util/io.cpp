@@ -1,6 +1,6 @@
-#include "util/io.hpp"
 #include "storage/io.hpp"
 #include "util/exception.hpp"
+#include "util/fingerprint.hpp"
 #include "util/typedefs.hpp"
 #include "util/version.hpp"
 
@@ -26,7 +26,11 @@ BOOST_AUTO_TEST_CASE(io_data)
     std::vector<int> data_in(53), data_out;
     std::iota(begin(data_in), end(data_in), 0);
 
-    osrm::util::serializeVector(IO_TMP_FILE, data_in);
+    {
+        osrm::storage::io::FileWriter outfile(IO_TMP_FILE,
+                                              osrm::storage::io::FileWriter::GenerateFingerprint);
+        outfile.SerializeVector(data_in);
+    }
 
     osrm::storage::io::FileReader infile(IO_TMP_FILE,
                                          osrm::storage::io::FileReader::VerifyFingerprint);
@@ -58,7 +62,11 @@ BOOST_AUTO_TEST_CASE(file_too_small)
         std::vector<int> v(53);
         std::iota(begin(v), end(v), 0);
 
-        osrm::util::serializeVector(IO_TOO_SMALL_FILE, v);
+        {
+            osrm::storage::io::FileWriter outfile(
+                IO_TOO_SMALL_FILE, osrm::storage::io::FileWriter::GenerateFingerprint);
+            outfile.SerializeVector(v);
+        }
 
         std::fstream f(IO_TOO_SMALL_FILE);
         f.seekp(sizeof(osrm::util::FingerPrint), std::ios_base::beg);
@@ -88,12 +96,12 @@ BOOST_AUTO_TEST_CASE(io_corrupt_fingerprint)
     {
         std::vector<int> v(153);
         std::iota(begin(v), end(v), 0);
-        osrm::util::serializeVector(IO_CORRUPT_FINGERPRINT_FILE, v);
 
-        std::fstream f(IO_CORRUPT_FINGERPRINT_FILE);
-        f.seekp(0, std::ios_base::beg);
-        std::uint64_t garbage = 0xDEADBEEFCAFEFACE;
-        f.write(reinterpret_cast<char *>(&garbage), sizeof(garbage));
+        osrm::storage::io::FileWriter outfile(IO_CORRUPT_FINGERPRINT_FILE,
+                                              osrm::storage::io::FileWriter::HasNoFingerprint);
+
+        outfile.WriteOne(0xDEADBEEFCAFEFACE);
+        outfile.SerializeVector(v);
     }
 
     try
@@ -115,7 +123,15 @@ BOOST_AUTO_TEST_CASE(io_incompatible_fingerprint)
     {
         std::vector<int> v(153);
         std::iota(begin(v), end(v), 0);
-        osrm::util::serializeVector(IO_INCOMPATIBLE_FINGERPRINT_FILE, v);
+
+        {
+            osrm::storage::io::FileWriter outfile(IO_INCOMPATIBLE_FINGERPRINT_FILE,
+                                                  osrm::storage::io::FileWriter::HasNoFingerprint);
+
+            const auto fingerprint = osrm::util::FingerPrint::GetValid();
+            outfile.WriteOne(fingerprint);
+            outfile.SerializeVector(v);
+        }
 
         std::fstream f(IO_INCOMPATIBLE_FINGERPRINT_FILE);
         f.seekp(5, std::ios_base::beg); // Seek past `OSRN` and Major version byte

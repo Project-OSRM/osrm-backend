@@ -46,7 +46,6 @@
 #include <atomic>
 #include <bitset>
 #include <chrono>
-#include <fstream>
 #include <future>
 #include <iostream>
 #include <iterator>
@@ -167,8 +166,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         }
         util::Log() << "timestamp: " << timestamp;
 
-        boost::filesystem::ofstream timestamp_out(config.timestamp_file_name);
-        timestamp_out.write(timestamp.c_str(), timestamp.length());
+        storage::io::FileWriter timestamp_file(config.timestamp_file_name,
+                                               storage::io::FileWriter::HasNoFingerprint);
+
+        timestamp_file.WriteFrom(timestamp.c_str(), timestamp.length());
 
         // initialize vectors holding parsed objects
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> resulting_nodes;
@@ -277,7 +278,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
         util::Log() << "Saving edge-based node weights to file.";
         TIMER_START(timer_write_node_weights);
-        util::serializeVector(config.edge_based_node_weights_output_path, edge_based_node_weights);
+
+        storage::io::FileWriter edge_file(config.edge_based_node_weights_output_path,
+                                          storage::io::FileWriter::GenerateFingerprint);
+        edge_file.SerializeVector(edge_based_node_weights);
+
         TIMER_STOP(timer_write_node_weights);
         util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -314,13 +319,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 void Extractor::WriteProfileProperties(const std::string &output_path,
                                        const ProfileProperties &properties) const
 {
-    boost::filesystem::ofstream out_stream(output_path);
-    if (!out_stream)
-    {
-        throw util::exception("Could not open " + output_path + " for writing." + SOURCE_REF);
-    }
+    storage::io::FileWriter file(output_path, storage::io::FileWriter::HasNoFingerprint);
 
-    out_stream.write(reinterpret_cast<const char *>(&properties), sizeof(properties));
+    file.WriteOne(properties);
 }
 
 void Extractor::FindComponents(unsigned max_edge_id,
@@ -535,14 +536,10 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
  */
 void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map)
 {
-    boost::filesystem::ofstream node_stream(config.node_output_path, std::ios::binary);
-    const std::uint64_t size_of_mapping = internal_to_external_node_map.size();
-    node_stream.write((char *)&size_of_mapping, sizeof(std::uint64_t));
-    if (size_of_mapping > 0)
-    {
-        node_stream.write((char *)internal_to_external_node_map.data(),
-                          size_of_mapping * sizeof(QueryNode));
-    }
+    storage::io::FileWriter node_file(config.node_output_path,
+                                      storage::io::FileWriter::HasNoFingerprint);
+
+    node_file.SerializeVector(internal_to_external_node_map);
 }
 
 /**
@@ -597,22 +594,19 @@ void Extractor::WriteEdgeBasedGraph(
     EdgeID const max_edge_id,
     util::DeallocatingVector<EdgeBasedEdge> const &edge_based_edge_list)
 {
-
-    std::ofstream file_out_stream;
-    file_out_stream.open(output_file_filename.c_str(), std::ios::binary);
-    const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
-    file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+    storage::io::FileWriter file(output_file_filename,
+                                 storage::io::FileWriter::GenerateFingerprint);
 
     util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
     TIMER_START(write_edges);
 
     std::uint64_t number_of_used_edges = edge_based_edge_list.size();
-    file_out_stream.write((char *)&number_of_used_edges, sizeof(number_of_used_edges));
-    file_out_stream.write((char *)&max_edge_id, sizeof(max_edge_id));
+    file.WriteElementCount64(number_of_used_edges);
+    file.WriteOne(max_edge_id);
 
     for (const auto &edge : edge_based_edge_list)
     {
-        file_out_stream.write((char *)&edge, sizeof(EdgeBasedEdge));
+        file.WriteOne(edge);
     }
 
     TIMER_STOP(write_edges);
@@ -627,17 +621,11 @@ void Extractor::WriteIntersectionClassificationData(
     const std::vector<util::guidance::BearingClass> &bearing_classes,
     const std::vector<util::guidance::EntryClass> &entry_classes) const
 {
-    std::ofstream file_out_stream(output_file_name.c_str(), std::ios::binary);
-    if (!file_out_stream)
-    {
-        util::Log(logERROR) << "Failed to open " << output_file_name << " for writing";
-        return;
-    }
+    storage::io::FileWriter file(output_file_name, storage::io::FileWriter::GenerateFingerprint);
 
     util::Log() << "Writing Intersection Classification Data";
     TIMER_START(write_edges);
-    util::writeFingerprint(file_out_stream);
-    util::serializeVector(file_out_stream, node_based_intersection_classes);
+    file.SerializeVector(node_based_intersection_classes);
 
     // create range table for vectors:
     std::vector<unsigned> bearing_counts;
@@ -651,22 +639,18 @@ void Extractor::WriteIntersectionClassificationData(
     }
 
     util::RangeTable<> bearing_class_range_table(bearing_counts);
-    file_out_stream << bearing_class_range_table;
+    bearing_class_range_table.Write(file);
 
-    file_out_stream.write(reinterpret_cast<const char *>(&total_bearings), sizeof(total_bearings));
+    file.WriteOne(total_bearings);
+
     for (const auto &bearing_class : bearing_classes)
     {
         const auto &bearings = bearing_class.getAvailableBearings();
-        file_out_stream.write(reinterpret_cast<const char *>(&bearings[0]),
-                              sizeof(bearings[0]) * bearings.size());
+        file.WriteFrom(bearings.data(), bearings.size());
     }
 
-    if (!static_cast<bool>(file_out_stream))
-    {
-        throw util::exception("Failed to write to " + output_file_name + "." + SOURCE_REF);
-    }
+    file.SerializeVector(entry_classes);
 
-    util::serializeVector(file_out_stream, entry_classes);
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s for "
                 << node_based_intersection_classes.size() << " Indices into "
@@ -684,20 +668,9 @@ void Extractor::WriteTurnLaneData(const std::string &turn_lane_file) const
     util::Log() << "Writing turn lane masks...";
     TIMER_START(turn_lane_timer);
 
-    std::ofstream ofs(turn_lane_file, std::ios::binary);
-    if (!ofs)
-        throw osrm::util::exception("Failed to open " + turn_lane_file + " for writing." +
-                                    SOURCE_REF);
-
-    if (!util::serializeVector(ofs, turn_lane_offsets))
-    {
-        throw util::exception("Error while writing to " + turn_lane_file + SOURCE_REF);
-    }
-
-    if (!util::serializeVector(ofs, turn_lane_masks))
-    {
-        throw util::exception("Error while writing to " + turn_lane_file + SOURCE_REF);
-    }
+    storage::io::FileWriter file(turn_lane_file, storage::io::FileWriter::HasNoFingerprint);
+    file.SerializeVector(turn_lane_offsets);
+    file.SerializeVector(turn_lane_masks);
 
     TIMER_STOP(turn_lane_timer);
     util::Log() << "done (" << TIMER_SEC(turn_lane_timer) << ")";
