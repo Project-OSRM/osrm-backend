@@ -37,7 +37,6 @@ inline std::size_t msb(std::uint32_t v)
     return 31UL - __builtin_clz(v);
 }
 #endif
-
 }
 }
 
