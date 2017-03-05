@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(mutable_cell_storage)
     std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3}};
     std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}};
     std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MultiLevelPartition mlp{{l1, l2, l3, l4}, {2, 4, 8, 12}};
+    MultiLevelPartition mlp{{l1, l2, l3, l4}, {6, 4, 2, 1}};
 
     std::vector<MockEdge> edges = {
         // edges sorted into border/internal by level
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(immutable_cell_storage)
     std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3}};
     std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}};
     std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    MultiLevelPartition mlp{{l1, l2, l3, l4}, {2, 4, 8, 12}};
+    MultiLevelPartition mlp{{l1, l2, l3, l4}, {5, 4, 2, 1}};
 
     std::vector<MockEdge> edges = {
         // edges sorted into border/internal by level
