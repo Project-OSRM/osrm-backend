@@ -201,6 +201,8 @@ template <bool UseShareMemory> class CellStorageImpl
         std::vector<std::pair<CellID, NodeID>> level_source_boundary;
         std::vector<std::pair<CellID, NodeID>> level_destination_boundary;
 
+        std::size_t number_of_unconneced = 0;
+
         for (LevelID level = 1u; level < partition.GetNumberOfLevels(); ++level)
         {
             auto level_offset = level_to_cell_offset[LevelIDToIndex(level)];
@@ -232,12 +234,14 @@ template <bool UseShareMemory> class CellStorageImpl
                         level_source_boundary.emplace_back(cell_id, node);
                     if (is_destination_node)
                         level_destination_boundary.emplace_back(cell_id, node);
-                    // a partition that contains boundary nodes that have no arcs going into
-                    // the cells or coming out of it is invalid. These nodes should be reassigned
-                    // to a different cell.
-                    BOOST_ASSERT_MSG(
-                        is_source_node || is_destination_node,
-                        "Node needs to either have incoming or outgoing edges in cell");
+
+                    // if a node is unconnected we still need to keep it for correctness
+                    // this adds it to the destination array to form an "empty" column
+                    if (!is_source_node && !is_destination_node)
+                    {
+                        number_of_unconneced++;
+                        level_destination_boundary.emplace_back(cell_id, node);
+                    }
                 }
             }
 
@@ -286,6 +290,14 @@ template <bool UseShareMemory> class CellStorageImpl
                         begin,
                         end);
                 });
+        }
+
+        // a partition that contains boundary nodes that have no arcs going into
+        // the cells or coming out of it is bad. These nodes should be reassigned
+        // to a different cell.
+        if (number_of_unconneced > 0)
+        {
+            util::Log(logWARNING) << "Node needs to either have incoming or outgoing edges in cell";
         }
 
         // Set weight offsets and calculate total storage size
