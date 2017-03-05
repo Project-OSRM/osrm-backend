@@ -22,7 +22,6 @@ file(GLOB UtilTestsSources
     util_tests.cpp
     util/*.cpp)
 
-
 add_executable(engine-tests
 	EXCLUDE_FROM_ALL
 	${EngineTestsSources}
@@ -57,13 +56,17 @@ if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
   add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
 
+set(TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/test/data")
+add_dependencies(library-tests osrm-extract osrm-contract osrm-partition)
+add_custom_command(TARGET library-tests POST_BUILD COMMAND make -C ${TEST_DATA_DIR})
+
 target_compile_definitions(extractor-tests PRIVATE COMPILE_DEFINITIONS OSRM_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/unit_tests/fixtures")
+target_compile_definitions(library-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 
 target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(partition-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
 
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -72,7 +75,5 @@ target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_F
 target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-
 add_custom_target(tests
-	DEPENDS
-	engine-tests extractor-tests partition-tests library-tests server-tests util-tests)
+	DEPENDS engine-tests extractor-tests partition-tests library-tests server-tests util-tests)

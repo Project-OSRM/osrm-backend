@@ -1,7 +1,6 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "args.hpp"
 #include "fixture.hpp"
 
 #include "osrm/tile_parameters.hpp"
@@ -23,10 +22,9 @@ BOOST_AUTO_TEST_SUITE(tile)
 
 BOOST_AUTO_TEST_CASE(test_tile)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     // This tile should contain most of monaco
     TileParameters params{17059, 11948, 15};
@@ -213,11 +211,9 @@ BOOST_AUTO_TEST_CASE(test_tile)
 
 BOOST_AUTO_TEST_CASE(test_tile_turns)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
 
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     // Small tile where we can test all the values
     TileParameters params{272953, 191177, 19};
 
@@ -363,10 +359,9 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
 
 BOOST_AUTO_TEST_CASE(test_tile_speeds)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
+
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     // Small tile so we can test all the values
     // TileParameters params{272953, 191177, 19};

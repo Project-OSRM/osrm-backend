@@ -195,13 +195,11 @@ install:
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
-  - echo "travis_fold:start:BENCHMARK"
   - make -C test/data benchmark
-  - echo "travis_fold:end:BENCHMARK"
   - ./example/build/osrm-example test/data/monaco.osrm
   # All tests assume to be run from the build directory
   - pushd ${OSRM_BUILD_DIR}
-  - ./unit_tests/library-tests ../test/data/monaco.osrm
+  - ./unit_tests/library-tests
   - ./unit_tests/extractor-tests
   - ./unit_tests/engine-tests
   - ./unit_tests/util-tests
