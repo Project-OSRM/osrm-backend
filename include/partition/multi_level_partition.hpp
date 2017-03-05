@@ -5,6 +5,7 @@
 #include "util/for_each_pair.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
+#include "util/msb.hpp"
 
 #include "storage/io.hpp"
 
@@ -38,27 +39,6 @@ void write(const boost::filesystem::path &file,
 
 namespace detail
 {
-// get the msb of an integer
-// return 0 for integers without msb
-template <typename T> std::size_t highestMSB(T value)
-{
-    static_assert(std::is_integral<T>::value, "Integer required.");
-    std::size_t msb = 0;
-    while (value > 0)
-    {
-        value >>= 1u;
-        msb++;
-    }
-    return msb;
-}
-
-#if (defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)) && __x86_64__
-inline std::size_t highestMSB(std::uint64_t v)
-{
-    BOOST_ASSERT(v > 0);
-    return 63UL - __builtin_clzl(v);
-}
-#endif
 }
 
 using LevelID = std::uint8_t;
@@ -132,7 +112,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         if (partition[first] == partition[second])
             return 0;
 
-        auto msb = detail::highestMSB(partition[first] ^ partition[second]);
+        auto msb = util::msb(partition[first] ^ partition[second]);
         return level_data.bit_to_level[msb];
     }
 
