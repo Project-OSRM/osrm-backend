@@ -64,7 +64,8 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
             auto &cell = cells[cell_index];
             BOOST_ASSERT(cell.depth < NUM_BISECTION_BITS);
 
-            // Go over all nodes and sum up the bits to determine at which position the first one bit is
+            // Go over all nodes and sum up the bits to determine at which position the first one
+            // bit is
             BisectionID sum =
                 std::accumulate(permutation.begin() + cell.begin,
                                 permutation.begin() + cell.end,
@@ -75,7 +76,8 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
             // masks all bit strictly higher then cell.depth
             const BisectionID mask = (1UL << (NUM_BISECTION_BITS - cell.depth)) - 1;
             const auto masked_sum = sum & mask;
-            // we can't split the cell anymore, but it also doesn't conform to the max size constraint
+            // we can't split the cell anymore, but it also doesn't conform to the max size
+            // constraint
             // -> we need to remove it from the optimization
             if (masked_sum == 0)
             {
@@ -117,7 +119,8 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
     std::iota(permutation.begin(), permutation.end(), 0);
 
     std::vector<CellBisection> cells;
-    cells.push_back(CellBisection{0, static_cast<std::uint32_t>(node_to_bisection_id.size()), 0, false});
+    cells.push_back(
+        CellBisection{0, static_cast<std::uint32_t>(node_to_bisection_id.size()), 0, false});
 
     std::vector<Partition> partitions(max_cell_sizes.size());
     std::vector<std::uint32_t> num_cells(max_cell_sizes.size());

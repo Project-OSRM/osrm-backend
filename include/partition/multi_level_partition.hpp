@@ -3,9 +3,9 @@
 
 #include "util/exception.hpp"
 #include "util/for_each_pair.hpp"
+#include "util/msb.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
-#include "util/msb.hpp"
 
 #include "storage/io.hpp"
 

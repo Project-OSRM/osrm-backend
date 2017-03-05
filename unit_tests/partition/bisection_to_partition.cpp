@@ -33,7 +33,22 @@ BOOST_AUTO_TEST_CASE(unsplitable_case)
      0   1   2   3   4   5   6   7   8   9   10   11   12   13  14  15
     */
     const std::vector<BisectionID> ids_1 = {
-        0b000, 0b000, 0b001, 0b001, 0b010, 0b010, 0b011, 0b011, 0b100, 0b100, 0b100, 0b100, 0b100, 0b100, 0b100, 0b100,
+        0b000,
+        0b000,
+        0b001,
+        0b001,
+        0b010,
+        0b010,
+        0b011,
+        0b011,
+        0b100,
+        0b100,
+        0b100,
+        0b100,
+        0b100,
+        0b100,
+        0b100,
+        0b100,
     };
 
     // If cell sizes are not a factor of two we will see sub-optimal results like below
@@ -44,22 +59,22 @@ BOOST_AUTO_TEST_CASE(unsplitable_case)
     CHECK_EQUAL_RANGE(reference_num_cells, num_cells);
 
     // Four cells of size 2 and one of size 4 (could not be split)
-    const std::vector<CellID> reference_l1{partitions[0][0],   // 0
-                                           partitions[0][0],   // 1
-                                           partitions[0][2],   // 2
-                                           partitions[0][2],   // 3
-                                           partitions[0][4],   // 4
-                                           partitions[0][4],   // 5
-                                           partitions[0][6],   // 6
-                                           partitions[0][6],   // 7
-                                           partitions[0][8],   // 8
-                                           partitions[0][8],   // 9
-                                           partitions[0][8],   // 10
-                                           partitions[0][8],   // 11
-                                           partitions[0][8],   // 12
-                                           partitions[0][8],   // 13
-                                           partitions[0][8],   // 14
-                                           partitions[0][8]};  // 15
+    const std::vector<CellID> reference_l1{partitions[0][0],  // 0
+                                           partitions[0][0],  // 1
+                                           partitions[0][2],  // 2
+                                           partitions[0][2],  // 3
+                                           partitions[0][4],  // 4
+                                           partitions[0][4],  // 5
+                                           partitions[0][6],  // 6
+                                           partitions[0][6],  // 7
+                                           partitions[0][8],  // 8
+                                           partitions[0][8],  // 9
+                                           partitions[0][8],  // 10
+                                           partitions[0][8],  // 11
+                                           partitions[0][8],  // 12
+                                           partitions[0][8],  // 13
+                                           partitions[0][8],  // 14
+                                           partitions[0][8]}; // 15
     // Two cells of size 4 and one of size 8
     const std::vector<CellID> reference_l2{partitions[1][0],  // 0
                                            partitions[1][0],  // 1
@@ -204,7 +219,18 @@ BOOST_AUTO_TEST_CASE(power_of_two_case)
 
     // Inserting zeros at bit position 0, and 2 should not change the result
     const std::vector<BisectionID> ids_2 = {
-        0b00000, 0b00000, 0b00010, 0b00010, 0b00100, 0b00100, 0b00110, 0b00110, 0b10000, 0b10000, 0b10010, 0b10010,
+        0b00000,
+        0b00000,
+        0b00010,
+        0b00010,
+        0b00100,
+        0b00100,
+        0b00110,
+        0b00110,
+        0b10000,
+        0b10000,
+        0b10010,
+        0b10010,
     };
     std::tie(partitions, num_cells) = bisectionToPartition(ids_2, {2, 4, 8, 16});
     CHECK_EQUAL_RANGE(reference_l1, partitions[0]);
@@ -214,7 +240,18 @@ BOOST_AUTO_TEST_CASE(power_of_two_case)
 
     // Inserting a prefix should not change anything
     const std::vector<BisectionID> ids_3 = {
-        0b101000, 0b101000, 0b101001, 0b101001, 0b101010, 0b101010, 0b101011, 0b101011, 0b101100, 0b101100, 0b101101, 0b101101,
+        0b101000,
+        0b101000,
+        0b101001,
+        0b101001,
+        0b101010,
+        0b101010,
+        0b101011,
+        0b101011,
+        0b101100,
+        0b101100,
+        0b101101,
+        0b101101,
     };
     std::tie(partitions, num_cells) = bisectionToPartition(ids_3, {2, 4, 8, 16});
     CHECK_EQUAL_RANGE(reference_l1, partitions[0]);
@@ -309,7 +346,18 @@ BOOST_AUTO_TEST_CASE(non_factor_two_case)
 
     // Inserting zeros at bit position 0, and 2 should not change the result
     const std::vector<BisectionID> ids_2 = {
-        0b00000, 0b00000, 0b00010, 0b00010, 0b00100, 0b00100, 0b00110, 0b00110, 0b10000, 0b10000, 0b10010, 0b10010,
+        0b00000,
+        0b00000,
+        0b00010,
+        0b00010,
+        0b00100,
+        0b00100,
+        0b00110,
+        0b00110,
+        0b10000,
+        0b10000,
+        0b10010,
+        0b10010,
     };
     std::tie(partitions, num_cells) = bisectionToPartition(ids_2, {2, 4, 6, 12});
     CHECK_EQUAL_RANGE(reference_l1, partitions[0]);
@@ -319,7 +367,18 @@ BOOST_AUTO_TEST_CASE(non_factor_two_case)
 
     // Inserting a prefix should not change anything
     const std::vector<BisectionID> ids_3 = {
-        0b101000, 0b101000, 0b101001, 0b101001, 0b101010, 0b101010, 0b101011, 0b101011, 0b101100, 0b101100, 0b101101, 0b101101,
+        0b101000,
+        0b101000,
+        0b101001,
+        0b101001,
+        0b101010,
+        0b101010,
+        0b101011,
+        0b101011,
+        0b101100,
+        0b101100,
+        0b101101,
+        0b101101,
     };
     std::tie(partitions, num_cells) = bisectionToPartition(ids_3, {2, 4, 6, 12});
     CHECK_EQUAL_RANGE(reference_l1, partitions[0]);

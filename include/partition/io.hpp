@@ -1,8 +1,8 @@
 #ifndef OSRM_PARTITION_IO_HPP
 #define OSRM_PARTITION_IO_HPP
 
-#include "partition/multi_level_partition.hpp"
 #include "partition/cell_storage.hpp"
+#include "partition/multi_level_partition.hpp"
 
 #include "storage/io.hpp"
 
@@ -36,7 +36,6 @@ inline void write(const boost::filesystem::path &path, const partition::CellStor
     writer.SerializeVector(storage.cells);
     writer.SerializeVector(storage.level_to_cell_offset);
 }
-
 }
 }
 }

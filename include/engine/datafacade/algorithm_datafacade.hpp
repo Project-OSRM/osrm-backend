@@ -4,8 +4,8 @@
 #include "contractor/query_edge.hpp"
 #include "engine/algorithm.hpp"
 
-#include "partition/multi_level_partition.hpp"
 #include "partition/cell_storage.hpp"
+#include "partition/multi_level_partition.hpp"
 
 #include "util/integer_range.hpp"
 
