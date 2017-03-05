@@ -38,9 +38,9 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &p
              ->default_value(tbb::task_scheduler_init::default_num_threads()),
          "Number of threads to use")
         //
-        ("max-cell-size",
-         boost::program_options::value<std::size_t>(&partition_config.maximum_cell_size)
-             ->default_value(4096),
+        ("min-cell-size",
+         boost::program_options::value<std::size_t>(&partition_config.minimum_cell_size)
+             ->default_value(128),
          "Bisection termination citerion based on cell size")
         //
         ("balance",

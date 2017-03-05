@@ -106,12 +106,12 @@ int Partitioner::Run(const PartitionConfig &config)
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
-    util::Log() << " running partition: " << config.maximum_cell_size << " " << config.balance
+    util::Log() << " running partition: " << config.minimum_cell_size << " " << config.balance
                 << " " << config.boundary_factor << " " << config.num_optimizing_cuts << " "
                 << config.small_component_size
                 << " # max_cell_size balance boundary cuts small_component_size";
     RecursiveBisection recursive_bisection(graph,
-                                           config.maximum_cell_size,
+                                           config.minimum_cell_size,
                                            config.balance,
                                            config.boundary_factor,
                                            config.num_optimizing_cuts,
@@ -162,8 +162,12 @@ int Partitioner::Run(const PartitionConfig &config)
 
     std::vector<Partition> partitions;
     std::vector<std::uint32_t> level_to_num_cells;
-    std::tie(partitions, level_to_num_cells) = bisectionToPartition(edge_based_partition_ids,
-                                           {128, 128 * 32, 128 * 32 * 16, 128 * 32 * 16 * 32});
+    std::tie(partitions, level_to_num_cells) =
+        bisectionToPartition(edge_based_partition_ids,
+                             {config.minimum_cell_size,
+                              config.minimum_cell_size * 32,
+                              config.minimum_cell_size * 32 * 16,
+                              config.minimum_cell_size * 32 * 16 * 32});
 
     TIMER_START(packed_mlp);
     MultiLevelPartition mlp{partitions, level_to_num_cells};
