@@ -13,40 +13,59 @@ MD5SUM:=$(SCRIPT_ROOT)/md5sum.js
 TIMER:=$(SCRIPT_ROOT)/timer.sh
 PROFILE:=$(PROFILE_ROOT)/car.lua
 
-all: $(DATA_NAME).osrm.hsgr $(DATA_NAME).osrm.partition
+all: data
+
+data: $(DATA_NAME)_CH.osrm.hsgr $(DATA_NAME)_CoreCH.osrm.hsgr $(DATA_NAME)_MLD.osrm.partition
 
 clean:
 	-rm $(DATA_NAME).*
+	-rm $(DATA_NAME)_*
 
 $(DATA_NAME).osm.pbf:
 	wget $(DATA_URL) -O $(DATA_NAME).osm.pbf
 
+$(DATA_NAME)_%.osm.pbf: $(DATA_NAME).osm.pbf
+	cp $< $@
+
 $(DATA_NAME).poly:
 	wget $(DATA_POLY_URL) -O $(DATA_NAME).poly
 
-$(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
+$(DATA_NAME)_%.osrm: $(DATA_NAME)_%.osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
 	@echo "Verifiyng data file integrity..."
 	$(MD5SUM) -c data.md5sum
 	@echo "Running osrm-extract..."
-	$(TIMER) "osrm-extract" $(OSRM_EXTRACT) $(DATA_NAME).osm.pbf -p $(PROFILE)
+	$(TIMER) "osrm-extract" $(OSRM_EXTRACT) $< -p $(PROFILE)
 
-$(DATA_NAME).osrm.hsgr: $(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
+$(DATA_NAME)_CH.osrm.hsgr: $(DATA_NAME)_CH.osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
-	$(TIMER) "osrm-contract" $(OSRM_CONTRACT) $(DATA_NAME).osrm
+	$(TIMER) "osrm-contract" $(OSRM_CONTRACT) $<
 
-$(DATA_NAME).osrm.partition: $(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
+$(DATA_NAME)_CoreCH.osrm.hsgr: $(DATA_NAME)_CoreCH.osrm $(PROFILE) $(OSRM_CONTRACT)
+	@echo "Running osrm-contract..."
+	$(TIMER) "osrm-contract" $(OSRM_CONTRACT) --core=0.95 $<
+
+$(DATA_NAME)_MLD.osrm.partition: $(DATA_NAME)_MLD.osrm $(PROFILE) $(OSRM_PARTITION)
 	@echo "Running osrm-partition..."
-	$(TIMER) "osrm-partition" $(OSRM_PARTITION) $(DATA_NAME).osrm
+	$(TIMER) "osrm-contract" $(OSRM_CONTRACT) $<
+	$(TIMER) "osrm-partition" $(OSRM_PARTITION) $<
 
 $(DATA_NAME).requests: $(DATA_NAME).poly
 	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests
 
-osrm-routed.pid: $(DATA_NAME).osrm.hsgr
-	@/bin/sh -c '$(OSRM_ROUTED) $(DATA_NAME).osrm& echo "$$!" > osrm-routed.pid'
-	sleep 1
-
-benchmark: $(DATA_NAME).requests osrm-routed.pid
+benchmark: data $(DATA_NAME).requests
 	@echo "Running benchmark..."
+	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CH $(DATA_NAME)_CH.osrm& echo "$$!" > osrm-routed.pid'
+	@sleep 1
+	$(TIMER) "queries" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
+	@cat osrm-routed.pid | xargs kill
+	@rm osrm-routed.pid
+	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CoreCH $(DATA_NAME)_CoreCH.osrm& echo "$$!" > osrm-routed.pid'
+	@sleep 1
+	$(TIMER) "queries" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
+	@cat osrm-routed.pid | xargs kill
+	@rm osrm-routed.pid
+	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD $(DATA_NAME)_MLD.osrm& echo "$$!" > osrm-routed.pid'
+	@sleep 1
 	$(TIMER) "queries" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
 	@cat osrm-routed.pid | xargs kill
 	@rm osrm-routed.pid

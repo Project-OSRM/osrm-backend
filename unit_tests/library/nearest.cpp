@@ -1,7 +1,6 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "args.hpp"
 #include "coordinates.hpp"
 #include "fixture.hpp"
 
@@ -17,8 +16,7 @@ BOOST_AUTO_TEST_SUITE(nearest)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     using namespace osrm;
 
@@ -45,8 +43,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     using namespace osrm;
 
@@ -62,8 +59,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     using namespace osrm;
 
@@ -81,8 +77,7 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates)
 
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     using namespace osrm;
 
