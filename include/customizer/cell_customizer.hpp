@@ -10,7 +10,7 @@
 
 namespace osrm
 {
-namespace customizer
+namespace customize
 {
 
 class CellCustomizer

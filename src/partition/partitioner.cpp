@@ -181,14 +181,8 @@ int Partitioner::Run(const PartitionConfig &config)
     TIMER_STOP(packed_mlp);
     util::Log() << "MultiLevelPartition constructed in " << TIMER_SEC(packed_mlp) << " seconds";
 
-    TIMER_START(cell_storage);
-    CellStorage storage(mlp, *edge_based_graph);
-    TIMER_STOP(cell_storage);
-    util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
-
     TIMER_START(writing_mld_data);
     io::write(config.mld_partition_path, mlp);
-    io::write(config.mld_storage_path, storage);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 

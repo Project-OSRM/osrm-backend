@@ -1,5 +1,5 @@
-#ifndef OSRM_UTIL_CELL_STORAGE_HPP
-#define OSRM_UTIL_CELL_STORAGE_HPP
+#ifndef OSRM_CUSTOMIZE_CELL_STORAGE_HPP
+#define OSRM_CUSTOMIZE_CELL_STORAGE_HPP
 
 #include "partition/multi_level_partition.hpp"
 
@@ -177,7 +177,7 @@ template <bool UseShareMemory> class CellStorageImpl
         }
     };
 
-    std::size_t LevelIDToIndex(LevelID level) const { return level - 1; }
+    std::size_t LevelIDToIndex(partition::LevelID level) const { return level - 1; }
 
   public:
     using Cell = CellImpl<EdgeWeight>;
@@ -186,11 +186,11 @@ template <bool UseShareMemory> class CellStorageImpl
     CellStorageImpl() {}
 
     template <typename GraphT, typename = std::enable_if<!UseShareMemory>>
-    CellStorageImpl(const MultiLevelPartition &partition, const GraphT &base_graph)
+    CellStorageImpl(const partition::MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
         unsigned number_of_cells = 0;
-        for (LevelID level = 1u; level < partition.GetNumberOfLevels(); ++level)
+        for (partition::LevelID level = 1u; level < partition.GetNumberOfLevels(); ++level)
         {
             level_to_cell_offset.push_back(number_of_cells);
             number_of_cells += partition.GetNumberOfCells(level);
@@ -198,12 +198,12 @@ template <bool UseShareMemory> class CellStorageImpl
         level_to_cell_offset.push_back(number_of_cells);
         cells.resize(number_of_cells);
 
-        std::vector<std::pair<CellID, NodeID>> level_source_boundary;
-        std::vector<std::pair<CellID, NodeID>> level_destination_boundary;
+        std::vector<std::pair<partition::CellID, NodeID>> level_source_boundary;
+        std::vector<std::pair<partition::CellID, NodeID>> level_destination_boundary;
 
         std::size_t number_of_unconneced = 0;
 
-        for (LevelID level = 1u; level < partition.GetNumberOfLevels(); ++level)
+        for (partition::LevelID level = 1u; level < partition.GetNumberOfLevels(); ++level)
         {
             auto level_offset = level_to_cell_offset[LevelIDToIndex(level)];
 
@@ -212,7 +212,7 @@ template <bool UseShareMemory> class CellStorageImpl
 
             for (auto node = 0u; node < base_graph.GetNumberOfNodes(); ++node)
             {
-                const CellID cell_id = partition.GetCell(level, node);
+                const partition::CellID cell_id = partition.GetCell(level, node);
                 bool is_source_node = false;
                 bool is_destination_node = false;
                 bool is_boundary_node = false;
@@ -297,7 +297,8 @@ template <bool UseShareMemory> class CellStorageImpl
         // to a different cell.
         if (number_of_unconneced > 0)
         {
-            util::Log(logWARNING) << "Node needs to either have incoming or outgoing edges in cell";
+            util::Log(logWARNING) << "Node needs to either have incoming or outgoing edges in cell."
+                                  << " Number of unconnected nodes is " << number_of_unconneced;
         }
 
         // Set weight offsets and calculate total storage size
@@ -323,7 +324,7 @@ template <bool UseShareMemory> class CellStorageImpl
     {
     }
 
-    ConstCell GetCell(LevelID level, CellID id) const
+    ConstCell GetCell(partition::LevelID level, partition::CellID id) const
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
@@ -334,7 +335,8 @@ template <bool UseShareMemory> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    template <typename = std::enable_if<!UseShareMemory>> Cell GetCell(LevelID level, CellID id)
+    template <typename = std::enable_if<!UseShareMemory>>
+    Cell GetCell(partition::LevelID level, partition::CellID id)
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
@@ -359,4 +361,4 @@ template <bool UseShareMemory> class CellStorageImpl
 }
 }
 
-#endif
+#endif // OSRM_CUSTOMIZE_CELL_STORAGE_HPP
