@@ -18,7 +18,7 @@ static constexpr std::size_t NUM_BISECTION_BITS = sizeof(BisectionID) * CHAR_BIT
 
 bool getSide(std::uint8_t depth, BisectionID id)
 {
-    return id & (1UL << (NUM_BISECTION_BITS - 1 - depth));
+    return id & (1ULL << (NUM_BISECTION_BITS - 1 - depth));
 }
 
 std::vector<std::uint32_t> getLargeCells(const std::size_t max_cell_size,
@@ -74,7 +74,7 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
                                     return lhs | node_to_bisection_id[rhs];
                                 });
             // masks all bit strictly higher then cell.depth
-            const BisectionID mask = (1UL << (NUM_BISECTION_BITS - cell.depth)) - 1;
+            const BisectionID mask = (1ULL << (NUM_BISECTION_BITS - cell.depth)) - 1;
             const auto masked_sum = sum & mask;
             // we can't split the cell anymore, but it also doesn't conform to the max size
             // constraint
