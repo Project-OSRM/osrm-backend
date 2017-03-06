@@ -106,6 +106,18 @@ template <typename DataT> class SharedMemoryWrapper
         return m_ptr[index];
     }
 
+    const DataT &front() const {
+        BOOST_ASSERT_MSG(m_size > 0, "invalid size");
+        return m_ptr[0];
+    }
+
+    const DataT &back() const {
+        BOOST_ASSERT_MSG(m_size > 0, "invalid size");
+        return m_ptr[m_size - 1];
+    }
+
+    auto data() const { return m_ptr; }
+
     template <typename T>
     friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;
 };

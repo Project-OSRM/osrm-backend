@@ -42,7 +42,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
         }
         std::sort(offsets.begin(), offsets.end());
         // add sentinel
-        offsets.push_back(offsets.back());
+        offsets.push_back(TEST_NUM_EDGES);
 
         // extract interval lengths
         for (unsigned i = 0; i < offsets.size() - 1; i++)

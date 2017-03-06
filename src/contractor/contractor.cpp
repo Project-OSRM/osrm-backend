@@ -147,8 +147,8 @@ void CheckWeightsConsistency(
 
     for (auto &edge : edge_based_edge_list)
     {
-        BOOST_ASSERT(edge.edge_id < current_edge_data.size());
-        auto geometry_id = current_edge_data[edge.edge_id].via_geometry;
+        BOOST_ASSERT(edge.data.edge_id < current_edge_data.size());
+        auto geometry_id = current_edge_data[edge.data.edge_id].via_geometry;
         BOOST_ASSERT(geometry_id.id < geometry_indices.size());
 
         const auto &weights = geometry_id.forward ? forward_weight_list : reverse_weight_list;
@@ -157,7 +157,7 @@ void CheckWeightsConsistency(
         const auto last = weights.begin() + geometry_indices.at(geometry_id.id + 1) - 1 + shift;
         EdgeWeight weight = std::accumulate(first, last, 0);
 
-        BOOST_ASSERT(weight <= edge.weight);
+        BOOST_ASSERT(weight <= edge.data.weight);
     }
 }
 
@@ -908,8 +908,8 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
             }
 
             // Update edge weight
-            inbuffer.weight = new_weight + turn_weight_penalty;
-            inbuffer.duration = new_duration + turn_duration_penalty;
+            inbuffer.data.weight = new_weight + turn_weight_penalty;
+            inbuffer.data.duration = new_duration + turn_duration_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));

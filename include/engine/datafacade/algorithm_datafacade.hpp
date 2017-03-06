@@ -2,6 +2,7 @@
 #define OSRM_ENGINE_DATAFACADE_ALGORITHM_DATAFACADE_HPP
 
 #include "contractor/query_edge.hpp"
+#include "extractor/edge_based_edge.hpp"
 #include "engine/algorithm.hpp"
 
 #include "partition/cell_storage.hpp"
@@ -66,6 +67,25 @@ template <> class AlgorithmDataFacade<algorithm::CoreCH>
 template <> class AlgorithmDataFacade<algorithm::MLD>
 {
   public:
+    using EdgeData = extractor::EdgeBasedEdge::EdgeData;
+
+    // search graph access
+    virtual unsigned GetNumberOfNodes() const = 0;
+
+    virtual unsigned GetNumberOfEdges() const = 0;
+
+    virtual unsigned GetOutDegree(const NodeID n) const = 0;
+
+    virtual NodeID GetTarget(const EdgeID e) const = 0;
+
+    virtual const EdgeData &GetEdgeData(const EdgeID e) const = 0;
+
+    virtual EdgeID BeginEdges(const NodeID n) const = 0;
+
+    virtual EdgeID EndEdges(const NodeID n) const = 0;
+
+    virtual EdgeRange GetAdjacentEdgeRange(const NodeID node) const = 0;
+
     virtual const partition::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 
     virtual const partition::CellStorageView &GetCellStorage() const = 0;
