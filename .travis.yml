@@ -196,7 +196,7 @@ install:
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
   - make -C test/data benchmark
-  - ./example/build/osrm-example test/data/monaco.osrm
+  - ./example/build/osrm-example test/data/monaco_CH.osrm
   # All tests assume to be run from the build directory
   - pushd ${OSRM_BUILD_DIR}
   - ./unit_tests/library-tests
