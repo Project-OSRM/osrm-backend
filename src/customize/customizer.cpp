@@ -14,6 +14,58 @@ namespace osrm
 namespace customize
 {
 
+template <typename Graph, typename Partition, typename CellStorage>
+void CellStorageStatistics(const Graph &graph,
+                           const Partition &partition,
+                           const CellStorage &storage)
+{
+    util::Log() << "Cells statistics per level";
+
+    for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
+    {
+        std::unordered_map<partition::CellID, std::size_t> cell_nodes;
+        for (auto node : util::irange(0u, graph.GetNumberOfNodes()))
+        {
+            ++cell_nodes[partition.GetCell(level, node)];
+        }
+
+        std::size_t source = 0, destination = 0, total = 0;
+        std::size_t invalid_sources = 0, invalid_destinations = 0;
+        for (std::uint32_t cell_id = 0; cell_id < partition.GetNumberOfCells(level); ++cell_id)
+        {
+            const auto &cell = storage.GetCell(level, cell_id);
+            source += cell.GetSourceNodes().size();
+            destination += cell.GetDestinationNodes().size();
+            total += cell_nodes[cell_id];
+            for (auto node : cell.GetSourceNodes())
+            {
+                const auto &weights = cell.GetOutWeight(node);
+                invalid_sources += std::all_of(weights.begin(), weights.end(), [](auto weight) {
+                    return weight == INVALID_EDGE_WEIGHT;
+                });
+            }
+            for (auto node : cell.GetDestinationNodes())
+            {
+                const auto &weights = cell.GetInWeight(node);
+                invalid_destinations +=
+                    std::all_of(weights.begin(), weights.end(), [](auto weight) {
+                        return weight == INVALID_EDGE_WEIGHT;
+                    });
+            }
+        }
+
+        util::Log() << "Level " << level << " #cells " << cell_nodes.size() << " #nodes " << total
+                    << ",   source nodes: average " << source
+                    << " (" << (100. * source / total) << "%)"
+                    << " invalid " << invalid_sources
+                    << " (" << (100. * invalid_sources / total) << "%)"
+                    << ",   destination nodes: average " << destination
+                    << " (" << (100. * destination / total) << "%)"
+                    << " invalid " << invalid_destinations
+                    << " (" << (100. * invalid_destinations / total) << "%)";
+    }
+}
+
 int Customizer::Run(const CustomizationConfig &config)
 {
     TIMER_START(loading_data);
@@ -39,6 +91,8 @@ int Customizer::Run(const CustomizationConfig &config)
     partition::io::write(config.mld_storage_path, storage);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
+
+    CellStorageStatistics(*edge_based_graph, mlp, storage);
 
     return 0;
 }
