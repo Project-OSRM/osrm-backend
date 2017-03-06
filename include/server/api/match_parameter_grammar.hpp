@@ -34,7 +34,9 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
              ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
-                    -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
+                    -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1) | (
+                    qi::lit("tidying=") > qi::bool_[ph::bind(&engine::api::MatchParameters::use_tidying,
+                    qi::_r1) = qi::_1])) % '&');
     }
 
   private:

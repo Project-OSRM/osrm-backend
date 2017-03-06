@@ -54,7 +54,8 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
                 const CandidateLists &candidates_list,
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
-                const std::vector<boost::optional<double>> &trace_gps_precision)
+                const std::vector<boost::optional<double>> &trace_gps_precision,
+                const bool use_tidying)
 {
     map_matching::MatchingConfidence confidence;
     map_matching::EmissionLogProbability default_emission_log_probability(DEFAULT_GPS_PRECISION);
@@ -156,16 +157,24 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
     for (auto t = initial_timestamp + 1; t < candidates_list.size(); ++t)
     {
 
-        const bool gap_in_trace = [&, use_timestamps]() {
-            // use temporal information if available to determine a split
-            if (use_timestamps)
+        const bool gap_in_trace = [&]() {
+            // do not determine split if wasn't asked about it
+            if (!use_tidying)
             {
-                return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                       max_broken_time;
+                return false;
             }
             else
             {
-                return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
+                // use temporal information if available to determine a split
+                if (use_timestamps)
+                {
+                    return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
+                        max_broken_time;
+                }
+                else
+                {
+                    return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
+                }
             }
         }();
 
@@ -416,14 +425,16 @@ mapMatching(SearchEngineData &engine_working_data,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision)
+            const std::vector<boost::optional<double>> &trace_gps_precision,
+            const bool use_tidying)
 {
     return mapMatchingImpl(engine_working_data,
                            facade,
                            candidates_list,
                            trace_coordinates,
                            trace_timestamps,
-                           trace_gps_precision);
+                           trace_gps_precision,
+                           use_tidying);
 }
 
 SubMatchingList
@@ -432,7 +443,8 @@ mapMatching(SearchEngineData &engine_working_data,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision)
+            const std::vector<boost::optional<double>> &trace_gps_precision,
+            const bool use_tidying)
 {
 
     return mapMatchingImpl(engine_working_data,
@@ -440,7 +452,8 @@ mapMatching(SearchEngineData &engine_working_data,
                            candidates_list,
                            trace_coordinates,
                            trace_timestamps,
-                           trace_gps_precision);
+                           trace_gps_precision,
+                           use_tidying);
 }
 
 } // namespace routing_algorithms

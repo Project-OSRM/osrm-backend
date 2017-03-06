@@ -189,7 +189,7 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
 
     // call the actual map matching
     SubMatchingList sub_matchings = algorithms.MapMatching(
-        candidates_lists, parameters.coordinates, parameters.timestamps, parameters.radiuses);
+        candidates_lists, parameters.coordinates, parameters.timestamps, parameters.radiuses, parameters.use_tidying);
 
     if (sub_matchings.size() == 0)
     {
