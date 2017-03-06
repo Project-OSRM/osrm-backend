@@ -1200,12 +1200,67 @@ class ContiguousInternalMemoryDataFacade<algorithm::MLD>
     : public ContiguousInternalMemoryDataFacadeBase,
       public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 {
+  private:
+    using QueryGraph = util::StaticGraph<EdgeData, true>;
+    using GraphNode = QueryGraph::NodeArrayEntry;
+    using GraphEdge = QueryGraph::EdgeArrayEntry;
+
+    std::unique_ptr<QueryGraph> m_query_graph;
+
+    void InitializeGraphPointer(storage::DataLayout &data_layout, char *memory_block)
+    {
+        auto graph_nodes_ptr = data_layout.GetBlockPtr<GraphNode>(
+            memory_block, storage::DataLayout::MLD_GRAPH_NODE_LIST);
+
+        auto graph_edges_ptr = data_layout.GetBlockPtr<GraphEdge>(
+            memory_block, storage::DataLayout::MLD_GRAPH_EDGE_LIST);
+
+        util::ShM<GraphNode, true>::vector node_list(
+            graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_LIST]);
+        util::ShM<GraphEdge, true>::vector edge_list(
+            graph_edges_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_EDGE_LIST]);
+
+        m_query_graph.reset(new QueryGraph(node_list, edge_list));
+    }
+
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
         : ContiguousInternalMemoryDataFacadeBase(allocator),
           ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>(allocator)
 
     {
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+    }
+
+    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        InitializeGraphPointer(data_layout, memory_block);
+    }
+
+    // search graph access
+    unsigned GetNumberOfNodes() const override final { return m_query_graph->GetNumberOfNodes(); }
+
+    unsigned GetNumberOfEdges() const override final { return m_query_graph->GetNumberOfEdges(); }
+
+    unsigned GetOutDegree(const NodeID n) const override final
+    {
+        return m_query_graph->GetOutDegree(n);
+    }
+
+    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
+
+    EdgeData &GetEdgeData(const EdgeID e) const override final
+    {
+        return m_query_graph->GetEdgeData(e);
+    }
+
+    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph->BeginEdges(n); }
+
+    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph->EndEdges(n); }
+
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
+    {
+        return m_query_graph->GetAdjacentEdgeRange(node);
     }
 };
 }

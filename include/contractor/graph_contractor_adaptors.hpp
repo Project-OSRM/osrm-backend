@@ -22,33 +22,33 @@ std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge
     {
 #ifndef NDEBUG
         const unsigned int constexpr DAY_IN_DECI_SECONDS = 24 * 60 * 60 * 10;
-        if (static_cast<unsigned int>(std::max(input_edge.weight, 1)) > DAY_IN_DECI_SECONDS)
+        if (static_cast<unsigned int>(std::max(input_edge.data.weight, 1)) > DAY_IN_DECI_SECONDS)
         {
             util::Log(logWARNING) << "Edge weight large -> "
-                                  << static_cast<unsigned int>(std::max(input_edge.weight, 1))
+                                  << static_cast<unsigned int>(std::max(input_edge.data.weight, 1))
                                   << " : " << static_cast<unsigned int>(input_edge.source) << " -> "
                                   << static_cast<unsigned int>(input_edge.target);
         }
 #endif
         edges.emplace_back(input_edge.source,
                            input_edge.target,
-                           std::max(input_edge.weight, 1),
-                           input_edge.duration,
+                           std::max(input_edge.data.weight, 1),
+                           input_edge.data.duration,
                            1,
-                           input_edge.edge_id,
+                           input_edge.data.edge_id,
                            false,
-                           input_edge.forward ? true : false,
-                           input_edge.backward ? true : false);
+                           input_edge.data.forward ? true : false,
+                           input_edge.data.backward ? true : false);
 
         edges.emplace_back(input_edge.target,
                            input_edge.source,
-                           std::max(input_edge.weight, 1),
-                           input_edge.duration,
+                           std::max(input_edge.data.weight, 1),
+                           input_edge.data.duration,
                            1,
-                           input_edge.edge_id,
+                           input_edge.data.edge_id,
                            false,
-                           input_edge.backward ? true : false,
-                           input_edge.forward ? true : false);
+                           input_edge.data.backward ? true : false,
+                           input_edge.data.forward ? true : false);
     }
     // FIXME not sure if we need this
     edges.shrink_to_fit();

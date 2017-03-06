@@ -134,8 +134,11 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector &nodes,
                 typename ShM<EdgeArrayEntry, UseSharedMemory>::vector &edges)
     {
+        BOOST_ASSERT(!nodes.empty());
+
         number_of_nodes = static_cast<decltype(number_of_nodes)>(nodes.size() - 1);
-        number_of_edges = static_cast<decltype(number_of_edges)>(edges.size());
+        number_of_edges = static_cast<decltype(number_of_edges)>(nodes.back().first_edge);
+        BOOST_ASSERT(number_of_edges <= edges.size());
 
         using std::swap;
         swap(node_array, nodes);

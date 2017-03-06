@@ -7,6 +7,22 @@ namespace osrm
 {
 namespace storage
 {
+namespace
+{
+bool CheckFileList(const std::vector<boost::filesystem::path> &files)
+{
+    bool success = true;
+    for (auto &path : files)
+    {
+        if (!boost::filesystem::is_regular_file(path))
+        {
+            util::Log(logWARNING) << "Missing/Broken File: " << path.string();
+            success = false;
+        }
+    }
+    return success;
+}
+}
 
 StorageConfig::StorageConfig(const boost::filesystem::path &base)
     : ram_index_path{base.string() + ".ramIndex"}, file_index_path{base.string() + ".fileIndex"},
@@ -20,40 +36,40 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"},
       intersection_class_path{base.string() + ".icd"}, turn_lane_data_path{base.string() + ".tld"},
       turn_lane_description_path{base.string() + ".tls"},
-      mld_partition_path{base.string() + ".partition"}, mld_storage_path{base.string() + ".cells"}
+      mld_partition_path{base.string() + ".partition"}, mld_storage_path{base.string() + ".cells"},
+      edge_based_graph_path{base.string() + ".ebg"}
 {
 }
 
 bool StorageConfig::IsValid() const
 {
     const constexpr auto num_files = 15;
-    const boost::filesystem::path paths[num_files] = {ram_index_path,
-                                                      file_index_path,
-                                                      hsgr_data_path,
-                                                      nodes_data_path,
-                                                      edges_data_path,
-                                                      core_data_path,
-                                                      geometries_path,
-                                                      timestamp_path,
-                                                      turn_weight_penalties_path,
-                                                      turn_duration_penalties_path,
-                                                      datasource_names_path,
-                                                      datasource_indexes_path,
-                                                      names_data_path,
-                                                      properties_path,
-                                                      intersection_class_path};
 
-    bool success = true;
-    for (auto path = paths; path != paths + num_files; ++path)
+    // Common files
+    if (!CheckFileList({ram_index_path,
+                        file_index_path,
+                        nodes_data_path,
+                        edges_data_path,
+                        geometries_path,
+                        timestamp_path,
+                        turn_weight_penalties_path,
+                        turn_duration_penalties_path,
+                        names_data_path,
+                        properties_path,
+                        intersection_class_path}))
     {
-        if (!boost::filesystem::is_regular_file(*path))
-        {
-            util::Log(logWARNING) << "Missing/Broken File: " << path->string();
-            success = false;
-        }
+        return false;
     }
 
-    return success;
+    // TODO: add algorithm checks
+
+    // CH files
+    CheckFileList({hsgr_data_path, core_data_path, datasource_names_path, datasource_indexes_path});
+
+    // MLD files
+    CheckFileList({mld_partition_path, mld_storage_path, edge_based_graph_path});
+
+    return true;
 }
 }
 }

@@ -169,6 +169,13 @@ int Partitioner::Run(const PartitionConfig &config)
                               config.minimum_cell_size * 32 * 16,
                               config.minimum_cell_size * 32 * 16 * 32});
 
+    util::Log() << "Edge-based-graph annotation:";
+    for (std::size_t level = 0; level < level_to_num_cells.size(); ++level)
+    {
+        util::Log() << "  level " << level + 1 << " #cells " << level_to_num_cells[level]
+                    << " bit size " << std::ceil(std::log2(level_to_num_cells[level] + 1));
+    }
+
     TIMER_START(packed_mlp);
     MultiLevelPartition mlp{partitions, level_to_num_cells};
     TIMER_STOP(packed_mlp);
