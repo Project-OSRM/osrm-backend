@@ -65,9 +65,11 @@ add_definitions(-DOSRM_PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 # include_directories and add_definitions for both
 # this build and for sharing externally via pkg-config
 
-function(add_dependency_includes includes)
-  list(APPEND DEPENDENCIES_INCLUDE_DIRS "${includes}")
-  set(DEPENDENCIES_INCLUDE_DIRS "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
+function(add_dependency_includes)
+  if(${ARGC} GREATER 0)
+    list(APPEND DEPENDENCIES_INCLUDE_DIRS "${ARGV}")
+    set(DEPENDENCIES_INCLUDE_DIRS "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
+  endif()
 endfunction(add_dependency_includes)
 
 function(add_dependency_defines defines)
@@ -165,8 +167,8 @@ endif()
 
 # Disable LTO when mason+gcc is detected before testing for / setting any flags.
 # Mason builds libraries with Clang, mixing does not work in the context of lto.
-if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(ENABLE_LTO Off)
+if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND ENABLE_LTO)
+  set(ENABLE_LTO OFF)
   message(WARNING "Mason and GCC's LTO not work together. Disabling LTO.")
 endif()
 
