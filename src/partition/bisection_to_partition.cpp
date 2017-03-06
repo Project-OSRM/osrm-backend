@@ -11,15 +11,10 @@ struct CellBisection
 {
     std::uint32_t begin;
     std::uint32_t end;
-    std::uint8_t depth;
+    std::uint8_t bit;
     bool tabu; // we will not attempt to split this cell anymore
 };
 static constexpr std::size_t NUM_BISECTION_BITS = sizeof(BisectionID) * CHAR_BIT;
-
-bool getSide(std::uint8_t depth, BisectionID id)
-{
-    return id & (1ULL << (NUM_BISECTION_BITS - 1 - depth));
-}
 
 std::vector<std::uint32_t> getLargeCells(const std::size_t max_cell_size,
                                          const std::vector<CellBisection> &cells)
@@ -62,7 +57,7 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
         for (const auto cell_index : large_cells)
         {
             auto &cell = cells[cell_index];
-            BOOST_ASSERT(cell.depth < NUM_BISECTION_BITS);
+            BOOST_ASSERT(cell.bit < NUM_BISECTION_BITS);
 
             // Go over all nodes and sum up the bits to determine at which position the first one
             // bit is
@@ -73,8 +68,10 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
                                 [&node_to_bisection_id](const BisectionID lhs, const NodeID rhs) {
                                     return lhs | node_to_bisection_id[rhs];
                                 });
-            // masks all bit strictly higher then cell.depth
-            const BisectionID mask = (1ULL << (NUM_BISECTION_BITS - cell.depth)) - 1;
+            // masks all bit strictly higher then cell.bit
+            BOOST_ASSERT(sizeof(unsigned long long)*CHAR_BIT > sizeof(BisectionID)*CHAR_BIT);
+            const BisectionID mask = (1ULL << (cell.bit + 1)) - 1;
+            BOOST_ASSERT(mask == 0 || util::msb(mask) == cell.bit);
             const auto masked_sum = sum & mask;
             // we can't split the cell anymore, but it also doesn't conform to the max size
             // constraint
@@ -84,25 +81,29 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
                 cell.tabu = true;
                 continue;
             }
-            const auto msb = util::msb(sum & mask);
-            // depth counts from MSB to LSB
-            const auto depth = NUM_BISECTION_BITS - 1 - msb;
+            const auto bit = util::msb(masked_sum);
+            // determines if an bisection ID is on the left side of the partition
+            const BisectionID is_left_mask = 1ULL << bit;
+            BOOST_ASSERT(util::msb(is_left_mask) == bit);
 
             std::uint32_t middle =
                 std::partition(permutation.begin() + cell.begin,
                                permutation.begin() + cell.end,
-                               [depth, &node_to_bisection_id](const auto node_id) {
-                                   return getSide(depth, node_to_bisection_id[node_id]);
+                               [is_left_mask, &node_to_bisection_id](const auto node_id) {
+                                    return node_to_bisection_id[node_id] & is_left_mask;
                                }) -
                 permutation.begin();
 
-            cell.depth = depth + 1;
+            if (bit > 0)
+                cell.bit = bit - 1;
+            else
+                cell.tabu = true;
             if (middle != cell.begin && middle != cell.end)
             {
                 auto old_end = cell.end;
                 cell.end = middle;
                 cells.push_back(
-                    CellBisection{middle, old_end, static_cast<std::uint8_t>(depth + 1), false});
+                    CellBisection{middle, old_end, static_cast<std::uint8_t>(cell.bit), cell.tabu});
             }
         }
     }
@@ -120,7 +121,7 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
 
     std::vector<CellBisection> cells;
     cells.push_back(
-        CellBisection{0, static_cast<std::uint32_t>(node_to_bisection_id.size()), 0, false});
+        CellBisection{0, static_cast<std::uint32_t>(node_to_bisection_id.size()), NUM_BISECTION_BITS-1, false});
 
     std::vector<Partition> partitions(max_cell_sizes.size());
     std::vector<std::uint32_t> num_cells(max_cell_sizes.size());
