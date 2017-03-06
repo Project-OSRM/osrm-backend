@@ -274,6 +274,7 @@ In addition to the [general options](#general-options) the following options are
 |Option      |Values                                          |Description                                                                               |
 |------------|------------------------------------------------|------------------------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Return route steps for each route                                                         |
+|tidying     |`true` (default), `false`                       |Allows the input track modification to obtain better matching quality for noisy tracks.   |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)                         |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.                 |
 |overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be display on, or not at all.|

@@ -38,7 +38,8 @@ class RoutingAlgorithmsInterface
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
-                const std::vector<boost::optional<double>> &trace_gps_precision) const = 0;
+                const std::vector<boost::optional<double>> &trace_gps_precision,
+                const bool use_tidying) const = 0;
 
     virtual std::vector<routing_algorithms::TurnData>
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
@@ -83,7 +84,8 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
         const routing_algorithms::CandidateLists &candidates_list,
         const std::vector<util::Coordinate> &trace_coordinates,
         const std::vector<unsigned> &trace_timestamps,
-        const std::vector<boost::optional<double>> &trace_gps_precision) const final override;
+        const std::vector<boost::optional<double>> &trace_gps_precision,
+        const bool use_tidying) const final override;
 
     std::vector<routing_algorithms::TurnData>
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
@@ -163,10 +165,11 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<AlgorithmT>::MapMat
     const routing_algorithms::CandidateLists &candidates_list,
     const std::vector<util::Coordinate> &trace_coordinates,
     const std::vector<unsigned> &trace_timestamps,
-    const std::vector<boost::optional<double>> &trace_gps_precision) const
+    const std::vector<boost::optional<double>> &trace_gps_precision,
+    const bool use_tidying) const
 {
     return routing_algorithms::mapMatching(
-        heaps, facade, candidates_list, trace_coordinates, trace_timestamps, trace_gps_precision);
+        heaps, facade, candidates_list, trace_coordinates, trace_timestamps, trace_gps_precision, use_tidying);
 }
 
 template <typename AlgorithmT>
@@ -207,7 +210,8 @@ inline routing_algorithms::SubMatchingList
 RoutingAlgorithms<algorithm::MLD>::MapMatching(const routing_algorithms::CandidateLists &,
                                                const std::vector<util::Coordinate> &,
                                                const std::vector<unsigned> &,
-                                               const std::vector<boost::optional<double>> &) const
+                                               const std::vector<boost::optional<double>> &,
+                                               const bool) const
 {
     throw util::exception("MapMatching is not implemented");
 }

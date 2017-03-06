@@ -61,12 +61,13 @@ struct MatchParameters : public RouteParameters
     }
 
     template <typename... Args>
-    MatchParameters(std::vector<unsigned> timestamps_, Args... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)}
+    MatchParameters(std::vector<unsigned> timestamps_, bool use_tidying_, Args... args_)
+        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)}, use_tidying(use_tidying_)
     {
     }
 
     std::vector<unsigned> timestamps;
+    bool use_tidying = true;
     bool IsValid() const
     {
         return RouteParameters::IsValid() &&
