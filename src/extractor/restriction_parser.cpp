@@ -1,9 +1,10 @@
-#include "extractor/restriction_parser.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 
 #include "extractor/external_memory_node.hpp"
 
+#include "util/conditional_restrictions.hpp"
 #include "util/log.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -54,9 +55,10 @@ RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment
  * in the corresponding profile. We use it for both namespacing restrictions, as in
  * restriction:motorcar as well as whitelisting if its in except:motorcar.
  */
-boost::optional<InputRestrictionContainer>
-RestrictionParser::TryParse(const osmium::Relation &relation) const
+boost::optional<std::vector<InputRestrictionContainer>>
+RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_conditional) const
 {
+    std::vector<InputRestrictionContainer> parsed_restrictions;
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
     {
@@ -65,10 +67,19 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
 
     osmium::tags::KeyFilter filter(false);
     filter.add(true, "restriction");
+    if (parse_conditional)
+        filter.add(
+            true,
+            "^restriction:conditional"); // TODO put this behind if flag for conditional option
 
     // Not only use restriction= but also e.g. restriction:motorcar=
+    // Include restriction:{mode}:conditional if flagged
     for (const auto &namespaced : restrictions)
+    {
         filter.add(true, "restriction:" + namespaced);
+        if (parse_conditional)
+            filter.add(true, "^restriction:" + namespaced + ":conditional");
+    }
 
     const osmium::TagList &tag_list = relation.tags();
 
@@ -160,7 +171,36 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
             break;
         }
     }
-    return boost::make_optional(std::move(restriction_container));
+
+    // push back a copy of turn restriction
+    parsed_restrictions.push_back(restriction_container);
+
+    // parse conditional tags if flagged
+    if (parse_conditional)
+    {
+        for (; fi_begin != fi_end; ++fi_begin)
+        {
+            // Parse condition and add independent value/condition pairs
+            const auto &parsed = osrm::util::ParseConditionalRestrictions(fi_begin->value());
+
+            if (parsed.empty())
+            {
+                osrm::util::Log(logWARNING) << "Conditional restriction parsing failed for \""
+                                            << fi_begin->value() << "\" at the turn "
+                                            << restriction_container.restriction.from.way << " -> "
+                                            << restriction_container.restriction.via.node << " -> "
+                                            << restriction_container.restriction.to.way;
+                continue;
+            }
+
+            for (auto &p : parsed)
+            {
+                restriction_container.condition = p.condition;
+                parsed_restrictions.push_back(restriction_container);
+            }
+        }
+    }
+    return boost::make_optional(std::move(parsed_restrictions));
 }
 
 bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const

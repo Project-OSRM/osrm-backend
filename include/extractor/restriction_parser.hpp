@@ -42,7 +42,7 @@ class RestrictionParser
 {
   public:
     RestrictionParser(ScriptingEnvironment &scripting_environment);
-    boost::optional<InputRestrictionContainer> TryParse(const osmium::Relation &relation) const;
+    boost::optional<std::vector<InputRestrictionContainer>> TryParse(const osmium::Relation &relation, const bool parse_conditional) const;
 
   private:
     bool ShouldIgnoreRestriction(const std::string &except_tag_string) const;

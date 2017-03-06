@@ -1,6 +1,7 @@
 #ifndef RESTRICTION_HPP
 #define RESTRICTION_HPP
 
+#include "util/coordinate.hpp"
 #include "util/typedefs.hpp"
 
 #include <limits>
@@ -64,6 +65,8 @@ struct TurnRestriction
 struct InputRestrictionContainer
 {
     TurnRestriction restriction;
+    std::string condition; // todo store this as something cuter than a string
+    util::Coordinate via_coordinate;
 
     InputRestrictionContainer(EdgeID fromWay, EdgeID toWay, EdgeID vw)
     {

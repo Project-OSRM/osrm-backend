@@ -525,9 +525,16 @@ void Sol2ScriptingEnvironment::ProcessElements(
                     resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
                     break;
                 case osmium::item_type::relation:
-                    resulting_restrictions.push_back(restriction_parser.TryParse(
-                        static_cast<const osmium::Relation &>(*entity)));
-                    break;
+                    {
+                        // TODO unhardcode boolean
+                        auto parsed = restriction_parser.TryParse(
+                            static_cast<const osmium::Relation &>(*entity), true);
+                        for (InputRestrictionContainer &p : *parsed)
+                        {
+                            resulting_restrictions.push_back(p);
+                        }
+                        break;
+                    }
                 default:
                     break;
                 }
