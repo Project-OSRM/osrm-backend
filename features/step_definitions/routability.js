@@ -62,9 +62,12 @@ module.exports = function () {
                             // rename forw/backw to forw/backw_speed
                             switch (true) {
                             case '' === want:
-                            case 'x' === want:
                                 outputRow[direction] = result[direction].status ?
                                     result[direction].mode : '';
+                                break;
+                            case 'x' === want:
+                                outputRow[direction] = result[direction].status ?
+                                    'x' : '';
                                 break;
                             case /^[\d\.]+ s/.test(want):
                                 // the result here can come back as a non-number value like
@@ -88,7 +91,7 @@ module.exports = function () {
                                 }
                                 break;
                             default:
-                                outputRow[direction] = result[direction].mode || ''
+                                outputRow[direction] = result[direction].mode || '';
                             }
 
                             if (this.FuzzyMatch.match(outputRow[direction], want)) {
@@ -138,7 +141,7 @@ module.exports = function () {
                         // for routability table test, we can assume the mode is the same throughout the route,
                         // since the route is just a single way
                         if( r.json.routes[0].legs[0] && r.json.routes[0].legs[0].steps[0] ) {
-                            r.mode = r.json.routes[0].legs[0].steps[0].mode
+                            r.mode = r.json.routes[0].legs[0].steps[0].mode;
                         }
                     } else {
                         r.status = null;
