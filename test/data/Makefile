@@ -54,17 +54,17 @@ $(DATA_NAME).requests: $(DATA_NAME).poly
 
 benchmark: data $(DATA_NAME).requests
 	@echo "Running benchmark..."
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CH $(DATA_NAME)_CH.osrm& echo "$$!" > osrm-routed.pid'
+	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CH $(DATA_NAME)_CH.osrm > /dev/null & echo "$$!" > osrm-routed.pid'
 	@sleep 1
 	$(TIMER) "queries" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
 	@cat osrm-routed.pid | xargs kill
 	@rm osrm-routed.pid
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CoreCH $(DATA_NAME)_CoreCH.osrm& echo "$$!" > osrm-routed.pid'
+	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CoreCH $(DATA_NAME)_CoreCH.osrm > /dev/null & echo "$$!" > osrm-routed.pid'
 	@sleep 1
 	$(TIMER) "queries" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
 	@cat osrm-routed.pid | xargs kill
 	@rm osrm-routed.pid
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD $(DATA_NAME)_MLD.osrm& echo "$$!" > osrm-routed.pid'
+	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD $(DATA_NAME)_MLD.osrm > /dev/null & echo "$$!" > osrm-routed.pid'
 	@sleep 1
 	$(TIMER) "queries" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
 	@cat osrm-routed.pid | xargs kill
@@ -76,4 +76,4 @@ benchmark: data $(DATA_NAME).requests
 checksum:
 	$(MD5SUM) $(DATA_NAME).osm.pbf $(DATA_NAME).poly > data.md5sum
 
-.PHONY: clean checksum benchmark
+.PHONY: clean checksum benchmark data
