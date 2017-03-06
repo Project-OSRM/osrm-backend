@@ -2,7 +2,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "customizer/cell_customizer.hpp"
-#include "partition/cell_storage.hpp"
 #include "partition/multi_level_partition.hpp"
 #include "util/static_graph.hpp"
 
@@ -21,7 +20,7 @@
     } while (0)
 
 using namespace osrm;
-using namespace osrm::customizer;
+using namespace osrm::customize;
 using namespace osrm::partition;
 using namespace osrm::util;
 

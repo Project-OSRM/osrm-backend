@@ -33,12 +33,11 @@ using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<true>;
 namespace io
 {
 template <bool UseShareMemory>
+void read(const boost::filesystem::path &file,
+          detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
+template <bool UseShareMemory>
 void write(const boost::filesystem::path &file,
            const detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
-}
-
-namespace detail
-{
 }
 
 using LevelID = std::uint8_t;
@@ -141,6 +140,8 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         return cell_to_children[offset + cell + 1];
     }
 
+    friend void io::read<UseShareMemory>(const boost::filesystem::path &file,
+                                         MultiLevelPartitionImpl &mlp);
     friend void io::write<UseShareMemory>(const boost::filesystem::path &file,
                                           const MultiLevelPartitionImpl &mlp);
 

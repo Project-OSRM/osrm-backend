@@ -119,6 +119,7 @@ configure_file(
 file(GLOB UtilGlob src/util/*.cpp src/util/*/*.cpp)
 file(GLOB ExtractorGlob src/extractor/*.cpp src/extractor/*/*.cpp)
 file(GLOB PartitionerGlob src/partition/*.cpp)
+file(GLOB CustomizerGlob src/customize/*.cpp)
 file(GLOB ContractorGlob src/contractor/*.cpp)
 file(GLOB StorageGlob src/storage/*.cpp)
 file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
@@ -127,6 +128,7 @@ file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 add_library(UTIL OBJECT ${UtilGlob})
 add_library(EXTRACTOR OBJECT ${ExtractorGlob})
 add_library(PARTITIONER OBJECT ${PartitionerGlob})
+add_library(CUSTOMIZER OBJECT ${CustomizerGlob})
 add_library(CONTRACTOR OBJECT ${ContractorGlob})
 add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
@@ -136,12 +138,14 @@ set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(osrm-extract src/tools/extract.cpp)
 add_executable(osrm-partition src/tools/partition.cpp)
+add_executable(osrm-customize src/tools/customize.cpp)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
 add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:STORAGE>)
 add_library(osrm_extract $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_partition $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_customize $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
@@ -591,6 +595,7 @@ set(BOOST_ENGINE_LIBRARIES
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
@@ -613,6 +618,12 @@ set(PARTITIONER_LIBRARIES
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
+  set(CUSTOMIZER_LIBRARIES
+    ${BOOST_ENGINE_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${TBB_LIBRARIES}
+    ${MAYBE_RT_LIBRARY}
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -645,6 +656,7 @@ target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
+target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 # BUILD_COMPONENTS

@@ -1,8 +1,8 @@
 #ifndef OSRM_PARTITION_IO_HPP
 #define OSRM_PARTITION_IO_HPP
 
-#include "partition/cell_storage.hpp"
 #include "partition/multi_level_partition.hpp"
+#include "partition/cell_storage.hpp"
 
 #include "storage/io.hpp"
 
@@ -13,8 +13,17 @@ namespace partition
 namespace io
 {
 
-template <>
-inline void write(const boost::filesystem::path &path, const partition::MultiLevelPartition &mlp)
+template <> inline void read(const boost::filesystem::path &path, MultiLevelPartition &mlp)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    reader.ReadInto<MultiLevelPartition::LevelData>(mlp.level_data);
+    reader.DeserializeVector(mlp.partition);
+    reader.DeserializeVector(mlp.cell_to_children);
+}
+
+template <> inline void write(const boost::filesystem::path &path, const MultiLevelPartition &mlp)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -24,8 +33,7 @@ inline void write(const boost::filesystem::path &path, const partition::MultiLev
     writer.SerializeVector(mlp.cell_to_children);
 }
 
-template <>
-inline void write(const boost::filesystem::path &path, const partition::CellStorage &storage)
+template <> inline void write(const boost::filesystem::path &path, const CellStorage &storage)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -36,6 +44,7 @@ inline void write(const boost::filesystem::path &path, const partition::CellStor
     writer.SerializeVector(storage.cells);
     writer.SerializeVector(storage.level_to_cell_offset);
 }
+
 }
 }
 }
