@@ -100,7 +100,7 @@ template <> struct HasManyToManySearch<algorithm::MLD> final : std::false_type
 template <> struct HasShortestPathSearch<algorithm::MLD> final : std::false_type
 {
 };
-template <> struct HasDirectShortestPathSearch<algorithm::MLD> final : std::false_type
+template <> struct HasDirectShortestPathSearch<algorithm::MLD> final : std::true_type
 {
 };
 template <> struct HasMapMatching<algorithm::MLD> final : std::false_type

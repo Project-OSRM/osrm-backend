@@ -3,6 +3,7 @@
 
 #include <boost/thread/tss.hpp>
 
+#include "partition/multi_level_partition.hpp"
 #include "util/binary_heap.hpp"
 #include "util/typedefs.hpp"
 
@@ -23,6 +24,21 @@ struct ManyToManyHeapData : HeapData
     ManyToManyHeapData(NodeID p, EdgeWeight duration) : HeapData(p), duration(duration) {}
 };
 
+struct MultiLayerDijkstraHeapData : HeapData
+{
+    LevelID level;  // node level: always increasing along the path starting from 0
+    EdgeID edge_id; // edge id if parent -> node is a boundary edge
+    MultiLayerDijkstraHeapData(NodeID p) : HeapData(p), level(0), edge_id(SPECIAL_EDGEID) {}
+    MultiLayerDijkstraHeapData(NodeID p, LevelID level)
+        : HeapData(p), level(level), edge_id(SPECIAL_EDGEID)
+    {
+    }
+    MultiLayerDijkstraHeapData(NodeID p, LevelID level, EdgeID edge_id)
+        : HeapData(p), level(level), edge_id(edge_id)
+    {
+    }
+};
+
 struct SearchEngineData
 {
     using QueryHeap = util::
@@ -37,6 +53,14 @@ struct SearchEngineData
 
     using ManyToManyHeapPtr = boost::thread_specific_ptr<ManyToManyQueryHeap>;
 
+    using MultiLayerDijkstraHeap = util::BinaryHeap<NodeID,
+                                                    NodeID,
+                                                    EdgeWeight,
+                                                    MultiLayerDijkstraHeapData,
+                                                    util::UnorderedMapStorage<NodeID, int>>;
+
+    using MultiLayerDijkstraHeapPtr = boost::thread_specific_ptr<MultiLayerDijkstraHeap>;
+
     static SearchEngineHeapPtr forward_heap_1;
     static SearchEngineHeapPtr reverse_heap_1;
     static SearchEngineHeapPtr forward_heap_2;
@@ -44,6 +68,8 @@ struct SearchEngineData
     static SearchEngineHeapPtr forward_heap_3;
     static SearchEngineHeapPtr reverse_heap_3;
     static ManyToManyHeapPtr many_to_many_heap;
+    static MultiLayerDijkstraHeapPtr mld_forward_heap;
+    static MultiLayerDijkstraHeapPtr mld_reverse_heap;
 
     void InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes);
 
@@ -52,6 +78,8 @@ struct SearchEngineData
     void InitializeOrClearThirdThreadLocalStorage(const unsigned number_of_nodes);
 
     void InitializeOrClearManyToManyThreadLocalStorage(const unsigned number_of_nodes);
+
+    void InitializeOrClearMultiLayerDijkstraThreadLocalStorage(const unsigned number_of_nodes);
 };
 }
 }

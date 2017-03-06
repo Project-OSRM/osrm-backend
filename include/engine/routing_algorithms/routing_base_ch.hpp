@@ -1,31 +1,14 @@
 #ifndef OSRM_ENGINE_ROUTING_BASE_CH_HPP
 #define OSRM_ENGINE_ROUTING_BASE_CH_HPP
 
-#include "extractor/guidance/turn_instruction.hpp"
-
 #include "engine/algorithm.hpp"
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
-#include "engine/internal_route_result.hpp"
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
 
-#include "util/coordinate_calculation.hpp"
-#include "util/guidance/turn_bearing.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-
-#include <cstddef>
-#include <cstdint>
-
-#include <algorithm>
-#include <functional>
-#include <iterator>
-#include <memory>
-#include <numeric>
-#include <stack>
-#include <utility>
-#include <vector>
 
 namespace osrm
 {
