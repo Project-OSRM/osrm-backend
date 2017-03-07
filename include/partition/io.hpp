@@ -33,6 +33,18 @@ template <> inline void write(const boost::filesystem::path &path, const MultiLe
     writer.SerializeVector(mlp.cell_to_children);
 }
 
+template <> inline void read(const boost::filesystem::path &path, CellStorage &storage)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    reader.DeserializeVector(storage.weights);
+    reader.DeserializeVector(storage.source_boundary);
+    reader.DeserializeVector(storage.destination_boundary);
+    reader.DeserializeVector(storage.cells);
+    reader.DeserializeVector(storage.level_to_cell_offset);
+}
+
 template <> inline void write(const boost::filesystem::path &path, const CellStorage &storage)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;

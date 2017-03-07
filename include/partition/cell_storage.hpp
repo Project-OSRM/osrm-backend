@@ -33,6 +33,9 @@ using CellStorageView = detail::CellStorageImpl<true>;
 namespace io
 {
 template <bool UseShareMemory>
+inline void read(const boost::filesystem::path &path,
+                 detail::CellStorageImpl<UseShareMemory> &storage);
+template <bool UseShareMemory>
 inline void write(const boost::filesystem::path &path,
                   const detail::CellStorageImpl<UseShareMemory> &storage);
 }
@@ -346,6 +349,8 @@ template <bool UseShareMemory> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
+    friend void io::read<UseShareMemory>(const boost::filesystem::path &path,
+                                         detail::CellStorageImpl<UseShareMemory> &storage);
     friend void io::write<UseShareMemory>(const boost::filesystem::path &path,
                                           const detail::CellStorageImpl<UseShareMemory> &storage);
 
