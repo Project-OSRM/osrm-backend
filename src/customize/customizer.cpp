@@ -6,7 +6,6 @@
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
 #include "partition/io.hpp"
-#include "partition/io.hpp"
 #include "partition/multi_level_partition.hpp"
 
 #include "updater/updater.hpp"
@@ -71,7 +70,8 @@ void CellStorageStatistics(const Graph &graph,
     }
 }
 
-auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config)
+auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
+                                    const partition::MultiLevelPartition &mlp)
 {
     updater::Updater updater(config.updater_config);
 
@@ -82,7 +82,9 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config)
     auto directed = partition::splitBidirectionalEdges(edge_based_edge_list);
     auto tidied =
         partition::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
-    auto edge_based_graph = std::make_unique<StaticEdgeBasedGraph>(num_nodes, std::move(tidied));
+    auto edge_based_graph =
+        std::make_unique<partition::MultiLevelGraph<EdgeBasedGraphEdgeData, false>>(
+            mlp, num_nodes, std::move(tidied));
 
     util::Log() << "Loaded edge based graph for mapping partition ids: "
                 << edge_based_graph->GetNumberOfEdges() << " edges, "
@@ -95,10 +97,10 @@ int Customizer::Run(const CustomizationConfig &config)
 {
     TIMER_START(loading_data);
 
-    auto edge_based_graph = LoadAndUpdateEdgeExpandedGraph(config);
-
     partition::MultiLevelPartition mlp;
     partition::io::read(config.mld_partition_path, mlp);
+
+    auto edge_based_graph = LoadAndUpdateEdgeExpandedGraph(config, mlp);
 
     partition::CellStorage storage;
     partition::io::read(config.mld_storage_path, storage);
@@ -117,7 +119,7 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    io::write(config.mld_graph_path, *edge_based_graph);
+    partition::io::write(config.mld_graph_path, *edge_based_graph);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 

@@ -11,24 +11,6 @@ namespace customizer
 {
 namespace io
 {
-
-inline void read(const boost::filesystem::path &path, StaticEdgeBasedGraph &graph)
-{
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
-    reader.DeserializeVector(graph.node_array);
-    reader.DeserializeVector(graph.edge_array);
-}
-
-inline void write(const boost::filesystem::path &path, const StaticEdgeBasedGraph &graph)
-{
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
-
-    writer.SerializeVector(graph.node_array);
-    writer.SerializeVector(graph.edge_array);
-}
 }
 }
 }

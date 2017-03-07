@@ -143,15 +143,14 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     }
 
     // Boundary edges
-    for (const auto edge : facade.GetAdjacentEdgeRange(node))
+    for (const auto edge : facade.GetBorderEdgeRange(level, node))
     {
         const auto &edge_data = facade.GetEdgeData(edge);
         if (DIRECTION == FORWARD_DIRECTION ? edge_data.forward : edge_data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
 
-            if (checkParentCellRestriction(partition.GetCell(level + 1, to), args...) &&
-                partition.GetHighestDifferentLevel(node, to) >= level)
+            if (checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
             {
                 BOOST_ASSERT_MSG(edge_data.weight > 0, "edge_weight invalid");
                 const EdgeWeight to_weight = weight + edge_data.weight;

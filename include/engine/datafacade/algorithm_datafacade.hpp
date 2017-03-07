@@ -90,6 +90,8 @@ template <> class AlgorithmDataFacade<algorithm::MLD>
 
     virtual const partition::CellStorageView &GetCellStorage() const = 0;
 
+    virtual EdgeRange GetBorderEdgeRange(const LevelID level, const NodeID node) const = 0;
+
     // searches for a specific edge
     virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;
 };
