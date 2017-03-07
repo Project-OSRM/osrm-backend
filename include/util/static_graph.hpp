@@ -112,6 +112,8 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         return irange(BeginEdges(node), EndEdges(node));
     }
 
+    StaticGraph() {}
+
     template <typename ContainerT> StaticGraph(const int nodes, const ContainerT &edges)
     {
         BOOST_ASSERT(std::is_sorted(const_cast<ContainerT &>(edges).begin(),
@@ -120,18 +122,15 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         InitializeFromSortedEdgeRange(nodes, edges.begin(), edges.end());
     }
 
-    StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector &nodes,
-                typename ShM<EdgeArrayEntry, UseSharedMemory>::vector &edges)
+    StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array_,
+                typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array_)
+        : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
-        BOOST_ASSERT(!nodes.empty());
+        BOOST_ASSERT(!node_array.empty());
 
-        number_of_nodes = static_cast<decltype(number_of_nodes)>(nodes.size() - 1);
-        number_of_edges = static_cast<decltype(number_of_edges)>(nodes.back().first_edge);
-        BOOST_ASSERT(number_of_edges <= edges.size());
-
-        using std::swap;
-        swap(node_array, nodes);
-        swap(edge_array, edges);
+        number_of_nodes = static_cast<decltype(number_of_nodes)>(node_array.size() - 1);
+        number_of_edges = static_cast<decltype(number_of_edges)>(node_array.back().first_edge);
+        BOOST_ASSERT(number_of_edges <= edge_array.size());
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
@@ -255,7 +254,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         });
     }
 
-  private:
+    // private:
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 

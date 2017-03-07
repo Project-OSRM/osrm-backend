@@ -447,21 +447,27 @@ void Storage::PopulateLayout(DataLayout &layout)
             io::FileReader reader(config.mld_graph_path, io::FileReader::VerifyFingerprint);
 
             const auto num_nodes =
-                reader.ReadVectorSize<customizer::StaticEdgeBasedGraph::NodeArrayEntry>();
+                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>();
             const auto num_edges =
-                reader.ReadVectorSize<customizer::StaticEdgeBasedGraph::EdgeArrayEntry>();
+                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>();
+            const auto num_node_offsets =
+                reader.ReadVectorSize<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>();
 
-            layout.SetBlockSize<customizer::StaticEdgeBasedGraph::NodeArrayEntry>(
+            layout.SetBlockSize<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>(
                 DataLayout::MLD_GRAPH_NODE_LIST, num_nodes);
-            layout.SetBlockSize<customizer::StaticEdgeBasedGraph::EdgeArrayEntry>(
+            layout.SetBlockSize<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>(
                 DataLayout::MLD_GRAPH_EDGE_LIST, num_edges);
+            layout.SetBlockSize<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>(
+                DataLayout::MLD_GRAPH_NODE_TO_OFFSET, num_node_offsets);
         }
         else
         {
-            layout.SetBlockSize<customizer::StaticEdgeBasedGraph::NodeArrayEntry>(
+            layout.SetBlockSize<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry>(
                 DataLayout::MLD_GRAPH_NODE_LIST, 0);
-            layout.SetBlockSize<customizer::StaticEdgeBasedGraph::EdgeArrayEntry>(
+            layout.SetBlockSize<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry>(
                 DataLayout::MLD_GRAPH_EDGE_LIST, 0);
+            layout.SetBlockSize<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>(
+                DataLayout::MLD_GRAPH_NODE_TO_OFFSET, 0);
         }
     }
 }
@@ -938,16 +944,21 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             io::FileReader reader(config.mld_graph_path, io::FileReader::VerifyFingerprint);
 
             auto nodes_ptr =
-                layout.GetBlockPtr<customizer::StaticEdgeBasedGraph::NodeArrayEntry, true>(
+                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry, true>(
                     memory_ptr, DataLayout::MLD_GRAPH_NODE_LIST);
             auto edges_ptr =
-                layout.GetBlockPtr<customizer::StaticEdgeBasedGraph::EdgeArrayEntry, true>(
+                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry, true>(
                     memory_ptr, DataLayout::MLD_GRAPH_EDGE_LIST);
+            auto node_to_offset_ptr =
+                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraph::EdgeOffset, true>(
+                    memory_ptr, DataLayout::MLD_GRAPH_NODE_TO_OFFSET);
 
             auto num_nodes = reader.ReadElementCount64();
             reader.ReadInto(nodes_ptr, num_nodes);
             auto num_edges = reader.ReadElementCount64();
             reader.ReadInto(edges_ptr, num_edges);
+            auto num_node_to_offset = reader.ReadElementCount64();
+            reader.ReadInto(node_to_offset_ptr, num_node_to_offset);
         }
     }
 }
