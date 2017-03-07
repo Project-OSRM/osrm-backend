@@ -1,23 +1,9 @@
-#include <boost/numeric/conversion/cast.hpp>
+#include "common/range_tools.hpp"
 #include <boost/test/unit_test.hpp>
 
 #include "customizer/cell_customizer.hpp"
 #include "partition/multi_level_partition.hpp"
 #include "util/static_graph.hpp"
-
-#define REQUIRE_SIZE_RANGE(range, ref) BOOST_REQUIRE_EQUAL(range.size(), ref)
-#define CHECK_EQUAL_RANGE(range, ...)                                                              \
-    do                                                                                             \
-    {                                                                                              \
-        const auto &lhs = range;                                                                   \
-        const auto &rhs = {__VA_ARGS__};                                                           \
-        BOOST_CHECK_EQUAL_COLLECTIONS(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());             \
-    } while (0)
-#define CHECK_EQUAL_COLLECTIONS(lhs, rhs)                                                          \
-    do                                                                                             \
-    {                                                                                              \
-        BOOST_CHECK_EQUAL_COLLECTIONS(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());             \
-    } while (0)
 
 using namespace osrm;
 using namespace osrm::customize;
