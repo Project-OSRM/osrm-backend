@@ -1110,19 +1110,19 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
                 *data_layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData>(
                     memory_block, storage::DataLayout::MLD_LEVEL_DATA);
 
-            auto mld_partition_ptr = data_layout.GetBlockPtr<partition::PartitionID>(
+            auto mld_partition_ptr = data_layout.GetBlockPtr<PartitionID>(
                 memory_block, storage::DataLayout::MLD_PARTITION);
             auto partition_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
-            util::ShM<partition::PartitionID, true>::vector partition(mld_partition_ptr,
-                                                                      partition_entries_count);
+            util::ShM<PartitionID, true>::vector partition(mld_partition_ptr,
+                                                           partition_entries_count);
 
-            auto mld_chilren_ptr = data_layout.GetBlockPtr<partition::CellID>(
+            auto mld_chilren_ptr = data_layout.GetBlockPtr<CellID>(
                 memory_block, storage::DataLayout::MLD_CELL_TO_CHILDREN);
             auto children_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
-            util::ShM<partition::CellID, true>::vector cell_to_children(mld_chilren_ptr,
-                                                                        children_entries_count);
+            util::ShM<CellID, true>::vector cell_to_children(mld_chilren_ptr,
+                                                             children_entries_count);
 
             mld_partition =
                 partition::MultiLevelPartitionView{level_data, partition, cell_to_children};

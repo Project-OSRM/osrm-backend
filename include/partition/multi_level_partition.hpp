@@ -40,12 +40,6 @@ void write(const boost::filesystem::path &file,
            const detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
 }
 
-using LevelID = std::uint8_t;
-using CellID = std::uint32_t;
-using PartitionID = std::uint64_t;
-
-static constexpr CellID INVALID_CELL_ID = std::numeric_limits<CellID>::max();
-
 namespace detail
 {
 
