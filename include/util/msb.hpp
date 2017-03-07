@@ -23,7 +23,7 @@ template <typename T> std::size_t msb(T value)
         msb++;
     }
     BOOST_ASSERT(msb > 0);
-    return msb-1;
+    return msb - 1;
 }
 
 #if (defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)) && __x86_64__

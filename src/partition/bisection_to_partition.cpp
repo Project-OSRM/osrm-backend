@@ -69,7 +69,7 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
                                     return lhs | node_to_bisection_id[rhs];
                                 });
             // masks all bit strictly higher then cell.bit
-            BOOST_ASSERT(sizeof(unsigned long long)*CHAR_BIT > sizeof(BisectionID)*CHAR_BIT);
+            BOOST_ASSERT(sizeof(unsigned long long) * CHAR_BIT > sizeof(BisectionID) * CHAR_BIT);
             const BisectionID mask = (1ULL << (cell.bit + 1)) - 1;
             BOOST_ASSERT(mask == 0 || util::msb(mask) == cell.bit);
             const auto masked_sum = sum & mask;
@@ -90,7 +90,7 @@ void partitionLevel(const std::vector<BisectionID> &node_to_bisection_id,
                 std::partition(permutation.begin() + cell.begin,
                                permutation.begin() + cell.end,
                                [is_left_mask, &node_to_bisection_id](const auto node_id) {
-                                    return node_to_bisection_id[node_id] & is_left_mask;
+                                   return node_to_bisection_id[node_id] & is_left_mask;
                                }) -
                 permutation.begin();
 
@@ -120,8 +120,8 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
     std::iota(permutation.begin(), permutation.end(), 0);
 
     std::vector<CellBisection> cells;
-    cells.push_back(
-        CellBisection{0, static_cast<std::uint32_t>(node_to_bisection_id.size()), NUM_BISECTION_BITS-1, false});
+    cells.push_back(CellBisection{
+        0, static_cast<std::uint32_t>(node_to_bisection_id.size()), NUM_BISECTION_BITS - 1, false});
 
     std::vector<Partition> partitions(max_cell_sizes.size());
     std::vector<std::uint32_t> num_cells(max_cell_sizes.size());
