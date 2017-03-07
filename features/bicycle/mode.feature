@@ -159,7 +159,7 @@ Feature: Bike - Mode flag
     	 | c    | a  | bc,ab,ab    | pushing bike,cycling,cycling         |
     	 | d    | b  | cd,bc,bc    | cycling,pushing bike,pushing bike    |
     	 | a    | c  | ab,bc,bc    | cycling,pushing bike,pushing bike    |
-         | b    | d  | bc,cd,cd    | pushing bike,cycling,cycling         |
+         | b    | d  | bc,cd,cd  | pushing bike,cycling,cycling         |
 
     Scenario: Bicycle - Modes when starting on forward oneway
         Given the node map
