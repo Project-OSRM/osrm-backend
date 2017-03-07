@@ -1108,7 +1108,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 
             auto level_data =
                 *data_layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData>(
-                    memory_block, storage::DataLayout::MLD_PARTITION);
+                    memory_block, storage::DataLayout::MLD_LEVEL_DATA);
 
             auto mld_partition_ptr = data_layout.GetBlockPtr<partition::PartitionID>(
                 memory_block, storage::DataLayout::MLD_PARTITION);
