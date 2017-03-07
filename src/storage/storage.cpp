@@ -1011,8 +1011,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             std::vector<extractor::EdgeBasedEdge> original_edges(number_of_edges);
             reader.ReadInto(original_edges);
 
-            original_edges = partition::SplitBidirectionalEdges(std::move(original_edges));
-            auto edges = partition::PrepareEdgesForUsageInGraph(std::move(original_edges));
+            original_edges = partition::splitBidirectionalEdges(std::move(original_edges));
+            auto edges = partition::prepareEdgesForUsageInGraph(std::move(original_edges));
             BOOST_ASSERT(edges.size() <= 2 * number_of_edges);
 
             auto nodes_ptr = layout.GetBlockPtr<EdgeBasedGraph::NodeArrayEntry, true>(
