@@ -82,6 +82,7 @@ class FileReader
     template <typename T> void ReadInto(T *dest, const std::size_t count)
     {
 #if not defined __GNUC__ or __GNUC__ > 4
+        static_assert(!std::is_pointer<T>::value, "saving pointer types is not allowed");
         static_assert(std::is_trivially_copyable<T>::value,
                       "bytewise reading requires trivially copyable type");
 #endif
