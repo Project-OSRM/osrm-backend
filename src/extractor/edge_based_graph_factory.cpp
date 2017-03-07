@@ -1,6 +1,6 @@
-#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/files.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
 #include "extractor/scripting_environment.hpp"
@@ -547,9 +547,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // If this edge is 'trivial' -- where the compressed edge corresponds
                     // exactly to an original OSM segment -- we can pull the turn's preceding
                     // node ID directly with `node_along_road_entering`; otherwise, we need to
-                    // look
-                    // up the node
-                    // immediately preceding the turn from the compressed edge container.
+                    // look up the node immediately preceding the turn from the compressed edge
+                    // container.
                     const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
 
                     const auto &from_node =

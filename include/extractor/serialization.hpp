@@ -4,6 +4,7 @@
 #include "extractor/datasources.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/restriction.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
 
@@ -19,6 +20,7 @@ namespace extractor
 namespace serialization
 {
 
+// read/write for datasources file
 inline void read(storage::io::FileReader &reader, Datasources &sources)
 {
     reader.ReadInto(sources);
@@ -29,6 +31,7 @@ inline void write(storage::io::FileWriter &writer, Datasources &sources)
     writer.WriteFrom(sources);
 }
 
+// read/write for segment data file
 template <storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,
                  detail::SegmentDataContainerImpl<Ownership> &segment_data)
@@ -55,6 +58,7 @@ inline void write(storage::io::FileWriter &writer,
     storage::serialization::write(writer, segment_data.datasources);
 }
 
+// read/write for turn data file
 template <storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,
                  detail::TurnDataContainerImpl<Ownership> &turn_data_container)
@@ -93,6 +97,40 @@ inline void write(storage::io::FileWriter &writer,
     storage::serialization::write(writer, node_data_container.geometry_ids);
     storage::serialization::write(writer, node_data_container.name_ids);
     storage::serialization::write(writer, node_data_container.travel_modes);
+}
+
+// read/write for conditional turn restrictions file
+inline void read(const boost::filesystem::path &path, std::vector<InputRestrictionContainer> &restrictions)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    auto num_indices = reader.ReadElementCount64();
+    restrictions.resize(num_indices);
+    while (num_indices > 0)
+    {
+        InputRestrictionContainer restriction;
+        bool is_only;
+        reader.ReadInto(restriction.restriction.via);
+        reader.ReadInto(restriction.restriction.from);
+        reader.ReadInto(restriction.restriction.to);
+        reader.ReadInto(is_only);
+        reader.ReadInto(restriction.restriction.condition);
+        restriction.restriction.flags.is_only = is_only;
+
+        restrictions.push_back(restriction);
+        num_indices--;
+    }
+}
+
+inline void write(storage::io::FileWriter &writer, const InputRestrictionContainer &container)
+{
+    writer.WriteOne(container.restriction.via);
+    writer.WriteOne(container.restriction.from);
+    writer.WriteOne(container.restriction.to);
+    writer.WriteOne(container.restriction.flags.is_only);
+    // condition is a string
+    writer.WriteFrom(container.restriction.condition);
 }
 }
 }

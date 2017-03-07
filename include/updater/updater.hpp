@@ -4,6 +4,7 @@
 #include "updater/updater_config.hpp"
 
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/query_node.hpp"
 
 #include <vector>
 
@@ -19,9 +20,10 @@ class Updater
     using NumNodesAndEdges = std::tuple<EdgeID, std::vector<extractor::EdgeBasedEdge>>;
     NumNodesAndEdges LoadAndUpdateEdgeExpandedGraph() const;
 
-    EdgeID
-    LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-                                   std::vector<EdgeWeight> &node_weights) const;
+    EdgeID LoadAndUpdateEdgeExpandedGraph(
+        std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+        std::vector<EdgeWeight> &node_weights,
+        std::vector<extractor::QueryNode> internal_to_external_node_map) const;
 
   private:
     UpdaterConfig config;

@@ -52,13 +52,13 @@ namespace lookup
 #pragma pack(push, 1)
 struct TurnIndexBlock
 {
-    OSMNodeID from_id;
-    OSMNodeID via_id;
-    OSMNodeID to_id;
+    NodeID from_id;
+    NodeID via_id;
+    NodeID to_id;
 };
 #pragma pack(pop)
 static_assert(std::is_trivial<TurnIndexBlock>::value, "TurnIndexBlock is not trivial");
-static_assert(sizeof(TurnIndexBlock) == 24, "TurnIndexBlock is not packed correctly");
+static_assert(sizeof(TurnIndexBlock) < 24, "TurnIndexBlock is not packed correctly");
 } // ns lookup
 
 struct NodeBasedGraphToEdgeBasedGraphMappingWriter; // fwd. decl

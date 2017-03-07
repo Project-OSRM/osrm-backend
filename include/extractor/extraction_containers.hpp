@@ -40,7 +40,7 @@ class ExtractionContainers
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
     void WriteNodes(storage::io::FileWriter &file_out) const;
-    void WriteRestrictions(const std::string &restrictions_file_name) const;
+    void WriteRestrictions(const std::string &restrictions_file_name);
     void WriteEdges(storage::io::FileWriter &file_out) const;
     void WriteCharData(const std::string &file_name);
 
@@ -63,6 +63,7 @@ class ExtractionContainers
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
     unsigned max_internal_node_id;
+    std::vector<TurnRestriction> unconditional_turn_restrictions;
 
     ExtractionContainers();
 

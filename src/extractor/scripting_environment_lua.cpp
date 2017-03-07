@@ -498,6 +498,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
         [&](const tbb::blocked_range<std::size_t> &range) {
             ExtractionNode result_node;
             ExtractionWay result_way;
+            boost::optional<std::vector<InputRestrictionContainer>> result_res;
             auto &local_context = this->GetSol2Context();
 
             for (auto x = range.begin(), end = range.end(); x != end; ++x)
@@ -525,16 +526,18 @@ void Sol2ScriptingEnvironment::ProcessElements(
                     resulting_ways.push_back(std::make_pair(x, std::move(result_way)));
                     break;
                 case osmium::item_type::relation:
+                    // TODO unhardcode boolean
+                    result_res.reset();
+                    result_res = restriction_parser.TryParse(
+                        static_cast<const osmium::Relation &>(*entity), true);
+                    if (result_res)
                     {
-                        // TODO unhardcode boolean
-                        auto parsed = restriction_parser.TryParse(
-                            static_cast<const osmium::Relation &>(*entity), true);
-                        for (InputRestrictionContainer &p : *parsed)
+                        for (const InputRestrictionContainer &r : *result_res)
                         {
-                            resulting_restrictions.push_back(p);
+                            resulting_restrictions.push_back(r);
                         }
-                        break;
                     }
+                    break;
                 default:
                     break;
                 }

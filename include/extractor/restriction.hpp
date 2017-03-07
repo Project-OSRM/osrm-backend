@@ -21,6 +21,8 @@ struct TurnRestriction
     WayOrNode from;
     WayOrNode to;
 
+    std::string condition; // todo store this as something cuter than a string
+
     struct Bits
     { // mostly unused
         Bits()
@@ -65,8 +67,6 @@ struct TurnRestriction
 struct InputRestrictionContainer
 {
     TurnRestriction restriction;
-    std::string condition; // todo store this as something cuter than a string
-    util::Coordinate via_coordinate;
 
     InputRestrictionContainer(EdgeID fromWay, EdgeID toWay, EdgeID vw)
     {

@@ -70,7 +70,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_c
     if (parse_conditional)
         filter.add(
             true,
-            "^restriction:conditional"); // TODO put this behind if flag for conditional option
+            "restriction:conditional"); // TODO put this behind if flag for conditional option
 
     // Not only use restriction= but also e.g. restriction:motorcar=
     // Include restriction:{mode}:conditional if flagged
@@ -78,7 +78,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_c
     {
         filter.add(true, "restriction:" + namespaced);
         if (parse_conditional)
-            filter.add(true, "^restriction:" + namespaced + ":conditional");
+            filter.add(true, "restriction:" + namespaced + ":conditional");
     }
 
     const osmium::TagList &tag_list = relation.tags();
@@ -195,7 +195,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_c
 
             for (auto &p : parsed)
             {
-                restriction_container.condition = p.condition;
+                restriction_container.restriction.condition = p.condition;
                 parsed_restrictions.push_back(restriction_container);
             }
         }
