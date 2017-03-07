@@ -45,12 +45,12 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
         "Percentage of the graph (in vertices) to contract [0..1]")(
         "segment-speed-file",
         boost::program_options::value<std::vector<std::string>>(
-            &contractor_config.segment_speed_lookup_paths)
+            &contractor_config.updater_config.segment_speed_lookup_paths)
             ->composing(),
         "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
         "turn-penalty-file",
         boost::program_options::value<std::vector<std::string>>(
-            &contractor_config.turn_penalty_lookup_paths)
+            &contractor_config.updater_config.turn_penalty_lookup_paths)
             ->composing(),
         "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
         "level-cache,o",
@@ -58,7 +58,7 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
             ->default_value(false),
         "Use .level file to retain the contaction level for each node from the last run.")(
         "edge-weight-updates-over-factor",
-        boost::program_options::value<double>(&contractor_config.log_edge_updates_factor)
+        boost::program_options::value<double>(&contractor_config.updater_config.log_edge_updates_factor)
             ->default_value(0.0),
         "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge "
         "weights updated by more than this factor");
@@ -162,16 +162,6 @@ int main(int argc, char *argv[]) try
         util::Log(logERROR) << "Input file " << contractor_config.osrm_input_path.string()
                             << " not found!";
         return EXIT_FAILURE;
-    }
-
-    if (boost::filesystem::is_regular_file(contractor_config.osrm_input_path))
-    {
-        // Propagate profile properties to contractor configuration structure
-        extractor::ProfileProperties profile_properties;
-        storage::io::FileReader profile_properties_file(contractor_config.profile_properties_path,
-                                                        storage::io::FileReader::HasNoFingerprint);
-        profile_properties_file.ReadInto<extractor::ProfileProperties>(&profile_properties, 1);
-        contractor_config.weight_multiplier = profile_properties.GetWeightMultiplier();
     }
 
     util::Log() << "Input file: " << contractor_config.osrm_input_path.filename().string();
