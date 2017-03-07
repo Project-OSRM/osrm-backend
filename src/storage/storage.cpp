@@ -1011,6 +1011,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             std::vector<extractor::EdgeBasedEdge> original_edges(number_of_edges);
             reader.ReadInto(original_edges);
 
+            // FIXME: move graph pre-processing to a pre-processing tool #3783
             original_edges = partition::splitBidirectionalEdges(std::move(original_edges));
             auto edges = partition::prepareEdgesForUsageInGraph(std::move(original_edges));
             BOOST_ASSERT(edges.size() <= 2 * number_of_edges);
