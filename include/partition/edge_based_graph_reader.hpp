@@ -40,7 +40,7 @@ struct EdgeBasedGraphEdge : EdgeBasedGraph::InputEdge
 
 // Bidirectional (s,t) to (s,t) and (t,s)
 std::vector<extractor::EdgeBasedEdge>
-SplitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
+splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
 {
     std::vector<extractor::EdgeBasedEdge> directed;
     directed.reserve(edges.size() * 2);
@@ -68,7 +68,7 @@ SplitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
 }
 
 std::vector<EdgeBasedGraphEdge>
-PrepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
+prepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
 {
     std::sort(begin(edges), end(edges));
 
@@ -167,9 +167,10 @@ struct EdgeBasedGraphReader
         // - adaptToContractorInput
         // - GraphContractor::GraphContractor
         // and should really be abstracted over.
+        // FIXME: edges passed as a const reference, can be changed pass-by-value if can be moved
 
-        auto directed = SplitBidirectionalEdges(edges);
-        auto tidied = PrepareEdgesForUsageInGraph(std::move(directed));
+        auto directed = splitBidirectionalEdges(edges);
+        auto tidied = prepareEdgesForUsageInGraph(std::move(directed));
 
         return std::make_unique<EdgeBasedGraph>(num_nodes, std::move(tidied));
     }
