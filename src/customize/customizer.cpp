@@ -23,7 +23,7 @@ void CellStorageStatistics(const Graph &graph,
 
     for (std::size_t level = 1; level < partition.GetNumberOfLevels(); ++level)
     {
-        std::unordered_map<partition::CellID, std::size_t> cell_nodes;
+        std::unordered_map<CellID, std::size_t> cell_nodes;
         for (auto node : util::irange(0u, graph.GetNumberOfNodes()))
         {
             ++cell_nodes[partition.GetCell(level, node)];
@@ -55,14 +55,14 @@ void CellStorageStatistics(const Graph &graph,
         }
 
         util::Log() << "Level " << level << " #cells " << cell_nodes.size() << " #nodes " << total
-                    << ",   source nodes: average " << source
-                    << " (" << (100. * source / total) << "%)"
-                    << " invalid " << invalid_sources
-                    << " (" << (100. * invalid_sources / total) << "%)"
-                    << ",   destination nodes: average " << destination
-                    << " (" << (100. * destination / total) << "%)"
-                    << " invalid " << invalid_destinations
-                    << " (" << (100. * invalid_destinations / total) << "%)";
+                    << ",   source nodes: average " << source << " (" << (100. * source / total)
+                    << "%)"
+                    << " invalid " << invalid_sources << " (" << (100. * invalid_sources / total)
+                    << "%)"
+                    << ",   destination nodes: average " << destination << " ("
+                    << (100. * destination / total) << "%)"
+                    << " invalid " << invalid_destinations << " ("
+                    << (100. * invalid_destinations / total) << "%)";
     }
 }
 

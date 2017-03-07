@@ -1,6 +1,7 @@
 #include "partition/partitioner.hpp"
 #include "partition/bisection_graph.hpp"
 #include "partition/bisection_to_partition.hpp"
+#include "partition/cell_storage.hpp"
 #include "partition/compressed_node_based_graph_reader.hpp"
 #include "partition/edge_based_graph_reader.hpp"
 #include "partition/io.hpp"
@@ -17,7 +18,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <unordered_set>
 #include <vector>
 
 #include <boost/assert.hpp>

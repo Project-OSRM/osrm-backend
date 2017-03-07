@@ -61,7 +61,6 @@ using EdgeWeight = std::int32_t;
 using TurnPenalty = std::int16_t; // turn penalty in 100ms units
 
 static const std::size_t INVALID_INDEX = std::numeric_limits<std::size_t>::max();
-using BisectionID = std::uint32_t;
 
 using LaneID = std::uint8_t;
 static const LaneID INVALID_LANEID = std::numeric_limits<LaneID>::max();
@@ -98,6 +97,14 @@ static const TurnPenalty INVALID_TURN_PENALTY = std::numeric_limits<TurnPenalty>
 static const EdgeWeight MAXIMAL_EDGE_DURATION_INT_30 = (1 << 29) - 1;
 
 using DatasourceID = std::uint8_t;
+
+using BisectionID = std::uint32_t;
+using LevelID = std::uint8_t;
+using CellID = std::uint32_t;
+using PartitionID = std::uint64_t;
+
+static constexpr auto INVALID_LEVEL_ID = std::numeric_limits<LevelID>::max();
+static constexpr auto INVALID_CELL_ID = std::numeric_limits<CellID>::max();
 
 struct SegmentID
 {

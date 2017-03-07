@@ -427,19 +427,17 @@ void Storage::PopulateLayout(DataLayout &layout)
             reader.Skip<partition::MultiLevelPartition::LevelData>(1);
             layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
                 DataLayout::MLD_LEVEL_DATA, 1);
-            const auto partition_entries_count = reader.ReadVectorSize<partition::PartitionID>();
-            layout.SetBlockSize<partition::PartitionID>(DataLayout::MLD_PARTITION,
-                                                        partition_entries_count);
-            const auto children_entries_count = reader.ReadVectorSize<partition::CellID>();
-            layout.SetBlockSize<partition::CellID>(DataLayout::MLD_CELL_TO_CHILDREN,
-                                                   children_entries_count);
+            const auto partition_entries_count = reader.ReadVectorSize<PartitionID>();
+            layout.SetBlockSize<PartitionID>(DataLayout::MLD_PARTITION, partition_entries_count);
+            const auto children_entries_count = reader.ReadVectorSize<CellID>();
+            layout.SetBlockSize<CellID>(DataLayout::MLD_CELL_TO_CHILDREN, children_entries_count);
         }
         else
         {
             layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
                 DataLayout::MLD_LEVEL_DATA, 0);
-            layout.SetBlockSize<partition::PartitionID>(DataLayout::MLD_PARTITION, 0);
-            layout.SetBlockSize<partition::CellID>(DataLayout::MLD_CELL_TO_CHILDREN, 0);
+            layout.SetBlockSize<PartitionID>(DataLayout::MLD_PARTITION, 0);
+            layout.SetBlockSize<CellID>(DataLayout::MLD_CELL_TO_CHILDREN, 0);
         }
 
         if (boost::filesystem::exists(config.mld_storage_path))
@@ -964,10 +962,10 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             auto mld_level_data_ptr =
                 layout.GetBlockPtr<partition::MultiLevelPartition::LevelData, true>(
                     memory_ptr, DataLayout::MLD_LEVEL_DATA);
-            auto mld_partition_ptr = layout.GetBlockPtr<partition::PartitionID, true>(
-                memory_ptr, DataLayout::MLD_PARTITION);
-            auto mld_chilren_ptr = layout.GetBlockPtr<partition::CellID, true>(
-                memory_ptr, DataLayout::MLD_CELL_TO_CHILDREN);
+            auto mld_partition_ptr =
+                layout.GetBlockPtr<PartitionID, true>(memory_ptr, DataLayout::MLD_PARTITION);
+            auto mld_chilren_ptr =
+                layout.GetBlockPtr<CellID, true>(memory_ptr, DataLayout::MLD_CELL_TO_CHILDREN);
 
             io::FileReader reader(config.mld_partition_path, io::FileReader::VerifyFingerprint);
 
