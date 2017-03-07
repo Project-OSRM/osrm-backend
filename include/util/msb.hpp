@@ -15,7 +15,7 @@ namespace util
 // return 0 for integers without msb
 template <typename T> std::size_t msb(T value)
 {
-    static_assert(std::is_integral<T>::value, "Integer required.");
+    static_assert(std::is_integral<T>::value && !std::is_signed<T>::value, "Integer required.");
     std::size_t msb = 0;
     while (value > 0)
     {
