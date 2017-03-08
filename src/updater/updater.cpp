@@ -1,5 +1,7 @@
 #include "updater/updater.hpp"
 
+#include "updater/csv_source.hpp"
+
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/node_based_edge.hpp"
@@ -18,24 +20,16 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/interprocess/file_mapping.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/fusion/adapted/std_pair.hpp>
-#include <boost/fusion/include/adapt_adt.hpp>
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <boost/spirit/include/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/support_line_pos_iterator.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_unordered_map.h>
 #include <tbb/enumerable_thread_specific.h>
-#include <tbb/parallel_for.h>
 #include <tbb/parallel_for_each.h>
 #include <tbb/parallel_invoke.h>
-#include <tbb/parallel_sort.h>
-#include <tbb/spin_mutex.h>
 
 #include <algorithm>
 #include <bitset>
@@ -49,64 +43,6 @@
 
 namespace
 {
-struct Segment final
-{
-    std::uint64_t from, to;
-    Segment() : from(0), to(0) {}
-    Segment(const std::uint64_t from, const std::uint64_t to) : from(from), to(to) {}
-    Segment(const OSMNodeID from, const OSMNodeID to)
-        : from(static_cast<std::uint64_t>(from)), to(static_cast<std::uint64_t>(to))
-    {
-    }
-
-    bool operator<(const Segment &rhs) const
-    {
-        return std::tie(from, to) < std::tie(rhs.from, rhs.to);
-    }
-    bool operator==(const Segment &rhs) const
-    {
-        return std::tie(from, to) == std::tie(rhs.from, rhs.to);
-    }
-};
-
-struct SpeedSource final
-{
-    SpeedSource() : speed(0), weight(std::numeric_limits<double>::quiet_NaN()) {}
-    unsigned speed;
-    double weight;
-    std::uint8_t source;
-};
-
-struct Turn final
-{
-    std::uint64_t from, via, to;
-    Turn() : from(0), via(0), to(0) {}
-    Turn(const std::uint64_t from, const std::uint64_t via, const std::uint64_t to)
-        : from(from), via(via), to(to)
-    {
-    }
-    Turn(const osrm::extractor::lookup::TurnIndexBlock &turn)
-        : from(static_cast<std::uint64_t>(turn.from_id)),
-          via(static_cast<std::uint64_t>(turn.via_id)), to(static_cast<std::uint64_t>(turn.to_id))
-    {
-    }
-    bool operator<(const Turn &rhs) const
-    {
-        return std::tie(from, via, to) < std::tie(rhs.from, rhs.via, rhs.to);
-    }
-    bool operator==(const Turn &rhs) const
-    {
-        return std::tie(from, via, to) == std::tie(rhs.from, rhs.via, rhs.to);
-    }
-};
-
-struct PenaltySource final
-{
-    PenaltySource() : duration(0.), weight(std::numeric_limits<double>::quiet_NaN()) {}
-    double duration;
-    double weight;
-    std::uint8_t source;
-};
 
 template <typename T> inline bool is_aligned(const void *pointer)
 {
@@ -116,128 +52,12 @@ template <typename T> inline bool is_aligned(const void *pointer)
 
 } // anon ns
 
-BOOST_FUSION_ADAPT_STRUCT(Segment, (decltype(Segment::from), from)(decltype(Segment::to), to))
-BOOST_FUSION_ADAPT_STRUCT(SpeedSource,
-                          (decltype(SpeedSource::speed), speed)(decltype(SpeedSource::weight),
-                                                                weight))
-BOOST_FUSION_ADAPT_STRUCT(Turn,
-                          (decltype(Turn::from), from)(decltype(Turn::via), via)(decltype(Turn::to),
-                                                                                 to))
-BOOST_FUSION_ADAPT_STRUCT(PenaltySource,
-                          (decltype(PenaltySource::duration),
-                           duration)(decltype(PenaltySource::weight), weight))
-
-namespace
-{
-namespace qi = boost::spirit::qi;
-}
 
 namespace osrm
 {
 namespace updater
 {
 
-// Functor to parse a list of CSV files using "key,value,comment" grammar.
-// Key and Value structures must be a model of Random Access Sequence.
-// Also the Value structure must have source member that will be filled
-// with the corresponding file index in the CSV filenames vector.
-template <typename Key, typename Value> struct CSVFilesParser
-{
-    using Iterator = boost::spirit::line_pos_iterator<boost::spirit::istream_iterator>;
-    using KeyRule = qi::rule<Iterator, Key()>;
-    using ValueRule = qi::rule<Iterator, Value()>;
-
-    CSVFilesParser(std::size_t start_index, const KeyRule &key_rule, const ValueRule &value_rule)
-        : start_index(start_index), key_rule(key_rule), value_rule(value_rule)
-    {
-    }
-
-    // Operator returns a lambda function that maps input Key to boost::optional<Value>.
-    auto operator()(const std::vector<std::string> &csv_filenames) const
-    {
-        try
-        {
-            tbb::spin_mutex mutex;
-            std::vector<std::pair<Key, Value>> lookup;
-            tbb::parallel_for(std::size_t{0}, csv_filenames.size(), [&](const std::size_t idx) {
-                auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
-
-                { // Merge local CSV results into a flat global vector
-                    tbb::spin_mutex::scoped_lock _{mutex};
-                    lookup.insert(end(lookup),
-                                  std::make_move_iterator(begin(local)),
-                                  std::make_move_iterator(end(local)));
-                }
-            });
-
-            // With flattened map-ish view of all the files, make a stable sort on key and source
-            // and unique them on key to keep only the value with the largest file index
-            // and the largest line number in a file.
-            // The operands order is swapped to make descending ordering on (key, source)
-            std::stable_sort(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
-                return rhs.first < lhs.first ||
-                       (rhs.first == lhs.first && rhs.second.source < lhs.second.source);
-            });
-
-            // Unique only on key to take the source precedence into account and remove duplicates.
-            const auto it =
-                std::unique(begin(lookup), end(lookup), [](const auto &lhs, const auto &rhs) {
-                    return lhs.first == rhs.first;
-                });
-            lookup.erase(it, end(lookup));
-
-            osrm::util::Log() << "In total loaded " << csv_filenames.size()
-                              << " file(s) with a total of " << lookup.size() << " unique values";
-
-            return [lookup](const Key &key) {
-                using Result = boost::optional<Value>;
-                const auto it = std::lower_bound(
-                    lookup.begin(), lookup.end(), key, [](const auto &lhs, const auto &rhs) {
-                        return rhs < lhs.first;
-                    });
-                return it != std::end(lookup) && !(it->first < key) ? Result(it->second) : Result();
-            };
-        }
-        catch (const tbb::captured_exception &e)
-        {
-            throw osrm::util::exception(e.what() + SOURCE_REF);
-        }
-    }
-
-  private:
-    // Parse a single CSV file and return result as a vector<Key, Value>
-    auto ParseCSVFile(const std::string &filename, std::size_t file_id) const
-    {
-        std::ifstream input_stream(filename, std::ios::binary);
-        input_stream.unsetf(std::ios::skipws);
-
-        boost::spirit::istream_iterator sfirst(input_stream), slast;
-        Iterator first(sfirst), last(slast);
-
-        BOOST_ASSERT(file_id <= std::numeric_limits<std::uint8_t>::max());
-        ValueRule value_source =
-            value_rule[qi::_val = qi::_1, boost::phoenix::bind(&Value::source, qi::_val) = file_id];
-        qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
-            (key_rule >> ',' >> value_source) >> -(',' >> *(qi::char_ - qi::eol));
-        std::vector<std::pair<Key, Value>> result;
-        const auto ok = qi::parse(first, last, -(csv_line % qi::eol) >> *qi::eol, result);
-
-        if (!ok || first != last)
-        {
-            const auto message =
-                boost::format("CSV file %1% malformed on line %2%") % filename % first.position();
-            throw osrm::util::exception(message.str() + SOURCE_REF);
-        }
-
-        osrm::util::Log() << "Loaded " << filename << " with " << result.size() << "values";
-
-        return std::move(result);
-    }
-
-    const std::size_t start_index;
-    const KeyRule key_rule;
-    const ValueRule value_rule;
-};
 
 // Returns duration in deci-seconds
 inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_kmh)
@@ -440,14 +260,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     edge_based_edge_list.reserve(graph_header.number_of_edges);
     util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
-    auto segment_speed_lookup = CSVFilesParser<Segment, SpeedSource>(
-        1, qi::ulong_long >> ',' >> qi::ulong_long, qi::uint_ >> -(',' >> qi::double_))(
-        config.segment_speed_lookup_paths);
-
-    auto turn_penalty_lookup = CSVFilesParser<Turn, PenaltySource>(
-        1 + config.segment_speed_lookup_paths.size(),
-        qi::ulong_long >> ',' >> qi::ulong_long >> ',' >> qi::ulong_long,
-        qi::double_ >> -(',' >> qi::double_))(config.turn_penalty_lookup_paths);
+    auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
+    auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
 
     // If we update the edge weights, this file will hold the datasource information for each
     // segment; the other files will also be conditionally filled concurrently if we make an update
