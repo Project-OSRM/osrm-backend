@@ -13,6 +13,15 @@ file(GLOB PartitionTestsSources
 file(GLOB LibraryTestsSources
     library_tests.cpp
     library/*.cpp)
+list(REMOVE_ITEM LibraryTestsSources ${CMAKE_CURRENT_SOURCE_DIR}/library/extract.cpp ${CMAKE_CURRENT_SOURCE_DIR}/library/contract.cpp)
+
+file(GLOB LibraryExtractTestsSources
+    library_tests.cpp
+    library/extract.cpp)
+
+file(GLOB LibraryContractTestsSources
+    library_tests.cpp
+    library/contract.cpp)
 
 file(GLOB ServerTestsSources
     server_tests.cpp
@@ -41,6 +50,14 @@ add_executable(library-tests
 	EXCLUDE_FROM_ALL
 	${LibraryTestsSources})
 
+add_executable(library-extract-tests
+	EXCLUDE_FROM_ALL
+	${LibraryExtractTestsSources})
+
+add_executable(library-contract-tests
+	EXCLUDE_FROM_ALL
+	${LibraryContractTestsSources})
+
 add_executable(server-tests
 	EXCLUDE_FROM_ALL
 	${ServerTestsSources}
@@ -65,9 +82,13 @@ endif()
 
 target_compile_definitions(extractor-tests PRIVATE COMPILE_DEFINITIONS OSRM_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/unit_tests/fixtures")
 target_compile_definitions(library-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(library-extract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(library-contract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 
 target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(library-extract-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(library-contract-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(partition-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -75,8 +96,10 @@ target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWO
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(partition-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(library-extract-tests osrm_extract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_custom_target(tests
-	DEPENDS engine-tests extractor-tests partition-tests library-tests server-tests util-tests)
+	DEPENDS engine-tests extractor-tests partition-tests library-tests library-extract-tests server-tests util-tests)
