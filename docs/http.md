@@ -247,7 +247,7 @@ curl 'http://router.project-osrm.org/table/v1/driving/polyline(egs_Iq_aqAppHzbHu
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `durations` array of arrays that stores the matrix in row-major order. `durations[i][j]` gives the travel time from
-  the i-th waypoint to the j-th waypoint. Values are given in seconds.
+  the i-th waypoint to the j-th waypoint. Values are given in seconds. Can be `null` if no route between `i` and `j` can be found.
 - `sources` array of `Waypoint` objects describing all sources in order
 - `destinations` array of `Waypoint` objects describing all destinations in order
 
