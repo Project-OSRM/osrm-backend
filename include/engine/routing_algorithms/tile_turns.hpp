@@ -22,7 +22,8 @@ struct TurnData final
     const util::Coordinate coordinate;
     const int in_angle;
     const int turn_angle;
-    const int weight;
+    const EdgeWeight weight;
+    const EdgeWeight duration;
 };
 
 using RTreeLeaf = datafacade::BaseDataFacade::RTreeLeaf;
