@@ -10,8 +10,8 @@
 
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/turn_bearing.hpp"
-#include "util/typedefs.hpp"
 #include "util/payload.hpp"
+#include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
 
@@ -202,8 +202,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap);
 }
 
-inline
-EdgeWeight
+inline EdgeWeight
 getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
               NodeID node)
 {
@@ -224,8 +223,7 @@ getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH
     return loop_weight;
 }
 
-inline
-EdgePayload 
+inline EdgePayload
 GetLoopPayload(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                NodeID node)
 {
