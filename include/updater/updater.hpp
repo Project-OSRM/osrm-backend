@@ -13,14 +13,14 @@ namespace updater
 {
 class Updater
 {
-public:
-    Updater(UpdaterConfig config_) :config(std::move(config_)) {}
+  public:
+    Updater(UpdaterConfig config_) : config(std::move(config_)) {}
 
-    EdgeID LoadAndUpdateEdgeExpandedGraph(
-        std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
-        std::vector<EdgeWeight> &node_weights) const;
+    EdgeID
+    LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
+                                   std::vector<EdgeWeight> &node_weights) const;
 
-private:
+  private:
     UpdaterConfig config;
 };
 }

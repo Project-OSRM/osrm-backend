@@ -3,9 +3,9 @@
 
 #include "updater/source.hpp"
 
-#include "util/log.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/log.hpp"
 
 #include <tbb/parallel_for.h>
 #include <tbb/spin_mutex.h>
@@ -51,16 +51,18 @@ template <typename Key, typename Value> struct CSVFilesParser
         {
             tbb::spin_mutex mutex;
             std::vector<std::pair<Key, Value>> lookup;
-            tbb::parallel_for(std::size_t{0}, csv_filenames.size(), [&](const std::size_t idx) {
-                auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
+            tbb::parallel_for(std::size_t{0},
+                              csv_filenames.size(),
+                              [&](const std::size_t idx) {
+                                  auto local = ParseCSVFile(csv_filenames[idx], start_index + idx);
 
-                { // Merge local CSV results into a flat global vector
-                    tbb::spin_mutex::scoped_lock _{mutex};
-                    lookup.insert(end(lookup),
-                                  std::make_move_iterator(begin(local)),
-                                  std::make_move_iterator(end(local)));
-                }
-            });
+                                  { // Merge local CSV results into a flat global vector
+                                      tbb::spin_mutex::scoped_lock _{mutex};
+                                      lookup.insert(end(lookup),
+                                                    std::make_move_iterator(begin(local)),
+                                                    std::make_move_iterator(end(local)));
+                                  }
+                              });
 
             // With flattened map-ish view of all the files, make a stable sort on key and source
             // and unique them on key to keep only the value with the largest file index
@@ -78,8 +80,8 @@ template <typename Key, typename Value> struct CSVFilesParser
                 });
             lookup.erase(it, end(lookup));
 
-            util::Log() << "In total loaded " << csv_filenames.size()
-                              << " file(s) with a total of " << lookup.size() << " unique values";
+            util::Log() << "In total loaded " << csv_filenames.size() << " file(s) with a total of "
+                        << lookup.size() << " unique values";
 
             return LookupTable<Key, Value>{lookup};
         }

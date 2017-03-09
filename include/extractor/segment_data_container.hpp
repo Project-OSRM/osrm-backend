@@ -4,9 +4,9 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
+#include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/iterator_range.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <unordered_map>
 
@@ -28,9 +28,11 @@ template <bool UseShareMemory> class SegmentDataContainerImpl;
 namespace io
 {
 template <bool UseShareMemory>
-inline void read(const boost::filesystem::path &path, detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+inline void read(const boost::filesystem::path &path,
+                 detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
 template <bool UseShareMemory>
-inline void write(const boost::filesystem::path &path, const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+inline void write(const boost::filesystem::path &path,
+                  const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
 }
 
 namespace detail
@@ -61,19 +63,19 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     }
 
     // TODO these random access functions can be removed after we implemented #3737
-    auto& ForwardDuration(const DirectionalGeometryID id, const SegmentOffset offset)
+    auto &ForwardDuration(const DirectionalGeometryID id, const SegmentOffset offset)
     {
         return fwd_durations[index[id] + 1 + offset];
     }
-    auto& ReverseDuration(const DirectionalGeometryID id, const SegmentOffset offset)
+    auto &ReverseDuration(const DirectionalGeometryID id, const SegmentOffset offset)
     {
         return rev_durations[index[id] + offset];
     }
-    auto& ForwardWeight(const DirectionalGeometryID id, const SegmentOffset offset)
+    auto &ForwardWeight(const DirectionalGeometryID id, const SegmentOffset offset)
     {
         return fwd_weights[index[id] + 1 + offset];
     }
-    auto& ReverseWeight(const DirectionalGeometryID id, const SegmentOffset offset)
+    auto &ReverseWeight(const DirectionalGeometryID id, const SegmentOffset offset)
     {
         return rev_weights[index[id] + offset];
     }
@@ -129,15 +131,14 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
         return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
 
-    auto GetNumberOfSegments() const
-    {
-        return fwd_weights.size();
-    }
+    auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
-    friend void io::read<UseShareMemory>(const boost::filesystem::path &path,
-                                         detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
-    friend void io::write<UseShareMemory>(const boost::filesystem::path &path,
-                                          const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+    friend void
+    io::read<UseShareMemory>(const boost::filesystem::path &path,
+                             detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+    friend void
+    io::write<UseShareMemory>(const boost::filesystem::path &path,
+                              const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
 
   private:
     Vector<std::uint32_t> index;

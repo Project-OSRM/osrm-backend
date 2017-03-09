@@ -4,8 +4,8 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
-#include "extractor/node_based_edge.hpp"
 #include "extractor/io.hpp"
+#include "extractor/node_based_edge.hpp"
 
 #include "storage/io.hpp"
 #include "util/exception.hpp"
@@ -21,10 +21,10 @@
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/interprocess/mapped_region.hpp>
-#include <boost/interprocess/file_mapping.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
 
 #include <tbb/blocked_range.h>
 #include <tbb/concurrent_unordered_map.h>
@@ -53,12 +53,10 @@ template <typename T> inline bool is_aligned(const void *pointer)
 
 } // anon ns
 
-
 namespace osrm
 {
 namespace updater
 {
-
 
 // Returns duration in deci-seconds
 inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_kmh)
@@ -343,10 +341,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 BOOST_ASSERT(u_index < nodes_range.size());
                 BOOST_ASSERT(v_index < nodes_range.size());
 
-                const extractor::QueryNode &u =
-                    internal_to_external_node_map[nodes_range[u_index]];
-                const extractor::QueryNode &v =
-                    internal_to_external_node_map[nodes_range[v_index]];
+                const extractor::QueryNode &u = internal_to_external_node_map[nodes_range[u_index]];
+                const extractor::QueryNode &v = internal_to_external_node_map[nodes_range[v_index]];
 
                 const double segment_length = util::coordinate_calculation::greatCircleDistance(
                     util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat});
@@ -366,8 +362,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                  new_segment_duration);
 
                     segment_data.ForwardWeight(geometry_id, segment_offset) = new_segment_weight;
-                    segment_data.ForwardDuration(geometry_id, segment_offset) = new_segment_duration;
-                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset)+1] = value->source;
+                    segment_data.ForwardDuration(geometry_id, segment_offset) =
+                        new_segment_duration;
+                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset) + 1] =
+                        value->source;
                     fwd_source = value->source;
                 }
 
@@ -385,8 +383,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                  new_segment_duration);
 
                     segment_data.ReverseWeight(geometry_id, segment_offset) = new_segment_weight;
-                    segment_data.ReverseDuration(geometry_id, segment_offset) = new_segment_duration;
-                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset)] = value->source;
+                    segment_data.ReverseDuration(geometry_id, segment_offset) =
+                        new_segment_duration;
+                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset)] =
+                        value->source;
                     rev_source = value->source;
                 }
 

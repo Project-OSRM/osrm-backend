@@ -63,7 +63,7 @@ struct Turn final
         : from(from), via(via), to(to)
     {
     }
-    template<typename Other>
+    template <typename Other>
     Turn(const Other &turn)
         : from(static_cast<std::uint64_t>(turn.from_id)),
           via(static_cast<std::uint64_t>(turn.via_id)), to(static_cast<std::uint64_t>(turn.to_id))
@@ -89,7 +89,6 @@ struct PenaltySource final
 
 using SegmentLookupTable = LookupTable<Segment, SpeedSource>;
 using TurnLookupTable = LookupTable<Turn, PenaltySource>;
-
 }
 }
 

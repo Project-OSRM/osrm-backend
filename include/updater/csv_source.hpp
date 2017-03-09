@@ -9,11 +9,10 @@ namespace updater
 {
 namespace csv
 {
-    SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths);
-    TurnLookupTable readTurnValues(const std::vector<std::string> &paths);
+SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths);
+TurnLookupTable readTurnValues(const std::vector<std::string> &paths);
 }
 }
 }
-
 
 #endif

@@ -332,6 +332,5 @@ std::unique_ptr<SegmentDataContainer> CompressedEdgeContainer::ToSegmentData()
 {
     return std::move(segment_data);
 }
-
 }
 }
