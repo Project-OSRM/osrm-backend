@@ -122,16 +122,16 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 // Get weights before graph is modified
                 const EdgeWeight forward_weight1 = fwd_edge_data1.weight;
                 const EdgeWeight forward_weight2 = fwd_edge_data2.weight;
-                const EdgePayload & forward_payload1  = fwd_edge_data1.payload;
-                const EdgePayload & forward_payload2  = fwd_edge_data2.payload;
+                const EdgePayload &forward_payload1 = fwd_edge_data1.payload;
+                const EdgePayload &forward_payload2 = fwd_edge_data2.payload;
 
                 BOOST_ASSERT(0 != forward_weight1);
                 BOOST_ASSERT(0 != forward_weight2);
 
                 const EdgeWeight reverse_weight1 = rev_edge_data1.weight;
                 const EdgeWeight reverse_weight2 = rev_edge_data2.weight;
-                const EdgePayload & reverse_payload1 = rev_edge_data1.payload;
-                const EdgePayload & reverse_payload2 = rev_edge_data2.payload;
+                const EdgePayload &reverse_payload1 = rev_edge_data1.payload;
+                const EdgePayload &reverse_payload2 = rev_edge_data2.payload;
 
                 BOOST_ASSERT(0 != reverse_weight1);
                 BOOST_ASSERT(0 != reverse_weight2);
@@ -142,7 +142,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
 
                 // add payload of e2's to e1
                 graph.GetEdgeData(forward_e1).payload += forward_payload2;
-                graph.GetEdgeData(reverse_e1).payload += reverse_payload2;                
+                graph.GetEdgeData(reverse_e1).payload += reverse_payload2;
 
                 // extend e1's to targets of e2's
                 graph.SetTarget(forward_e1, node_w);
@@ -235,7 +235,8 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
         {
             const EdgeData &data = graph.GetEdgeData(edge_id);
             const NodeID target = graph.GetTarget(edge_id);
-            geometry_compressor.AddUncompressedEdge(edge_id, target, data.weight, UncompressedEdgePayload(data.payload));
+            geometry_compressor.AddUncompressedEdge(
+                edge_id, target, data.weight, UncompressedEdgePayload(data.payload));
         }
     }
 }

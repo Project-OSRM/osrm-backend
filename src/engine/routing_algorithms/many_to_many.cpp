@@ -24,7 +24,7 @@ struct NodeBucket
     unsigned target_id; // essentially a row in the weight matrix
     EdgeWeight weight;
     RoutingPayload payload;
-    NodeBucket(const unsigned target_id, const EdgeWeight weight, const RoutingPayload & payload)
+    NodeBucket(const unsigned target_id, const EdgeWeight weight, const RoutingPayload &payload)
         : target_id(target_id), weight(weight), payload(payload)
     {
     }
@@ -37,7 +37,7 @@ template <bool DIRECTION>
 void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
-                        const RoutingPayload & payload,
+                        const RoutingPayload &payload,
                         ManyToManyQueryHeap &query_heap)
 {
     for (auto edge : facade.GetAdjacentEdgeRange(node))
@@ -47,7 +47,7 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<alg
         {
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
-            const RoutingPayload & edge_payload = data.payload;
+            const RoutingPayload &edge_payload = data.payload;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             const EdgeWeight to_weight = weight + edge_weight;
@@ -79,7 +79,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight source_weight = query_heap.GetKey(node);
-    const RoutingPayload & source_payload = query_heap.GetData(node).payload;
+    const RoutingPayload &source_payload = query_heap.GetData(node).payload;
 
     // check if each encountered node has an entry
     const auto bucket_iterator = search_space_with_buckets.find(node);
@@ -92,7 +92,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
             // get target id from bucket entry
             const unsigned column_idx = current_bucket.target_id;
             const EdgeWeight target_weight = current_bucket.weight;
-            const RoutingPayload & target_payload = current_bucket.payload;
+            const RoutingPayload &target_payload = current_bucket.payload;
 
             auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
             auto &current_payload = payload_table[row_idx * number_of_targets + column_idx];
@@ -110,7 +110,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
                         current_weight = new_weight_with_loop;
                         RoutingPayload payload = RoutingPayload(GetLoopPayload(facade, node));
                         current_payload = source_payload + target_payload + payload;
-                    }                    
+                    }
                 }
             }
             else if (new_weight < current_weight)
@@ -179,15 +179,17 @@ manyToManySearch(SearchEngineData &engine_working_data,
 
         if (phantom.forward_segment_id.enabled)
         {
-            query_heap.Insert(phantom.forward_segment_id.id,
-                              phantom.GetForwardWeightPlusOffset(),
-                              {phantom.forward_segment_id.id, RoutingPayload(phantom.GetForwardPayload())});
+            query_heap.Insert(
+                phantom.forward_segment_id.id,
+                phantom.GetForwardWeightPlusOffset(),
+                {phantom.forward_segment_id.id, RoutingPayload(phantom.GetForwardPayload())});
         }
         if (phantom.reverse_segment_id.enabled)
         {
-            query_heap.Insert(phantom.reverse_segment_id.id,
-                              phantom.GetReverseWeightPlusOffset(),
-                              {phantom.reverse_segment_id.id, RoutingPayload(phantom.GetReversePayload())});
+            query_heap.Insert(
+                phantom.reverse_segment_id.id,
+                phantom.GetReverseWeightPlusOffset(),
+                {phantom.reverse_segment_id.id, RoutingPayload(phantom.GetReversePayload())});
         }
 
         // explore search space
@@ -206,15 +208,17 @@ manyToManySearch(SearchEngineData &engine_working_data,
 
         if (phantom.forward_segment_id.enabled)
         {
-            query_heap.Insert(phantom.forward_segment_id.id,
-                              -phantom.GetForwardWeightPlusOffset(),
-                              {phantom.forward_segment_id.id, -RoutingPayload(phantom.GetForwardPayload())});
+            query_heap.Insert(
+                phantom.forward_segment_id.id,
+                -phantom.GetForwardWeightPlusOffset(),
+                {phantom.forward_segment_id.id, -RoutingPayload(phantom.GetForwardPayload())});
         }
         if (phantom.reverse_segment_id.enabled)
         {
-            query_heap.Insert(phantom.reverse_segment_id.id,
-                              -phantom.GetReverseWeightPlusOffset(),
-                              {phantom.reverse_segment_id.id, -RoutingPayload(phantom.GetReversePayload())});
+            query_heap.Insert(
+                phantom.reverse_segment_id.id,
+                -phantom.GetReverseWeightPlusOffset(),
+                {phantom.reverse_segment_id.id, -RoutingPayload(phantom.GetReversePayload())});
         }
 
         // explore search space

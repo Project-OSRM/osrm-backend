@@ -48,13 +48,16 @@ struct TableParametersGrammar final : public BaseParametersGrammar<Iterator, Sig
             (qi::lit("all") |
              (size_t_ % ';')[ph::bind(&engine::api::TableParameters::sources, qi::_r1) = qi::_1]);
 
-        output_component = (qi::lit("durations")[qi::_val = engine::api::DURATION] | qi::lit("distances")[qi::_val = engine::api::DISTANCE]);    
+        output_component = (qi::lit("durations")[qi::_val = engine::api::DURATION] |
+                            qi::lit("distances")[qi::_val = engine::api::DISTANCE]);
 
         output_fields_rule =
             qi::lit("output_fields=") >
-            (output_component % ';')[ph::bind(&engine::api::TableParameters::output_fields, qi::_r1) = qi::_1];
+            (output_component %
+             ';')[ph::bind(&engine::api::TableParameters::output_fields, qi::_r1) = qi::_1];
 
-        table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1) | output_fields_rule(qi::_r1);
+        table_rule =
+            destinations_rule(qi::_r1) | sources_rule(qi::_r1) | output_fields_rule(qi::_r1);
 
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
                     -('?' > (table_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');

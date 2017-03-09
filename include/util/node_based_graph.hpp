@@ -26,7 +26,7 @@ struct NodeBasedEdgeData
     }
 
     NodeBasedEdgeData(EdgeWeight weight,
-                      const EdgePayload & payload,
+                      const EdgePayload &payload,
                       unsigned edge_id,
                       unsigned name_id,
                       bool reversed,
@@ -36,8 +36,8 @@ struct NodeBasedEdgeData
                       bool restricted,
                       extractor::TravelMode travel_mode,
                       const LaneDescriptionID lane_description_id)
-        : weight(weight), payload(payload), edge_id(edge_id), name_id(name_id),
-          reversed(reversed), roundabout(roundabout), circular(circular), startpoint(startpoint),
+        : weight(weight), payload(payload), edge_id(edge_id), name_id(name_id), reversed(reversed),
+          roundabout(roundabout), circular(circular), startpoint(startpoint),
           restricted(restricted), travel_mode(travel_mode), lane_description_id(lane_description_id)
     {
     }

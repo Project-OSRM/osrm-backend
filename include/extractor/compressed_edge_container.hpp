@@ -1,8 +1,8 @@
 #ifndef GEOMETRY_COMPRESSOR_HPP_
 #define GEOMETRY_COMPRESSOR_HPP_
 
-#include "util/typedefs.hpp"
 #include "util/payload.hpp"
+#include "util/typedefs.hpp"
 
 #include <unordered_map>
 
@@ -20,8 +20,8 @@ class CompressedEdgeContainer
     struct OnewayCompressedEdge
     {
       public:
-        NodeID node_id;      // refers to an internal node-based-node
-        EdgeWeight weight;   // the weight of the edge leading to this node
+        NodeID node_id;                  // refers to an internal node-based-node
+        EdgeWeight weight;               // the weight of the edge leading to this node
         UncompressedEdgePayload payload; // the payload of the edge leading to this node
     };
 
@@ -34,13 +34,13 @@ class CompressedEdgeContainer
                       const NodeID target_node,
                       const EdgeWeight weight1,
                       const EdgeWeight weight2,
-                      const UncompressedEdgePayload & payload1,
-                      const UncompressedEdgePayload & payload2);
+                      const UncompressedEdgePayload &payload1,
+                      const UncompressedEdgePayload &payload2);
 
     void AddUncompressedEdge(const EdgeID edge_id,
                              const NodeID target_node,
                              const EdgeWeight weight,
-                             const UncompressedEdgePayload & payload);
+                             const UncompressedEdgePayload &payload);
 
     void InitializeBothwayVector();
     unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos);

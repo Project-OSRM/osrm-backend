@@ -2,8 +2,8 @@
 #define NODE_BASED_EDGE_HPP
 
 #include "extractor/travel_mode.hpp"
-#include "util/typedefs.hpp"
 #include "util/payload.hpp"
+#include "util/typedefs.hpp"
 
 #include "extractor/guidance/road_classification.hpp"
 
@@ -20,7 +20,7 @@ struct NodeBasedEdge
                   NodeID target,
                   NodeID name_id,
                   EdgeWeight weight,
-                  const EdgePayload & payload,
+                  const EdgePayload &payload,
                   bool forward,
                   bool backward,
                   bool roundabout,
@@ -38,7 +38,7 @@ struct NodeBasedEdge
     NodeID target;                                    // 32 4
     NodeID name_id;                                   // 32 4
     EdgeWeight weight;                                // 32 4
-    EdgePayload payload;                              // 
+    EdgePayload payload;                              //
     std::uint8_t forward : 1;                         // 1
     std::uint8_t backward : 1;                        // 1
     std::uint8_t roundabout : 1;                      // 1
@@ -57,7 +57,7 @@ struct NodeBasedEdgeWithOSM : NodeBasedEdge
                          OSMNodeID target,
                          NodeID name_id,
                          EdgeWeight weight,
-                         const EdgePayload & payload,
+                         const EdgePayload &payload,
                          bool forward,
                          bool backward,
                          bool roundabout,
@@ -87,7 +87,7 @@ inline NodeBasedEdge::NodeBasedEdge(NodeID source,
                                     NodeID target,
                                     NodeID name_id,
                                     EdgeWeight weight,
-                                    const EdgePayload & payload,
+                                    const EdgePayload &payload,
                                     bool forward,
                                     bool backward,
                                     bool roundabout,
@@ -126,7 +126,7 @@ inline NodeBasedEdgeWithOSM::NodeBasedEdgeWithOSM(OSMNodeID source,
                                                   OSMNodeID target,
                                                   NodeID name_id,
                                                   EdgeWeight weight,
-                                                  const EdgePayload & payload,
+                                                  const EdgePayload &payload,
                                                   bool forward,
                                                   bool backward,
                                                   bool roundabout,

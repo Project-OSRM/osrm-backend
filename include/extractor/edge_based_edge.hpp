@@ -2,8 +2,8 @@
 #define EDGE_BASED_EDGE_HPP
 
 #include "extractor/travel_mode.hpp"
-#include "util/typedefs.hpp"
 #include "util/payload.hpp"
+#include "util/typedefs.hpp"
 #include <tuple>
 
 namespace osrm
@@ -22,7 +22,7 @@ struct EdgeBasedEdge
                   const NodeID target,
                   const NodeID edge_id,
                   const EdgeWeight weight,
-                  const EdgePayload & payload, 
+                  const EdgePayload &payload,
                   const bool forward,
                   const bool backward);
 
@@ -37,11 +37,11 @@ struct EdgeBasedEdge
 
         EdgeData(const NodeID edge_id,
                  const EdgeWeight weight,
-                 const EdgePayload & payload,
+                 const EdgePayload &payload,
                  const bool forward,
                  const bool backward)
-            : edge_id(edge_id), weight(weight), forward(forward),
-              backward(backward), payload(payload)
+            : edge_id(edge_id), weight(weight), forward(forward), backward(backward),
+              payload(payload)
         {
         }
 
@@ -67,7 +67,7 @@ inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const NodeID target,
                                     const NodeID edge_id,
                                     const EdgeWeight weight,
-                                    const EdgePayload & payload,
+                                    const EdgePayload &payload,
                                     const bool forward,
                                     const bool backward)
     : source(source), target(target), data{edge_id, weight, payload, forward, backward}

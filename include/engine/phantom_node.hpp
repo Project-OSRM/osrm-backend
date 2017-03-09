@@ -29,8 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PHANTOM_NODES_H
 
 #include "extractor/travel_mode.hpp"
-#include "util/typedefs.hpp"
 #include "util/payload.hpp"
+#include "util/typedefs.hpp"
 
 #include "util/coordinate.hpp"
 
@@ -83,7 +83,7 @@ struct PhantomNode
           reverse_segment_id{SPECIAL_SEGMENTID, false},
           name_id(std::numeric_limits<unsigned>::max()), forward_weight(INVALID_EDGE_WEIGHT),
           reverse_weight(INVALID_EDGE_WEIGHT), forward_weight_offset(0), reverse_weight_offset(0),
-          forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),          
+          forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
           forward_payload(INVALID_PAYLOAD), reverse_payload(INVALID_PAYLOAD),
           packed_geometry_id(SPECIAL_GEOMETRYID), component{INVALID_COMPONENTID, false},
           fwd_segment_position(0), forward_travel_mode(TRAVEL_MODE_INACCESSIBLE),
@@ -102,16 +102,10 @@ struct PhantomNode
         BOOST_ASSERT(reverse_segment_id.enabled);
         return reverse_weight_offset + reverse_weight;
     }
-    
-    EdgePayload GetForwardPayload() const
-    {
-        return forward_payload;
-    }
-    
-    EdgePayload GetReversePayload() const
-    {
-        return reverse_payload;
-    }
+
+    EdgePayload GetForwardPayload() const { return forward_payload; }
+
+    EdgePayload GetReversePayload() const { return reverse_payload; }
 
     bool IsBidirected() const { return forward_segment_id.enabled && reverse_segment_id.enabled; }
 
@@ -150,11 +144,10 @@ struct PhantomNode
         : forward_segment_id{other.forward_segment_id},
           reverse_segment_id{other.reverse_segment_id}, name_id{other.name_id},
           forward_weight{forward_weight}, reverse_weight{reverse_weight},
-          forward_weight_offset{forward_weight_offset}, reverse_weight_offset{reverse_weight_offset}, 
-          forward_duration{forward_duration},
-          reverse_duration{reverse_duration},
-          forward_payload{forward_payload}, reverse_payload{reverse_payload},
-          packed_geometry_id{other.packed_geometry_id},
+          forward_weight_offset{forward_weight_offset},
+          reverse_weight_offset{reverse_weight_offset}, forward_duration{forward_duration},
+          reverse_duration{reverse_duration}, forward_payload{forward_payload},
+          reverse_payload{reverse_payload}, packed_geometry_id{other.packed_geometry_id},
           component{other.component.id, other.component.is_tiny}, location{location},
           input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
           forward_travel_mode{other.forward_travel_mode},
@@ -168,9 +161,9 @@ struct PhantomNode
     EdgeWeight forward_weight;
     EdgeWeight reverse_weight;
     EdgeWeight forward_weight_offset; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight reverse_weight_offset; // TODO: try to remove -> requires path unpacking changes    
-    EdgeWeight forward_duration; // TODO: try to remove -> requires path unpacking changes
-    EdgeWeight reverse_duration; // TODO: try to remove -> requires path unpacking changes
+    EdgeWeight reverse_weight_offset; // TODO: try to remove -> requires path unpacking changes
+    EdgeWeight forward_duration;      // TODO: try to remove -> requires path unpacking changes
+    EdgeWeight reverse_duration;      // TODO: try to remove -> requires path unpacking changes
     EdgePayload forward_payload;
     EdgePayload reverse_payload;
     unsigned packed_geometry_id;
@@ -190,7 +183,8 @@ struct PhantomNode
     extractor::TravelMode backward_travel_mode;
 };
 
-static_assert(sizeof(PhantomNode) == 64 + 2 * sizeof(EdgePayload), "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 64 + 2 * sizeof(EdgePayload),
+              "PhantomNode has more padding then expected");
 
 using PhantomNodePair = std::pair<PhantomNode, PhantomNode>;
 

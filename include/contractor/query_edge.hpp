@@ -1,8 +1,8 @@
 #ifndef QUERYEDGE_HPP
 #define QUERYEDGE_HPP
 
-#include "util/typedefs.hpp"
 #include "util/payload.hpp"
+#include "util/typedefs.hpp"
 
 #include <tuple>
 
@@ -24,7 +24,7 @@ struct QueryEdge
 
         template <class OtherT> EdgeData(const OtherT &other)
         {
-            weight = other.weight;            
+            weight = other.weight;
             shortcut = other.shortcut;
             id = other.id;
             forward = other.forward;
@@ -59,8 +59,7 @@ struct QueryEdge
         return (source == right.source && target == right.target &&
                 data.weight == right.data.weight && data.shortcut == right.data.shortcut &&
                 data.forward == right.data.forward && data.backward == right.data.backward &&
-                data.payload == right.data.payload &&
-                data.id == right.data.id);
+                data.payload == right.data.payload && data.id == right.data.id);
     }
 };
 }

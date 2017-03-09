@@ -33,11 +33,11 @@ class RoutingAlgorithmsInterface
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices) const = 0;
-                     
+
     virtual std::vector<EdgeWeight>
     ManyToManyDurations(const std::vector<PhantomNode> &phantom_nodes,
-                     const std::vector<std::size_t> &source_indices,
-                     const std::vector<std::size_t> &target_indices) const = 0;
+                        const std::vector<std::size_t> &source_indices,
+                        const std::vector<std::size_t> &target_indices) const = 0;
 
     virtual routing_algorithms::SubMatchingList
     MapMatching(const routing_algorithms::CandidateLists &candidates_list,
@@ -83,11 +83,11 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices) const final override;
-                     
+
     std::vector<EdgeWeight>
     ManyToManyDurations(const std::vector<PhantomNode> &phantom_nodes,
-                     const std::vector<std::size_t> &source_indices,
-                     const std::vector<std::size_t> &target_indices) const final override;
+                        const std::vector<std::size_t> &source_indices,
+                        const std::vector<std::size_t> &target_indices) const final override;
 
     routing_algorithms::SubMatchingList MapMatching(
         const routing_algorithms::CandidateLists &candidates_list,
@@ -177,11 +177,11 @@ std::vector<EdgeWeight> RoutingAlgorithms<AlgorithmT>::ManyToManyDurations(
     std::vector<RoutingPayload> table = routing_algorithms::manyToManySearch(
         heaps, facade, phantom_nodes, source_indices, target_indices);
     std::vector<EdgeWeight> durations;
-    std::transform(table.begin(), 
-               table.end(), 
-               std::back_inserter(durations), 
-               [](const RoutingPayload& e) { return e.duration; });
-      return durations;
+    std::transform(table.begin(),
+                   table.end(),
+                   std::back_inserter(durations),
+                   [](const RoutingPayload &e) { return e.duration; });
+    return durations;
 }
 
 template <typename AlgorithmT>
@@ -238,8 +238,8 @@ RoutingAlgorithms<algorithm::MLD>::ManyToManySearch(const std::vector<PhantomNod
 template <>
 inline std::vector<EdgeWeight>
 RoutingAlgorithms<algorithm::MLD>::ManyToManyDurations(const std::vector<PhantomNode> &,
-                                                    const std::vector<std::size_t> &,
-                                                    const std::vector<std::size_t> &) const
+                                                       const std::vector<std::size_t> &,
+                                                       const std::vector<std::size_t> &) const
 {
     throw util::exception("ManyToManySearch is not implemented");
 }

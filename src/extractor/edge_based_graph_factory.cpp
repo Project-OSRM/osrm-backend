@@ -562,8 +562,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     auto turn_id = m_edge_based_edge_list.size();
                     auto weight =
                         boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
-                    auto duration =
-                        boost::numeric_cast<EdgeWeight>(edge_data1.payload.duration + duration_penalty);
+                    auto duration = boost::numeric_cast<EdgeWeight>(edge_data1.payload.duration +
+                                                                    duration_penalty);
                     EdgePayload payload = edge_data1.payload;
                     payload.duration = duration;
                     m_edge_based_edge_list.emplace_back(edge_data1.edge_id,

@@ -40,8 +40,7 @@ class TableAPI final : public BaseAPI
     virtual void MakeResponse(const std::vector<RoutingPayload> &entries,
                               const std::vector<PhantomNode> &phantoms,
                               util::json::Object &response,
-                              const std::vector<TableOutputField> & output_fields
-                              ) const
+                              const std::vector<TableOutputField> &output_fields) const
     {
         auto number_of_sources = parameters.sources.size();
         auto number_of_destinations = parameters.destinations.size();
@@ -67,11 +66,14 @@ class TableAPI final : public BaseAPI
         {
             response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
         }
-        
+
         for (auto &component : output_fields.size() == 0 ? DEFAULT_FIELDS : output_fields)
         {
             response.values[TableOutputFieldName[component]] =
-                MakeTable(entries, number_of_sources, number_of_destinations, get_encoder<RoutingPayload>(component));
+                MakeTable(entries,
+                          number_of_sources,
+                          number_of_destinations,
+                          get_encoder<RoutingPayload>(component));
         }
 
         response.values["code"] = "Ok";
@@ -117,21 +119,19 @@ class TableAPI final : public BaseAPI
             auto row_begin_iterator = values.begin() + (row * number_of_columns);
             auto row_end_iterator = values.begin() + ((row + 1) * number_of_columns);
             json_row.values.resize(number_of_columns);
-            std::transform(row_begin_iterator,
-                           row_end_iterator,
-                           json_row.values.begin(),
-                           encoder);
+            std::transform(row_begin_iterator, row_end_iterator, json_row.values.begin(), encoder);
             json_table.values.push_back(std::move(json_row));
         }
         return json_table;
     }
 
     const TableParameters &parameters;
-    
+
     static const std::vector<TableOutputField> DEFAULT_FIELDS;
 };
 
-const std::vector<TableOutputField> TableAPI::DEFAULT_FIELDS = std::vector<TableOutputField>(1, DURATION);
+const std::vector<TableOutputField> TableAPI::DEFAULT_FIELDS =
+    std::vector<TableOutputField>(1, DURATION);
 
 } // ns api
 } // ns engine

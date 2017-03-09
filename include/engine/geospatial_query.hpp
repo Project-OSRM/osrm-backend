@@ -386,41 +386,44 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             datafacade.GetUncompressedForwardDurations(data.packed_geometry_id);
         const std::vector<EdgeWeight> reverse_duration_vector =
             datafacade.GetUncompressedReverseDurations(data.packed_geometry_id);
-        const std::vector<NodeID> forward_node_vector = 
+        const std::vector<NodeID> forward_node_vector =
             datafacade.GetUncompressedForwardGeometry(data.packed_geometry_id);
-        const std::vector<NodeID> reverse_node_vector = 
+        const std::vector<NodeID> reverse_node_vector =
             datafacade.GetUncompressedReverseGeometry(data.packed_geometry_id);
 
         for (std::size_t i = 0; i < data.fwd_segment_position; i++)
         {
             forward_weight_offset += forward_weight_vector[i];
             forward_duration_offset += forward_duration_vector[i];
-            
+
             auto c1 = coordinates[forward_node_vector[i]];
-            auto c2 = coordinates[forward_node_vector[i+1]];
+            auto c2 = coordinates[forward_node_vector[i + 1]];
             forward_distance_offset += util::coordinate_calculation::greatCircleDistance(c1, c2);
         }
         forward_weight = forward_weight_vector[data.fwd_segment_position];
         forward_duration = forward_duration_vector[data.fwd_segment_position];
-        forward_distance = util::coordinate_calculation::greatCircleDistance(coordinates[forward_node_vector[data.fwd_segment_position]],
-                                     coordinates[forward_node_vector[data.fwd_segment_position + 1]]);
+        forward_distance = util::coordinate_calculation::greatCircleDistance(
+            coordinates[forward_node_vector[data.fwd_segment_position]],
+            coordinates[forward_node_vector[data.fwd_segment_position + 1]]);
 
         BOOST_ASSERT(data.fwd_segment_position < reverse_weight_vector.size());
 
-        const std::size_t reverse_segment_position = reverse_weight_vector.size() - data.fwd_segment_position - 1;
+        const std::size_t reverse_segment_position =
+            reverse_weight_vector.size() - data.fwd_segment_position - 1;
         for (std::size_t i = 0; i < reverse_segment_position; i++)
         {
             reverse_weight_offset += reverse_weight_vector[i];
             reverse_duration_offset += reverse_duration_vector[i];
-            
+
             auto c1 = coordinates[reverse_node_vector[i]];
-            auto c2 = coordinates[reverse_node_vector[i+1]];
+            auto c2 = coordinates[reverse_node_vector[i + 1]];
             reverse_distance_offset += util::coordinate_calculation::greatCircleDistance(c1, c2);
         }
         reverse_weight = reverse_weight_vector[reverse_segment_position];
         reverse_duration = reverse_duration_vector[reverse_segment_position];
-        reverse_distance = util::coordinate_calculation::greatCircleDistance(coordinates[reverse_node_vector[reverse_segment_position]],
-                coordinates[reverse_node_vector[reverse_segment_position + 1]]);
+        reverse_distance = util::coordinate_calculation::greatCircleDistance(
+            coordinates[reverse_node_vector[reverse_segment_position]],
+            coordinates[reverse_node_vector[reverse_segment_position + 1]]);
 
         ratio = std::min(1.0, std::max(0.0, ratio));
         if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
@@ -436,20 +439,21 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             reverse_distance -= static_cast<EdgeDistance>(reverse_distance * ratio);
         }
 
-        auto transformed = PhantomNodeWithDistance{PhantomNode{data,
-                                                               forward_weight,
-                                                               reverse_weight,
-                                                               forward_weight_offset,
-                                                               reverse_weight_offset,
-                                                               forward_duration,
-                                                               reverse_duration,
-                                                               MAKE_PAYLOAD(forward_duration_offset + forward_duration,
-                                                                            forward_distance_offset + forward_distance),
-                                                               MAKE_PAYLOAD(reverse_duration_offset + reverse_duration,
-                                                                            reverse_distance_offset + reverse_distance),                                                               
-                                                               point_on_segment,
-                                                               input_coordinate},
-                                                   current_perpendicular_distance};
+        auto transformed = PhantomNodeWithDistance{
+            PhantomNode{data,
+                        forward_weight,
+                        reverse_weight,
+                        forward_weight_offset,
+                        reverse_weight_offset,
+                        forward_duration,
+                        reverse_duration,
+                        MAKE_PAYLOAD(forward_duration_offset + forward_duration,
+                                     forward_distance_offset + forward_distance),
+                        MAKE_PAYLOAD(reverse_duration_offset + reverse_duration,
+                                     reverse_distance_offset + reverse_distance),
+                        point_on_segment,
+                        input_coordinate},
+            current_perpendicular_distance};
 
         return transformed;
     }

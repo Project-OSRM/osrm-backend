@@ -30,82 +30,82 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "util/typedefs.hpp"
 
-struct DurationDistancePayload 
+struct DurationDistancePayload
 {
     EdgeWeight duration;
     EdgeDistance distance;
-    
-    DurationDistancePayload(const EdgeWeight & duration, const EdgeDistance & distance) : duration(duration), distance(distance) {}
+
+    DurationDistancePayload(const EdgeWeight &duration, const EdgeDistance &distance)
+        : duration(duration), distance(distance)
+    {
+    }
     DurationDistancePayload() : duration(0), distance(0) {}
-    
+
     bool operator==(const DurationDistancePayload &right) const
     {
         return duration == right.duration && distance == right.distance;
     }
-    
+
     bool operator<(const DurationDistancePayload &right) const
     {
-        return duration < right.duration || (duration == right.duration && distance < right.distance);
+        return duration < right.duration ||
+               (duration == right.duration && distance < right.distance);
     }
-    
-    DurationDistancePayload & operator+=(const DurationDistancePayload &right)
+
+    DurationDistancePayload &operator+=(const DurationDistancePayload &right)
     {
         duration += right.duration;
         distance += right.distance;
         return *this;
     }
-    
-   DurationDistancePayload operator-() const
-   {
+
+    DurationDistancePayload operator-() const
+    {
         return DurationDistancePayload(-duration, -distance);
-   }
+    }
 };
 
-inline DurationDistancePayload operator+(const DurationDistancePayload& lhs, const DurationDistancePayload& rhs)
+inline DurationDistancePayload operator+(const DurationDistancePayload &lhs,
+                                         const DurationDistancePayload &rhs)
 {
-  return DurationDistancePayload(lhs.duration + rhs.duration, lhs.distance + rhs.distance);
+    return DurationDistancePayload(lhs.duration + rhs.duration, lhs.distance + rhs.distance);
 }
 
-static_assert(sizeof(DurationDistancePayload) == 8, "DurationDistancePayload is larger than expected");
+static_assert(sizeof(DurationDistancePayload) == 8,
+              "DurationDistancePayload is larger than expected");
 
-struct DurationPayload 
+struct DurationPayload
 {
     EdgeWeight duration;
-        
-    DurationPayload(const DurationDistancePayload & other) : DurationPayload(other.duration) {}
-    DurationPayload(const EdgeWeight & duration, const EdgeDistance & distance) : DurationPayload(duration) { (void)distance; }
-    DurationPayload(const EdgeWeight & duration) : duration(duration) {}
+
+    DurationPayload(const DurationDistancePayload &other) : DurationPayload(other.duration) {}
+    DurationPayload(const EdgeWeight &duration, const EdgeDistance &distance)
+        : DurationPayload(duration)
+    {
+        (void)distance;
+    }
+    DurationPayload(const EdgeWeight &duration) : duration(duration) {}
     DurationPayload() : duration(0) {}
-    
-    bool operator==(const DurationPayload &right) const
-    {
-        return duration == right.duration;
-    }
-    
-    bool operator<(const DurationPayload &right) const
-    {
-        return duration < right.duration;
-    }
-    
-    DurationPayload & operator+=(const DurationPayload &right)
+
+    bool operator==(const DurationPayload &right) const { return duration == right.duration; }
+
+    bool operator<(const DurationPayload &right) const { return duration < right.duration; }
+
+    DurationPayload &operator+=(const DurationPayload &right)
     {
         duration += right.duration;
         return *this;
     }
-    
-    DurationPayload operator-() const
-    {
-        return DurationPayload(-duration);
-    }
+
+    DurationPayload operator-() const { return DurationPayload(-duration); }
 };
 
-inline DurationPayload operator+(const DurationPayload& lhs, const DurationPayload& rhs)
+inline DurationPayload operator+(const DurationPayload &lhs, const DurationPayload &rhs)
 {
-  return DurationPayload(lhs.duration + rhs.duration);
+    return DurationPayload(lhs.duration + rhs.duration);
 }
 
 static_assert(sizeof(DurationPayload) == 4, "DurationPayload is larger than expected");
-
 
 //////////////////////////////////////////////////////
 
@@ -113,7 +113,7 @@ static_assert(sizeof(DurationPayload) == 4, "DurationPayload is larger than expe
 using EdgePayload = DurationDistancePayload;
 using UncompressedEdgePayload = DurationPayload;
 using RoutingPayload = DurationDistancePayload;
-#else //PAYLOAD_TYPE_DURATIONS
+#else // PAYLOAD_TYPE_DURATIONS
 using EdgePayload = DurationPayload;
 using UncompressedEdgePayload = DurationPayload;
 using RoutingPayload = DurationPayload;
@@ -129,8 +129,9 @@ static inline RoutingPayload MAKE_ROUTING_PAYLOAD(EdgeWeight duration, EdgeDista
     return RoutingPayload(duration, distance);
 }
 
-
-static const EdgePayload INVALID_PAYLOAD = MAKE_PAYLOAD(MAXIMAL_EDGE_DURATION, MAXIMAL_EDGE_DISTANCE);
-static const RoutingPayload INVALID_RPAYLOAD = MAKE_ROUTING_PAYLOAD(MAXIMAL_EDGE_DURATION, MAXIMAL_EDGE_DISTANCE);
+static const EdgePayload INVALID_PAYLOAD =
+    MAKE_PAYLOAD(MAXIMAL_EDGE_DURATION, MAXIMAL_EDGE_DISTANCE);
+static const RoutingPayload INVALID_RPAYLOAD =
+    MAKE_ROUTING_PAYLOAD(MAXIMAL_EDGE_DURATION, MAXIMAL_EDGE_DISTANCE);
 
 #endif /* PAYLOAD_H */

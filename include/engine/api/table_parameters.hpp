@@ -42,16 +42,14 @@ namespace engine
 {
 namespace api
 {
-    
-enum TableOutputField {
-  DURATION,
-  DISTANCE
+
+enum TableOutputField
+{
+    DURATION,
+    DISTANCE
 };
 
-const std::string TableOutputFieldName[] = {
-    "durations",
-    "distances"
-};
+const std::string TableOutputFieldName[] = {"durations", "distances"};
 
 /**
  * Parameters specific to the OSRM Table service.
