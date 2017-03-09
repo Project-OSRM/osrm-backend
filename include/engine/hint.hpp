@@ -64,7 +64,7 @@ struct Hint
 };
 
 static_assert(sizeof(Hint) == sizeof(PhantomNode) + 4, "Hint is bigger than expected");
-constexpr std::size_t ENCODED_HINT_SIZE = (std::size_t) std::ceil(sizeof(Hint) / 3.) * 4;
+constexpr std::size_t ENCODED_HINT_SIZE = sizeof(EdgePayload) == 4 ? 104 : (sizeof(EdgePayload) == 8 ? 112 : 0); // (std::size_t) std::ceil(sizeof(Hint) / 3.) * 4;
 static_assert(ENCODED_HINT_SIZE / 4 * 3 >= sizeof(Hint),
               "ENCODED_HINT_SIZE does not match size of Hint");
 }
