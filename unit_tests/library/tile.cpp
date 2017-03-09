@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
         BOOST_CHECK_EQUAL(*iter++, 2);              // cost key
         found_penalties_indexes.push_back(*iter++); // skip value check, can be valud uint32
         BOOST_CHECK_EQUAL(*iter++, 3);              // weight key
-        found_weight_indexes.push_back(*iter++); // skip value check, can be valud uint32
+        found_weight_indexes.push_back(*iter++);    // skip value check, can be valud uint32
         BOOST_CHECK(iter == feature_iter_pair.end());
         // geometry
         feature_message.next();

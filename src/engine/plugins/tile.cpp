@@ -558,9 +558,10 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         const auto sum_node_weight = std::accumulate(approach_weight_vector.begin(),
                                                                      approach_weight_vector.end(),
                                                                      EdgeWeight{0});
-                        const auto sum_node_duration = std::accumulate(approach_duration_vector.begin(),
-                                                                      approach_duration_vector.end(),
-                                                                     EdgeWeight{0});
+                        const auto sum_node_duration =
+                            std::accumulate(approach_duration_vector.begin(),
+                                            approach_duration_vector.end(),
+                                            EdgeWeight{0});
 
                         // The edge.weight is the whole edge weight, which includes the turn
                         // cost.
@@ -619,8 +620,11 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         // Save everything we need to later add all the points to the tile.
                         // We need the coordinate of the intersection, the angle in, the turn
                         // angle and the turn cost.
-                        all_turn_data.emplace_back(
-                            coord_via, angle_in_index, turn_angle_index, turn_weight_index, turn_duration_index);
+                        all_turn_data.emplace_back(coord_via,
+                                                   angle_in_index,
+                                                   turn_angle_index,
+                                                   turn_weight_index,
+                                                   turn_duration_index);
                     }
                 }
             }
