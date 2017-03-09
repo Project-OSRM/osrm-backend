@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
         auto property_iter_pair = feature_message.get_packed_uint32();
         auto value_begin = property_iter_pair.begin();
         auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 10);
+        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 12);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
         BOOST_CHECK_LT(*iter++, 128);  // speed value
@@ -66,10 +66,12 @@ BOOST_AUTO_TEST_CASE(test_tile)
         iter++;
         BOOST_CHECK_EQUAL(*iter++, 2); // data source key
         *iter++;                       // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 3); // duration key
+        BOOST_CHECK_EQUAL(*iter++, 3); // weight key
+        BOOST_CHECK_GT(*iter++, 130);  // weight value
+        BOOST_CHECK_EQUAL(*iter++, 4); // duration key
         BOOST_CHECK_GT(*iter++, 130);  // duration value
         // name
-        BOOST_CHECK_EQUAL(*iter++, 4);
+        BOOST_CHECK_EQUAL(*iter++, 5);
         BOOST_CHECK_GT(*iter++, 130);
         BOOST_CHECK(iter == value_end);
         // geometry
@@ -138,7 +140,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
         }
     }
 
-    BOOST_CHECK_EQUAL(number_of_speed_keys, 5);
+    BOOST_CHECK_EQUAL(number_of_speed_keys, 6);
     BOOST_CHECK_GT(number_of_speed_values, 128); // speed value resolution
 
     tile_message.next();
@@ -399,7 +401,7 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
         auto property_iter_pair = feature_message.get_packed_uint32();
         auto value_begin = property_iter_pair.begin();
         auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 10);
+        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 12);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
         found_speed_indexes.push_back(*iter++);
@@ -408,10 +410,12 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
         found_component_indexes.push_back(*iter++);
         BOOST_CHECK_EQUAL(*iter++, 2); // data source key
         found_datasource_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 3); // duration key
+        BOOST_CHECK_EQUAL(*iter++, 3); // weight key
+        found_duration_indexes.push_back(*iter++);
+        BOOST_CHECK_EQUAL(*iter++, 4); // duration key
         found_duration_indexes.push_back(*iter++);
         // name
-        BOOST_CHECK_EQUAL(*iter++, 4);
+        BOOST_CHECK_EQUAL(*iter++, 5);
         found_name_indexes.push_back(*iter++);
         BOOST_CHECK(iter == value_end);
         // geometry

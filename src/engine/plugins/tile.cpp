@@ -421,6 +421,8 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
             for (const auto &edge_index : sorted_edge_indexes)
             {
                 const auto &edge = edges[edge_index];
+
+                // Weight values
                 const auto forward_weight_vector =
                     facade.GetUncompressedForwardWeights(edge.packed_geometry_id);
                 const auto reverse_weight_vector =
@@ -428,8 +430,20 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
                 const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
                                                                   edge.fwd_segment_position - 1];
-                use_line_value(reverse_weight);
                 use_line_value(forward_weight);
+                use_line_value(reverse_weight);
+
+                // Duration values
+                const auto forward_duration_vector =
+                    facade.GetUncompressedForwardDurations(edge.packed_geometry_id);
+                const auto reverse_duration_vector =
+                    facade.GetUncompressedReverseDurations(edge.packed_geometry_id);
+                const auto forward_duration = forward_duration_vector[edge.fwd_segment_position];
+                const auto reverse_duration =
+                    reverse_duration_vector[reverse_duration_vector.size() -
+                                            edge.fwd_segment_position - 1];
+                use_line_value(forward_duration);
+                use_line_value(reverse_duration);
             }
 
             // Begin the layer features block
@@ -450,6 +464,10 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                         facade.GetUncompressedForwardWeights(edge.packed_geometry_id);
                     const auto reverse_weight_vector =
                         facade.GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    const auto forward_duration_vector =
+                        facade.GetUncompressedForwardDurations(edge.packed_geometry_id);
+                    const auto reverse_duration_vector =
+                        facade.GetUncompressedReverseDurations(edge.packed_geometry_id);
                     const auto forward_datasource_vector =
                         facade.GetUncompressedForwardDatasources(edge.packed_geometry_id);
                     const auto reverse_datasource_vector =
@@ -458,6 +476,11 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                     const auto reverse_weight =
                         reverse_weight_vector[reverse_weight_vector.size() -
                                               edge.fwd_segment_position - 1];
+                    const auto forward_duration =
+                        forward_duration_vector[edge.fwd_segment_position];
+                    const auto reverse_duration =
+                        reverse_duration_vector[reverse_duration_vector.size() -
+                                                edge.fwd_segment_position - 1];
                     const auto forward_datasource =
                         forward_datasource_vector[edge.fwd_segment_position];
                     const auto reverse_datasource =
@@ -484,6 +507,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                                    &max_datasource_id,
                                                    &used_line_ints](const FixedLine &tile_line,
                                                                     const std::uint32_t speed_kmh,
+                                                                    const std::size_t weight,
                                                                     const std::size_t duration,
                                                                     const DatasourceID datasource,
                                                                     const std::size_t name_idx,
@@ -519,10 +543,13 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                                               (edge.component.is_tiny ? 0 : 1)); // is_small feature
                             field.add_element(2);                // "datasource" tag key offset
                             field.add_element(130 + datasource); // datasource value offset
-                            field.add_element(3);                // "duration" tag key offset
+                            field.add_element(3);                // "weight" tag key offset
+                            field.add_element(130 + max_datasource_id + 1 +
+                                              weight); // weight value offset
+                            field.add_element(4);      // "duration" tag key offset
                             field.add_element(130 + max_datasource_id + 1 +
                                               duration); // duration value offset
-                            field.add_element(4);        // "name" tag key offset
+                            field.add_element(5);        // "name" tag key offset
 
                             field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
                                               name_idx); // name value offset
@@ -537,14 +564,14 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                     };
 
                     // If this is a valid forward edge, go ahead and add it to the tile
-                    if (forward_weight != 0 && edge.forward_segment_id.enabled)
+                    if (forward_duration != 0 && edge.forward_segment_id.enabled)
                     {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
                         std::uint32_t speed_kmh =
-                            static_cast<std::uint32_t>(round(length / forward_weight * 10 * 3.6));
+                            static_cast<std::uint32_t>(round(length / forward_duration * 10 * 3.6));
 
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
@@ -552,6 +579,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                             encode_tile_line(tile_line,
                                              speed_kmh,
                                              line_int_offsets[forward_weight],
+                                             line_int_offsets[forward_duration],
                                              forward_datasource,
                                              name_offset,
                                              start_x,
@@ -561,14 +589,14 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
 
                     // Repeat the above for the coordinates reversed and using the `reverse`
                     // properties
-                    if (reverse_weight != 0 && edge.reverse_segment_id.enabled)
+                    if (reverse_duration != 0 && edge.reverse_segment_id.enabled)
                     {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
                         std::uint32_t speed_kmh =
-                            static_cast<std::uint32_t>(round(length / reverse_weight * 10 * 3.6));
+                            static_cast<std::uint32_t>(round(length / reverse_duration * 10 * 3.6));
 
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
@@ -576,6 +604,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                             encode_tile_line(tile_line,
                                              speed_kmh,
                                              line_int_offsets[reverse_weight],
+                                             line_int_offsets[reverse_duration],
                                              reverse_datasource,
                                              name_offset,
                                              start_x,
@@ -591,6 +620,7 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "speed");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "is_small");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "datasource");
+            line_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "duration");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "name");
 
@@ -663,9 +693,9 @@ void encodeVectorTile(const datafacade::ContiguousInternalMemoryDataFacadeBase &
                 [&](const routing_algorithms::TurnData &t) {
                     auto angle_idx = use_point_int_value(t.in_angle);
                     auto turn_idx = use_point_int_value(t.turn_angle);
-                    auto weight_idx =
-                        use_point_float_value(t.weight / 10.0); // Note conversion to float here
-                    return std::make_tuple(t.coordinate, angle_idx, turn_idx, weight_idx);
+                    auto duration_idx =
+                        use_point_float_value(t.duration / 10.0); // Note conversion to float here
+                    return std::make_tuple(t.coordinate, angle_idx, turn_idx, duration_idx);
                 });
 
             // Now write the points layer for turn penalty data:
