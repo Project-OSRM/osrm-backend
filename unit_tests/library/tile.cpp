@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
         auto property_iter_pair = feature_message.get_packed_uint32();
         auto value_begin = property_iter_pair.begin();
         auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 10);
+        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 12);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
         BOOST_CHECK_LT(*iter++, 128);  // speed value
@@ -65,10 +65,12 @@ BOOST_AUTO_TEST_CASE(test_tile)
         iter++;
         BOOST_CHECK_EQUAL(*iter++, 2); // data source key
         *iter++;                       // skip value check, can be valud uint32
-        BOOST_CHECK_EQUAL(*iter++, 3); // duration key
+        BOOST_CHECK_EQUAL(*iter++, 3); // weight key
+        BOOST_CHECK_GT(*iter++, 130);  // weight value
+        BOOST_CHECK_EQUAL(*iter++, 4); // duration key
         BOOST_CHECK_GT(*iter++, 130);  // duration value
         // name
-        BOOST_CHECK_EQUAL(*iter++, 4);
+        BOOST_CHECK_EQUAL(*iter++, 5);
         BOOST_CHECK_GT(*iter++, 130);
         BOOST_CHECK(iter == value_end);
         // geometry
@@ -137,7 +139,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
         }
     }
 
-    BOOST_CHECK_EQUAL(number_of_speed_keys, 5);
+    BOOST_CHECK_EQUAL(number_of_speed_keys, 6);
     BOOST_CHECK_GT(number_of_speed_values, 128); // speed value resolution
 
     tile_message.next();
@@ -156,13 +158,15 @@ BOOST_AUTO_TEST_CASE(test_tile)
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
         auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 6);
+        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 8);
         auto iter = feature_iter_pair.begin();
         BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
         *iter++;
         BOOST_CHECK_EQUAL(*iter++, 1); // turn_angle key
         *iter++;
         BOOST_CHECK_EQUAL(*iter++, 2); // cost key
+        *iter++;                       // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 3); // weight key
         *iter++;                       // skip value check, can be valud uint32
         BOOST_CHECK(iter == feature_iter_pair.end());
         // geometry
@@ -204,7 +208,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
         }
     }
 
-    BOOST_CHECK_EQUAL(number_of_turn_keys, 3);
+    BOOST_CHECK_EQUAL(number_of_turn_keys, 4);
     BOOST_CHECK(number_of_turns_found > 700);
 }
 
@@ -236,6 +240,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     std::vector<int> found_bearing_in_indexes;
     std::vector<int> found_turn_angles_indexes;
     std::vector<int> found_penalties_indexes;
+    std::vector<int> found_weight_indexes;
 
     const auto check_turn_feature = [&](protozero::pbf_reader feature_message) {
         feature_message.next(); // advance parser to first entry
@@ -250,7 +255,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
         BOOST_CHECK_EQUAL(feature_message.tag(), util::vector_tile::FEATURE_ATTRIBUTES_TAG);
         // properties
         auto feature_iter_pair = feature_message.get_packed_uint32();
-        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 6);
+        BOOST_CHECK_EQUAL(std::distance(feature_iter_pair.begin(), feature_iter_pair.end()), 8);
         auto iter = feature_iter_pair.begin();
         BOOST_CHECK_EQUAL(*iter++, 0); // bearing_in key
         found_bearing_in_indexes.push_back(*iter++);
@@ -258,6 +263,8 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
         found_turn_angles_indexes.push_back(*iter++);
         BOOST_CHECK_EQUAL(*iter++, 2);              // cost key
         found_penalties_indexes.push_back(*iter++); // skip value check, can be valud uint32
+        BOOST_CHECK_EQUAL(*iter++, 3);              // weight key
+        found_weight_indexes.push_back(*iter++); // skip value check, can be valud uint32
         BOOST_CHECK(iter == feature_iter_pair.end());
         // geometry
         feature_message.next();
@@ -333,6 +340,18 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
         0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
     BOOST_CHECK(actual_turn_penalties == expected_turn_penalties);
 
+    // Verify that we got the expected turn penalties
+    std::vector<float> actual_turn_weights;
+    for (const auto &i : found_weight_indexes)
+    {
+        BOOST_CHECK(float_vals.count(i) == 1);
+        actual_turn_weights.push_back(float_vals[i]);
+    }
+    std::sort(actual_turn_weights.begin(), actual_turn_weights.end());
+    const std::vector<float> expected_turn_weights = {
+        0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
+    BOOST_CHECK(actual_turn_weights == expected_turn_weights);
+
     // Verify the expected turn angles
     std::vector<std::int64_t> actual_turn_angles;
     for (const auto &i : found_turn_angles_indexes)
@@ -401,7 +420,7 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
         auto property_iter_pair = feature_message.get_packed_uint32();
         auto value_begin = property_iter_pair.begin();
         auto value_end = property_iter_pair.end();
-        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 10);
+        BOOST_CHECK_EQUAL(std::distance(value_begin, value_end), 12);
         auto iter = value_begin;
         BOOST_CHECK_EQUAL(*iter++, 0); // speed key
         found_speed_indexes.push_back(*iter++);
@@ -410,10 +429,12 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
         found_component_indexes.push_back(*iter++);
         BOOST_CHECK_EQUAL(*iter++, 2); // data source key
         found_datasource_indexes.push_back(*iter++);
-        BOOST_CHECK_EQUAL(*iter++, 3); // duration key
+        BOOST_CHECK_EQUAL(*iter++, 3); // weight key
+        found_duration_indexes.push_back(*iter++);
+        BOOST_CHECK_EQUAL(*iter++, 4); // duration key
         found_duration_indexes.push_back(*iter++);
         // name
-        BOOST_CHECK_EQUAL(*iter++, 4);
+        BOOST_CHECK_EQUAL(*iter++, 5);
         found_name_indexes.push_back(*iter++);
         BOOST_CHECK(iter == value_end);
         // geometry

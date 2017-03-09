@@ -1,4 +1,9 @@
 
+# 5.6.3
+  - Changes from 5.6.0
+    - Bugfixes
+      - #3790 Fix incorrect speed values in tile plugin
+
 # 5.6.2
   - Changes from 5.6.0
     - Bugfixes

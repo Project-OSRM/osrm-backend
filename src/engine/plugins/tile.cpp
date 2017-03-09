@@ -79,9 +79,10 @@ struct TurnData final
     TurnData(const util::Coordinate coordinate_,
              const std::size_t _in,
              const std::size_t _out,
-             const std::size_t _weight)
+             const std::size_t _weight,
+             const std::size_t _duration)
         : coordinate(std::move(coordinate_)), in_angle_offset(_in), turn_angle_offset(_out),
-          weight_offset(_weight)
+          weight_offset(_weight), duration_offset(_duration)
     {
     }
 
@@ -89,6 +90,7 @@ struct TurnData final
     const std::size_t in_angle_offset;
     const std::size_t turn_angle_offset;
     const std::size_t weight_offset;
+    const std::size_t duration_offset;
 };
 
 using FixedPoint = Point<std::int32_t>;
@@ -457,6 +459,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
         //  vw is the "exit"
         std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
         std::vector<EdgeWeight> approach_weight_vector;
+        std::vector<EdgeWeight> approach_duration_vector;
 
         // Make sure we traverse the startnodes in a consistent order
         // to ensure identical PBF encoding on all platforms.
@@ -539,15 +542,24 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                             approach_weight_vector = facade->GetUncompressedForwardWeights(
                                 edge_based_node_info[approachedge.edge_based_node_id]
                                     .packed_geometry_id);
+                            approach_duration_vector = facade->GetUncompressedForwardDurations(
+                                edge_based_node_info[approachedge.edge_based_node_id]
+                                    .packed_geometry_id);
                         }
                         else
                         {
                             approach_weight_vector = facade->GetUncompressedReverseWeights(
                                 edge_based_node_info[approachedge.edge_based_node_id]
                                     .packed_geometry_id);
+                            approach_duration_vector = facade->GetUncompressedReverseDurations(
+                                edge_based_node_info[approachedge.edge_based_node_id]
+                                    .packed_geometry_id);
                         }
                         const auto sum_node_weight = std::accumulate(approach_weight_vector.begin(),
                                                                      approach_weight_vector.end(),
+                                                                     EdgeWeight{0});
+                        const auto sum_node_duration = std::accumulate(approach_duration_vector.begin(),
+                                                                      approach_duration_vector.end(),
                                                                      EdgeWeight{0});
 
                         // The edge.weight is the whole edge weight, which includes the turn
@@ -557,7 +569,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         // intersections include stop signs, traffic signals and other
                         // penalties, but at this stage, we can't divide those out, so we just
                         // treat the whole lot as the "turn cost" that we'll stick on the map.
-                        const auto turn_cost = data.weight - sum_node_weight;
+                        const auto turn_weight = data.weight - sum_node_weight;
+                        const auto turn_duration = data.duration - sum_node_duration;
 
                         // Find the three nodes that make up the turn movement)
                         const auto node_from = startnode;
@@ -598,14 +611,16 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         // And, same for the actual turn cost value - it goes in the lookup
                         // table,
                         // not directly on the feature itself.
-                        const auto turn_cost_index = use_point_float_value(
-                            turn_cost / 10.0); // Note conversion to float here
+                        const auto turn_weight_index = use_point_float_value(
+                            turn_weight / 10.0); // Note conversion to float here
+                        const auto turn_duration_index = use_point_float_value(
+                            turn_duration / 10.0); // Note conversion to float here
 
                         // Save everything we need to later add all the points to the tile.
                         // We need the coordinate of the intersection, the angle in, the turn
                         // angle and the turn cost.
                         all_turn_data.emplace_back(
-                            coord_via, angle_in_index, turn_angle_index, turn_cost_index);
+                            coord_via, angle_in_index, turn_angle_index, turn_weight_index, turn_duration_index);
                     }
                 }
             }
@@ -672,6 +687,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
             for (const auto &edge_index : sorted_edge_indexes)
             {
                 const auto &edge = edges[edge_index];
+
+                // Weight values
                 const auto forward_weight_vector =
                     facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
                 const auto reverse_weight_vector =
@@ -679,8 +696,20 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                 const auto forward_weight = forward_weight_vector[edge.fwd_segment_position];
                 const auto reverse_weight = reverse_weight_vector[reverse_weight_vector.size() -
                                                                   edge.fwd_segment_position - 1];
-                use_line_value(reverse_weight);
                 use_line_value(forward_weight);
+                use_line_value(reverse_weight);
+
+                // Duration values
+                const auto forward_duration_vector =
+                    facade->GetUncompressedForwardDurations(edge.packed_geometry_id);
+                const auto reverse_duration_vector =
+                    facade->GetUncompressedReverseDurations(edge.packed_geometry_id);
+                const auto forward_duration = forward_duration_vector[edge.fwd_segment_position];
+                const auto reverse_duration =
+                    reverse_duration_vector[reverse_duration_vector.size() -
+                                            edge.fwd_segment_position - 1];
+                use_line_value(forward_duration);
+                use_line_value(reverse_duration);
             }
 
             // Begin the layer features block
@@ -701,6 +730,10 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         facade->GetUncompressedForwardWeights(edge.packed_geometry_id);
                     const auto reverse_weight_vector =
                         facade->GetUncompressedReverseWeights(edge.packed_geometry_id);
+                    const auto forward_duration_vector =
+                        facade->GetUncompressedForwardDurations(edge.packed_geometry_id);
+                    const auto reverse_duration_vector =
+                        facade->GetUncompressedReverseDurations(edge.packed_geometry_id);
                     const auto forward_datasource_vector =
                         facade->GetUncompressedForwardDatasources(edge.packed_geometry_id);
                     const auto reverse_datasource_vector =
@@ -709,6 +742,11 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                     const auto reverse_weight =
                         reverse_weight_vector[reverse_weight_vector.size() -
                                               edge.fwd_segment_position - 1];
+                    const auto forward_duration =
+                        forward_duration_vector[edge.fwd_segment_position];
+                    const auto reverse_duration =
+                        reverse_duration_vector[reverse_duration_vector.size() -
+                                                edge.fwd_segment_position - 1];
                     const auto forward_datasource =
                         forward_datasource_vector[edge.fwd_segment_position];
                     const auto reverse_datasource =
@@ -735,6 +773,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                                                    &max_datasource_id,
                                                    &used_line_ints](const FixedLine &tile_line,
                                                                     const std::uint32_t speed_kmh,
+                                                                    const std::size_t weight,
                                                                     const std::size_t duration,
                                                                     const DatasourceID datasource,
                                                                     const std::size_t name_idx,
@@ -770,10 +809,13 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                                               (edge.component.is_tiny ? 0 : 1)); // is_small feature
                             field.add_element(2);                // "datasource" tag key offset
                             field.add_element(130 + datasource); // datasource value offset
-                            field.add_element(3);                // "duration" tag key offset
+                            field.add_element(3);                // "weight" tag key offset
+                            field.add_element(130 + max_datasource_id + 1 +
+                                              weight); // weight value offset
+                            field.add_element(4);      // "duration" tag key offset
                             field.add_element(130 + max_datasource_id + 1 +
                                               duration); // duration value offset
-                            field.add_element(4);        // "name" tag key offset
+                            field.add_element(5);        // "name" tag key offset
 
                             field.add_element(130 + max_datasource_id + 1 + used_line_ints.size() +
                                               name_idx); // name value offset
@@ -788,14 +830,14 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                     };
 
                     // If this is a valid forward edge, go ahead and add it to the tile
-                    if (forward_weight != 0 && edge.forward_segment_id.enabled)
+                    if (forward_duration != 0 && edge.forward_segment_id.enabled)
                     {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
                         std::uint32_t speed_kmh =
-                            static_cast<std::uint32_t>(round(length / forward_weight * 10 * 3.6));
+                            static_cast<std::uint32_t>(round(length / forward_duration * 10 * 3.6));
 
                         auto tile_line = coordinatesToTileLine(a, b, tile_bbox);
                         if (!tile_line.empty())
@@ -803,6 +845,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                             encode_tile_line(tile_line,
                                              speed_kmh,
                                              line_int_offsets[forward_weight],
+                                             line_int_offsets[forward_duration],
                                              forward_datasource,
                                              name_offset,
                                              start_x,
@@ -812,14 +855,14 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
 
                     // Repeat the above for the coordinates reversed and using the `reverse`
                     // properties
-                    if (reverse_weight != 0 && edge.reverse_segment_id.enabled)
+                    if (reverse_duration != 0 && edge.reverse_segment_id.enabled)
                     {
                         std::int32_t start_x = 0;
                         std::int32_t start_y = 0;
 
                         // Calculate the speed for this line
                         std::uint32_t speed_kmh =
-                            static_cast<std::uint32_t>(round(length / reverse_weight * 10 * 3.6));
+                            static_cast<std::uint32_t>(round(length / reverse_duration * 10 * 3.6));
 
                         auto tile_line = coordinatesToTileLine(b, a, tile_bbox);
                         if (!tile_line.empty())
@@ -827,6 +870,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                             encode_tile_line(tile_line,
                                              speed_kmh,
                                              line_int_offsets[reverse_weight],
+                                             line_int_offsets[reverse_duration],
                                              reverse_datasource,
                                              name_offset,
                                              start_x,
@@ -842,6 +886,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "speed");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "is_small");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "datasource");
+            line_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "duration");
             line_layer_writer.add_string(util::vector_tile::KEY_TAG, "name");
 
@@ -938,6 +983,8 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
                         field.add_element(1); // "turn_angle" tag key offset
                         field.add_element(point_turn_data.turn_angle_offset);
                         field.add_element(2); // "cost" tag key offset
+                        field.add_element(used_point_ints.size() + point_turn_data.duration_offset);
+                        field.add_element(3); // "cost" tag key offset
                         field.add_element(used_point_ints.size() + point_turn_data.weight_offset);
                     }
                     {
@@ -965,6 +1012,7 @@ Status TilePlugin::HandleRequest(const std::shared_ptr<const datafacade::BaseDat
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "bearing_in");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "turn_angle");
             point_layer_writer.add_string(util::vector_tile::KEY_TAG, "cost");
+            point_layer_writer.add_string(util::vector_tile::KEY_TAG, "weight");
 
             // Now, save the lists of integers and floats that our features refer to.
             for (const auto &value : used_point_ints)
