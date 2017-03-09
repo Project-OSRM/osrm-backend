@@ -61,7 +61,7 @@ unsigned CompressedEdgeContainer::GetZippedPositionForForwardID(const EdgeID edg
 {
     auto map_iterator = m_forward_edge_id_to_zipped_index_map.find(edge_id);
     BOOST_ASSERT(map_iterator != m_forward_edge_id_to_zipped_index_map.end());
-    BOOST_ASSERT(map_iterator->second < segment_data.nodes.size());
+    BOOST_ASSERT(map_iterator->second < segment_data->nodes.size());
     return map_iterator->second;
 }
 
@@ -69,7 +69,7 @@ unsigned CompressedEdgeContainer::GetZippedPositionForReverseID(const EdgeID edg
 {
     auto map_iterator = m_reverse_edge_id_to_zipped_index_map.find(edge_id);
     BOOST_ASSERT(map_iterator != m_reverse_edge_id_to_zipped_index_map.end());
-    BOOST_ASSERT(map_iterator->second < segment_data.nodes.size());
+    BOOST_ASSERT(map_iterator->second < segment_data->nodes.size());
     return map_iterator->second;
 }
 
@@ -214,12 +214,13 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
 
 void CompressedEdgeContainer::InitializeBothwayVector()
 {
-    segment_data.index.reserve(m_compressed_oneway_geometries.size());
-    segment_data.nodes.reserve(m_compressed_oneway_geometries.size());
-    segment_data.fwd_weights.reserve(m_compressed_oneway_geometries.size());
-    segment_data.rev_weights.reserve(m_compressed_oneway_geometries.size());
-    segment_data.fwd_durations.reserve(m_compressed_oneway_geometries.size());
-    segment_data.rev_durations.reserve(m_compressed_oneway_geometries.size());
+    segment_data = std::make_unique<SegmentDataContainer>();
+    segment_data->index.reserve(m_compressed_oneway_geometries.size());
+    segment_data->nodes.reserve(m_compressed_oneway_geometries.size());
+    segment_data->fwd_weights.reserve(m_compressed_oneway_geometries.size());
+    segment_data->rev_weights.reserve(m_compressed_oneway_geometries.size());
+    segment_data->fwd_durations.reserve(m_compressed_oneway_geometries.size());
+    segment_data->rev_durations.reserve(m_compressed_oneway_geometries.size());
 }
 
 unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id)
@@ -229,19 +230,19 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
 
     BOOST_ASSERT(forward_bucket.size() == reverse_bucket.size());
 
-    const unsigned zipped_geometry_id = segment_data.index.size();
+    const unsigned zipped_geometry_id = segment_data->index.size();
     m_forward_edge_id_to_zipped_index_map[f_edge_id] = zipped_geometry_id;
     m_reverse_edge_id_to_zipped_index_map[r_edge_id] = zipped_geometry_id;
 
-    segment_data.index.emplace_back(segment_data.nodes.size());
+    segment_data->index.emplace_back(segment_data->nodes.size());
 
     const auto &first_node = reverse_bucket.back();
 
-    segment_data.nodes.emplace_back(first_node.node_id);
-    segment_data.fwd_weights.emplace_back(INVALID_EDGE_WEIGHT);
-    segment_data.rev_weights.emplace_back(first_node.weight);
-    segment_data.fwd_durations.emplace_back(INVALID_EDGE_WEIGHT);
-    segment_data.rev_durations.emplace_back(first_node.duration);
+    segment_data->nodes.emplace_back(first_node.node_id);
+    segment_data->fwd_weights.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->rev_weights.emplace_back(first_node.weight);
+    segment_data->fwd_durations.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->rev_durations.emplace_back(first_node.duration);
 
     for (std::size_t i = 0; i < forward_bucket.size() - 1; ++i)
     {
@@ -250,20 +251,20 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
 
         BOOST_ASSERT(fwd_node.node_id == rev_node.node_id);
 
-        segment_data.nodes.emplace_back(fwd_node.node_id);
-        segment_data.fwd_weights.emplace_back(fwd_node.weight);
-        segment_data.rev_weights.emplace_back(rev_node.weight);
-        segment_data.fwd_durations.emplace_back(fwd_node.duration);
-        segment_data.rev_durations.emplace_back(rev_node.duration);
+        segment_data->nodes.emplace_back(fwd_node.node_id);
+        segment_data->fwd_weights.emplace_back(fwd_node.weight);
+        segment_data->rev_weights.emplace_back(rev_node.weight);
+        segment_data->fwd_durations.emplace_back(fwd_node.duration);
+        segment_data->rev_durations.emplace_back(rev_node.duration);
     }
 
     const auto &last_node = forward_bucket.back();
 
-    segment_data.nodes.emplace_back(last_node.node_id);
-    segment_data.fwd_weights.emplace_back(last_node.weight);
-    segment_data.rev_weights.emplace_back(INVALID_EDGE_WEIGHT);
-    segment_data.fwd_durations.emplace_back(last_node.duration);
-    segment_data.rev_durations.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->nodes.emplace_back(last_node.node_id);
+    segment_data->fwd_weights.emplace_back(last_node.weight);
+    segment_data->rev_weights.emplace_back(INVALID_EDGE_WEIGHT);
+    segment_data->fwd_durations.emplace_back(last_node.duration);
+    segment_data->rev_durations.emplace_back(INVALID_EDGE_WEIGHT);
 
     return zipped_geometry_id;
 }
@@ -327,7 +328,7 @@ NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
     return bucket[bucket.size() - 2].node_id;
 }
 
-SegmentDataContainer CompressedEdgeContainer::ToSegmentData()
+std::unique_ptr<SegmentDataContainer> CompressedEdgeContainer::ToSegmentData()
 {
     return std::move(segment_data);
 }

@@ -60,7 +60,7 @@ class CompressedEdgeContainer
     NodeID GetLastEdgeSourceID(const EdgeID edge_id) const;
 
     // Invalidates the internal storage
-    SegmentDataContainer ToSegmentData();
+    std::unique_ptr<SegmentDataContainer> ToSegmentData();
 
   private:
     int free_list_maximum = 0;
@@ -71,7 +71,7 @@ class CompressedEdgeContainer
     std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
     std::unordered_map<EdgeID, unsigned> m_forward_edge_id_to_zipped_index_map;
     std::unordered_map<EdgeID, unsigned> m_reverse_edge_id_to_zipped_index_map;
-    SegmentDataContainer segment_data;
+    std::unique_ptr<SegmentDataContainer> segment_data;
 };
 }
 }

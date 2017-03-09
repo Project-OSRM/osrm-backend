@@ -14,7 +14,7 @@ namespace updater
 class Updater
 {
 public:
-    Updater(const UpdaterConfig &config) :config(config) {}
+    Updater(UpdaterConfig config_) :config(std::move(config_)) {}
 
     EdgeID LoadAndUpdateEdgeExpandedGraph(
         std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
