@@ -193,7 +193,7 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>
                     // penalties, but at this stage, we can't divide those out, so we just
                     // treat the whole lot as the "turn cost" that we'll stick on the map.
                     const auto turn_weight = data.weight - sum_node_weight;
-                    const auto turn_duration = data.duration - sum_node_duration;
+                    const auto turn_duration = data.payload.duration - sum_node_duration;
 
                     // Find the three nodes that make up the turn movement)
                     const auto node_from = startnode;
