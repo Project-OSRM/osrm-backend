@@ -5,6 +5,7 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/node_based_edge.hpp"
+#include "extractor/io.hpp"
 
 #include "storage/io.hpp"
 #include "util/exception.hpp"
@@ -268,12 +269,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     std::vector<uint8_t> geometry_datasource;
 
     std::vector<extractor::QueryNode> internal_to_external_node_map;
-    std::vector<unsigned> geometry_indices;
-    std::vector<NodeID> geometry_node_list;
-    std::vector<EdgeWeight> geometry_fwd_weight_list;
-    std::vector<EdgeWeight> geometry_rev_weight_list;
-    std::vector<EdgeWeight> geometry_fwd_duration_list;
-    std::vector<EdgeWeight> geometry_rev_duration_list;
+    extractor::SegmentDataContainer segment_data;
 
     const auto maybe_load_internal_to_external_node_map = [&] {
         if (!update_edge_weights)
@@ -289,33 +285,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         if (!update_edge_weights)
             return;
 
-        storage::io::FileReader geometry_file(config.geometry_path,
-                                              storage::io::FileReader::HasNoFingerprint);
-        const auto number_of_indices = geometry_file.ReadElementCount32();
-        geometry_indices.resize(number_of_indices);
-        geometry_file.ReadInto(geometry_indices.data(), number_of_indices);
-
-        const auto number_of_compressed_geometries = geometry_file.ReadElementCount32();
-
-        BOOST_ASSERT(geometry_indices.back() == number_of_compressed_geometries);
-        geometry_node_list.resize(number_of_compressed_geometries);
-        geometry_fwd_weight_list.resize(number_of_compressed_geometries);
-        geometry_rev_weight_list.resize(number_of_compressed_geometries);
-        geometry_fwd_duration_list.resize(number_of_compressed_geometries);
-        geometry_rev_duration_list.resize(number_of_compressed_geometries);
-
-        if (number_of_compressed_geometries > 0)
-        {
-            geometry_file.ReadInto(geometry_node_list.data(), number_of_compressed_geometries);
-            geometry_file.ReadInto(geometry_fwd_weight_list.data(),
-                                   number_of_compressed_geometries);
-            geometry_file.ReadInto(geometry_rev_weight_list.data(),
-                                   number_of_compressed_geometries);
-            geometry_file.ReadInto(geometry_fwd_duration_list.data(),
-                                   number_of_compressed_geometries);
-            geometry_file.ReadInto(geometry_rev_duration_list.data(),
-                                   number_of_compressed_geometries);
-        }
+        extractor::io::read(config.geometry_path, segment_data);
     };
 
     // Folds all our actions into independently concurrently executing lambdas
@@ -332,7 +302,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         // CSV file that supplied the value that gets used for that segment, then
         // we write out this list so that it can be returned by the debugging
         // vector tiles later on.
-        geometry_datasource.resize(geometry_fwd_weight_list.size(), 0);
+        geometry_datasource.resize(segment_data.GetNumberOfSegments(), 0);
 
         // Now, we iterate over all the segments stored in the StaticRTree, updating
         // the packed geometry weights in the `.geometries` file (note: we do not
@@ -363,14 +333,20 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             {
                 const auto &leaf_object = current_node.objects[i];
 
-                const auto forward_begin = geometry_indices.at(leaf_object.packed_geometry_id);
-                const auto u_index = forward_begin + leaf_object.fwd_segment_position;
-                const auto v_index = forward_begin + leaf_object.fwd_segment_position + 1;
+                const auto geometry_id = leaf_object.packed_geometry_id;
+                auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
+
+                const auto segment_offset = leaf_object.fwd_segment_position;
+                const auto u_index = segment_offset;
+                const auto v_index = segment_offset + 1;
+
+                BOOST_ASSERT(u_index < nodes_range.size());
+                BOOST_ASSERT(v_index < nodes_range.size());
 
                 const extractor::QueryNode &u =
-                    internal_to_external_node_map[geometry_node_list[u_index]];
+                    internal_to_external_node_map[nodes_range[u_index]];
                 const extractor::QueryNode &v =
-                    internal_to_external_node_map[geometry_node_list[v_index]];
+                    internal_to_external_node_map[nodes_range[v_index]];
 
                 const double segment_length = util::coordinate_calculation::greatCircleDistance(
                     util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat});
@@ -383,15 +359,15 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                  weight_multiplier,
                                  *value,
                                  segment_length,
-                                 geometry_fwd_duration_list[u_index],
+                                 segment_data.ForwardWeight(geometry_id, segment_offset),
                                  u.node_id,
                                  v.node_id,
                                  new_segment_weight,
                                  new_segment_duration);
 
-                    geometry_fwd_weight_list[v_index] = new_segment_weight;
-                    geometry_fwd_duration_list[v_index] = new_segment_duration;
-                    geometry_datasource[v_index] = value->source;
+                    segment_data.ForwardWeight(geometry_id, segment_offset) = new_segment_weight;
+                    segment_data.ForwardDuration(geometry_id, segment_offset) = new_segment_duration;
+                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset)+1] = value->source;
                     fwd_source = value->source;
                 }
 
@@ -402,15 +378,15 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                  weight_multiplier,
                                  *value,
                                  segment_length,
-                                 geometry_rev_duration_list[u_index],
+                                 segment_data.ReverseWeight(geometry_id, segment_offset),
                                  v.node_id,
                                  u.node_id,
                                  new_segment_weight,
                                  new_segment_duration);
 
-                    geometry_rev_weight_list[u_index] = new_segment_weight;
-                    geometry_rev_duration_list[u_index] = new_segment_duration;
-                    geometry_datasource[u_index] = value->source;
+                    segment_data.ReverseWeight(geometry_id, segment_offset) = new_segment_weight;
+                    segment_data.ReverseDuration(geometry_id, segment_offset) = new_segment_duration;
+                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset)] = value->source;
                     rev_source = value->source;
                 }
 
@@ -451,29 +427,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             return;
 
         // Now save out the updated compressed geometries
-        std::ofstream geometry_stream(config.geometry_path, std::ios::binary);
-        if (!geometry_stream)
-        {
-            const std::string message{"Failed to open " + config.geometry_path + " for writing"};
-            throw util::exception(message + SOURCE_REF);
-        }
-        const unsigned number_of_indices = geometry_indices.size();
-        const unsigned number_of_compressed_geometries = geometry_node_list.size();
-        geometry_stream.write(reinterpret_cast<const char *>(&number_of_indices), sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_indices[0])),
-                              number_of_indices * sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<const char *>(&number_of_compressed_geometries),
-                              sizeof(unsigned));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_node_list[0])),
-                              number_of_compressed_geometries * sizeof(NodeID));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_fwd_weight_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_rev_weight_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_fwd_duration_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
-        geometry_stream.write(reinterpret_cast<char *>(&(geometry_rev_duration_list[0])),
-                              number_of_compressed_geometries * sizeof(EdgeWeight));
+        extractor::io::write(config.geometry_path, segment_data);
     };
 
     const auto save_datasource_indexes = [&] {

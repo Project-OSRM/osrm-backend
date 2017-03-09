@@ -42,7 +42,9 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     friend CompressedEdgeContainer;
 
   public:
-    using SegmentID = std::uint32_t;
+    // FIXME We should change the indexing to Edge-Based-Node id
+    using DirectionalGeometryID = std::uint32_t;
+    using SegmentOffset = std::uint32_t;
 
     SegmentDataContainerImpl() = default;
 
@@ -58,49 +60,78 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     {
     }
 
-    auto GetForwardGeometry(const SegmentID id) const
+    // TODO these random access functions can be removed after we implemented #3737
+    auto& ForwardDuration(const DirectionalGeometryID id, const SegmentOffset offset)
     {
-        const auto begin = nodes.begin() + index.at(id);
-        const auto end = nodes.begin() + index.at(id + 1);
+        return fwd_durations[index[id] + 1 + offset];
+    }
+    auto& ReverseDuration(const DirectionalGeometryID id, const SegmentOffset offset)
+    {
+        return rev_durations[index[id] + offset];
+    }
+    auto& ForwardWeight(const DirectionalGeometryID id, const SegmentOffset offset)
+    {
+        return fwd_weights[index[id] + 1 + offset];
+    }
+    auto& ReverseWeight(const DirectionalGeometryID id, const SegmentOffset offset)
+    {
+        return rev_weights[index[id] + offset];
+    }
+    // TODO we only need this for the datasource file since it breaks this
+    // abstraction, but uses this index
+    auto GetOffset(const DirectionalGeometryID id, const SegmentOffset offset) const
+    {
+        return index[id] + offset;
+    }
+
+    auto GetForwardGeometry(const DirectionalGeometryID id) const
+    {
+        const auto begin = nodes.cbegin() + index.at(id);
+        const auto end = nodes.cbegin() + index.at(id + 1);
 
         return boost::make_iterator_range(begin, end);
     }
 
-    auto GetReverseGeometry(const SegmentID id) const
+    auto GetReverseGeometry(const DirectionalGeometryID id) const
     {
         return boost::adaptors::reverse(GetForwardGeometry(id));
     }
 
-    auto GetForwardDurations(const SegmentID id) const
+    auto GetForwardDurations(const DirectionalGeometryID id) const
     {
-        const auto begin = fwd_durations.begin() + index.at(id) + 1;
-        const auto end = fwd_durations.begin() + index.at(id + 1);
+        const auto begin = fwd_durations.cbegin() + index.at(id) + 1;
+        const auto end = fwd_durations.cbegin() + index.at(id + 1);
 
         return boost::make_iterator_range(begin, end);
     }
 
-    auto GetReverseDurations(const SegmentID id) const
+    auto GetReverseDurations(const DirectionalGeometryID id) const
     {
-        const auto begin = rev_durations.begin() + index.at(id);
-        const auto end = rev_durations.begin() + index.at(id + 1) - 1;
+        const auto begin = rev_durations.cbegin() + index.at(id);
+        const auto end = rev_durations.cbegin() + index.at(id + 1) - 1;
 
         return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
 
-    auto GetForwardWeights(const SegmentID id) const
+    auto GetForwardWeights(const DirectionalGeometryID id) const
     {
-        const auto begin = fwd_weights.begin() + index.at(id) + 1;
-        const auto end = fwd_weights.begin() + index.at(id + 1);
+        const auto begin = fwd_weights.cbegin() + index.at(id) + 1;
+        const auto end = fwd_weights.cbegin() + index.at(id + 1);
 
         return boost::make_iterator_range(begin, end);
     }
 
-    auto GetReverseWeights(const SegmentID id) const
+    auto GetReverseWeights(const DirectionalGeometryID id) const
     {
-        const auto begin = rev_weights.begin() + index.at(id);
-        const auto end = rev_weights.begin() + index.at(id + 1) - 1;
+        const auto begin = rev_weights.cbegin() + index.at(id);
+        const auto end = rev_weights.cbegin() + index.at(id + 1) - 1;
 
         return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+    }
+
+    auto GetNumberOfSegments() const
+    {
+        return fwd_weights.size();
     }
 
     friend void io::read<UseShareMemory>(const boost::filesystem::path &path,

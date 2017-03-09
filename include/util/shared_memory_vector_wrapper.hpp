@@ -34,6 +34,7 @@ class ShMemIterator
     typedef typename base_t::reference reference;
     typedef std::random_access_iterator_tag iterator_category;
 
+    explicit ShMemIterator() : m_value(nullptr) {}
     explicit ShMemIterator(DataT *x) : m_value(x) {}
 
   private:
@@ -60,6 +61,7 @@ template <typename DataT> class SharedMemoryWrapper
   public:
     using value_type = DataT;
     using iterator = ShMemIterator<DataT>;
+    using const_iterator = ShMemIterator<const DataT>;
     using reverse_iterator = boost::reverse_iterator<iterator>;
 
     SharedMemoryWrapper() : m_ptr(nullptr), m_size(0) {}
@@ -85,6 +87,10 @@ template <typename DataT> class SharedMemoryWrapper
     auto begin() const { return iterator(m_ptr); }
 
     auto end() const { return iterator(m_ptr + m_size); }
+
+    auto cbegin() const { return const_iterator(m_ptr); }
+
+    auto cend() const { return const_iterator(m_ptr + m_size); }
 
     auto rbegin() const { return reverse_iterator(iterator(m_ptr + m_size)); }
 
