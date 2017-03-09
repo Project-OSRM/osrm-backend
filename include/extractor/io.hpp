@@ -12,8 +12,7 @@ namespace extractor
 namespace io
 {
 
-template <>
-void read(const boost::filesystem::path &path, SegmentDataContainer &segment_data)
+template <> void read(const boost::filesystem::path &path, SegmentDataContainer &segment_data)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -36,7 +35,8 @@ void read(const boost::filesystem::path &path, SegmentDataContainer &segment_dat
     reader.ReadInto(segment_data.rev_durations.data(), segment_data.rev_durations.size());
 }
 
-template <> void write(const boost::filesystem::path &path, const SegmentDataContainer &segment_data)
+template <>
+void write(const boost::filesystem::path &path, const SegmentDataContainer &segment_data)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -54,7 +54,6 @@ template <> void write(const boost::filesystem::path &path, const SegmentDataCon
     writer.WriteFrom(segment_data.fwd_durations.data(), segment_data.fwd_durations.size());
     writer.WriteFrom(segment_data.rev_durations.data(), segment_data.rev_durations.size());
 }
-
 }
 }
 }

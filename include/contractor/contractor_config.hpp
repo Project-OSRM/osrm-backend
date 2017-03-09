@@ -74,7 +74,6 @@ struct ContractorConfig
     //(e.g. 0.8 contracts 80 percent of the hierarchy, leaving a core of 20%)
     double core_factor;
 };
-
 }
 }
 

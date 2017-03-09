@@ -8,10 +8,10 @@
 #include "engine/algorithm.hpp"
 #include "engine/geospatial_query.hpp"
 
-#include "extractor/segment_data_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/segment_data_container.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/multi_level_partition.hpp"
@@ -574,41 +574,41 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
 
         auto range = segment_data.GetForwardGeometry(id);
-        return std::vector<NodeID> {range.begin(), range.end()};
+        return std::vector<NodeID>{range.begin(), range.end()};
     }
 
     virtual std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID id) const override final
     {
         auto range = segment_data.GetReverseGeometry(id);
-        return std::vector<NodeID> {range.begin(), range.end()};
+        return std::vector<NodeID>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedForwardDurations(const EdgeID id) const override final
     {
         auto range = segment_data.GetForwardDurations(id);
-        return std::vector<EdgeWeight> {range.begin(), range.end()};
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedReverseDurations(const EdgeID id) const override final
     {
         auto range = segment_data.GetReverseDurations(id);
-        return std::vector<EdgeWeight> {range.begin(), range.end()};
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedForwardWeights(const EdgeID id) const override final
     {
         auto range = segment_data.GetForwardWeights(id);
-        return std::vector<EdgeWeight> {range.begin(), range.end()};
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedReverseWeights(const EdgeID id) const override final
     {
         auto range = segment_data.GetReverseWeights(id);
-        return std::vector<EdgeWeight> {range.begin(), range.end()};
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual GeometryID GetGeometryIndexForEdgeID(const EdgeID id) const override final

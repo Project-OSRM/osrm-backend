@@ -58,7 +58,8 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
             ->default_value(false),
         "Use .level file to retain the contaction level for each node from the last run.")(
         "edge-weight-updates-over-factor",
-        boost::program_options::value<double>(&contractor_config.updater_config.log_edge_updates_factor)
+        boost::program_options::value<double>(
+            &contractor_config.updater_config.log_edge_updates_factor)
             ->default_value(0.0),
         "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge "
         "weights updated by more than this factor");
