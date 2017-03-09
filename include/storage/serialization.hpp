@@ -70,16 +70,6 @@ inline void readHSGR(io::FileReader &input_file,
     input_file.ReadInto(edge_buffer, number_of_edges);
 }
 
-// Loads datasource_indexes from .datasource_indexes into memory
-// Needs to be called after readElementCount() to get the correct offset in the stream
-inline void readDatasourceIndexes(io::FileReader &datasource_indexes_file,
-                                  uint8_t *datasource_buffer,
-                                  const std::uint64_t number_of_datasource_indexes)
-{
-    BOOST_ASSERT(datasource_buffer);
-    datasource_indexes_file.ReadInto(datasource_buffer, number_of_datasource_indexes);
-}
-
 // Loads edge data from .edge files into memory which includes its
 // geometry, name ID, turn instruction, lane data ID, travel mode, entry class ID
 // Needs to be called after readElementCount() to get the correct offset in the stream
@@ -133,29 +123,6 @@ void readNodes(io::FileReader &nodes_file,
         osmnodeid_list.push_back(current_node.node_id);
         BOOST_ASSERT(coordinate_list[i].IsValid());
     }
-}
-
-// Reads datasource names out of .datasource_names files and metadata such as
-// the length and offset of each name
-struct DatasourceNamesData
-{
-    std::vector<char> names;
-    std::vector<std::size_t> offsets;
-    std::vector<std::size_t> lengths;
-};
-inline DatasourceNamesData readDatasourceNames(io::FileReader &datasource_names_file)
-{
-    DatasourceNamesData datasource_names_data;
-    std::vector<std::string> lines = datasource_names_file.ReadLines();
-    for (const auto &name : lines)
-    {
-        datasource_names_data.offsets.push_back(datasource_names_data.names.size());
-        datasource_names_data.lengths.push_back(name.size());
-        std::copy(name.c_str(),
-                  name.c_str() + name.size(),
-                  std::back_inserter(datasource_names_data.names));
-    }
-    return datasource_names_data;
 }
 }
 }

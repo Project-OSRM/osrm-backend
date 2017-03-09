@@ -262,10 +262,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
     auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
 
-    // If we update the edge weights, this file will hold the datasource information for each
-    // segment; the other files will also be conditionally filled concurrently if we make an update
-    std::vector<uint8_t> geometry_datasource;
-
     std::vector<extractor::QueryNode> internal_to_external_node_map;
     extractor::SegmentDataContainer segment_data;
 
@@ -293,14 +289,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     {
         // Here, we have to update the compressed geometry weights
         // First, we need the external-to-internal node lookup table
-
-        // This is a list of the "data source id" for every segment in the compressed
-        // geometry container.  We assume that everything so far has come from the
-        // profile (data source 0).  Here, we replace the 0's with the index of the
-        // CSV file that supplied the value that gets used for that segment, then
-        // we write out this list so that it can be returned by the debugging
-        // vector tiles later on.
-        geometry_datasource.resize(segment_data.GetNumberOfSegments(), 0);
 
         // Now, we iterate over all the segments stored in the StaticRTree, updating
         // the packed geometry weights in the `.geometries` file (note: we do not
@@ -364,8 +352,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                     segment_data.ForwardWeight(geometry_id, segment_offset) = new_segment_weight;
                     segment_data.ForwardDuration(geometry_id, segment_offset) =
                         new_segment_duration;
-                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset) + 1] =
-                        value->source;
+                    segment_data.ForwardDatasource(geometry_id, segment_offset) = value->source;
                     fwd_source = value->source;
                 }
 
@@ -385,8 +372,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                     segment_data.ReverseWeight(geometry_id, segment_offset) = new_segment_weight;
                     segment_data.ReverseDuration(geometry_id, segment_offset) =
                         new_segment_duration;
-                    geometry_datasource[segment_data.GetOffset(geometry_id, segment_offset)] =
-                        value->source;
+                    segment_data.ReverseDatasource(geometry_id, segment_offset) = value->source;
                     rev_source = value->source;
                 }
 
@@ -430,44 +416,23 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         extractor::io::write(config.geometry_path, segment_data);
     };
 
-    const auto save_datasource_indexes = [&] {
-        std::ofstream datasource_stream(config.datasource_indexes_path, std::ios::binary);
-        if (!datasource_stream)
-        {
-            const std::string message{"Failed to open " + config.datasource_indexes_path +
-                                      " for writing"};
-            throw util::exception(message + SOURCE_REF);
-        }
-        std::uint64_t number_of_datasource_entries = geometry_datasource.size();
-        datasource_stream.write(reinterpret_cast<const char *>(&number_of_datasource_entries),
-                                sizeof(number_of_datasource_entries));
-        if (number_of_datasource_entries > 0)
-        {
-            datasource_stream.write(reinterpret_cast<char *>(&(geometry_datasource[0])),
-                                    number_of_datasource_entries * sizeof(uint8_t));
-        }
-    };
-
     const auto save_datastore_names = [&] {
-        std::ofstream datasource_stream(config.datasource_names_path, std::ios::binary);
-        if (!datasource_stream)
-        {
-            const std::string message{"Failed to open " + config.datasource_names_path +
-                                      " for writing"};
-            throw util::exception(message + SOURCE_REF);
-        }
-        datasource_stream << "lua profile" << std::endl;
+        extractor::Datasources sources;
+        DatasourceID source = 0;
+        sources.SetSourceName(source++, "lua profile");
 
         // Only write the filename, without path or extension.
         // This prevents information leakage, and keeps names short
         // for rendering in the debug tiles.
         for (auto const &name : config.segment_speed_lookup_paths)
         {
-            datasource_stream << boost::filesystem::path(name).stem().string() << std::endl;
+            sources.SetSourceName(source++, boost::filesystem::path(name).stem().string());
         }
+
+        extractor::io::write(config.datasource_names_path, sources);
     };
 
-    tbb::parallel_invoke(maybe_save_geometries, save_datasource_indexes, save_datastore_names);
+    tbb::parallel_invoke(maybe_save_geometries, save_datastore_names);
 
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;

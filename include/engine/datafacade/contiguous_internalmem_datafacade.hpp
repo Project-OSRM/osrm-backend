@@ -8,6 +8,7 @@
 #include "engine/algorithm.hpp"
 #include "engine/geospatial_query.hpp"
 
+#include "extractor/datasources.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/profile_properties.hpp"
@@ -205,6 +206,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::string m_timestamp;
     extractor::ProfileProperties *m_profile_properties;
+    extractor::Datasources *m_datasources;
 
     unsigned m_check_sum;
     util::ShM<util::Coordinate, true>::vector m_coordinate_list;
@@ -219,7 +221,6 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::NameTable m_names_table;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
     util::ShM<bool, true>::vector m_is_core_node;
-    util::ShM<DatasourceID, true>::vector m_datasource_list;
     util::ShM<std::uint32_t, true>::vector m_lane_description_offsets;
     util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector m_lane_description_masks;
     util::ShM<TurnPenalty, true>::vector m_turn_weight_penalties;
@@ -467,39 +468,21 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             geometries_rev_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
 
+        auto datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
+            memory_block, storage::DataLayout::DATASOURCES_LIST);
+        util::ShM<DatasourceID, true>::vector datasources_list(
+            datasources_list_ptr, data_layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
+
         segment_data = extractor::SegmentDataView{std::move(geometry_begin_indices),
                                                   std::move(geometry_node_list),
                                                   std::move(geometry_fwd_weight_list),
                                                   std::move(geometry_rev_weight_list),
                                                   std::move(geometry_fwd_duration_list),
-                                                  std::move(geometry_rev_duration_list)};
+                                                  std::move(geometry_rev_duration_list),
+                                                  std::move(datasources_list)};
 
-        auto datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
-            memory_block, storage::DataLayout::DATASOURCES_LIST);
-        util::ShM<DatasourceID, true>::vector datasources_list(
-            datasources_list_ptr, data_layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
-        m_datasource_list = std::move(datasources_list);
-
-        auto datasource_name_data_ptr =
-            data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::DATASOURCE_NAME_DATA);
-        util::ShM<char, true>::vector datasource_name_data(
-            datasource_name_data_ptr,
-            data_layout.num_entries[storage::DataLayout::DATASOURCE_NAME_DATA]);
-        m_datasource_name_data = std::move(datasource_name_data);
-
-        auto datasource_name_offsets_ptr = data_layout.GetBlockPtr<std::size_t>(
-            memory_block, storage::DataLayout::DATASOURCE_NAME_OFFSETS);
-        util::ShM<std::size_t, true>::vector datasource_name_offsets(
-            datasource_name_offsets_ptr,
-            data_layout.num_entries[storage::DataLayout::DATASOURCE_NAME_OFFSETS]);
-        m_datasource_name_offsets = std::move(datasource_name_offsets);
-
-        auto datasource_name_lengths_ptr = data_layout.GetBlockPtr<std::size_t>(
-            memory_block, storage::DataLayout::DATASOURCE_NAME_LENGTHS);
-        util::ShM<std::size_t, true>::vector datasource_name_lengths(
-            datasource_name_lengths_ptr,
-            data_layout.num_entries[storage::DataLayout::DATASOURCE_NAME_LENGTHS]);
-        m_datasource_name_lengths = std::move(datasource_name_lengths);
+        m_datasources = data_layout.GetBlockPtr<extractor::Datasources>(
+            memory_block, storage::DataLayout::DATASOURCES_NAMES);
     }
 
     void InitializeIntersectionClassPointers(storage::DataLayout &data_layout, char *memory_block)
@@ -609,6 +592,24 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto range = segment_data.GetReverseWeights(id);
         return std::vector<EdgeWeight>{range.begin(), range.end()};
+    }
+
+    // Returns the data source ids that were used to supply the edge
+    // weights.
+    virtual std::vector<DatasourceID>
+    GetUncompressedForwardDatasources(const EdgeID id) const override final
+    {
+        auto range = segment_data.GetForwardDatasources(id);
+        return std::vector<DatasourceID>{range.begin(), range.end()};
+    }
+
+    // Returns the data source ids that were used to supply the edge
+    // weights.
+    virtual std::vector<DatasourceID>
+    GetUncompressedReverseDatasources(const EdgeID id) const override final
+    {
+        auto range = segment_data.GetReverseDatasources(id);
+        return std::vector<DatasourceID>{range.begin(), range.end()};
     }
 
     virtual GeometryID GetGeometryIndexForEdgeID(const EdgeID id) const override final
@@ -781,89 +782,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_name_table.GetDestinationsForID(id);
     }
 
-    // Returns the data source ids that were used to supply the edge
-    // weights.
-    virtual std::vector<DatasourceID>
-    GetUncompressedForwardDatasources(const EdgeID id) const override final
-    {
-        /*
-         * Data sources for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the list vector. For
-         * forward datasources of bi-directional edges, edges 2 to
-         * n of that edge need to be read.
-         */
-        const auto begin = segment_data.GetOffset(id, 0) + 1;
-        const auto end = segment_data.GetOffset(id + 1, 0);
-
-        std::vector<DatasourceID> result_datasources;
-        result_datasources.reserve(end - begin);
-
-        // If there was no datasource info, return an array of 0's.
-        if (m_datasource_list.empty())
-        {
-            result_datasources.resize(end - begin, 0);
-        }
-        else
-        {
-            std::copy(m_datasource_list.begin() + begin,
-                      m_datasource_list.begin() + end,
-                      std::back_inserter(result_datasources));
-        }
-
-        return result_datasources;
-    }
-
-    // Returns the data source ids that were used to supply the edge
-    // weights.
-    virtual std::vector<DatasourceID>
-    GetUncompressedReverseDatasources(const EdgeID id) const override final
-    {
-        /*
-         * Datasources for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the list vector. For
-         * reverse datasources of bi-directional edges, edges 1 to
-         * n-1 of that edge need to be read in reverse.
-         */
-        const auto begin = segment_data.GetOffset(id, 0);
-        const auto end = segment_data.GetOffset(id + 1, 0) - 1;
-
-        std::vector<DatasourceID> result_datasources;
-        result_datasources.reserve(end - begin);
-
-        // If there was no datasource info, return an array of 0's.
-        if (m_datasource_list.empty())
-        {
-            result_datasources.resize(end - begin, 0);
-        }
-        else
-        {
-            std::reverse_copy(m_datasource_list.begin() + begin,
-                              m_datasource_list.begin() + end,
-                              std::back_inserter(result_datasources));
-        }
-
-        return result_datasources;
-    }
-
     StringView GetDatasourceName(const DatasourceID id) const override final
     {
-        BOOST_ASSERT(m_datasource_name_offsets.size() >= 1);
-        BOOST_ASSERT(m_datasource_name_offsets.size() > id);
-
-        auto first = m_datasource_name_data.begin() + m_datasource_name_offsets[id];
-        auto last = m_datasource_name_data.begin() + m_datasource_name_offsets[id] +
-                    m_datasource_name_lengths[id];
-        // These iterators are useless: they're InputIterators onto a contiguous block of memory.
-        // Deref to get to the first element, then Addressof to get the memory address of the it.
-        const std::size_t len = &*last - &*first;
-
-        return StringView{&*first, len};
+        return m_datasources->GetSourceName(id);
     }
 
     std::string GetTimestamp() const override final { return m_timestamp; }

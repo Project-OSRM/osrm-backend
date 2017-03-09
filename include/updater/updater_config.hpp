@@ -51,7 +51,6 @@ struct UpdaterConfig final
         geometry_path = osrm_input_path.string() + ".geometry";
         rtree_leaf_path = osrm_input_path.string() + ".fileIndex";
         datasource_names_path = osrm_input_path.string() + ".datasource_names";
-        datasource_indexes_path = osrm_input_path.string() + ".datasource_indexes";
         profile_properties_path = osrm_input_path.string() + ".properties";
     }
 
@@ -71,7 +70,6 @@ struct UpdaterConfig final
 
     std::vector<std::string> segment_speed_lookup_paths;
     std::vector<std::string> turn_penalty_lookup_paths;
-    std::string datasource_indexes_path;
     std::string datasource_names_path;
     std::string profile_properties_path;
 };
