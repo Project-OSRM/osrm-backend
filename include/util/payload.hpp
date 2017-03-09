@@ -113,12 +113,10 @@ static_assert(sizeof(DurationPayload) == 4, "DurationPayload is larger than expe
 using EdgePayload = DurationDistancePayload;
 using UncompressedEdgePayload = DurationPayload;
 using RoutingPayload = DurationDistancePayload;
-#elif PAYLOAD_TYPE_DURATIONS
+#else //PAYLOAD_TYPE_DURATIONS
 using EdgePayload = DurationPayload;
 using UncompressedEdgePayload = DurationPayload;
 using RoutingPayload = DurationPayload;
-#else
-#error "Please specify desired payload type in Makefile."
 #endif
 
 static inline EdgePayload MAKE_PAYLOAD(EdgeWeight duration, EdgeDistance distance)
