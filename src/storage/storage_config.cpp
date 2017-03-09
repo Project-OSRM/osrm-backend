@@ -32,7 +32,6 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       turn_weight_penalties_path{base.string() + ".turn_weight_penalties"},
       turn_duration_penalties_path{base.string() + ".turn_duration_penalties"},
       datasource_names_path{base.string() + ".datasource_names"},
-      datasource_indexes_path{base.string() + ".datasource_indexes"},
       names_data_path{base.string() + ".names"}, properties_path{base.string() + ".properties"},
       intersection_class_path{base.string() + ".icd"}, turn_lane_data_path{base.string() + ".tld"},
       turn_lane_description_path{base.string() + ".tls"},
@@ -54,7 +53,8 @@ bool StorageConfig::IsValid() const
                         turn_duration_penalties_path,
                         names_data_path,
                         properties_path,
-                        intersection_class_path}))
+                        intersection_class_path,
+                        datasource_names_path}))
     {
         return false;
     }
@@ -62,7 +62,7 @@ bool StorageConfig::IsValid() const
     // TODO: add algorithm checks
 
     // CH files
-    CheckFileList({hsgr_data_path, core_data_path, datasource_names_path, datasource_indexes_path});
+    CheckFileList({hsgr_data_path, core_data_path});
 
     // MLD files
     CheckFileList({mld_partition_path, mld_storage_path, edge_based_graph_path});

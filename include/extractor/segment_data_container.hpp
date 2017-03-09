@@ -55,10 +55,11 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
                              Vector<EdgeWeight> fwd_weights_,
                              Vector<EdgeWeight> rev_weights_,
                              Vector<EdgeWeight> fwd_durations_,
-                             Vector<EdgeWeight> rev_durations_)
+                             Vector<EdgeWeight> rev_durations_,
+                             Vector<DatasourceID> datasources_)
         : index(std::move(index_)), nodes(std::move(nodes_)), fwd_weights(std::move(fwd_weights_)),
           rev_weights(std::move(rev_weights_)), fwd_durations(std::move(fwd_durations_)),
-          rev_durations(std::move(rev_durations_))
+          rev_durations(std::move(rev_durations_)), datasources(std::move(datasources_))
     {
     }
 
@@ -79,11 +80,13 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     {
         return rev_weights[index[id] + offset];
     }
-    // TODO we only need this for the datasource file since it breaks this
-    // abstraction, but uses this index
-    auto GetOffset(const DirectionalGeometryID id, const SegmentOffset offset) const
+    auto &ForwardDatasource(const DirectionalGeometryID id, const SegmentOffset offset)
     {
-        return index[id] + offset;
+        return datasources[index[id] + 1 + offset];
+    }
+    auto &ReverseDatasource(const DirectionalGeometryID id, const SegmentOffset offset)
+    {
+        return datasources[index[id] + offset];
     }
 
     auto GetForwardGeometry(const DirectionalGeometryID id) const
@@ -131,6 +134,22 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
         return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
 
+    auto GetForwardDatasources(const DirectionalGeometryID id) const
+    {
+        const auto begin = datasources.cbegin() + index.at(id) + 1;
+        const auto end = datasources.cbegin() + index.at(id + 1);
+
+        return boost::make_iterator_range(begin, end);
+    }
+
+    auto GetReverseDatasources(const DirectionalGeometryID id) const
+    {
+        const auto begin = datasources.cbegin() + index.at(id);
+        const auto end = datasources.cbegin() + index.at(id + 1) - 1;
+
+        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+    }
+
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
     friend void
@@ -147,6 +166,7 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     Vector<EdgeWeight> rev_weights;
     Vector<EdgeWeight> fwd_durations;
     Vector<EdgeWeight> rev_durations;
+    Vector<DatasourceID> datasources;
 };
 }
 

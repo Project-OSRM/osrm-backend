@@ -2,6 +2,8 @@
   - Changes from 5.6
     - Internals
       - Shared memory notification via conditional variables on Linux or semaphore queue on OS X and Windows with a limit of 128 OSRM Engine instances
+    - Files
+      - .osrm.datasource_index file was removed. Data is now part of .osrm.geometries.
 
 # 5.6.3
   - Changes from 5.6.0
