@@ -26,7 +26,7 @@ env:
    - CCACHE_COMPRESS=1
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
    - CCACHE_VERSION=3.3.1
-   - CMAKE_VERSION=3.6.2
+   - CMAKE_VERSION=3.7.2
    - MASON="$(pwd)/scripts/mason.sh"
 
 matrix:
@@ -45,12 +45,12 @@ matrix:
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug' TARGET_ARCH='x86_64-asan' ENABLE_COVERAGE=ON ENABLE_SANITIZER=ON
 
     - os: linux
-      compiler: "clang-3.9-debug"
-      addons: &clang38
+      compiler: "clang-4.0-debug"
+      addons: &clang40
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
 
     - os: linux
       compiler: "mason-linux-debug-santize"
@@ -58,7 +58,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON
 
     # Release Builds
     - os: linux
@@ -67,7 +67,7 @@ matrix:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='3.9.1' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON RUN_CLANG_FORMAT=ON ENABLE_LTO=ON
 
     - os: linux
       compiler: "gcc-6-release"
@@ -100,11 +100,11 @@ matrix:
       # Disabled because of CI slowness
       #- os: linux
       #- compiler: clang
-      #- addons: &clang38
+      #- addons: &clang40
       #-   apt:
-      #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
-      #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release'
+      #-     sources: ['llvm-toolchain-trusty-4.0', 'ubuntu-toolchain-r-test']
+      #-     packages: ['clang-4.0', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      #- env: CCOMPILER='clang-4.0' CXXCOMPILER='clang++-4.0' BUILD_TYPE='Release'
 
     # Shared Library
     - os: linux
@@ -118,11 +118,11 @@ matrix:
       # Disabled because CI slowness
       #- os: linux
       #- compiler: clang
-      #- addons: &clang38
+      #- addons: &clang40
       #-   apt:
-      #-     sources: ['llvm-toolchain-precise-3.8', 'ubuntu-toolchain-r-test']
-      #-     packages: ['clang-3.8', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
-      #- env: CCOMPILER='clang-3.8' CXXCOMPILER='clang++-3.8' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
+      #-     sources: ['llvm-toolchain-trusty-4.0', 'ubuntu-toolchain-r-test']
+      #-     packages: ['clang-4.0', 'libbz2-dev', 'libstxxl-dev', 'libstxxl1', 'libxml2-dev', 'libzip-dev', 'lua5.1', 'liblua5.1-0-dev', 'libtbb-dev', 'libgdal-dev', 'libluabind-dev', 'libboost-all-dev']
+      #- env: CCOMPILER='clang-4.0' CXXCOMPILER='clang++-4.0' BUILD_TYPE='Release' BUILD_SHARED_LIBS=ON
 
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
