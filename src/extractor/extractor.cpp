@@ -118,7 +118,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     const unsigned recommended_num_threads = tbb::task_scheduler_init::default_num_threads();
     const auto number_of_threads = std::min(recommended_num_threads, config.requested_num_threads);
-    tbb::task_scheduler_init init(number_of_threads);
+    tbb::task_scheduler_init init(number_of_threads ? number_of_threads
+                                                    : tbb::task_scheduler_init::automatic);
 
     {
         util::Log() << "Input file: " << config.input_path.filename().string();

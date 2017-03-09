@@ -3,6 +3,11 @@
     - Internals
       - Shared memory notification via conditional variables on Linux or semaphore queue on OS X and Windows with a limit of 128 OSRM Engine instances
 
+# 5.6.3
+  - Changes from 5.6.0
+    - Bugfixes
+      - #3790 Fix incorrect speed values in tile plugin
+
 # 5.6.2
   - Changes from 5.6.0
     - Bugfixes

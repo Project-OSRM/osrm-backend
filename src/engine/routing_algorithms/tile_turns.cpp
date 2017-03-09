@@ -83,6 +83,7 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>
     //  vw is the "exit"
     std::vector<contractor::QueryEdge::EdgeData> unpacked_shortcut;
     std::vector<EdgeWeight> approach_weight_vector;
+    std::vector<EdgeWeight> approach_duration_vector;
 
     // Make sure we traverse the startnodes in a consistent order
     // to ensure identical PBF encoding on all platforms.
@@ -164,16 +165,25 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>
                         approach_weight_vector = facade.GetUncompressedForwardWeights(
                             edge_based_node_info[approachedge.edge_based_node_id]
                                 .packed_geometry_id);
+                        approach_duration_vector = facade.GetUncompressedForwardDurations(
+                            edge_based_node_info[approachedge.edge_based_node_id]
+                                .packed_geometry_id);
                     }
                     else
                     {
                         approach_weight_vector = facade.GetUncompressedReverseWeights(
                             edge_based_node_info[approachedge.edge_based_node_id]
                                 .packed_geometry_id);
+                        approach_duration_vector = facade.GetUncompressedReverseDurations(
+                            edge_based_node_info[approachedge.edge_based_node_id]
+                                .packed_geometry_id);
                     }
                     const auto sum_node_weight = std::accumulate(approach_weight_vector.begin(),
                                                                  approach_weight_vector.end(),
                                                                  EdgeWeight{0});
+                    const auto sum_node_duration = std::accumulate(approach_duration_vector.begin(),
+                                                                   approach_duration_vector.end(),
+                                                                   EdgeWeight{0});
 
                     // The edge.weight is the whole edge weight, which includes the turn
                     // cost.
@@ -182,7 +192,8 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>
                     // intersections include stop signs, traffic signals and other
                     // penalties, but at this stage, we can't divide those out, so we just
                     // treat the whole lot as the "turn cost" that we'll stick on the map.
-                    const auto turn_cost = data.weight - sum_node_weight;
+                    const auto turn_weight = data.weight - sum_node_weight;
+                    const auto turn_duration = data.duration - sum_node_duration;
 
                     // Find the three nodes that make up the turn movement)
                     const auto node_from = startnode;
@@ -214,7 +225,8 @@ getTileTurns(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH>
                     // Save everything we need to later add all the points to the tile.
                     // We need the coordinate of the intersection, the angle in, the turn
                     // angle and the turn cost.
-                    all_turn_data.push_back(TurnData{coord_via, angle_in, turn_angle, turn_cost});
+                    all_turn_data.push_back(
+                        TurnData{coord_via, angle_in, turn_angle, turn_weight, turn_duration});
                 }
             }
         }
