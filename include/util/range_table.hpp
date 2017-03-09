@@ -139,7 +139,19 @@ template <unsigned BLOCK_SIZE, bool USE_SHARED_MEMORY> class RangeTable
         sum_lengths = lengths_prefix_sum;
     }
 
-    void ReadARangeTable(osrm::storage::io::FileReader &filereader)
+    void Write(osrm::storage::io::FileWriter &filewriter)
+    {
+        unsigned number_of_blocks = diff_blocks.size();
+
+        filewriter.WriteElementCount32(number_of_blocks);
+
+        filewriter.WriteOne(sum_lengths);
+
+        filewriter.WriteFrom(block_offsets.data(), number_of_blocks);
+        filewriter.WriteFrom(diff_blocks.data(), number_of_blocks);
+    }
+
+    void Read(osrm::storage::io::FileReader &filereader)
     {
         unsigned number_of_blocks = filereader.ReadElementCount32();
         // read total length

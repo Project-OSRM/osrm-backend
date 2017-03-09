@@ -12,6 +12,8 @@
 #include "util/name_table.hpp"
 #include "util/timing_util.hpp"
 
+#include "storage/io.hpp"
+
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -152,17 +154,15 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
                                        const std::string &restrictions_file_name,
                                        const std::string &name_file_name)
 {
-    std::ofstream file_out_stream;
-    file_out_stream.open(output_file_name.c_str(), std::ios::binary);
-    const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
-    file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+    storage::io::FileWriter file_out(output_file_name,
+                                     storage::io::FileWriter::GenerateFingerprint);
 
     FlushVectors();
 
     PrepareNodes();
-    WriteNodes(file_out_stream);
+    WriteNodes(file_out);
     PrepareEdges(scripting_environment);
-    WriteEdges(file_out_stream);
+    WriteEdges(file_out);
 
     PrepareRestrictions();
     WriteRestrictions(restrictions_file_name);
@@ -541,21 +541,15 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
     }
 }
 
-void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
+void ExtractionContainers::WriteEdges(storage::io::FileWriter &file_out) const
 {
-
-    std::size_t start_position = 0;
-    std::uint64_t used_edges_counter = 0;
-    std::uint32_t used_edges_counter_buffer = 0;
+    std::vector<NodeBasedEdge> normal_edges;
+    normal_edges.reserve(all_edges_list.size());
     {
         util::UnbufferedLog log;
         log << "Writing used edges       ... " << std::flush;
         TIMER_START(write_edges);
         // Traverse list of edges and nodes in parallel and set target coord
-
-        start_position = file_out_stream.tellp();
-        file_out_stream.write((char *)&used_edges_counter_buffer,
-                              sizeof(used_edges_counter_buffer));
 
         for (const auto &edge : all_edges_list)
         {
@@ -566,41 +560,30 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
 
             // IMPORTANT: here, we're using slicing to only write the data from the base
             // class of NodeBasedEdgeWithOSM
-            NodeBasedEdge tmp = edge.result;
-            file_out_stream.write((char *)&tmp, sizeof(NodeBasedEdge));
-            used_edges_counter++;
+            normal_edges.push_back(edge.result);
         }
 
-        if (used_edges_counter > std::numeric_limits<unsigned>::max())
+        if (normal_edges.size() > std::numeric_limits<uint32_t>::max())
         {
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
+
+        file_out.WriteElementCount32(normal_edges.size());
+        file_out.WriteFrom(normal_edges.data(), normal_edges.size());
+
         TIMER_STOP(write_edges);
         log << "ok, after " << TIMER_SEC(write_edges) << "s";
+        log << "Processed " << normal_edges.size() << " edges";
     }
-
-    {
-        util::UnbufferedLog log;
-        log << "setting number of edges   ... " << std::flush;
-
-        used_edges_counter_buffer = boost::numeric_cast<std::uint32_t>(used_edges_counter);
-
-        file_out_stream.seekp(start_position);
-        file_out_stream.write((char *)&used_edges_counter_buffer,
-                              sizeof(used_edges_counter_buffer));
-        log << "ok";
-    }
-
-    util::Log() << "Processed " << used_edges_counter << " edges";
 }
 
-void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
+void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
 {
     {
         // write dummy value, will be overwritten later
         util::UnbufferedLog log;
         log << "setting number of nodes   ... " << std::flush;
-        file_out_stream.write((char *)&max_internal_node_id, sizeof(unsigned));
+        file_out.WriteElementCount32(max_internal_node_id);
         log << "ok";
     }
 
@@ -628,7 +611,7 @@ void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
             }
             BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
 
-            file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
+            file_out.WriteOne((*node_iterator));
 
             ++node_id_iterator;
             ++node_iterator;
@@ -643,13 +626,11 @@ void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
 void ExtractionContainers::WriteRestrictions(const std::string &path) const
 {
     // serialize restrictions
-    std::ofstream restrictions_out_stream;
     unsigned written_restriction_count = 0;
-    restrictions_out_stream.open(path.c_str(), std::ios::binary);
-    const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
-    restrictions_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
-    const auto count_position = restrictions_out_stream.tellp();
-    restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
+    storage::io::FileWriter restrictions_out_file(path,
+                                                  storage::io::FileWriter::GenerateFingerprint);
+
+    restrictions_out_file.WriteElementCount32(written_restriction_count);
 
     for (const auto &restriction_container : restrictions_list)
     {
@@ -657,13 +638,12 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
             SPECIAL_NODEID != restriction_container.restriction.via.node &&
             SPECIAL_NODEID != restriction_container.restriction.to.node)
         {
-            restrictions_out_stream.write((char *)&(restriction_container.restriction),
-                                          sizeof(TurnRestriction));
+            restrictions_out_file.WriteOne(restriction_container.restriction);
             ++written_restriction_count;
         }
     }
-    restrictions_out_stream.seekp(count_position);
-    restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
+    restrictions_out_file.SkipToBeginning();
+    restrictions_out_file.WriteElementCount32(written_restriction_count);
     util::Log() << "usable restrictions: " << written_restriction_count;
 }
 

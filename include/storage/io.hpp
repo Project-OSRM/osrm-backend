@@ -284,7 +284,7 @@ class FileWriter
         }
     }
 
-    template <typename T> void WriteFrom(const T &target) { WriteFrom(&target, 1); }
+    template <typename T> void WriteFrom(const T &src) { WriteFrom(&src, 1); }
 
     template <typename T> void WriteOne(const T tmp) { WriteFrom(tmp); }
 
