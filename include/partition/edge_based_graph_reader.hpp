@@ -51,7 +51,7 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
                               edge.target,
                               edge.data.edge_id,
                               std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              edge.data.payload,
                               edge.data.forward,
                               edge.data.backward);
 
@@ -59,7 +59,7 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
                               edge.source,
                               edge.data.edge_id,
                               std::max(edge.data.weight, 1),
-                              edge.data.duration,
+                              edge.data.payload,
                               edge.data.backward,
                               edge.data.forward);
     }
@@ -93,7 +93,7 @@ prepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
         forward_edge.target = reverse_edge.target = target;
         forward_edge.data.edge_id = reverse_edge.data.edge_id = edges[i].data.edge_id;
         forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
-        forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION_INT_30;
+        forward_edge.data.payload = reverse_edge.data.payload = INVALID_PAYLOAD;
         forward_edge.data.forward = reverse_edge.data.backward = true;
         forward_edge.data.backward = reverse_edge.data.forward = false;
 
@@ -102,15 +102,19 @@ prepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
         {
             if (edges[i].data.forward)
             {
-                forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
-                forward_edge.data.duration =
-                    std::min(edges[i].data.duration, forward_edge.data.duration);
+                if (edges[i].data.weight < forward_edge.data.weight)
+                {
+                    forward_edge.data.weight = edges[i].data.weight;
+                    forward_edge.data.payload = edges[i].data.payload;
+                }
             }
             if (edges[i].data.backward)
             {
-                reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
-                reverse_edge.data.duration =
-                    std::min(edges[i].data.duration, reverse_edge.data.duration);
+                if (edges[i].data.weight < reverse_edge.data.weight)
+                {
+                    reverse_edge.data.weight = edges[i].data.weight;
+                    reverse_edge.data.payload = edges[i].data.payload;
+                }
             }
             ++i;
         }

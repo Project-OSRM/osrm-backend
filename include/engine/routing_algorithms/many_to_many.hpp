@@ -17,7 +17,7 @@ namespace engine
 namespace routing_algorithms
 {
 
-std::vector<EdgeWeight>
+std::vector<RoutingPayload>
 manyToManySearch(SearchEngineData &engine_working_data,
                  const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,

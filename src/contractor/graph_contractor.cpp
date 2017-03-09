@@ -39,21 +39,25 @@ GraphContractor::GraphContractor(int nodes,
         forward_edge.data.id = reverse_edge.data.id = id;
         forward_edge.data.originalEdges = reverse_edge.data.originalEdges = 1;
         forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
-        forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION;
+        forward_edge.data.payload = reverse_edge.data.payload = INVALID_PAYLOAD;
         // remove parallel edges
         while (i < edges.size() && edges[i].source == source && edges[i].target == target)
         {
             if (edges[i].data.forward)
             {
-                forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
-                forward_edge.data.duration =
-                    std::min(edges[i].data.duration, forward_edge.data.duration);
+                if (edges[i].data.weight < forward_edge.data.weight)
+                {
+                    forward_edge.data.weight = edges[i].data.weight;
+                    forward_edge.data.payload = edges[i].data.payload;
+                }
             }
             if (edges[i].data.backward)
             {
-                reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
-                reverse_edge.data.duration =
-                    std::min(edges[i].data.duration, reverse_edge.data.duration);
+                if (edges[i].data.weight < reverse_edge.data.weight)
+                {
+                    reverse_edge.data.weight = edges[i].data.weight;
+                    reverse_edge.data.payload = edges[i].data.payload;
+                }
             }
             ++i;
         }

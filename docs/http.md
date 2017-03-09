@@ -212,10 +212,11 @@ GET /table/v1/{profile}/{coordinates}?{sources}=[{elem}...];&destinations=[{elem
 
 In addition to the [general options](#general-options) the following options are supported for this service:
 
-|Option      |Values                                            |Description                                  |
-|------------|--------------------------------------------------|---------------------------------------------|
-|sources     |`{index};{index}[;{index} ...]` or `all` (default)|Use location with given index as source.     |
-|destinations|`{index};{index}[;{index} ...]` or `all` (default)|Use location with given index as destination.|
+|Option       |Values                                             |Description                                  |
+|-------------|---------------------------------------------------|---------------------------------------------|
+|sources      |`{index};{index}[;{index} ...]` or `all` (default) |Use location with given index as source.     |
+|destinations |`{index};{index}[;{index} ...]` or `all` (default) |Use location with given index as destination.|
+|output_fields|`{durations|distances}[;{durations|distances} ...]`|Matrix fields to output in the reponse. Defaults to `durations` is missing. |
 
 Unlike other array encoded options, the length of `sources` and `destinations` can be **smaller or equal**
 to number of input locations;
@@ -248,6 +249,8 @@ curl 'http://router.project-osrm.org/table/v1/driving/polyline(egs_Iq_aqAppHzbHu
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `durations` array of arrays that stores the matrix in row-major order. `durations[i][j]` gives the travel time from
   the i-th waypoint to the j-th waypoint. Values are given in seconds.
+- `distances` array of arrays that stores the matrix in row-major order. `distances[i][j]` gives the distance from
+  the i-th waypoint to the j-th waypoint. Values are given in meters.
 - `sources` array of `Waypoint` objects describing all sources in order
 - `destinations` array of `Waypoint` objects describing all destinations in order
 

@@ -5,6 +5,7 @@
 
 #include "util/binary_heap.hpp"
 #include "util/typedefs.hpp"
+#include "util/payload.hpp"
 
 namespace osrm
 {
@@ -19,8 +20,8 @@ struct HeapData
 
 struct ManyToManyHeapData : HeapData
 {
-    EdgeWeight duration;
-    ManyToManyHeapData(NodeID p, EdgeWeight duration) : HeapData(p), duration(duration) {}
+    RoutingPayload payload;
+    ManyToManyHeapData(NodeID p, RoutingPayload payload) : HeapData(p), payload(payload) {}
 };
 
 struct SearchEngineData

@@ -64,7 +64,7 @@ struct InternalExtractorEdge
                  MIN_OSM_NODEID,
                  SPECIAL_NODEID,
                  0,
-                 0,
+                 EdgePayload(),
                  false, // forward
                  false, // backward
                  false, // roundabout
@@ -99,7 +99,7 @@ struct InternalExtractorEdge
                  target,
                  name_id,
                  0,
-                 0,
+                 EdgePayload(),
                  forward,
                  backward,
                  roundabout,

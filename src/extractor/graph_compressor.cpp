@@ -122,16 +122,16 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 // Get weights before graph is modified
                 const EdgeWeight forward_weight1 = fwd_edge_data1.weight;
                 const EdgeWeight forward_weight2 = fwd_edge_data2.weight;
-                const EdgeWeight forward_duration1 = fwd_edge_data1.duration;
-                const EdgeWeight forward_duration2 = fwd_edge_data2.duration;
+                const EdgePayload & forward_payload1  = fwd_edge_data1.payload;
+                const EdgePayload & forward_payload2  = fwd_edge_data2.payload;
 
                 BOOST_ASSERT(0 != forward_weight1);
                 BOOST_ASSERT(0 != forward_weight2);
 
                 const EdgeWeight reverse_weight1 = rev_edge_data1.weight;
                 const EdgeWeight reverse_weight2 = rev_edge_data2.weight;
-                const EdgeWeight reverse_duration1 = rev_edge_data1.duration;
-                const EdgeWeight reverse_duration2 = rev_edge_data2.duration;
+                const EdgePayload & reverse_payload1 = rev_edge_data1.payload;
+                const EdgePayload & reverse_payload2 = rev_edge_data2.payload;
 
                 BOOST_ASSERT(0 != reverse_weight1);
                 BOOST_ASSERT(0 != reverse_weight2);
@@ -140,9 +140,9 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                 graph.GetEdgeData(forward_e1).weight += forward_weight2;
                 graph.GetEdgeData(reverse_e1).weight += reverse_weight2;
 
-                // add duration of e2's to e1
-                graph.GetEdgeData(forward_e1).duration += forward_duration2;
-                graph.GetEdgeData(reverse_e1).duration += reverse_duration2;
+                // add payload of e2's to e1
+                graph.GetEdgeData(forward_e1).payload += forward_payload2;
+                graph.GetEdgeData(reverse_e1).payload += reverse_payload2;                
 
                 // extend e1's to targets of e2's
                 graph.SetTarget(forward_e1, node_w);
@@ -210,16 +210,16 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
                                                  node_w,
                                                  forward_weight1,
                                                  forward_weight2,
-                                                 forward_duration1,
-                                                 forward_duration2);
+                                                 UncompressedEdgePayload(forward_payload1),
+                                                 UncompressedEdgePayload(forward_payload2));
                 geometry_compressor.CompressEdge(reverse_e1,
                                                  reverse_e2,
                                                  node_v,
                                                  node_u,
                                                  reverse_weight1,
                                                  reverse_weight2,
-                                                 reverse_duration1,
-                                                 reverse_duration2);
+                                                 UncompressedEdgePayload(reverse_payload1),
+                                                 UncompressedEdgePayload(reverse_payload2));
             }
         }
     }
@@ -235,7 +235,7 @@ void GraphCompressor::Compress(const std::unordered_set<NodeID> &barrier_nodes,
         {
             const EdgeData &data = graph.GetEdgeData(edge_id);
             const NodeID target = graph.GetTarget(edge_id);
-            geometry_compressor.AddUncompressedEdge(edge_id, target, data.weight, data.duration);
+            geometry_compressor.AddUncompressedEdge(edge_id, target, data.weight, UncompressedEdgePayload(data.payload));
         }
     }
 }

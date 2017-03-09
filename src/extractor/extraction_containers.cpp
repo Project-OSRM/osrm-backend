@@ -402,7 +402,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             auto &edge = edge_iterator->result;
             edge.weight =
                 std::max<EdgeWeight>(1, std::round(extracted_segment.weight * weight_multiplier));
-            edge.duration = std::max<EdgeWeight>(1, std::round(extracted_segment.duration * 10.));
+            edge.payload = MAKE_PAYLOAD(std::max<EdgeWeight>(1, 
+                std::round(extracted_segment.duration * 10.)), distance);
 
             // assign new node id
             auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
@@ -469,9 +470,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         NodeID target = all_edges_list[i].result.target;
 
         auto min_forward = std::make_pair(std::numeric_limits<EdgeWeight>::max(),
-                                          std::numeric_limits<EdgeWeight>::max());
+                                          INVALID_PAYLOAD);
         auto min_backward = std::make_pair(std::numeric_limits<EdgeWeight>::max(),
-                                           std::numeric_limits<EdgeWeight>::max());
+                                           INVALID_PAYLOAD);
         std::size_t min_forward_idx = std::numeric_limits<std::size_t>::max();
         std::size_t min_backward_idx = std::numeric_limits<std::size_t>::max();
 
@@ -480,7 +481,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                all_edges_list[i].result.target == target)
         {
             const auto &result = all_edges_list[i].result;
-            const auto value = std::make_pair(result.weight, result.duration);
+            const auto value = std::make_pair(result.weight, result.payload);
             if (result.forward && value < min_forward)
             {
                 min_forward_idx = i;

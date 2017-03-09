@@ -23,9 +23,9 @@ struct NodeBucket
 {
     unsigned target_id; // essentially a row in the weight matrix
     EdgeWeight weight;
-    EdgeWeight duration;
-    NodeBucket(const unsigned target_id, const EdgeWeight weight, const EdgeWeight duration)
-        : target_id(target_id), weight(weight), duration(duration)
+    RoutingPayload payload;
+    NodeBucket(const unsigned target_id, const EdgeWeight weight, const RoutingPayload & payload)
+        : target_id(target_id), weight(weight), payload(payload)
     {
     }
 };
@@ -37,7 +37,7 @@ template <bool DIRECTION>
 void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
-                        const EdgeWeight duration,
+                        const RoutingPayload & payload,
                         ManyToManyQueryHeap &query_heap)
 {
     for (auto edge : facade.GetAdjacentEdgeRange(node))
@@ -47,22 +47,22 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<alg
         {
             const NodeID to = facade.GetTarget(edge);
             const EdgeWeight edge_weight = data.weight;
-            const EdgeWeight edge_duration = data.duration;
+            const RoutingPayload & edge_payload = data.payload;
 
             BOOST_ASSERT_MSG(edge_weight > 0, "edge_weight invalid");
             const EdgeWeight to_weight = weight + edge_weight;
-            const EdgeWeight to_duration = duration + edge_duration;
+            const RoutingPayload to_payload = payload + edge_payload;
 
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!query_heap.WasInserted(to))
             {
-                query_heap.Insert(to, to_weight, {node, to_duration});
+                query_heap.Insert(to, to_weight, {node, to_payload});
             }
             // Found a shorter Path -> Update weight
             else if (to_weight < query_heap.GetKey(to))
             {
                 // new parent
-                query_heap.GetData(to) = {node, to_duration};
+                query_heap.GetData(to) = {node, to_payload};
                 query_heap.DecreaseKey(to, to_weight);
             }
         }
@@ -75,11 +75,11 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
                         ManyToManyQueryHeap &query_heap,
                         const SearchSpaceWithBuckets &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
-                        std::vector<EdgeWeight> &durations_table)
+                        std::vector<RoutingPayload> &payload_table)
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight source_weight = query_heap.GetKey(node);
-    const EdgeWeight source_duration = query_heap.GetData(node).duration;
+    const RoutingPayload & source_payload = query_heap.GetData(node).payload;
 
     // check if each encountered node has an entry
     const auto bucket_iterator = search_space_with_buckets.find(node);
@@ -92,29 +92,31 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
             // get target id from bucket entry
             const unsigned column_idx = current_bucket.target_id;
             const EdgeWeight target_weight = current_bucket.weight;
-            const EdgeWeight target_duration = current_bucket.duration;
+            const RoutingPayload & target_payload = current_bucket.payload;
 
             auto &current_weight = weights_table[row_idx * number_of_targets + column_idx];
-            auto &current_duration = durations_table[row_idx * number_of_targets + column_idx];
+            auto &current_payload = payload_table[row_idx * number_of_targets + column_idx];
 
             // check if new weight is better
             const EdgeWeight new_weight = source_weight + target_weight;
             if (new_weight < 0)
             {
-                const EdgeWeight loop_weight = getLoopWeight<false>(facade, node);
+                const EdgeWeight loop_weight = getLoopWeight(facade, node);
                 const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT && new_weight_with_loop >= 0)
                 {
-                    current_weight = std::min(current_weight, new_weight_with_loop);
-                    current_duration = std::min(current_duration,
-                                                source_duration + target_duration +
-                                                    getLoopWeight<true>(facade, node));
+                    if (new_weight_with_loop < current_weight)
+                    {
+                        current_weight = new_weight_with_loop;
+                        RoutingPayload payload = RoutingPayload(GetLoopPayload(facade, node));
+                        current_payload = source_payload + target_payload + payload;
+                    }                    
                 }
             }
             else if (new_weight < current_weight)
             {
                 current_weight = new_weight;
-                current_duration = source_duration + target_duration;
+                current_payload = source_payload + target_payload;
             }
         }
     }
@@ -123,7 +125,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
         return;
     }
 
-    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, node, source_weight, source_duration, query_heap);
+    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, node, source_weight, source_payload, query_heap);
 }
 
 void backwardRoutingStep(
@@ -134,21 +136,21 @@ void backwardRoutingStep(
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight target_weight = query_heap.GetKey(node);
-    const EdgeWeight target_duration = query_heap.GetData(node).duration;
+    const RoutingPayload target_payload = query_heap.GetData(node).payload;
 
     // store settled nodes in search space bucket
-    search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_duration);
+    search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_payload);
 
     if (stallAtNode<REVERSE_DIRECTION>(facade, node, target_weight, query_heap))
     {
         return;
     }
 
-    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, node, target_weight, target_duration, query_heap);
+    relaxOutgoingEdges<REVERSE_DIRECTION>(facade, node, target_weight, target_payload, query_heap);
 }
 }
 
-std::vector<EdgeWeight>
+std::vector<RoutingPayload>
 manyToManySearch(SearchEngineData &engine_working_data,
                  const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
@@ -162,7 +164,7 @@ manyToManySearch(SearchEngineData &engine_working_data,
     const auto number_of_entries = number_of_sources * number_of_targets;
 
     std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
-    std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+    std::vector<RoutingPayload> payload_table(number_of_entries, INVALID_RPAYLOAD);
 
     engine_working_data.InitializeOrClearManyToManyThreadLocalStorage(facade.GetNumberOfNodes());
 
@@ -179,13 +181,13 @@ manyToManySearch(SearchEngineData &engine_working_data,
         {
             query_heap.Insert(phantom.forward_segment_id.id,
                               phantom.GetForwardWeightPlusOffset(),
-                              {phantom.forward_segment_id.id, phantom.GetForwardDuration()});
+                              {phantom.forward_segment_id.id, RoutingPayload(phantom.GetForwardPayload())});
         }
         if (phantom.reverse_segment_id.enabled)
         {
             query_heap.Insert(phantom.reverse_segment_id.id,
                               phantom.GetReverseWeightPlusOffset(),
-                              {phantom.reverse_segment_id.id, phantom.GetReverseDuration()});
+                              {phantom.reverse_segment_id.id, RoutingPayload(phantom.GetReversePayload())});
         }
 
         // explore search space
@@ -206,13 +208,13 @@ manyToManySearch(SearchEngineData &engine_working_data,
         {
             query_heap.Insert(phantom.forward_segment_id.id,
                               -phantom.GetForwardWeightPlusOffset(),
-                              {phantom.forward_segment_id.id, -phantom.GetForwardDuration()});
+                              {phantom.forward_segment_id.id, -RoutingPayload(phantom.GetForwardPayload())});
         }
         if (phantom.reverse_segment_id.enabled)
         {
             query_heap.Insert(phantom.reverse_segment_id.id,
                               -phantom.GetReverseWeightPlusOffset(),
-                              {phantom.reverse_segment_id.id, -phantom.GetReverseDuration()});
+                              {phantom.reverse_segment_id.id, -RoutingPayload(phantom.GetReversePayload())});
         }
 
         // explore search space
@@ -224,7 +226,7 @@ manyToManySearch(SearchEngineData &engine_working_data,
                                query_heap,
                                search_space_with_buckets,
                                weights_table,
-                               durations_table);
+                               payload_table);
         }
         ++row_idx;
     };
@@ -261,7 +263,7 @@ manyToManySearch(SearchEngineData &engine_working_data,
         }
     }
 
-    return durations_table;
+    return payload_table;
 }
 
 } // namespace routing_algorithms

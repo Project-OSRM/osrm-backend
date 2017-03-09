@@ -18,7 +18,7 @@ namespace util
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
+        : weight(INVALID_EDGE_WEIGHT), payload(INVALID_PAYLOAD), edge_id(SPECIAL_NODEID),
           name_id(std::numeric_limits<unsigned>::max()), reversed(false), roundabout(false),
           circular(false), travel_mode(TRAVEL_MODE_INACCESSIBLE),
           lane_description_id(INVALID_LANE_DESCRIPTIONID)
@@ -26,7 +26,7 @@ struct NodeBasedEdgeData
     }
 
     NodeBasedEdgeData(EdgeWeight weight,
-                      EdgeWeight duration,
+                      const EdgePayload & payload,
                       unsigned edge_id,
                       unsigned name_id,
                       bool reversed,
@@ -36,14 +36,14 @@ struct NodeBasedEdgeData
                       bool restricted,
                       extractor::TravelMode travel_mode,
                       const LaneDescriptionID lane_description_id)
-        : weight(weight), duration(duration), edge_id(edge_id), name_id(name_id),
+        : weight(weight), payload(payload), edge_id(edge_id), name_id(name_id),
           reversed(reversed), roundabout(roundabout), circular(circular), startpoint(startpoint),
           restricted(restricted), travel_mode(travel_mode), lane_description_id(lane_description_id)
     {
     }
 
     EdgeWeight weight;
-    EdgeWeight duration;
+    EdgePayload payload;
     unsigned edge_id;
     unsigned name_id;
     bool reversed : 1;
@@ -84,7 +84,7 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
         [](NodeBasedDynamicGraph::InputEdge &output_edge,
            const extractor::NodeBasedEdge &input_edge) {
             output_edge.data.weight = input_edge.weight;
-            output_edge.data.duration = input_edge.duration;
+            output_edge.data.payload = input_edge.payload;
             output_edge.data.roundabout = input_edge.roundabout;
             output_edge.data.circular = input_edge.circular;
             output_edge.data.name_id = input_edge.name_id;
@@ -95,7 +95,7 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
             output_edge.data.lane_description_id = input_edge.lane_description_id;
 
             BOOST_ASSERT(output_edge.data.weight > 0);
-            BOOST_ASSERT(output_edge.data.duration > 0);
+            BOOST_ASSERT(output_edge.data.payload.duration > 0);
         });
 
     tbb::parallel_sort(edges_list.begin(), edges_list.end());

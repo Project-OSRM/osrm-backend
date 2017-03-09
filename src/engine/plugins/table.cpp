@@ -77,7 +77,7 @@ Status TablePlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
     }
 
     api::TableAPI table_api{facade, params};
-    table_api.MakeResponse(result_table, snapped_phantoms, result);
+    table_api.MakeResponse(result_table, snapped_phantoms, result, params.output_fields);
 
     return Status::Ok;
 }

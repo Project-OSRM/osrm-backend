@@ -25,7 +25,7 @@ class NearestService final : public BaseService
     engine::Status
     RunQuery(std::size_t prefix_length, std::string &query, ResultT &result) final override;
 
-    unsigned GetVersion() final override { return 1; }
+    unsigned GetVersion() final override { return 2; }
 };
 }
 }

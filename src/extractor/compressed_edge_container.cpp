@@ -126,8 +126,8 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
                                            const NodeID target_node_id,
                                            const EdgeWeight weight1,
                                            const EdgeWeight weight2,
-                                           const EdgeWeight duration1,
-                                           const EdgeWeight duration2)
+                                           const UncompressedEdgePayload & payload1,
+                                           const UncompressedEdgePayload & payload2)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id_1);
@@ -172,7 +172,7 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     // weight1 is the distance to the (currently) last coordinate in the bucket
     if (edge_bucket_list1.empty())
     {
-        edge_bucket_list1.emplace_back(OnewayCompressedEdge{via_node_id, weight1, duration1});
+        edge_bucket_list1.emplace_back(OnewayCompressedEdge{via_node_id, weight1, payload1});
     }
 
     BOOST_ASSERT(0 < edge_bucket_list1.size());
@@ -203,14 +203,14 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     else
     {
         // we are certain that the second edge is atomic.
-        edge_bucket_list1.emplace_back(OnewayCompressedEdge{target_node_id, weight2, duration2});
+        edge_bucket_list1.emplace_back(OnewayCompressedEdge{target_node_id, weight2, payload2});
     }
 }
 
 void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
                                                   const NodeID target_node_id,
                                                   const EdgeWeight weight,
-                                                  const EdgeWeight duration)
+                                                  const UncompressedEdgePayload & payload)
 {
     // remove super-trivial geometries
     BOOST_ASSERT(SPECIAL_EDGEID != edge_id);
@@ -246,7 +246,7 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
     // Don't re-add this if it's already in there.
     if (edge_bucket_list.empty())
     {
-        edge_bucket_list.emplace_back(OnewayCompressedEdge{target_node_id, weight, duration});
+        edge_bucket_list.emplace_back(OnewayCompressedEdge{target_node_id, weight, payload});
     }
 }
 
@@ -279,7 +279,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     m_compressed_geometry_fwd_weights.emplace_back(INVALID_EDGE_WEIGHT);
     m_compressed_geometry_rev_weights.emplace_back(first_node.weight);
     m_compressed_geometry_fwd_durations.emplace_back(INVALID_EDGE_WEIGHT);
-    m_compressed_geometry_rev_durations.emplace_back(first_node.duration);
+    m_compressed_geometry_rev_durations.emplace_back(first_node.payload.duration);
 
     for (std::size_t i = 0; i < forward_bucket.size() - 1; ++i)
     {
@@ -291,8 +291,8 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
         m_compressed_geometry_nodes.emplace_back(fwd_node.node_id);
         m_compressed_geometry_fwd_weights.emplace_back(fwd_node.weight);
         m_compressed_geometry_rev_weights.emplace_back(rev_node.weight);
-        m_compressed_geometry_fwd_durations.emplace_back(fwd_node.duration);
-        m_compressed_geometry_rev_durations.emplace_back(rev_node.duration);
+        m_compressed_geometry_fwd_durations.emplace_back(fwd_node.payload.duration);
+        m_compressed_geometry_rev_durations.emplace_back(rev_node.payload.duration);
     }
 
     const auto &last_node = forward_bucket.back();
@@ -300,7 +300,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     m_compressed_geometry_nodes.emplace_back(last_node.node_id);
     m_compressed_geometry_fwd_weights.emplace_back(last_node.weight);
     m_compressed_geometry_rev_weights.emplace_back(INVALID_EDGE_WEIGHT);
-    m_compressed_geometry_fwd_durations.emplace_back(last_node.duration);
+    m_compressed_geometry_fwd_durations.emplace_back(last_node.payload.duration);
     m_compressed_geometry_rev_durations.emplace_back(INVALID_EDGE_WEIGHT);
 
     return zipped_geometry_id;

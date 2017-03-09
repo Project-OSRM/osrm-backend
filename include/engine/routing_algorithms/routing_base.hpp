@@ -11,6 +11,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/typedefs.hpp"
+#include "util/payload.hpp"
 
 #include <boost/assert.hpp>
 
@@ -201,12 +202,12 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap);
 }
 
-template <bool UseDuration>
+inline
 EdgeWeight
 getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
               NodeID node)
 {
-    EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
+    EdgeWeight loop_weight = INVALID_EDGE_WEIGHT;
     for (auto edge : facade.GetAdjacentEdgeRange(node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -215,12 +216,35 @@ getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH
             const NodeID to = facade.GetTarget(edge);
             if (to == node)
             {
-                const auto value = UseDuration ? data.duration : data.weight;
+                const auto value = data.weight;
                 loop_weight = std::min(loop_weight, value);
             }
         }
     }
     return loop_weight;
+}
+
+inline
+EdgePayload 
+GetLoopPayload(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+               NodeID node)
+{
+    EdgeWeight loop_weight = INVALID_EDGE_WEIGHT;
+    EdgePayload result = INVALID_PAYLOAD;
+    for (auto edge : facade.GetAdjacentEdgeRange(node))
+    {
+        const auto &data = facade.GetEdgeData(edge);
+        if (data.forward)
+        {
+            const NodeID to = facade.GetTarget(edge);
+            if (to == node && data.weight < loop_weight)
+            {
+                loop_weight = data.weight;
+                result = data.payload;
+            }
+        }
+    }
+    return result;
 }
 
 /**

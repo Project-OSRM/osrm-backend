@@ -63,8 +63,8 @@ struct Hint
     friend std::ostream &operator<<(std::ostream &, const Hint &);
 };
 
-static_assert(sizeof(Hint) == 72 + 4, "Hint is bigger than expected");
-constexpr std::size_t ENCODED_HINT_SIZE = 104;
+static_assert(sizeof(Hint) == sizeof(PhantomNode) + 4, "Hint is bigger than expected");
+constexpr std::size_t ENCODED_HINT_SIZE = (std::size_t) std::ceil(sizeof(Hint) / 3.) * 4;
 static_assert(ENCODED_HINT_SIZE / 4 * 3 >= sizeof(Hint),
               "ENCODED_HINT_SIZE does not match size of Hint");
 }

@@ -4,6 +4,7 @@
 #include "engine/api/base_api.hpp"
 #include "engine/api/json_factory.hpp"
 #include "engine/api/table_parameters.hpp"
+#include "engine/api/table_payload.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
 
@@ -36,9 +37,11 @@ class TableAPI final : public BaseAPI
     {
     }
 
-    virtual void MakeResponse(const std::vector<EdgeWeight> &durations,
+    virtual void MakeResponse(const std::vector<RoutingPayload> &entries,
                               const std::vector<PhantomNode> &phantoms,
-                              util::json::Object &response) const
+                              util::json::Object &response,
+                              const std::vector<TableOutputField> & output_fields
+                              ) const
     {
         auto number_of_sources = parameters.sources.size();
         auto number_of_destinations = parameters.destinations.size();
@@ -64,9 +67,13 @@ class TableAPI final : public BaseAPI
         {
             response.values["destinations"] = MakeWaypoints(phantoms, parameters.destinations);
         }
+        
+        for (auto &component : output_fields.size() == 0 ? DEFAULT_FIELDS : output_fields)
+        {
+            response.values[TableOutputFieldName[component]] =
+                MakeTable(entries, number_of_sources, number_of_destinations, get_encoder<RoutingPayload>(component));
+        }
 
-        response.values["durations"] =
-            MakeTable(durations, number_of_sources, number_of_destinations);
         response.values["code"] = "Ok";
     }
 
@@ -98,9 +105,10 @@ class TableAPI final : public BaseAPI
         return json_waypoints;
     }
 
-    virtual util::json::Array MakeTable(const std::vector<EdgeWeight> &values,
+    virtual util::json::Array MakeTable(const std::vector<RoutingPayload> &values,
                                         std::size_t number_of_rows,
-                                        std::size_t number_of_columns) const
+                                        std::size_t number_of_columns,
+                                        PAYLOAD_ENCODER<RoutingPayload> encoder) const
     {
         util::json::Array json_table;
         for (const auto row : util::irange<std::size_t>(0UL, number_of_rows))
@@ -112,20 +120,18 @@ class TableAPI final : public BaseAPI
             std::transform(row_begin_iterator,
                            row_end_iterator,
                            json_row.values.begin(),
-                           [](const EdgeWeight duration) {
-                               if (duration == MAXIMAL_EDGE_DURATION)
-                               {
-                                   return util::json::Value(util::json::Null());
-                               }
-                               return util::json::Value(util::json::Number(duration / 10.));
-                           });
+                           encoder);
             json_table.values.push_back(std::move(json_row));
         }
         return json_table;
     }
 
     const TableParameters &parameters;
+    
+    static const std::vector<TableOutputField> DEFAULT_FIELDS;
 };
+
+const std::vector<TableOutputField> TableAPI::DEFAULT_FIELDS = std::vector<TableOutputField>(1, DURATION);
 
 } // ns api
 } // ns engine

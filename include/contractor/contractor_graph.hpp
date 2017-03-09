@@ -2,6 +2,7 @@
 #define OSRM_CONTRACTOR_CONTRACTOR_GRAPH_HPP_
 
 #include "util/dynamic_graph.hpp"
+#include "util/payload.hpp"
 #include <algorithm>
 
 namespace osrm
@@ -12,24 +13,24 @@ namespace contractor
 struct ContractorEdgeData
 {
     ContractorEdgeData()
-        : weight(0), duration(0), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
+        : weight(0), payload(), id(0), originalEdges(0), shortcut(0), forward(0), backward(0),
           is_original_via_node_ID(false)
     {
     }
     ContractorEdgeData(EdgeWeight weight,
-                       EdgeWeight duration,
+                       EdgePayload payload,
                        unsigned original_edges,
                        unsigned id,
                        bool shortcut,
                        bool forward,
                        bool backward)
-        : weight(weight), duration(duration), id(id),
+        : weight(weight), payload(payload), id(id),
           originalEdges(std::min((1u << 28) - 1u, original_edges)), shortcut(shortcut),
           forward(forward), backward(backward), is_original_via_node_ID(false)
     {
     }
     EdgeWeight weight;
-    EdgeWeight duration;
+    EdgePayload payload;
     unsigned id;
     unsigned originalEdges : 28;
     bool shortcut : 1;

@@ -909,7 +909,7 @@ Contractor::LoadEdgeExpandedGraph(const ContractorConfig &config,
 
             // Update edge weight
             inbuffer.data.weight = new_weight + turn_weight_penalty;
-            inbuffer.data.duration = new_duration + turn_duration_penalty;
+            inbuffer.data.payload.duration = new_duration + turn_duration_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));

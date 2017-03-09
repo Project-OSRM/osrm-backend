@@ -29,8 +29,13 @@ class RoutingAlgorithmsInterface
     virtual InternalRouteResult
     DirectShortestPathSearch(const PhantomNodes &phantom_node_pair) const = 0;
 
-    virtual std::vector<EdgeWeight>
+    virtual std::vector<RoutingPayload>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
+                     const std::vector<std::size_t> &source_indices,
+                     const std::vector<std::size_t> &target_indices) const = 0;
+                     
+    virtual std::vector<EdgeWeight>
+    ManyToManyDurations(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices) const = 0;
 
@@ -74,8 +79,13 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
     InternalRouteResult
     DirectShortestPathSearch(const PhantomNodes &phantom_nodes) const final override;
 
-    std::vector<EdgeWeight>
+    std::vector<RoutingPayload>
     ManyToManySearch(const std::vector<PhantomNode> &phantom_nodes,
+                     const std::vector<std::size_t> &source_indices,
+                     const std::vector<std::size_t> &target_indices) const final override;
+                     
+    std::vector<EdgeWeight>
+    ManyToManyDurations(const std::vector<PhantomNode> &phantom_nodes,
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices) const final override;
 
@@ -149,13 +159,29 @@ RoutingAlgorithms<AlgorithmT>::DirectShortestPathSearch(const PhantomNodes &phan
 }
 
 template <typename AlgorithmT>
-std::vector<EdgeWeight> RoutingAlgorithms<AlgorithmT>::ManyToManySearch(
+std::vector<RoutingPayload> RoutingAlgorithms<AlgorithmT>::ManyToManySearch(
     const std::vector<PhantomNode> &phantom_nodes,
     const std::vector<std::size_t> &source_indices,
     const std::vector<std::size_t> &target_indices) const
 {
     return routing_algorithms::manyToManySearch(
         heaps, facade, phantom_nodes, source_indices, target_indices);
+}
+
+template <typename AlgorithmT>
+std::vector<EdgeWeight> RoutingAlgorithms<AlgorithmT>::ManyToManyDurations(
+    const std::vector<PhantomNode> &phantom_nodes,
+    const std::vector<std::size_t> &source_indices,
+    const std::vector<std::size_t> &target_indices) const
+{
+    std::vector<RoutingPayload> table = routing_algorithms::manyToManySearch(
+        heaps, facade, phantom_nodes, source_indices, target_indices);
+    std::vector<EdgeWeight> durations;
+    std::transform(table.begin(), 
+               table.end(), 
+               std::back_inserter(durations), 
+               [](const RoutingPayload& e) { return e.duration; });
+      return durations;
 }
 
 template <typename AlgorithmT>
@@ -201,8 +227,17 @@ InternalRouteResult inline RoutingAlgorithms<algorithm::MLD>::DirectShortestPath
 }
 
 template <>
-inline std::vector<EdgeWeight>
+inline std::vector<RoutingPayload>
 RoutingAlgorithms<algorithm::MLD>::ManyToManySearch(const std::vector<PhantomNode> &,
+                                                    const std::vector<std::size_t> &,
+                                                    const std::vector<std::size_t> &) const
+{
+    throw util::exception("ManyToManySearch is not implemented");
+}
+
+template <>
+inline std::vector<EdgeWeight>
+RoutingAlgorithms<algorithm::MLD>::ManyToManyDurations(const std::vector<PhantomNode> &,
                                                     const std::vector<std::size_t> &,
                                                     const std::vector<std::size_t> &) const
 {

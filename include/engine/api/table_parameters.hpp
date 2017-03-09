@@ -42,6 +42,16 @@ namespace engine
 {
 namespace api
 {
+    
+enum TableOutputField {
+  DURATION,
+  DISTANCE
+};
+
+const std::string TableOutputFieldName[] = {
+    "durations",
+    "distances"
+};
 
 /**
  * Parameters specific to the OSRM Table service.
@@ -51,6 +61,7 @@ namespace api
  *             use all coordinates as sources
  *  - destinations: indices into coordinates indicating destinations for the Table service, no
  *                  destinations means use all coordinates as destinations
+ *  - output_fields: fields that should get returned (durations, distances)
  *
  * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
  *      NearestParameters, TripParameters, MatchParameters and TileParameters
@@ -59,14 +70,16 @@ struct TableParameters : public BaseParameters
 {
     std::vector<std::size_t> sources;
     std::vector<std::size_t> destinations;
+    std::vector<TableOutputField> output_fields;
 
     TableParameters() = default;
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,
                     std::vector<std::size_t> destinations_,
+                    std::vector<TableOutputField> output_fields,
                     Args... args_)
         : BaseParameters{std::forward<Args>(args_)...}, sources{std::move(sources_)},
-          destinations{std::move(destinations_)}
+          destinations{std::move(destinations_)}, output_fields(output_fields)
     {
     }
 

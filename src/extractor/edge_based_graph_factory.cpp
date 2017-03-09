@@ -563,12 +563,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     auto weight =
                         boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
                     auto duration =
-                        boost::numeric_cast<EdgeWeight>(edge_data1.duration + duration_penalty);
+                        boost::numeric_cast<EdgeWeight>(edge_data1.payload.duration + duration_penalty);
+                    EdgePayload payload = edge_data1.payload;
+                    payload.duration = duration;
                     m_edge_based_edge_list.emplace_back(edge_data1.edge_id,
                                                         edge_data2.edge_id,
                                                         turn_id,
                                                         weight,
-                                                        duration,
+                                                        payload,
                                                         true,
                                                         false);
                     BOOST_ASSERT(original_edges_counter == m_edge_based_edge_list.size());
@@ -620,7 +622,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             lookup::SegmentBlock nodeblock{to.node_id,
                                                            segment_length,
                                                            target_node.weight,
-                                                           target_node.duration};
+                                                           target_node.payload.duration};
 
                             edge_segment_file.write(reinterpret_cast<const char *>(&nodeblock),
                                                     sizeof(nodeblock));

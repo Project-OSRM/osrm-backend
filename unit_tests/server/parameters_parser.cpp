@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(valid_table_urls)
 
     std::vector<std::size_t> sources_2 = {1, 2, 3};
     std::vector<std::size_t> destinations_2 = {4, 5};
-    TableParameters reference_2{sources_2, destinations_2};
+    TableParameters reference_2{sources_2, destinations_2, std::vector<TableOutputField>()};
     reference_2.coordinates = coords_1;
     auto result_2 = parseParameters<TableParameters>("1,2;3,4?sources=1;2;3&destinations=4;5");
     BOOST_CHECK(result_2);

@@ -3,6 +3,7 @@
 
 #include "extractor/travel_mode.hpp"
 #include "util/typedefs.hpp"
+#include "util/payload.hpp"
 #include <tuple>
 
 namespace osrm
@@ -21,7 +22,7 @@ struct EdgeBasedEdge
                   const NodeID target,
                   const NodeID edge_id,
                   const EdgeWeight weight,
-                  const EdgeWeight duration,
+                  const EdgePayload & payload, 
                   const bool forward,
                   const bool backward);
 
@@ -32,28 +33,28 @@ struct EdgeBasedEdge
 
     struct EdgeData
     {
-        EdgeData() : edge_id(0), weight(0), duration(0), forward(false), backward(false) {}
+        EdgeData() : edge_id(0), weight(0), forward(false), backward(false), payload() {}
 
         EdgeData(const NodeID edge_id,
                  const EdgeWeight weight,
-                 const EdgeWeight duration,
+                 const EdgePayload & payload,
                  const bool forward,
                  const bool backward)
-            : edge_id(edge_id), weight(weight), duration(duration), forward(forward),
-              backward(backward)
+            : edge_id(edge_id), weight(weight), forward(forward),
+              backward(backward), payload(payload)
         {
         }
 
         NodeID edge_id;
-        EdgeWeight weight;
-        EdgeWeight duration : 30;
+        EdgeWeight weight : 30;
         std::uint32_t forward : 1;
         std::uint32_t backward : 1;
+        EdgePayload payload;
 
         auto is_unidirectional() const { return !forward || !backward; }
     } data;
 };
-static_assert(sizeof(extractor::EdgeBasedEdge) == 20,
+static_assert(sizeof(extractor::EdgeBasedEdge) == 16 + sizeof(EdgePayload),
               "Size of extractor::EdgeBasedEdge type is "
               "bigger than expected. This will influence "
               "memory consumption.");
@@ -66,10 +67,10 @@ inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const NodeID target,
                                     const NodeID edge_id,
                                     const EdgeWeight weight,
-                                    const EdgeWeight duration,
+                                    const EdgePayload & payload,
                                     const bool forward,
                                     const bool backward)
-    : source(source), target(target), data{edge_id, weight, duration, forward, backward}
+    : source(source), target(target), data{edge_id, weight, payload, forward, backward}
 {
 }
 

@@ -214,7 +214,7 @@ Status TripPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryDataF
 
     // compute the duration table of all phantom nodes
     auto result_table = util::DistTableWrapper<EdgeWeight>(
-        algorithms.ManyToManySearch(snapped_phantoms, {}, {}), number_of_locations);
+        algorithms.ManyToManyDurations(snapped_phantoms, {}, {}), number_of_locations);
 
     if (result_table.size() == 0)
     {
