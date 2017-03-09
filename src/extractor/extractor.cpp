@@ -514,7 +514,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     });
 
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);
-    io::write(config.geometry_output_path, compressed_edge_container.ToSegmentData());
+    io::write(config.geometry_output_path, *compressed_edge_container.ToSegmentData());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
