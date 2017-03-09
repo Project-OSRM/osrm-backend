@@ -5,10 +5,11 @@
 #include "extractor/extraction_node.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/extractor_callbacks.hpp"
+#include "extractor/io.hpp"
+#include "extractor/raster_source.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
 
-#include "extractor/raster_source.hpp"
 #include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
@@ -513,7 +514,7 @@ Extractor::BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
     });
 
     WriteTurnLaneData(config.turn_lane_descriptions_file_name);
-    compressed_edge_container.SerializeInternalVector(config.geometry_output_path);
+    io::write(config.geometry_output_path, compressed_edge_container.ToSegmentData());
 
     edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
     edge_based_graph_factory.GetEdgeBasedNodes(node_based_edge_list);
