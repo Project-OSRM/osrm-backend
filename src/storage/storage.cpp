@@ -1,11 +1,15 @@
 #include "storage/storage.hpp"
 #include "contractor/query_edge.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/edge_based_edge.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+#include "partition/cell_storage.hpp"
+#include "partition/edge_based_graph_reader.hpp"
+#include "partition/multi_level_partition.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
@@ -52,6 +56,7 @@ using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
 using RTreeNode =
     util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, true>::vector, true>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
+using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 
 using Monitor = SharedMonitor<SharedDataTimestamp>;
 
@@ -235,6 +240,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<EntryClassID>(DataLayout::ENTRY_CLASSID, number_of_original_edges);
     }
 
+    if (boost::filesystem::exists(config.hsgr_data_path))
     {
         io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
 
@@ -244,6 +250,12 @@ void Storage::PopulateLayout(DataLayout &layout)
                                                         hsgr_header.number_of_nodes);
         layout.SetBlockSize<QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
                                                         hsgr_header.number_of_edges);
+    }
+    else
+    {
+        layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 0);
+        layout.SetBlockSize<QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST, 0);
+        layout.SetBlockSize<QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST, 0);
     }
 
     // load rsearch tree size
@@ -268,10 +280,15 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     // load core marker size
+    if (boost::filesystem::exists(config.core_data_path))
     {
         io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
         const auto number_of_core_markers = core_marker_file.ReadElementCount32();
         layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, number_of_core_markers);
+    }
+    else
+    {
+        layout.SetBlockSize<unsigned>(DataLayout::CH_CORE_MARKER, 0);
     }
 
     // load turn weight penalties
@@ -324,24 +341,25 @@ void Storage::PopulateLayout(DataLayout &layout)
                                         number_of_compressed_geometries);
     }
 
-    // load datasource sizes.  This file is optional, and it's non-fatal if it doesn't
-    // exist.
+    // load datasource sizes. This file is optional, and it's non-fatal if it doesn't exist.
+    if (boost::filesystem::exists(config.datasource_indexes_path))
     {
-        io::FileReader geometry_datasource_file(config.datasource_indexes_path,
-                                                io::FileReader::HasNoFingerprint);
-        const auto number_of_compressed_datasources = geometry_datasource_file.ReadElementCount64();
-        layout.SetBlockSize<uint8_t>(DataLayout::DATASOURCES_LIST,
-                                     number_of_compressed_datasources);
+        io::FileReader reader(config.datasource_indexes_path, io::FileReader::HasNoFingerprint);
+        const auto number_of_datasources = reader.ReadElementCount64();
+        layout.SetBlockSize<uint8_t>(DataLayout::DATASOURCES_LIST, number_of_datasources);
+    }
+    else
+    {
+        layout.SetBlockSize<uint8_t>(DataLayout::DATASOURCES_LIST, 0);
     }
 
-    // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't
-    // exist
+    // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't exist
+    if (boost::filesystem::exists(config.datasource_names_path))
     {
-        io::FileReader datasource_names_file(config.datasource_names_path,
-                                             io::FileReader::HasNoFingerprint);
+        io::FileReader reader(config.datasource_names_path, io::FileReader::HasNoFingerprint);
 
         const serialization::DatasourceNamesData datasource_names_data =
-            serialization::readDatasourceNames(datasource_names_file);
+            serialization::readDatasourceNames(reader);
 
         layout.SetBlockSize<char>(DataLayout::DATASOURCE_NAME_DATA,
                                   datasource_names_data.names.size());
@@ -349,6 +367,12 @@ void Storage::PopulateLayout(DataLayout &layout)
                                          datasource_names_data.offsets.size());
         layout.SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_LENGTHS,
                                          datasource_names_data.lengths.size());
+    }
+    else
+    {
+        layout.SetBlockSize<char>(DataLayout::DATASOURCE_NAME_DATA, 0);
+        layout.SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_OFFSETS, 0);
+        layout.SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_LENGTHS, 0);
     }
 
     {
@@ -393,6 +417,75 @@ void Storage::PopulateLayout(DataLayout &layout)
         layout.SetBlockSize<util::guidance::LaneTupleIdPair>(DataLayout::TURN_LANE_DATA,
                                                              lane_tuple_count);
     }
+
+    {
+        // Loading MLD Data
+        if (boost::filesystem::exists(config.mld_partition_path))
+        {
+            io::FileReader reader(config.mld_partition_path, io::FileReader::VerifyFingerprint);
+
+            reader.Skip<partition::MultiLevelPartition::LevelData>(1);
+            layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
+                DataLayout::MLD_LEVEL_DATA, 1);
+            const auto partition_entries_count = reader.ReadVectorSize<PartitionID>();
+            layout.SetBlockSize<PartitionID>(DataLayout::MLD_PARTITION, partition_entries_count);
+            const auto children_entries_count = reader.ReadVectorSize<CellID>();
+            layout.SetBlockSize<CellID>(DataLayout::MLD_CELL_TO_CHILDREN, children_entries_count);
+        }
+        else
+        {
+            layout.SetBlockSize<partition::MultiLevelPartition::LevelData>(
+                DataLayout::MLD_LEVEL_DATA, 0);
+            layout.SetBlockSize<PartitionID>(DataLayout::MLD_PARTITION, 0);
+            layout.SetBlockSize<CellID>(DataLayout::MLD_CELL_TO_CHILDREN, 0);
+        }
+
+        if (boost::filesystem::exists(config.mld_storage_path))
+        {
+            io::FileReader reader(config.mld_storage_path, io::FileReader::VerifyFingerprint);
+
+            const auto weights_count = reader.ReadVectorSize<EdgeWeight>();
+            layout.SetBlockSize<EdgeWeight>(DataLayout::MLD_CELL_WEIGHTS, weights_count);
+            const auto source_node_count = reader.ReadVectorSize<NodeID>();
+            layout.SetBlockSize<NodeID>(DataLayout::MLD_CELL_SOURCE_BOUNDARY, source_node_count);
+            const auto destination_node_count = reader.ReadVectorSize<NodeID>();
+            layout.SetBlockSize<NodeID>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY,
+                                        destination_node_count);
+            const auto cell_count = reader.ReadVectorSize<partition::CellStorage::CellData>();
+            layout.SetBlockSize<partition::CellStorage::CellData>(DataLayout::MLD_CELLS,
+                                                                  cell_count);
+            const auto level_offsets_count = reader.ReadVectorSize<std::uint64_t>();
+            layout.SetBlockSize<std::uint64_t>(DataLayout::MLD_CELL_LEVEL_OFFSETS,
+                                               level_offsets_count);
+        }
+        else
+        {
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_WEIGHTS, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_SOURCE_BOUNDARY, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_DESTINATION_BOUNDARY, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELLS, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_CELL_LEVEL_OFFSETS, 0);
+        }
+
+        if (boost::filesystem::exists(config.edge_based_graph_path))
+        {
+            io::FileReader ebg_file(config.edge_based_graph_path,
+                                    io::FileReader::VerifyFingerprint);
+
+            const auto num_edges = ebg_file.ReadElementCount64();
+            const auto num_nodes = ebg_file.ReadOne<EdgeID>() + 1;
+
+            layout.SetBlockSize<EdgeBasedGraph::NodeArrayEntry>(DataLayout::MLD_GRAPH_NODE_LIST,
+                                                                num_nodes + 1);
+            layout.SetBlockSize<EdgeBasedGraph::EdgeArrayEntry>(DataLayout::MLD_GRAPH_EDGE_LIST,
+                                                                2 * num_edges);
+        }
+        else
+        {
+            layout.SetBlockSize<char>(DataLayout::MLD_GRAPH_NODE_LIST, 0);
+            layout.SetBlockSize<char>(DataLayout::MLD_GRAPH_EDGE_LIST, 0);
+        }
+    }
 }
 
 void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
@@ -402,6 +495,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     // read actual data into shared memory object //
 
     // Load the HSGR file
+    if (boost::filesystem::exists(config.hsgr_data_path))
     {
         io::FileReader hsgr_file(config.hsgr_data_path, io::FileReader::VerifyFingerprint);
         auto hsgr_header = serialization::readHSGRHeader(hsgr_file);
@@ -424,6 +518,14 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                                 hsgr_header.number_of_nodes,
                                 graph_edge_list_ptr,
                                 hsgr_header.number_of_edges);
+    }
+    else
+    {
+        layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
+        layout.GetBlockPtr<QueryGraph::NodeArrayEntry, true>(memory_ptr,
+                                                             DataLayout::CH_GRAPH_NODE_LIST);
+        layout.GetBlockPtr<QueryGraph::EdgeArrayEntry, true>(memory_ptr,
+                                                             DataLayout::CH_GRAPH_EDGE_LIST);
     }
 
     // store the filename of the on-disk portion of the RTree
@@ -589,6 +691,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         geometry_input_file.ReadInto(geometries_rev_duration_list_ptr, geometry_node_lists_count);
     }
 
+    if (boost::filesystem::exists(config.datasource_indexes_path))
     {
         io::FileReader geometry_datasource_file(config.datasource_indexes_path,
                                                 io::FileReader::HasNoFingerprint);
@@ -603,9 +706,13 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                 geometry_datasource_file, datasources_list_ptr, number_of_compressed_datasources);
         }
     }
-
+    else
     {
-        /* Load names */
+        layout.GetBlockPtr<uint8_t, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
+    }
+
+    if (boost::filesystem::exists(config.datasource_names_path))
+    {
         io::FileReader datasource_names_file(config.datasource_names_path,
                                              io::FileReader::HasNoFingerprint);
 
@@ -651,6 +758,12 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                       datasource_names_data.lengths.end(),
                       datasource_name_lengths_ptr);
         }
+    }
+    else
+    {
+        layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::DATASOURCE_NAME_DATA);
+        layout.GetBlockPtr<std::size_t, true>(memory_ptr, DataLayout::DATASOURCE_NAME_OFFSETS);
+        layout.GetBlockPtr<std::size_t, true>(memory_ptr, DataLayout::DATASOURCE_NAME_LENGTHS);
     }
 
     // Loading list of coordinates
@@ -714,6 +827,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         tree_node_file.ReadInto(rtree_ptr, layout.num_entries[DataLayout::R_SEARCH_TREE]);
     }
 
+    if (boost::filesystem::exists(config.core_data_path))
     {
         io::FileReader core_marker_file(config.core_data_path, io::FileReader::HasNoFingerprint);
         const auto number_of_core_markers = core_marker_file.ReadElementCount32();
@@ -838,6 +952,106 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
                          std::distance(entry_class_table.begin(), entry_class_table.end()) *
                              sizeof(decltype(entry_class_table)::value_type));
             std::copy(entry_class_table.begin(), entry_class_table.end(), entry_class_ptr);
+        }
+    }
+
+    {
+        // Loading MLD Data
+        if (boost::filesystem::exists(config.mld_partition_path))
+        {
+            auto mld_level_data_ptr =
+                layout.GetBlockPtr<partition::MultiLevelPartition::LevelData, true>(
+                    memory_ptr, DataLayout::MLD_LEVEL_DATA);
+            auto mld_partition_ptr =
+                layout.GetBlockPtr<PartitionID, true>(memory_ptr, DataLayout::MLD_PARTITION);
+            auto mld_chilren_ptr =
+                layout.GetBlockPtr<CellID, true>(memory_ptr, DataLayout::MLD_CELL_TO_CHILDREN);
+
+            io::FileReader reader(config.mld_partition_path, io::FileReader::VerifyFingerprint);
+
+            reader.ReadInto(mld_level_data_ptr, 1);
+
+            std::uint64_t size;
+
+            reader.ReadInto(size);
+            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_PARTITION));
+            reader.ReadInto(mld_partition_ptr, size);
+
+            reader.ReadInto(size);
+            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_TO_CHILDREN));
+            reader.ReadInto(mld_chilren_ptr, size);
+        }
+
+        if (boost::filesystem::exists(config.mld_storage_path))
+        {
+            io::FileReader reader(config.mld_storage_path, io::FileReader::VerifyFingerprint);
+            auto mld_cell_weights_ptr =
+                layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, DataLayout::MLD_CELL_WEIGHTS);
+            auto mld_source_boundary_ptr =
+                layout.GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
+                memory_ptr, DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto mld_cells_ptr = layout.GetBlockPtr<partition::CellStorage::CellData, true>(
+                memory_ptr, DataLayout::MLD_CELLS);
+            auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
+                memory_ptr, DataLayout::MLD_CELL_LEVEL_OFFSETS);
+
+            std::uint64_t size;
+
+            reader.ReadInto(size);
+            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_WEIGHTS));
+            reader.ReadInto(mld_cell_weights_ptr, size);
+
+            reader.ReadInto(size);
+            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_SOURCE_BOUNDARY));
+            reader.ReadInto(mld_source_boundary_ptr, size);
+
+            reader.ReadInto(size);
+            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_DESTINATION_BOUNDARY));
+            reader.ReadInto(mld_destination_boundary_ptr, size);
+
+            reader.ReadInto(size);
+            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELLS));
+            reader.ReadInto(mld_cells_ptr, size);
+
+            reader.ReadInto(size);
+            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_LEVEL_OFFSETS));
+            reader.ReadInto(mld_cell_level_offsets_ptr, size);
+        }
+
+        if (boost::filesystem::exists(config.edge_based_graph_path))
+        {
+            io::FileReader reader(config.edge_based_graph_path, io::FileReader::VerifyFingerprint);
+
+            const auto number_of_edges = reader.ReadElementCount64();
+            const auto number_of_nodes = reader.ReadOne<EdgeID>() + 1;
+            std::vector<extractor::EdgeBasedEdge> original_edges(number_of_edges);
+            reader.ReadInto(original_edges);
+
+            // FIXME: move graph pre-processing to a pre-processing tool #3783
+            original_edges = partition::splitBidirectionalEdges(std::move(original_edges));
+            auto edges = partition::prepareEdgesForUsageInGraph(std::move(original_edges));
+            BOOST_ASSERT(edges.size() <= 2 * number_of_edges);
+
+            auto nodes_ptr = layout.GetBlockPtr<EdgeBasedGraph::NodeArrayEntry, true>(
+                memory_ptr, DataLayout::MLD_GRAPH_NODE_LIST);
+            auto edges_ptr = layout.GetBlockPtr<EdgeBasedGraph::EdgeArrayEntry, true>(
+                memory_ptr, DataLayout::MLD_GRAPH_EDGE_LIST);
+
+            EdgeBasedGraph::EdgeIterator edge = 0;
+            for (const auto node : util::irange(0u, number_of_nodes + 1))
+            {
+                EdgeBasedGraph::EdgeIterator last_edge = edge;
+                while (edge < edges.size() && edges[edge].source == node)
+                {
+                    edges_ptr[edge].target = edges[edge].target;
+                    edges_ptr[edge].data = edges[edge].data;
+                    ++edge;
+                }
+                nodes_ptr[node].first_edge = last_edge;
+            }
+
+            BOOST_ASSERT(edge == edges.size());
         }
     }
 }

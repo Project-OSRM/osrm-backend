@@ -82,6 +82,7 @@ class FileReader
     template <typename T> void ReadInto(T *dest, const std::size_t count)
     {
 #if not defined __GNUC__ or __GNUC__ > 4
+        static_assert(!std::is_pointer<T>::value, "saving pointer types is not allowed");
         static_assert(std::is_trivially_copyable<T>::value,
                       "bytewise reading requires trivially copyable type");
 #endif
@@ -132,6 +133,33 @@ class FileReader
         const auto count = ReadElementCount64();
         data.resize(count);
         ReadInto(data.data(), count);
+    }
+
+    template <typename T> std::size_t GetVectorMemorySize()
+    {
+        const auto count = ReadElementCount64();
+        Skip<T>(count);
+        return sizeof(count) + sizeof(T) * count;
+    }
+
+    template <typename T> std::size_t ReadVectorSize()
+    {
+        const auto count = ReadElementCount64();
+        Skip<T>(count);
+        return count;
+    }
+
+    template <typename T> void *DeserializeVector(void *begin, const void *end)
+    {
+        auto count = ReadElementCount64();
+        auto required = reinterpret_cast<char *>(begin) + sizeof(count) + sizeof(T) * count;
+        if (required > end)
+            throw util::exception("Not enough memory ");
+
+        *reinterpret_cast<decltype(count) *>(begin) = count;
+        ReadInto(reinterpret_cast<T *>(reinterpret_cast<char *>(begin) + sizeof(decltype(count))),
+                 count);
+        return required;
     }
 
     bool ReadAndCheckFingerprint()

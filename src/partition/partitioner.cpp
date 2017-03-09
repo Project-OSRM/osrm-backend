@@ -1,8 +1,11 @@
 #include "partition/partitioner.hpp"
-#include "partition/annotated_partition.hpp"
 #include "partition/bisection_graph.hpp"
+#include "partition/bisection_to_partition.hpp"
+#include "partition/cell_storage.hpp"
 #include "partition/compressed_node_based_graph_reader.hpp"
 #include "partition/edge_based_graph_reader.hpp"
+#include "partition/io.hpp"
+#include "partition/multi_level_partition.hpp"
 #include "partition/node_based_graph_to_edge_based_graph_mapping_reader.hpp"
 #include "partition/recursive_bisection.hpp"
 
@@ -28,27 +31,6 @@ namespace osrm
 {
 namespace partition
 {
-
-void LogStatistics(const std::string &filename, std::vector<std::uint32_t> bisection_ids)
-{
-    auto compressed_node_based_graph = LoadCompressedNodeBasedGraph(filename);
-
-    util::Log() << "Loaded compressed node based graph: "
-                << compressed_node_based_graph.edges.size() << " edges, "
-                << compressed_node_based_graph.coordinates.size() << " nodes";
-
-    groupEdgesBySource(begin(compressed_node_based_graph.edges),
-                       end(compressed_node_based_graph.edges));
-
-    auto graph =
-        makeBisectionGraph(compressed_node_based_graph.coordinates,
-                           adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
-
-    TIMER_START(annotation);
-    AnnotatedPartition partition(graph, bisection_ids);
-    TIMER_STOP(annotation);
-    std::cout << "Annotation took " << TIMER_SEC(annotation) << " seconds" << std::endl;
-}
 
 void LogGeojson(const std::string &filename, const std::vector<std::uint32_t> &bisection_ids)
 {
@@ -124,19 +106,16 @@ int Partitioner::Run(const PartitionConfig &config)
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
-    util::Log() << " running partition: " << config.maximum_cell_size << " " << config.balance
+    util::Log() << " running partition: " << config.minimum_cell_size << " " << config.balance
                 << " " << config.boundary_factor << " " << config.num_optimizing_cuts << " "
                 << config.small_component_size
                 << " # max_cell_size balance boundary cuts small_component_size";
     RecursiveBisection recursive_bisection(graph,
-                                           config.maximum_cell_size,
+                                           config.minimum_cell_size,
                                            config.balance,
                                            config.boundary_factor,
                                            config.num_optimizing_cuts,
                                            config.small_component_size);
-
-    LogStatistics(config.compressed_node_based_graph_path.string(),
-                  recursive_bisection.BisectionIDs());
 
     // Up until now we worked on the compressed node based graph.
     // But what we actually need is a partition for the edge based graph to work on.
@@ -180,6 +159,38 @@ int Partitioner::Run(const PartitionConfig &config)
             edge_based_partition_ids[node] = node_based_partition_ids[u];
         }
     }
+
+    std::vector<Partition> partitions;
+    std::vector<std::uint32_t> level_to_num_cells;
+    std::tie(partitions, level_to_num_cells) =
+        bisectionToPartition(edge_based_partition_ids,
+                             {config.minimum_cell_size,
+                              config.minimum_cell_size * 32,
+                              config.minimum_cell_size * 32 * 16,
+                              config.minimum_cell_size * 32 * 16 * 32});
+
+    util::Log() << "Edge-based-graph annotation:";
+    for (std::size_t level = 0; level < level_to_num_cells.size(); ++level)
+    {
+        util::Log() << "  level " << level + 1 << " #cells " << level_to_num_cells[level]
+                    << " bit size " << std::ceil(std::log2(level_to_num_cells[level] + 1));
+    }
+
+    TIMER_START(packed_mlp);
+    MultiLevelPartition mlp{partitions, level_to_num_cells};
+    TIMER_STOP(packed_mlp);
+    util::Log() << "MultiLevelPartition constructed in " << TIMER_SEC(packed_mlp) << " seconds";
+
+    TIMER_START(cell_storage);
+    CellStorage storage(mlp, *edge_based_graph);
+    TIMER_STOP(cell_storage);
+    util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
+
+    TIMER_START(writing_mld_data);
+    io::write(config.mld_partition_path, mlp);
+    io::write(config.mld_storage_path, storage);
+    TIMER_STOP(writing_mld_data);
+    util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     return 0;
 }

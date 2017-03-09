@@ -198,15 +198,17 @@ struct LocatedConditionalRestriction
     ConditionalRestriction restriction;
 };
 
+// clang-format off
 BOOST_FUSION_ADAPT_ADT(LocatedConditionalRestriction,
-                       (obj.restriction.from, obj.restriction.from = val)           //
-                       (obj.restriction.via, obj.restriction.via = val)             //
-                       (obj.restriction.to, obj.restriction.to = val)               //
-                       (obj.restriction.tag, obj.restriction.tag = val)             //
-                       (obj.restriction.value, obj.restriction.value = val)         //
-                       (obj.restriction.condition, obj.restriction.condition = val) //
-                       (obj.location.lon(), obj.location.set_lon(val))              //
-                       (obj.location.lat(), obj.location.set_lat(val)))
+  (osmium::object_id_type, osmium::object_id_type, obj.restriction.from, obj.restriction.from = val)
+  (osmium::object_id_type, osmium::object_id_type, obj.restriction.via, obj.restriction.via = val)
+  (osmium::object_id_type, osmium::object_id_type, obj.restriction.to, obj.restriction.to = val)
+  (std::string, std::string const &, obj.restriction.tag, obj.restriction.tag = val)
+  (std::string, std::string const &, obj.restriction.value, obj.restriction.value = val)
+  (std::string, std::string const &, obj.restriction.condition, obj.restriction.condition = val)
+  (std::int32_t, std::int32_t, obj.location.lon(), obj.location.set_lon(val))
+  (std::int32_t, std::int32_t, obj.location.lat(), obj.location.set_lat(val)))
+// clang-format on
 
 // The first pass relations handler that collects conditional restrictions
 class ConditionalRestrictionsCollector : public osmium::handler::Handler
@@ -311,10 +313,11 @@ class ConditionalRestrictionsHandler : public osmium::handler::Handler
         const auto &nodes = way.nodes();
 
         if (related_vias.find(nodes.front().ref()) != related_vias.end())
-            via_adjacency.push_back({nodes.front().ref(), way.id(), nodes[1].ref()});
+            via_adjacency.push_back(std::make_tuple(nodes.front().ref(), way.id(), nodes[1].ref()));
 
         if (related_vias.find(nodes.back().ref()) != related_vias.end())
-            via_adjacency.push_back({nodes.back().ref(), way.id(), nodes[nodes.size() - 2].ref()});
+            via_adjacency.push_back(
+                std::make_tuple(nodes.back().ref(), way.id(), nodes[nodes.size() - 2].ref()));
     }
 
     template <typename Callback> void process(Callback callback)
@@ -457,14 +460,16 @@ struct LocatedConditionalSpeedLimit
     ConditionalSpeedLimit speed_limit;
 };
 
+// clang-format off
 BOOST_FUSION_ADAPT_ADT(LocatedConditionalSpeedLimit,
-                       (obj.speed_limit.from, obj.speed_limit.from = val)           //
-                       (obj.speed_limit.to, obj.speed_limit.to = val)               //
-                       (obj.speed_limit.tag, obj.speed_limit.tag = val)             //
-                       (obj.speed_limit.value, obj.speed_limit.value = val)         //
-                       (obj.speed_limit.condition, obj.speed_limit.condition = val) //
-                       (obj.location.lon(), obj.location.set_lon(val))              //
-                       (obj.location.lat(), obj.location.set_lat(val)))
+  (osmium::object_id_type, osmium::object_id_type, obj.speed_limit.from, obj.speed_limit.from = val)
+  (osmium::object_id_type, osmium::object_id_type, obj.speed_limit.to, obj.speed_limit.to = val)
+  (std::string, std::string const &, obj.speed_limit.tag, obj.speed_limit.tag = val)
+  (int, int, obj.speed_limit.value, obj.speed_limit.value = val)
+  (std::string, std::string const &, obj.speed_limit.condition, obj.speed_limit.condition = val)
+  (std::int32_t, std::int32_t, obj.location.lon(), obj.location.set_lon(val))
+  (std::int32_t, std::int32_t, obj.location.lat(), obj.location.set_lat(val)))
+// clang-format on
 
 class ConditionalSpeedLimitsCollector : public osmium::handler::Handler
 {

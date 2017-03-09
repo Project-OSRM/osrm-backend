@@ -334,16 +334,16 @@ void Extractor::FindComponents(unsigned max_edge_id,
 
     for (const auto &edge : input_edge_list)
     {
-        BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(edge.weight, 1)) > 0,
+        BOOST_ASSERT_MSG(static_cast<unsigned int>(std::max(edge.data.weight, 1)) > 0,
                          "edge distance < 1");
         BOOST_ASSERT(edge.source <= max_edge_id);
         BOOST_ASSERT(edge.target <= max_edge_id);
-        if (edge.forward)
+        if (edge.data.forward)
         {
             edges.push_back({edge.source, edge.target});
         }
 
-        if (edge.backward)
+        if (edge.data.backward)
         {
             edges.push_back({edge.target, edge.source});
         }

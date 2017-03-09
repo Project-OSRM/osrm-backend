@@ -1,10 +1,15 @@
-#ifndef OSRM_UTIL_CELL_STORAGE_HPP
-#define OSRM_UTIL_CELL_STORAGE_HPP
+#ifndef OSRM_CUSTOMIZE_CELL_STORAGE_HPP
+#define OSRM_CUSTOMIZE_CELL_STORAGE_HPP
+
+#include "partition/multi_level_partition.hpp"
 
 #include "util/assert.hpp"
 #include "util/for_each_range.hpp"
-#include "util/multi_level_partition.hpp"
+#include "util/log.hpp"
+#include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
+
+#include "storage/io.hpp"
 
 #include <boost/range/iterator_range.hpp>
 #include <tbb/parallel_sort.h>
@@ -16,10 +21,28 @@
 
 namespace osrm
 {
-namespace util
+namespace partition
 {
+namespace detail
+{
+template <bool UseShareMemory> class CellStorageImpl;
+}
+using CellStorage = detail::CellStorageImpl<false>;
+using CellStorageView = detail::CellStorageImpl<true>;
 
-class CellStorage
+namespace io
+{
+template <bool UseShareMemory>
+inline void read(const boost::filesystem::path &path,
+                 detail::CellStorageImpl<UseShareMemory> &storage);
+template <bool UseShareMemory>
+inline void write(const boost::filesystem::path &path,
+                  const detail::CellStorageImpl<UseShareMemory> &storage);
+}
+
+namespace detail
+{
+template <bool UseShareMemory> class CellStorageImpl
 {
   public:
     using WeightOffset = std::uint32_t;
@@ -31,7 +54,6 @@ class CellStorage
     static constexpr auto INVALID_WEIGHT_OFFSET = std::numeric_limits<WeightOffset>::max();
     static constexpr auto INVALID_BOUNDARY_OFFSET = std::numeric_limits<BoundaryOffset>::max();
 
-  private:
     struct CellData
     {
         WeightOffset weight_offset = INVALID_WEIGHT_OFFSET;
@@ -40,6 +62,9 @@ class CellStorage
         BoundarySize num_source_nodes = 0;
         BoundarySize num_destination_nodes = 0;
     };
+
+  private:
+    template <typename T> using Vector = typename util::ShM<T, UseShareMemory>::vector;
 
     // Implementation of the cell view. We need a template parameter here
     // because we need to derive a read-only and read-write view from this.
@@ -61,13 +86,19 @@ class CellStorage
         class ColumnIterator : public std::iterator<std::random_access_iterator_tag, EdgeWeight>
         {
           public:
+            explicit ColumnIterator() : current(nullptr), stride(1) {}
+
             explicit ColumnIterator(WeightPtrT begin, std::size_t row_length)
                 : current(begin), stride(row_length)
             {
                 BOOST_ASSERT(begin != nullptr);
             }
 
-            WeightRefT operator*() const { return *current; }
+            WeightRefT operator*() const
+            {
+                BOOST_ASSERT(current);
+                return *current;
+            }
 
             ColumnIterator &operator++()
             {
@@ -95,25 +126,14 @@ class CellStorage
             std::size_t stride;
         };
 
-        std::size_t GetRow(NodeID node) const
-        {
-            auto iter = std::find(source_boundary, source_boundary + num_source_nodes, node);
-            BOOST_ASSERT(iter != source_boundary + num_source_nodes);
-            return iter - source_boundary;
-        }
-
-        std::size_t GetColumn(NodeID node) const
-        {
-            auto iter =
-                std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
-            BOOST_ASSERT(iter != destination_boundary + num_destination_nodes);
-            return iter - destination_boundary;
-        }
-
       public:
         auto GetOutWeight(NodeID node) const
         {
-            auto row = GetRow(node);
+            auto iter = std::find(source_boundary, source_boundary + num_source_nodes, node);
+            if (iter == source_boundary + num_source_nodes)
+                return boost::make_iterator_range(weights, weights);
+
+            auto row = std::distance(source_boundary, iter);
             auto begin = weights + num_destination_nodes * row;
             auto end = begin + num_destination_nodes;
             return boost::make_iterator_range(begin, end);
@@ -121,7 +141,12 @@ class CellStorage
 
         auto GetInWeight(NodeID node) const
         {
-            auto column = GetColumn(node);
+            auto iter =
+                std::find(destination_boundary, destination_boundary + num_destination_nodes, node);
+            if (iter == destination_boundary + num_destination_nodes)
+                return boost::make_iterator_range(ColumnIterator{}, ColumnIterator{});
+
+            auto column = std::distance(destination_boundary, iter);
             auto begin = ColumnIterator{weights + column, num_destination_nodes};
             auto end = ColumnIterator{weights + column + num_source_nodes * num_destination_nodes,
                                       num_destination_nodes};
@@ -161,8 +186,10 @@ class CellStorage
     using Cell = CellImpl<EdgeWeight>;
     using ConstCell = CellImpl<const EdgeWeight>;
 
-    template <typename GraphT>
-    CellStorage(const MultiLevelPartition &partition, const GraphT &base_graph)
+    CellStorageImpl() {}
+
+    template <typename GraphT, typename = std::enable_if<!UseShareMemory>>
+    CellStorageImpl(const partition::MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
         unsigned number_of_cells = 0;
@@ -176,6 +203,8 @@ class CellStorage
 
         std::vector<std::pair<CellID, NodeID>> level_source_boundary;
         std::vector<std::pair<CellID, NodeID>> level_destination_boundary;
+
+        std::size_t number_of_unconneced = 0;
 
         for (LevelID level = 1u; level < partition.GetNumberOfLevels(); ++level)
         {
@@ -208,12 +237,14 @@ class CellStorage
                         level_source_boundary.emplace_back(cell_id, node);
                     if (is_destination_node)
                         level_destination_boundary.emplace_back(cell_id, node);
-                    // a partition that contains boundary nodes that have no arcs going into
-                    // the cells or coming out of it is invalid. These nodes should be reassigned
-                    // to a different cell.
-                    BOOST_ASSERT_MSG(
-                        is_source_node || is_destination_node,
-                        "Node needs to either have incoming or outgoing edges in cell");
+
+                    // if a node is unconnected we still need to keep it for correctness
+                    // this adds it to the destination array to form an "empty" column
+                    if (!is_source_node && !is_destination_node)
+                    {
+                        number_of_unconneced++;
+                        level_destination_boundary.emplace_back(cell_id, node);
+                    }
                 }
             }
 
@@ -264,6 +295,15 @@ class CellStorage
                 });
         }
 
+        // a partition that contains boundary nodes that have no arcs going into
+        // the cells or coming out of it is bad. These nodes should be reassigned
+        // to a different cell.
+        if (number_of_unconneced > 0)
+        {
+            util::Log(logWARNING) << "Node needs to either have incoming or outgoing edges in cell."
+                                  << " Number of unconnected nodes is " << number_of_unconneced;
+        }
+
         // Set weight offsets and calculate total storage size
         WeightOffset weight_offset = 0;
         for (auto &cell : cells)
@@ -275,11 +315,12 @@ class CellStorage
         weights.resize(weight_offset + 1, INVALID_EDGE_WEIGHT);
     }
 
-    CellStorage(std::vector<EdgeWeight> weights_,
-                std::vector<NodeID> source_boundary_,
-                std::vector<NodeID> destination_boundary_,
-                std::vector<CellData> cells_,
-                std::vector<std::size_t> level_to_cell_offset_)
+    template <typename = std::enable_if<UseShareMemory>>
+    CellStorageImpl(Vector<EdgeWeight> weights_,
+                    Vector<NodeID> source_boundary_,
+                    Vector<NodeID> destination_boundary_,
+                    Vector<CellData> cells_,
+                    Vector<std::uint64_t> level_to_cell_offset_)
         : weights(std::move(weights_)), source_boundary(std::move(source_boundary_)),
           destination_boundary(std::move(destination_boundary_)), cells(std::move(cells_)),
           level_to_cell_offset(std::move(level_to_cell_offset_))
@@ -297,7 +338,7 @@ class CellStorage
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    Cell GetCell(LevelID level, CellID id)
+    template <typename = std::enable_if<!UseShareMemory>> Cell GetCell(LevelID level, CellID id)
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
@@ -308,14 +349,20 @@ class CellStorage
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
+    friend void io::read<UseShareMemory>(const boost::filesystem::path &path,
+                                         detail::CellStorageImpl<UseShareMemory> &storage);
+    friend void io::write<UseShareMemory>(const boost::filesystem::path &path,
+                                          const detail::CellStorageImpl<UseShareMemory> &storage);
+
   private:
-    std::vector<EdgeWeight> weights;
-    std::vector<NodeID> source_boundary;
-    std::vector<NodeID> destination_boundary;
-    std::vector<CellData> cells;
-    std::vector<std::size_t> level_to_cell_offset;
+    Vector<EdgeWeight> weights;
+    Vector<NodeID> source_boundary;
+    Vector<NodeID> destination_boundary;
+    Vector<CellData> cells;
+    Vector<std::uint64_t> level_to_cell_offset;
 };
 }
 }
+}
 
-#endif
+#endif // OSRM_CUSTOMIZE_CELL_STORAGE_HPP

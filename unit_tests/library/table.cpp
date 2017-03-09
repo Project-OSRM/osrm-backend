@@ -1,7 +1,6 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "args.hpp"
 #include "coordinates.hpp"
 #include "fixture.hpp"
 #include "waypoint_check.hpp"
@@ -18,12 +17,9 @@ BOOST_AUTO_TEST_SUITE(table)
 
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
-    auto osrm = getOSRM(args[0]);
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     TableParameters params;
     params.coordinates.push_back(get_dummy_location());
@@ -68,12 +64,9 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
 
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
-    auto osrm = getOSRM(args[0]);
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     TableParameters params;
     params.coordinates.push_back(get_dummy_location());
@@ -118,12 +111,9 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
 
 BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
-    auto osrm = getOSRM(args[0]);
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
 
     TableParameters params;
     params.coordinates.push_back(get_dummy_location());

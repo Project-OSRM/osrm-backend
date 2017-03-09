@@ -56,7 +56,17 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "LANE_DESCRIPTION_OFFSETS",
                                             "LANE_DESCRIPTION_MASKS",
                                             "TURN_WEIGHT_PENALTIES",
-                                            "TURN_DURATION_PENALTIES"};
+                                            "TURN_DURATION_PENALTIES",
+                                            "MLD_LEVEL_DATA",
+                                            "MLD_PARTITION",
+                                            "MLD_CELL_TO_CHILDREN",
+                                            "MLD_CELL_WEIGHTS",
+                                            "MLD_CELL_SOURCE_BOUNDARY",
+                                            "MLD_CELL_DESTINATION_BOUNDARY",
+                                            "MLD_CELLS",
+                                            "MLD_CELL_LEVEL_OFFSETS",
+                                            "MLD_GRAPH_NODE_LIST",
+                                            "MLD_GRAPH_EDGE_LIST"};
 
 struct DataLayout
 {
@@ -101,6 +111,16 @@ struct DataLayout
         LANE_DESCRIPTION_MASKS,
         TURN_WEIGHT_PENALTIES,
         TURN_DURATION_PENALTIES,
+        MLD_LEVEL_DATA,
+        MLD_PARTITION,
+        MLD_CELL_TO_CHILDREN,
+        MLD_CELL_WEIGHTS,
+        MLD_CELL_SOURCE_BOUNDARY,
+        MLD_CELL_DESTINATION_BOUNDARY,
+        MLD_CELLS,
+        MLD_CELL_LEVEL_OFFSETS,
+        MLD_GRAPH_NODE_LIST,
+        MLD_GRAPH_EDGE_LIST,
         NUM_BLOCKS
     };
 
@@ -117,6 +137,8 @@ struct DataLayout
         entry_size[bid] = sizeof(T);
         entry_align[bid] = alignof(T);
     }
+
+    inline uint64_t GetBlockEntries(BlockID bid) const { return num_entries[bid]; }
 
     inline uint64_t GetBlockSize(BlockID bid) const
     {
@@ -163,6 +185,12 @@ struct DataLayout
         ptr = static_cast<char *>(ptr) + sizeof(CANARY);
         ptr = align(entry_align[bid], entry_size[bid], ptr);
         return ptr;
+    }
+
+    template <typename T> inline T *GetBlockEnd(char *shared_memory, BlockID bid) const
+    {
+        auto begin = GetBlockPtr<T>(shared_memory, bid);
+        return begin + GetBlockEntries(bid);
     }
 
     template <typename T, bool WRITE_CANARY = false>

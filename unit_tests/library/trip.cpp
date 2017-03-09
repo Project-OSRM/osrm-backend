@@ -1,7 +1,6 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "args.hpp"
 #include "coordinates.hpp"
 #include "fixture.hpp"
 
@@ -17,11 +16,9 @@ BOOST_AUTO_TEST_SUITE(trip)
 
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
 
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     const auto locations = get_locations_in_small_component();
 
     TripParameters params;
@@ -61,11 +58,9 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component)
 
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
 
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     const auto locations = get_locations_in_big_component();
 
     TripParameters params;
@@ -105,11 +100,9 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component)
 
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
 
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     const auto small = get_locations_in_small_component();
     const auto big = get_locations_in_big_component();
 
@@ -153,11 +146,9 @@ BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components)
 
 BOOST_AUTO_TEST_CASE(test_tfse_1)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
 
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     const auto locations = get_locations_in_small_component();
 
     TripParameters params;
@@ -201,11 +192,9 @@ BOOST_AUTO_TEST_CASE(test_tfse_1)
 
 BOOST_AUTO_TEST_CASE(test_tfse_2)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
-
     using namespace osrm;
 
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     const auto locations = get_locations_in_big_component();
 
     TripParameters params;
@@ -274,10 +263,9 @@ void CheckOk(const osrm::OSRM &osrm, osrm::TripParameters &params)
 
 BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
     using namespace osrm;
 
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     const auto locations = get_locations_in_big_component();
     auto params = osrm::TripParameters();
 
@@ -326,9 +314,8 @@ BOOST_AUTO_TEST_CASE(test_tfse_illegal_parameters)
 
 BOOST_AUTO_TEST_CASE(test_tfse_legal_parameters)
 {
-    const auto args = get_args();
-    auto osrm = getOSRM(args.at(0));
     using namespace osrm;
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/monaco_CH.osrm");
     const auto locations = get_locations_in_big_component();
     json::Object result;
     TripParameters params;

@@ -55,6 +55,8 @@ EngineConfig::Algorithm stringToAlgorithm(const std::string &algorithm)
         return EngineConfig::Algorithm::CH;
     if (algorithm == "CoreCH")
         return EngineConfig::Algorithm::CoreCH;
+    if (algorithm == "MLD")
+        return EngineConfig::Algorithm::MLD;
     throw util::exception("Invalid algorithm name: " + algorithm);
 }
 
@@ -100,7 +102,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          "Load data from shared memory") //
         ("algorithm,a",
          value<std::string>(&algorithm)->default_value("CH"),
-         "Algorithm to use for the data. Can be CH, CoreCH") //
+         "Algorithm to use for the data. Can be CH, CoreCH, MLD.") //
         ("max-viaroute-size",
          value<int>(&max_locations_viaroute)->default_value(500),
          "Max. locations supported in viaroute query") //

@@ -1,8 +1,6 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "args.hpp"
-
 #include "osrm/match_parameters.hpp"
 #include "osrm/nearest_parameters.hpp"
 #include "osrm/route_parameters.hpp"
@@ -27,13 +25,10 @@ BOOST_AUTO_TEST_SUITE(limits)
 
 BOOST_AUTO_TEST_CASE(test_trip_limits)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {args[0]};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_trip = 2;
 
@@ -57,13 +52,10 @@ BOOST_AUTO_TEST_CASE(test_trip_limits)
 
 BOOST_AUTO_TEST_CASE(test_route_limits)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {args[0]};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_viaroute = 2;
 
@@ -87,13 +79,10 @@ BOOST_AUTO_TEST_CASE(test_route_limits)
 
 BOOST_AUTO_TEST_CASE(test_table_limits)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {args[0]};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_distance_table = 2;
 
@@ -117,13 +106,10 @@ BOOST_AUTO_TEST_CASE(test_table_limits)
 
 BOOST_AUTO_TEST_CASE(test_match_limits)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {args[0]};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
     config.use_shared_memory = false;
     config.max_locations_map_matching = 2;
 
@@ -147,13 +133,10 @@ BOOST_AUTO_TEST_CASE(test_match_limits)
 
 BOOST_AUTO_TEST_CASE(test_nearest_limits)
 {
-    const auto args = get_args();
-    BOOST_REQUIRE_EQUAL(args.size(), 1);
-
     using namespace osrm;
 
     EngineConfig config;
-    config.storage_config = {args[0]};
+    config.storage_config = {OSRM_TEST_DATA_DIR "/monaco_CH.osrm"};
     config.use_shared_memory = false;
     config.max_results_nearest = 2;
 

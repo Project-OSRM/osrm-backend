@@ -19,7 +19,7 @@ namespace osrm
 namespace partition
 {
 
-struct EdgeBasedGraphEdgeData : extractor::EdgeBasedEdge
+struct EdgeBasedGraphEdgeData : extractor::EdgeBasedEdge::EdgeData
 {
     // We need to write out the full edge based graph again.
 
@@ -37,6 +37,107 @@ struct EdgeBasedGraphEdge : EdgeBasedGraph::InputEdge
     using Base = EdgeBasedGraph::InputEdge;
     using Base::Base;
 };
+
+// Bidirectional (s,t) to (s,t) and (t,s)
+std::vector<extractor::EdgeBasedEdge>
+splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
+{
+    std::vector<extractor::EdgeBasedEdge> directed;
+    directed.reserve(edges.size() * 2);
+
+    for (const auto &edge : edges)
+    {
+        directed.emplace_back(edge.source,
+                              edge.target,
+                              edge.data.edge_id,
+                              std::max(edge.data.weight, 1),
+                              edge.data.duration,
+                              edge.data.forward,
+                              edge.data.backward);
+
+        directed.emplace_back(edge.target,
+                              edge.source,
+                              edge.data.edge_id,
+                              std::max(edge.data.weight, 1),
+                              edge.data.duration,
+                              edge.data.backward,
+                              edge.data.forward);
+    }
+
+    return directed;
+}
+
+std::vector<EdgeBasedGraphEdge>
+prepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
+{
+    std::sort(begin(edges), end(edges));
+
+    std::vector<EdgeBasedGraphEdge> graph_edges;
+    graph_edges.reserve(edges.size());
+
+    for (NodeID i = 0; i < edges.size();)
+    {
+        const NodeID source = edges[i].source;
+        const NodeID target = edges[i].target;
+
+        // remove eigenloops
+        if (source == target)
+        {
+            ++i;
+            continue;
+        }
+
+        EdgeBasedGraphEdge forward_edge;
+        EdgeBasedGraphEdge reverse_edge;
+        forward_edge.source = reverse_edge.source = source;
+        forward_edge.target = reverse_edge.target = target;
+        forward_edge.data.edge_id = reverse_edge.data.edge_id = edges[i].data.edge_id;
+        forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
+        forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION_INT_30;
+        forward_edge.data.forward = reverse_edge.data.backward = true;
+        forward_edge.data.backward = reverse_edge.data.forward = false;
+
+        // remove parallel edges
+        while (i < edges.size() && edges[i].source == source && edges[i].target == target)
+        {
+            if (edges[i].data.forward)
+            {
+                forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
+                forward_edge.data.duration =
+                    std::min(edges[i].data.duration, forward_edge.data.duration);
+            }
+            if (edges[i].data.backward)
+            {
+                reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
+                reverse_edge.data.duration =
+                    std::min(edges[i].data.duration, reverse_edge.data.duration);
+            }
+            ++i;
+        }
+        // merge edges (s,t) and (t,s) into bidirectional edge
+        if (forward_edge.data.weight == reverse_edge.data.weight)
+        {
+            if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
+            {
+                forward_edge.data.backward = true;
+                graph_edges.push_back(forward_edge);
+            }
+        }
+        else
+        { // insert seperate edges
+            if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
+            {
+                graph_edges.push_back(forward_edge);
+            }
+            if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
+            {
+                graph_edges.push_back(reverse_edge);
+            }
+        }
+    }
+
+    return graph_edges;
+}
 
 struct EdgeBasedGraphReader
 {
@@ -66,115 +167,15 @@ struct EdgeBasedGraphReader
         // - adaptToContractorInput
         // - GraphContractor::GraphContractor
         // and should really be abstracted over.
+        // FIXME: edges passed as a const reference, can be changed pass-by-value if can be moved
 
-        auto directed = SplitBidirectionalEdges(edges);
-        auto tidied = PrepareEdgesForUsageInGraph(std::move(directed));
+        auto directed = splitBidirectionalEdges(edges);
+        auto tidied = prepareEdgesForUsageInGraph(std::move(directed));
 
         return std::make_unique<EdgeBasedGraph>(num_nodes, std::move(tidied));
     }
 
   private:
-    // Bidirectional (s,t) to (s,t) and (t,s)
-    std::vector<extractor::EdgeBasedEdge>
-    SplitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
-    {
-        std::vector<extractor::EdgeBasedEdge> directed;
-        directed.reserve(edges.size() * 2);
-
-        for (const auto &edge : edges)
-        {
-            directed.emplace_back(edge.source,
-                                  edge.target,
-                                  edge.edge_id,
-                                  std::max(edge.weight, 1),
-                                  edge.duration,
-                                  edge.forward,
-                                  edge.backward);
-
-            directed.emplace_back(edge.target,
-                                  edge.source,
-                                  edge.edge_id,
-                                  std::max(edge.weight, 1),
-                                  edge.duration,
-                                  edge.backward,
-                                  edge.forward);
-        }
-
-        return directed;
-    }
-
-    std::vector<EdgeBasedGraphEdge>
-    PrepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
-    {
-        std::sort(begin(edges), end(edges));
-
-        std::vector<EdgeBasedGraphEdge> graph_edges;
-        graph_edges.reserve(edges.size());
-
-        for (NodeID i = 0; i < edges.size();)
-        {
-            const NodeID source = edges[i].source;
-            const NodeID target = edges[i].target;
-
-            // remove eigenloops
-            if (source == target)
-            {
-                ++i;
-                continue;
-            }
-
-            EdgeBasedGraphEdge forward_edge;
-            EdgeBasedGraphEdge reverse_edge;
-            forward_edge.source = reverse_edge.source = source;
-            forward_edge.target = reverse_edge.target = target;
-            forward_edge.data.edge_id = reverse_edge.data.edge_id = edges[i].edge_id;
-            forward_edge.data.weight = reverse_edge.data.weight = INVALID_EDGE_WEIGHT;
-            forward_edge.data.duration = reverse_edge.data.duration = MAXIMAL_EDGE_DURATION_INT_30;
-            forward_edge.data.forward = reverse_edge.data.backward = true;
-            forward_edge.data.backward = reverse_edge.data.forward = false;
-
-            // remove parallel edges
-            while (i < edges.size() && edges[i].source == source && edges[i].target == target)
-            {
-                if (edges[i].forward)
-                {
-                    forward_edge.data.weight = std::min(edges[i].weight, forward_edge.data.weight);
-                    forward_edge.data.duration =
-                        std::min(edges[i].duration, forward_edge.data.duration);
-                }
-                if (edges[i].backward)
-                {
-                    reverse_edge.data.weight = std::min(edges[i].weight, reverse_edge.data.weight);
-                    reverse_edge.data.duration =
-                        std::min(edges[i].duration, reverse_edge.data.duration);
-                }
-                ++i;
-            }
-            // merge edges (s,t) and (t,s) into bidirectional edge
-            if (forward_edge.data.weight == reverse_edge.data.weight)
-            {
-                if ((int)forward_edge.data.weight != INVALID_EDGE_WEIGHT)
-                {
-                    forward_edge.data.backward = true;
-                    graph_edges.push_back(forward_edge);
-                }
-            }
-            else
-            { // insert seperate edges
-                if (((int)forward_edge.data.weight) != INVALID_EDGE_WEIGHT)
-                {
-                    graph_edges.push_back(forward_edge);
-                }
-                if ((int)reverse_edge.data.weight != INVALID_EDGE_WEIGHT)
-                {
-                    graph_edges.push_back(reverse_edge);
-                }
-            }
-        }
-
-        return graph_edges;
-    }
-
     std::vector<extractor::EdgeBasedEdge> edges;
     std::size_t num_nodes;
 };

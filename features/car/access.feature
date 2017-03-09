@@ -292,14 +292,15 @@ Feature: Car - Restricted access
             | service    | private    |       |
             | cycleway   | private    |       |
             | track      | private    |       |
+            | footway    | customers  |       |
 
     Scenario: Car - Access blacklist
         Then routability should be
             | highway    | access       | bothw |
             | primary    |              |   x   |
-            | primary    | customer     |       |
             | primary    | emergency    |       |
             | primary    | forestry     |       |
             | primary    | agricultural |       |
             | primary    | psv          |       |
             | primary    | no           |       |
+            | primary    | customers    |   x   |

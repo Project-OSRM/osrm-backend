@@ -35,6 +35,7 @@ if(ENABLE_MASON)
   set(MASON_LUA_VERSION "5.2.4")
   set(MASON_BZIP2_VERSION "1.0.6")
   set(MASON_TBB_VERSION "2017_20161128")
+  set(MASON_LIBSHP_VERSION "1.3.0")
 
   message(STATUS "Enabling mason")
 
@@ -64,9 +65,11 @@ add_definitions(-DOSRM_PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 # include_directories and add_definitions for both
 # this build and for sharing externally via pkg-config
 
-function(add_dependency_includes includes)
-  list(APPEND DEPENDENCIES_INCLUDE_DIRS "${includes}")
-  set(DEPENDENCIES_INCLUDE_DIRS "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
+function(add_dependency_includes)
+  if(${ARGC} GREATER 0)
+    list(APPEND DEPENDENCIES_INCLUDE_DIRS "${ARGV}")
+    set(DEPENDENCIES_INCLUDE_DIRS "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
+  endif()
 endfunction(add_dependency_includes)
 
 function(add_dependency_defines defines)
@@ -116,6 +119,7 @@ configure_file(
 file(GLOB UtilGlob src/util/*.cpp src/util/*/*.cpp)
 file(GLOB ExtractorGlob src/extractor/*.cpp src/extractor/*/*.cpp)
 file(GLOB PartitionerGlob src/partition/*.cpp)
+file(GLOB CustomizerGlob src/customize/*.cpp)
 file(GLOB ContractorGlob src/contractor/*.cpp)
 file(GLOB StorageGlob src/storage/*.cpp)
 file(GLOB ServerGlob src/server/*.cpp src/server/**/*.cpp)
@@ -124,6 +128,7 @@ file(GLOB EngineGlob src/engine/*.cpp src/engine/**/*.cpp)
 add_library(UTIL OBJECT ${UtilGlob})
 add_library(EXTRACTOR OBJECT ${ExtractorGlob})
 add_library(PARTITIONER OBJECT ${PartitionerGlob})
+add_library(CUSTOMIZER OBJECT ${CustomizerGlob})
 add_library(CONTRACTOR OBJECT ${ContractorGlob})
 add_library(STORAGE OBJECT ${StorageGlob})
 add_library(ENGINE OBJECT ${EngineGlob})
@@ -133,13 +138,15 @@ set_target_properties(UTIL PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(osrm-extract src/tools/extract.cpp)
 add_executable(osrm-partition src/tools/partition.cpp)
+add_executable(osrm-customize src/tools/customize.cpp)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-routed src/tools/routed.cpp $<TARGET_OBJECTS:SERVER> $<TARGET_OBJECTS:UTIL>)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
 add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:STORAGE>)
-add_library(osrm_extract $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_partition $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_contract $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_customize $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
 if(ENABLE_GOLD_LINKER)
@@ -164,8 +171,8 @@ endif()
 
 # Disable LTO when mason+gcc is detected before testing for / setting any flags.
 # Mason builds libraries with Clang, mixing does not work in the context of lto.
-if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(ENABLE_LTO Off)
+if(ENABLE_MASON AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND ENABLE_LTO)
+  set(ENABLE_LTO OFF)
   message(WARNING "Mason and GCC's LTO not work together. Disabling LTO.")
 endif()
 
@@ -323,6 +330,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
   # using Visual Studio C++
   set(BOOST_COMPONENTS ${BOOST_COMPONENTS} zlib)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # avoid compiler error C1128 from scripting_environment_lua.cpp
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
@@ -433,6 +441,10 @@ if(ENABLE_MASON)
   add_dependency_includes(${MASON_PACKAGE_tbb_INCLUDE_DIRS})
   set(TBB_LIBRARIES ${MASON_PACKAGE_tbb_LDFLAGS})
 
+  mason_use(libshp2 VERSION ${MASON_LIBSHP_VERSION})
+  set(LIBSHAPEFILE_INCLUDE_DIR ${MASON_PACKAGE_libshp2_INCLUDE_DIRS})
+  set(LIBSHAPEFILE_LIBRARY ${MASON_PACKAGE_libshp2_LDFLAGS})
+
   if(NOT MASON_PACKAGE_tbb_LIBRARY_DIRS)
     message(FATAL_ERROR "MASON_PACKAGE_tbb_LIBRARY_DIRS is empty, rpath will not work")
   endif()
@@ -522,7 +534,9 @@ else()
 
   # note libosmium depends on expat and bzip2
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
-  set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
+  if(NOT OSMIUM_INCLUDE_DIR)
+    set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
+  endif()
   find_package(Osmium REQUIRED COMPONENTS io)
   include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 
@@ -583,6 +597,7 @@ set(BOOST_ENGINE_LIBRARIES
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
@@ -605,6 +620,12 @@ set(PARTITIONER_LIBRARIES
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
+  set(CUSTOMIZER_LIBRARIES
+    ${BOOST_ENGINE_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${TBB_LIBRARIES}
+    ${MAYBE_RT_LIBRARY}
+    ${MAYBE_COVERAGE_LIBRARIES})
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -637,6 +658,7 @@ target_link_libraries(osrm ${ENGINE_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES})
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
+target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES})
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 # BUILD_COMPONENTS
@@ -652,10 +674,11 @@ if(BUILD_TOOLS)
   install(TARGETS osrm-io-benchmark DESTINATION bin)
 
   find_package(Shapefile) # package libshp-dev
-  if(Shapefile_FOUND)
+  if(SHAPEFILE_FOUND AND (Boost_VERSION VERSION_GREATER 106000 OR ENABLE_MASON))
     add_executable(osrm-extract-conditionals src/tools/extract-conditionals.cpp $<TARGET_OBJECTS:UTIL>)
     target_include_directories(osrm-extract-conditionals PRIVATE ${LIBSHAPEFILE_INCLUDE_DIR})
-    target_link_libraries(osrm-extract-conditionals ${OSMIUM_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${LIBSHAPEFILE_LIBRARY})
+    target_link_libraries(osrm-extract-conditionals ${OSMIUM_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${Boost_PROGRAM_OPTIONS_LIBRARY}
+      ${LIBSHAPEFILE_LIBRARY} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARY} ${EXPAT_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
     install(TARGETS osrm-extract-conditionals DESTINATION bin)
   endif()
 endif()

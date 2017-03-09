@@ -5,20 +5,25 @@
 #include "engine/datafacade/contiguous_block_allocator.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 
+#include "engine/algorithm.hpp"
+#include "engine/geospatial_query.hpp"
+
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/profile_properties.hpp"
-#include "storage/shared_datatype.hpp"
-#include "util/guidance/bearing_class.hpp"
-#include "util/guidance/entry_class.hpp"
-#include "util/guidance/turn_lanes.hpp"
 
-#include "engine/algorithm.hpp"
-#include "engine/geospatial_query.hpp"
+#include "partition/cell_storage.hpp"
+#include "partition/multi_level_partition.hpp"
+
+#include "storage/shared_datatype.hpp"
+
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/guidance/bearing_class.hpp"
+#include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_bearing.hpp"
+#include "util/guidance/turn_lanes.hpp"
 #include "util/log.hpp"
 #include "util/name_table.hpp"
 #include "util/packed_vector.hpp"
@@ -1078,6 +1083,184 @@ class ContiguousInternalMemoryDataFacade<algorithm::CoreCH> final
           ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>(allocator)
 
     {
+    }
+};
+
+template <>
+class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
+    : public datafacade::AlgorithmDataFacade<algorithm::MLD>
+{
+    // MLD data
+    partition::MultiLevelPartitionView mld_partition;
+    partition::CellStorageView mld_cell_storage;
+
+    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        InitializeMLDDataPointers(data_layout, memory_block);
+    }
+
+    void InitializeMLDDataPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        if (data_layout.GetBlockSize(storage::DataLayout::MLD_PARTITION) > 0)
+        {
+            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_LEVEL_DATA) > 0);
+            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_TO_CHILDREN) > 0);
+
+            auto level_data =
+                *data_layout.GetBlockPtr<partition::MultiLevelPartitionView::LevelData>(
+                    memory_block, storage::DataLayout::MLD_LEVEL_DATA);
+
+            auto mld_partition_ptr = data_layout.GetBlockPtr<PartitionID>(
+                memory_block, storage::DataLayout::MLD_PARTITION);
+            auto partition_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
+            util::ShM<PartitionID, true>::vector partition(mld_partition_ptr,
+                                                           partition_entries_count);
+
+            auto mld_chilren_ptr = data_layout.GetBlockPtr<CellID>(
+                memory_block, storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            auto children_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
+            util::ShM<CellID, true>::vector cell_to_children(mld_chilren_ptr,
+                                                             children_entries_count);
+
+            mld_partition =
+                partition::MultiLevelPartitionView{level_data, partition, cell_to_children};
+        }
+
+        if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS) > 0)
+        {
+            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY) >
+                         0);
+            BOOST_ASSERT(
+                data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY) > 0);
+            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
+            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
+
+            auto mld_cell_weights_ptr = data_layout.GetBlockPtr<EdgeWeight>(
+                memory_block, storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto mld_source_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
+                memory_block, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            auto mld_destination_boundary_ptr = data_layout.GetBlockPtr<NodeID>(
+                memory_block, storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto mld_cells_ptr = data_layout.GetBlockPtr<partition::CellStorageView::CellData>(
+                memory_block, storage::DataLayout::MLD_CELLS);
+            auto mld_cell_level_offsets_ptr = data_layout.GetBlockPtr<std::uint64_t>(
+                memory_block, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
+
+            auto weight_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto source_boundary_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            auto destination_boundary_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto cells_entries_counts = data_layout.GetBlockEntries(storage::DataLayout::MLD_CELLS);
+            auto cell_level_offsets_entries_count =
+                data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
+
+            util::ShM<EdgeWeight, true>::vector weights(mld_cell_weights_ptr, weight_entries_count);
+            util::ShM<NodeID, true>::vector source_boundary(mld_source_boundary_ptr,
+                                                            source_boundary_entries_count);
+            util::ShM<NodeID, true>::vector destination_boundary(
+                mld_destination_boundary_ptr, destination_boundary_entries_count);
+            util::ShM<partition::CellStorageView::CellData, true>::vector cells(
+                mld_cells_ptr, cells_entries_counts);
+            util::ShM<std::uint64_t, true>::vector level_offsets(mld_cell_level_offsets_ptr,
+                                                                 cell_level_offsets_entries_count);
+
+            mld_cell_storage = partition::CellStorageView{std::move(weights),
+                                                          std::move(source_boundary),
+                                                          std::move(destination_boundary),
+                                                          std::move(cells),
+                                                          std::move(level_offsets)};
+        }
+    }
+
+    // allocator that keeps the allocation data
+    std::shared_ptr<ContiguousBlockAllocator> allocator;
+
+  public:
+    ContiguousInternalMemoryAlgorithmDataFacade(
+        std::shared_ptr<ContiguousBlockAllocator> allocator_)
+        : allocator(std::move(allocator_))
+    {
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+    }
+
+    const partition::MultiLevelPartitionView &GetMultiLevelPartition() const
+    {
+        return mld_partition;
+    }
+
+    const partition::CellStorageView &GetCellStorage() const { return mld_cell_storage; }
+};
+
+template <>
+class ContiguousInternalMemoryDataFacade<algorithm::MLD>
+    : public ContiguousInternalMemoryDataFacadeBase,
+      public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
+{
+  private:
+    using QueryGraph = util::StaticGraph<EdgeData, true>;
+    using GraphNode = QueryGraph::NodeArrayEntry;
+    using GraphEdge = QueryGraph::EdgeArrayEntry;
+
+    std::unique_ptr<QueryGraph> m_query_graph;
+
+    void InitializeGraphPointer(storage::DataLayout &data_layout, char *memory_block)
+    {
+        auto graph_nodes_ptr = data_layout.GetBlockPtr<GraphNode>(
+            memory_block, storage::DataLayout::MLD_GRAPH_NODE_LIST);
+
+        auto graph_edges_ptr = data_layout.GetBlockPtr<GraphEdge>(
+            memory_block, storage::DataLayout::MLD_GRAPH_EDGE_LIST);
+
+        util::ShM<GraphNode, true>::vector node_list(
+            graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_LIST]);
+        util::ShM<GraphEdge, true>::vector edge_list(
+            graph_edges_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_EDGE_LIST]);
+
+        m_query_graph.reset(new QueryGraph(node_list, edge_list));
+    }
+
+  public:
+    ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
+        : ContiguousInternalMemoryDataFacadeBase(allocator),
+          ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>(allocator)
+
+    {
+        InitializeInternalPointers(allocator->GetLayout(), allocator->GetMemory());
+    }
+
+    void InitializeInternalPointers(storage::DataLayout &data_layout, char *memory_block)
+    {
+        InitializeGraphPointer(data_layout, memory_block);
+    }
+
+    // search graph access
+    unsigned GetNumberOfNodes() const override final { return m_query_graph->GetNumberOfNodes(); }
+
+    unsigned GetNumberOfEdges() const override final { return m_query_graph->GetNumberOfEdges(); }
+
+    unsigned GetOutDegree(const NodeID n) const override final
+    {
+        return m_query_graph->GetOutDegree(n);
+    }
+
+    NodeID GetTarget(const EdgeID e) const override final { return m_query_graph->GetTarget(e); }
+
+    EdgeData &GetEdgeData(const EdgeID e) const override final
+    {
+        return m_query_graph->GetEdgeData(e);
+    }
+
+    EdgeID BeginEdges(const NodeID n) const override final { return m_query_graph->BeginEdges(n); }
+
+    EdgeID EndEdges(const NodeID n) const override final { return m_query_graph->EndEdges(n); }
+
+    EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
+    {
+        return m_query_graph->GetAdjacentEdgeRange(node);
     }
 };
 }
