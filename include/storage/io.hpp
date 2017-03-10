@@ -284,6 +284,11 @@ class FileWriter
         }
     }
 
+    template <typename T> void WriteFrom(const std::vector<T> &src)
+    {
+        WriteFrom(src.data(), src.size());
+    }
+
     template <typename T> void WriteFrom(const T &src) { WriteFrom(&src, 1); }
 
     template <typename T> void WriteOne(const T tmp) { WriteFrom(tmp); }

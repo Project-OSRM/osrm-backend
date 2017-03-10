@@ -8,10 +8,10 @@
 #include "engine/algorithm.hpp"
 #include "engine/geospatial_query.hpp"
 
-#include "extractor/compressed_edge_container.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/profile_properties.hpp"
+#include "extractor/segment_data_container.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/multi_level_partition.hpp"
@@ -218,18 +218,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::ShM<util::guidance::TurnBearing, true>::vector m_post_turn_bearing;
     util::NameTable m_names_table;
     util::ShM<unsigned, true>::vector m_name_begin_indices;
-    util::ShM<unsigned, true>::vector m_geometry_indices;
-    util::ShM<NodeID, true>::vector m_geometry_node_list;
-    util::ShM<EdgeWeight, true>::vector m_geometry_fwd_weight_list;
-    util::ShM<EdgeWeight, true>::vector m_geometry_rev_weight_list;
-    util::ShM<EdgeWeight, true>::vector m_geometry_fwd_duration_list;
-    util::ShM<EdgeWeight, true>::vector m_geometry_rev_duration_list;
     util::ShM<bool, true>::vector m_is_core_node;
     util::ShM<DatasourceID, true>::vector m_datasource_list;
     util::ShM<std::uint32_t, true>::vector m_lane_description_offsets;
     util::ShM<extractor::guidance::TurnLaneType::Mask, true>::vector m_lane_description_masks;
     util::ShM<TurnPenalty, true>::vector m_turn_weight_penalties;
     util::ShM<TurnPenalty, true>::vector m_turn_duration_penalties;
+    extractor::SegmentDataView segment_data;
 
     util::ShM<char, true>::vector m_datasource_name_data;
     util::ShM<std::size_t, true>::vector m_datasource_name_offsets;
@@ -441,48 +436,49 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::GEOMETRIES_INDEX);
         util::ShM<unsigned, true>::vector geometry_begin_indices(
             geometries_index_ptr, data_layout.num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
-        m_geometry_indices = std::move(geometry_begin_indices);
 
         auto geometries_node_list_ptr = data_layout.GetBlockPtr<NodeID>(
             memory_block, storage::DataLayout::GEOMETRIES_NODE_LIST);
         util::ShM<NodeID, true>::vector geometry_node_list(
             geometries_node_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
-        m_geometry_node_list = std::move(geometry_node_list);
 
         auto geometries_fwd_weight_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_fwd_weight_list(
             geometries_fwd_weight_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
-        m_geometry_fwd_weight_list = std::move(geometry_fwd_weight_list);
 
         auto geometries_rev_weight_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_rev_weight_list(
             geometries_rev_weight_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
-        m_geometry_rev_weight_list = std::move(geometry_rev_weight_list);
-
-        auto datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
-            memory_block, storage::DataLayout::DATASOURCES_LIST);
-        util::ShM<DatasourceID, true>::vector datasources_list(
-            datasources_list_ptr, data_layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
-        m_datasource_list = std::move(datasources_list);
 
         auto geometries_fwd_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_fwd_duration_list(
             geometries_fwd_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
-        m_geometry_fwd_duration_list = std::move(geometry_fwd_duration_list);
 
         auto geometries_rev_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
         util::ShM<EdgeWeight, true>::vector geometry_rev_duration_list(
             geometries_rev_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
-        m_geometry_rev_duration_list = std::move(geometry_rev_duration_list);
+
+        segment_data = extractor::SegmentDataView{std::move(geometry_begin_indices),
+                                                  std::move(geometry_node_list),
+                                                  std::move(geometry_fwd_weight_list),
+                                                  std::move(geometry_rev_weight_list),
+                                                  std::move(geometry_fwd_duration_list),
+                                                  std::move(geometry_rev_duration_list)};
+
+        auto datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
+            memory_block, storage::DataLayout::DATASOURCES_LIST);
+        util::ShM<DatasourceID, true>::vector datasources_list(
+            datasources_list_ptr, data_layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
+        m_datasource_list = std::move(datasources_list);
 
         auto datasource_name_data_ptr =
             data_layout.GetBlockPtr<char>(memory_block, storage::DataLayout::DATASOURCE_NAME_DATA);
@@ -576,144 +572,43 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     virtual std::vector<NodeID> GetUncompressedForwardGeometry(const EdgeID id) const override final
     {
-        /*
-         * NodeID's for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_node_list vector. For
-         * forward geometries of bi-directional edges, edges 2 to
-         * n of that edge need to be read.
-         */
-        const auto begin = m_geometry_indices.at(id);
-        const auto end = m_geometry_indices.at(id + 1);
 
-        std::vector<NodeID> result_nodes;
-        result_nodes.reserve(end - begin);
-
-        std::copy(m_geometry_node_list.begin() + begin,
-                  m_geometry_node_list.begin() + end,
-                  std::back_inserter(result_nodes));
-
-        return result_nodes;
+        auto range = segment_data.GetForwardGeometry(id);
+        return std::vector<NodeID>{range.begin(), range.end()};
     }
 
     virtual std::vector<NodeID> GetUncompressedReverseGeometry(const EdgeID id) const override final
     {
-        /*
-         * NodeID's for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_node_list vector.
-         * */
-        const auto begin = m_geometry_indices.at(id);
-        const auto end = m_geometry_indices.at(id + 1);
-
-        std::vector<NodeID> result_nodes;
-        result_nodes.reserve(end - begin);
-
-        std::reverse_copy(m_geometry_node_list.begin() + begin,
-                          m_geometry_node_list.begin() + end,
-                          std::back_inserter(result_nodes));
-
-        return result_nodes;
+        auto range = segment_data.GetReverseGeometry(id);
+        return std::vector<NodeID>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedForwardDurations(const EdgeID id) const override final
     {
-        /*
-         * EdgeWeights's for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_fwd_weight_list vector.
-         * */
-        const auto begin = m_geometry_indices.at(id) + 1;
-        const auto end = m_geometry_indices.at(id + 1);
-
-        std::vector<EdgeWeight> result_durations;
-        result_durations.reserve(end - begin);
-
-        std::copy(m_geometry_fwd_duration_list.begin() + begin,
-                  m_geometry_fwd_duration_list.begin() + end,
-                  std::back_inserter(result_durations));
-
-        return result_durations;
+        auto range = segment_data.GetForwardDurations(id);
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedReverseDurations(const EdgeID id) const override final
     {
-        /*
-         * EdgeWeights for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_rev_weight_list vector. For
-         * reverse durations of bi-directional edges, edges 1 to
-         * n-1 of that edge need to be read in reverse.
-         */
-        const auto begin = m_geometry_indices.at(id);
-        const auto end = m_geometry_indices.at(id + 1) - 1;
-
-        std::vector<EdgeWeight> result_durations;
-        result_durations.reserve(end - begin);
-
-        std::reverse_copy(m_geometry_rev_duration_list.begin() + begin,
-                          m_geometry_rev_duration_list.begin() + end,
-                          std::back_inserter(result_durations));
-
-        return result_durations;
+        auto range = segment_data.GetReverseDurations(id);
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedForwardWeights(const EdgeID id) const override final
     {
-        /*
-         * EdgeWeights's for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_fwd_weight_list vector.
-         * */
-        const auto begin = m_geometry_indices.at(id) + 1;
-        const auto end = m_geometry_indices.at(id + 1);
-
-        std::vector<EdgeWeight> result_weights;
-        result_weights.reserve(end - begin);
-
-        std::copy(m_geometry_fwd_weight_list.begin() + begin,
-                  m_geometry_fwd_weight_list.begin() + end,
-                  std::back_inserter(result_weights));
-
-        return result_weights;
+        auto range = segment_data.GetForwardWeights(id);
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual std::vector<EdgeWeight>
     GetUncompressedReverseWeights(const EdgeID id) const override final
     {
-        /*
-         * EdgeWeights for geometries are stored in one place for
-         * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
-         * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_rev_weight_list vector. For
-         * reverse weights of bi-directional edges, edges 1 to
-         * n-1 of that edge need to be read in reverse.
-         */
-        const auto begin = m_geometry_indices.at(id);
-        const auto end = m_geometry_indices.at(id + 1) - 1;
-
-        std::vector<EdgeWeight> result_weights;
-        result_weights.reserve(end - begin);
-
-        std::reverse_copy(m_geometry_rev_weight_list.begin() + begin,
-                          m_geometry_rev_weight_list.begin() + end,
-                          std::back_inserter(result_weights));
-
-        return result_weights;
+        auto range = segment_data.GetReverseWeights(id);
+        return std::vector<EdgeWeight>{range.begin(), range.end()};
     }
 
     virtual GeometryID GetGeometryIndexForEdgeID(const EdgeID id) const override final
@@ -894,14 +789,14 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         /*
          * Data sources for geometries are stored in one place for
          * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
+         * directional edge. The indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector. For
+         * directional edge in the list vector. For
          * forward datasources of bi-directional edges, edges 2 to
          * n of that edge need to be read.
          */
-        const auto begin = m_geometry_indices.at(id) + 1;
-        const auto end = m_geometry_indices.at(id + 1);
+        const auto begin = segment_data.GetOffset(id, 0) + 1;
+        const auto end = segment_data.GetOffset(id + 1, 0);
 
         std::vector<DatasourceID> result_datasources;
         result_datasources.reserve(end - begin);
@@ -929,14 +824,14 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         /*
          * Datasources for geometries are stored in one place for
          * both forward and reverse segments along the same bi-
-         * directional edge. The m_geometry_indices stores
+         * directional edge. The indices stores
          * refences to where to find the beginning of the bi-
-         * directional edge in the m_geometry_list vector. For
+         * directional edge in the list vector. For
          * reverse datasources of bi-directional edges, edges 1 to
          * n-1 of that edge need to be read in reverse.
          */
-        const unsigned begin = m_geometry_indices.at(id);
-        const unsigned end = m_geometry_indices.at(id + 1) - 1;
+        const auto begin = segment_data.GetOffset(id, 0);
+        const auto end = segment_data.GetOffset(id + 1, 0) - 1;
 
         std::vector<DatasourceID> result_datasources;
         result_datasources.reserve(end - begin);

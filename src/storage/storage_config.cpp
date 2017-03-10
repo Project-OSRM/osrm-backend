@@ -43,8 +43,6 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
 
 bool StorageConfig::IsValid() const
 {
-    const constexpr auto num_files = 15;
-
     // Common files
     if (!CheckFileList({ram_index_path,
                         file_index_path,

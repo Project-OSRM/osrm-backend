@@ -11,6 +11,7 @@
 
 #include "storage/io.hpp"
 
+#include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <tbb/parallel_sort.h>
 
@@ -83,9 +84,21 @@ template <bool UseShareMemory> class CellStorageImpl
         using RowIterator = WeightPtrT;
         // Possibly replace with
         // http://www.boost.org/doc/libs/1_55_0/libs/range/doc/html/range/reference/adaptors/reference/strided.html
-        class ColumnIterator : public std::iterator<std::random_access_iterator_tag, EdgeWeight>
+        class ColumnIterator : public boost::iterator_facade<ColumnIterator,
+                                                             WeightValueT,
+                                                             boost::random_access_traversal_tag>
         {
+            typedef boost::iterator_facade<ColumnIterator,
+                                           WeightValueT,
+                                           boost::random_access_traversal_tag>
+                base_t;
+
           public:
+            typedef typename base_t::value_type value_type;
+            typedef typename base_t::difference_type difference_type;
+            typedef typename base_t::reference reference;
+            typedef std::random_access_iterator_tag iterator_category;
+
             explicit ColumnIterator() : current(nullptr), stride(1) {}
 
             explicit ColumnIterator(WeightPtrT begin, std::size_t row_length)
@@ -94,36 +107,20 @@ template <bool UseShareMemory> class CellStorageImpl
                 BOOST_ASSERT(begin != nullptr);
             }
 
-            WeightRefT operator*() const
-            {
-                BOOST_ASSERT(current);
-                return *current;
-            }
-
-            ColumnIterator &operator++()
-            {
-                current += stride;
-                return *this;
-            }
-
-            ColumnIterator &operator+=(int amount)
-            {
-                current += stride * amount;
-                return *this;
-            }
-
-            bool operator==(const ColumnIterator &other) const { return current == other.current; }
-
-            bool operator!=(const ColumnIterator &other) const { return current != other.current; }
-
-            std::int64_t operator-(const ColumnIterator &other) const
-            {
-                return (current - other.current) / stride;
-            }
-
           private:
+            void increment() { current += stride; }
+            void decrement() { current -= stride; }
+            void advance(difference_type offset) { current += stride * offset; }
+            bool equal(const ColumnIterator &other) const { return current == other.current; }
+            reference dereference() const { return *current; }
+            difference_type distance_to(const ColumnIterator &other) const
+            {
+                return (other.current - current) / static_cast<std::intptr_t>(stride);
+            }
+
+            friend class ::boost::iterator_core_access;
             WeightPtrT current;
-            std::size_t stride;
+            const std::size_t stride;
         };
 
       public:
