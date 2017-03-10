@@ -109,19 +109,50 @@ static_assert(sizeof(DurationPayload) == 4, "DurationPayload is larger than expe
 
 //////////////////////////////////////////////////////
 
+using DurationProviderFunction = std::function<EdgeWeight()>;
+using DistanceProviderFunction = std::function<EdgeDistance()>;
+
 #ifdef PAYLOAD_TYPE_DURATIONS_AND_DISTANCES
 using EdgePayload = DurationDistancePayload;
 using UncompressedEdgePayload = DurationPayload;
 using RoutingPayload = DurationDistancePayload;
+
+static inline EdgePayload MAKE_PAYLOAD(DurationProviderFunction duration_gen,
+                                       DistanceProviderFunction distance_gen)
+{
+    return DurationDistancePayload(duration_gen(), distance_gen());
+}
+
+static inline RoutingPayload MAKE_ROUTING_PAYLOAD(DurationProviderFunction duration_gen,
+                                                  DistanceProviderFunction distance_gen)
+{
+    return DurationDistancePayload(duration_gen(), distance_gen());
+}
+
 #else // PAYLOAD_TYPE_DURATIONS
 using EdgePayload = DurationPayload;
 using UncompressedEdgePayload = DurationPayload;
 using RoutingPayload = DurationPayload;
+
+static inline EdgePayload MAKE_PAYLOAD(DurationProviderFunction duration_gen,
+                                       DistanceProviderFunction distance_gen)
+{
+    (void)distance_gen;
+    return DurationPayload(duration_gen());
+}
+
+static inline RoutingPayload MAKE_ROUTING_PAYLOAD(DurationProviderFunction duration_gen,
+                                                  DistanceProviderFunction distance_gen)
+{
+    (void)distance_gen;
+    return DurationPayload(duration_gen());
+}
+
 #endif
 
 static inline EdgePayload MAKE_PAYLOAD(EdgeWeight duration, EdgeDistance distance)
 {
-    return DurationDistancePayload(duration, distance);
+    return EdgePayload(duration, distance);
 }
 
 static inline RoutingPayload MAKE_ROUTING_PAYLOAD(EdgeWeight duration, EdgeDistance distance)
