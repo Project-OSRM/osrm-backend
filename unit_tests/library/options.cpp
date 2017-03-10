@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(test_mld)
     using namespace osrm;
     EngineConfig config;
     config.use_shared_memory = false;
-    config.storage_config = storage::StorageConfig(OSRM_TEST_DATA_DIR "/monaco_CoreCH.osrm");
+    config.storage_config = storage::StorageConfig(OSRM_TEST_DATA_DIR "/monaco_MLD.osrm");
     config.algorithm = EngineConfig::Algorithm::MLD;
     OSRM osrm{config};
 }

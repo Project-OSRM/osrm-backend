@@ -1,17 +1,22 @@
 #include "customizer/customizer.hpp"
 #include "customizer/cell_customizer.hpp"
-#include "partition/edge_based_graph_reader.hpp"
-#include "partition/io.hpp"
+#include "customizer/edge_based_graph.hpp"
+#include "customizer/io.hpp"
 
 #include "partition/cell_storage.hpp"
+#include "partition/edge_based_graph_reader.hpp"
+#include "partition/io.hpp"
 #include "partition/io.hpp"
 #include "partition/multi_level_partition.hpp"
+
+#include "updater/updater.hpp"
+
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 
 namespace osrm
 {
-namespace customize
+namespace customizer
 {
 
 template <typename Graph, typename Partition, typename CellStorage>
@@ -66,13 +71,31 @@ void CellStorageStatistics(const Graph &graph,
     }
 }
 
-int Customizer::Run(const CustomizationConfig &config)
+auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config)
 {
-    TIMER_START(loading_data);
-    auto edge_based_graph = partition::LoadEdgeBasedGraph(config.edge_based_graph_path.string());
+    updater::Updater updater(config.updater_config);
+
+    EdgeID num_nodes;
+    std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
+    std::tie(num_nodes, edge_based_edge_list) = updater.LoadAndUpdateEdgeExpandedGraph();
+
+    auto directed = partition::splitBidirectionalEdges(edge_based_edge_list);
+    auto tidied =
+        partition::prepareEdgesForUsageInGraph<StaticEdgeBasedGraphEdge>(std::move(directed));
+    auto edge_based_graph = std::make_unique<StaticEdgeBasedGraph>(num_nodes, std::move(tidied));
+
     util::Log() << "Loaded edge based graph for mapping partition ids: "
                 << edge_based_graph->GetNumberOfEdges() << " edges, "
                 << edge_based_graph->GetNumberOfNodes() << " nodes";
+
+    return edge_based_graph;
+}
+
+int Customizer::Run(const CustomizationConfig &config)
+{
+    TIMER_START(loading_data);
+
+    auto edge_based_graph = LoadAndUpdateEdgeExpandedGraph(config);
 
     partition::MultiLevelPartition mlp;
     partition::io::read(config.mld_partition_path, mlp);
@@ -93,10 +116,15 @@ int Customizer::Run(const CustomizationConfig &config)
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
+    TIMER_START(writing_graph);
+    io::write(config.mld_graph_path, *edge_based_graph);
+    TIMER_STOP(writing_graph);
+    util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
+
     CellStorageStatistics(*edge_based_graph, mlp, storage);
 
     return 0;
 }
 
-} // namespace customize
+} // namespace customizer$
 } // namespace osrm

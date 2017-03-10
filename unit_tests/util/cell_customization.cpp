@@ -6,7 +6,7 @@
 #include "util/static_graph.hpp"
 
 using namespace osrm;
-using namespace osrm::customize;
+using namespace osrm::customizer;
 using namespace osrm::partition;
 using namespace osrm::util;
 

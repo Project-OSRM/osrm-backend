@@ -36,7 +36,7 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       intersection_class_path{base.string() + ".icd"}, turn_lane_data_path{base.string() + ".tld"},
       turn_lane_description_path{base.string() + ".tls"},
       mld_partition_path{base.string() + ".partition"}, mld_storage_path{base.string() + ".cells"},
-      edge_based_graph_path{base.string() + ".ebg"}
+      mld_graph_path{base.string() + ".mldgr"}
 {
 }
 
@@ -65,7 +65,7 @@ bool StorageConfig::IsValid() const
     CheckFileList({hsgr_data_path, core_data_path});
 
     // MLD files
-    CheckFileList({mld_partition_path, mld_storage_path, edge_based_graph_path});
+    CheckFileList({mld_partition_path, mld_storage_path, mld_graph_path});
 
     return true;
 }

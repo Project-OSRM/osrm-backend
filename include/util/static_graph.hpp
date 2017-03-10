@@ -52,6 +52,8 @@ template <> struct SortableEdgeWithData<void>
     NodeIterator source;
     NodeIterator target;
 
+    SortableEdgeWithData() = default;
+
     SortableEdgeWithData(NodeIterator source, NodeIterator target) : source(source), target(target)
     {
     }
@@ -73,6 +75,8 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
 
     EdgeDataT data;
 
+    SortableEdgeWithData() = default;
+
     template <typename... Ts>
     SortableEdgeWithData(NodeIterator source, NodeIterator target, Ts &&... data)
         : Base{source, target}, data{std::forward<Ts>(data)...}
@@ -85,6 +89,7 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
 template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
 {
   public:
+    using InputEdge = static_graph_details::SortableEdgeWithData<EdgeDataT>;
     using NodeIterator = static_graph_details::NodeIterator;
     using EdgeIterator = static_graph_details::EdgeIterator;
     using EdgeRange = range<EdgeIterator>;
@@ -241,7 +246,7 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     const NodeArrayEntry &GetNode(const NodeID nid) const { return node_array[nid]; }
     const EdgeArrayEntry &GetEdge(const EdgeID eid) const { return edge_array[eid]; }
 
-  private:
+  protected:
     template <typename OtherEdge>
     void CopyDataIfAvailable(EdgeArrayEntry &into, const OtherEdge &from, std::true_type)
     {
