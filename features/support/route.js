@@ -10,7 +10,7 @@ module.exports = function () {
         if (service == 'timestamp') {
             uri = [this.HOST, service].join('/');
         } else {
-            uri = [this.HOST, service, 'v1', this.profile].join('/');
+            uri = [this.HOST, service, 'v2', this.profile].join('/');
         }
 
         return this.sendRequest(uri, params, callback);

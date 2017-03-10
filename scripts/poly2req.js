@@ -10,9 +10,9 @@ let NUM_REQUEST = 1000;
 let NUM_COORDS = 2;
 let PORT = 5000;
 let url_templates = {
-  "route_5.0": "http://127.0.0.1:{port}/route/v1/driving/{coords}?steps=false&alternatives=false",
+  "route_5.0": "http://127.0.0.1:{port}/route/v2/driving/{coords}?steps=false&alternatives=false",
   "route_4.9": "http://127.0.0.1:{port}/viaroute?{coords}&instructions=false&alt=false",
-  "table_5.0": "http://127.0.0.1:{port}/table/v1/driving/{coords}",
+  "table_5.0": "http://127.0.0.1:{port}/table/v2/driving/{coords}",
   "table_4.9": "http://127.0.0.1:{port}/table?{coords}"
 };
 
