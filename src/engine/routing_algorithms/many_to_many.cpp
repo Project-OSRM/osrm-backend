@@ -79,7 +79,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight source_weight = query_heap.GetKey(node);
-    const RoutingPayload &source_payload = query_heap.GetData(node).payload;
+    const RoutingPayload source_payload = query_heap.GetData(node).payload;
 
     // check if each encountered node has an entry
     const auto bucket_iterator = search_space_with_buckets.find(node);
