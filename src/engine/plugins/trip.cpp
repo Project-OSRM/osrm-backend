@@ -28,7 +28,7 @@ namespace plugins
 
 bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeWeight> &result_table)
 {
-    return std::find(std::begin(result_table), std::end(result_table), INVALID_EDGE_WEIGHT) ==
+    return std::find(std::begin(result_table), std::end(result_table), MAXIMAL_EDGE_DURATION) ==
            std::end(result_table);
 }
 
