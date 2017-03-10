@@ -1,6 +1,7 @@
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
 
 #include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/routing_algorithms/routing_base_ch.hpp"
 
 namespace osrm
 {
@@ -9,44 +10,8 @@ namespace engine
 namespace routing_algorithms
 {
 
-namespace
+namespace ch
 {
-void insertInHeaps(SearchEngineData::QueryHeap &forward_heap,
-                   SearchEngineData::QueryHeap &reverse_heap,
-                   const PhantomNodes &nodes)
-{
-    const auto &source_phantom = nodes.source_phantom;
-    const auto &target_phantom = nodes.target_phantom;
-    BOOST_ASSERT(source_phantom.IsValid());
-    BOOST_ASSERT(target_phantom.IsValid());
-
-    if (source_phantom.forward_segment_id.enabled)
-    {
-        forward_heap.Insert(source_phantom.forward_segment_id.id,
-                            -source_phantom.GetForwardWeightPlusOffset(),
-                            source_phantom.forward_segment_id.id);
-    }
-    if (source_phantom.reverse_segment_id.enabled)
-    {
-        forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                            -source_phantom.GetReverseWeightPlusOffset(),
-                            source_phantom.reverse_segment_id.id);
-    }
-
-    if (target_phantom.forward_segment_id.enabled)
-    {
-        reverse_heap.Insert(target_phantom.forward_segment_id.id,
-                            target_phantom.GetForwardWeightPlusOffset(),
-                            target_phantom.forward_segment_id.id);
-    }
-
-    if (target_phantom.reverse_segment_id.enabled)
-    {
-        reverse_heap.Insert(target_phantom.reverse_segment_id.id,
-                            target_phantom.GetReverseWeightPlusOffset(),
-                            target_phantom.reverse_segment_id.id);
-    }
-}
 
 template <typename AlgorithmT>
 InternalRouteResult
@@ -82,7 +47,6 @@ extractRoute(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &f
 
     return raw_route_data;
 }
-}
 
 /// This is a striped down version of the general shortest path algorithm.
 /// The general algorithm always computes two queries for each leg. This is only
@@ -109,7 +73,7 @@ InternalRouteResult directShortestPathSearchImpl(
 
     int weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_leg;
-    insertInHeaps(forward_heap, reverse_heap, phantom_nodes);
+    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
     search(facade,
            forward_heap,
@@ -124,12 +88,14 @@ InternalRouteResult directShortestPathSearchImpl(
     return extractRoute(facade, weight, packed_leg, phantom_nodes);
 }
 
+} // namespace ch
+
 InternalRouteResult directShortestPathSearch(
     SearchEngineData &engine_working_data,
     const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
     const PhantomNodes &phantom_nodes)
 {
-    return directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
+    return ch::directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
 }
 
 InternalRouteResult directShortestPathSearch(
@@ -137,7 +103,7 @@ InternalRouteResult directShortestPathSearch(
     const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
     const PhantomNodes &phantom_nodes)
 {
-    return directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
+    return ch::directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
 }
 
 } // namespace routing_algorithms

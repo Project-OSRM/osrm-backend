@@ -1,5 +1,5 @@
 #include "engine/routing_algorithms/map_matching.hpp"
-#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/routing_algorithms/routing_base_ch.hpp"
 
 #include "engine/map_matching/hidden_markov_model.hpp"
 #include "engine/map_matching/matching_confidence.hpp"
@@ -210,14 +210,14 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
                     }
 
                     double network_distance =
-                        getNetworkDistance(facade,
-                                           forward_heap,
-                                           reverse_heap,
-                                           forward_core_heap,
-                                           reverse_core_heap,
-                                           prev_unbroken_timestamps_list[s].phantom_node,
-                                           current_timestamps_list[s_prime].phantom_node,
-                                           duration_upper_bound);
+                        ch::getNetworkDistance(facade,
+                                               forward_heap,
+                                               reverse_heap,
+                                               forward_core_heap,
+                                               reverse_core_heap,
+                                               prev_unbroken_timestamps_list[s].phantom_node,
+                                               current_timestamps_list[s_prime].phantom_node,
+                                               duration_upper_bound);
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);
