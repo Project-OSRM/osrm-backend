@@ -330,6 +330,9 @@ NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
 
 std::unique_ptr<SegmentDataContainer> CompressedEdgeContainer::ToSegmentData()
 {
+    // Finalize the index
+    segment_data->index.push_back(segment_data->nodes.size());
+
     return std::move(segment_data);
 }
 }
