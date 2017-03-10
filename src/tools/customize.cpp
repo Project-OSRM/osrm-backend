@@ -21,7 +21,7 @@ enum class return_code : unsigned
 };
 
 return_code
-parseArguments(int argc, char *argv[], customize::CustomizationConfig &customization_config)
+parseArguments(int argc, char *argv[], customizer::CustomizationConfig &customization_config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -34,7 +34,24 @@ parseArguments(int argc, char *argv[], customize::CustomizationConfig &customiza
         ("threads,t",
          boost::program_options::value<unsigned int>(&customization_config.requested_num_threads)
              ->default_value(tbb::task_scheduler_init::default_num_threads()),
-         "Number of threads to use");
+         "Number of threads to use")(
+            "segment-speed-file",
+            boost::program_options::value<std::vector<std::string>>(
+                &customization_config.updater_config.segment_speed_lookup_paths)
+                ->composing(),
+            "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
+            "turn-penalty-file",
+            boost::program_options::value<std::vector<std::string>>(
+                &customization_config.updater_config.turn_penalty_lookup_paths)
+                ->composing(),
+            "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn "
+            "weights")("edge-weight-updates-over-factor",
+                       boost::program_options::value<double>(
+                           &customization_config.updater_config.log_edge_updates_factor)
+                           ->default_value(0.0),
+                       "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor "
+                       "will log edge "
+                       "weights updated by more than this factor");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
@@ -99,7 +116,7 @@ parseArguments(int argc, char *argv[], customize::CustomizationConfig &customiza
 int main(int argc, char *argv[]) try
 {
     util::LogPolicy::GetInstance().Unmute();
-    customize::CustomizationConfig customization_config;
+    customizer::CustomizationConfig customization_config;
 
     const auto result = parseArguments(argc, argv, customization_config);
 
@@ -131,7 +148,7 @@ int main(int argc, char *argv[]) try
 
     tbb::task_scheduler_init init(customization_config.requested_num_threads);
 
-    auto exitcode = customize::Customizer().Run(customization_config);
+    auto exitcode = customizer::Customizer().Run(customization_config);
 
     util::DumpMemoryStats();
 

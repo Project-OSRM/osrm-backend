@@ -8,6 +8,8 @@
 #include "engine/algorithm.hpp"
 #include "engine/geospatial_query.hpp"
 
+#include "customizer/edge_based_graph.hpp"
+
 #include "extractor/datasources.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
@@ -1017,7 +1019,7 @@ class ContiguousInternalMemoryDataFacade<algorithm::MLD>
       public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 {
   private:
-    using QueryGraph = util::StaticGraph<EdgeData, true>;
+    using QueryGraph = customizer::StaticEdgeBasedGraphView;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 

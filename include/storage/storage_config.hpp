@@ -71,7 +71,7 @@ struct StorageConfig final
     boost::filesystem::path turn_lane_description_path;
     boost::filesystem::path mld_partition_path;
     boost::filesystem::path mld_storage_path;
-    boost::filesystem::path edge_based_graph_path;
+    boost::filesystem::path mld_graph_path;
 };
 }
 }

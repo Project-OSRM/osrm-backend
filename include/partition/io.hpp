@@ -2,6 +2,7 @@
 #define OSRM_PARTITION_IO_HPP
 
 #include "partition/cell_storage.hpp"
+#include "partition/edge_based_graph.hpp"
 #include "partition/multi_level_partition.hpp"
 
 #include "storage/io.hpp"

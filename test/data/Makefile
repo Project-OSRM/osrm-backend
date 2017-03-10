@@ -7,6 +7,7 @@ SCRIPT_ROOT:=../../scripts
 OSRM_EXTRACT:=$(OSRM_BUILD_DIR)/osrm-extract
 OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract
 OSRM_PARTITION:=$(OSRM_BUILD_DIR)/osrm-partition
+OSRM_CUSTOMIZE:=$(OSRM_BUILD_DIR)/osrm-customize
 OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed
 POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
 MD5SUM:=$(SCRIPT_ROOT)/md5sum.js
@@ -48,6 +49,7 @@ $(DATA_NAME)_MLD.osrm.partition: $(DATA_NAME)_MLD.osrm $(PROFILE) $(OSRM_PARTITI
 	@echo "Running osrm-partition..."
 	$(TIMER) "osrm-contract" $(OSRM_CONTRACT) $<
 	$(TIMER) "osrm-partition" $(OSRM_PARTITION) $<
+	$(TIMER) "osrm-customize" $(OSRM_CUSTOMIZE) $<
 
 $(DATA_NAME).requests: $(DATA_NAME).poly
 	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests

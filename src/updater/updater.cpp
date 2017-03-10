@@ -162,6 +162,14 @@ void CheckWeightsConsistency(
 }
 #endif
 
+Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
+{
+    std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
+    std::vector<EdgeWeight> node_weights;
+    auto max_edge_id = Updater::LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list, node_weights);
+    return std::make_tuple(max_edge_id + 1, std::move(edge_based_edge_list));
+}
+
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                                         std::vector<EdgeWeight> &node_weights) const
@@ -525,7 +533,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             // Update the node-weight cache. This is the weight of the edge-based-node only,
             // it doesn't include the turn. We may visit the same node multiple times, but
             // we should always assign the same value here.
-            node_weights[inbuffer.source] = new_weight;
+            if (node_weights.size() > 0)
+                node_weights[inbuffer.source] = new_weight;
 
             // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
             // effectively removes it from the routing network.

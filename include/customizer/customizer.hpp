@@ -5,7 +5,7 @@
 
 namespace osrm
 {
-namespace customize
+namespace customizer
 {
 
 class Customizer
@@ -14,7 +14,7 @@ class Customizer
     int Run(const CustomizationConfig &config);
 };
 
-} // namespace customize
+} // namespace customizer
 } // namespace osrm
 
 #endif // OSRM_CUSTOMIZE_CUSTOMIZER_HPP
