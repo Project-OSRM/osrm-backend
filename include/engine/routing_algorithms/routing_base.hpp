@@ -292,7 +292,7 @@ void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::
         // If the edge is a shortcut, we need to add the two halfs to the stack.
         if (data.shortcut)
         { // unpack
-            const NodeID middle_node_id = data.id;
+            const NodeID middle_node_id = data.turn_id;
             // Note the order here - we're adding these to a stack, so we
             // want the first->middle to get visited before middle->second
             recursion_stack.emplace(middle_node_id, edge.second);
@@ -340,14 +340,15 @@ void unpackPath(const FacadeT &facade,
                                        const auto &edge_data) {
 
             BOOST_ASSERT_MSG(!edge_data.shortcut, "original edge flagged as shortcut");
-            const auto name_index = facade.GetNameIndexFromEdgeID(edge_data.id);
-            const auto turn_instruction = facade.GetTurnInstructionForEdgeID(edge_data.id);
+            const auto turn_id = edge_data.turn_id; // edge-based node ID
+            const auto name_index = facade.GetNameIndexFromEdgeID(turn_id);
+            const auto turn_instruction = facade.GetTurnInstructionForEdgeID(turn_id);
             const extractor::TravelMode travel_mode =
                 (unpacked_path.empty() && start_traversed_in_reverse)
                     ? phantom_node_pair.source_phantom.backward_travel_mode
-                    : facade.GetTravelModeForEdgeID(edge_data.id);
+                    : facade.GetTravelModeForEdgeID(turn_id);
 
-            const auto geometry_index = facade.GetGeometryIndexForEdgeID(edge_data.id);
+            const auto geometry_index = facade.GetGeometryIndexForEdgeID(turn_id);
             std::vector<NodeID> id_vector;
 
             std::vector<EdgeWeight> weight_vector;
@@ -399,17 +400,15 @@ void unpackPath(const FacadeT &facade,
                                                  util::guidance::TurnBearing(0)});
             }
             BOOST_ASSERT(unpacked_path.size() > 0);
-            if (facade.hasLaneData(edge_data.id))
-                unpacked_path.back().lane_data = facade.GetLaneData(edge_data.id);
+            if (facade.hasLaneData(turn_id))
+                unpacked_path.back().lane_data = facade.GetLaneData(turn_id);
 
-            unpacked_path.back().entry_classid = facade.GetEntryClassID(edge_data.id);
+            unpacked_path.back().entry_classid = facade.GetEntryClassID(turn_id);
             unpacked_path.back().turn_instruction = turn_instruction;
-            unpacked_path.back().duration_until_turn +=
-                facade.GetDurationPenaltyForEdgeID(edge_data.id);
-            unpacked_path.back().weight_until_turn +=
-                facade.GetWeightPenaltyForEdgeID(edge_data.id);
-            unpacked_path.back().pre_turn_bearing = facade.PreTurnBearing(edge_data.id);
-            unpacked_path.back().post_turn_bearing = facade.PostTurnBearing(edge_data.id);
+            unpacked_path.back().duration_until_turn += facade.GetDurationPenaltyForEdgeID(turn_id);
+            unpacked_path.back().weight_until_turn += facade.GetWeightPenaltyForEdgeID(turn_id);
+            unpacked_path.back().pre_turn_bearing = facade.PreTurnBearing(turn_id);
+            unpacked_path.back().post_turn_bearing = facade.PostTurnBearing(turn_id);
         });
 
     std::size_t start_index = 0, end_index = 0;

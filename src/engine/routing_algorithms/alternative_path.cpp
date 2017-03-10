@@ -434,7 +434,7 @@ bool viaNodeCandidatePassesTTest(
         const bool current_edge_is_shortcut = current_edge_data.shortcut;
         if (current_edge_is_shortcut)
         {
-            const NodeID via_path_middle_node_id = current_edge_data.id;
+            const NodeID via_path_middle_node_id = current_edge_data.turn_id;
             const EdgeID second_segment_edge_id =
                 facade.FindEdgeInEitherDirection(via_path_middle_node_id, via_path_edge.second);
             const int second_segment_length = facade.GetEdgeData(second_segment_edge_id).weight;
@@ -496,7 +496,7 @@ bool viaNodeCandidatePassesTTest(
         const bool IsViaEdgeShortCut = current_edge_data.shortcut;
         if (IsViaEdgeShortCut)
         {
-            const NodeID middleOfViaPath = current_edge_data.id;
+            const NodeID middleOfViaPath = current_edge_data.turn_id;
             EdgeID edgeIDOfFirstSegment =
                 facade.FindEdgeInEitherDirection(via_path_edge.first, middleOfViaPath);
             int lengthOfFirstSegment = facade.GetEdgeData(edgeIDOfFirstSegment).weight;
