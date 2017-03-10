@@ -41,11 +41,8 @@ void write(const boost::filesystem::path &path, const SegmentDataContainer &segm
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
 
-    // FIXME this _should_ just be size and the senitel below need to be removed
-    writer.WriteElementCount32(segment_data.index.size() + 1);
-    writer.WriteFrom(segment_data.index.data(), segment_data.index.size());
-    // FIMXE remove unnecessary senitel
-    writer.WriteElementCount32(segment_data.nodes.size());
+    writer.WriteElementCount32(segment_data.index.size());
+    writer.WriteFrom(segment_data.index);
 
     writer.WriteElementCount32(segment_data.nodes.size());
     writer.WriteFrom(segment_data.nodes);

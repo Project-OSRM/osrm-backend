@@ -116,6 +116,7 @@ void GetNewWeight(const UpdaterConfig &config,
     }
 }
 
+#if !defined(NDEBUG)
 void CheckWeightsConsistency(
     const UpdaterConfig &config,
     const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
@@ -159,19 +160,18 @@ void CheckWeightsConsistency(
         BOOST_ASSERT(weight <= edge.data.weight);
     }
 }
+#endif
 
 EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                                         std::vector<EdgeWeight> &node_weights) const
 {
-    double weight_multiplier = 10;
-
     // Propagate profile properties to contractor configuration structure
     extractor::ProfileProperties profile_properties;
     storage::io::FileReader profile_properties_file(config.profile_properties_path,
                                                     storage::io::FileReader::HasNoFingerprint);
     profile_properties_file.ReadInto<extractor::ProfileProperties>(&profile_properties, 1);
-    weight_multiplier = profile_properties.GetWeightMultiplier();
+    auto weight_multiplier = profile_properties.GetWeightMultiplier();
 
     if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
