@@ -939,10 +939,6 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 
         if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS) > 0)
         {
-            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY) >
-                         0);
-            BOOST_ASSERT(
-                data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
 
