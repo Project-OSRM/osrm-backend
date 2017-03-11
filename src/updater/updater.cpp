@@ -42,6 +42,10 @@
 #include <tuple>
 #include <vector>
 
+namespace osrm
+{
+namespace updater
+{
 namespace
 {
 
@@ -51,15 +55,8 @@ template <typename T> inline bool is_aligned(const void *pointer)
     return reinterpret_cast<uintptr_t>(pointer) % alignof(T) == 0;
 }
 
-} // anon ns
-
-namespace osrm
-{
-namespace updater
-{
-
 // Returns duration in deci-seconds
-inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_kmh)
+inline EdgeWeight convertToDuration(double distance_in_meters, double speed_in_kmh)
 {
     if (speed_in_kmh <= 0.)
         return MAXIMAL_EDGE_DURATION;
@@ -69,7 +66,7 @@ inline EdgeWeight ConvertToDuration(double distance_in_meters, double speed_in_k
     return std::max<EdgeWeight>(1, static_cast<EdgeWeight>(std::round(duration * 10.)));
 }
 
-inline EdgeWeight ConvertToWeight(double weight, double weight_multiplier, EdgeWeight duration)
+inline EdgeWeight convertToWeight(double weight, double weight_multiplier, EdgeWeight duration)
 {
     if (std::isfinite(weight))
         return std::round(weight * weight_multiplier);
@@ -79,7 +76,7 @@ inline EdgeWeight ConvertToWeight(double weight, double weight_multiplier, EdgeW
 }
 
 // Returns updated edge weight
-void GetNewWeight(const UpdaterConfig &config,
+void getNewWeight(const UpdaterConfig &config,
                   const double weight_multiplier,
                   const SpeedSource &value,
                   const double &segment_length,
@@ -90,10 +87,10 @@ void GetNewWeight(const UpdaterConfig &config,
                   EdgeWeight &new_segment_duration)
 {
     // Update the edge duration as distance/speed
-    new_segment_duration = ConvertToDuration(segment_length, value.speed);
+    new_segment_duration = convertToDuration(segment_length, value.speed);
 
     // Update the edge weight or fallback to the new edge duration
-    new_segment_weight = ConvertToWeight(value.weight, weight_multiplier, new_segment_duration);
+    new_segment_weight = convertToWeight(value.weight, weight_multiplier, new_segment_duration);
 
     // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a warning
     // if the new duration exceeds a heuristic of what a reasonable duration update is
@@ -117,7 +114,7 @@ void GetNewWeight(const UpdaterConfig &config,
 }
 
 #if !defined(NDEBUG)
-void CheckWeightsConsistency(
+void checkWeightsConsistency(
     const UpdaterConfig &config,
     const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
 {
@@ -162,6 +159,188 @@ void CheckWeightsConsistency(
 }
 #endif
 
+auto mmapFile(const std::string &filename, boost::interprocess::mode_t mode)
+{
+    using boost::interprocess::file_mapping;
+    using boost::interprocess::mapped_region;
+
+    try
+    {
+        const file_mapping mapping{filename.c_str(), mode};
+        mapped_region region{mapping, mode};
+        region.advise(mapped_region::advice_sequential);
+        return region;
+    }
+    catch (const std::exception &e)
+    {
+        util::Log(logERROR) << "Error while trying to mmap " + filename + ": " + e.what();
+        throw;
+    }
+}
+
+void updaterSegmentData(const UpdaterConfig &config,
+                        const extractor::ProfileProperties &profile_properties,
+                        const SegmentLookupTable &segment_speed_lookup)
+{
+    auto weight_multiplier = profile_properties.GetWeightMultiplier();
+    std::vector<extractor::QueryNode> internal_to_external_node_map;
+    extractor::SegmentDataContainer segment_data;
+
+    const auto load_internal_to_external_node_map = [&] {
+        storage::io::FileReader nodes_file(config.node_based_graph_path,
+                                           storage::io::FileReader::HasNoFingerprint);
+
+        nodes_file.DeserializeVector(internal_to_external_node_map);
+    };
+
+    const auto load_geometries = [&] { extractor::io::read(config.geometry_path, segment_data); };
+
+    // Folds all our actions into independently concurrently executing lambdas
+    tbb::parallel_invoke(load_internal_to_external_node_map, load_geometries);
+
+    // Here, we have to update the compressed geometry weights
+    // First, we need the external-to-internal node lookup table
+
+    // Now, we iterate over all the segments stored in the StaticRTree, updating
+    // the packed geometry weights in the `.geometries` file (note: we do not
+    // update the RTree itself, we just use the leaf nodes to iterate over all segments)
+    using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
+
+    using boost::interprocess::mapped_region;
+
+    auto region = mmapFile(config.rtree_leaf_path.c_str(), boost::interprocess::read_only);
+    region.advise(mapped_region::advice_willneed);
+    BOOST_ASSERT(is_aligned<LeafNode>(region.get_address()));
+
+    const auto bytes = region.get_size();
+    const auto first = static_cast<const LeafNode *>(region.get_address());
+    const auto last = first + (bytes / sizeof(LeafNode));
+
+    // vector to count used speeds for logging
+    // size offset by one since index 0 is used for speeds not from external file
+    using counters_type = std::vector<std::size_t>;
+    std::size_t num_counters = config.segment_speed_lookup_paths.size() + 1;
+    tbb::enumerable_thread_specific<counters_type> segment_speeds_counters(
+        counters_type(num_counters, 0));
+    const constexpr auto LUA_SOURCE = 0;
+
+    tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
+        auto &counters = segment_speeds_counters.local();
+        for (size_t i = 0; i < current_node.object_count; i++)
+        {
+            const auto &leaf_object = current_node.objects[i];
+
+            const auto geometry_id = leaf_object.packed_geometry_id;
+            auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
+
+            const auto segment_offset = leaf_object.fwd_segment_position;
+            const std::uint32_t u_index = segment_offset;
+            const std::uint32_t v_index = segment_offset + 1;
+
+            BOOST_ASSERT(u_index < nodes_range.size());
+            BOOST_ASSERT(v_index < nodes_range.size());
+
+            const extractor::QueryNode &u = internal_to_external_node_map[nodes_range[u_index]];
+            const extractor::QueryNode &v = internal_to_external_node_map[nodes_range[v_index]];
+
+            const double segment_length = util::coordinate_calculation::greatCircleDistance(
+                util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat});
+
+            auto fwd_source = LUA_SOURCE, rev_source = LUA_SOURCE;
+            if (auto value = segment_speed_lookup({u.node_id, v.node_id}))
+            {
+                EdgeWeight new_segment_weight, new_segment_duration;
+                getNewWeight(config,
+                             weight_multiplier,
+                             *value,
+                             segment_length,
+                             segment_data.ForwardWeight(geometry_id, segment_offset),
+                             u.node_id,
+                             v.node_id,
+                             new_segment_weight,
+                             new_segment_duration);
+
+                segment_data.ForwardWeight(geometry_id, segment_offset) = new_segment_weight;
+                segment_data.ForwardDuration(geometry_id, segment_offset) = new_segment_duration;
+                segment_data.ForwardDatasource(geometry_id, segment_offset) = value->source;
+                fwd_source = value->source;
+            }
+
+            if (auto value = segment_speed_lookup({v.node_id, u.node_id}))
+            {
+                EdgeWeight new_segment_weight, new_segment_duration;
+                getNewWeight(config,
+                             weight_multiplier,
+                             *value,
+                             segment_length,
+                             segment_data.ReverseWeight(geometry_id, segment_offset),
+                             v.node_id,
+                             u.node_id,
+                             new_segment_weight,
+                             new_segment_duration);
+
+                segment_data.ReverseWeight(geometry_id, segment_offset) = new_segment_weight;
+                segment_data.ReverseDuration(geometry_id, segment_offset) = new_segment_duration;
+                segment_data.ReverseDatasource(geometry_id, segment_offset) = value->source;
+                rev_source = value->source;
+            }
+
+            // count statistics for logging
+            counters[fwd_source] += 1;
+            counters[rev_source] += 1;
+        }
+    }); // parallel_for_each
+
+    counters_type merged_counters(num_counters, 0);
+    for (const auto &counters : segment_speeds_counters)
+    {
+        for (std::size_t i = 0; i < counters.size(); i++)
+        {
+            merged_counters[i] += counters[i];
+        }
+    }
+
+    for (std::size_t i = 0; i < merged_counters.size(); i++)
+    {
+        if (i == LUA_SOURCE)
+        {
+            util::Log() << "Used " << merged_counters[LUA_SOURCE]
+                        << " speeds from LUA profile or input map";
+        }
+        else
+        {
+            // segments_speeds_counters has 0 as LUA, segment_speed_filenames not, thus we need
+            // to susbstract 1 to avoid off-by-one error
+            util::Log() << "Used " << merged_counters[i] << " speeds from "
+                        << config.segment_speed_lookup_paths[i - 1];
+        }
+    }
+
+    const auto save_geometries = [&]() {
+        // Now save out the updated compressed geometries
+        extractor::io::write(config.geometry_path, segment_data);
+    };
+
+    const auto save_datastore_names = [&]() {
+        extractor::Datasources sources;
+        DatasourceID source = 0;
+        sources.SetSourceName(source++, "lua profile");
+
+        // Only write the filename, without path or extension.
+        // This prevents information leakage, and keeps names short
+        // for rendering in the debug tiles.
+        for (auto const &name : config.segment_speed_lookup_paths)
+        {
+            sources.SetSourceName(source++, boost::filesystem::path(name).stem().string());
+        }
+
+        extractor::io::write(config.datasource_names_path, sources);
+    };
+
+    tbb::parallel_invoke(save_geometries, save_datastore_names);
+}
+}
+
 Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
 {
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
@@ -187,26 +366,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     util::Log() << "Opening " << config.edge_based_graph_path;
 
-    auto mmap_file = [](const std::string &filename, boost::interprocess::mode_t mode) {
-        using boost::interprocess::file_mapping;
-        using boost::interprocess::mapped_region;
-
-        try
-        {
-            const file_mapping mapping{filename.c_str(), mode};
-            mapped_region region{mapping, mode};
-            region.advise(mapped_region::advice_sequential);
-            return region;
-        }
-        catch (const std::exception &e)
-        {
-            util::Log(logERROR) << "Error while trying to mmap " + filename + ": " + e.what();
-            throw;
-        }
-    };
-
     const auto edge_based_graph_region =
-        mmap_file(config.edge_based_graph_path, boost::interprocess::read_only);
+        mmapFile(config.edge_based_graph_path, boost::interprocess::read_only);
 
     const bool update_edge_weights = !config.segment_speed_lookup_paths.empty();
     const bool update_turn_penalties = !config.turn_penalty_lookup_paths.empty();
@@ -214,7 +375,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     const auto turn_penalties_index_region = [&] {
         if (update_edge_weights || update_turn_penalties)
         {
-            return mmap_file(config.turn_penalties_index_path, boost::interprocess::read_only);
+            return mmapFile(config.turn_penalties_index_path, boost::interprocess::read_only);
         }
         return boost::interprocess::mapped_region();
     }();
@@ -222,7 +383,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     const auto edge_segment_region = [&] {
         if (update_edge_weights || update_turn_penalties)
         {
-            return mmap_file(config.edge_segment_lookup_path, boost::interprocess::read_only);
+            return mmapFile(config.edge_segment_lookup_path, boost::interprocess::read_only);
         }
         return boost::interprocess::mapped_region();
     }();
@@ -270,177 +431,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
     auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
 
-    std::vector<extractor::QueryNode> internal_to_external_node_map;
-    extractor::SegmentDataContainer segment_data;
-
-    const auto maybe_load_internal_to_external_node_map = [&] {
-        if (!update_edge_weights)
-            return;
-
-        storage::io::FileReader nodes_file(config.node_based_graph_path,
-                                           storage::io::FileReader::HasNoFingerprint);
-
-        nodes_file.DeserializeVector(internal_to_external_node_map);
-    };
-
-    const auto maybe_load_geometries = [&] {
-        if (!update_edge_weights)
-            return;
-
-        extractor::io::read(config.geometry_path, segment_data);
-    };
-
-    // Folds all our actions into independently concurrently executing lambdas
-    tbb::parallel_invoke(maybe_load_internal_to_external_node_map, maybe_load_geometries);
-
     if (update_edge_weights)
     {
-        // Here, we have to update the compressed geometry weights
-        // First, we need the external-to-internal node lookup table
-
-        // Now, we iterate over all the segments stored in the StaticRTree, updating
-        // the packed geometry weights in the `.geometries` file (note: we do not
-        // update the RTree itself, we just use the leaf nodes to iterate over all segments)
-        using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
-
-        using boost::interprocess::mapped_region;
-
-        auto region = mmap_file(config.rtree_leaf_path.c_str(), boost::interprocess::read_only);
-        region.advise(mapped_region::advice_willneed);
-        BOOST_ASSERT(is_aligned<LeafNode>(region.get_address()));
-
-        const auto bytes = region.get_size();
-        const auto first = static_cast<const LeafNode *>(region.get_address());
-        const auto last = first + (bytes / sizeof(LeafNode));
-
-        // vector to count used speeds for logging
-        // size offset by one since index 0 is used for speeds not from external file
-        using counters_type = std::vector<std::size_t>;
-        std::size_t num_counters = config.segment_speed_lookup_paths.size() + 1;
-        tbb::enumerable_thread_specific<counters_type> segment_speeds_counters(
-            counters_type(num_counters, 0));
-        const constexpr auto LUA_SOURCE = 0;
-
-        tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
-            auto &counters = segment_speeds_counters.local();
-            for (size_t i = 0; i < current_node.object_count; i++)
-            {
-                const auto &leaf_object = current_node.objects[i];
-
-                const auto geometry_id = leaf_object.packed_geometry_id;
-                auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
-
-                const auto segment_offset = leaf_object.fwd_segment_position;
-                const auto u_index = segment_offset;
-                const auto v_index = segment_offset + 1;
-
-                BOOST_ASSERT(u_index < nodes_range.size());
-                BOOST_ASSERT(v_index < nodes_range.size());
-
-                const extractor::QueryNode &u = internal_to_external_node_map[nodes_range[u_index]];
-                const extractor::QueryNode &v = internal_to_external_node_map[nodes_range[v_index]];
-
-                const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                    util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat});
-
-                auto fwd_source = LUA_SOURCE, rev_source = LUA_SOURCE;
-                if (auto value = segment_speed_lookup({u.node_id, v.node_id}))
-                {
-                    EdgeWeight new_segment_weight, new_segment_duration;
-                    GetNewWeight(config,
-                                 weight_multiplier,
-                                 *value,
-                                 segment_length,
-                                 segment_data.ForwardWeight(geometry_id, segment_offset),
-                                 u.node_id,
-                                 v.node_id,
-                                 new_segment_weight,
-                                 new_segment_duration);
-
-                    segment_data.ForwardWeight(geometry_id, segment_offset) = new_segment_weight;
-                    segment_data.ForwardDuration(geometry_id, segment_offset) =
-                        new_segment_duration;
-                    segment_data.ForwardDatasource(geometry_id, segment_offset) = value->source;
-                    fwd_source = value->source;
-                }
-
-                if (auto value = segment_speed_lookup({v.node_id, u.node_id}))
-                {
-                    EdgeWeight new_segment_weight, new_segment_duration;
-                    GetNewWeight(config,
-                                 weight_multiplier,
-                                 *value,
-                                 segment_length,
-                                 segment_data.ReverseWeight(geometry_id, segment_offset),
-                                 v.node_id,
-                                 u.node_id,
-                                 new_segment_weight,
-                                 new_segment_duration);
-
-                    segment_data.ReverseWeight(geometry_id, segment_offset) = new_segment_weight;
-                    segment_data.ReverseDuration(geometry_id, segment_offset) =
-                        new_segment_duration;
-                    segment_data.ReverseDatasource(geometry_id, segment_offset) = value->source;
-                    rev_source = value->source;
-                }
-
-                // count statistics for logging
-                counters[fwd_source] += 1;
-                counters[rev_source] += 1;
-            }
-        }); // parallel_for_each
-
-        counters_type merged_counters(num_counters, 0);
-        for (const auto &counters : segment_speeds_counters)
-        {
-            for (std::size_t i = 0; i < counters.size(); i++)
-            {
-                merged_counters[i] += counters[i];
-            }
-        }
-
-        for (std::size_t i = 0; i < merged_counters.size(); i++)
-        {
-            if (i == LUA_SOURCE)
-            {
-                util::Log() << "Used " << merged_counters[LUA_SOURCE]
-                            << " speeds from LUA profile or input map";
-            }
-            else
-            {
-                // segments_speeds_counters has 0 as LUA, segment_speed_filenames not, thus we need
-                // to susbstract 1 to avoid off-by-one error
-                util::Log() << "Used " << merged_counters[i] << " speeds from "
-                            << config.segment_speed_lookup_paths[i - 1];
-            }
-        }
+        updaterSegmentData(config, profile_properties, segment_speed_lookup);
     }
-
-    const auto maybe_save_geometries = [&] {
-        if (!update_edge_weights)
-            return;
-
-        // Now save out the updated compressed geometries
-        extractor::io::write(config.geometry_path, segment_data);
-    };
-
-    const auto save_datastore_names = [&] {
-        extractor::Datasources sources;
-        DatasourceID source = 0;
-        sources.SetSourceName(source++, "lua profile");
-
-        // Only write the filename, without path or extension.
-        // This prevents information leakage, and keeps names short
-        // for rendering in the debug tiles.
-        for (auto const &name : config.segment_speed_lookup_paths)
-        {
-            sources.SetSourceName(source++, boost::filesystem::path(name).stem().string());
-        }
-
-        extractor::io::write(config.datasource_names_path, sources);
-    };
-
-    tbb::parallel_invoke(maybe_save_geometries, save_datastore_names);
 
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
@@ -517,10 +511,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                         if (value->speed == 0)
                             return true;
 
-                        segment_duration = ConvertToDuration(segment.segment_length, value->speed);
+                        segment_duration = convertToDuration(segment.segment_length, value->speed);
 
                         segment_weight =
-                            ConvertToWeight(value->weight, weight_multiplier, segment_duration);
+                            convertToWeight(value->weight, weight_multiplier, segment_duration);
                     }
 
                     // Update the edge weight and the next OSM node ID
@@ -603,7 +597,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (config.turn_penalty_lookup_paths.empty())
     { // don't check weights consistency with turn updates that can break assertion
         // condition with turn weight penalties negative updates
-        CheckWeightsConsistency(config, edge_based_edge_list);
+        checkWeightsConsistency(config, edge_based_edge_list);
     }
 #endif
 
