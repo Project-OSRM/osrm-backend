@@ -5,7 +5,7 @@ Feature: Basic Routing
         Given the profile "car"
         Given a grid size of 500 meters
 
-    @smallest
+    @smallest @via
     Scenario: Summaries when routing on a simple network
         Given the node map
             """

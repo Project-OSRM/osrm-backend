@@ -25,32 +25,16 @@ module.exports = function () {
         this.runAndSafeOutput('osrm-routed', options, callback);
     });
 
-    this.When(/^I run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
-        const stamp = this.processedCacheFile + '.extract';
-        this.runAndSafeOutput('osrm-extract', options, (err) => {
+    this.When(/^I run "osrm\-(extract|contract|partition|customize)\s?(.*?)"$/, (binary, options, callback) => {
+        const stamp = this.processedCacheFile + '.stamp_' + binary;
+        this.runAndSafeOutput('osrm-' + binary, options, (err) => {
             if (err) return callback(err);
             fs.writeFile(stamp, 'ok', callback);
         });
     });
 
-    this.When(/^I run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
-        const stamp = this.processedCacheFile + '.contract';
-        this.runAndSafeOutput('osrm-contract', options, (err) => {
-            if (err) return callback(err);
-            fs.writeFile(stamp, 'ok', callback);
-        });
-    });
-
-    this.When(/^I try to run "osrm\-routed\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-routed', options, () => { callback(); });
-    });
-
-    this.When(/^I try to run "osrm\-extract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-extract', options, () => { callback(); });
-    });
-
-    this.When(/^I try to run "osrm\-contract\s?(.*?)"$/, (options, callback) => {
-        this.runAndSafeOutput('osrm-contract', options, () => { callback(); });
+    this.When(/^I try to run "(osrm\-[a-z]+)\s?(.*?)"$/, (binary, options, callback) => {
+        this.runAndSafeOutput(binary, options, () => { callback(); });
     });
 
     this.When(/^I run "osrm\-datastore\s?(.*?)"(?: with input "([^"]*)")?$/, (options, input, callback) => {

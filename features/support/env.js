@@ -34,12 +34,12 @@ module.exports = function () {
         this.DEFAULT_LOAD_METHOD = 'datastore';
         this.DEFAULT_ORIGIN = [1,1];
         this.OSM_USER = 'osrm';
-        this.OSM_GENERATOR = 'osrm-test';
         this.OSM_UID = 1;
         this.OSM_TIMESTAMP = '2000-01-01T00:00:00Z';
         this.WAY_SPACING = 100;
         this.DEFAULT_GRID_SIZE = 100; // meters
-        this.ROUTING_ALGORITHM = 'CH';
+        // get algorithm name from the command line profile argument
+        this.ROUTING_ALGORITHM = process.argv[process.argv.indexOf('-p') + 1] === 'mld' ? 'MLD' : 'CH';
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;

@@ -35,6 +35,8 @@ module.exports = function () {
         this.queryParams = {};
         this.extractArgs = '';
         this.contractArgs = '';
+        this.partitionArgs = '';
+        this.customizeArgs = '';
         this.environment = Object.assign(this.DEFAULT_ENVIRONMENT);
         this.resetOSM();
 
