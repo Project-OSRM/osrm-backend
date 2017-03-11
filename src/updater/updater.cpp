@@ -19,6 +19,7 @@
 #include "util/string_util.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
+#include "util/for_each_pair.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -198,24 +199,6 @@ void updaterSegmentData(const UpdaterConfig &config,
     // Folds all our actions into independently concurrently executing lambdas
     tbb::parallel_invoke(load_internal_to_external_node_map, load_geometries);
 
-    // Here, we have to update the compressed geometry weights
-    // First, we need the external-to-internal node lookup table
-
-    // Now, we iterate over all the segments stored in the StaticRTree, updating
-    // the packed geometry weights in the `.geometries` file (note: we do not
-    // update the RTree itself, we just use the leaf nodes to iterate over all segments)
-    using LeafNode = util::StaticRTree<extractor::EdgeBasedNode>::LeafNode;
-
-    using boost::interprocess::mapped_region;
-
-    auto region = mmapFile(config.rtree_leaf_path.c_str(), boost::interprocess::read_only);
-    region.advise(mapped_region::advice_willneed);
-    BOOST_ASSERT(is_aligned<LeafNode>(region.get_address()));
-
-    const auto bytes = region.get_size();
-    const auto first = static_cast<const LeafNode *>(region.get_address());
-    const auto last = first + (bytes / sizeof(LeafNode));
-
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
     using counters_type = std::vector<std::size_t>;
@@ -224,72 +207,96 @@ void updaterSegmentData(const UpdaterConfig &config,
         counters_type(num_counters, 0));
     const constexpr auto LUA_SOURCE = 0;
 
-    tbb::parallel_for_each(first, last, [&](const LeafNode &current_node) {
+    using DirectionalGeometryID = extractor::SegmentDataContainer::DirectionalGeometryID;
+    auto range = tbb::blocked_range<DirectionalGeometryID>(0, segment_data.GetNumberOfGeometries());
+    tbb::parallel_for(range, [&](const auto &range) {
         auto &counters = segment_speeds_counters.local();
-        for (size_t i = 0; i < current_node.object_count; i++)
+        std::vector<extractor::QueryNode> query_nodes;
+        std::vector<double> segment_lengths;
+        for (auto geometry_id = range.begin(); geometry_id < range.end(); geometry_id++)
         {
-            const auto &leaf_object = current_node.objects[i];
+            query_nodes.clear();
+            segment_lengths.clear();
 
-            const auto geometry_id = leaf_object.packed_geometry_id;
             auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
 
-            const auto segment_offset = leaf_object.fwd_segment_position;
-            const std::uint32_t u_index = segment_offset;
-            const std::uint32_t v_index = segment_offset + 1;
-
-            BOOST_ASSERT(u_index < nodes_range.size());
-            BOOST_ASSERT(v_index < nodes_range.size());
-
-            const extractor::QueryNode &u = internal_to_external_node_map[nodes_range[u_index]];
-            const extractor::QueryNode &v = internal_to_external_node_map[nodes_range[v_index]];
-
-            const double segment_length = util::coordinate_calculation::greatCircleDistance(
-                util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat});
-
-            auto fwd_source = LUA_SOURCE, rev_source = LUA_SOURCE;
-            if (auto value = segment_speed_lookup({u.node_id, v.node_id}))
+            query_nodes.reserve(nodes_range.size());
+            for (const auto node : nodes_range)
             {
-                EdgeWeight new_segment_weight, new_segment_duration;
-                getNewWeight(config,
-                             weight_multiplier,
-                             *value,
-                             segment_length,
-                             segment_data.ForwardWeight(geometry_id, segment_offset),
-                             u.node_id,
-                             v.node_id,
-                             new_segment_weight,
-                             new_segment_duration);
-
-                segment_data.ForwardWeight(geometry_id, segment_offset) = new_segment_weight;
-                segment_data.ForwardDuration(geometry_id, segment_offset) = new_segment_duration;
-                segment_data.ForwardDatasource(geometry_id, segment_offset) = value->source;
-                fwd_source = value->source;
+                query_nodes.push_back(internal_to_external_node_map[node]);
             }
 
-            if (auto value = segment_speed_lookup({v.node_id, u.node_id}))
-            {
-                EdgeWeight new_segment_weight, new_segment_duration;
-                getNewWeight(config,
-                             weight_multiplier,
-                             *value,
-                             segment_length,
-                             segment_data.ReverseWeight(geometry_id, segment_offset),
-                             v.node_id,
-                             u.node_id,
-                             new_segment_weight,
-                             new_segment_duration);
+            segment_lengths.reserve(nodes_range.size()+1);
+            util::for_each_pair(query_nodes, [&](const auto &u, const auto &v) {
+                segment_lengths.push_back(util::coordinate_calculation::greatCircleDistance(
+                util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat}));
+            });
 
-                segment_data.ReverseWeight(geometry_id, segment_offset) = new_segment_weight;
-                segment_data.ReverseDuration(geometry_id, segment_offset) = new_segment_duration;
-                segment_data.ReverseDatasource(geometry_id, segment_offset) = value->source;
-                rev_source = value->source;
+            auto fwd_weights_range = segment_data.GetForwardWeights(geometry_id);
+            auto fwd_durations_range = segment_data.GetForwardDurations(geometry_id);
+            auto fwd_datasources_range = segment_data.GetForwardDatasources(geometry_id);
+            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size(); ++segment_offset)
+            {
+                auto u = query_nodes[segment_offset].node_id;
+                auto v = query_nodes[segment_offset+1].node_id;
+                if (auto value = segment_speed_lookup({u, v}))
+                {
+                    EdgeWeight new_segment_weight, new_segment_duration;
+                    getNewWeight(config,
+                                 weight_multiplier,
+                                 *value,
+                                 segment_lengths[segment_offset],
+                                 fwd_weights_range[segment_offset],
+                                 u,
+                                 v,
+                                 new_segment_weight,
+                                 new_segment_duration);
+
+                    fwd_weights_range[segment_offset] = new_segment_weight;
+                    fwd_durations_range[segment_offset] = new_segment_duration;
+                    fwd_datasources_range[segment_offset] = value->source;
+                    counters[value->source] += 1;
+                }
+                else
+                {
+                    counters[LUA_SOURCE] += 1;
+                }
             }
 
-            // count statistics for logging
-            counters[fwd_source] += 1;
-            counters[rev_source] += 1;
+            // In this case we want it oriented from in forward directions
+            auto rev_weights_range = boost::adaptors::reverse(segment_data.GetReverseWeights(geometry_id));
+            auto rev_durations_range = boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
+            auto rev_datasources_range = boost::adaptors::reverse(segment_data.GetReverseDatasources(geometry_id));
+
+            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size(); ++segment_offset)
+            {
+                auto u = query_nodes[segment_offset].node_id;
+                auto v = query_nodes[segment_offset+1].node_id;
+                if (auto value = segment_speed_lookup({v, u}))
+                {
+                    EdgeWeight new_segment_weight, new_segment_duration;
+                    getNewWeight(config,
+                                 weight_multiplier,
+                                 *value,
+                                 segment_lengths[segment_offset],
+                                 rev_weights_range[segment_offset],
+                                 v,
+                                 u,
+                                 new_segment_weight,
+                                 new_segment_duration);
+
+                    rev_weights_range[segment_offset] = new_segment_weight;
+                    rev_durations_range[segment_offset] = new_segment_duration;
+                    rev_datasources_range[segment_offset] = value->source;
+                    counters[value->source] += 1;
+                }
+                else
+                {
+                    counters[LUA_SOURCE] += 1;
+                }
+            }
         }
-    }); // parallel_for_each
+    }); // parallel_for
 
     counters_type merged_counters(num_counters, 0);
     for (const auto &counters : segment_speeds_counters)
