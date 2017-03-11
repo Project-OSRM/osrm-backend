@@ -316,29 +316,27 @@ void updaterSegmentData(const UpdaterConfig &config,
         }
     }
 
-    const auto save_geometries = [&]() {
-        // Now save out the updated compressed geometries
-        extractor::io::write(config.geometry_path, segment_data);
-    };
-
-    const auto save_datastore_names = [&]() {
-        extractor::Datasources sources;
-        DatasourceID source = 0;
-        sources.SetSourceName(source++, "lua profile");
-
-        // Only write the filename, without path or extension.
-        // This prevents information leakage, and keeps names short
-        // for rendering in the debug tiles.
-        for (auto const &name : config.segment_speed_lookup_paths)
-        {
-            sources.SetSourceName(source++, boost::filesystem::path(name).stem().string());
-        }
-
-        extractor::io::write(config.datasource_names_path, sources);
-    };
-
-    tbb::parallel_invoke(save_geometries, save_datastore_names);
+    // Now save out the updated compressed geometries
+    extractor::io::write(config.geometry_path, segment_data);
 }
+
+void saveDatasourcesNames(const UpdaterConfig &config)
+{
+    extractor::Datasources sources;
+    DatasourceID source = 0;
+    sources.SetSourceName(source++, "lua profile");
+
+    // Only write the filename, without path or extension.
+    // This prevents information leakage, and keeps names short
+    // for rendering in the debug tiles.
+    for (auto const &name : config.segment_speed_lookup_paths)
+    {
+        sources.SetSourceName(source++, boost::filesystem::path(name).stem().string());
+    }
+
+    extractor::io::write(config.datasource_names_path, sources);
+}
+
 }
 
 Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
@@ -353,6 +351,8 @@ EdgeID
 Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &edge_based_edge_list,
                                         std::vector<EdgeWeight> &node_weights) const
 {
+    TIMER_START(load_edges);
+
     // Propagate profile properties to contractor configuration structure
     extractor::ProfileProperties profile_properties;
     storage::io::FileReader profile_properties_file(config.profile_properties_path,
@@ -433,7 +433,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     if (update_edge_weights)
     {
+        TIMER_START(segment);
         updaterSegmentData(config, profile_properties, segment_speed_lookup);
+        TIMER_STOP(segment);
+        util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }
 
     std::vector<TurnPenalty> turn_weight_penalties;
@@ -601,7 +604,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     }
 #endif
 
-    util::Log() << "Done reading edges";
+    saveDatasourcesNames(config);
+
+    TIMER_STOP(load_edges);
+    util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
     return graph_header.max_edge_id;
 }
 }
