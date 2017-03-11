@@ -35,12 +35,16 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     const auto weight = forward_heap.GetKey(node);
 
     auto update_upper_bounds = [&](NodeID to, EdgeWeight forward_weight, EdgeWeight edge_weight) {
-        if (reverse_heap.WasInserted(to) && reverse_heap.WasRemoved(to))
+        // Upper bound for the path source -> target with
+        // weight(source -> node) = forward_weight, weight(node -> to) = edge_weight and
+        // weight(to -> target) ≤ reverse_weight is forward_weight + edge_weight + reverse_weight
+        // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
+        // with weight(to -> target) = reverse_weight and all weights ≥ 0
+        if (reverse_heap.WasInserted(to))
         {
             auto reverse_weight = reverse_heap.GetKey(to);
             auto path_weight = forward_weight + edge_weight + reverse_weight;
-            BOOST_ASSERT(path_weight >= 0);
-            if (path_weight < path_upper_bound)
+            if (path_weight >= 0 && path_weight < path_upper_bound)
             {
                 middle_node = to;
                 path_upper_bound = path_weight;
