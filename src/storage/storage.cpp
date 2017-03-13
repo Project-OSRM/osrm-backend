@@ -3,6 +3,7 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
+#include "extractor/io.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
@@ -339,40 +340,13 @@ void Storage::PopulateLayout(DataLayout &layout)
                                         number_of_compressed_geometries);
         layout.SetBlockSize<EdgeWeight>(DataLayout::GEOMETRIES_REV_DURATION_LIST,
                                         number_of_compressed_geometries);
+        layout.SetBlockSize<DatasourceID>(DataLayout::DATASOURCES_LIST,
+                                          number_of_compressed_geometries);
     }
 
-    // load datasource sizes. This file is optional, and it's non-fatal if it doesn't exist.
-    if (boost::filesystem::exists(config.datasource_indexes_path))
+    // Load datasource name sizes.
     {
-        io::FileReader reader(config.datasource_indexes_path, io::FileReader::HasNoFingerprint);
-        const auto number_of_datasources = reader.ReadElementCount64();
-        layout.SetBlockSize<uint8_t>(DataLayout::DATASOURCES_LIST, number_of_datasources);
-    }
-    else
-    {
-        layout.SetBlockSize<uint8_t>(DataLayout::DATASOURCES_LIST, 0);
-    }
-
-    // Load datasource name sizes.  This file is optional, and it's non-fatal if it doesn't exist
-    if (boost::filesystem::exists(config.datasource_names_path))
-    {
-        io::FileReader reader(config.datasource_names_path, io::FileReader::HasNoFingerprint);
-
-        const serialization::DatasourceNamesData datasource_names_data =
-            serialization::readDatasourceNames(reader);
-
-        layout.SetBlockSize<char>(DataLayout::DATASOURCE_NAME_DATA,
-                                  datasource_names_data.names.size());
-        layout.SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_OFFSETS,
-                                         datasource_names_data.offsets.size());
-        layout.SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_LENGTHS,
-                                         datasource_names_data.lengths.size());
-    }
-    else
-    {
-        layout.SetBlockSize<char>(DataLayout::DATASOURCE_NAME_DATA, 0);
-        layout.SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_OFFSETS, 0);
-        layout.SetBlockSize<std::size_t>(DataLayout::DATASOURCE_NAME_LENGTHS, 0);
+        layout.SetBlockSize<extractor::Datasources>(DataLayout::DATASOURCES_NAMES, 1);
     }
 
     {
@@ -689,81 +663,17 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         BOOST_ASSERT(geometry_node_lists_count ==
                      layout.num_entries[DataLayout::GEOMETRIES_REV_DURATION_LIST]);
         geometry_input_file.ReadInto(geometries_rev_duration_list_ptr, geometry_node_lists_count);
+
+        const auto datasource_list_ptr =
+            layout.GetBlockPtr<DatasourceID, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
+        BOOST_ASSERT(geometry_node_lists_count == layout.num_entries[DataLayout::DATASOURCES_LIST]);
+        geometry_input_file.ReadInto(datasource_list_ptr, geometry_node_lists_count);
     }
 
-    if (boost::filesystem::exists(config.datasource_indexes_path))
     {
-        io::FileReader geometry_datasource_file(config.datasource_indexes_path,
-                                                io::FileReader::HasNoFingerprint);
-        const auto number_of_compressed_datasources = geometry_datasource_file.ReadElementCount64();
-
-        // load datasource information (if it exists)
-        const auto datasources_list_ptr =
-            layout.GetBlockPtr<uint8_t, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
-        if (number_of_compressed_datasources > 0)
-        {
-            serialization::readDatasourceIndexes(
-                geometry_datasource_file, datasources_list_ptr, number_of_compressed_datasources);
-        }
-    }
-    else
-    {
-        layout.GetBlockPtr<uint8_t, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
-    }
-
-    if (boost::filesystem::exists(config.datasource_names_path))
-    {
-        io::FileReader datasource_names_file(config.datasource_names_path,
-                                             io::FileReader::HasNoFingerprint);
-
-        const auto datasource_names_data =
-            serialization::readDatasourceNames(datasource_names_file);
-
-        // load datasource name information (if it exists)
-        const auto datasource_name_data_ptr =
-            layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::DATASOURCE_NAME_DATA);
-        if (layout.GetBlockSize(DataLayout::DATASOURCE_NAME_DATA) > 0)
-        {
-            BOOST_ASSERT(std::distance(datasource_names_data.names.begin(),
-                                       datasource_names_data.names.end()) *
-                             sizeof(decltype(datasource_names_data.names)::value_type) <=
-                         layout.GetBlockSize(DataLayout::DATASOURCE_NAME_DATA));
-            std::copy(datasource_names_data.names.begin(),
-                      datasource_names_data.names.end(),
-                      datasource_name_data_ptr);
-        }
-
-        const auto datasource_name_offsets_ptr =
-            layout.GetBlockPtr<std::size_t, true>(memory_ptr, DataLayout::DATASOURCE_NAME_OFFSETS);
-        if (layout.GetBlockSize(DataLayout::DATASOURCE_NAME_OFFSETS) > 0)
-        {
-            BOOST_ASSERT(std::distance(datasource_names_data.offsets.begin(),
-                                       datasource_names_data.offsets.end()) *
-                             sizeof(decltype(datasource_names_data.offsets)::value_type) <=
-                         layout.GetBlockSize(DataLayout::DATASOURCE_NAME_OFFSETS));
-            std::copy(datasource_names_data.offsets.begin(),
-                      datasource_names_data.offsets.end(),
-                      datasource_name_offsets_ptr);
-        }
-
-        const auto datasource_name_lengths_ptr =
-            layout.GetBlockPtr<std::size_t, true>(memory_ptr, DataLayout::DATASOURCE_NAME_LENGTHS);
-        if (layout.GetBlockSize(DataLayout::DATASOURCE_NAME_LENGTHS) > 0)
-        {
-            BOOST_ASSERT(std::distance(datasource_names_data.lengths.begin(),
-                                       datasource_names_data.lengths.end()) *
-                             sizeof(decltype(datasource_names_data.lengths)::value_type) <=
-                         layout.GetBlockSize(DataLayout::DATASOURCE_NAME_LENGTHS));
-            std::copy(datasource_names_data.lengths.begin(),
-                      datasource_names_data.lengths.end(),
-                      datasource_name_lengths_ptr);
-        }
-    }
-    else
-    {
-        layout.GetBlockPtr<char, true>(memory_ptr, DataLayout::DATASOURCE_NAME_DATA);
-        layout.GetBlockPtr<std::size_t, true>(memory_ptr, DataLayout::DATASOURCE_NAME_OFFSETS);
-        layout.GetBlockPtr<std::size_t, true>(memory_ptr, DataLayout::DATASOURCE_NAME_LENGTHS);
+        const auto datasources_names_ptr = layout.GetBlockPtr<extractor::Datasources, true>(
+            memory_ptr, DataLayout::DATASOURCES_NAMES);
+        extractor::io::read(config.datasource_names_path, *datasources_names_ptr);
     }
 
     // Loading list of coordinates

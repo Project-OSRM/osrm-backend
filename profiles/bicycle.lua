@@ -39,6 +39,8 @@ local profile = {
   },
 
   barrier_whitelist = Set {
+    'sump_buster',
+    'bus_trap',
     'cycle_barrier',
     'bollard',
     'entrance',

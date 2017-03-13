@@ -103,11 +103,6 @@ module.exports = function () {
         assert.equal(this.stderr.split('\n').length - 1, parseInt(lines));
     });
 
-    this.Then(/^datasource names should contain "(.+)"$/, (expectedData) => {
-        const actualData = fs.readFileSync(this.processedCacheFile + '.datasource_names', {encoding:'UTF-8'}).trim().split('\n').join(',');
-        assert.equal(actualData, expectedData);
-    });
-
     this.Given(/^the query options$/, (table, callback) => {
         table.raw().forEach(tuple => {
             this.queryParams[tuple[0]] = tuple[1];

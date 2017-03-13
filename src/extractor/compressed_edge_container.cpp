@@ -221,6 +221,7 @@ void CompressedEdgeContainer::InitializeBothwayVector()
     segment_data->rev_weights.reserve(m_compressed_oneway_geometries.size());
     segment_data->fwd_durations.reserve(m_compressed_oneway_geometries.size());
     segment_data->rev_durations.reserve(m_compressed_oneway_geometries.size());
+    segment_data->datasources.reserve(m_compressed_oneway_geometries.size());
 }
 
 unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id)
@@ -238,11 +239,14 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
 
     const auto &first_node = reverse_bucket.back();
 
+    constexpr DatasourceID LUA_SOURCE = 0;
+
     segment_data->nodes.emplace_back(first_node.node_id);
     segment_data->fwd_weights.emplace_back(INVALID_EDGE_WEIGHT);
     segment_data->rev_weights.emplace_back(first_node.weight);
     segment_data->fwd_durations.emplace_back(MAXIMAL_EDGE_DURATION);
     segment_data->rev_durations.emplace_back(first_node.payload.duration);
+    segment_data->datasources.emplace_back(LUA_SOURCE);
 
     for (std::size_t i = 0; i < forward_bucket.size() - 1; ++i)
     {
@@ -256,6 +260,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
         segment_data->rev_weights.emplace_back(rev_node.weight);
         segment_data->fwd_durations.emplace_back(fwd_node.payload.duration);
         segment_data->rev_durations.emplace_back(rev_node.payload.duration);
+        segment_data->datasources.emplace_back(LUA_SOURCE);
     }
 
     const auto &last_node = forward_bucket.back();
@@ -265,6 +270,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     segment_data->rev_weights.emplace_back(INVALID_EDGE_WEIGHT);
     segment_data->fwd_durations.emplace_back(last_node.payload.duration);
     segment_data->rev_durations.emplace_back(MAXIMAL_EDGE_DURATION);
+    segment_data->datasources.emplace_back(LUA_SOURCE);
 
     return zipped_geometry_id;
 }
