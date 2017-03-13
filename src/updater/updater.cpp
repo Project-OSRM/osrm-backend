@@ -10,6 +10,7 @@
 #include "storage/io.hpp"
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
+#include "util/for_each_pair.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
 #include "util/io.hpp"
@@ -19,7 +20,6 @@
 #include "util/string_util.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
-#include "util/for_each_pair.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -122,22 +122,8 @@ void checkWeightsConsistency(
     using Reader = osrm::storage::io::FileReader;
     using OriginalEdgeData = osrm::extractor::OriginalEdgeData;
 
-    Reader geometry_file(config.geometry_path, Reader::HasNoFingerprint);
-    const auto number_of_indices = geometry_file.ReadElementCount32();
-    std::vector<unsigned> geometry_indices(number_of_indices);
-    geometry_file.ReadInto(geometry_indices);
-
-    const auto number_of_compressed_geometries = geometry_file.ReadElementCount32();
-    BOOST_ASSERT(geometry_indices.back() == number_of_compressed_geometries);
-    if (number_of_compressed_geometries == 0)
-        return;
-
-    std::vector<NodeID> geometry_node_list(number_of_compressed_geometries);
-    std::vector<EdgeWeight> forward_weight_list(number_of_compressed_geometries);
-    std::vector<EdgeWeight> reverse_weight_list(number_of_compressed_geometries);
-    geometry_file.ReadInto(geometry_node_list.data(), number_of_compressed_geometries);
-    geometry_file.ReadInto(forward_weight_list.data(), number_of_compressed_geometries);
-    geometry_file.ReadInto(reverse_weight_list.data(), number_of_compressed_geometries);
+    extractor::SegmentDataContainer segment_data;
+    extractor::io::read(config.geometry_path, segment_data);
 
     Reader edges_input_file(config.osrm_input_path.string() + ".edges", Reader::HasNoFingerprint);
     std::vector<OriginalEdgeData> current_edge_data(edges_input_file.ReadElementCount64());
@@ -147,15 +133,27 @@ void checkWeightsConsistency(
     {
         BOOST_ASSERT(edge.data.edge_id < current_edge_data.size());
         auto geometry_id = current_edge_data[edge.data.edge_id].via_geometry;
-        BOOST_ASSERT(geometry_id.id < geometry_indices.size());
 
-        const auto &weights = geometry_id.forward ? forward_weight_list : reverse_weight_list;
-        const int shift = static_cast<int>(geometry_id.forward);
-        const auto first = weights.begin() + geometry_indices.at(geometry_id.id) + shift;
-        const auto last = weights.begin() + geometry_indices.at(geometry_id.id + 1) - 1 + shift;
-        EdgeWeight weight = std::accumulate(first, last, 0);
-
-        BOOST_ASSERT(weight <= edge.data.weight);
+        if (geometry_id.forward)
+        {
+            auto range = segment_data.GetForwardWeights(geometry_id.id);
+            EdgeWeight weight = std::accumulate(range.begin(), range.end(), 0);
+            if (weight > edge.data.weight)
+            {
+                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":" << weight << " > "
+                                      << edge.data.weight;
+            }
+        }
+        else
+        {
+            auto range = segment_data.GetReverseWeights(geometry_id.id);
+            EdgeWeight weight = std::accumulate(range.begin(), range.end(), 0);
+            if (weight > edge.data.weight)
+            {
+                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":" << weight << " > "
+                                      << edge.data.weight;
+            }
+        }
     }
 }
 #endif
@@ -226,19 +224,20 @@ void updaterSegmentData(const UpdaterConfig &config,
                 query_nodes.push_back(internal_to_external_node_map[node]);
             }
 
-            segment_lengths.reserve(nodes_range.size()+1);
+            segment_lengths.reserve(nodes_range.size() + 1);
             util::for_each_pair(query_nodes, [&](const auto &u, const auto &v) {
                 segment_lengths.push_back(util::coordinate_calculation::greatCircleDistance(
-                util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat}));
+                    util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat}));
             });
 
             auto fwd_weights_range = segment_data.GetForwardWeights(geometry_id);
             auto fwd_durations_range = segment_data.GetForwardDurations(geometry_id);
             auto fwd_datasources_range = segment_data.GetForwardDatasources(geometry_id);
-            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size(); ++segment_offset)
+            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
+                 ++segment_offset)
             {
                 auto u = query_nodes[segment_offset].node_id;
-                auto v = query_nodes[segment_offset+1].node_id;
+                auto v = query_nodes[segment_offset + 1].node_id;
                 if (auto value = segment_speed_lookup({u, v}))
                 {
                     EdgeWeight new_segment_weight, new_segment_duration;
@@ -268,10 +267,11 @@ void updaterSegmentData(const UpdaterConfig &config,
             auto rev_durations_range = boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
             auto rev_datasources_range = boost::adaptors::reverse(segment_data.GetReverseDatasources(geometry_id));
 
-            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size(); ++segment_offset)
+            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
+                 ++segment_offset)
             {
                 auto u = query_nodes[segment_offset].node_id;
-                auto v = query_nodes[segment_offset+1].node_id;
+                auto v = query_nodes[segment_offset + 1].node_id;
                 if (auto value = segment_speed_lookup({v, u}))
                 {
                     EdgeWeight new_segment_weight, new_segment_duration;
@@ -343,7 +343,6 @@ void saveDatasourcesNames(const UpdaterConfig &config)
 
     extractor::io::write(config.datasource_names_path, sources);
 }
-
 }
 
 Updater::NumNodesAndEdges Updater::LoadAndUpdateEdgeExpandedGraph() const
@@ -575,6 +574,13 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
                 // Is fallback of duration to weight values allowed
                 fallback_to_duration &= (turn_duration_penalty == turn_weight_penalty);
+            }
+
+            if (turn_weight_penalty < 0)
+            {
+                util::Log(logWARNING) << "Negative turn penalty at " << turn_index.from_id << ", "
+                                      << turn_index.via_id << ", " << turn_index.to_id
+                                      << ": turn penalty " << turn_weight_penalty;
             }
 
             // Update edge weight
