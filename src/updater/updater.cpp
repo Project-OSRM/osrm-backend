@@ -209,25 +209,17 @@ void updaterSegmentData(const UpdaterConfig &config,
     auto range = tbb::blocked_range<DirectionalGeometryID>(0, segment_data.GetNumberOfGeometries());
     tbb::parallel_for(range, [&](const auto &range) {
         auto &counters = segment_speeds_counters.local();
-        std::vector<extractor::QueryNode> query_nodes;
         std::vector<double> segment_lengths;
         for (auto geometry_id = range.begin(); geometry_id < range.end(); geometry_id++)
         {
-            query_nodes.clear();
             segment_lengths.clear();
 
             auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
 
-            query_nodes.reserve(nodes_range.size());
-            for (const auto node : nodes_range)
-            {
-                query_nodes.push_back(internal_to_external_node_map[node]);
-            }
-
             segment_lengths.reserve(nodes_range.size() + 1);
-            util::for_each_pair(query_nodes, [&](const auto &u, const auto &v) {
+            util::for_each_pair(nodes_range, [&](const auto &u, const auto &v) {
                 segment_lengths.push_back(util::coordinate_calculation::greatCircleDistance(
-                    util::Coordinate{u.lon, u.lat}, util::Coordinate{v.lon, v.lat}));
+                    util::Coordinate{internal_to_external_node_map[u]}, util::Coordinate{internal_to_external_node_map[v]}));
             });
 
             auto fwd_weights_range = segment_data.GetForwardWeights(geometry_id);
@@ -236,8 +228,8 @@ void updaterSegmentData(const UpdaterConfig &config,
             for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
                  ++segment_offset)
             {
-                auto u = query_nodes[segment_offset].node_id;
-                auto v = query_nodes[segment_offset + 1].node_id;
+                auto u = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
+                auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
                 if (auto value = segment_speed_lookup({u, v}))
                 {
                     EdgeWeight new_segment_weight, new_segment_duration;
@@ -270,8 +262,8 @@ void updaterSegmentData(const UpdaterConfig &config,
             for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
                  ++segment_offset)
             {
-                auto u = query_nodes[segment_offset].node_id;
-                auto v = query_nodes[segment_offset + 1].node_id;
+                auto u = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
+                auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
                 if (auto value = segment_speed_lookup({v, u}))
                 {
                     EdgeWeight new_segment_weight, new_segment_duration;
