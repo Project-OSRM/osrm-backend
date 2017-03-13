@@ -151,12 +151,46 @@ int Partitioner::Run(const PartitionConfig &config)
         {
             // Can use partition_ids[u/v] as partition for edge based graph `node_id`
             edge_based_partition_ids[node] = node_based_partition_ids[u];
+
+            auto edges = edge_based_graph->GetAdjacentEdgeRange(node);
+            if (edges.size() == 1)
+            { // Check the edge case with one adjacent edge-based backward edge
+                auto edge = edges.front();
+                auto other = edge_based_graph->GetTarget(edge);
+                auto &data = edge_based_graph->GetEdgeData(edge);
+                auto other_node_based_nodes = mapping.Lookup(other);
+                if (data.backward &&
+                    node_based_partition_ids[other_node_based_nodes.u] !=
+                        node_based_partition_ids[u])
+                { // use id of other node if the edge [other_u, other_v] -> [u,v] is a single edge
+                    // and nodes other_[u,v] are in  different node-based partitions
+                    edge_based_partition_ids[node] =
+                        node_based_partition_ids[other_node_based_nodes.u];
+                }
+            }
         }
         else
         {
             // Border nodes u,v - need to be resolved.
             // FIXME: just pick one side for now. See #3205.
-            edge_based_partition_ids[node] = node_based_partition_ids[u];
+
+            bool use_u = false;
+            for (auto edge : edge_based_graph->GetAdjacentEdgeRange(node))
+            {
+                auto other = edge_based_graph->GetTarget(edge);
+                auto &data = edge_based_graph->GetEdgeData(edge);
+                auto other_node_based_nodes = mapping.Lookup(other);
+
+                if (data.backward)
+                { // can use id of u if [other_u, other_v] -> [u,v] is in the same partition as u
+                    BOOST_ASSERT(u == other_node_based_nodes.v);
+                    use_u |= node_based_partition_ids[u] ==
+                             node_based_partition_ids[other_node_based_nodes.u];
+                }
+            }
+
+            // Use partition that introduce less cross cell connections
+            edge_based_partition_ids[node] = node_based_partition_ids[use_u ? u : v];
         }
     }
 
