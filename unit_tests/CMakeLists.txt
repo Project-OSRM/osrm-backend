@@ -10,6 +10,10 @@ file(GLOB PartitionTestsSources
     partition_tests.cpp
     partition/*.cpp)
 
+file(GLOB CustomizerTestsSources
+    customizer_tests.cpp
+    customizer/*.cpp)
+
 file(GLOB LibraryTestsSources
     library_tests.cpp
     library/*.cpp)
@@ -45,6 +49,11 @@ add_executable(partition-tests
 	EXCLUDE_FROM_ALL
 	${PartitionTestsSources}
 	$<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
+
+add_executable(customizer-tests
+	EXCLUDE_FROM_ALL
+    ${CustomizerTestsSources}
+    $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(library-tests
 	EXCLUDE_FROM_ALL
@@ -91,10 +100,12 @@ target_include_directories(library-extract-tests PUBLIC ${CMAKE_CURRENT_SOURCE_D
 target_include_directories(library-contract-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(util-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(partition-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(customizer-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(extractor-tests ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(partition-tests ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(customizer-tests ${CUSTOMIZER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-extract-tests osrm_extract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -102,4 +113,4 @@ target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_custom_target(tests
-	DEPENDS engine-tests extractor-tests partition-tests library-tests library-extract-tests server-tests util-tests)
+	DEPENDS engine-tests extractor-tests partition-tests customizer-tests library-tests library-extract-tests server-tests util-tests)
