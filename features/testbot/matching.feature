@@ -139,6 +139,7 @@ Feature: Basic Map Matching
         """
 
         And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
             | trace | matchings | a:duration       |
@@ -165,6 +166,7 @@ Feature: Basic Map Matching
         """
 
         And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
 
         When I match I should get
             | trace | matchings | a:duration      |

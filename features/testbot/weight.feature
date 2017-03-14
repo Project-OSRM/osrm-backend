@@ -280,6 +280,7 @@ Feature: Weight tests
             2,3,5,25.5,16.7
             """
         And the contract extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
 
         When I route I should get
             | waypoints | route | distance | weights   | times        |
@@ -315,6 +316,7 @@ Feature: Weight tests
             2,3,5,1
             """
         And the contract extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
 
         When I route I should get
             | waypoints | route      | distance | weights       | times    |
