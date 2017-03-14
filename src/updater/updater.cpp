@@ -225,7 +225,7 @@ UpdatedListAndSegmentData updaterSegmentData(const UpdaterConfig &config,
                 }
             }
             if (fwd_was_updated)
-                updated_segments.push_back(GeometryID{true, geometry_id});
+                updated_segments.push_back(GeometryID{geometry_id, true});
 
             // In this case we want it oriented from in forward directions
             auto rev_weights_range =
@@ -260,7 +260,7 @@ UpdatedListAndSegmentData updaterSegmentData(const UpdaterConfig &config,
                 }
             }
             if (rev_was_updated)
-                updated_segments.push_back(GeometryID{false, geometry_id});
+                updated_segments.push_back(GeometryID{geometry_id, false});
         }
     }); // parallel_for
 
@@ -473,6 +473,11 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
     auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
 
+    storage::io::FileReader edges_input_file(config.osrm_input_path.string() + ".edges",
+                                             storage::io::FileReader::HasNoFingerprint);
+    std::vector<extractor::OriginalEdgeData> edge_data(edges_input_file.ReadElementCount64());
+    edges_input_file.ReadInto(edge_data);
+
     tbb::concurrent_vector<GeometryID> updated_segments;
     extractor::SegmentDataContainer segment_data;
     if (update_edge_weights)
@@ -531,21 +536,43 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     {
         // Make a copy of the data from the memory map
         extractor::EdgeBasedEdge inbuffer = edge_based_edge_ptr[edge_index];
+        bool needs_update = update_turn_penalties;
 
-        if (update_edge_weights || update_turn_penalties)
+        if (update_edge_weights)
         {
-            using extractor::lookup::SegmentHeaderBlock;
-            using extractor::lookup::SegmentBlock;
+            const auto geometry_id = edge_data[edge_index].via_geometry;
+            auto updated_iter = std::lower_bound(updated_segments.begin(),
+                                                 updated_segments.end(),
+                                                 geometry_id,
+                                                 [](const GeometryID lhs, const GeometryID rhs) {
+                                                     return std::tie(lhs.id, lhs.forward) <
+                                                            std::tie(rhs.id, rhs.forward);
+                                                 });
+            if (updated_iter == updated_segments.end() || updated_iter->id != geometry_id.id ||
+                updated_iter->forward != geometry_id.forward)
+            {
+                needs_update = update_turn_penalties;
+            }
+            else
+            {
+                needs_update = true;
+            }
+        }
 
-            auto header = reinterpret_cast<const SegmentHeaderBlock *>(edge_segment_byte_ptr);
-            BOOST_ASSERT(is_aligned<SegmentHeaderBlock>(header));
-            edge_segment_byte_ptr += sizeof(SegmentHeaderBlock);
+        using extractor::lookup::SegmentHeaderBlock;
+        using extractor::lookup::SegmentBlock;
 
-            auto first = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
-            BOOST_ASSERT(is_aligned<SegmentBlock>(first));
-            edge_segment_byte_ptr += sizeof(SegmentBlock) * (header->num_osm_nodes - 1);
-            auto last = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
+        auto header = reinterpret_cast<const SegmentHeaderBlock *>(edge_segment_byte_ptr);
+        BOOST_ASSERT(is_aligned<SegmentHeaderBlock>(header));
+        edge_segment_byte_ptr += sizeof(SegmentHeaderBlock);
 
+        auto first = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
+        BOOST_ASSERT(is_aligned<SegmentBlock>(first));
+        edge_segment_byte_ptr += sizeof(SegmentBlock) * (header->num_osm_nodes - 1);
+        auto last = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
+
+        if (needs_update)
+        {
             // Find a segment with zero speed and simultaneously compute the new edge weight
             EdgeWeight new_weight = 0;
             EdgeWeight new_duration = 0;
