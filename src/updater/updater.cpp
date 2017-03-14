@@ -139,9 +139,11 @@ auto mmapFile(const std::string &filename, boost::interprocess::mode_t mode)
     }
 }
 
-void updaterSegmentData(const UpdaterConfig &config,
-                        const extractor::ProfileProperties &profile_properties,
-                        const SegmentLookupTable &segment_speed_lookup)
+using UpdatedListAndSegmentData =
+    std::tuple<tbb::concurrent_vector<GeometryID>, extractor::SegmentDataContainer>;
+UpdatedListAndSegmentData updaterSegmentData(const UpdaterConfig &config,
+                                             const extractor::ProfileProperties &profile_properties,
+                                             const SegmentLookupTable &segment_speed_lookup)
 {
     auto weight_multiplier = profile_properties.GetWeightMultiplier();
     std::vector<extractor::QueryNode> internal_to_external_node_map;
@@ -176,6 +178,8 @@ void updaterSegmentData(const UpdaterConfig &config,
         segment_data_backup = std::make_unique<extractor::SegmentDataContainer>(segment_data);
     }
 
+    tbb::concurrent_vector<GeometryID> updated_segments;
+
     using DirectionalGeometryID = extractor::SegmentDataContainer::DirectionalGeometryID;
     auto range = tbb::blocked_range<DirectionalGeometryID>(0, segment_data.GetNumberOfGeometries());
     tbb::parallel_for(range, [&, LUA_SOURCE](const auto &range) {
@@ -196,6 +200,7 @@ void updaterSegmentData(const UpdaterConfig &config,
             auto fwd_weights_range = segment_data.GetForwardWeights(geometry_id);
             auto fwd_durations_range = segment_data.GetForwardDurations(geometry_id);
             auto fwd_datasources_range = segment_data.GetForwardDatasources(geometry_id);
+            bool fwd_was_updated = false;
             for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
                  ++segment_offset)
             {
@@ -203,8 +208,11 @@ void updaterSegmentData(const UpdaterConfig &config,
                 auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
                 if (auto value = segment_speed_lookup({u, v}))
                 {
-                    auto new_duration = convertToDuration(value->speed, segment_lengths[segment_offset]);
-                    auto new_weight = convertToWeight(value->weight, weight_multiplier, new_duration);
+                    auto new_duration =
+                        convertToDuration(value->speed, segment_lengths[segment_offset]);
+                    auto new_weight =
+                        convertToWeight(value->weight, weight_multiplier, new_duration);
+                    fwd_was_updated = true;
 
                     fwd_weights_range[segment_offset] = new_weight;
                     fwd_durations_range[segment_offset] = new_duration;
@@ -216,6 +224,8 @@ void updaterSegmentData(const UpdaterConfig &config,
                     counters[LUA_SOURCE] += 1;
                 }
             }
+            if (fwd_was_updated)
+                updated_segments.push_back(GeometryID{true, geometry_id});
 
             // In this case we want it oriented from in forward directions
             auto rev_weights_range =
@@ -224,6 +234,7 @@ void updaterSegmentData(const UpdaterConfig &config,
                 boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
             auto rev_datasources_range =
                 boost::adaptors::reverse(segment_data.GetReverseDatasources(geometry_id));
+            bool rev_was_updated = false;
 
             for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
                  ++segment_offset)
@@ -232,8 +243,11 @@ void updaterSegmentData(const UpdaterConfig &config,
                 auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
                 if (auto value = segment_speed_lookup({v, u}))
                 {
-                    auto new_duration = convertToDuration(value->speed, segment_lengths[segment_offset]);
-                    auto new_weight = convertToWeight(value->weight, weight_multiplier, new_duration);
+                    auto new_duration =
+                        convertToDuration(value->speed, segment_lengths[segment_offset]);
+                    auto new_weight =
+                        convertToWeight(value->weight, weight_multiplier, new_duration);
+                    rev_was_updated = true;
 
                     rev_weights_range[segment_offset] = new_weight;
                     rev_durations_range[segment_offset] = new_duration;
@@ -245,6 +259,8 @@ void updaterSegmentData(const UpdaterConfig &config,
                     counters[LUA_SOURCE] += 1;
                 }
             }
+            if (rev_was_updated)
+                updated_segments.push_back(GeometryID{false, geometry_id});
         }
     }); // parallel_for
 
@@ -338,8 +354,13 @@ void updaterSegmentData(const UpdaterConfig &config,
         }
     }
 
-    // Now save out the updated compressed geometries
-    extractor::io::write(config.geometry_path, segment_data);
+    tbb::parallel_sort(updated_segments.begin(),
+                       updated_segments.end(),
+                       [](const GeometryID lhs, const GeometryID rhs) {
+                           return std::tie(lhs.id, lhs.forward) < std::tie(rhs.id, rhs.forward);
+                       });
+
+    return std::make_tuple(std::move(updated_segments), std::move(segment_data));
 }
 
 void saveDatasourcesNames(const UpdaterConfig &config)
@@ -452,10 +473,15 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
     auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
 
+    tbb::concurrent_vector<GeometryID> updated_segments;
+    extractor::SegmentDataContainer segment_data;
     if (update_edge_weights)
     {
         TIMER_START(segment);
-        updaterSegmentData(config, profile_properties, segment_speed_lookup);
+        std::tie(updated_segments, segment_data) =
+            updaterSegmentData(config, profile_properties, segment_speed_lookup);
+        // Now save out the updated compressed geometries
+        extractor::io::write(config.geometry_path, segment_data);
         TIMER_STOP(segment);
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }
