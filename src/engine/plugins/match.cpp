@@ -177,32 +177,32 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
     SubMatchingList sub_matchings;
     if (parameters.track_preprocessing == api::MatchParameters::PreprocessingType::Full)
     {
-    // Transparently tidy match parameters, do map matching on tidied parameters.
-    // Then use the mapping to restore the original <-> tidied relationship.
-    auto tidied = api::tidy::tidy(parameters);
+        // Transparently tidy match parameters, do map matching on tidied parameters.
+        // Then use the mapping to restore the original <-> tidied relationship.
+        auto tidied = api::tidy::tidy(parameters);
 
-    // TODO is search radiuses still actual
-    auto candidates_lists = GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses);
+        // TODO is search radiuses still actual
+        auto candidates_lists = GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses);
 
-    filterCandidates(tidied.parameters.coordinates, candidates_lists);
-    if (std::all_of(candidates_lists.begin(),
-                    candidates_lists.end(),
-                    [](const std::vector<PhantomNodeWithDistance> &candidates) {
-                        return candidates.empty();
-                    }))
-    {
-        return Error("NoSegment",
-                     std::string("Could not find a matching segment for any coordinate."),
-                     json_result);
-    }
+        filterCandidates(tidied.parameters.coordinates, candidates_lists);
+        if (std::all_of(candidates_lists.begin(),
+                        candidates_lists.end(),
+                        [](const std::vector<PhantomNodeWithDistance> &candidates) {
+                            return candidates.empty();
+                        }))
+        {
+            return Error("NoSegment",
+                         std::string("Could not find a matching segment for any coordinate."),
+                         json_result);
+        }
 
-    // call the actual map matching
-    sub_matchings = algorithms.MapMatching(
-                                                 candidates_lists,
-                                                 tidied.parameters.coordinates,
-                                                 tidied.parameters.timestamps,
-                                                 tidied.parameters.radiuses,
-                                                !(parameters.track_preprocessing == api::MatchParameters::PreprocessingType::False));
+        // call the actual map matching
+        sub_matchings = algorithms.MapMatching(
+            candidates_lists,
+            tidied.parameters.coordinates,
+            tidied.parameters.timestamps,
+            tidied.parameters.radiuses,
+            !(parameters.track_preprocessing == api::MatchParameters::PreprocessingType::False));
     }
     else
     {
@@ -223,11 +223,11 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
 
         // call the actual map matching
         sub_matchings = algorithms.MapMatching(
-                                               candidates_lists,
-                                               parameters.coordinates,
-                                               parameters.timestamps,
-                                               parameters.radiuses,
-                                               !(parameters.track_preprocessing == api::MatchParameters::PreprocessingType::False));
+            candidates_lists,
+            parameters.coordinates,
+            parameters.timestamps,
+            parameters.radiuses,
+            !(parameters.track_preprocessing == api::MatchParameters::PreprocessingType::False));
     }
 
     if (sub_matchings.size() == 0)
