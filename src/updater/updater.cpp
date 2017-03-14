@@ -57,7 +57,7 @@ template <typename T> inline bool is_aligned(const void *pointer)
 }
 
 // Returns duration in deci-seconds
-inline EdgeWeight convertToDuration(double distance_in_meters, double speed_in_kmh)
+inline EdgeWeight convertToDuration(double speed_in_kmh, double distance_in_meters)
 {
     if (speed_in_kmh <= 0.)
         return MAXIMAL_EDGE_DURATION;
@@ -74,44 +74,6 @@ inline EdgeWeight convertToWeight(double weight, double weight_multiplier, EdgeW
 
     return duration == MAXIMAL_EDGE_DURATION ? INVALID_EDGE_WEIGHT
                                              : duration * weight_multiplier / 10.;
-}
-
-// Returns updated edge weight
-void getNewWeight(const UpdaterConfig &config,
-                  const double weight_multiplier,
-                  const SpeedSource &value,
-                  const double &segment_length,
-                  const EdgeWeight current_duration,
-                  const OSMNodeID from,
-                  const OSMNodeID to,
-                  EdgeWeight &new_segment_weight,
-                  EdgeWeight &new_segment_duration)
-{
-    // Update the edge duration as distance/speed
-    new_segment_duration = convertToDuration(segment_length, value.speed);
-
-    // Update the edge weight or fallback to the new edge duration
-    new_segment_weight = convertToWeight(value.weight, weight_multiplier, new_segment_duration);
-
-    // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a warning
-    // if the new duration exceeds a heuristic of what a reasonable duration update is
-    if (config.log_edge_updates_factor > 0 && current_duration != 0)
-    {
-        if (current_duration >= (new_segment_duration * config.log_edge_updates_factor))
-        {
-            auto new_secs = new_segment_duration / 10.;
-            auto old_secs = current_duration / 10.;
-            auto approx_original_speed = (segment_length / old_secs) * 3.6;
-            auto speed_file = config.segment_speed_lookup_paths.at(value.source - 1);
-            util::Log(logWARNING) << "[weight updates] Edge weight update from " << old_secs
-                                  << "s to " << new_secs << "s  New speed: " << value.speed
-                                  << " kph"
-                                  << ". Old speed: " << approx_original_speed << " kph"
-                                  << ". Segment length: " << segment_length << " m"
-                                  << ". Segment: " << from << "," << to << " based on "
-                                  << speed_file;
-        }
-    }
 }
 
 #if !defined(NDEBUG)
@@ -140,8 +102,8 @@ void checkWeightsConsistency(
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), 0);
             if (weight > edge.data.weight)
             {
-                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":" << weight << " > "
-                                      << edge.data.weight;
+                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":"
+                                      << weight << " > " << edge.data.weight;
             }
         }
         else
@@ -150,8 +112,8 @@ void checkWeightsConsistency(
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), 0);
             if (weight > edge.data.weight)
             {
-                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":" << weight << " > "
-                                      << edge.data.weight;
+                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":"
+                                      << weight << " > " << edge.data.weight;
             }
         }
     }
@@ -205,21 +167,30 @@ void updaterSegmentData(const UpdaterConfig &config,
         counters_type(num_counters, 0));
     const constexpr auto LUA_SOURCE = 0;
 
+    // The check here is enabled by the `--edge-weight-updates-over-factor` flag it logs a
+    // warning if the new duration exceeds a heuristic of what a reasonable duration update is
+    std::unique_ptr<extractor::SegmentDataContainer> segment_data_backup;
+    if (config.log_edge_updates_factor > 0)
+    {
+        // copy the old data so we can compare later
+        segment_data_backup = std::make_unique<extractor::SegmentDataContainer>(segment_data);
+    }
+
     using DirectionalGeometryID = extractor::SegmentDataContainer::DirectionalGeometryID;
     auto range = tbb::blocked_range<DirectionalGeometryID>(0, segment_data.GetNumberOfGeometries());
-    tbb::parallel_for(range, [&](const auto &range) {
+    tbb::parallel_for(range, [&, LUA_SOURCE](const auto &range) {
         auto &counters = segment_speeds_counters.local();
         std::vector<double> segment_lengths;
         for (auto geometry_id = range.begin(); geometry_id < range.end(); geometry_id++)
         {
-            segment_lengths.clear();
-
             auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
 
+            segment_lengths.clear();
             segment_lengths.reserve(nodes_range.size() + 1);
             util::for_each_pair(nodes_range, [&](const auto &u, const auto &v) {
                 segment_lengths.push_back(util::coordinate_calculation::greatCircleDistance(
-                    util::Coordinate{internal_to_external_node_map[u]}, util::Coordinate{internal_to_external_node_map[v]}));
+                    util::Coordinate{internal_to_external_node_map[u]},
+                    util::Coordinate{internal_to_external_node_map[v]}));
             });
 
             auto fwd_weights_range = segment_data.GetForwardWeights(geometry_id);
@@ -232,19 +203,11 @@ void updaterSegmentData(const UpdaterConfig &config,
                 auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
                 if (auto value = segment_speed_lookup({u, v}))
                 {
-                    EdgeWeight new_segment_weight, new_segment_duration;
-                    getNewWeight(config,
-                                 weight_multiplier,
-                                 *value,
-                                 segment_lengths[segment_offset],
-                                 fwd_weights_range[segment_offset],
-                                 u,
-                                 v,
-                                 new_segment_weight,
-                                 new_segment_duration);
+                    auto new_duration = convertToDuration(value->speed, segment_lengths[segment_offset]);
+                    auto new_weight = convertToWeight(value->weight, weight_multiplier, new_duration);
 
-                    fwd_weights_range[segment_offset] = new_segment_weight;
-                    fwd_durations_range[segment_offset] = new_segment_duration;
+                    fwd_weights_range[segment_offset] = new_weight;
+                    fwd_durations_range[segment_offset] = new_duration;
                     fwd_datasources_range[segment_offset] = value->source;
                     counters[value->source] += 1;
                 }
@@ -255,9 +218,12 @@ void updaterSegmentData(const UpdaterConfig &config,
             }
 
             // In this case we want it oriented from in forward directions
-            auto rev_weights_range = boost::adaptors::reverse(segment_data.GetReverseWeights(geometry_id));
-            auto rev_durations_range = boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
-            auto rev_datasources_range = boost::adaptors::reverse(segment_data.GetReverseDatasources(geometry_id));
+            auto rev_weights_range =
+                boost::adaptors::reverse(segment_data.GetReverseWeights(geometry_id));
+            auto rev_durations_range =
+                boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
+            auto rev_datasources_range =
+                boost::adaptors::reverse(segment_data.GetReverseDatasources(geometry_id));
 
             for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
                  ++segment_offset)
@@ -266,19 +232,11 @@ void updaterSegmentData(const UpdaterConfig &config,
                 auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
                 if (auto value = segment_speed_lookup({v, u}))
                 {
-                    EdgeWeight new_segment_weight, new_segment_duration;
-                    getNewWeight(config,
-                                 weight_multiplier,
-                                 *value,
-                                 segment_lengths[segment_offset],
-                                 rev_weights_range[segment_offset],
-                                 v,
-                                 u,
-                                 new_segment_weight,
-                                 new_segment_duration);
+                    auto new_duration = convertToDuration(value->speed, segment_lengths[segment_offset]);
+                    auto new_weight = convertToWeight(value->weight, weight_multiplier, new_duration);
 
-                    rev_weights_range[segment_offset] = new_segment_weight;
-                    rev_durations_range[segment_offset] = new_segment_duration;
+                    rev_weights_range[segment_offset] = new_weight;
+                    rev_durations_range[segment_offset] = new_duration;
                     rev_datasources_range[segment_offset] = value->source;
                     counters[value->source] += 1;
                 }
@@ -312,6 +270,71 @@ void updaterSegmentData(const UpdaterConfig &config,
             // to susbstract 1 to avoid off-by-one error
             util::Log() << "Used " << merged_counters[i] << " speeds from "
                         << config.segment_speed_lookup_paths[i - 1];
+        }
+    }
+
+    if (config.log_edge_updates_factor > 0)
+    {
+        BOOST_ASSERT(segment_data_backup);
+
+        for (DirectionalGeometryID geometry_id = 0;
+             geometry_id < segment_data.GetNumberOfGeometries();
+             geometry_id++)
+        {
+            auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
+
+            auto new_fwd_durations_range = segment_data.GetForwardDurations(geometry_id);
+            auto new_fwd_datasources_range = segment_data.GetForwardDatasources(geometry_id);
+            auto new_rev_durations_range =
+                boost::adaptors::reverse(segment_data.GetReverseDurations(geometry_id));
+            auto new_rev_datasources_range = segment_data.GetForwardDatasources(geometry_id);
+            auto old_fwd_durations_range = segment_data_backup->GetForwardDurations(geometry_id);
+            auto old_rev_durations_range =
+                boost::adaptors::reverse(segment_data_backup->GetReverseDurations(geometry_id));
+
+            for (auto segment_offset = 0UL; segment_offset < new_fwd_durations_range.size();
+                 ++segment_offset)
+            {
+                if (new_fwd_datasources_range[segment_offset] == LUA_SOURCE)
+                    continue;
+
+                if (old_fwd_durations_range[segment_offset] >=
+                    (new_fwd_durations_range[segment_offset] * config.log_edge_updates_factor))
+                {
+                    auto from = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
+                    auto to =
+                        internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
+                    util::Log(logWARNING)
+                        << "[weight updates] Edge weight update from "
+                        << old_fwd_durations_range[segment_offset] / 10. << "s to "
+                        << new_fwd_durations_range[segment_offset] / 10. << "s Segment: " << from
+                        << "," << to << " based on "
+                        << config.segment_speed_lookup_paths
+                               [new_fwd_datasources_range[segment_offset] - 1];
+                }
+            }
+
+            for (auto segment_offset = 0UL; segment_offset < new_rev_durations_range.size();
+                 ++segment_offset)
+            {
+                if (new_rev_datasources_range[segment_offset] == LUA_SOURCE)
+                    continue;
+
+                if (old_rev_durations_range[segment_offset] >=
+                    (new_rev_durations_range[segment_offset] * config.log_edge_updates_factor))
+                {
+                    auto from =
+                        internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
+                    auto to = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
+                    util::Log(logWARNING)
+                        << "[weight updates] Edge weight update from "
+                        << old_rev_durations_range[segment_offset] / 10. << "s to "
+                        << new_rev_durations_range[segment_offset] / 10. << "s Segment: " << from
+                        << "," << to << " based on "
+                        << config.segment_speed_lookup_paths
+                               [new_rev_datasources_range[segment_offset] - 1];
+                }
+            }
         }
     }
 
@@ -512,7 +535,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                         if (value->speed == 0)
                             return true;
 
-                        segment_duration = convertToDuration(segment.segment_length, value->speed);
+                        segment_duration = convertToDuration(value->speed, segment.segment_length);
 
                         segment_weight =
                             convertToWeight(value->weight, weight_multiplier, segment_duration);
