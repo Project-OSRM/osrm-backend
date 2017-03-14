@@ -39,6 +39,7 @@ module.exports = function () {
         this.OSM_TIMESTAMP = '2000-01-01T00:00:00Z';
         this.WAY_SPACING = 100;
         this.DEFAULT_GRID_SIZE = 100; // meters
+        this.ROUTING_ALGORITHM = 'CH';
 
         this.OSRM_PORT = process.env.OSRM_PORT && parseInt(process.env.OSRM_PORT) || 5000;
         this.HOST = 'http://127.0.0.1:' + this.OSRM_PORT;
