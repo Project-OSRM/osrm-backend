@@ -139,27 +139,18 @@ auto mmapFile(const std::string &filename, boost::interprocess::mode_t mode)
     }
 }
 
-using UpdatedListAndSegmentData =
-    std::tuple<tbb::concurrent_vector<GeometryID>, extractor::SegmentDataContainer>;
-UpdatedListAndSegmentData updaterSegmentData(const UpdaterConfig &config,
-                                             const extractor::ProfileProperties &profile_properties,
-                                             const SegmentLookupTable &segment_speed_lookup)
+tbb::concurrent_vector<GeometryID>
+updateSegmentData(const UpdaterConfig &config,
+                  const extractor::ProfileProperties &profile_properties,
+                  const SegmentLookupTable &segment_speed_lookup,
+                  extractor::SegmentDataContainer &segment_data)
 {
     auto weight_multiplier = profile_properties.GetWeightMultiplier();
+
     std::vector<extractor::QueryNode> internal_to_external_node_map;
-    extractor::SegmentDataContainer segment_data;
-
-    const auto load_internal_to_external_node_map = [&] {
-        storage::io::FileReader nodes_file(config.node_based_graph_path,
-                                           storage::io::FileReader::HasNoFingerprint);
-
-        nodes_file.DeserializeVector(internal_to_external_node_map);
-    };
-
-    const auto load_geometries = [&] { extractor::io::read(config.geometry_path, segment_data); };
-
-    // Folds all our actions into independently concurrently executing lambdas
-    tbb::parallel_invoke(load_internal_to_external_node_map, load_geometries);
+    storage::io::FileReader nodes_file(config.node_based_graph_path,
+                                       storage::io::FileReader::HasNoFingerprint);
+    nodes_file.DeserializeVector(internal_to_external_node_map);
 
     // vector to count used speeds for logging
     // size offset by one since index 0 is used for speeds not from external file
@@ -360,7 +351,7 @@ UpdatedListAndSegmentData updaterSegmentData(const UpdaterConfig &config,
                            return std::tie(lhs.id, lhs.forward) < std::tie(rhs.id, rhs.forward);
                        });
 
-    return std::make_tuple(std::move(updated_segments), std::move(segment_data));
+    return updated_segments;
 }
 
 void saveDatasourcesNames(const UpdaterConfig &config)
@@ -380,32 +371,16 @@ void saveDatasourcesNames(const UpdaterConfig &config)
     extractor::io::write(config.datasource_names_path, sources);
 }
 
-using TurnWeightAndDuration = std::tuple<std::vector<TurnPenalty>, std::vector<TurnPenalty>>;
-TurnWeightAndDuration
-loadAndUpdateTurnPenalties(const UpdaterConfig &config,
-                           const extractor::ProfileProperties &profile_properties,
-                           const TurnLookupTable &turn_penalty_lookup)
+std::vector<std::uint64_t>
+updateTurnPenalties(const UpdaterConfig &config,
+                    const extractor::ProfileProperties &profile_properties,
+                    const TurnLookupTable &turn_penalty_lookup,
+                    std::vector<TurnPenalty> &turn_weight_penalties,
+                    std::vector<TurnPenalty> &turn_duration_penalties)
 {
     const auto weight_multiplier = profile_properties.GetWeightMultiplier();
     const auto turn_penalties_index_region =
         mmapFile(config.turn_penalties_index_path, boost::interprocess::read_only);
-
-    std::vector<TurnPenalty> turn_weight_penalties;
-    std::vector<TurnPenalty> turn_duration_penalties;
-
-    const auto load_turn_weight_penalties = [&] {
-        using storage::io::FileReader;
-        FileReader file(config.turn_weight_penalties_path, FileReader::HasNoFingerprint);
-        file.DeserializeVector(turn_weight_penalties);
-    };
-
-    const auto load_turn_duration_penalties = [&] {
-        using storage::io::FileReader;
-        FileReader file(config.turn_duration_penalties_path, FileReader::HasNoFingerprint);
-        file.DeserializeVector(turn_duration_penalties);
-    };
-
-    tbb::parallel_invoke(load_turn_weight_penalties, load_turn_duration_penalties);
 
     // Mapped file pointer for turn indices
     const extractor::lookup::TurnIndexBlock *turn_index_blocks =
@@ -413,6 +388,7 @@ loadAndUpdateTurnPenalties(const UpdaterConfig &config,
             turn_penalties_index_region.get_address());
     BOOST_ASSERT(is_aligned<extractor::lookup::TurnIndexBlock>(turn_index_blocks));
 
+    std::vector<std::uint64_t> updated_turns;
     for (std::uint64_t edge_index = 0; edge_index < turn_weight_penalties.size(); ++edge_index)
     {
         // Get the turn penalty and update to the new value if required
@@ -429,6 +405,7 @@ loadAndUpdateTurnPenalties(const UpdaterConfig &config,
 
             turn_duration_penalties[edge_index] = turn_duration_penalty;
             turn_weight_penalties[edge_index] = turn_weight_penalty;
+            updated_turns.push_back(edge_index);
         }
 
         if (turn_weight_penalty < 0)
@@ -439,7 +416,7 @@ loadAndUpdateTurnPenalties(const UpdaterConfig &config,
         }
     }
 
-    return std::make_tuple(std::move(turn_weight_penalties), std::move(turn_duration_penalties));
+    return updated_turns;
 }
 }
 
@@ -456,12 +433,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                         std::vector<EdgeWeight> &node_weights) const
 {
     TIMER_START(load_edges);
-
-    // Propagate profile properties to contractor configuration structure
-    extractor::ProfileProperties profile_properties;
-    storage::io::FileReader profile_properties_file(config.profile_properties_path,
-                                                    storage::io::FileReader::HasNoFingerprint);
-    profile_properties_file.ReadInto<extractor::ProfileProperties>(&profile_properties, 1);
 
     if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
         throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
@@ -515,40 +486,23 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     edge_based_edge_list.reserve(graph_header.number_of_edges);
     util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
-    storage::io::FileReader edges_input_file(config.osrm_input_path.string() + ".edges",
-                                             storage::io::FileReader::HasNoFingerprint);
-    std::vector<extractor::OriginalEdgeData> edge_data(edges_input_file.ReadElementCount64());
-    edges_input_file.ReadInto(edge_data);
-
-    tbb::concurrent_vector<GeometryID> updated_segments;
+    extractor::ProfileProperties profile_properties;
+    std::vector<extractor::OriginalEdgeData> edge_data;
     extractor::SegmentDataContainer segment_data;
-    if (update_edge_weights)
-    {
-        auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
-
-        TIMER_START(segment);
-        std::tie(updated_segments, segment_data) =
-            updaterSegmentData(config, profile_properties, segment_speed_lookup);
-        // Now save out the updated compressed geometries
-        extractor::io::write(config.geometry_path, segment_data);
-        TIMER_STOP(segment);
-        util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
-    }
-    else if (update_turn_penalties)
-    {
-        extractor::io::read(config.geometry_path, segment_data);
-    }
-
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
-    if (update_turn_penalties)
+    if (update_edge_weights || update_turn_penalties)
     {
-        auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
-        std::tie(turn_weight_penalties, turn_duration_penalties) =
-            loadAndUpdateTurnPenalties(config, profile_properties, turn_penalty_lookup);
-    }
-    else if (update_edge_weights)
-    {
+        const auto load_segment_data = [&]() {
+            extractor::io::read(config.geometry_path, segment_data);
+        };
+
+        const auto load_edge_data = [&]() {
+            storage::io::FileReader edges_input_file(config.edge_data_path,
+                                                     storage::io::FileReader::HasNoFingerprint);
+            edges_input_file.DeserializeVector(edge_data);
+        };
+
         const auto load_turn_weight_penalties = [&] {
             using storage::io::FileReader;
             FileReader file(config.turn_weight_penalties_path, FileReader::HasNoFingerprint);
@@ -561,7 +515,42 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             file.DeserializeVector(turn_duration_penalties);
         };
 
-        tbb::parallel_invoke(load_turn_weight_penalties, load_turn_duration_penalties);
+        const auto load_profile_properties = [&] {
+            // Propagate profile properties to contractor configuration structure
+            storage::io::FileReader profile_properties_file(
+                config.profile_properties_path, storage::io::FileReader::HasNoFingerprint);
+            profile_properties = profile_properties_file.ReadOne<extractor::ProfileProperties>();
+        };
+
+        tbb::parallel_invoke(load_edge_data,
+                             load_segment_data,
+                             load_turn_weight_penalties,
+                             load_turn_duration_penalties,
+                             load_profile_properties);
+    }
+
+    tbb::concurrent_vector<GeometryID> updated_segments;
+    if (update_edge_weights)
+    {
+        auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
+
+        TIMER_START(segment);
+        updated_segments = updateSegmentData(config, profile_properties, segment_speed_lookup, segment_data);
+        // Now save out the updated compressed geometries
+        extractor::io::write(config.geometry_path, segment_data);
+        TIMER_STOP(segment);
+        util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
+    }
+
+    std::vector<std::uint64_t> updated_turn_penalties;
+    if (update_turn_penalties)
+    {
+        auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
+        updated_turn_penalties = updateTurnPenalties(config,
+                                                     profile_properties,
+                                                     turn_penalty_lookup,
+                                                     turn_weight_penalties,
+                                                     turn_duration_penalties);
     }
 
     // Mapped file pointers for edge-based graph edges
