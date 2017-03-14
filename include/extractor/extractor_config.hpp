@@ -70,7 +70,6 @@ struct ExtractorConfig
         edge_graph_output_path = basepath + ".osrm.ebg";
         rtree_nodes_output_path = basepath + ".osrm.ramIndex";
         rtree_leafs_output_path = basepath + ".osrm.fileIndex";
-        edge_segment_lookup_path = basepath + ".osrm.edge_segment_lookup";
         turn_duration_penalties_path = basepath + ".osrm.turn_duration_penalties";
         turn_weight_penalties_path = basepath + ".osrm.turn_weight_penalties";
         turn_penalties_index_path = basepath + ".osrm.turn_penalties_index";
@@ -109,7 +108,6 @@ struct ExtractorConfig
 
     bool generate_edge_lookup;
     std::string turn_penalties_index_path;
-    std::string edge_segment_lookup_path;
 
     bool use_metadata;
 };
