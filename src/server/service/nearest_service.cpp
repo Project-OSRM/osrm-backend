@@ -31,11 +31,6 @@ std::string getWrongOptionHelp(const engine::api::NearestParameters &parameters)
         constrainParamSize(
             PARAMETER_SIZE_MISMATCH_MSG, "radiuses", parameters.radiuses, coord_size, help);
 
-    if (!param_size_mismatch && parameters.coordinates.size() < 2)
-    {
-        help = "Number of coordinates needs to be at least two.";
-    }
-
     return help;
 }
 } // anon. ns
