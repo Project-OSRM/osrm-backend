@@ -33,15 +33,22 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
             (qi::uint_ %
              ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
 
+        preprocessing_type.add("simple", engine::api::MatchParameters::PreprocessingType::Simple)(
+                               "full", engine::api::MatchParameters::PreprocessingType::Full)(
+                               "false", engine::api::MatchParameters::PreprocessingType::False);
+
+
         root_rule = BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
                     -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1) | (
-                    qi::lit("tidying=") > qi::bool_[ph::bind(&engine::api::MatchParameters::use_tidying,
-                    qi::_r1) = qi::_1])) % '&');
+                    qi::lit("preprocess=") > preprocessing_type[ph::bind(&engine::api::MatchParameters::track_preprocessing, qi::_r1) = qi::_1])
+                    ) % '&');
     }
 
   private:
     qi::rule<Iterator, Signature> root_rule;
     qi::rule<Iterator, Signature> timestamps_rule;
+
+    qi::symbols<char, engine::api::MatchParameters::PreprocessingType> preprocessing_type;
 };
 }
 }

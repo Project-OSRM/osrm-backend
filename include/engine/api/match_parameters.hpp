@@ -50,24 +50,31 @@ namespace api
  */
 struct MatchParameters : public RouteParameters
 {
+    enum class PreprocessingType
+    {
+        False,
+        Simple,
+        Full
+    };
+
     MatchParameters()
         : RouteParameters(false,
                           false,
                           false,
                           RouteParameters::GeometriesType::Polyline,
                           RouteParameters::OverviewType::Simplified,
-                          {}), use_tidying(true)
+                          {}), track_preprocessing(PreprocessingType::Simple)
     {
     }
 
     template <typename... Args>
-    MatchParameters(std::vector<unsigned> timestamps_, bool use_tidying_, Args... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)}, use_tidying(use_tidying_)
+    MatchParameters(std::vector<unsigned> timestamps_, PreprocessingType track_preprocessing_, Args... args_)
+        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)}, track_preprocessing(track_preprocessing_)
     {
     }
 
     std::vector<unsigned> timestamps;
-    bool use_tidying;
+    PreprocessingType track_preprocessing;
 
     bool IsValid() const
     {
