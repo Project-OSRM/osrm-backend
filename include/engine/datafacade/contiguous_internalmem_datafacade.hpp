@@ -417,20 +417,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_turn_weight_penalties = util::ShM<TurnPenalty, true>::vector(
             turn_weight_penalties_ptr,
             data_layout.num_entries[storage::DataLayout::TURN_WEIGHT_PENALTIES]);
-        if (data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES] == 0)
-        { // Fallback to turn weight penalties that are turn duration penalties in deciseconds
-            m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
-                turn_weight_penalties_ptr,
-                data_layout.num_entries[storage::DataLayout::TURN_WEIGHT_PENALTIES]);
-        }
-        else
-        {
-            auto turn_duration_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
-                memory_block, storage::DataLayout::TURN_DURATION_PENALTIES);
-            m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
-                turn_duration_penalties_ptr,
-                data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES]);
-        }
+        auto turn_duration_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
+            memory_block, storage::DataLayout::TURN_DURATION_PENALTIES);
+        m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
+            turn_duration_penalties_ptr,
+            data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES]);
     }
 
     void InitializeGeometryPointers(storage::DataLayout &data_layout, char *memory_block)

@@ -46,37 +46,6 @@ class ScriptingEnvironment;
 
 namespace lookup
 {
-// Set to 1 byte alignment
-#pragma pack(push, 1)
-struct SegmentHeaderBlock
-{
-    std::uint32_t num_osm_nodes;
-    OSMNodeID previous_osm_node_id;
-};
-#pragma pack(pop)
-static_assert(sizeof(SegmentHeaderBlock) == 12, "SegmentHeaderBlock is not packed correctly");
-
-#pragma pack(push, 1)
-struct SegmentBlock
-{
-    OSMNodeID this_osm_node_id;
-    double segment_length;
-    EdgeWeight segment_weight;
-    EdgeWeight segment_duration;
-};
-#pragma pack(pop)
-static_assert(sizeof(SegmentBlock) == 24, "SegmentBlock is not packed correctly");
-
-#pragma pack(push, 1)
-struct TurnPenaltiesHeader
-{
-    //! the number of penalties in each block
-    std::uint64_t number_of_penalties;
-};
-#pragma pack(pop)
-static_assert(std::is_trivial<TurnPenaltiesHeader>::value, "TurnPenaltiesHeader is not trivial");
-static_assert(sizeof(TurnPenaltiesHeader) == 8, "TurnPenaltiesHeader is not packed correctly");
-
 #pragma pack(push, 1)
 struct TurnIndexBlock
 {

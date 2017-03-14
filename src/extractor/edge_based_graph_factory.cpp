@@ -570,13 +570,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                     BOOST_ASSERT(turn_weight_penalties.size() == turn_id);
                     turn_weight_penalties.push_back(weight_penalty);
-
-                    // the weight and the duration are not the same thing
-                    if (!profile_properties.fallback_to_duration)
-                    {
-                        BOOST_ASSERT(turn_duration_penalties.size() == turn_id);
-                        turn_duration_penalties.push_back(duration_penalty);
-                    }
+                    BOOST_ASSERT(turn_duration_penalties.size() == turn_id);
+                    turn_duration_penalties.push_back(duration_penalty);
 
                     // We write out the mapping between the edge-expanded edges and the
                     // original nodes. Since each edge represents a possible maneuver, external
@@ -616,27 +611,17 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     }
 
     // write weight penalties per turn
-    storage::io::FileWriter turn_weight_penalties_file(turn_weight_penalties_filename,
-                                                       storage::io::FileWriter::HasNoFingerprint);
-
-    lookup::TurnPenaltiesHeader turn_weight_penalties_header{turn_weight_penalties.size()};
-    turn_weight_penalties_file.WriteOne(turn_weight_penalties_header);
-    turn_weight_penalties_file.WriteFrom(turn_weight_penalties.data(),
-                                         turn_weight_penalties.size());
-
-    // write duration penalties per turn if we need them
-    BOOST_ASSERT(!profile_properties.fallback_to_duration || turn_duration_penalties.size() == 0);
-
-    storage::io::FileWriter turn_duration_penalties_file(turn_duration_penalties_filename,
-                                                         storage::io::FileWriter::HasNoFingerprint);
-    lookup::TurnPenaltiesHeader turn_duration_penalties_header{turn_duration_penalties.size()};
-    turn_duration_penalties_file.WriteOne(turn_duration_penalties_header);
-
-    if (!profile_properties.fallback_to_duration)
+    BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
     {
-        BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
-        turn_duration_penalties_file.WriteFrom(turn_duration_penalties.data(),
-                                               turn_duration_penalties.size());
+        storage::io::FileWriter turn_weight_penalties_file(
+            turn_weight_penalties_filename, storage::io::FileWriter::HasNoFingerprint);
+        turn_weight_penalties_file.SerializeVector(turn_weight_penalties);
+    }
+
+    {
+        storage::io::FileWriter turn_duration_penalties_file(
+            turn_duration_penalties_filename, storage::io::FileWriter::HasNoFingerprint);
+        turn_duration_penalties_file.SerializeVector(turn_duration_penalties);
     }
 
     util::Log() << "Created " << entry_class_hash.size() << " entry classes and "
