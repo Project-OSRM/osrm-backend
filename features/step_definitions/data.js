@@ -269,12 +269,8 @@ module.exports = function () {
         this.writeAndLinkOSM(callback);
     });
 
-    this.Given(/^the data has been (extract|contract)ed$/, (step, callback) => {
+    this.Given(/^the data has been (extract|contract|partition|customiz)ed$/, (step, callback) => {
         this.reprocess(callback);
-    });
-
-    this.Given(/^the data has been (partition|customiz)ed$/, (step, callback) => {
-        this.reprocessMLD(callback);
     });
 
     this.Given(/^osrm\-routed is stopped$/, (callback) => {

@@ -234,7 +234,7 @@ module.exports = function () {
         });
     };
 
-    this.extractAndContract = (callback) => {
+    this.extractContractPartitionAndCustomize = (callback) => {
         // a shallow copy of scenario parameters to avoid data inconsistency
         // if a cucumber timeout occurs during deferred jobs
         let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
@@ -244,17 +244,6 @@ module.exports = function () {
         let queue = d3.queue(1);
         queue.defer(this.extractData.bind(this), p);
         queue.defer(this.contractData.bind(this), p);
-        queue.awaitAll(callback);
-    };
-
-    this.extractPartitionAndCustomize = (callback) => {
-        // a shallow copy of scenario parameters to avoid data inconsistency
-        // if a cucumber timeout occurs during deferred jobs
-        let p = {extractArgs: this.extractArgs, partitionArgs: this.partitionArgs, customizeArgs: this.customizeArgs,
-                 profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
-                 processedCacheFile: this.processedCacheFile, environment: this.environment};
-        let queue = d3.queue(1);
-        queue.defer(this.extractData.bind(this), p);
         queue.defer(this.partitionData.bind(this), p);
         queue.defer(this.customizeData.bind(this), p);
         queue.awaitAll(callback);
@@ -270,23 +259,14 @@ module.exports = function () {
     this.reprocess = (callback) => {
         let queue = d3.queue(1);
         queue.defer(this.writeAndLinkOSM.bind(this));
-        queue.defer(this.extractAndContract.bind(this));
-        queue.awaitAll(callback);
-    };
-
-    this.reprocessMLD = (callback) => {
-        let queue = d3.queue(1);
-        queue.defer(this.writeAndLinkOSM.bind(this));
-        queue.defer(this.extractPartitionAndCustomize.bind(this));
+        queue.defer(this.extractContractPartitionAndCustomize.bind(this));
         queue.awaitAll(callback);
     };
 
     this.reprocessAndLoadData = (callback) => {
         let queue = d3.queue(1);
         queue.defer(this.writeAndLinkOSM.bind(this));
-        queue.defer((this.ROUTING_ALGORITHM === 'MLD' ?
-                     this.extractPartitionAndCustomize :
-                     this.extractAndContract).bind(this));
+        queue.defer(this.extractContractPartitionAndCustomize.bind(this));
         queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
         queue.awaitAll(callback);
     };
