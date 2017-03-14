@@ -380,7 +380,7 @@ void saveDatasourcesNames(const UpdaterConfig &config)
     extractor::io::write(config.datasource_names_path, sources);
 }
 
-using TurnWeightAndDuration = std::tuple<std::vector<TurnPenalty>, std::vector<TurnPenalty>, bool>;
+using TurnWeightAndDuration = std::tuple<std::vector<TurnPenalty>, std::vector<TurnPenalty>>;
 TurnWeightAndDuration
 loadAndUpdateTurnPenalties(const UpdaterConfig &config,
                            const extractor::ProfileProperties &profile_properties,
@@ -407,13 +407,6 @@ loadAndUpdateTurnPenalties(const UpdaterConfig &config,
 
     tbb::parallel_invoke(load_turn_weight_penalties, load_turn_duration_penalties);
 
-    bool fallback_to_duration = false;
-    if (turn_duration_penalties.empty())
-    { // Copy-on-write for duration penalties as turn weight penalties
-        turn_duration_penalties = turn_weight_penalties;
-        fallback_to_duration = true;
-    }
-
     // Mapped file pointer for turn indices
     const extractor::lookup::TurnIndexBlock *turn_index_blocks =
         reinterpret_cast<const extractor::lookup::TurnIndexBlock *>(
@@ -436,9 +429,6 @@ loadAndUpdateTurnPenalties(const UpdaterConfig &config,
 
             turn_duration_penalties[edge_index] = turn_duration_penalty;
             turn_weight_penalties[edge_index] = turn_weight_penalty;
-
-            // Is fallback of duration to weight values allowed
-            fallback_to_duration &= (turn_duration_penalty == turn_weight_penalty);
         }
 
         if (turn_weight_penalty < 0)
@@ -449,7 +439,7 @@ loadAndUpdateTurnPenalties(const UpdaterConfig &config,
         }
     }
 
-    return std::make_tuple(std::move(turn_weight_penalties), std::move(turn_duration_penalties), fallback_to_duration);
+    return std::make_tuple(std::move(turn_weight_penalties), std::move(turn_duration_penalties));
 }
 }
 
@@ -551,11 +541,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
-    bool fallback_to_duration = true;
     if (update_turn_penalties)
     {
         auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
-        std::tie(turn_weight_penalties, turn_duration_penalties, fallback_to_duration) =
+        std::tie(turn_weight_penalties, turn_duration_penalties) =
             loadAndUpdateTurnPenalties(config, profile_properties, turn_penalty_lookup);
     }
     else if (update_edge_weights)
@@ -573,12 +562,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         };
 
         tbb::parallel_invoke(load_turn_weight_penalties, load_turn_duration_penalties);
-        if (turn_duration_penalties.empty())
-        { // Copy-on-write for duration penalties as turn weight penalties
-            turn_duration_penalties = turn_weight_penalties;
-            fallback_to_duration = true;
-        }
-
     }
 
     // Mapped file pointers for edge-based graph edges
@@ -680,9 +663,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
             turn_weight_penalties[edge_index] = turn_weight_penalty;
 
-            // Is fallback of duration to weight values allowed
-            fallback_to_duration &= (turn_duration_penalty == turn_weight_penalty);
-
             // Update edge weight
             inbuffer.data.weight = new_weight + turn_weight_penalty;
             inbuffer.data.duration = new_duration + turn_duration_penalty;
@@ -693,12 +673,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     if (update_turn_penalties)
     {
-        if (fallback_to_duration)
-        { // Turn duration penalties are identical to turn weight penalties
-            // Save empty data vector, so turn weight penalties will be used by data facade.
-            turn_duration_penalties.clear();
-        }
-
         const auto save_penalties = [](const auto &filename, const auto &data) -> void {
             storage::io::FileWriter file(filename, storage::io::FileWriter::HasNoFingerprint);
             file.SerializeVector(data);
