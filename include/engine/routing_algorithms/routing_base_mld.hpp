@@ -26,9 +26,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                  const std::pair<LevelID, CellID> &parent_cell,
                  const std::function<LevelID(const NodeID)> &get_query_level,
                  NodeID &middle_node,
-                 EdgeWeight &path_upper_bound,
-                 EdgeWeight &forward_upper_bound,
-                 EdgeWeight &reverse_upper_bound)
+                 EdgeWeight &path_upper_bound)
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
@@ -36,25 +34,21 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     const auto node = forward_heap.DeleteMin();
     const auto weight = forward_heap.GetKey(node);
 
-    auto update_upper_bounds = [&](NodeID to, EdgeWeight forward_weight, EdgeWeight edge_weight) {
-        // Upper bound for the path source -> target with
-        // weight(source -> node) = forward_weight, weight(node -> to) = edge_weight and
-        // weight(to -> target) ≤ reverse_weight is forward_weight + edge_weight + reverse_weight
-        // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
-        // with weight(to -> target) = reverse_weight and all weights ≥ 0
-        if (reverse_heap.WasInserted(to))
+    // Upper bound for the path source -> target with
+    // weight(source -> node) = weight weight(to -> target) ≤ reverse_weight
+    // is weight + reverse_weight
+    // More tighter upper bound requires additional condition reverse_heap.WasRemoved(to)
+    // with weight(to -> target) = reverse_weight and all weights ≥ 0
+    if (reverse_heap.WasInserted(node))
+    {
+        auto reverse_weight = reverse_heap.GetKey(node);
+        auto path_weight = weight + reverse_weight;
+        if (path_weight >= 0 && path_weight < path_upper_bound)
         {
-            auto reverse_weight = reverse_heap.GetKey(to);
-            auto path_weight = forward_weight + edge_weight + reverse_weight;
-            if (path_weight >= 0 && path_weight < path_upper_bound)
-            {
-                middle_node = to;
-                path_upper_bound = path_weight;
-                forward_upper_bound = forward_weight + edge_weight;
-                reverse_upper_bound = reverse_weight + edge_weight;
-            }
+            middle_node = node;
+            path_upper_bound = path_weight;
         }
-    };
+    }
 
     const auto &node_data = forward_heap.GetData(node);
     const auto level = get_query_level(node);
@@ -62,9 +56,6 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
         (level >= 1) &&                        // only if at least the first level and
         (node_data.parent == node ||           //   is the first point of the path
          node_data.edge_id != SPECIAL_EDGEID); //   or an overlay entreé point
-
-    // Edge case: single node path
-    update_upper_bounds(node, weight, 0);
 
     if (check_overlay_edges)
     {
@@ -83,13 +74,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                     if (!forward_heap.WasInserted(to))
                     {
                         forward_heap.Insert(to, to_weight, {node});
-                        update_upper_bounds(to, weight, shortcut_weight);
                     }
                     else if (to_weight < forward_heap.GetKey(to))
                     {
                         forward_heap.GetData(to) = {node};
                         forward_heap.DecreaseKey(to, to_weight);
-                        update_upper_bounds(to, weight, shortcut_weight);
                     }
                 }
                 ++destination;
@@ -110,13 +99,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                     if (!forward_heap.WasInserted(to))
                     {
                         forward_heap.Insert(to, to_weight, {node});
-                        update_upper_bounds(to, weight, shortcut_weight);
                     }
                     else if (to_weight < forward_heap.GetKey(to))
                     {
                         forward_heap.GetData(to) = {node};
                         forward_heap.DecreaseKey(to, to_weight);
-                        update_upper_bounds(to, weight, shortcut_weight);
                     }
                 }
                 ++source;
@@ -146,13 +133,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                 if (!forward_heap.WasInserted(to))
                 {
                     forward_heap.Insert(to, to_weight, {node, edge});
-                    update_upper_bounds(to, weight, edge_data.weight);
                 }
                 else if (to_weight < forward_heap.GetKey(to))
                 {
                     forward_heap.GetData(to) = {node, edge};
                     forward_heap.DecreaseKey(to, to_weight);
-                    update_upper_bounds(to, weight, edge_data.weight);
                 }
             }
         }
@@ -165,44 +150,35 @@ auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD>
             const std::pair<LevelID, CellID> &parent_cell,
             const std::function<LevelID(const NodeID)> &get_query_level)
 {
+
     const auto &partition = facade.GetMultiLevelPartition();
+
+    BOOST_ASSERT(!forward_heap.Empty() && forward_heap.MinKey() < INVALID_EDGE_WEIGHT);
+    BOOST_ASSERT(!reverse_heap.Empty() && reverse_heap.MinKey() < INVALID_EDGE_WEIGHT);
 
     // run two-Target Dijkstra routing step.
     NodeID middle = SPECIAL_NODEID;
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
-    EdgeWeight forward_search_radius = INVALID_EDGE_WEIGHT;
-    EdgeWeight reverse_search_radius = INVALID_EDGE_WEIGHT;
-    bool progress;
-    do
+    EdgeWeight forward_heap_min = forward_heap.MinKey();
+    EdgeWeight reverse_heap_min = reverse_heap.MinKey();
+    while (forward_heap.Size() + reverse_heap.Size() > 0 &&
+           forward_heap_min + reverse_heap_min < weight)
     {
-        progress = false;
-        if (!forward_heap.Empty() && (forward_heap.MinKey() < forward_search_radius))
+        if (!forward_heap.Empty())
         {
-            progress = true;
-            routingStep<FORWARD_DIRECTION>(facade,
-                                           forward_heap,
-                                           reverse_heap,
-                                           parent_cell,
-                                           get_query_level,
-                                           middle,
-                                           weight,
-                                           forward_search_radius,
-                                           reverse_search_radius);
+            routingStep<FORWARD_DIRECTION>(
+                facade, forward_heap, reverse_heap, parent_cell, get_query_level, middle, weight);
+            if (!forward_heap.Empty())
+                forward_heap_min = forward_heap.MinKey();
         }
-        if (!reverse_heap.Empty() && (reverse_heap.MinKey() < reverse_search_radius))
+        if (!reverse_heap.Empty())
         {
-            progress = true;
-            routingStep<REVERSE_DIRECTION>(facade,
-                                           reverse_heap,
-                                           forward_heap,
-                                           parent_cell,
-                                           get_query_level,
-                                           middle,
-                                           weight,
-                                           reverse_search_radius,
-                                           forward_search_radius);
+            routingStep<REVERSE_DIRECTION>(
+                facade, reverse_heap, forward_heap, parent_cell, get_query_level, middle, weight);
+            if (!reverse_heap.Empty())
+                reverse_heap_min = reverse_heap.MinKey();
         }
-    } while (progress);
+    };
 
     // No path found for both target nodes?
     if (weight == INVALID_EDGE_WEIGHT || SPECIAL_NODEID == middle)
