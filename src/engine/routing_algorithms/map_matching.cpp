@@ -169,7 +169,7 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
                 if (use_timestamps)
                 {
                     return trace_timestamps[t] - trace_timestamps[prev_unbroken_timestamps.back()] >
-                        max_broken_time;
+                           max_broken_time;
                 }
                 else
                 {

@@ -80,12 +80,12 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
                      const std::vector<std::size_t> &source_indices,
                      const std::vector<std::size_t> &target_indices) const final override;
 
-    routing_algorithms::SubMatchingList MapMatching(
-        const routing_algorithms::CandidateLists &candidates_list,
-        const std::vector<util::Coordinate> &trace_coordinates,
-        const std::vector<unsigned> &trace_timestamps,
-        const std::vector<boost::optional<double>> &trace_gps_precision,
-        const bool use_tidying) const final override;
+    routing_algorithms::SubMatchingList
+    MapMatching(const routing_algorithms::CandidateLists &candidates_list,
+                const std::vector<util::Coordinate> &trace_coordinates,
+                const std::vector<unsigned> &trace_timestamps,
+                const std::vector<boost::optional<double>> &trace_gps_precision,
+                const bool use_tidying) const final override;
 
     std::vector<routing_algorithms::TurnData>
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
@@ -168,8 +168,13 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<AlgorithmT>::MapMat
     const std::vector<boost::optional<double>> &trace_gps_precision,
     const bool use_tidying) const
 {
-    return routing_algorithms::mapMatching(
-        heaps, facade, candidates_list, trace_coordinates, trace_timestamps, trace_gps_precision, use_tidying);
+    return routing_algorithms::mapMatching(heaps,
+                                           facade,
+                                           candidates_list,
+                                           trace_coordinates,
+                                           trace_timestamps,
+                                           trace_gps_precision,
+                                           use_tidying);
 }
 
 template <typename AlgorithmT>

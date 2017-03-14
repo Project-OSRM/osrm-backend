@@ -63,13 +63,17 @@ struct MatchParameters : public RouteParameters
                           false,
                           RouteParameters::GeometriesType::Polyline,
                           RouteParameters::OverviewType::Simplified,
-                          {}), track_preprocessing(PreprocessingType::Simple)
+                          {}),
+          track_preprocessing(PreprocessingType::Simple)
     {
     }
 
     template <typename... Args>
-    MatchParameters(std::vector<unsigned> timestamps_, PreprocessingType track_preprocessing_, Args... args_)
-        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)}, track_preprocessing(track_preprocessing_)
+    MatchParameters(std::vector<unsigned> timestamps_,
+                    PreprocessingType track_preprocessing_,
+                    Args... args_)
+        : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)},
+          track_preprocessing(track_preprocessing_)
     {
     }
 
