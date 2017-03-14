@@ -422,14 +422,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         return boost::interprocess::mapped_region();
     }();
 
-    const auto edge_segment_region = [&] {
-        if (update_edge_weights || update_turn_penalties)
-        {
-            return mmapFile(config.edge_segment_lookup_path, boost::interprocess::read_only);
-        }
-        return boost::interprocess::mapped_region();
-    }();
-
 // Set the struct packing to 1 byte word sizes.  This prevents any padding.  We only use
 // this struct once, so any alignment penalty is trivial.  If this is *not* done, then
 // the struct will be padded out by an extra 4 bytes, and sizeof() will mean we read
@@ -470,7 +462,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     edge_based_edge_list.reserve(graph_header.number_of_edges);
     util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
 
-    auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
     auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
 
     storage::io::FileReader edges_input_file(config.osrm_input_path.string() + ".edges",
@@ -482,6 +473,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     extractor::SegmentDataContainer segment_data;
     if (update_edge_weights)
     {
+        auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
+
         TIMER_START(segment);
         std::tie(updated_segments, segment_data) =
             updaterSegmentData(config, profile_properties, segment_speed_lookup);
@@ -489,6 +482,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         extractor::io::write(config.geometry_path, segment_data);
         TIMER_STOP(segment);
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
+    }
+    else if (update_turn_penalties)
+    {
+        extractor::io::read(config.geometry_path, segment_data);
     }
 
     std::vector<TurnPenalty> turn_weight_penalties;
@@ -529,8 +526,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         sizeof(EdgeBasedGraphHeader));
     BOOST_ASSERT(is_aligned<extractor::EdgeBasedEdge>(edge_based_edge_ptr));
 
-    auto edge_segment_byte_ptr = reinterpret_cast<const char *>(edge_segment_region.get_address());
-
     bool fallback_to_duration = true;
     for (std::uint64_t edge_index = 0; edge_index < graph_header.number_of_edges; ++edge_index)
     {
@@ -559,47 +554,44 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             }
         }
 
-        using extractor::lookup::SegmentHeaderBlock;
-        using extractor::lookup::SegmentBlock;
-
-        auto header = reinterpret_cast<const SegmentHeaderBlock *>(edge_segment_byte_ptr);
-        BOOST_ASSERT(is_aligned<SegmentHeaderBlock>(header));
-        edge_segment_byte_ptr += sizeof(SegmentHeaderBlock);
-
-        auto first = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
-        BOOST_ASSERT(is_aligned<SegmentBlock>(first));
-        edge_segment_byte_ptr += sizeof(SegmentBlock) * (header->num_osm_nodes - 1);
-        auto last = reinterpret_cast<const SegmentBlock *>(edge_segment_byte_ptr);
-
         if (needs_update)
         {
             // Find a segment with zero speed and simultaneously compute the new edge weight
             EdgeWeight new_weight = 0;
             EdgeWeight new_duration = 0;
-            auto osm_node_id = header->previous_osm_node_id;
-            bool skip_edge =
-                std::find_if(first, last, [&](const auto &segment) {
-                    auto segment_weight = segment.segment_weight;
-                    auto segment_duration = segment.segment_duration;
-                    if (auto value = segment_speed_lookup({osm_node_id, segment.this_osm_node_id}))
+            bool skip_edge = false;
+
+            const auto geometry_id = edge_data[edge_index].via_geometry;
+            if (geometry_id.forward)
+            {
+                const auto weights = segment_data.GetForwardWeights(geometry_id.id);
+                for (const auto weight : weights)
+                {
+                    if (weight == INVALID_EDGE_WEIGHT)
                     {
-                        // If we hit a 0-speed edge, then it's effectively not traversible.
-                        // We don't want to include it in the edge_based_edge_list.
-                        if (value->speed == 0)
-                            return true;
-
-                        segment_duration = convertToDuration(value->speed, segment.segment_length);
-
-                        segment_weight =
-                            convertToWeight(value->weight, weight_multiplier, segment_duration);
+                        skip_edge = true;
+                        break;
                     }
-
-                    // Update the edge weight and the next OSM node ID
-                    osm_node_id = segment.this_osm_node_id;
-                    new_weight += segment_weight;
-                    new_duration += segment_duration;
-                    return false;
-                }) != last;
+                    new_weight += weight;
+                }
+                const auto durations = segment_data.GetForwardDurations(geometry_id.id);
+                new_duration = std::accumulate(durations.begin(), durations.end(), 0);
+            }
+            else
+            {
+                const auto weights = segment_data.GetReverseWeights(geometry_id.id);
+                for (const auto weight : weights)
+                {
+                    if (weight == INVALID_EDGE_WEIGHT)
+                    {
+                        skip_edge = true;
+                        break;
+                    }
+                    new_weight += weight;
+                }
+                const auto durations = segment_data.GetReverseDurations(geometry_id.id);
+                new_duration = std::accumulate(durations.begin(), durations.end(), 0);
+            }
 
             // Update the node-weight cache. This is the weight of the edge-based-node only,
             // it doesn't include the turn. We may visit the same node multiple times, but
@@ -625,7 +617,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                    ? value->weight * weight_multiplier
                                    : turn_duration_penalty * weight_multiplier / 10.));
 
-                const auto weight_min_value = static_cast<EdgeWeight>(header->num_osm_nodes);
+                const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
+                const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
                 if (turn_weight_penalty + new_weight < weight_min_value)
                 {
                     util::Log(logWARNING) << "turn penalty " << turn_weight_penalty << " for turn "
