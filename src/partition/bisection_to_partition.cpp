@@ -42,6 +42,7 @@ Partition cellsToPartition(const std::vector<CellBisection> &cells,
                       [&partition, cell_id](const auto node_id) { partition[node_id] = cell_id; });
         cell_id++;
     }
+    BOOST_ASSERT(std::find(partition.begin(), partition.end(), INVALID_CELL_ID) == partition.end());
 
     return partition;
 }
@@ -126,9 +127,10 @@ bisectionToPartition(const std::vector<BisectionID> &node_to_bisection_id,
     std::vector<Partition> partitions(max_cell_sizes.size());
     std::vector<std::uint32_t> num_cells(max_cell_sizes.size());
 
-    auto level_idx = max_cell_sizes.size() - 1;
+    int level_idx = max_cell_sizes.size() - 1;
     for (auto max_cell_size : boost::adaptors::reverse(max_cell_sizes))
     {
+        BOOST_ASSERT(level_idx >= 0);
         partitionLevel(node_to_bisection_id, max_cell_size, permutation, cells);
 
         partitions[level_idx] = cellsToPartition(cells, permutation);

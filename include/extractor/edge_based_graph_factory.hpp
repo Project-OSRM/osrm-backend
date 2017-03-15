@@ -10,10 +10,12 @@
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/nbg_to_ebg.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
+
 #include "util/deallocating_vector.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -35,7 +37,6 @@
 #include <vector>
 
 #include <boost/filesystem/fstream.hpp>
-#include <boost/optional.hpp>
 
 namespace osrm
 {
@@ -177,7 +178,7 @@ class EdgeBasedGraphFactory
 
     unsigned RenumberEdges();
 
-    void GenerateEdgeExpandedNodes(const std::string &nbg_ebg_mapping_path);
+    std::vector<NBGToEBG> GenerateEdgeExpandedNodes();
 
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
                                    const std::string &original_edge_data_filename,
@@ -188,15 +189,7 @@ class EdgeBasedGraphFactory
                                    const std::string &turn_penalties_index_filename,
                                    const bool generate_edge_lookup);
 
-    // Mapping betweenn the node based graph u,v nodes and the edge based graph head,tail edge ids.
-    // Required in the osrm-partition tool to translate from a nbg partition to a ebg partition.
-    struct Mapping
-    {
-        NodeID u, v;
-        EdgeID head, tail;
-    };
-
-    boost::optional<Mapping> InsertEdgeBasedNode(const NodeID u, const NodeID v);
+    NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
     void FlushVectorToStream(storage::io::FileWriter &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;
