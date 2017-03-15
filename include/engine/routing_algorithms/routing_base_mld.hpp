@@ -19,14 +19,29 @@ namespace routing_algorithms
 namespace mld
 {
 
-template <bool DIRECTION>
+namespace
+{
+// Unrestricted search (Args is std::function<LevelID(const NodeID)>):
+//   * use `query_level` closure of partition.GetQueryLevel to find the query level
+//   * allow to traverse all cells
+using QueryLevelFunction = std::function<LevelID(const NodeID)>;
+LevelID getNodeQureyLevel(NodeID node, const QueryLevelFunction &functor) { return functor(node); }
+bool checkParentCellRestriction(CellID, const QueryLevelFunction &) { return true; }
+
+// Restricted search (Args is LevelID, CellID):
+//   * use the fixed level for queries
+//   * check if the node cell is the same as the specified parent onr
+LevelID getNodeQureyLevel(NodeID, LevelID level, CellID) { return level; }
+bool checkParentCellRestriction(CellID cell, LevelID, CellID parent) { return cell == parent; }
+}
+
+template <bool DIRECTION, typename... Args>
 void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
                  SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
                  SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
-                 const std::pair<LevelID, CellID> &parent_cell,
-                 const std::function<LevelID(const NodeID)> &get_query_level,
                  NodeID &middle_node,
-                 EdgeWeight &path_upper_bound)
+                 EdgeWeight &path_upper_bound,
+                 Args... args)
 {
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
@@ -50,8 +65,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
         }
     }
 
+    const auto level = getNodeQureyLevel(node, args...);
     const auto &node_data = forward_heap.GetData(node);
-    const auto level = get_query_level(node);
     const auto check_overlay_edges =
         (level >= 1) &&                        // only if at least the first level and
         (node_data.parent == node ||           //   is the first point of the path
@@ -118,14 +133,9 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
         if (DIRECTION == FORWARD_DIRECTION ? edge_data.forward : edge_data.backward)
         {
             const NodeID to = facade.GetTarget(edge);
-            const auto to_level =
-                std::min(parent_cell.first, partition.GetHighestDifferentLevel(node, to));
 
-            if ( // Routing is unrestricted or restricted to the highest level cell
-                (parent_cell.second == INVALID_CELL_ID ||
-                 parent_cell.second == partition.GetCell(parent_cell.first + 1, to)) &&
-                // "Never-go-down" at border edges
-                to_level >= level)
+            if (checkParentCellRestriction(partition.GetCell(level + 1, to), args...) &&
+                partition.GetHighestDifferentLevel(node, to) >= level)
             {
                 BOOST_ASSERT_MSG(edge_data.weight > 0, "edge_weight invalid");
                 const EdgeWeight to_weight = weight + edge_data.weight;
@@ -144,11 +154,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     }
 }
 
+template <typename... Args>
 auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
             SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
             SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
-            const std::pair<LevelID, CellID> &parent_cell,
-            const std::function<LevelID(const NodeID)> &get_query_level)
+            Args... args)
 {
 
     const auto &partition = facade.GetMultiLevelPartition();
@@ -167,14 +177,14 @@ auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD>
         if (!forward_heap.Empty())
         {
             routingStep<FORWARD_DIRECTION>(
-                facade, forward_heap, reverse_heap, parent_cell, get_query_level, middle, weight);
+                facade, forward_heap, reverse_heap, middle, weight, args...);
             if (!forward_heap.Empty())
                 forward_heap_min = forward_heap.MinKey();
         }
         if (!reverse_heap.Empty())
         {
             routingStep<REVERSE_DIRECTION>(
-                facade, reverse_heap, forward_heap, parent_cell, get_query_level, middle, weight);
+                facade, reverse_heap, forward_heap, middle, weight, args...);
             if (!reverse_heap.Empty())
                 reverse_heap_min = reverse_heap.MinKey();
         }
@@ -213,7 +223,7 @@ auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD>
     // Unpack path
     std::vector<EdgeID> unpacked_path;
     unpacked_path.reserve(packed_path.size());
-    for (auto &packed_edge : packed_path)
+    for (auto const &packed_edge : packed_path)
     {
         NodeID source, target;
         EdgeID edge_id;
@@ -224,7 +234,7 @@ auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD>
         }
         else
         { // an overlay graph edge
-            LevelID level = std::min(parent_cell.first, get_query_level(source));
+            LevelID level = getNodeQureyLevel(source, args...);
             CellID parent_cell_id = partition.GetCell(level, source);
             BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
 
@@ -241,8 +251,8 @@ auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD>
             EdgeWeight subpath_weight;
             NodeID subpath_source, subpath_target;
             std::vector<EdgeID> subpath;
-            std::tie(subpath_weight, subpath_source, subpath_target, subpath) = search(
-                facade, forward_heap, reverse_heap, {sublevel, parent_cell_id}, get_query_level);
+            std::tie(subpath_weight, subpath_source, subpath_target, subpath) =
+                search(facade, forward_heap, reverse_heap, sublevel, parent_cell_id);
             BOOST_ASSERT(!subpath.empty());
             BOOST_ASSERT(subpath_source == source);
             BOOST_ASSERT(subpath_target == target);
