@@ -139,32 +139,35 @@ InternalRouteResult directShortestPathSearch(
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
     const auto &partition = facade.GetMultiLevelPartition();
-    const auto &cells = facade.GetCellStorage();
 
-    auto get_highest_level = [&partition](const SegmentID &source, const SegmentID &target) {
-        if (source.enabled && target.enabled)
-            return partition.GetHighestDifferentLevel(source.id, target.id);
-        return INVALID_LEVEL_ID;
+    auto get_query_level = [&partition, &phantom_nodes](const NodeID node) -> LevelID {
+        auto level =
+            [&partition](const SegmentID &source, const SegmentID &target, const NodeID node) {
+                if (source.enabled && target.enabled)
+                    return partition.GetQueryLevel(source.id, target.id, node);
+                return INVALID_LEVEL_ID;
+            };
+        return std::min(std::min(level(phantom_nodes.source_phantom.forward_segment_id,
+                                       phantom_nodes.target_phantom.forward_segment_id,
+                                       node),
+                                 level(phantom_nodes.source_phantom.forward_segment_id,
+                                       phantom_nodes.target_phantom.reverse_segment_id,
+                                       node)),
+                        std::min(level(phantom_nodes.source_phantom.reverse_segment_id,
+                                       phantom_nodes.target_phantom.forward_segment_id,
+                                       node),
+                                 level(phantom_nodes.source_phantom.reverse_segment_id,
+                                       phantom_nodes.target_phantom.reverse_segment_id,
+                                       node)));
     };
 
-    const auto &source_phantom = phantom_nodes.source_phantom;
-    const auto &target_phantom = phantom_nodes.target_phantom;
-    const auto highest_level =
-        std::min(std::min(get_highest_level(source_phantom.forward_segment_id,
-                                            target_phantom.forward_segment_id),
-                          get_highest_level(source_phantom.forward_segment_id,
-                                            target_phantom.reverse_segment_id)),
-                 std::min(get_highest_level(source_phantom.reverse_segment_id,
-                                            target_phantom.forward_segment_id),
-                          get_highest_level(source_phantom.reverse_segment_id,
-                                            target_phantom.reverse_segment_id)));
     // TODO: when structured bindings will be allowed change to
     // auto [weight, source_node, target_node, unpacked_edges] = ...
     EdgeWeight weight;
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
     std::tie(weight, source_node, target_node, unpacked_edges) = mld::search(
-        facade, partition, cells, forward_heap, reverse_heap, {highest_level, INVALID_CELL_ID});
+        facade, forward_heap, reverse_heap, {INVALID_LEVEL_ID, INVALID_CELL_ID}, get_query_level);
 
     return extractRoute(facade, weight, source_node, target_node, unpacked_edges, phantom_nodes);
 }

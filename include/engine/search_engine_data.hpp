@@ -26,17 +26,9 @@ struct ManyToManyHeapData : HeapData
 
 struct MultiLayerDijkstraHeapData : HeapData
 {
-    LevelID level;  // node level: always increasing along the path starting from 0
     EdgeID edge_id; // edge id if parent -> node is a boundary edge
-    MultiLayerDijkstraHeapData(NodeID p) : HeapData(p), level(0), edge_id(SPECIAL_EDGEID) {}
-    MultiLayerDijkstraHeapData(NodeID p, LevelID level)
-        : HeapData(p), level(level), edge_id(SPECIAL_EDGEID)
-    {
-    }
-    MultiLayerDijkstraHeapData(NodeID p, LevelID level, EdgeID edge_id)
-        : HeapData(p), level(level), edge_id(edge_id)
-    {
-    }
+    MultiLayerDijkstraHeapData(NodeID p) : HeapData(p), edge_id(SPECIAL_EDGEID) {}
+    MultiLayerDijkstraHeapData(NodeID p, EdgeID edge_id) : HeapData(p), edge_id(edge_id) {}
 };
 
 struct SearchEngineData
