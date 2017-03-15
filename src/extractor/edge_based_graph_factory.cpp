@@ -199,8 +199,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const std::string &turn_weight_penalties_filename,
                                 const std::string &turn_duration_penalties_filename,
                                 const std::string &turn_penalties_index_filename,
-                                const std::string &cnbg_ebg_mapping_path,
-                                const bool generate_edge_lookup)
+                                const std::string &cnbg_ebg_mapping_path)
 {
     TIMER_START(renumber);
     m_max_edge_id = RenumberEdges() - 1;
@@ -217,8 +216,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                               turn_lane_data_filename,
                               turn_weight_penalties_filename,
                               turn_duration_penalties_filename,
-                              turn_penalties_index_filename,
-                              generate_edge_lookup);
+                              turn_penalties_index_filename);
 
     TIMER_STOP(generate_edges);
 
@@ -330,8 +328,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const std::string &turn_lane_data_filename,
     const std::string &turn_weight_penalties_filename,
     const std::string &turn_duration_penalties_filename,
-    const std::string &turn_penalties_index_filename,
-    const bool generate_edge_lookup)
+    const std::string &turn_penalties_index_filename)
 {
     util::Log() << "Generating edge-expanded edges ";
 
@@ -584,27 +581,24 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // look
                     // up the node
                     // immediately preceding the turn from the compressed edge container.
-                    if (generate_edge_lookup)
-                    {
-                        const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
+                    const bool isTrivial = m_compressed_edge_container.IsTrivial(incoming_edge);
 
-                        const auto &from_node =
-                            isTrivial
-                                ? m_node_info_list[node_along_road_entering]
-                                : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(
-                                      incoming_edge)];
-                        const auto &via_node =
-                            m_node_info_list[m_compressed_edge_container.GetLastEdgeTargetID(
-                                incoming_edge)];
-                        const auto &to_node =
-                            m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
-                                turn.eid)];
+                    const auto &from_node =
+                        isTrivial
+                            ? m_node_info_list[node_along_road_entering]
+                            : m_node_info_list[m_compressed_edge_container.GetLastEdgeSourceID(
+                                  incoming_edge)];
+                    const auto &via_node =
+                        m_node_info_list[m_compressed_edge_container.GetLastEdgeTargetID(
+                            incoming_edge)];
+                    const auto &to_node =
+                        m_node_info_list[m_compressed_edge_container.GetFirstEdgeTargetID(
+                            turn.eid)];
 
-                        lookup::TurnIndexBlock turn_index_block = {
-                            from_node.node_id, via_node.node_id, to_node.node_id};
+                    lookup::TurnIndexBlock turn_index_block = {
+                        from_node.node_id, via_node.node_id, to_node.node_id};
 
-                        turn_penalties_index_file.WriteOne(turn_index_block);
-                    }
+                    turn_penalties_index_file.WriteOne(turn_index_block);
                 }
             }
         }

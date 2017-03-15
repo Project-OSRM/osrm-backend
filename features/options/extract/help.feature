@@ -14,7 +14,6 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
-        And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
         And it should exit successfully
 
@@ -28,7 +27,6 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
-        And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
         And it should exit successfully
 
@@ -42,6 +40,5 @@ Feature: osrm-extract command line options: help
         And stdout should contain "Configuration:"
         And stdout should contain "--profile"
         And stdout should contain "--threads"
-        And stdout should contain "--generate-edge-lookup"
         And stdout should contain "--small-component-size"
         And it should exit successfully

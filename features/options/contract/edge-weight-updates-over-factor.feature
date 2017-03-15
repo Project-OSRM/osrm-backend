@@ -22,8 +22,8 @@ Feature: osrm-contract command line option: edge-weight-updates-over-factor
     Scenario: Logging weight with updates over factor of 2, long segment
         When I run "osrm-extract --profile {profile_file} {osm_file} --generate-edge-lookup"
         When I run "osrm-contract --edge-weight-updates-over-factor 2 --segment-speed-file {speeds_file} {processed_file}"
-        And stderr should contain "weight updates"
-        And stderr should contain "New speed: 100 kph"
+        And stderr should contain "Segment: 1,2"
+        And stderr should contain "Segment: 1,3"
         And I route I should get
             | from | to | route    | speed     |
             | a    | b  | ab,ab    | 100 km/h  |

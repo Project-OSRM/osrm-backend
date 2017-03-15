@@ -84,8 +84,7 @@ class EdgeBasedGraphFactory
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
-             const std::string &cnbg_ebg_mapping_path,
-             const bool generate_edge_lookup);
+             const std::string &cnbg_ebg_mapping_path);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
@@ -152,8 +151,7 @@ class EdgeBasedGraphFactory
                                    const std::string &turn_lane_data_filename,
                                    const std::string &turn_weight_penalties_filename,
                                    const std::string &turn_duration_penalties_filename,
-                                   const std::string &turn_penalties_index_filename,
-                                   const bool generate_edge_lookup);
+                                   const std::string &turn_penalties_index_filename);
 
     // Mapping betweenn the node based graph u,v nodes and the edge based graph head,tail edge ids.
     // Required in the osrm-partition tool to translate from a nbg partition to a ebg partition.

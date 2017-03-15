@@ -4,6 +4,8 @@
       - Shared memory notification via conditional variables on Linux or semaphore queue on OS X and Windows with a limit of 128 OSRM Engine instances
     - Files
       - .osrm.datasource_index file was removed. Data is now part of .osrm.geometries.
+      - .osrm.edge_lookup was removed. The option `--generate-edge-lookup` does nothing now.
+      - `osrm-contract` does not depend on the `.osrm.fileIndex` file anymore
 
 # 5.6.3
   - Changes from 5.6.0
