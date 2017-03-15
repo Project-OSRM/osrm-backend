@@ -345,12 +345,6 @@ updateSegmentData(const UpdaterConfig &config,
         }
     }
 
-    tbb::parallel_sort(updated_segments.begin(),
-                       updated_segments.end(),
-                       [](const GeometryID lhs, const GeometryID rhs) {
-                           return std::tie(lhs.id, lhs.forward) < std::tie(rhs.id, rhs.forward);
-                       });
-
     return updated_segments;
 }
 
@@ -543,16 +537,77 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }
 
-    std::vector<std::uint64_t> updated_turn_penalties;
     if (update_turn_penalties)
     {
         auto turn_penalty_lookup = csv::readTurnValues(config.turn_penalty_lookup_paths);
-        updated_turn_penalties = updateTurnPenalties(config,
-                                                     profile_properties,
-                                                     turn_penalty_lookup,
-                                                     turn_weight_penalties,
-                                                     turn_duration_penalties);
+        auto updated_turn_penalties = updateTurnPenalties(config,
+                                                          profile_properties,
+                                                          turn_penalty_lookup,
+                                                          turn_weight_penalties,
+                                                          turn_duration_penalties);
+        // we need to re-compute all edges that have updated turn penalties.
+        // this marks it for re-computation
+        std::transform(updated_turn_penalties.begin(),
+                       updated_turn_penalties.end(),
+                       std::back_inserter(updated_segments),
+                       [&edge_data](const std::uint64_t edge_index) {
+                           return edge_data[edge_index].via_geometry;
+                       });
     }
+
+    tbb::parallel_sort(updated_segments.begin(),
+                       updated_segments.end(),
+                       [](const GeometryID lhs, const GeometryID rhs) {
+                           return std::tie(lhs.id, lhs.forward) < std::tie(rhs.id, rhs.forward);
+                       });
+
+    using WeightAndDuration = std::tuple<EdgeWeight, EdgeWeight>;
+    const auto compute_new_weight_and_duration =
+        [&](const GeometryID geometry_id) -> WeightAndDuration {
+        EdgeWeight new_weight = 0;
+        EdgeWeight new_duration = 0;
+        if (geometry_id.forward)
+        {
+            const auto weights = segment_data.GetForwardWeights(geometry_id.id);
+            for (const auto weight : weights)
+            {
+                if (weight == INVALID_EDGE_WEIGHT)
+                {
+                    new_weight = INVALID_EDGE_WEIGHT;
+                    break;
+                }
+                new_weight += weight;
+            }
+            const auto durations = segment_data.GetForwardDurations(geometry_id.id);
+            new_duration = std::accumulate(durations.begin(), durations.end(), 0);
+        }
+        else
+        {
+            const auto weights = segment_data.GetReverseWeights(geometry_id.id);
+            for (const auto weight : weights)
+            {
+                if (weight == INVALID_EDGE_WEIGHT)
+                {
+                    new_weight = INVALID_EDGE_WEIGHT;
+                    break;
+                }
+                new_weight += weight;
+            }
+            const auto durations = segment_data.GetReverseDurations(geometry_id.id);
+            new_duration = std::accumulate(durations.begin(), durations.end(), 0);
+        }
+        return std::make_tuple(new_weight, new_duration);
+    };
+
+    std::vector<WeightAndDuration> accumulated_segment_data(updated_segments.size());
+    tbb::parallel_for(tbb::blocked_range<std::size_t>(0, updated_segments.size()),
+                      [&](const tbb::blocked_range<std::size_t> &range) {
+                          for (auto index = range.begin(); index < range.end(); ++index)
+                          {
+                              accumulated_segment_data[index] =
+                                  compute_new_weight_and_duration(updated_segments[index]);
+                          }
+                      });
 
     // Mapped file pointers for edge-based graph edges
     auto edge_based_edge_ptr = reinterpret_cast<const extractor::EdgeBasedEdge *>(
@@ -564,9 +619,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     {
         // Make a copy of the data from the memory map
         extractor::EdgeBasedEdge inbuffer = edge_based_edge_ptr[edge_index];
-        bool needs_update = update_turn_penalties;
 
-        if (update_edge_weights)
+        if (updated_segments.size() > 0)
         {
             const auto geometry_id = edge_data[edge_index].via_geometry;
             auto updated_iter = std::lower_bound(updated_segments.begin(),
@@ -576,91 +630,51 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                                      return std::tie(lhs.id, lhs.forward) <
                                                             std::tie(rhs.id, rhs.forward);
                                                  });
-            if (updated_iter == updated_segments.end() || updated_iter->id != geometry_id.id ||
-                updated_iter->forward != geometry_id.forward)
+            if (updated_iter != updated_segments.end() && updated_iter->id == geometry_id.id &&
+                updated_iter->forward == geometry_id.forward)
             {
-                needs_update = update_turn_penalties;
-            }
-            else
-            {
-                needs_update = true;
-            }
-        }
+                // Find a segment with zero speed and simultaneously compute the new edge weight
+                EdgeWeight new_weight;
+                EdgeWeight new_duration;
+                std::tie(new_weight, new_duration) =
+                    accumulated_segment_data[updated_iter - updated_segments.begin()];
 
-        if (needs_update)
-        {
-            // Find a segment with zero speed and simultaneously compute the new edge weight
-            EdgeWeight new_weight = 0;
-            EdgeWeight new_duration = 0;
-            bool skip_edge = false;
+                // Update the node-weight cache. This is the weight of the edge-based-node only,
+                // it doesn't include the turn. We may visit the same node multiple times, but
+                // we should always assign the same value here.
+                if (node_weights.size() > 0)
+                    node_weights[inbuffer.source] = new_weight;
 
-            const auto geometry_id = edge_data[edge_index].via_geometry;
-            if (geometry_id.forward)
-            {
-                const auto weights = segment_data.GetForwardWeights(geometry_id.id);
-                for (const auto weight : weights)
+                // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
+                // effectively removes it from the routing network.
+                if (new_weight == INVALID_EDGE_WEIGHT)
+                    continue;
+
+                // Get the turn penalty and update to the new value if required
+                auto turn_weight_penalty = turn_weight_penalties[edge_index];
+                auto turn_duration_penalty = turn_duration_penalties[edge_index];
+                const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
+                const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
+                if (turn_weight_penalty + new_weight < weight_min_value)
                 {
-                    if (weight == INVALID_EDGE_WEIGHT)
+                    if (turn_weight_penalty < 0)
                     {
-                        skip_edge = true;
-                        break;
+                        util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
+                                              << " is too negative: clamping turn weight to "
+                                              << weight_min_value;
+                        turn_weight_penalty = weight_min_value - new_weight;
+                        turn_weight_penalties[edge_index] = turn_weight_penalty;
                     }
-                    new_weight += weight;
-                }
-                const auto durations = segment_data.GetForwardDurations(geometry_id.id);
-                new_duration = std::accumulate(durations.begin(), durations.end(), 0);
-            }
-            else
-            {
-                const auto weights = segment_data.GetReverseWeights(geometry_id.id);
-                for (const auto weight : weights)
-                {
-                    if (weight == INVALID_EDGE_WEIGHT)
+                    else
                     {
-                        skip_edge = true;
-                        break;
+                        new_weight = weight_min_value;
                     }
-                    new_weight += weight;
                 }
-                const auto durations = segment_data.GetReverseDurations(geometry_id.id);
-                new_duration = std::accumulate(durations.begin(), durations.end(), 0);
+
+                // Update edge weight
+                inbuffer.data.weight = new_weight + turn_weight_penalty;
+                inbuffer.data.duration = new_duration + turn_duration_penalty;
             }
-
-            // Update the node-weight cache. This is the weight of the edge-based-node only,
-            // it doesn't include the turn. We may visit the same node multiple times, but
-            // we should always assign the same value here.
-            if (node_weights.size() > 0)
-                node_weights[inbuffer.source] = new_weight;
-
-            // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
-            // effectively removes it from the routing network.
-            if (skip_edge)
-                continue;
-
-            // Get the turn penalty and update to the new value if required
-            auto turn_weight_penalty = turn_weight_penalties[edge_index];
-            auto turn_duration_penalty = turn_duration_penalties[edge_index];
-            const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
-            const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
-            if (turn_weight_penalty + new_weight < weight_min_value)
-            {
-                if (turn_weight_penalty < 0)
-                {
-                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
-                                          << " is too negative: clamping turn weight to "
-                                          << weight_min_value;
-                    turn_weight_penalty = weight_min_value - new_weight;
-                    turn_weight_penalties[edge_index] = turn_weight_penalty;
-                }
-                else
-                {
-                    new_weight = weight_min_value;
-                }
-            }
-
-            // Update edge weight
-            inbuffer.data.weight = new_weight + turn_weight_penalty;
-            inbuffer.data.duration = new_duration + turn_duration_penalty;
         }
 
         edge_based_edge_list.emplace_back(std::move(inbuffer));
