@@ -535,7 +535,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         auto segment_speed_lookup = csv::readSegmentValues(config.segment_speed_lookup_paths);
 
         TIMER_START(segment);
-        updated_segments = updateSegmentData(config, profile_properties, segment_speed_lookup, segment_data);
+        updated_segments =
+            updateSegmentData(config, profile_properties, segment_speed_lookup, segment_data);
         // Now save out the updated compressed geometries
         extractor::io::write(config.geometry_path, segment_data);
         TIMER_STOP(segment);
@@ -643,14 +644,19 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
             if (turn_weight_penalty + new_weight < weight_min_value)
             {
-                util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
-                                      << " is too negative: clamping turn weight to "
-                                      << weight_min_value;
-
-                turn_weight_penalty = weight_min_value - new_weight;
+                if (turn_weight_penalty < 0)
+                {
+                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
+                                          << " is too negative: clamping turn weight to "
+                                          << weight_min_value;
+                    turn_weight_penalty = weight_min_value - new_weight;
+                    turn_weight_penalties[edge_index] = turn_weight_penalty;
+                }
+                else
+                {
+                    new_weight = weight_min_value;
+                }
             }
-
-            turn_weight_penalties[edge_index] = turn_weight_penalty;
 
             // Update edge weight
             inbuffer.data.weight = new_weight + turn_weight_penalty;
