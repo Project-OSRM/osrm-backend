@@ -30,6 +30,9 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
 
     for (const auto &edge : edges)
     {
+        if (edge.data.weight == INVALID_EDGE_WEIGHT)
+            continue;
+
         directed.emplace_back(edge.source,
                               edge.target,
                               edge.data.edge_id,

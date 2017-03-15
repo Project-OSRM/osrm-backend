@@ -20,6 +20,9 @@ std::vector<ContractorEdge> adaptToContractorInput(InputEdgeContainer input_edge
 
     for (const auto &input_edge : input_edge_list)
     {
+        if (input_edge.data.weight == INVALID_EDGE_WEIGHT)
+            continue;
+
 #ifndef NDEBUG
         const unsigned int constexpr DAY_IN_DECI_SECONDS = 24 * 60 * 60 * 10;
         if (static_cast<unsigned int>(std::max(input_edge.data.weight, 1)) > DAY_IN_DECI_SECONDS)

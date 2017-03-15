@@ -428,57 +428,29 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 {
     TIMER_START(load_edges);
 
-    if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
-        throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
-                              SOURCE_REF);
+    auto max_edge_id = 0;
 
-    util::Log() << "Opening " << config.edge_based_graph_path;
-
-    const auto edge_based_graph_region =
-        mmapFile(config.edge_based_graph_path, boost::interprocess::read_only);
+    {
+        storage::io::FileReader reader(config.edge_based_graph_path,
+                                       storage::io::FileReader::VerifyFingerprint);
+        auto num_edges = reader.ReadElementCount64();
+        edge_based_edge_list.resize(num_edges);
+        max_edge_id = reader.ReadOne<EdgeID>();
+        reader.ReadInto(edge_based_edge_list);
+    }
 
     const bool update_edge_weights = !config.segment_speed_lookup_paths.empty();
     const bool update_turn_penalties = !config.turn_penalty_lookup_paths.empty();
 
-// Set the struct packing to 1 byte word sizes.  This prevents any padding.  We only use
-// this struct once, so any alignment penalty is trivial.  If this is *not* done, then
-// the struct will be padded out by an extra 4 bytes, and sizeof() will mean we read
-// too much data from the original file.
-#pragma pack(push, r1, 1)
-    struct EdgeBasedGraphHeader
+    if (!update_edge_weights && !update_turn_penalties)
     {
-        util::FingerPrint fingerprint;
-        std::uint64_t number_of_edges;
-        EdgeID max_edge_id;
-    };
-#pragma pack(pop, r1)
-
-    BOOST_ASSERT(is_aligned<EdgeBasedGraphHeader>(edge_based_graph_region.get_address()));
-    const EdgeBasedGraphHeader graph_header =
-        *(reinterpret_cast<const EdgeBasedGraphHeader *>(edge_based_graph_region.get_address()));
-
-    const util::FingerPrint expected_fingerprint = util::FingerPrint::GetValid();
-    if (!graph_header.fingerprint.IsValid())
-    {
-        util::Log(logERROR) << config.edge_based_graph_path << " does not have a valid fingerprint";
-        throw util::exception("Invalid fingerprint");
+        saveDatasourcesNames(config);
+        return max_edge_id;
     }
 
-    if (!expected_fingerprint.IsDataCompatible(graph_header.fingerprint))
-    {
-        util::Log(logERROR) << config.edge_based_graph_path
-                            << " is not compatible with this version of OSRM.";
-        util::Log(logERROR) << "It was prepared with OSRM "
-                            << graph_header.fingerprint.GetMajorVersion() << "."
-                            << graph_header.fingerprint.GetMinorVersion() << "."
-                            << graph_header.fingerprint.GetPatchVersion() << " but you are running "
-                            << OSRM_VERSION;
-        util::Log(logERROR) << "Data is only compatible between minor releases.";
-        throw util::exception("Incompatible file version" + SOURCE_REF);
-    }
-
-    edge_based_edge_list.reserve(graph_header.number_of_edges);
-    util::Log() << "Reading " << graph_header.number_of_edges << " edges from the edge based graph";
+    if (config.segment_speed_lookup_paths.size() + config.turn_penalty_lookup_paths.size() > 255)
+        throw util::exception("Limit of 255 segment speed and turn penalty files each reached" +
+                              SOURCE_REF);
 
     extractor::ProfileProperties profile_properties;
     std::vector<extractor::OriginalEdgeData> edge_data;
@@ -609,75 +581,78 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                           }
                       });
 
-    // Mapped file pointers for edge-based graph edges
-    auto edge_based_edge_ptr = reinterpret_cast<const extractor::EdgeBasedEdge *>(
-        reinterpret_cast<char *>(edge_based_graph_region.get_address()) +
-        sizeof(EdgeBasedGraphHeader));
-    BOOST_ASSERT(is_aligned<extractor::EdgeBasedEdge>(edge_based_edge_ptr));
-
-    for (std::uint64_t edge_index = 0; edge_index < graph_header.number_of_edges; ++edge_index)
-    {
-        // Make a copy of the data from the memory map
-        extractor::EdgeBasedEdge inbuffer = edge_based_edge_ptr[edge_index];
-
-        if (updated_segments.size() > 0)
+    const auto update_edge = [&](extractor::EdgeBasedEdge &edge) {
+        const auto geometry_id = edge_data[edge.data.edge_id].via_geometry;
+        auto updated_iter = std::lower_bound(updated_segments.begin(),
+                                             updated_segments.end(),
+                                             geometry_id,
+                                             [](const GeometryID lhs, const GeometryID rhs) {
+                                                 return std::tie(lhs.id, lhs.forward) <
+                                                        std::tie(rhs.id, rhs.forward);
+                                             });
+        if (updated_iter != updated_segments.end() && updated_iter->id == geometry_id.id &&
+            updated_iter->forward == geometry_id.forward)
         {
-            const auto geometry_id = edge_data[edge_index].via_geometry;
-            auto updated_iter = std::lower_bound(updated_segments.begin(),
-                                                 updated_segments.end(),
-                                                 geometry_id,
-                                                 [](const GeometryID lhs, const GeometryID rhs) {
-                                                     return std::tie(lhs.id, lhs.forward) <
-                                                            std::tie(rhs.id, rhs.forward);
-                                                 });
-            if (updated_iter != updated_segments.end() && updated_iter->id == geometry_id.id &&
-                updated_iter->forward == geometry_id.forward)
+            // Find a segment with zero speed and simultaneously compute the new edge
+            // weight
+            EdgeWeight new_weight;
+            EdgeWeight new_duration;
+            std::tie(new_weight, new_duration) =
+                accumulated_segment_data[updated_iter - updated_segments.begin()];
+
+            // Update the node-weight cache. This is the weight of the edge-based-node
+            // only,
+            // it doesn't include the turn. We may visit the same node multiple times,
+            // but
+            // we should always assign the same value here.
+            if (node_weights.size() > 0)
+                node_weights[edge.source] = new_weight;
+
+            // We found a zero-speed edge, so we'll skip this whole edge-based-edge
+            // which
+            // effectively removes it from the routing network.
+            if (new_weight == INVALID_EDGE_WEIGHT)
             {
-                // Find a segment with zero speed and simultaneously compute the new edge weight
-                EdgeWeight new_weight;
-                EdgeWeight new_duration;
-                std::tie(new_weight, new_duration) =
-                    accumulated_segment_data[updated_iter - updated_segments.begin()];
-
-                // Update the node-weight cache. This is the weight of the edge-based-node only,
-                // it doesn't include the turn. We may visit the same node multiple times, but
-                // we should always assign the same value here.
-                if (node_weights.size() > 0)
-                    node_weights[inbuffer.source] = new_weight;
-
-                // We found a zero-speed edge, so we'll skip this whole edge-based-edge which
-                // effectively removes it from the routing network.
-                if (new_weight == INVALID_EDGE_WEIGHT)
-                    continue;
-
-                // Get the turn penalty and update to the new value if required
-                auto turn_weight_penalty = turn_weight_penalties[edge_index];
-                auto turn_duration_penalty = turn_duration_penalties[edge_index];
-                const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
-                const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
-                if (turn_weight_penalty + new_weight < weight_min_value)
-                {
-                    if (turn_weight_penalty < 0)
-                    {
-                        util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
-                                              << " is too negative: clamping turn weight to "
-                                              << weight_min_value;
-                        turn_weight_penalty = weight_min_value - new_weight;
-                        turn_weight_penalties[edge_index] = turn_weight_penalty;
-                    }
-                    else
-                    {
-                        new_weight = weight_min_value;
-                    }
-                }
-
-                // Update edge weight
-                inbuffer.data.weight = new_weight + turn_weight_penalty;
-                inbuffer.data.duration = new_duration + turn_duration_penalty;
+                edge.data.weight = INVALID_EDGE_WEIGHT;
+                return;
             }
-        }
 
-        edge_based_edge_list.emplace_back(std::move(inbuffer));
+            // Get the turn penalty and update to the new value if required
+            auto turn_weight_penalty = turn_weight_penalties[edge.data.edge_id];
+            auto turn_duration_penalty = turn_duration_penalties[edge.data.edge_id];
+            const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
+            const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
+            if (turn_weight_penalty + new_weight < weight_min_value)
+            {
+                if (turn_weight_penalty < 0)
+                {
+                    util::Log(logWARNING) << "turn penalty " << turn_weight_penalty
+                                          << " is too negative: clamping turn weight to "
+                                          << weight_min_value;
+                    turn_weight_penalty = weight_min_value - new_weight;
+                    turn_weight_penalties[edge.data.edge_id] = turn_weight_penalty;
+                }
+                else
+                {
+                    new_weight = weight_min_value;
+                }
+            }
+
+            // Update edge weight
+            edge.data.weight = new_weight + turn_weight_penalty;
+            edge.data.duration = new_duration + turn_duration_penalty;
+        }
+    };
+
+    if (updated_segments.size() > 0)
+    {
+        tbb::parallel_for(tbb::blocked_range<std::size_t>(0, edge_based_edge_list.size()),
+                          [&](const tbb::blocked_range<std::size_t> &range) {
+                              for (auto index = range.begin(); index < range.end(); ++index)
+                              {
+                                  update_edge(edge_based_edge_list[index]);
+                              }
+                          });
     }
 
     if (update_turn_penalties)
@@ -704,7 +679,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 
     TIMER_STOP(load_edges);
     util::Log() << "Done reading edges in " << TIMER_MSEC(load_edges) << "ms.";
-    return graph_header.max_edge_id;
+    return max_edge_id;
 }
 }
 }
