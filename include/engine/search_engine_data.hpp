@@ -26,9 +26,9 @@ struct ManyToManyHeapData : HeapData
 
 struct MultiLayerDijkstraHeapData : HeapData
 {
-    EdgeID edge_id; // edge id if parent -> node is a boundary edge
-    MultiLayerDijkstraHeapData(NodeID p) : HeapData(p), edge_id(SPECIAL_EDGEID) {}
-    MultiLayerDijkstraHeapData(NodeID p, EdgeID edge_id) : HeapData(p), edge_id(edge_id) {}
+    bool from_clique_arc;
+    MultiLayerDijkstraHeapData(NodeID p) : HeapData(p), from_clique_arc(false) {}
+    MultiLayerDijkstraHeapData(NodeID p, bool from) : HeapData(p), from_clique_arc(from) {}
 };
 
 struct SearchEngineData

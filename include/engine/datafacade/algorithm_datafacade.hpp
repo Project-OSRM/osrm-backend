@@ -89,6 +89,9 @@ template <> class AlgorithmDataFacade<algorithm::MLD>
     virtual const partition::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 
     virtual const partition::CellStorageView &GetCellStorage() const = 0;
+
+    // searches for a specific edge
+    virtual EdgeID FindEdge(const NodeID from, const NodeID to) const = 0;
 };
 }
 }

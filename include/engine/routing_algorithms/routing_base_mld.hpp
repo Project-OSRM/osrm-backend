@@ -87,13 +87,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     }
 
     const auto level = getNodeQureyLevel(partition, node, args...);
-    const auto &node_data = forward_heap.GetData(node);
-    const auto check_overlay_edges =
-        (level >= 1) &&                        // only if at least the first level and
-        (node_data.parent == node ||           //   is the first point of the path
-         node_data.edge_id != SPECIAL_EDGEID); //   or an overlay entreé point
 
-    if (check_overlay_edges)
+    if (level >= 1 && !forward_heap.GetData(node).from_clique_arc)
     {
         if (DIRECTION == FORWARD_DIRECTION)
         {
@@ -109,11 +104,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                     const EdgeWeight to_weight = weight + shortcut_weight;
                     if (!forward_heap.WasInserted(to))
                     {
-                        forward_heap.Insert(to, to_weight, {node});
+                        forward_heap.Insert(to, to_weight, {node, true});
                     }
                     else if (to_weight < forward_heap.GetKey(to))
                     {
-                        forward_heap.GetData(to) = {node};
+                        forward_heap.GetData(to) = {node, true};
                         forward_heap.DecreaseKey(to, to_weight);
                     }
                 }
@@ -134,11 +129,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
                     const EdgeWeight to_weight = weight + shortcut_weight;
                     if (!forward_heap.WasInserted(to))
                     {
-                        forward_heap.Insert(to, to_weight, {node});
+                        forward_heap.Insert(to, to_weight, {node, true});
                     }
                     else if (to_weight < forward_heap.GetKey(to))
                     {
-                        forward_heap.GetData(to) = {node};
+                        forward_heap.GetData(to) = {node, true};
                         forward_heap.DecreaseKey(to, to_weight);
                     }
                 }
@@ -163,11 +158,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
 
                 if (!forward_heap.WasInserted(to))
                 {
-                    forward_heap.Insert(to, to_weight, {node, edge});
+                    forward_heap.Insert(to, to_weight, {node, false});
                 }
                 else if (to_weight < forward_heap.GetKey(to))
                 {
-                    forward_heap.GetData(to) = {node, edge};
+                    forward_heap.GetData(to) = {node, false};
                     forward_heap.DecreaseKey(to, to_weight);
                 }
             }
@@ -220,12 +215,12 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &fac
     }
 
     // Get packed path as edges {from node ID, to node ID, edge ID}
-    std::vector<std::tuple<NodeID, NodeID, EdgeID>> packed_path;
+    std::vector<std::tuple<NodeID, NodeID, bool>> packed_path;
     NodeID current_node = middle, parent_node = forward_heap.GetData(middle).parent;
     while (parent_node != current_node)
     {
         const auto &data = forward_heap.GetData(current_node);
-        packed_path.push_back(std::make_tuple(parent_node, current_node, data.edge_id));
+        packed_path.push_back(std::make_tuple(parent_node, current_node, data.from_clique_arc));
         current_node = parent_node;
         parent_node = forward_heap.GetData(parent_node).parent;
     }
@@ -236,7 +231,7 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &fac
     while (parent_node != current_node)
     {
         const auto &data = reverse_heap.GetData(current_node);
-        packed_path.push_back(std::make_tuple(current_node, parent_node, data.edge_id));
+        packed_path.push_back(std::make_tuple(current_node, parent_node, data.from_clique_arc));
         current_node = parent_node;
         parent_node = reverse_heap.GetData(parent_node).parent;
     }
@@ -248,11 +243,11 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &fac
     for (auto const &packed_edge : packed_path)
     {
         NodeID source, target;
-        EdgeID edge_id;
-        std::tie(source, target, edge_id) = packed_edge;
-        if (edge_id != SPECIAL_EDGEID)
+        bool overlay_edge;
+        std::tie(source, target, overlay_edge) = packed_edge;
+        if (!overlay_edge)
         { // a base graph edge
-            unpacked_path.push_back(edge_id);
+            unpacked_path.push_back(facade.FindEdge(source, target));
         }
         else
         { // an overlay graph edge
