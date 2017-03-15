@@ -1,3 +1,5 @@
+- Track preprocessing flag in the map matching plugin.
+
 # 5.7.0
   - Changes from 5.6
     - NodeJs Bindings
