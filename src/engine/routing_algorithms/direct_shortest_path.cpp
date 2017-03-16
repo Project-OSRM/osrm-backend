@@ -138,36 +138,13 @@ InternalRouteResult directShortestPathSearch(
     reverse_heap.Clear();
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
 
-    const auto &partition = facade.GetMultiLevelPartition();
-
-    auto get_query_level = [&partition, &phantom_nodes](const NodeID node) -> LevelID {
-        auto level =
-            [&partition](const SegmentID &source, const SegmentID &target, const NodeID node) {
-                if (source.enabled && target.enabled)
-                    return partition.GetQueryLevel(source.id, target.id, node);
-                return INVALID_LEVEL_ID;
-            };
-        return std::min(std::min(level(phantom_nodes.source_phantom.forward_segment_id,
-                                       phantom_nodes.target_phantom.forward_segment_id,
-                                       node),
-                                 level(phantom_nodes.source_phantom.forward_segment_id,
-                                       phantom_nodes.target_phantom.reverse_segment_id,
-                                       node)),
-                        std::min(level(phantom_nodes.source_phantom.reverse_segment_id,
-                                       phantom_nodes.target_phantom.forward_segment_id,
-                                       node),
-                                 level(phantom_nodes.source_phantom.reverse_segment_id,
-                                       phantom_nodes.target_phantom.reverse_segment_id,
-                                       node)));
-    };
-
     // TODO: when structured bindings will be allowed change to
     // auto [weight, source_node, target_node, unpacked_edges] = ...
     EdgeWeight weight;
     NodeID source_node, target_node;
     std::vector<EdgeID> unpacked_edges;
     std::tie(weight, source_node, target_node, unpacked_edges) =
-        mld::search(facade, forward_heap, reverse_heap, get_query_level);
+        mld::search(facade, forward_heap, reverse_heap, phantom_nodes);
 
     return extractRoute(facade, weight, source_node, target_node, unpacked_edges, phantom_nodes);
 }

@@ -21,17 +21,38 @@ namespace mld
 
 namespace
 {
-// Unrestricted search (Args is std::function<LevelID(const NodeID)>):
-//   * use `query_level` closure of partition.GetQueryLevel to find the query level
+// Unrestricted search (Args is const PhantomNodes &):
+//   * use partition.GetQueryLevel to find the node query level based on source and target phantoms
 //   * allow to traverse all cells
-using QueryLevelFunction = std::function<LevelID(const NodeID)>;
-LevelID getNodeQureyLevel(NodeID node, const QueryLevelFunction &functor) { return functor(node); }
-bool checkParentCellRestriction(CellID, const QueryLevelFunction &) { return true; }
+LevelID getNodeQureyLevel(const partition::MultiLevelPartitionView &partition,
+                          NodeID node,
+                          const PhantomNodes &phantom_nodes)
+{
+    auto level = [&partition, node](const SegmentID &source, const SegmentID &target) {
+        if (source.enabled && target.enabled)
+            return partition.GetQueryLevel(source.id, target.id, node);
+        return INVALID_LEVEL_ID;
+    };
+    return std::min(std::min(level(phantom_nodes.source_phantom.forward_segment_id,
+                                   phantom_nodes.target_phantom.forward_segment_id),
+                             level(phantom_nodes.source_phantom.forward_segment_id,
+                                   phantom_nodes.target_phantom.reverse_segment_id)),
+                    std::min(level(phantom_nodes.source_phantom.reverse_segment_id,
+                                   phantom_nodes.target_phantom.forward_segment_id),
+                             level(phantom_nodes.source_phantom.reverse_segment_id,
+                                   phantom_nodes.target_phantom.reverse_segment_id)));
+}
+
+bool checkParentCellRestriction(CellID, const PhantomNodes &) { return true; }
 
 // Restricted search (Args is LevelID, CellID):
 //   * use the fixed level for queries
 //   * check if the node cell is the same as the specified parent onr
-LevelID getNodeQureyLevel(NodeID, LevelID level, CellID) { return level; }
+LevelID getNodeQureyLevel(const partition::MultiLevelPartitionView &, NodeID, LevelID level, CellID)
+{
+    return level;
+}
+
 bool checkParentCellRestriction(CellID cell, LevelID, CellID parent) { return cell == parent; }
 }
 
@@ -65,7 +86,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
         }
     }
 
-    const auto level = getNodeQureyLevel(node, args...);
+    const auto level = getNodeQureyLevel(partition, node, args...);
     const auto &node_data = forward_heap.GetData(node);
     const auto check_overlay_edges =
         (level >= 1) &&                        // only if at least the first level and
@@ -155,10 +176,11 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
 }
 
 template <typename... Args>
-auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
-            SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
-            SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
-            Args... args)
+std::tuple<EdgeWeight, NodeID, NodeID, std::vector<EdgeID>>
+search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
+       SearchEngineData::MultiLayerDijkstraHeap &forward_heap,
+       SearchEngineData::MultiLayerDijkstraHeap &reverse_heap,
+       Args... args)
 {
 
     const auto &partition = facade.GetMultiLevelPartition();
@@ -234,7 +256,7 @@ auto search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD>
         }
         else
         { // an overlay graph edge
-            LevelID level = getNodeQureyLevel(source, args...);
+            LevelID level = getNodeQureyLevel(partition, source, args...);
             CellID parent_cell_id = partition.GetCell(level, source);
             BOOST_ASSERT(parent_cell_id == partition.GetCell(level, target));
 
