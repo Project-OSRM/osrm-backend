@@ -99,7 +99,7 @@ void checkWeightsConsistency(
         if (geometry_id.forward)
         {
             auto range = segment_data.GetForwardWeights(geometry_id.id);
-            EdgeWeight weight = std::accumulate(range.begin(), range.end(), 0);
+            EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
                 util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":"
@@ -109,7 +109,7 @@ void checkWeightsConsistency(
         else
         {
             auto range = segment_data.GetReverseWeights(geometry_id.id);
-            EdgeWeight weight = std::accumulate(range.begin(), range.end(), 0);
+            EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
                 util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":"
@@ -192,8 +192,7 @@ updateSegmentData(const UpdaterConfig &config,
             auto fwd_durations_range = segment_data.GetForwardDurations(geometry_id);
             auto fwd_datasources_range = segment_data.GetForwardDatasources(geometry_id);
             bool fwd_was_updated = false;
-            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
-                 ++segment_offset)
+            for (const auto segment_offset : util::irange<std::size_t>(0, fwd_weights_range.size()))
             {
                 auto u = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
                 auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
@@ -227,8 +226,7 @@ updateSegmentData(const UpdaterConfig &config,
                 boost::adaptors::reverse(segment_data.GetReverseDatasources(geometry_id));
             bool rev_was_updated = false;
 
-            for (auto segment_offset = 0UL; segment_offset < fwd_weights_range.size();
-                 ++segment_offset)
+            for (const auto segment_offset : util::irange<std::size_t>(0, rev_weights_range.size()))
             {
                 auto u = internal_to_external_node_map[nodes_range[segment_offset]].node_id;
                 auto v = internal_to_external_node_map[nodes_range[segment_offset + 1]].node_id;
@@ -284,9 +282,8 @@ updateSegmentData(const UpdaterConfig &config,
     {
         BOOST_ASSERT(segment_data_backup);
 
-        for (DirectionalGeometryID geometry_id = 0;
-             geometry_id < segment_data.GetNumberOfGeometries();
-             geometry_id++)
+        for (const auto geometry_id :
+             util::irange<DirectionalGeometryID>(0, segment_data.GetNumberOfGeometries()))
         {
             auto nodes_range = segment_data.GetForwardGeometry(geometry_id);
 
@@ -299,8 +296,8 @@ updateSegmentData(const UpdaterConfig &config,
             auto old_rev_durations_range =
                 boost::adaptors::reverse(segment_data_backup->GetReverseDurations(geometry_id));
 
-            for (auto segment_offset = 0UL; segment_offset < new_fwd_durations_range.size();
-                 ++segment_offset)
+            for (const auto segment_offset :
+                 util::irange<std::size_t>(0, new_fwd_durations_range.size()))
             {
                 if (new_fwd_datasources_range[segment_offset] == LUA_SOURCE)
                     continue;
@@ -321,8 +318,8 @@ updateSegmentData(const UpdaterConfig &config,
                 }
             }
 
-            for (auto segment_offset = 0UL; segment_offset < new_rev_durations_range.size();
-                 ++segment_offset)
+            for (const auto segment_offset :
+                 util::irange<std::size_t>(0, new_rev_durations_range.size()))
             {
                 if (new_rev_datasources_range[segment_offset] == LUA_SOURCE)
                     continue;
@@ -352,14 +349,16 @@ void saveDatasourcesNames(const UpdaterConfig &config)
 {
     extractor::Datasources sources;
     DatasourceID source = 0;
-    sources.SetSourceName(source++, "lua profile");
+    sources.SetSourceName(source, "lua profile");
+    source++;
 
     // Only write the filename, without path or extension.
     // This prevents information leakage, and keeps names short
     // for rendering in the debug tiles.
     for (auto const &name : config.segment_speed_lookup_paths)
     {
-        sources.SetSourceName(source++, boost::filesystem::path(name).stem().string());
+        sources.SetSourceName(source, boost::filesystem::path(name).stem().string());
+        source++;
     }
 
     extractor::io::write(config.datasource_names_path, sources);
@@ -428,7 +427,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
 {
     TIMER_START(load_edges);
 
-    auto max_edge_id = 0;
+    EdgeID max_edge_id = 0;
 
     {
         storage::io::FileReader reader(config.edge_based_graph_path,
@@ -459,11 +458,11 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     std::vector<TurnPenalty> turn_duration_penalties;
     if (update_edge_weights || update_turn_penalties)
     {
-        const auto load_segment_data = [&]() {
+        const auto load_segment_data = [&] {
             extractor::io::read(config.geometry_path, segment_data);
         };
 
-        const auto load_edge_data = [&]() {
+        const auto load_edge_data = [&] {
             storage::io::FileReader edges_input_file(config.edge_data_path,
                                                      storage::io::FileReader::HasNoFingerprint);
             edges_input_file.DeserializeVector(edge_data);
@@ -517,11 +516,13 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                                           turn_penalty_lookup,
                                                           turn_weight_penalties,
                                                           turn_duration_penalties);
+        const auto offset = updated_segments.size();
+        updated_segments.resize(offset + updated_turn_penalties.size());
         // we need to re-compute all edges that have updated turn penalties.
         // this marks it for re-computation
         std::transform(updated_turn_penalties.begin(),
                        updated_turn_penalties.end(),
-                       std::back_inserter(updated_segments),
+                       updated_segments.begin() + offset,
                        [&edge_data](const std::uint64_t edge_index) {
                            return edge_data[edge_index].via_geometry;
                        });
@@ -551,7 +552,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetForwardDurations(geometry_id.id);
-            new_duration = std::accumulate(durations.begin(), durations.end(), 0);
+            new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         else
         {
@@ -566,14 +567,14 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 new_weight += weight;
             }
             const auto durations = segment_data.GetReverseDurations(geometry_id.id);
-            new_duration = std::accumulate(durations.begin(), durations.end(), 0);
+            new_duration = std::accumulate(durations.begin(), durations.end(), EdgeWeight{0});
         }
         return std::make_tuple(new_weight, new_duration);
     };
 
     std::vector<WeightAndDuration> accumulated_segment_data(updated_segments.size());
     tbb::parallel_for(tbb::blocked_range<std::size_t>(0, updated_segments.size()),
-                      [&](const tbb::blocked_range<std::size_t> &range) {
+                      [&](const auto &range) {
                           for (auto index = range.begin(); index < range.end(); ++index)
                           {
                               accumulated_segment_data[index] =
@@ -647,7 +648,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (updated_segments.size() > 0)
     {
         tbb::parallel_for(tbb::blocked_range<std::size_t>(0, edge_based_edge_list.size()),
-                          [&](const tbb::blocked_range<std::size_t> &range) {
+                          [&](const auto &range) {
                               for (auto index = range.begin(); index < range.end(); ++index)
                               {
                                   update_edge(edge_based_edge_list[index]);
