@@ -355,7 +355,7 @@ int main(int argc, const char *argv[]) try
         else
         {
             util::Log(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
-            server_task.reset(); // just kill it
+            std::exit(EXIT_FAILURE);
         }
     }
 

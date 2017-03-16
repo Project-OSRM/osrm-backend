@@ -312,6 +312,11 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
                     new_total_weight_to_reverse = new_total_weight_to_forward;
                     packed_leg_to_reverse = std::move(packed_leg_to_forward);
                     new_total_weight_to_forward = INVALID_EDGE_WEIGHT;
+
+                    // (*)
+                    //
+                    //   Below we have to check if new_total_weight_to_forward is invalid.
+                    //   This prevents use-after-move on packed_leg_to_forward.
                 }
                 else if (target_phantom.reverse_segment_id.enabled)
                 {
@@ -340,6 +345,9 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
                        packed_leg_to_reverse);
             }
         }
+
+        // Note: To make sure we do not access the moved-from packed_leg_to_forward
+        // we guard its access by a check for invalid edge weight. See  (*) above.
 
         // No path found for both target nodes?
         if ((INVALID_EDGE_WEIGHT == new_total_weight_to_forward) &&
