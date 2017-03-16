@@ -6,6 +6,8 @@ COPY . /src
 RUN mkdir /opt
 WORKDIR /opt
 RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
+    case $DOCKER_TAG in *"debug"*) BUILD_TYPE="Debug";; *) BUILD_TYPE="Release";; esac && \
+    echo ">>> DOCKER_TAG=${DOCKER_TAG}" && \
     echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
     apk upgrade && \
@@ -25,7 +27,7 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
     cd /src && \
     mkdir build && \
     cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LTO=On .. && \
+    cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_LTO=On .. && \
     make -j${NPROC} install && \
     cd ../profiles && \
     cp -r * /opt && \
