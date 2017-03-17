@@ -939,10 +939,6 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 
         if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS) > 0)
         {
-            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY) >
-                         0);
-            BOOST_ASSERT(
-                data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
 
@@ -1070,6 +1066,12 @@ class ContiguousInternalMemoryDataFacade<algorithm::MLD>
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
         return m_query_graph->GetAdjacentEdgeRange(node);
+    }
+
+    // searches for a specific edge
+    EdgeID FindEdge(const NodeID from, const NodeID to) const override final
+    {
+        return m_query_graph->FindEdge(from, to);
     }
 };
 }

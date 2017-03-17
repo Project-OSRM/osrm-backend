@@ -194,13 +194,6 @@ RoutingAlgorithms<algorithm::MLD>::ShortestPathSearch(const std::vector<PhantomN
 }
 
 template <>
-InternalRouteResult inline RoutingAlgorithms<algorithm::MLD>::DirectShortestPathSearch(
-    const PhantomNodes &) const
-{
-    throw util::exception("DirectShortestPathSearch is not implemented");
-}
-
-template <>
 inline std::vector<EdgeWeight>
 RoutingAlgorithms<algorithm::MLD>::ManyToManySearch(const std::vector<PhantomNode> &,
                                                     const std::vector<std::size_t> &,

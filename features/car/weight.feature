@@ -53,6 +53,7 @@ Feature: Car - weights
             | ec    | service | yes    |
         And the extract extra arguments "--generate-edge-lookup"
         And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the speed file
             """
             2,5,8

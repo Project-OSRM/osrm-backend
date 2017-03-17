@@ -107,7 +107,7 @@ parseArguments(int argc, char *argv[], customizer::CustomizationConfig &customiz
     if (!option_variables.count("input"))
     {
         std::cout << visible_options;
-        return return_code::exit;
+        return return_code::fail;
     }
 
     return return_code::ok;

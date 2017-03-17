@@ -23,6 +23,16 @@ module.exports = function () {
         callback();
     });
 
+    this.Given(/^the partition extra arguments "(.*?)"$/, (args, callback) => {
+        this.partitionArgs = this.expandOptions(args);
+        callback();
+    });
+
+    this.Given(/^the customize extra arguments "(.*?)"$/, (args, callback) => {
+        this.customizeArgs = this.expandOptions(args);
+        callback();
+    });
+
     this.Given(/^a grid size of ([0-9.]+) meters$/, (meters, callback) => {
         this.setGridSize(meters);
         callback();
@@ -259,11 +269,7 @@ module.exports = function () {
         this.writeAndLinkOSM(callback);
     });
 
-    this.Given(/^the data has been extracted$/, (callback) => {
-        this.reprocess(callback);
-    });
-
-    this.Given(/^the data has been contracted$/, (callback) => {
+    this.Given(/^the data has been (extract|contract|partition|customiz)ed$/, (step, callback) => {
         this.reprocess(callback);
     });
 

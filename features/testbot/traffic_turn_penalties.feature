@@ -40,6 +40,8 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
             3,4,7,-30
             """
         And the contract extra arguments "--turn-penalty-file {penalties_file}"
+        And the customize extra arguments "--turn-penalty-file {penalties_file}"
+
         When I route I should get
             | from | to | route    | speed    | time    |
             | a    | e  | ab,be,be | 36 km/h  | 40s +-1 |
@@ -56,6 +58,8 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
             3,4,7,-30,100.75
             """
         And the contract extra arguments "--turn-penalty-file {penalties_file}"
+        And the customize extra arguments "--turn-penalty-file {penalties_file}"
+
         When I route I should get
             | from | to | route    | speed    | time    | weights    |
             | a    | e  | ab,be,be | 36 km/h  | 40s +-1 | 16.7,20,0  |

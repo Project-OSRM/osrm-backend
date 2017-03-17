@@ -15,6 +15,9 @@ SearchEngineData::SearchEngineHeapPtr SearchEngineData::forward_heap_3;
 SearchEngineData::SearchEngineHeapPtr SearchEngineData::reverse_heap_3;
 SearchEngineData::ManyToManyHeapPtr SearchEngineData::many_to_many_heap;
 
+SearchEngineData::MultiLayerDijkstraHeapPtr SearchEngineData::mld_forward_heap;
+SearchEngineData::MultiLayerDijkstraHeapPtr SearchEngineData::mld_reverse_heap;
+
 void SearchEngineData::InitializeOrClearFirstThreadLocalStorage(const unsigned number_of_nodes)
 {
     if (forward_heap_1.get())
@@ -87,6 +90,28 @@ void SearchEngineData::InitializeOrClearManyToManyThreadLocalStorage(const unsig
     else
     {
         many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes));
+    }
+}
+
+void SearchEngineData::InitializeOrClearMultiLayerDijkstraThreadLocalStorage(
+    const unsigned number_of_nodes)
+{
+    if (mld_forward_heap.get())
+    {
+        mld_forward_heap->Clear();
+    }
+    else
+    {
+        mld_forward_heap.reset(new MultiLayerDijkstraHeap(number_of_nodes));
+    }
+
+    if (mld_reverse_heap.get())
+    {
+        mld_reverse_heap->Clear();
+    }
+    else
+    {
+        mld_reverse_heap.reset(new MultiLayerDijkstraHeap(number_of_nodes));
     }
 }
 }

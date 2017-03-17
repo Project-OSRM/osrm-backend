@@ -27,7 +27,8 @@ Feature: Traffic - speeds
 
     Scenario: Weighting based on speed file
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
-        Given the speed file
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
         """
         1,2,0
         2,1,0
@@ -52,7 +53,8 @@ Feature: Traffic - speeds
 
     Scenario: Weighting based on speed file weights, ETA based on file durations
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
-        Given the speed file
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
         """
         1,2,1,20020.7
         2,1,1,20020.7
@@ -84,7 +86,8 @@ Feature: Traffic - speeds
         properties.weight_precision = 3
         """
         And the contract extra arguments "--segment-speed-file {speeds_file}"
-        Given the speed file
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
         """
         1,2,1,20020.789
         2,1,1,20020.123
@@ -110,10 +113,11 @@ Feature: Traffic - speeds
 
     Scenario: Speeds that isolate a single node (a)
         Given the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
         And the node locations
           | node | lat        | lon      |
           | h    | 2.075      | 19.1     |
-        Given the speed file
+        And the speed file
         """
         1,2,0
         2,1,0

@@ -179,7 +179,7 @@ module.exports = function () {
     };
 
     this.extractData = (p, callback) => {
-        let stamp = p.processedCacheFile + '.extract';
+        let stamp = p.processedCacheFile + '.stamp_extract';
         fs.exists(stamp, (exists) => {
             if (exists) return callback();
 
@@ -193,7 +193,7 @@ module.exports = function () {
     };
 
     this.contractData = (p, callback) => {
-        let stamp = p.processedCacheFile + '.contract';
+        let stamp = p.processedCacheFile + '.stamp_contract';
         fs.exists(stamp, (exists) => {
             if (exists) return callback();
 
@@ -206,15 +206,46 @@ module.exports = function () {
         });
     };
 
-    this.extractAndContract = (callback) => {
+    this.partitionData = (p, callback) => {
+        let stamp = p.processedCacheFile + '.stamp_partition';
+        fs.exists(stamp, (exists) => {
+            if (exists) return callback();
+
+            this.runBin('osrm-partition', util.format('%s %s', p.partitionArgs, p.processedCacheFile), p.environment, (err) => {
+                if (err) {
+                    return callback(new Error(util.format('osrm-partition %s: %s', errorReason(err), err.cmd)));
+                }
+                fs.writeFile(stamp, 'ok', callback);
+            });
+        });
+    };
+
+    this.customizeData = (p, callback) => {
+        let stamp = p.processedCacheFile + '.stamp_customize';
+        fs.exists(stamp, (exists) => {
+            if (exists) return callback();
+
+            this.runBin('osrm-customize', util.format('%s %s', p.customizeArgs, p.processedCacheFile), p.environment, (err) => {
+                if (err) {
+                    return callback(new Error(util.format('osrm-customize %s: %s', errorReason(err), err)));
+                }
+                fs.writeFile(stamp, 'ok', callback);
+            });
+        });
+    };
+
+    this.extractContractPartitionAndCustomize = (callback) => {
         // a shallow copy of scenario parameters to avoid data inconsistency
         // if a cucumber timeout occurs during deferred jobs
         let p = {extractArgs: this.extractArgs, contractArgs: this.contractArgs,
+                 partitionArgs: this.partitionArgs, customizeArgs: this.customizeArgs,
                  profileFile: this.profileFile, inputCacheFile: this.inputCacheFile,
                  processedCacheFile: this.processedCacheFile, environment: this.environment};
         let queue = d3.queue(1);
         queue.defer(this.extractData.bind(this), p);
         queue.defer(this.contractData.bind(this), p);
+        queue.defer(this.partitionData.bind(this), p);
+        queue.defer(this.customizeData.bind(this), p);
         queue.awaitAll(callback);
     };
 
@@ -228,14 +259,14 @@ module.exports = function () {
     this.reprocess = (callback) => {
         let queue = d3.queue(1);
         queue.defer(this.writeAndLinkOSM.bind(this));
-        queue.defer(this.extractAndContract.bind(this));
+        queue.defer(this.extractContractPartitionAndCustomize.bind(this));
         queue.awaitAll(callback);
     };
 
     this.reprocessAndLoadData = (callback) => {
         let queue = d3.queue(1);
         queue.defer(this.writeAndLinkOSM.bind(this));
-        queue.defer(this.extractAndContract.bind(this));
+        queue.defer(this.extractContractPartitionAndCustomize.bind(this));
         queue.defer(this.osrmLoader.load.bind(this.osrmLoader), this.processedCacheFile);
         queue.awaitAll(callback);
     };

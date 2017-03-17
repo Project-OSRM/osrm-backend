@@ -1,10 +1,12 @@
-#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/routing_algorithms/routing_base_ch.hpp"
 
 namespace osrm
 {
 namespace engine
 {
 namespace routing_algorithms
+{
+namespace ch
 {
 
 /**
@@ -411,31 +413,7 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorith
     forward_core_heap.Clear();
     reverse_core_heap.Clear();
 
-    if (source_phantom.forward_segment_id.enabled)
-    {
-        forward_heap.Insert(source_phantom.forward_segment_id.id,
-                            -source_phantom.GetForwardWeightPlusOffset(),
-                            source_phantom.forward_segment_id.id);
-    }
-    if (source_phantom.reverse_segment_id.enabled)
-    {
-        forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                            -source_phantom.GetReverseWeightPlusOffset(),
-                            source_phantom.reverse_segment_id.id);
-    }
-
-    if (target_phantom.forward_segment_id.enabled)
-    {
-        reverse_heap.Insert(target_phantom.forward_segment_id.id,
-                            target_phantom.GetForwardWeightPlusOffset(),
-                            target_phantom.forward_segment_id.id);
-    }
-    if (target_phantom.reverse_segment_id.enabled)
-    {
-        reverse_heap.Insert(target_phantom.reverse_segment_id.id,
-                            target_phantom.GetReverseWeightPlusOffset(),
-                            target_phantom.reverse_segment_id.id);
-    }
+    insertNodesInHeaps(forward_heap, reverse_heap, {source_phantom, target_phantom});
 
     EdgeWeight weight = INVALID_EDGE_WEIGHT;
     std::vector<NodeID> packed_path;
@@ -517,6 +495,7 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorith
     return getPathDistance(facade, packed_path, source_phantom, target_phantom);
 }
 
+} // namespace ch
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

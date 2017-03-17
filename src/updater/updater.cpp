@@ -93,8 +93,8 @@ void checkWeightsConsistency(
 
     for (auto &edge : edge_based_edge_list)
     {
-        BOOST_ASSERT(edge.data.edge_id < current_edge_data.size());
-        auto geometry_id = current_edge_data[edge.data.edge_id].via_geometry;
+        BOOST_ASSERT(edge.data.turn_id < current_edge_data.size());
+        auto geometry_id = current_edge_data[edge.data.turn_id].via_geometry;
 
         if (geometry_id.forward)
         {
@@ -102,7 +102,7 @@ void checkWeightsConsistency(
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
-                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":"
+                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.turn_id << ":"
                                       << weight << " > " << edge.data.weight;
             }
         }
@@ -112,7 +112,7 @@ void checkWeightsConsistency(
             EdgeWeight weight = std::accumulate(range.begin(), range.end(), EdgeWeight{0});
             if (weight > edge.data.weight)
             {
-                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.edge_id << ":"
+                util::Log(logWARNING) << geometry_id.id << " vs " << edge.data.turn_id << ":"
                                       << weight << " > " << edge.data.weight;
             }
         }
@@ -583,7 +583,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                       });
 
     const auto update_edge = [&](extractor::EdgeBasedEdge &edge) {
-        const auto geometry_id = edge_data[edge.data.edge_id].via_geometry;
+        const auto geometry_id = edge_data[edge.data.turn_id].via_geometry;
         auto updated_iter = std::lower_bound(updated_segments.begin(),
                                              updated_segments.end(),
                                              geometry_id,
@@ -619,8 +619,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
             }
 
             // Get the turn penalty and update to the new value if required
-            auto turn_weight_penalty = turn_weight_penalties[edge.data.edge_id];
-            auto turn_duration_penalty = turn_duration_penalties[edge.data.edge_id];
+            auto turn_weight_penalty = turn_weight_penalties[edge.data.turn_id];
+            auto turn_duration_penalty = turn_duration_penalties[edge.data.turn_id];
             const auto num_nodes = segment_data.GetForwardGeometry(geometry_id.id).size();
             const auto weight_min_value = static_cast<EdgeWeight>(num_nodes);
             if (turn_weight_penalty + new_weight < weight_min_value)
@@ -631,7 +631,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                           << " is too negative: clamping turn weight to "
                                           << weight_min_value;
                     turn_weight_penalty = weight_min_value - new_weight;
-                    turn_weight_penalties[edge.data.edge_id] = turn_weight_penalty;
+                    turn_weight_penalties[edge.data.turn_id] = turn_weight_penalty;
                 }
                 else
                 {
