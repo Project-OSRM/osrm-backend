@@ -117,6 +117,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     {
         engine_config->storage_config =
             osrm::StorageConfig(*v8::String::Utf8Value(Nan::To<v8::String>(path).ToLocalChecked()));
+        engine_config->use_shared_memory = false;
     }
     if (!shared_memory->IsUndefined())
     {
@@ -141,18 +142,18 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
     auto algorithm = params->Get(Nan::New("algorithm").ToLocalChecked());
     if (algorithm->IsString())
     {
-        auto algorithm_str = *v8::String::Utf8Value(Nan::To<v8::String>(algorithm).ToLocalChecked());
-        if (name == "CH")
+        auto algorithm_str = Nan::To<v8::String>(algorithm).ToLocalChecked();
+        if (*v8::String::Utf8Value(algorithm_str) == std::string("CH"))
         {
-            engine_config->algorithm = EngineConfig::Algorithm::CH;
+            engine_config->algorithm = osrm::EngineConfig::Algorithm::CH;
         }
-        else if (name == "CoreCH")
+        else if (*v8::String::Utf8Value(algorithm_str) == std::string("CoreCH"))
         {
-            engine_config->algorithm = EngineConfig::Algorithm::CoreCH;
+            engine_config->algorithm = osrm::EngineConfig::Algorithm::CoreCH;
         }
-        else if (name == "MLD")
+        else if (*v8::String::Utf8Value(algorithm_str) == std::string("MLD"))
         {
-            engine_config->algorithm = EngineConfig::Algorithm::MLD;
+            engine_config->algorithm = osrm::EngineConfig::Algorithm::MLD;
         }
         else
         {
