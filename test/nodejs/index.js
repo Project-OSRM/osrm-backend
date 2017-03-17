@@ -50,6 +50,18 @@ test('constructor: throws if given a non-string/obj argument', function(assert) 
         /Parameter must be a path or options object/);
 });
 
+test('constructor: throws if given an unkown algorithm', function(assert) {
+    assert.plan(1);
+    assert.throws(function() { var osrm = new OSRM({algorithm: "Foo", shared_memory: true}); },
+        /algorithm option needs to be one of 'CH', 'CoreCH', or 'MLD'/);
+});
+
+test('constructor: throws if given an invalid algorithm', function(assert) {
+    assert.plan(1);
+    assert.throws(function() { var osrm = new OSRM({algorithm: 3, shared_memory: true}); },
+        /algorithm option needs to be a string and one of 'CH', 'CoreCH', or 'MLD'/);
+});
+
 require('./route.js');
 require('./trip.js');
 require('./match.js');

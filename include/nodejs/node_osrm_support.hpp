@@ -138,6 +138,34 @@ inline engine_config_ptr argumentsToEngineConfig(const Nan::FunctionCallbackInfo
         return engine_config_ptr();
     }
 
+    auto algorithm = params->Get(Nan::New("algorithm").ToLocalChecked());
+    if (algorithm->IsString())
+    {
+        auto algorithm_str = *v8::String::Utf8Value(Nan::To<v8::String>(algorithm).ToLocalChecked());
+        if (name == "CH")
+        {
+            engine_config->algorithm = EngineConfig::Algorithm::CH;
+        }
+        else if (name == "CoreCH")
+        {
+            engine_config->algorithm = EngineConfig::Algorithm::CoreCH;
+        }
+        else if (name == "MLD")
+        {
+            engine_config->algorithm = EngineConfig::Algorithm::MLD;
+        }
+        else
+        {
+            Nan::ThrowError("algorithm option must be one of 'CH', 'CoreCH', or 'MLD'.");
+            return engine_config_ptr();
+        }
+    }
+    else if (!algorithm->IsUndefined())
+    {
+        Nan::ThrowError("algorithm option must be a string and one of 'CH', 'CoreCH', or 'MLD'.");
+        return engine_config_ptr();
+    }
+
     return engine_config;
 }
 
