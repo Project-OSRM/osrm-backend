@@ -185,15 +185,14 @@ set (TBB_INC_SEARCH_DIR ${_TBB_INSTALL_DIR}/include)
 #       containing the headers.
 find_path(TBB_INCLUDE_DIR
     tbb/task_scheduler_init.h
-    PATHS ${TBB_INC_SEARCH_DIR} ENV CPATH
+    HINTS ${TBB_INC_SEARCH_DIR} ENV CPATH
 )
 mark_as_advanced(TBB_INCLUDE_DIR)
-
 
 #-- Look for libraries
 # GvdB: $ENV{TBB_ARCH_PLATFORM} is set by the build script tbbvars[.bat|.sh|.csh]
 if (NOT $ENV{TBB_ARCH_PLATFORM} STREQUAL "")
-    set (_TBB_LIBRARY_DIR 
+    set (_TBB_LIBRARY_DIR
          ${_TBB_INSTALL_DIR}/lib/$ENV{TBB_ARCH_PLATFORM}
          ${_TBB_INSTALL_DIR}/$ENV{TBB_ARCH_PLATFORM}/lib
         )
@@ -213,6 +212,11 @@ endif ((NOT ${TBB_ARCHITECTURE} STREQUAL "") AND (NOT ${TBB_COMPILER} STREQUAL "
 # GvdB: Mac OS X distribution places libraries directly in lib directory.
 list(APPEND _TBB_LIBRARY_DIR ${_TBB_INSTALL_DIR}/lib)
 
+if(EXISTS ${_TBB_INSTALL_DIR}/build)
+  file(GLOB _TBB_BUILD_DIR_RELEASE ${_TBB_INSTALL_DIR}/build/*_release)
+  file(GLOB _TBB_BUILD_DIR_DEBUG ${_TBB_INSTALL_DIR}/build/*_debug)
+endif()
+
 # Jiri: No reason not to check the default paths. From recent versions,
 #       tbbvars has started exporting the LIBRARY_PATH and LD_LIBRARY_PATH
 #       variables, which now point to the directories of the lib files.
@@ -222,10 +226,8 @@ list(APPEND _TBB_LIBRARY_DIR ${_TBB_INSTALL_DIR}/lib)
 #       and LD_LIBRARY_PATH environment variables is now even more important
 #       that tbbvars doesn't export TBB_ARCH_PLATFORM and it facilitates
 #       the use of TBB built from sources.
-find_library(TBB_LIBRARY ${_TBB_LIB_NAME} HINTS ${_TBB_LIBRARY_DIR}
-        PATHS ENV LIBRARY_PATH ENV LD_LIBRARY_PATH)
-find_library(TBB_MALLOC_LIBRARY ${_TBB_LIB_MALLOC_NAME} HINTS ${_TBB_LIBRARY_DIR}
-        PATHS ENV LIBRARY_PATH ENV LD_LIBRARY_PATH)
+find_library(TBB_LIBRARY ${_TBB_LIB_NAME} HINTS ${_TBB_BUILD_DIR_RELEASE} ${_TBB_LIBRARY_DIR})
+find_library(TBB_MALLOC_LIBRARY ${_TBB_LIB_MALLOC_NAME} HINTS ${_TBB_BUILD_DIR_RELEASE} ${_TBB_LIBRARY_DIR})
 
 #Extract path from TBB_LIBRARY name
 get_filename_component(TBB_LIBRARY_DIR ${TBB_LIBRARY} PATH)
@@ -236,9 +238,9 @@ mark_as_advanced(TBB_LIBRARY TBB_MALLOC_LIBRARY)
 
 #-- Look for debug libraries
 # Jiri: Changed the same way as for the release libraries.
-find_library(TBB_LIBRARY_DEBUG ${_TBB_LIB_DEBUG_NAME} HINTS ${_TBB_LIBRARY_DIR}
+find_library(TBB_LIBRARY_DEBUG ${_TBB_LIB_DEBUG_NAME} HINTS ${_TBB_BUILD_DIR_DEBUG} ${_TBB_LIBRARY_DIR}
         PATHS ENV LIBRARY_PATH ENV LD_LIBRARY_PATH)
-find_library(TBB_MALLOC_LIBRARY_DEBUG ${_TBB_LIB_MALLOC_DEBUG_NAME} HINTS ${_TBB_LIBRARY_DIR}
+find_library(TBB_MALLOC_LIBRARY_DEBUG ${_TBB_LIB_MALLOC_DEBUG_NAME} HINTS ${_TBB_BUILD_DIR_DEBUG} ${_TBB_LIBRARY_DIR}
         PATHS ENV LIBRARY_PATH ENV LD_LIBRARY_PATH)
 
 # Jiri: Self-built TBB stores the debug libraries in a separate directory.
