@@ -20,7 +20,7 @@ target_link_libraries(node-osrm osrm)
 # node-osrm artifacts in ${BINDING_DIR} to depend targets on
 set(ARTIFACTS "")
 
-set(OSRM_BINARIES osrm-extract osrm-contract osrm-routed osrm-datastore osrm-components)
+set(OSRM_BINARIES osrm-extract osrm-contract osrm-routed osrm-datastore osrm-components osrm-partition osrm-customize)
 foreach(binary ${OSRM_BINARIES})
   add_custom_command(OUTPUT ${BINDING_DIR}/${binary}
                      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${binary}> ${BINDING_DIR}
