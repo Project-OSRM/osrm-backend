@@ -1,10 +1,36 @@
 var OSRM = require('../../');
 var test = require('tape');
 var berlin_path = require('./osrm-data-path').data_path;
+var berlin_mld_path = require('./osrm-data-path').mld_data_path;
+var berlin_corech_path = require('./osrm-data-path').corech_data_path;
 
 test('route: routes Berlin', function(assert) {
     assert.plan(5);
     var osrm = new OSRM(berlin_path);
+    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
+        assert.ifError(err);
+        assert.ok(route.waypoints);
+        assert.ok(route.routes);
+        assert.ok(route.routes.length);
+        assert.ok(route.routes[0].geometry);
+    });
+});
+
+test('route: routes Berlin on MLD', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM({path: berlin_mld_path, algorithm: 'MLD'});
+    osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
+        assert.ifError(err);
+        assert.ok(route.waypoints);
+        assert.ok(route.routes);
+        assert.ok(route.routes.length);
+        assert.ok(route.routes[0].geometry);
+    });
+});
+
+test('route: routes Berlin on CoreCH', function(assert) {
+    assert.plan(5);
+    var osrm = new OSRM({path: berlin_corech_path, algorithm: 'CoreCH'});
     osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]]}, function(err, route) {
         assert.ifError(err);
         assert.ok(route.waypoints);
