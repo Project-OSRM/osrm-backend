@@ -1,4 +1,4 @@
-@prepare @options @version
+@contract @options @version
 Feature: osrm-contract command line options: version
 # the regex will match these two formats:
 # v0.3.7.0          # this is the normal format when you build from a git clone

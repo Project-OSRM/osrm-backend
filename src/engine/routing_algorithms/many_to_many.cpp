@@ -1,5 +1,5 @@
 #include "engine/routing_algorithms/many_to_many.hpp"
-#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/routing_algorithms/routing_base_ch.hpp"
 
 #include <boost/assert.hpp>
 
@@ -101,14 +101,14 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
             const EdgeWeight new_weight = source_weight + target_weight;
             if (new_weight < 0)
             {
-                const EdgeWeight loop_weight = getLoopWeight(facade, node);
+                const EdgeWeight loop_weight = ch::getLoopWeight(facade, node);
                 const EdgeWeight new_weight_with_loop = new_weight + loop_weight;
                 if (loop_weight != INVALID_EDGE_WEIGHT && new_weight_with_loop >= 0)
                 {
                     if (new_weight_with_loop < current_weight)
                     {
                         current_weight = new_weight_with_loop;
-                        RoutingPayload payload = RoutingPayload(GetLoopPayload(facade, node));
+                        RoutingPayload payload = RoutingPayload(ch::getLoopPayload(facade, node));
                         current_payload = source_payload + target_payload + payload;
                     }
                 }
@@ -120,7 +120,7 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
             }
         }
     }
-    if (stallAtNode<FORWARD_DIRECTION>(facade, node, source_weight, query_heap))
+    if (ch::stallAtNode<FORWARD_DIRECTION>(facade, node, source_weight, query_heap))
     {
         return;
     }
@@ -141,7 +141,7 @@ void backwardRoutingStep(
     // store settled nodes in search space bucket
     search_space_with_buckets[node].emplace_back(column_idx, target_weight, target_payload);
 
-    if (stallAtNode<REVERSE_DIRECTION>(facade, node, target_weight, query_heap))
+    if (ch::stallAtNode<REVERSE_DIRECTION>(facade, node, target_weight, query_heap))
     {
         return;
     }
@@ -174,23 +174,9 @@ manyToManySearch(SearchEngineData &engine_working_data,
 
     unsigned column_idx = 0;
     const auto search_target_phantom = [&](const PhantomNode &phantom) {
+        // clear heap and insert target nodes
         query_heap.Clear();
-        // insert target(s) at weight 0
-
-        if (phantom.forward_segment_id.enabled)
-        {
-            query_heap.Insert(
-                phantom.forward_segment_id.id,
-                phantom.GetForwardWeightPlusOffset(),
-                {phantom.forward_segment_id.id, RoutingPayload(phantom.GetForwardPayload())});
-        }
-        if (phantom.reverse_segment_id.enabled)
-        {
-            query_heap.Insert(
-                phantom.reverse_segment_id.id,
-                phantom.GetReverseWeightPlusOffset(),
-                {phantom.reverse_segment_id.id, RoutingPayload(phantom.GetReversePayload())});
-        }
+        insertNodesInHeap<REVERSE_DIRECTION>(query_heap, phantom);
 
         // explore search space
         while (!query_heap.Empty())
@@ -203,23 +189,9 @@ manyToManySearch(SearchEngineData &engine_working_data,
     // for each source do forward search
     unsigned row_idx = 0;
     const auto search_source_phantom = [&](const PhantomNode &phantom) {
+        // clear heap and insert source nodes
         query_heap.Clear();
-        // insert target(s) at weight 0
-
-        if (phantom.forward_segment_id.enabled)
-        {
-            query_heap.Insert(
-                phantom.forward_segment_id.id,
-                -phantom.GetForwardWeightPlusOffset(),
-                {phantom.forward_segment_id.id, -RoutingPayload(phantom.GetForwardPayload())});
-        }
-        if (phantom.reverse_segment_id.enabled)
-        {
-            query_heap.Insert(
-                phantom.reverse_segment_id.id,
-                -phantom.GetReverseWeightPlusOffset(),
-                {phantom.reverse_segment_id.id, -RoutingPayload(phantom.GetReversePayload())});
-        }
+        insertNodesInHeap<FORWARD_DIRECTION>(query_heap, phantom);
 
         // explore search space
         while (!query_heap.Empty())

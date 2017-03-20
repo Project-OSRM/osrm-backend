@@ -6,8 +6,10 @@
 #include "partition/edge_based_graph_reader.hpp"
 #include "partition/io.hpp"
 #include "partition/multi_level_partition.hpp"
-#include "partition/node_based_graph_to_edge_based_graph_mapping_reader.hpp"
 #include "partition/recursive_bisection.hpp"
+#include "partition/remove_unconnected.hpp"
+
+#include "extractor/io.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/geojson_debug_logger.hpp"
@@ -123,7 +125,8 @@ int Partitioner::Run(const PartitionConfig &config)
     // Then loads the edge based graph tanslates the partition and modifies it.
     // For details see #3205
 
-    auto mapping = LoadNodeBasedGraphToEdgeBasedGraphMapping(config.cnbg_ebg_mapping_path.string());
+    std::vector<extractor::NBGToEBG> mapping;
+    extractor::io::read(config.cnbg_ebg_mapping_path.string(), mapping);
     util::Log() << "Loaded node based graph to edge based graph mapping";
 
     auto edge_based_graph = LoadEdgeBasedGraph(config.edge_based_graph_path.string());
@@ -137,27 +140,22 @@ int Partitioner::Run(const PartitionConfig &config)
     const auto &node_based_partition_ids = recursive_bisection.BisectionIDs();
 
     // Partition ids, keyed by edge based graph nodes
-    std::vector<NodeID> edge_based_partition_ids(edge_based_graph->GetNumberOfNodes());
+    std::vector<NodeID> edge_based_partition_ids(edge_based_graph->GetNumberOfNodes(),
+                                                 SPECIAL_NODEID);
 
-    // Extract edge based border nodes, based on node based partition and mapping.
-    for (const auto node : util::irange(0u, edge_based_graph->GetNumberOfNodes()))
+    // Only resolve all easy cases in the first pass
+    for (const auto &entry : mapping)
     {
-        const auto node_based_nodes = mapping.Lookup(node);
+        const auto u = entry.u;
+        const auto v = entry.v;
+        const auto forward_node = entry.forward_ebg_node;
+        const auto backward_node = entry.backward_ebg_node;
 
-        const auto u = node_based_nodes.u;
-        const auto v = node_based_nodes.v;
-
-        if (node_based_partition_ids[u] == node_based_partition_ids[v])
-        {
-            // Can use partition_ids[u/v] as partition for edge based graph `node_id`
-            edge_based_partition_ids[node] = node_based_partition_ids[u];
-        }
-        else
-        {
-            // Border nodes u,v - need to be resolved.
-            // FIXME: just pick one side for now. See #3205.
-            edge_based_partition_ids[node] = node_based_partition_ids[u];
-        }
+        // This heuristic strategy seems to work best, even beating chosing the minimum
+        // border edge bisection ID
+        edge_based_partition_ids[forward_node] = node_based_partition_ids[u];
+        if (backward_node != SPECIAL_NODEID)
+            edge_based_partition_ids[backward_node] = node_based_partition_ids[v];
     }
 
     std::vector<Partition> partitions;
@@ -168,6 +166,9 @@ int Partitioner::Run(const PartitionConfig &config)
                               config.minimum_cell_size * 32,
                               config.minimum_cell_size * 32 * 16,
                               config.minimum_cell_size * 32 * 16 * 32});
+
+    auto num_unconnected = removeUnconnectedBoundaryNodes(*edge_based_graph, partitions);
+    util::Log() << "Fixed " << num_unconnected << " unconnected nodes";
 
     util::Log() << "Edge-based-graph annotation:";
     for (std::size_t level = 0; level < level_to_num_cells.size(); ++level)

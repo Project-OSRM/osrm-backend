@@ -10,10 +10,12 @@
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
+#include "extractor/nbg_to_ebg.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction_map.hpp"
+
 #include "util/deallocating_vector.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
@@ -35,7 +37,6 @@
 #include <vector>
 
 #include <boost/filesystem/fstream.hpp>
-#include <boost/optional.hpp>
 
 namespace osrm
 {
@@ -46,37 +47,6 @@ class ScriptingEnvironment;
 
 namespace lookup
 {
-// Set to 1 byte alignment
-#pragma pack(push, 1)
-struct SegmentHeaderBlock
-{
-    std::uint32_t num_osm_nodes;
-    OSMNodeID previous_osm_node_id;
-};
-#pragma pack(pop)
-static_assert(sizeof(SegmentHeaderBlock) == 12, "SegmentHeaderBlock is not packed correctly");
-
-#pragma pack(push, 1)
-struct SegmentBlock
-{
-    OSMNodeID this_osm_node_id;
-    double segment_length;
-    EdgeWeight segment_weight;
-    EdgeWeight segment_duration;
-};
-#pragma pack(pop)
-static_assert(sizeof(SegmentBlock) == 24, "SegmentBlock is not packed correctly");
-
-#pragma pack(push, 1)
-struct TurnPenaltiesHeader
-{
-    //! the number of penalties in each block
-    std::uint64_t number_of_penalties;
-};
-#pragma pack(pop)
-static_assert(std::is_trivial<TurnPenaltiesHeader>::value, "TurnPenaltiesHeader is not trivial");
-static_assert(sizeof(TurnPenaltiesHeader) == 8, "TurnPenaltiesHeader is not packed correctly");
-
 #pragma pack(push, 1)
 struct TurnIndexBlock
 {
@@ -112,12 +82,10 @@ class EdgeBasedGraphFactory
     void Run(ScriptingEnvironment &scripting_environment,
              const std::string &original_edge_data_filename,
              const std::string &turn_lane_data_filename,
-             const std::string &edge_segment_lookup_filename,
              const std::string &turn_weight_penalties_filename,
              const std::string &turn_duration_penalties_filename,
              const std::string &turn_penalties_index_filename,
-             const std::string &cnbg_ebg_mapping_path,
-             const bool generate_edge_lookup);
+             const std::string &cnbg_ebg_mapping_path);
 
     // The following get access functions destroy the content in the factory
     void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
@@ -177,26 +145,16 @@ class EdgeBasedGraphFactory
 
     unsigned RenumberEdges();
 
-    void GenerateEdgeExpandedNodes(const std::string &nbg_ebg_mapping_path);
+    std::vector<NBGToEBG> GenerateEdgeExpandedNodes();
 
     void GenerateEdgeExpandedEdges(ScriptingEnvironment &scripting_environment,
                                    const std::string &original_edge_data_filename,
                                    const std::string &turn_lane_data_filename,
-                                   const std::string &edge_segment_lookup_filename,
                                    const std::string &turn_weight_penalties_filename,
                                    const std::string &turn_duration_penalties_filename,
-                                   const std::string &turn_penalties_index_filename,
-                                   const bool generate_edge_lookup);
+                                   const std::string &turn_penalties_index_filename);
 
-    // Mapping betweenn the node based graph u,v nodes and the edge based graph head,tail edge ids.
-    // Required in the osrm-partition tool to translate from a nbg partition to a ebg partition.
-    struct Mapping
-    {
-        NodeID u, v;
-        EdgeID head, tail;
-    };
-
-    boost::optional<Mapping> InsertEdgeBasedNode(const NodeID u, const NodeID v);
+    NBGToEBG InsertEdgeBasedNode(const NodeID u, const NodeID v);
 
     void FlushVectorToStream(storage::io::FileWriter &edge_data_file,
                              std::vector<OriginalEdgeData> &original_edge_data_vector) const;

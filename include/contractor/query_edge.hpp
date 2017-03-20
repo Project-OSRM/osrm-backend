@@ -18,7 +18,7 @@ struct QueryEdge
     struct EdgeData
     {
         explicit EdgeData()
-            : id(0), shortcut(false), weight(0), forward(false), backward(false), payload()
+            : turn_id(0), shortcut(false), weight(0), forward(false), backward(false), payload()
         {
         }
 
@@ -26,7 +26,7 @@ struct QueryEdge
         {
             weight = other.weight;
             shortcut = other.shortcut;
-            id = other.id;
+            turn_id = other.id;
             forward = other.forward;
             backward = other.backward;
             payload = other.payload;
@@ -34,7 +34,7 @@ struct QueryEdge
         // this ID is either the middle node of the shortcut, or the ID of the edge based node (node
         // based edge) storing the appropriate data. If `shortcut` is set to true, we get the middle
         // node. Otherwise we see the edge based node to access node data.
-        NodeID id : 31;
+        NodeID turn_id : 31;
         bool shortcut : 1;
         EdgeWeight weight : 30;
         std::uint32_t forward : 1;
@@ -59,7 +59,7 @@ struct QueryEdge
         return (source == right.source && target == right.target &&
                 data.weight == right.data.weight && data.shortcut == right.data.shortcut &&
                 data.forward == right.data.forward && data.backward == right.data.backward &&
-                data.payload == right.data.payload && data.id == right.data.id);
+                data.payload == right.data.payload && data.turn_id == right.data.turn_id);
     }
 };
 }

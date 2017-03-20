@@ -4,6 +4,7 @@ Feature: Avoid weird loops caused by rounding errors
     Background:
         Given the profile "testbot"
 
+    @via
     Scenario: Weird sidestreet loops
         Given the node map
             """
@@ -72,7 +73,7 @@ Feature: Avoid weird loops caused by rounding errors
             | from | to | route   |
             | x    | y  | abc,abc |
 
-    @412
+    @412 @via
     Scenario: Avoid weird loops 3
         And the node map
             """

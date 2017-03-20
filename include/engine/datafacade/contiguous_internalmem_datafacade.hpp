@@ -8,6 +8,8 @@
 #include "engine/algorithm.hpp"
 #include "engine/geospatial_query.hpp"
 
+#include "customizer/edge_based_graph.hpp"
+
 #include "extractor/datasources.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
@@ -415,20 +417,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_turn_weight_penalties = util::ShM<TurnPenalty, true>::vector(
             turn_weight_penalties_ptr,
             data_layout.num_entries[storage::DataLayout::TURN_WEIGHT_PENALTIES]);
-        if (data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES] == 0)
-        { // Fallback to turn weight penalties that are turn duration penalties in deciseconds
-            m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
-                turn_weight_penalties_ptr,
-                data_layout.num_entries[storage::DataLayout::TURN_WEIGHT_PENALTIES]);
-        }
-        else
-        {
-            auto turn_duration_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
-                memory_block, storage::DataLayout::TURN_DURATION_PENALTIES);
-            m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
-                turn_duration_penalties_ptr,
-                data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES]);
-        }
+        auto turn_duration_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
+            memory_block, storage::DataLayout::TURN_DURATION_PENALTIES);
+        m_turn_duration_penalties = util::ShM<TurnPenalty, true>::vector(
+            turn_duration_penalties_ptr,
+            data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES]);
     }
 
     void InitializeGeometryPointers(storage::DataLayout &data_layout, char *memory_block)
@@ -946,10 +939,6 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 
         if (data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_WEIGHTS) > 0)
         {
-            BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY) >
-                         0);
-            BOOST_ASSERT(
-                data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
             BOOST_ASSERT(data_layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
 
@@ -1017,7 +1006,7 @@ class ContiguousInternalMemoryDataFacade<algorithm::MLD>
       public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 {
   private:
-    using QueryGraph = util::StaticGraph<EdgeData, true>;
+    using QueryGraph = customizer::StaticEdgeBasedGraphView;
     using GraphNode = QueryGraph::NodeArrayEntry;
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
@@ -1077,6 +1066,12 @@ class ContiguousInternalMemoryDataFacade<algorithm::MLD>
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const override final
     {
         return m_query_graph->GetAdjacentEdgeRange(node);
+    }
+
+    // searches for a specific edge
+    EdgeID FindEdge(const NodeID from, const NodeID to) const override final
+    {
+        return m_query_graph->FindEdge(from, to);
     }
 };
 }

@@ -172,8 +172,8 @@ template <bool UseShareMemory> class CellStorageImpl
               destination_boundary{all_destinations + data.destination_boundary_offset}
         {
             BOOST_ASSERT(all_weight != nullptr);
-            BOOST_ASSERT(all_sources != nullptr);
-            BOOST_ASSERT(all_destinations != nullptr);
+            BOOST_ASSERT(num_source_nodes == 0 || all_sources != nullptr);
+            BOOST_ASSERT(num_destination_nodes == 0 || all_destinations != nullptr);
         }
     };
 
@@ -240,6 +240,8 @@ template <bool UseShareMemory> class CellStorageImpl
                     if (!is_source_node && !is_destination_node)
                     {
                         number_of_unconneced++;
+                        util::Log(logWARNING) << "Found unconnected boundary node " << node << "("
+                                              << cell_id << ") on level " << (int)level;
                         level_destination_boundary.emplace_back(cell_id, node);
                     }
                 }
@@ -331,8 +333,10 @@ template <bool UseShareMemory> class CellStorageImpl
         const auto offset = level_to_cell_offset[level_index];
         const auto cell_index = offset + id;
         BOOST_ASSERT(cell_index < cells.size());
-        return ConstCell{
-            cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
+        return ConstCell{cells[cell_index],
+                         weights.data(),
+                         source_boundary.empty() ? nullptr : source_boundary.data(),
+                         destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
 
     template <typename = std::enable_if<!UseShareMemory>> Cell GetCell(LevelID level, CellID id)

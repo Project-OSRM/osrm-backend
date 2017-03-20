@@ -306,7 +306,7 @@ endif()
 
 # Configuring compilers
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics -ftemplate-depth=1024")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wuninitialized -Wunreachable-code -Wstrict-overflow=2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fPIC -fcolor-diagnostics -ftemplate-depth=1024 -Wno-unused-command-line-argument")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
   set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
@@ -668,7 +668,7 @@ target_link_libraries(osrm_update ${UPDATER_LIBRARIES})
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES} osrm_update)
 target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
 target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
-target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES})
+target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update)
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
 
 # BUILD_COMPONENTS

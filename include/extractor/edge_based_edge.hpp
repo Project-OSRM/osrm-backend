@@ -33,19 +33,19 @@ struct EdgeBasedEdge
 
     struct EdgeData
     {
-        EdgeData() : edge_id(0), weight(0), forward(false), backward(false), payload() {}
+        EdgeData() : turn_id(0), weight(0), forward(false), backward(false), payload() {}
 
-        EdgeData(const NodeID edge_id,
+        EdgeData(const NodeID turn_id,
                  const EdgeWeight weight,
                  const EdgePayload &payload,
                  const bool forward,
                  const bool backward)
-            : edge_id(edge_id), weight(weight), forward(forward), backward(backward),
+            : turn_id(turn_id), weight(weight), forward(forward), backward(backward),
               payload(payload)
         {
         }
 
-        NodeID edge_id;
+        NodeID turn_id; // ID of the edge based node (node based edge)
         EdgeWeight weight : 30;
         std::uint32_t forward : 1;
         std::uint32_t backward : 1;
@@ -65,12 +65,12 @@ inline EdgeBasedEdge::EdgeBasedEdge() : source(0), target(0) {}
 
 inline EdgeBasedEdge::EdgeBasedEdge(const NodeID source,
                                     const NodeID target,
-                                    const NodeID edge_id,
+                                    const NodeID turn_id,
                                     const EdgeWeight weight,
                                     const EdgePayload &payload,
                                     const bool forward,
                                     const bool backward)
-    : source(source), target(target), data{edge_id, weight, payload, forward, backward}
+    : source(source), target(target), data{turn_id, weight, payload, forward, backward}
 {
 }
 

@@ -41,11 +41,6 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
             ->default_value(tbb::task_scheduler_init::default_num_threads()),
         "Number of threads to use")(
-        "generate-edge-lookup",
-        boost::program_options::value<bool>(&extractor_config.generate_edge_lookup)
-            ->implicit_value(true)
-            ->default_value(false),
-        "Generate a lookup table for internal edge-expanded-edge IDs to OSM node pairs")(
         "small-component-size",
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
             ->default_value(1000),
@@ -57,13 +52,17 @@ return_code parseArguments(int argc, char *argv[], extractor::ExtractorConfig &e
             ->default_value(false),
         "Use metada during osm parsing (This can affect the extraction performance).");
 
+    bool dummy;
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
         boost::program_options::value<boost::filesystem::path>(&extractor_config.input_path),
-        "Input file in .osm, .osm.bz2 or .osm.pbf format");
+        "Input file in .osm, .osm.bz2 or .osm.pbf format")(
+        "generate-edge-lookup",
+        boost::program_options::value<bool>(&dummy)->implicit_value(true)->default_value(false),
+        "Not used anymore");
 
     // positional option
     boost::program_options::positional_options_description positional_options;

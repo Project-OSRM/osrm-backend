@@ -327,7 +327,7 @@ In addition to the [general options](#general-options) the following options are
 
 |Option      |Values                                          |Description                                                                |
 |------------|------------------------------------------------|---------------------------------------------------------------------------|
-|roundtrip   |`true` (default), `false`                       |Return route is a roundtrip                                                |
+|roundtrip   |`true` (default), `false`                       |Return route is a roundtrip (route returns to first location)              |
 |source      |`any` (default), `first`                        |Return route starts at `any` or `first` coordinate                         |
 |destination |`any` (default), `last`                         |Return route ends at `any` or `last` coordinate                            |
 |steps       |`true`, `false` (default)                       |Return route instructions for each trip                                    |

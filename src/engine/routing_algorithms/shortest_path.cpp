@@ -1,5 +1,5 @@
 #include "engine/routing_algorithms/shortest_path.hpp"
-#include "engine/routing_algorithms/routing_base.hpp"
+#include "engine/routing_algorithms/routing_base_ch.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
@@ -71,23 +71,24 @@ void searchWithUTurn(const datafacade::ContiguousInternalMemoryDataFacade<Algori
     auto is_oneway_source = !(search_from_forward_node && search_from_reverse_node);
     auto is_oneway_target = !(search_to_forward_node && search_to_reverse_node);
     // we only enable loops here if we can't search from forward to backward node
-    auto needs_loop_forwad = is_oneway_source && needsLoopForward(source_phantom, target_phantom);
+    auto needs_loop_forwad =
+        is_oneway_source && ch::needsLoopForward(source_phantom, target_phantom);
     auto needs_loop_backwards =
-        is_oneway_target && needsLoopBackwards(source_phantom, target_phantom);
+        is_oneway_target && ch::needsLoopBackwards(source_phantom, target_phantom);
 
     forward_core_heap.Clear();
     reverse_core_heap.Clear();
     BOOST_ASSERT(forward_core_heap.Size() == 0);
     BOOST_ASSERT(reverse_core_heap.Size() == 0);
-    routing_algorithms::search(facade,
-                               forward_heap,
-                               reverse_heap,
-                               forward_core_heap,
-                               reverse_core_heap,
-                               new_total_weight,
-                               leg_packed_path,
-                               needs_loop_forwad,
-                               needs_loop_backwards);
+    ch::search(facade,
+               forward_heap,
+               reverse_heap,
+               forward_core_heap,
+               reverse_core_heap,
+               new_total_weight,
+               leg_packed_path,
+               needs_loop_forwad,
+               needs_loop_backwards);
 
     // if no route is found between two parts of the via-route, the entire route becomes
     // invalid. Adding to invalid edge weight sadly doesn't return an invalid edge weight. Here
@@ -147,15 +148,15 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &fa
         reverse_core_heap.Clear();
         BOOST_ASSERT(forward_core_heap.Size() == 0);
         BOOST_ASSERT(reverse_core_heap.Size() == 0);
-        routing_algorithms::search(facade,
-                                   forward_heap,
-                                   reverse_heap,
-                                   forward_core_heap,
-                                   reverse_core_heap,
-                                   new_total_weight_to_forward,
-                                   leg_packed_path_forward,
-                                   needsLoopForward(source_phantom, target_phantom),
-                                   DO_NOT_FORCE_LOOP);
+        ch::search(facade,
+                   forward_heap,
+                   reverse_heap,
+                   forward_core_heap,
+                   reverse_core_heap,
+                   new_total_weight_to_forward,
+                   leg_packed_path_forward,
+                   ch::needsLoopForward(source_phantom, target_phantom),
+                   DO_NOT_FORCE_LOOP);
     }
 
     if (search_to_reverse_node)
@@ -185,15 +186,15 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &fa
         reverse_core_heap.Clear();
         BOOST_ASSERT(forward_core_heap.Size() == 0);
         BOOST_ASSERT(reverse_core_heap.Size() == 0);
-        routing_algorithms::search(facade,
-                                   forward_heap,
-                                   reverse_heap,
-                                   forward_core_heap,
-                                   reverse_core_heap,
-                                   new_total_weight_to_reverse,
-                                   leg_packed_path_reverse,
-                                   DO_NOT_FORCE_LOOP,
-                                   needsLoopBackwards(source_phantom, target_phantom));
+        ch::search(facade,
+                   forward_heap,
+                   reverse_heap,
+                   forward_core_heap,
+                   reverse_core_heap,
+                   new_total_weight_to_reverse,
+                   leg_packed_path_reverse,
+                   DO_NOT_FORCE_LOOP,
+                   ch::needsLoopBackwards(source_phantom, target_phantom));
     }
 }
 
@@ -213,11 +214,11 @@ void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::
         auto leg_begin = total_packed_path.begin() + packed_leg_begin[current_leg];
         auto leg_end = total_packed_path.begin() + packed_leg_begin[current_leg + 1];
         const auto &unpack_phantom_node_pair = phantom_nodes_vector[current_leg];
-        unpackPath(facade,
-                   leg_begin,
-                   leg_end,
-                   unpack_phantom_node_pair,
-                   raw_route_data.unpacked_path_segments[current_leg]);
+        ch::unpackPath(facade,
+                       leg_begin,
+                       leg_end,
+                       unpack_phantom_node_pair,
+                       raw_route_data.unpacked_path_segments[current_leg]);
 
         raw_route_data.source_traversed_in_reverse.push_back(
             (*leg_begin != phantom_nodes_vector[current_leg].source_phantom.forward_segment_id.id));
@@ -312,6 +313,11 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
                     new_total_weight_to_reverse = new_total_weight_to_forward;
                     packed_leg_to_reverse = std::move(packed_leg_to_forward);
                     new_total_weight_to_forward = INVALID_EDGE_WEIGHT;
+
+                    // (*)
+                    //
+                    //   Below we have to check if new_total_weight_to_forward is invalid.
+                    //   This prevents use-after-move on packed_leg_to_forward.
                 }
                 else if (target_phantom.reverse_segment_id.enabled)
                 {
@@ -340,6 +346,9 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
                        packed_leg_to_reverse);
             }
         }
+
+        // Note: To make sure we do not access the moved-from packed_leg_to_forward
+        // we guard its access by a check for invalid edge weight. See  (*) above.
 
         // No path found for both target nodes?
         if ((INVALID_EDGE_WEIGHT == new_total_weight_to_forward) &&

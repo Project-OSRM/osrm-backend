@@ -116,7 +116,7 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &p
     if (!option_variables.count("input"))
     {
         std::cout << visible_options;
-        return return_code::exit;
+        return return_code::fail;
     }
 
     return return_code::ok;

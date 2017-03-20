@@ -139,13 +139,13 @@ class GraphContractor
                     if (!data.is_original_via_node_ID && !orig_node_id_from_new_node_id_map.empty())
                     {
                         // tranlate the _node id_ of the shortcutted node
-                        new_edge.data.id = orig_node_id_from_new_node_id_map[data.id];
+                        new_edge.data.turn_id = orig_node_id_from_new_node_id_map[data.id];
                     }
                     else
                     {
-                        new_edge.data.id = data.id;
+                        new_edge.data.turn_id = data.id;
                     }
-                    BOOST_ASSERT_MSG(new_edge.data.id != INT_MAX, // 2^31
+                    BOOST_ASSERT_MSG(new_edge.data.turn_id != INT_MAX, // 2^31
                                      "edge id invalid");
                     new_edge.data.forward = data.forward;
                     new_edge.data.backward = data.backward;

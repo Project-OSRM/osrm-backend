@@ -43,11 +43,11 @@ struct UpdaterConfig final
     void UseDefaultOutputNames()
     {
         edge_based_graph_path = osrm_input_path.string() + ".ebg";
-        edge_segment_lookup_path = osrm_input_path.string() + ".edge_segment_lookup";
         turn_weight_penalties_path = osrm_input_path.string() + ".turn_weight_penalties";
         turn_duration_penalties_path = osrm_input_path.string() + ".turn_duration_penalties";
         turn_penalties_index_path = osrm_input_path.string() + ".turn_penalties_index";
         node_based_graph_path = osrm_input_path.string() + ".nodes";
+        edge_data_path = osrm_input_path.string() + ".edges";
         geometry_path = osrm_input_path.string() + ".geometry";
         rtree_leaf_path = osrm_input_path.string() + ".fileIndex";
         datasource_names_path = osrm_input_path.string() + ".datasource_names";
@@ -58,11 +58,11 @@ struct UpdaterConfig final
 
     std::string edge_based_graph_path;
 
-    std::string edge_segment_lookup_path;
     std::string turn_weight_penalties_path;
     std::string turn_duration_penalties_path;
     std::string turn_penalties_index_path;
     std::string node_based_graph_path;
+    std::string edge_data_path;
     std::string geometry_path;
     std::string rtree_leaf_path;
 

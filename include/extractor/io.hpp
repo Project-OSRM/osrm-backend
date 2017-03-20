@@ -2,6 +2,7 @@
 #define OSRM_EXTRACTOR_IO_HPP
 
 #include "extractor/datasources.hpp"
+#include "extractor/nbg_to_ebg.hpp"
 #include "extractor/segment_data_container.hpp"
 
 #include "storage/io.hpp"
@@ -15,7 +16,23 @@ namespace extractor
 namespace io
 {
 
-void read(const boost::filesystem::path &path, Datasources &sources)
+inline void read(const boost::filesystem::path &path, std::vector<NBGToEBG> &mapping)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    reader.DeserializeVector(mapping);
+}
+
+inline void write(const boost::filesystem::path &path, const std::vector<NBGToEBG> &mapping)
+{
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+    storage::io::FileWriter reader{path, fingerprint};
+
+    reader.SerializeVector(mapping);
+}
+
+inline void read(const boost::filesystem::path &path, Datasources &sources)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -23,7 +40,7 @@ void read(const boost::filesystem::path &path, Datasources &sources)
     reader.ReadInto(sources);
 }
 
-void write(const boost::filesystem::path &path, Datasources &sources)
+inline void write(const boost::filesystem::path &path, Datasources &sources)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -31,7 +48,8 @@ void write(const boost::filesystem::path &path, Datasources &sources)
     writer.WriteFrom(sources);
 }
 
-template <> void read(const boost::filesystem::path &path, SegmentDataContainer &segment_data)
+template <>
+inline void read(const boost::filesystem::path &path, SegmentDataContainer &segment_data)
 {
     const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -57,7 +75,7 @@ template <> void read(const boost::filesystem::path &path, SegmentDataContainer 
 }
 
 template <>
-void write(const boost::filesystem::path &path, const SegmentDataContainer &segment_data)
+inline void write(const boost::filesystem::path &path, const SegmentDataContainer &segment_data)
 {
     const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
     storage::io::FileWriter writer{path, fingerprint};

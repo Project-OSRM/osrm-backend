@@ -209,13 +209,22 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
     else
     {
         BOOST_ASSERT(source_node.fwd_segment_position == target_node.fwd_segment_position);
-        //     s     t
-        // u-------------v
-        // |---| source_duration
-        // |---------| target_duration
+        BOOST_ASSERT(source_traversed_in_reverse == target_traversed_in_reverse);
 
-        const EdgeWeight duration = target_duration - source_duration;
+        // The difference (target-source) should handle
+        // all variants for similar directions u-v and s-t (and opposite)
+        //    s(t)  t(s)   source_traversed_in_reverse = target_traversed_in_reverse = false
+        // u-------------v
+        // |---|           source_weight
+        // |---------|     target_weight
+
+        //    s(t)  t(s)   source_traversed_in_reverse = target_traversed_in_reverse = true
+        // u-------------v
+        // |   |---------| source_weight
+        // |         |---| target_weight
         const EdgeWeight weight = target_weight - source_weight;
+        const EdgeWeight duration = target_duration - source_duration;
+        BOOST_ASSERT(weight >= 0);
         BOOST_ASSERT(duration >= 0);
 
         steps.push_back(RouteStep{source_node.name_id,

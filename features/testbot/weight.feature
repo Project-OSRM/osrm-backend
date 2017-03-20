@@ -240,6 +240,7 @@ Feature: Weight tests
             | e,d       | ,,    | 40m +-.1 | 4.009,1.11,0 | 189.9s,100s,0s |
             | d,e       | ,,    | 40m +-.1 | 2.21,1.11,0  | 10.1s,100s,0s  |
 
+    @traffic @speed
     Scenario: Step weights -- segment_function with speed and turn updates
         Given the profile file "testbot" extended with
         """
@@ -279,6 +280,7 @@ Feature: Weight tests
             2,3,5,25.5,16.7
             """
         And the contract extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
 
         When I route I should get
             | waypoints | route | distance | weights   | times        |
@@ -286,6 +288,7 @@ Feature: Weight tests
             | a,e       | ,,    | 60.1m    | 68.7,10,0 | 38.5s,11s,0s |
             | d,e       | ,,    | 39.9m    | 10,10,0   | 11s,11s,0s   |
 
+    @traffic @speed
     Scenario: Step weights -- segment_function with speed and turn updates with fallback to durations
         Given the profile file "testbot" extended with
         """
@@ -313,6 +316,7 @@ Feature: Weight tests
             2,3,5,1
             """
         And the contract extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file} --turn-penalty-file {penalties_file}"
 
         When I route I should get
             | waypoints | route      | distance | weights       | times    |

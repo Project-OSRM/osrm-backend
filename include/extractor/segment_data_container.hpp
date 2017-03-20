@@ -63,36 +63,71 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     {
     }
 
-    // TODO these random access functions can be removed after we implemented #3737
-    auto &ForwardDuration(const DirectionalGeometryID id, const SegmentOffset offset)
+    auto GetForwardGeometry(const DirectionalGeometryID id)
     {
-        return fwd_durations[index[id] + 1 + offset];
+        const auto begin = nodes.begin() + index[id];
+        const auto end = nodes.begin() + index[id + 1];
+
+        return boost::make_iterator_range(begin, end);
     }
-    auto &ReverseDuration(const DirectionalGeometryID id, const SegmentOffset offset)
+
+    auto GetReverseGeometry(const DirectionalGeometryID id)
     {
-        return rev_durations[index[id] + offset];
+        return boost::adaptors::reverse(GetForwardGeometry(id));
     }
-    auto &ForwardWeight(const DirectionalGeometryID id, const SegmentOffset offset)
+
+    auto GetForwardDurations(const DirectionalGeometryID id)
     {
-        return fwd_weights[index[id] + 1 + offset];
+        const auto begin = fwd_durations.begin() + index[id] + 1;
+        const auto end = fwd_durations.begin() + index[id + 1];
+
+        return boost::make_iterator_range(begin, end);
     }
-    auto &ReverseWeight(const DirectionalGeometryID id, const SegmentOffset offset)
+
+    auto GetReverseDurations(const DirectionalGeometryID id)
     {
-        return rev_weights[index[id] + offset];
+        const auto begin = rev_durations.begin() + index[id];
+        const auto end = rev_durations.begin() + index[id + 1] - 1;
+
+        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
-    auto &ForwardDatasource(const DirectionalGeometryID id, const SegmentOffset offset)
+
+    auto GetForwardWeights(const DirectionalGeometryID id)
     {
-        return datasources[index[id] + 1 + offset];
+        const auto begin = fwd_weights.begin() + index[id] + 1;
+        const auto end = fwd_weights.begin() + index[id + 1];
+
+        return boost::make_iterator_range(begin, end);
     }
-    auto &ReverseDatasource(const DirectionalGeometryID id, const SegmentOffset offset)
+
+    auto GetReverseWeights(const DirectionalGeometryID id)
     {
-        return datasources[index[id] + offset];
+        const auto begin = rev_weights.begin() + index[id];
+        const auto end = rev_weights.begin() + index[id + 1] - 1;
+
+        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
+    }
+
+    auto GetForwardDatasources(const DirectionalGeometryID id)
+    {
+        const auto begin = datasources.begin() + index[id] + 1;
+        const auto end = datasources.begin() + index[id + 1];
+
+        return boost::make_iterator_range(begin, end);
+    }
+
+    auto GetReverseDatasources(const DirectionalGeometryID id)
+    {
+        const auto begin = datasources.begin() + index[id];
+        const auto end = datasources.begin() + index[id + 1] - 1;
+
+        return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
 
     auto GetForwardGeometry(const DirectionalGeometryID id) const
     {
-        const auto begin = nodes.cbegin() + index.at(id);
-        const auto end = nodes.cbegin() + index.at(id + 1);
+        const auto begin = nodes.cbegin() + index[id];
+        const auto end = nodes.cbegin() + index[id + 1];
 
         return boost::make_iterator_range(begin, end);
     }
@@ -104,52 +139,53 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
 
     auto GetForwardDurations(const DirectionalGeometryID id) const
     {
-        const auto begin = fwd_durations.cbegin() + index.at(id) + 1;
-        const auto end = fwd_durations.cbegin() + index.at(id + 1);
+        const auto begin = fwd_durations.cbegin() + index[id] + 1;
+        const auto end = fwd_durations.cbegin() + index[id + 1];
 
         return boost::make_iterator_range(begin, end);
     }
 
     auto GetReverseDurations(const DirectionalGeometryID id) const
     {
-        const auto begin = rev_durations.cbegin() + index.at(id);
-        const auto end = rev_durations.cbegin() + index.at(id + 1) - 1;
+        const auto begin = rev_durations.cbegin() + index[id];
+        const auto end = rev_durations.cbegin() + index[id + 1] - 1;
 
         return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
 
     auto GetForwardWeights(const DirectionalGeometryID id) const
     {
-        const auto begin = fwd_weights.cbegin() + index.at(id) + 1;
-        const auto end = fwd_weights.cbegin() + index.at(id + 1);
+        const auto begin = fwd_weights.cbegin() + index[id] + 1;
+        const auto end = fwd_weights.cbegin() + index[id + 1];
 
         return boost::make_iterator_range(begin, end);
     }
 
     auto GetReverseWeights(const DirectionalGeometryID id) const
     {
-        const auto begin = rev_weights.cbegin() + index.at(id);
-        const auto end = rev_weights.cbegin() + index.at(id + 1) - 1;
+        const auto begin = rev_weights.cbegin() + index[id];
+        const auto end = rev_weights.cbegin() + index[id + 1] - 1;
 
         return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
 
     auto GetForwardDatasources(const DirectionalGeometryID id) const
     {
-        const auto begin = datasources.cbegin() + index.at(id) + 1;
-        const auto end = datasources.cbegin() + index.at(id + 1);
+        const auto begin = datasources.cbegin() + index[id] + 1;
+        const auto end = datasources.cbegin() + index[id + 1];
 
         return boost::make_iterator_range(begin, end);
     }
 
     auto GetReverseDatasources(const DirectionalGeometryID id) const
     {
-        const auto begin = datasources.cbegin() + index.at(id);
-        const auto end = datasources.cbegin() + index.at(id + 1) - 1;
+        const auto begin = datasources.cbegin() + index[id];
+        const auto end = datasources.cbegin() + index[id + 1] - 1;
 
         return boost::adaptors::reverse(boost::make_iterator_range(begin, end));
     }
 
+    auto GetNumberOfGeometries() const { return index.size() - 1; }
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
     friend void

@@ -152,9 +152,9 @@ module.exports = function () {
                                     let a_type = k.slice(2);
                                     if (whitelist.indexOf(a_type) == -1)
                                         return cb(new Error('Unrecognized annotation field', a_type));
-                                    if (!annotation[a_type])
+                                    if (annotation && !annotation[a_type])
                                         return cb(new Error('Annotation not found in response', a_type));
-                                    got[k] = annotation[a_type];
+                                    got[k] = annotation && annotation[a_type] || '';
                                 }
                             });
 
