@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     }
     std::sort(actual_turn_penalties.begin(), actual_turn_penalties.end());
     const std::vector<float> expected_turn_penalties = {
-        0., 0., 0., 0., 0., 0., 0., 0., 0.1, 0.7, 5.2, 7.1, 7.4};
+        0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.7f, 5.2f, 7.1f, 7.4f};
     CHECK_EQUAL_RANGE(actual_turn_penalties, expected_turn_penalties);
 
     // Verify the expected turn angles
