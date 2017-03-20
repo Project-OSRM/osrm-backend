@@ -35,6 +35,7 @@ left_hand_driving             | Boolean  | Are vehicles assumed to drive on the 
 use_turn_restrictions         | Boolean  | Are turn instructions followed?
 continue_straight_at_waypoint | Boolean  | Must the route continue straight on at a via point, or are U-turns allowed?
 max_speed_for_map_matching    | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
+max_turn_weight               | Float    | Maximum turn penalty weight
 
 ## way_function
 
