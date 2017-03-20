@@ -57,7 +57,7 @@
 if (WIN32)
     # has em64t/vc8 em64t/vc9
     # has ia32/vc7.1 ia32/vc8 ia32/vc9
-    set(_TBB_DEFAULT_INSTALL_DIR "C:/Program Files/Intel/TBB" "C:/Program Files (x86)/Intel/TBB")
+    set(_TBB_DEFAULT_INSTALL_DIR "C:/Program Files/Intel/TBB")
     set(_TBB_LIB_NAME "tbb")
     set(_TBB_LIB_MALLOC_NAME "${_TBB_LIB_NAME}malloc")
     set(_TBB_LIB_DEBUG_NAME "${_TBB_LIB_NAME}_debug")
@@ -102,7 +102,7 @@ if (UNIX)
         endif(NOT TBB_ARCHITECTURE)
     else (APPLE)
         # LINUX
-        set(_TBB_DEFAULT_INSTALL_DIR "/opt/intel/tbb" "/usr/local/include" "/usr/include")
+        set(_TBB_DEFAULT_INSTALL_DIR "/usr")
         set(_TBB_LIB_NAME "tbb")
         set(_TBB_LIB_MALLOC_NAME "${_TBB_LIB_NAME}malloc")
         set(_TBB_LIB_DEBUG_NAME "${_TBB_LIB_NAME}_debug")
