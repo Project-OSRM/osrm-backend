@@ -85,6 +85,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
     }
 
     // Fast scan over all relevant border edges
+    // For level 0 this yield the same result as GetAdjacentEdgeRange
     auto GetBorderEdgeRange(const LevelID level, const NodeID node) const
     {
         auto begin = BeginBorderEdges(level, node);
@@ -94,10 +95,11 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
 
     // Fast scan over all relevant internal edges, that is edges that will not
     // leave the cell of that node at the given level
+    // For level 0 this returns an empty edge range
     auto GetInternalEdgeRange(const LevelID level, const NodeID node) const
     {
         auto begin = SuperT::BeginEdges(node);
-        auto end = SuperT::BeginEdges(node) + node_to_edge_offset[node + level];
+        auto end = BeginBorderEdges(level, node);
         return util::irange<EdgeID>(begin, end);
     }
 
@@ -110,7 +112,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
             return SuperT::BeginEdges(node) + node_to_edge_offset[index + level];
     }
 
-    // We save the level as senitel at the end
+    // We save the level as sentinel at the end
     LevelID GetNumberOfLevels() const { return node_to_edge_offset.back(); }
 
   private:
@@ -135,7 +137,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
             permutation.begin(),
             permutation.end(),
             [&edges, &highest_border_level](const auto &lhs, const auto &rhs) {
-                // sort by source node and then by level in acending order
+                // sort by source node and then by level in ascending order
                 return std::tie(edges[lhs].source, highest_border_level[lhs], edges[lhs].target) <
                        std::tie(edges[rhs].source, highest_border_level[rhs], edges[rhs].target);
             });
@@ -151,7 +153,7 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
     {
 
         auto num_levels = mlp.GetNumberOfLevels();
-        // we save one senitel element at the end
+        // we save one sentinel element at the end
         node_to_edge_offset.reserve(num_levels * (max_border_node_id + 1) + 1);
         auto iter = edge_and_level_begin;
         for (auto node : util::irange<NodeID>(0, max_border_node_id + 1))
