@@ -158,6 +158,13 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     file_out_stream.open(output_file_name.c_str(), std::ios::binary);
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     file_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+    if (!file_out_stream)
+    {
+        throw util::exception(
+            std::string(
+                "Error writing fingerprint during extraction containers data preparation: ") +
+            SOURCE_REF);
+    }
 
     FlushVectors();
 
@@ -571,7 +578,14 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
             // class of NodeBasedEdgeWithOSM
             NodeBasedEdge tmp = edge.result;
             file_out_stream.write((char *)&tmp, sizeof(NodeBasedEdge));
+
             used_edges_counter++;
+        }
+
+        if (!file_out_stream)
+        {
+            throw util::exception(std::string("Error writing edges in extraction containers: ") +
+                                  SOURCE_REF);
         }
 
         if (used_edges_counter > std::numeric_limits<unsigned>::max())
@@ -591,6 +605,13 @@ void ExtractionContainers::WriteEdges(std::ofstream &file_out_stream) const
         file_out_stream.seekp(start_position);
         file_out_stream.write((char *)&used_edges_counter_buffer,
                               sizeof(used_edges_counter_buffer));
+
+        if (!file_out_stream)
+        {
+            throw util::exception(
+                std::string("Error writing number of used edges in extraction containers: ") +
+                SOURCE_REF);
+        }
         log << "ok";
     }
 
@@ -632,6 +653,12 @@ void ExtractionContainers::WriteNodes(std::ofstream &file_out_stream) const
             BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
 
             file_out_stream.write((char *)&(*node_iterator), sizeof(ExternalMemoryNode));
+            if (!file_out_stream)
+            {
+                throw util::exception(
+                    std::string("Error writing size of edges buffer in extraction containers: ") +
+                    SOURCE_REF);
+            }
 
             ++node_id_iterator;
             ++node_iterator;
@@ -651,6 +678,7 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
     restrictions_out_stream.open(path.c_str(), std::ios::binary);
     const util::FingerPrint fingerprint = util::FingerPrint::GetValid();
     restrictions_out_stream.write((char *)&fingerprint, sizeof(util::FingerPrint));
+
     const auto count_position = restrictions_out_stream.tellp();
     restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
 
@@ -665,8 +693,14 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
             ++written_restriction_count;
         }
     }
+
     restrictions_out_stream.seekp(count_position);
     restrictions_out_stream.write((char *)&written_restriction_count, sizeof(unsigned));
+    if (!restrictions_out_stream)
+    {
+        throw util::exception(std::string("Error writing restrictions in extraction containers: ") +
+                              SOURCE_REF);
+    }
     util::Log() << "usable restrictions: " << written_restriction_count;
 }
 

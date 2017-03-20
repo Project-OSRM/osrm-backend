@@ -2,6 +2,7 @@
 #define OSRM_INDEXED_DATA_HPP
 
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/string_view.hpp"
 
 #include <boost/assert.hpp>
@@ -107,6 +108,11 @@ template <int N, typename T = std::string> struct VariableGroupBlock
 
         out.write((const char *)&refernce, sizeof(refernce));
 
+        if (!out)
+        {
+            throw util::exception(std::string("Error writing block reference: ") + SOURCE_REF);
+        }
+
         return prefix_length;
     }
 
@@ -128,6 +134,11 @@ template <int N, typename T = std::string> struct VariableGroupBlock
                 continue;
 
             out.write((const char *)&data_length, byte_length);
+
+            if (!out)
+            {
+                throw util::exception(std::string("Error writing block prefix: ") + SOURCE_REF);
+            }
         }
     }
 
@@ -183,6 +194,12 @@ template <int N, typename T = std::string> struct FixedGroupBlock
         BlockReference refernce{static_cast<decltype(BlockReference::offset)>(data_offset)};
         out.write((const char *)&refernce, sizeof(refernce));
 
+        if (!out)
+        {
+            throw util::exception(std::string("Error writing group block reference: ") +
+                                  SOURCE_REF);
+        }
+
         return BLOCK_SIZE;
     }
 
@@ -201,6 +218,12 @@ template <int N, typename T = std::string> struct FixedGroupBlock
             block_prefix[index++] = static_cast<ValueType>(data_length);
         }
         out.write((const char *)block_prefix.data(), block_prefix.size());
+
+        if (!out)
+        {
+            throw util::exception(std::string("Error writing a fixed length block prefix: ") +
+                                  SOURCE_REF);
+        }
     }
 
     /// Advances the range to an item stored in the referenced block.
@@ -261,6 +284,11 @@ template <typename GroupBlock> struct IndexedData
                                     : 1 + (std::distance(first, sentinel) - 1) / (BLOCK_SIZE + 1);
         out.write((const char *)&number_of_blocks, sizeof(number_of_blocks));
 
+        if (!out)
+        {
+            throw util::exception(std::string("Error writing indexed data: ") + SOURCE_REF);
+        }
+
         // Write block references and compute the total data size that includes prefix and data
         const GroupBlock block;
         DataSizeType data_size = 0;
@@ -274,6 +302,12 @@ template <typename GroupBlock> struct IndexedData
 
         // Write the total data size
         out.write((const char *)&data_size, sizeof(data_size));
+
+        if (!out)
+        {
+            throw util::exception(std::string("Error writing the total indexed data size: ") +
+                                  SOURCE_REF);
+        }
 
         // Write data blocks that are (prefix, data)
         for (OffsetIterator curr = first, next = first; next != sentinel; curr = next)

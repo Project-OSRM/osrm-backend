@@ -166,6 +166,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
         boost::filesystem::ofstream timestamp_out(config.timestamp_file_name);
         timestamp_out.write(timestamp.c_str(), timestamp.length());
 
+        if (!timestamp_out)
+        {
+            throw util::exception(std::string("Error writing timestamp in extractor: ") +
+                                  SOURCE_REF);
+        }
+
         // initialize vectors holding parsed objects
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionNode>> resulting_nodes;
         tbb::concurrent_vector<std::pair<std::size_t, ExtractionWay>> resulting_ways;
@@ -317,6 +323,12 @@ void Extractor::WriteProfileProperties(const std::string &output_path,
     }
 
     out_stream.write(reinterpret_cast<const char *>(&properties), sizeof(properties));
+
+    if (!out_stream)
+    {
+        throw util::exception(std::string("Error writing profile properties in extractor: ") +
+                              SOURCE_REF);
+    }
 }
 
 void Extractor::FindComponents(unsigned max_edge_id,
@@ -536,6 +548,11 @@ void Extractor::WriteNodeMapping(const std::vector<QueryNode> &internal_to_exter
         node_stream.write((char *)internal_to_external_node_map.data(),
                           size_of_mapping * sizeof(QueryNode));
     }
+    if (!node_stream)
+    {
+        throw util::exception(std::string("Error writing node mapping in extractor: ") +
+                              SOURCE_REF);
+    }
 }
 
 /**
@@ -608,6 +625,12 @@ void Extractor::WriteEdgeBasedGraph(
         file_out_stream.write((char *)&edge, sizeof(EdgeBasedEdge));
     }
 
+    if (!file_out_stream)
+    {
+        throw util::exception(std::string("Error writing edge based graph in extractor: ") +
+                              SOURCE_REF);
+    }
+
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
 
@@ -647,6 +670,14 @@ void Extractor::WriteIntersectionClassificationData(
     file_out_stream << bearing_class_range_table;
 
     file_out_stream.write(reinterpret_cast<const char *>(&total_bearings), sizeof(total_bearings));
+
+    if (!file_out_stream)
+    {
+        throw util::exception(
+            std::string("Error in writing interestction classification data in extractor: ") +
+            SOURCE_REF);
+    }
+
     for (const auto &bearing_class : bearing_classes)
     {
         const auto &bearings = bearing_class.getAvailableBearings();

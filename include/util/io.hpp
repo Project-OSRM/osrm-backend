@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "storage/io.hpp"
+#include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
 
 namespace osrm
@@ -26,6 +27,10 @@ inline bool writeFingerprint(std::ostream &stream)
 {
     const auto fingerprint = FingerPrint::GetValid();
     stream.write(reinterpret_cast<const char *>(&fingerprint), sizeof(fingerprint));
+    if (!stream)
+    {
+        throw util::exception(std::string("Error writing fingerprint: ") + SOURCE_REF);
+    }
     return static_cast<bool>(stream);
 }
 
@@ -36,6 +41,10 @@ bool serializeVector(std::ostream &stream, const std::vector<simple_type> &data)
     stream.write(reinterpret_cast<const char *>(&count), sizeof(count));
     if (!data.empty())
         stream.write(reinterpret_cast<const char *>(&data[0]), sizeof(simple_type) * count);
+    if (!stream)
+    {
+        throw util::exception(std::string("Error serializing vector: ") + SOURCE_REF);
+    }
     return static_cast<bool>(stream);
 }
 
@@ -82,6 +91,11 @@ bool serializeVector(std::ofstream &out_stream, const stxxl::vector<simple_type>
 {
     const std::uint64_t size = data.size();
     out_stream.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    if (!out_stream)
+    {
+        throw util::exception(std::string("Error serializing vector. Writing size step: ") +
+                              SOURCE_REF);
+    }
 
     simple_type write_buffer[WRITE_BLOCK_BUFFER_SIZE];
     std::size_t buffer_len = 0;
@@ -102,6 +116,11 @@ bool serializeVector(std::ofstream &out_stream, const stxxl::vector<simple_type>
     if (buffer_len > 0)
         out_stream.write(reinterpret_cast<const char *>(write_buffer),
                          buffer_len * sizeof(simple_type));
+    if (!out_stream)
+    {
+        throw util::exception(std::string("Error serializing vector. Writing data step: ") +
+                              SOURCE_REF);
+    }
 
     return static_cast<bool>(out_stream);
 }
@@ -133,6 +152,11 @@ inline bool serializeFlags(const boost::filesystem::path &path, const std::vecto
 
     std::uint32_t number_of_bits = flags.size();
     flag_stream.write(reinterpret_cast<const char *>(&number_of_bits), sizeof(number_of_bits));
+    if (!flag_stream)
+    {
+        throw util::exception(std::string("Error on  serializing flags. Write size step: ") +
+                              SOURCE_REF);
+    }
     // putting bits in ints
     std::uint32_t chunk = 0;
     std::size_t chunk_count = 0;
@@ -146,6 +170,11 @@ inline bool serializeFlags(const boost::filesystem::path &path, const std::vecto
         chunk = chunk_bitset.to_ulong();
         ++chunk_count;
         flag_stream.write(reinterpret_cast<const char *>(&chunk), sizeof(chunk));
+    }
+    if (!flag_stream)
+    {
+        throw util::exception(std::string("Error on  serializing flags. Write data step: ") +
+                              SOURCE_REF);
     }
     Log() << "Wrote " << number_of_bits << " bits in " << chunk_count << " chunks (Flags).";
     return static_cast<bool>(flag_stream);
