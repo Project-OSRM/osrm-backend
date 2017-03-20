@@ -43,10 +43,10 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 {
     Result result;
 
-    result.can_be_removed.reserve(params.coordinates.size());
+    result.can_be_removed.resize(params.coordinates.size(), false);
     result.original_to_tidied.reserve(params.coordinates.size());
 
-    result.can_be_removed.push_back(false);
+    result.can_be_removed.set(0, false);
     result.original_to_tidied.push_back(0);
     std::size_t last_good = 0;
 
@@ -72,26 +72,26 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 
             if (over_distance && over_duration)
             {
-                result.can_be_removed.push_back(false);
+                result.can_be_removed.set(next, false);
                 last_good = next;
                 running = {0., 0}; // reset running distance and time
             }
             else
             {
-                result.can_be_removed.push_back(true);
+                result.can_be_removed.set(next, true);
             }
         }
         else
         {
             if (over_distance)
             {
-                result.can_be_removed.push_back(false);
+                result.can_be_removed.set(next, false);
                 last_good = next;
                 running = {0., 0}; // reset running distance and time
             }
             else
             {
-                result.can_be_removed.push_back(true);
+                result.can_be_removed.set(next, true);
             }
         }
 
