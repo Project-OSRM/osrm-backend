@@ -146,20 +146,33 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
             "InvalidValue", "Timestamps need to be monotonically increasing.", json_result);
     }
 
+    SubMatchingList sub_matchings;
+    api::tidy::Result tidied;
+    if (parameters.use_tidying)
+    {
+        // Transparently tidy match parameters, do map matching on tidied parameters.
+        // Then use the mapping to restore the original <-> tidied relationship.
+        tidied = api::tidy::tidy(parameters);
+    }
+    else
+    {
+        tidied = api::tidy::keep_all(parameters);
+    }
+
     // assuming radius is the standard deviation of a normal distribution
     // that models GPS noise (in this model), x3 should give us the correct
     // search radius with > 99% confidence
     std::vector<double> search_radiuses;
-    if (parameters.radiuses.empty())
+    if (tidied.parameters.radiuses.empty())
     {
-        search_radiuses.resize(parameters.coordinates.size(),
+        search_radiuses.resize(tidied.parameters.coordinates.size(),
                                routing_algorithms::DEFAULT_GPS_PRECISION * RADIUS_MULTIPLIER);
     }
     else
     {
-        search_radiuses.resize(parameters.coordinates.size());
-        std::transform(parameters.radiuses.begin(),
-                       parameters.radiuses.end(),
+        search_radiuses.resize(tidied.parameters.coordinates.size());
+        std::transform(tidied.parameters.radiuses.begin(),
+                       tidied.parameters.radiuses.end(),
                        search_radiuses.begin(),
                        [](const boost::optional<double> &maybe_radius) {
                            if (maybe_radius)
@@ -174,61 +187,27 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
                        });
     }
 
-    SubMatchingList sub_matchings;
-    if (parameters.use_tidying)
+    auto candidates_lists = GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses);
+
+    filterCandidates(tidied.parameters.coordinates, candidates_lists);
+    if (std::all_of(candidates_lists.begin(),
+                    candidates_lists.end(),
+                    [](const std::vector<PhantomNodeWithDistance> &candidates) {
+                        return candidates.empty();
+                    }))
     {
-        // Transparently tidy match parameters, do map matching on tidied parameters.
-        // Then use the mapping to restore the original <-> tidied relationship.
-        auto tidied = api::tidy::tidy(parameters);
-
-        // TODO is search radiuses still actual
-        auto candidates_lists = GetPhantomNodesInRange(facade, tidied.parameters, search_radiuses);
-
-        filterCandidates(tidied.parameters.coordinates, candidates_lists);
-        if (std::all_of(candidates_lists.begin(),
-                        candidates_lists.end(),
-                        [](const std::vector<PhantomNodeWithDistance> &candidates) {
-                            return candidates.empty();
-                        }))
-        {
-            return Error("NoSegment",
-                         std::string("Could not find a matching segment for any coordinate."),
-                         json_result);
-        }
-
-        // call the actual map matching
-        sub_matchings = algorithms.MapMatching(candidates_lists,
-                                               tidied.parameters.coordinates,
-                                               tidied.parameters.timestamps,
-                                               tidied.parameters.radiuses,
-                                               parameters.gaps_processing ==
-                                                   api::MatchParameters::GapsType::Split);
+        return Error("NoSegment",
+                     std::string("Could not find a matching segment for any coordinate."),
+                     json_result);
     }
-    else
-    {
 
-        auto candidates_lists = GetPhantomNodesInRange(facade, parameters, search_radiuses);
-
-        filterCandidates(parameters.coordinates, candidates_lists);
-        if (std::all_of(candidates_lists.begin(),
-                        candidates_lists.end(),
-                        [](const std::vector<PhantomNodeWithDistance> &candidates) {
-                            return candidates.empty();
-                        }))
-        {
-            return Error("NoSegment",
-                         std::string("Could not find a matching segment for any coordinate."),
-                         json_result);
-        }
-
-        // call the actual map matching
-        sub_matchings = algorithms.MapMatching(candidates_lists,
-                                               parameters.coordinates,
-                                               parameters.timestamps,
-                                               parameters.radiuses,
-                                               parameters.gaps_processing ==
-                                                   api::MatchParameters::GapsType::Split);
-    }
+    // call the actual map matching
+    sub_matchings =
+        algorithms.MapMatching(candidates_lists,
+                               tidied.parameters.coordinates,
+                               tidied.parameters.timestamps,
+                               tidied.parameters.radiuses,
+                               parameters.gaps_processing == api::MatchParameters::GapsType::Split);
 
     if (sub_matchings.size() == 0)
     {
@@ -259,9 +238,7 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
         BOOST_ASSERT(sub_routes[index].shortest_path_length != INVALID_EDGE_WEIGHT);
     }
 
-    // TODO: restore original coordinates for tidyied parameters
-
-    api::MatchAPI match_api{facade, parameters};
+    api::MatchAPI match_api{facade, parameters, tidied};
     match_api.MakeResponse(sub_matchings, sub_routes, json_result);
 
     return Status::Ok;

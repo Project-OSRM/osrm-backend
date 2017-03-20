@@ -36,18 +36,56 @@ struct Result
     // Masking the MatchParameter parallel arrays for items which should be removed.
     Mask can_be_removed;
     // Maps the MatchParameter's original items to items which should not be removed.
-    Mapping original_to_tidied;
+    Mapping tidied_to_original;
 };
+
+inline Result keep_all(const MatchParameters &params)
+{
+    Result result;
+
+    result.can_be_removed.resize(params.coordinates.size(), false);
+    result.tidied_to_original.reserve(params.coordinates.size());
+    for (std::size_t current = 0; current < params.coordinates.size(); ++current)
+    {
+        result.tidied_to_original.push_back(current);
+    }
+
+    BOOST_ASSERT(result.can_be_removed.size() == params.coordinates.size());
+
+    // We have to filter parallel arrays that may be empty or the exact same size.
+    // result.parameters contains an empty MatchParameters at this point: conditionally fill.
+
+    for (std::size_t i = 0; i < result.can_be_removed.size(); ++i)
+    {
+        if (!result.can_be_removed[i])
+        {
+            result.parameters.coordinates.push_back(params.coordinates[i]);
+
+            if (!params.hints.empty())
+                result.parameters.hints.push_back(params.hints[i]);
+
+            if (!params.radiuses.empty())
+                result.parameters.radiuses.push_back(params.radiuses[i]);
+
+            if (!params.bearings.empty())
+                result.parameters.bearings.push_back(params.bearings[i]);
+
+            if (!params.timestamps.empty())
+                result.parameters.timestamps.push_back(params.timestamps[i]);
+        }
+    }
+
+    return result;
+}
 
 inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 {
     Result result;
 
     result.can_be_removed.resize(params.coordinates.size(), false);
-    result.original_to_tidied.reserve(params.coordinates.size());
 
     result.can_be_removed.set(0, false);
-    result.original_to_tidied.push_back(0);
+    result.tidied_to_original.push_back(0);
     std::size_t last_good = 0;
 
     const auto uses_timestamps = !params.timestamps.empty();
@@ -74,6 +112,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
             {
                 result.can_be_removed.set(next, false);
                 last_good = next;
+                result.tidied_to_original.push_back(next);
                 running = {0., 0}; // reset running distance and time
             }
             else
@@ -87,6 +126,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
             {
                 result.can_be_removed.set(next, false);
                 last_good = next;
+                result.tidied_to_original.push_back(next);
                 running = {0., 0}; // reset running distance and time
             }
             else
@@ -94,18 +134,12 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
                 result.can_be_removed.set(next, true);
             }
         }
-
-        result.original_to_tidied.push_back(last_good);
     }
 
-    BOOST_ASSERT(result.original_to_tidied.size() == params.coordinates.size());
     BOOST_ASSERT(result.can_be_removed.size() == params.coordinates.size());
-    BOOST_ASSERT(std::is_sorted(begin(result.original_to_tidied), end(result.original_to_tidied)));
 
     // We have to filter parallel arrays that may be empty or the exact same size.
     // result.parameters contains an empty MatchParameters at this point: conditionally fill.
-
-    const auto to_keep = result.can_be_removed.size() - result.can_be_removed.count();
 
     for (std::size_t i = 0; i < result.can_be_removed.size(); ++i)
     {
@@ -126,6 +160,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
                 result.parameters.timestamps.push_back(params.timestamps[i]);
         }
     }
+    BOOST_ASSERT(result.tidied_to_original.size() == result.parameters.coordinates.size());
 
     return result;
 }
