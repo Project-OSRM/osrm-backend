@@ -185,8 +185,7 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
     relaxOutgoingEdges<DIRECTION>(facade, node, weight, forward_heap);
 }
 
-inline
-EdgeWeight
+inline EdgeWeight
 getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
               NodeID node)
 {
@@ -207,8 +206,7 @@ getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH
     return loop_weight;
 }
 
-inline
-EdgePayload
+inline EdgePayload
 getLoopPayload(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
                NodeID node)
 {

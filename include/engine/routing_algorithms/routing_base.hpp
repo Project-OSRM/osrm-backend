@@ -70,14 +70,16 @@ void insertNodesInHeap(SearchEngineData::ManyToManyQueryHeap &heap, const Phanto
         heap.Insert(
             phantom_node.forward_segment_id.id,
             weight_sign * phantom_node.GetForwardWeightPlusOffset(),
-            {phantom_node.forward_segment_id.id, forward ? -phantom_node.GetForwardPayload() : phantom_node.GetForwardPayload()});
+            {phantom_node.forward_segment_id.id,
+             forward ? -phantom_node.GetForwardPayload() : phantom_node.GetForwardPayload()});
     }
     if (phantom_node.reverse_segment_id.enabled)
     {
         heap.Insert(
             phantom_node.reverse_segment_id.id,
             weight_sign * phantom_node.GetReverseWeightPlusOffset(),
-            {phantom_node.reverse_segment_id.id, forward ? -phantom_node.GetReversePayload() : phantom_node.GetReversePayload()});
+            {phantom_node.reverse_segment_id.id,
+             forward ? -phantom_node.GetReversePayload() : phantom_node.GetReversePayload()});
     }
 }
 
