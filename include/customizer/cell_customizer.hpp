@@ -120,7 +120,8 @@ class CellCustomizer
         {
             const NodeID to = graph.GetTarget(edge);
             const auto &data = graph.GetEdgeData(edge);
-            if (data.forward && (first_level ||
+            if (data.forward &&
+                (first_level ||
                  partition.GetCell(level - 1, node) != partition.GetCell(level - 1, to)))
             {
                 const EdgeWeight to_weight = data.weight + weight;
