@@ -2,6 +2,7 @@
 #define ENGINE_API_MATCH_HPP
 
 #include "engine/api/match_parameters.hpp"
+#include "engine/api/match_parameters_tidy.hpp"
 #include "engine/api/route_api.hpp"
 
 #include "engine/datafacade/datafacade_base.hpp"
@@ -21,8 +22,10 @@ namespace api
 class MatchAPI final : public RouteAPI
 {
   public:
-    MatchAPI(const datafacade::BaseDataFacade &facade_, const MatchParameters &parameters_)
-        : RouteAPI(facade_, parameters_), parameters(parameters_)
+    MatchAPI(const datafacade::BaseDataFacade &facade_,
+             const MatchParameters &parameters_,
+             const tidy::Result &tidy_result_)
+        : RouteAPI(facade_, parameters_), parameters(parameters_), tidy_result(tidy_result_)
     {
     }
 
@@ -83,13 +86,20 @@ class MatchAPI final : public RouteAPI
             for (auto point_index : util::irange(
                      0u, static_cast<unsigned>(sub_matchings[sub_matching_index].indices.size())))
             {
-                trace_idx_to_matching_idx[sub_matchings[sub_matching_index].indices[point_index]] =
+                trace_idx_to_matching_idx[tidy_result
+                                              .tidied_to_original[sub_matchings[sub_matching_index]
+                                                                      .indices[point_index]]] =
                     MatchingIndex{sub_matching_index, point_index};
             }
         }
 
         for (auto trace_index : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
+            if (tidy_result.can_be_removed[trace_index])
+            {
+                waypoints.values.push_back(util::json::Null());
+                continue;
+            }
             auto matching_index = trace_idx_to_matching_idx[trace_index];
             if (matching_index.NotMatched())
             {
@@ -111,6 +121,7 @@ class MatchAPI final : public RouteAPI
     }
 
     const MatchParameters &parameters;
+    const tidy::Result &tidy_result;
 };
 
 } // ns api
