@@ -39,7 +39,7 @@ class RoutingAlgorithmsInterface
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
                 const std::vector<boost::optional<double>> &trace_gps_precision,
-                const bool use_tidying) const = 0;
+                const bool allow_splitting) const = 0;
 
     virtual std::vector<routing_algorithms::TurnData>
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
@@ -85,7 +85,7 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
                 const std::vector<boost::optional<double>> &trace_gps_precision,
-                const bool use_tidying) const final override;
+                const bool allow_splitting) const final override;
 
     std::vector<routing_algorithms::TurnData>
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
@@ -166,7 +166,7 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<AlgorithmT>::MapMat
     const std::vector<util::Coordinate> &trace_coordinates,
     const std::vector<unsigned> &trace_timestamps,
     const std::vector<boost::optional<double>> &trace_gps_precision,
-    const bool use_tidying) const
+    const bool allow_splitting) const
 {
     return routing_algorithms::mapMatching(heaps,
                                            facade,
@@ -174,7 +174,7 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<AlgorithmT>::MapMat
                                            trace_coordinates,
                                            trace_timestamps,
                                            trace_gps_precision,
-                                           use_tidying);
+                                           allow_splitting);
 }
 
 template <typename AlgorithmT>

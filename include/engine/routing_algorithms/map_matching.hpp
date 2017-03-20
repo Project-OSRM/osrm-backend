@@ -29,7 +29,7 @@ mapMatching(SearchEngineData &engine_working_data,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool use_tidying);
+            const bool allow_splitting);
 
 SubMatchingList
 mapMatching(SearchEngineData &engine_working_data,
@@ -38,7 +38,7 @@ mapMatching(SearchEngineData &engine_working_data,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool use_tidying);
+            const bool allow_splitting);
 }
 }
 }

@@ -55,7 +55,7 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
                 const std::vector<util::Coordinate> &trace_coordinates,
                 const std::vector<unsigned> &trace_timestamps,
                 const std::vector<boost::optional<double>> &trace_gps_precision,
-                const bool use_tidying)
+                const bool allow_splitting)
 {
     map_matching::MatchingConfidence confidence;
     map_matching::EmissionLogProbability default_emission_log_probability(DEFAULT_GPS_PRECISION);
@@ -159,11 +159,7 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
 
         const bool gap_in_trace = [&]() {
             // do not determine split if wasn't asked about it
-            if (!use_tidying)
-            {
-                return false;
-            }
-            else
+            if (allow_splitting)
             {
                 // use temporal information if available to determine a split
                 if (use_timestamps)
@@ -175,6 +171,10 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
                 {
                     return t - prev_unbroken_timestamps.back() > MAX_BROKEN_STATES;
                 }
+            }
+            else
+            {
+                return false;
             }
         }();
 
