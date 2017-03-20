@@ -43,7 +43,7 @@ $(DATA_NAME)_CH.osrm.hsgr: $(DATA_NAME)_CH.osrm $(PROFILE) $(OSRM_CONTRACT)
 
 $(DATA_NAME)_CoreCH.osrm.hsgr: $(DATA_NAME)_CoreCH.osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
-	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) --core=0.95 $<
+	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) --core=0.2 $<
 
 $(DATA_NAME)_MLD.osrm.partition: $(DATA_NAME)_MLD.osrm $(PROFILE) $(OSRM_PARTITION)
 	@echo "Running osrm-partition..."
