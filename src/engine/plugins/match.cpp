@@ -175,7 +175,7 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
     }
 
     SubMatchingList sub_matchings;
-    if (parameters.track_preprocessing == api::MatchParameters::PreprocessingType::Full)
+    if (parameters.use_tidying)
     {
         // Transparently tidy match parameters, do map matching on tidied parameters.
         // Then use the mapping to restore the original <-> tidied relationship.
@@ -197,12 +197,12 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
         }
 
         // call the actual map matching
-        sub_matchings = algorithms.MapMatching(
-            candidates_lists,
-            tidied.parameters.coordinates,
-            tidied.parameters.timestamps,
-            tidied.parameters.radiuses,
-            !(parameters.track_preprocessing == api::MatchParameters::PreprocessingType::False));
+        sub_matchings = algorithms.MapMatching(candidates_lists,
+                                               tidied.parameters.coordinates,
+                                               tidied.parameters.timestamps,
+                                               tidied.parameters.radiuses,
+                                               parameters.gaps_processing ==
+                                                   api::MatchParameters::GapsType::Split);
     }
     else
     {
@@ -222,12 +222,12 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
         }
 
         // call the actual map matching
-        sub_matchings = algorithms.MapMatching(
-            candidates_lists,
-            parameters.coordinates,
-            parameters.timestamps,
-            parameters.radiuses,
-            !(parameters.track_preprocessing == api::MatchParameters::PreprocessingType::False));
+        sub_matchings = algorithms.MapMatching(candidates_lists,
+                                               parameters.coordinates,
+                                               parameters.timestamps,
+                                               parameters.radiuses,
+                                               parameters.gaps_processing ==
+                                                   api::MatchParameters::GapsType::Split);
     }
 
     if (sub_matchings.size() == 0)
