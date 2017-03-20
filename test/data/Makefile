@@ -47,7 +47,6 @@ $(DATA_NAME)_CoreCH.osrm.hsgr: $(DATA_NAME)_CoreCH.osrm $(PROFILE) $(OSRM_CONTRA
 
 $(DATA_NAME)_MLD.osrm.partition: $(DATA_NAME)_MLD.osrm $(PROFILE) $(OSRM_PARTITION)
 	@echo "Running osrm-partition..."
-	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) $<
 	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) $<
 	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) $<
 
