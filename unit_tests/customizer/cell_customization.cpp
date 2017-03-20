@@ -2,8 +2,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "customizer/cell_customizer.hpp"
-#include "partition/multi_level_partition.hpp"
 #include "partition/multi_level_graph.hpp"
+#include "partition/multi_level_partition.hpp"
 #include "util/static_graph.hpp"
 
 using namespace osrm;
