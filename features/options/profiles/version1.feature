@@ -13,6 +13,9 @@ properties.max_speed_for_map_matching      = 180/3.6
 properties.use_turn_restrictions           = true
 properties.continue_straight_at_waypoint   = true
 properties.weight_name                     = 'test_version1'
+properties.weight_precision                = 2
+
+assert(properties.max_turn_weight == 327.67)
 
 function node_function (node, result)
   print ('node_function ' .. node:id())
