@@ -90,6 +90,25 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
         CHECK_EQUAL_COLLECTIONS(graph.GetBorderEdgeRange(0, node),
                                 graph.GetAdjacentEdgeRange(node));
 
+    // on level 0 there are no internal edges
+    for (auto node : util::irange<NodeID>(0, 13))
+        CHECK_EQUAL_COLLECTIONS(graph.GetInternalEdgeRange(0, node), util::irange<EdgeID>(0, 0));
+
+    // the union of border and internal edge needs to equal the adjacent edges
+    for (auto level : util::irange<LevelID>(0, 4))
+    {
+        for (auto node : util::irange<NodeID>(0, 13))
+        {
+            const auto adjacent = graph.GetAdjacentEdgeRange(node);
+            const auto border = graph.GetBorderEdgeRange(level, node);
+            const auto internal = graph.GetInternalEdgeRange(level, node);
+            std::vector<EdgeID> merged;
+            std::copy(internal.begin(), internal.end(), std::back_inserter(merged));
+            std::copy(border.begin(), border.end(), std::back_inserter(merged));
+            CHECK_EQUAL_COLLECTIONS(adjacent, merged);
+        }
+    }
+
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 0).size(), 1);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 1).size(), 0);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 2).size(), 0);
