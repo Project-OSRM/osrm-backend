@@ -58,9 +58,9 @@ duration                                | Float    | Alternative setter for dura
 weight                                  | Float    | Alternative setter for weight of the whole way in both directions
 turn_lanes_forward                      | String   | Directions for individual lanes (normalised OSM turn:lanes value)
 turn_lanes_backward                     | String   |  "   "
-forward_restricted                      | Boolean  | Is this a restricted access road? (e.g. private, deliveries only)
+forward_restricted                      | Boolean  | Is this a restricted access road? (e.g. private, or deliveries only; used to enable high turn penalty, so that way is only chosen for start/end of route)
 backward_restricted                     | Boolean  |  "   "
-is_startpoint                           | Boolean  | Can a journey start on this way?
+is_startpoint                           | Boolean  | Can a journey start on this way? (e.g. ferry; if false, prevents snapping the start point to this way)
 roundabout                              | Boolean  | Is this part of a roundabout?
 circular                                | Boolean  | Is this part of a non-roundabout circular junction?
 name                                    | String   | Name of the way
