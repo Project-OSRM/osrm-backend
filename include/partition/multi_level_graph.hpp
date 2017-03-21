@@ -106,6 +106,9 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
     EdgeID BeginBorderEdges(const LevelID level, const NodeID node) const
     {
         auto index = node * GetNumberOfLevels();
+        // `node_to_edge_offset` has size `max_border_node_id + 1`
+        // which can be smaller then the total number of nodes.
+        // this will save memory in case we sort the border nodes first
         if (index >= node_to_edge_offset.size() - 1)
             return SuperT::BeginEdges(node);
         else
