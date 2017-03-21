@@ -58,6 +58,7 @@
     "brfs": "^1.4.3",
     "browserify": "^14.1.0",
     "docbox": "^1.0.2",
+    "documentation": "^4.0.0-beta.18",
     "eslint": "^2.4.0",
     "tape": "^4.2.2",
     "uglifyjs": "^2.4.10"
