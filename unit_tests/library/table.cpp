@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
     TableParameters params;
     params.coordinates.push_back(get_dummy_location());
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
     TableParameters params;
     params.coordinates.push_back(get_dummy_location());
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
     TableParameters params;
     params.coordinates.push_back(get_dummy_location());

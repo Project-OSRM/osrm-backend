@@ -1,4 +1,4 @@
-DATA_NAME:=berlin
+DATA_NAME:=monaco
 DATA_URL:=https://s3.amazonaws.com/mapbox/osrm/testing/$(DATA_NAME).osm.pbf
 DATA_POLY_URL:=https://s3.amazonaws.com/mapbox/osrm/testing/$(DATA_NAME).poly
 OSRM_BUILD_DIR?=../../build
@@ -19,8 +19,8 @@ all: data
 data: ch/$(DATA_NAME).osrm.hsgr corech/$(DATA_NAME).osrm.hsgr mld/$(DATA_NAME).osrm.partition
 
 clean:
-	-rm $(DATA_NAME).*
-	-rm $(DATA_NAME)_*
+	-rm -r $(DATA_NAME).*
+	-rm -r ch corech mld
 
 $(DATA_NAME).osm.pbf:
 	wget $(DATA_URL) -O $(DATA_NAME).osm.pbf

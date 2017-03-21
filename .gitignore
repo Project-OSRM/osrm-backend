@@ -46,8 +46,10 @@ Thumbs.db
 #######################
 /build/
 /example/build/
-/test/data/berlin*
-/test/bindings/node/data/berlin*
+/test/data/monaco*
+/test/data/ch
+/test/data/corech
+/test/data/mld
 /cmake/postinst
 
 # Eclipse related files #
@@ -87,7 +89,6 @@ stxxl.errlog
 /test/cache
 /test/speeds.csv
 /test/penalties.csv
-/test/data/berlin.*
 node_modules
 
 # Deprecated config file #
