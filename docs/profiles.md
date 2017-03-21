@@ -49,10 +49,10 @@ The following attributes can be set on the result in way_function:
 
 Attribute                               | Type     | Notes
 ----------------------------------------|----------|--------------------------------------------------------------------------
-forward_rate                            | Float    | Routing weight on this way per metre
-backward_rate                           | Float    |  "   "
 forward_speed                           | Float    | Speed on this way in km/h
 backward_speed                          | Float    |  "   "
+forward_rate                            | Float    | Routing weight, expressed as meters/*weight* (e.g. for a fastest-route weighting, you would want this to be meters/second, so set it to forward_speed/3.6)
+backward_rate                           | Float    |  "   "
 forward_mode                            | Enum     | Mode of travel (e.g. car, ferry). Defined in include/extractor/travel_mode.hpp
 backward_mode                           | Enum     |  "   "
 duration                                | Float    | Alternative setter for duration of the whole way in both directions
