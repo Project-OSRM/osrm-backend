@@ -6,7 +6,7 @@ let fs = require('fs');  // Node 4.x required!
 
 let VERSION = "route_5.0";
 let SAMPLE_SIZE = 20;
-let NUM_REQUEST = 1000;
+let NUM_REQUEST = 100;
 let NUM_COORDS = 2;
 let PORT = 5000;
 let url_templates = {

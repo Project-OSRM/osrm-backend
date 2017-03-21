@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(test_tile)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
 
     // Tile within Berlin dataset at Hackescher Markt (13.40294, 52.52330)
     TileParameters params{140831, 85967, 18};
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
 
     // Tile within Berlin dataset at Hackescher Markt (13.40294, 52.52330)
     TileParameters params{140831, 85967, 18};
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/berlin_CH.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
 
     // Small tile so we can test all the values
     // TileParameters params{272953, 191177, 19};
