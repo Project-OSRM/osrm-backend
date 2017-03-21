@@ -24,17 +24,16 @@ BOOST_AUTO_TEST_CASE(test_tile)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
-    // Tile within Berlin dataset at Hackescher Markt (13.40294, 52.52330)
-    TileParameters params{140831, 85967, 18};
+    // This tile should contain most of monaco
+    TileParameters params{17059, 11948, 15};
 
     std::string result;
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_GT(result.size(), 1500);
-    BOOST_CHECK_LT(result.size(), 2500);
+    BOOST_CHECK(result.size() > 114000);
 
     protozero::pbf_reader tile_message(result);
     tile_message.next();
@@ -209,24 +208,22 @@ BOOST_AUTO_TEST_CASE(test_tile)
     }
 
     BOOST_CHECK_EQUAL(number_of_turn_keys, 3);
-    BOOST_CHECK_GT(number_of_turns_found, 10); // roughly ten turns in the tile
+    BOOST_CHECK(number_of_turns_found > 700);
 }
 
 BOOST_AUTO_TEST_CASE(test_tile_turns)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
-
-    // Tile within Berlin dataset at Hackescher Markt (13.40294, 52.52330)
-    TileParameters params{140831, 85967, 18};
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+    // Small tile where we can test all the values
+    TileParameters params{272953, 191177, 19};
 
     std::string result;
     const auto rc = osrm.Tile(params, result);
     BOOST_CHECK(rc == Status::Ok);
 
-    BOOST_CHECK_GT(result.size(), 1500);
-    BOOST_CHECK_LT(result.size(), 2500);
+    BOOST_CHECK_GT(result.size(), 128);
 
     protozero::pbf_reader tile_message(result);
     tile_message.next();
@@ -334,7 +331,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     }
     std::sort(actual_turn_penalties.begin(), actual_turn_penalties.end());
     const std::vector<float> expected_turn_penalties = {
-        0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.1f, 0.7f, 5.2f, 7.1f, 7.4f};
+        0, 0, 0, 0, 0, 0, .1f, .1f, .3f, .4f, 1.2f, 1.9f, 5.3f, 5.5f, 5.8f, 7.1f, 7.2f, 7.2f};
     CHECK_EQUAL_RANGE(actual_turn_penalties, expected_turn_penalties);
 
     // Verify the expected turn angles
@@ -346,7 +343,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     }
     std::sort(actual_turn_angles.begin(), actual_turn_angles.end());
     const std::vector<std::int64_t> expected_turn_angles = {
-        -142, -118, -49, -13, -4, -2, -2, 2, 4, 13, 34, 49, 118};
+        -122, -120, -117, -65, -57, -30, -28, -3, -2, 2, 3, 28, 30, 57, 65, 117, 120, 122};
     CHECK_EQUAL_RANGE(actual_turn_angles, expected_turn_angles);
 
     // Verify the expected bearings
@@ -358,7 +355,7 @@ BOOST_AUTO_TEST_CASE(test_tile_turns)
     }
     std::sort(actual_turn_bearings.begin(), actual_turn_bearings.end());
     const std::vector<std::int64_t> expected_turn_bearings = {
-        75, 75, 124, 124, 128, 242, 242, 255, 304, 304, 306, 308, 308};
+        49, 49, 107, 107, 169, 169, 171, 171, 229, 229, 257, 257, 286, 286, 349, 349, 352, 352};
     CHECK_EQUAL_RANGE(actual_turn_bearings, expected_turn_bearings);
 }
 
@@ -366,7 +363,7 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
     // Small tile so we can test all the values
     // TileParameters params{272953, 191177, 19};
@@ -502,7 +499,26 @@ BOOST_AUTO_TEST_CASE(test_tile_speeds)
         actual_names.push_back(string_vals[i]);
     }
     std::sort(actual_names.begin(), actual_names.end());
-    const std::vector<std::string> expected_names = {};
+    const std::vector<std::string> expected_names = {"Avenue du Carnier",
+                                                     "Avenue du Carnier",
+                                                     "Avenue du Carnier",
+                                                     "Avenue du Carnier",
+                                                     "Avenue du Carnier",
+                                                     "Avenue du Maréchal Foch",
+                                                     "Avenue du Maréchal Foch",
+                                                     "Avenue du Maréchal Foch",
+                                                     "Avenue du Maréchal Foch",
+                                                     "Avenue du Maréchal Foch",
+                                                     "Avenue du Maréchal Foch",
+                                                     "Avenue du Professeur Langevin",
+                                                     "Avenue du Professeur Langevin",
+                                                     "Avenue du Professeur Langevin",
+                                                     "Montée de la Crémaillère",
+                                                     "Montée de la Crémaillère",
+                                                     "Rue Jules Ferry",
+                                                     "Rue Jules Ferry",
+                                                     "Rue Professeur Calmette",
+                                                     "Rue Professeur Calmette"};
     BOOST_CHECK(actual_names == expected_names);
 }
 

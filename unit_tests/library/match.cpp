@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(test_match)
 {
     using namespace osrm;
 
-    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/berlin.osrm");
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
 
     MatchParameters params;
     params.coordinates.push_back(get_dummy_location());
