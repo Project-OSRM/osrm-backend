@@ -15,6 +15,7 @@ branches:
     - master
 
 cache:
+  yarn: true
   ccache: true
   apt: true
   directories:
@@ -141,8 +142,7 @@ before_install:
     fi
   - echo "Using ${JOBS} jobs"
   - source ./scripts/install_node.sh 4
-  - npm install -g "npm@>=3" # Upgrade to npm >v2 to reduce size of downloaded dependencies
-  - npm install --ignore-scripts
+  - yarn install --ignore-scripts
     # Bootstrap cmake to be able to run mason
   - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}.tar.gz"
   - CMAKE_DIR="mason_packages/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}"
@@ -190,7 +190,7 @@ install:
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make --jobs=${JOBS}
   - popd
-  - npm run build-api-docs
+  - yarn run docs
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
@@ -205,7 +205,7 @@ script:
   - ./unit_tests/server-tests
   - ./unit_tests/partition-tests
   - popd
-  - npm test
+  - yarn test
 
 after_success:
   - |
