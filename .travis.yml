@@ -142,6 +142,7 @@ before_install:
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       export JOBS=$((`sysctl -n hw.ncpu` + 1))
       sudo mdutil -i off /
+      npm install -g yarn
     fi
   - echo "Using ${JOBS} jobs"
   - yarn install --ignore-scripts
