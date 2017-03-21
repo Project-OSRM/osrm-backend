@@ -39,9 +39,9 @@ int main(int argc, const char *argv[])
     // The following shows how to use the Route service; configure this service
     RouteParameters params;
 
-    // Route in Berlin: Alexanderplatz to Hackescher Markt
-    params.coordinates.push_back({util::FloatLongitude{13.414307}, util::FloatLatitude{52.521835}});
-    params.coordinates.push_back({util::FloatLongitude{13.402290}, util::FloatLatitude{52.523728}});
+    // Route in monaco
+    params.coordinates.push_back({util::FloatLongitude{7.419758}, util::FloatLatitude{43.731142}});
+    params.coordinates.push_back({util::FloatLongitude{7.419505}, util::FloatLatitude{43.736825}});
 
     // Response is in JSON format
     json::Object result;
@@ -58,7 +58,7 @@ int main(int argc, const char *argv[])
         const auto distance = route.values["distance"].get<json::Number>().value;
         const auto duration = route.values["duration"].get<json::Number>().value;
 
-        // Warn users if extract does not contain the default Berlin coordinates from above
+        // Warn users if extract does not contain the default coordinates from above
         if (distance == 0 || duration == 0)
         {
             std::cout << "Note: distance or duration is zero. ";
