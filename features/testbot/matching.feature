@@ -78,7 +78,7 @@ Feature: Basic Map Matching
             | trace | timestamps | matchings |
             | abcd | 0 10 20 30  | abcd      |
 
-    Scenario: Testbot - Map matching with trace tidying. Dirty case.
+    Scenario: Testbot - Map matching with trace tidying. Dirty case by ts.
         Given a grid size of 100 meters
 
         Given the query options
@@ -97,6 +97,26 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | timestamps    | matchings |
             | abacd | 0 10 12 20 30 | abcd      |
+
+    Scenario: Testbot - Map matching with trace tidying. Dirty case by dist.
+        Given a grid size of 8 meters
+
+        Given the query options
+            | tidying | true |
+
+        Given the node map
+            """
+            a q b c d
+                e
+            """
+
+        And the ways
+            | nodes | oneway |
+            | aqbcd | no     |
+
+        When I match I should get
+            | trace | matchings |
+            | abcbd | abbd      |
 
     Scenario: Testbot - Map matching with core factor
         Given the contract extra arguments "--core 0.8"
