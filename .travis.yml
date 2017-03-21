@@ -7,6 +7,9 @@ git:
 sudo: required
 dist: trusty
 
+nodejs:
+    - "4"
+
 notifications:
   email: false
 
@@ -15,6 +18,7 @@ branches:
     - master
 
 cache:
+  yarn: true
   ccache: true
   apt: true
   directories:
@@ -138,11 +142,10 @@ before_install:
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       export JOBS=$((`sysctl -n hw.ncpu` + 1))
       sudo mdutil -i off /
+      npm install -g yarn
     fi
   - echo "Using ${JOBS} jobs"
-  - source ./scripts/install_node.sh 4
-  - npm install -g "npm@>=3" # Upgrade to npm >v2 to reduce size of downloaded dependencies
-  - npm install --ignore-scripts
+  - yarn install --ignore-scripts
     # Bootstrap cmake to be able to run mason
   - CMAKE_URL="https://mason-binaries.s3.amazonaws.com/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}.tar.gz"
   - CMAKE_DIR="mason_packages/${TRAVIS_OS_NAME}-x86_64/cmake/${CMAKE_VERSION}"
@@ -173,7 +176,16 @@ install:
   - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
   - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DENABLE_CCACHE=ON -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF}
+  - |
+    cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+             -DENABLE_MASON=${ENABLE_MASON:-OFF} \
+             -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
+             -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
+             -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} \
+             -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} \
+             -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} \
+             -DBUILD_TOOLS=ON \
+             -DENABLE_CCACHE=ON
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
@@ -190,7 +202,8 @@ install:
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make --jobs=${JOBS}
   - popd
-  - npm run build-api-docs
+  # building docs only works with npm3+ not with yarn or npm2
+  #- yarn run docs
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
@@ -205,7 +218,7 @@ script:
   - ./unit_tests/server-tests
   - ./unit_tests/partition-tests
   - popd
-  - npm test
+  - yarn test
 
 after_success:
   - |
@@ -215,8 +228,6 @@ after_success:
 
   - |
     if [ -n "${ENABLE_NODE_BINDINGS}" ]; then
-      nvm install 4
-      nvm use 4
       source ./scripts/travis/build.sh
       ./scripts/travis/publish.sh
     fi

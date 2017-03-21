@@ -48,19 +48,12 @@
     "node": ">=4.0.0"
   },
   "devDependencies": {
-    "aws-sdk": "~2.0.31",
-    "babel-cli": "^6.24.0",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-es2015": "^6.24.0",
-    "babel-preset-react": "^6.23.0",
-    "babel-preset-stage-0": "^6.22.0",
-    "babelify": "^7.3.0",
-    "brfs": "^1.4.3",
-    "browserify": "^14.1.0",
-    "docbox": "^1.0.2",
+    "docbox": "^1.0.5",
+    "documentation": "^4.0.0-beta.18",
     "eslint": "^2.4.0",
-    "tape": "^4.2.2",
-    "uglifyjs": "^2.4.10"
+
+    "aws-sdk": "~2.0.31",
+    "tape": "^4.2.2"
   },
   "bundleDependencies": [
     "node-pre-gyp"
