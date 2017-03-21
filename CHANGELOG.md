@@ -1,11 +1,16 @@
 
+# 5.6.4
+  - Changes from 5.6.3
+    - Bugfixes
+      - Fix #3838 throws errors if write streams have failed
+
 # 5.6.3
-  - Changes from 5.6.0
+  - Changes from 5.6.2
     - Bugfixes
       - #3790 Fix incorrect speed values in tile plugin
 
 # 5.6.2
-  - Changes from 5.6.0
+  - Changes from 5.6.1
     - Bugfixes
       - Fix incorrect forward datasources getter in facade
       - Fix include `access=private` non-car roads in the car profile

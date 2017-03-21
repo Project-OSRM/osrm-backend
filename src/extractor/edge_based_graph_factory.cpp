@@ -4,6 +4,7 @@
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/guidance/turn_bearing.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
@@ -183,6 +184,15 @@ void EdgeBasedGraphFactory::FlushVectorToStream(
     }
     edge_data_file.write((char *)&(original_edge_data_vector[0]),
                          original_edge_data_vector.size() * sizeof(OriginalEdgeData));
+
+    if (!edge_data_file)
+    {
+        throw util::exception(
+            std::string(
+                "Error in EdgeBasedGraphFactory, flushing vector to stream for `.ebg` file: ") +
+            SOURCE_REF);
+    }
+
     original_edge_data_vector.clear();
 }
 
@@ -338,6 +348,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     const std::uint64_t length_prefix_empty_space{0};
     edge_data_file.write(reinterpret_cast<const char *>(&length_prefix_empty_space),
                          sizeof(length_prefix_empty_space));
+
+    if (!edge_data_file)
+    {
+        throw util::exception(
+            std::string("Error writing dummy value to edge based graph in `.ebg` file: ") +
+            SOURCE_REF);
+    }
 
     std::vector<OriginalEdgeData> original_edge_data_vector;
     original_edge_data_vector.reserve(1024 * 1024);
@@ -608,7 +625,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                             edge_segment_file.write(reinterpret_cast<const char *>(&nodeblock),
                                                     sizeof(nodeblock));
+
                             previous = target_node.node_id;
+                        }
+
+                        if (!edge_segment_file)
+                        {
+                            throw util::exception(
+                                std::string("Error in generating edge lookups and writing to "
+                                            "`.edge_segment_lookup` file: ") +
+                                SOURCE_REF);
                         }
 
                         // We also now write out the mapping between the edge-expanded edges and the
@@ -644,6 +670,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                         turn_penalties_index_file.write(
                             reinterpret_cast<const char *>(&turn_index_block),
                             sizeof(turn_index_block));
+
+                        if (!turn_penalties_index_file)
+                        {
+                            throw util::exception(
+                                std::string("Error writing data for turn penalties to "
+                                            "`.turn_penalties_index` file ") +
+                                SOURCE_REF);
+                        }
                     }
                 }
             }
@@ -659,6 +693,12 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     turn_weight_penalties_file.write(reinterpret_cast<const char *>(turn_weight_penalties.data()),
                                      sizeof(decltype(turn_weight_penalties)::value_type) *
                                          turn_weight_penalties.size());
+    if (!turn_weight_penalties_file)
+    {
+        throw util::exception(
+            std::string("Error writing turn weight penalties to `.turn_weight_penalties` file ") +
+            SOURCE_REF);
+    }
 
     // write duration penalties per turn if we need them
     BOOST_ASSERT(!profile_properties.fallback_to_duration || turn_duration_penalties.size() == 0);
@@ -668,12 +708,20 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     turn_duration_penalties_file.write(
         reinterpret_cast<const char *>(&turn_duration_penalties_header),
         sizeof(turn_duration_penalties_header));
+
     if (!profile_properties.fallback_to_duration)
     {
         BOOST_ASSERT(turn_weight_penalties.size() == turn_duration_penalties.size());
         turn_duration_penalties_file.write(
             reinterpret_cast<const char *>(turn_duration_penalties.data()),
             sizeof(decltype(turn_duration_penalties)::value_type) * turn_duration_penalties.size());
+        if (!turn_duration_penalties_file)
+        {
+            throw util::exception(
+                std::string(
+                    "Error writing turn duration penalties to `.turn_duration_penalties` file ") +
+                SOURCE_REF);
+        }
     }
 
     util::Log() << "Created " << entry_class_hash.size() << " entry classes and "
@@ -693,6 +741,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         turn_lane_data_file.write(reinterpret_cast<const char *>(&lane_data[0]),
                                   sizeof(util::guidance::LaneTupleIdPair) * lane_data.size());
 
+    if (!turn_lane_data_file)
+    {
+        throw util::exception(std::string("Error writing turn lane data file: ") + SOURCE_REF);
+    }
+
     util::Log() << "done.";
 
     FlushVectorToStream(edge_data_file, original_edge_data_vector);
@@ -704,6 +757,10 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     static_assert(sizeof(length_prefix_empty_space) == sizeof(length_prefix), "type mismatch");
 
     edge_data_file.write(reinterpret_cast<const char *>(&length_prefix), sizeof(length_prefix));
+    if (!edge_data_file)
+    {
+        throw util::exception(std::string("Error writing data to `.ebg`") + SOURCE_REF);
+    }
 
     util::Log() << "Generated " << m_edge_based_node_list.size() << " edge based nodes";
     util::Log() << "Node-based graph contains " << node_based_edge_counter << " edges";

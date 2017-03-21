@@ -1,4 +1,6 @@
 #include "extractor/compressed_edge_container.hpp"
+#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/log.hpp"
 
 #include <boost/assert.hpp>
@@ -109,6 +111,13 @@ void CompressedEdgeContainer::SerializeInternalVector(const std::string &path) c
     // write compressed geometry reverse durations
     geometry_out_stream.write((char *)(m_compressed_geometry_rev_durations.data()),
                               sizeof(EdgeWeight) * m_compressed_geometry_rev_durations.size());
+
+    if (!geometry_out_stream)
+    {
+        throw util::exception(std::string("Error in CompressedEdgeContainer, writing compressed "
+                                          "geometry to `.geometry` file: ") +
+                              SOURCE_REF);
+    }
 }
 
 // Adds info for a compressed edge to the container.   edge_id_2

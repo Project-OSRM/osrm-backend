@@ -2,6 +2,7 @@
 #define RANGE_TABLE_HPP
 
 #include "storage/io.hpp"
+#include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 
@@ -221,12 +222,34 @@ std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, USE_SHA
     // write number of block
     const unsigned number_of_blocks = table.diff_blocks.size();
     out.write((char *)&number_of_blocks, sizeof(unsigned));
+    if (!out)
+    {
+        throw util::exception(
+            std::string("Error writing block size of range table to shared memory: ") + SOURCE_REF);
+    }
     // write total length
     out.write((char *)&table.sum_lengths, sizeof(unsigned));
+    if (!out)
+    {
+        throw util::exception(
+            std::string("Error writing total length of range table to shared memory: ") +
+            SOURCE_REF);
+    }
     // write block offsets
     out.write((char *)table.block_offsets.data(), sizeof(unsigned) * table.block_offsets.size());
+    if (!out)
+    {
+        throw util::exception(
+            std::string("Error writing block offsets of range table to shared memory: ") +
+            SOURCE_REF);
+    }
     // write blocks
     out.write((char *)table.diff_blocks.data(), BLOCK_SIZE * table.diff_blocks.size());
+    if (!out)
+    {
+        throw util::exception(
+            std::string("Error writing blocks of range table to shared memory: ") + SOURCE_REF);
+    }
 
     return out;
 }

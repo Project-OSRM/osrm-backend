@@ -263,6 +263,12 @@ class StaticRTree
 
                 // write leaf_node to leaf node file
                 leaf_node_file.write((char *)&current_leaf, sizeof(current_leaf));
+                if (!leaf_node_file)
+                {
+                    throw util::exception(std::string("Error in static_rtree, writing leaf_node to "
+                                                      "leaf node file (`.fileIndex`): ") +
+                                          SOURCE_REF);
+                }
             }
 
             tree_nodes_in_level.emplace_back(current_node);
@@ -336,7 +342,19 @@ class StaticRTree
         std::uint64_t size_of_tree = m_search_tree.size();
         BOOST_ASSERT_MSG(0 < size_of_tree, "tree empty");
         tree_node_file.write((char *)&size_of_tree, sizeof(size_of_tree));
+        if (!tree_node_file)
+        {
+            throw util::exception(
+                std::string("Error in static_rtree, writing size of tree in `.fileIndex` file: ") +
+                SOURCE_REF);
+        }
         tree_node_file.write((char *)&m_search_tree[0], sizeof(TreeNode) * size_of_tree);
+        if (!tree_node_file)
+        {
+            throw util::exception(
+                std::string("Error in static_rtree, writing tree data in `.fileIndex` file: ") +
+                SOURCE_REF);
+        }
 
         MapLeafNodesFile(leaf_node_filename);
     }
