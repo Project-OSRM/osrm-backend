@@ -1,6 +1,6 @@
 {
   "name": "osrm",
-  "version": "5.7.0",
+  "version": "5.7.0-latest",
   "private": true,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++14 designed to run on OpenStreetMap data.",
   "dependencies": {
@@ -8,15 +8,14 @@
     "cucumber": "^1.2.1",
     "d3-queue": "^2.0.3",
     "mkdirp": "^0.5.1",
+    "nan": "^2.1.0",
+    "node-cmake": "^1.2.1",
+    "node-pre-gyp": "^0.6.34",
     "node-timeout": "0.0.4",
     "polyline": "^0.2.0",
     "request": "^2.69.0",
     "rimraf": "^2.5.4",
-    "xmlbuilder": "^4.2.1",
-
-    "nan": "^2.1.0",
-    "node-cmake": "^1.2.1",
-    "node-pre-gyp": "~0.6.30"
+    "xmlbuilder": "^4.2.1"
   },
   "bin": {
     "cucumber": "./node_modules/cucumber/bin/cucumber.js"
@@ -32,17 +31,15 @@
     "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
     "clean-test": "rm -rf test/cache",
     "cucumber": "./node_modules/cucumber/bin/cucumber.js",
-    "build-api-docs": "./scripts/build_api_docs.sh",
-
-    "preinstall": "npm install node-pre-gyp",
+    "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Project-OSRM/osrm-backend.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Project OSRM Team",
+  "license": "BSD 2-Clause",
   "bugs": {
     "url": "https://github.com/Project-OSRM/osrm-backend/issues"
   },
@@ -51,12 +48,23 @@
     "node": ">=4.0.0"
   },
   "devDependencies": {
+    "aws-sdk": "~2.0.31",
+    "babel-cli": "^6.24.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.24.0",
+    "babel-preset-react": "^6.23.0",
+    "babel-preset-stage-0": "^6.22.0",
+    "babelify": "^7.3.0",
+    "brfs": "^1.4.3",
+    "browserify": "^14.1.0",
     "docbox": "^1.0.2",
     "eslint": "^2.4.0",
-
-    "aws-sdk": "~2.0.31",
-    "tape": "^4.2.2"
+    "tape": "^4.2.2",
+    "uglifyjs": "^2.4.10"
   },
+  "bundleDependencies": [
+    "node-pre-gyp"
+  ],
   "main": "lib/index.js",
   "binary": {
     "module_name": "node-osrm",
