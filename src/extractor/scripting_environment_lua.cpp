@@ -245,7 +245,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "weight_precision",
         &ProfileProperties::weight_precision,
         "weight_name",
-        sol::property(&ProfileProperties::SetWeightName, &ProfileProperties::GetWeightName));
+        sol::property(&ProfileProperties::SetWeightName, &ProfileProperties::GetWeightName),
+        "max_turn_weight",
+        sol::property(&ProfileProperties::GetMaxTurnWeight));
 
     context.state.new_usertype<std::vector<std::string>>(
         "vector",
