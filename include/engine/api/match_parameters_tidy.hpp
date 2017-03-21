@@ -84,7 +84,6 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 
     result.can_be_removed.resize(params.coordinates.size(), false);
 
-    result.can_be_removed.set(0, false);
     result.tidied_to_original.push_back(0);
     std::size_t last_good = 0;
 
@@ -110,7 +109,6 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
 
             if (over_distance && over_duration)
             {
-                result.can_be_removed.set(next, false);
                 last_good = next;
                 result.tidied_to_original.push_back(next);
                 running = {0., 0}; // reset running distance and time
@@ -124,7 +122,6 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
         {
             if (over_distance)
             {
-                result.can_be_removed.set(next, false);
                 last_good = next;
                 result.tidied_to_original.push_back(next);
                 running = {0., 0}; // reset running distance and time
