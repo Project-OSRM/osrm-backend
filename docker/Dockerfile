@@ -1,11 +1,15 @@
 FROM alpine:3.5
 
+ARG DOCKER_TAG
+
 RUN mkdir /src
 COPY . /src
 
 RUN mkdir /opt
 WORKDIR /opt
 RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
+    case ${DOCKER_TAG} in *"-debug"*) BUILD_TYPE="Debug";; *) BUILD_TYPE="Release";; esac && \
+    \
     echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
     apk upgrade && \
@@ -21,11 +25,11 @@ RUN NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) && \
     make -j${NPROC} && \
     make install && \
     \
-    echo "Building OSRM" &&\
+    echo "Building OSRM ${DOCKER_TAG}" && \
     cd /src && \
     mkdir build && \
     cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_LTO=On .. && \
+    cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_LTO=On .. && \
     make -j${NPROC} install && \
     cd ../profiles && \
     cp -r * /opt && \
