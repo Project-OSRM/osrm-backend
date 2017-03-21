@@ -24,7 +24,7 @@ before_test:
   - node --version
   - npm --version
   - npm install --ignore-scripts
-  - npm link
+  - npm link --ignore-scripts
   - SET PATH=%CD%\osrm-deps\libs\bin;%PATH%
   - SET OSRM_BUILD_DIR=build\%Configuration%
   - npm test
