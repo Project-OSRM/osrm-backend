@@ -27,6 +27,8 @@ env:
    - CCACHE_VERSION=3.3.1
    - CMAKE_VERSION=3.7.2
    - MASON="$(pwd)/scripts/mason.sh"
+     # auto detect does not work on container instances
+   - JOBS=3
 
 matrix:
   fast_finish: true
@@ -128,16 +130,11 @@ matrix:
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      export JOBS=$((`nproc` + 1))
-    fi
-  - |
     if [ -n "${RUN_CLANG_FORMAT}" ]; then
       ${MASON} install clang-format 3.8.1 && PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh
     fi
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      export JOBS=$((`sysctl -n hw.ncpu` + 1))
       sudo mdutil -i off /
     fi
   - echo "Using ${JOBS} jobs"
