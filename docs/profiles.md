@@ -115,5 +115,9 @@ Attribute          | Read/write? | Type    | Notes
 -------------------|-------------|---------|------------------------------------------------------
 direction_modifier | Read        | Enum    | Geometry of turn. Defined in include/extractor/guidance/turn_instruction.hpp
 turn_type          | Read        | Enum    | Priority of turn. Defined in include/extractor/guidance/turn_instruction.hpp
-has_traffic_light  | Read        | Boolean | Traffic light present at this turn
-duration           | Write       | Float   | Penalty to be applied for this turn (s)
+has_traffic_light  | Read        | Boolean | Is a traffic light present at this turn?
+source_restricted  | Read        | Boolean | Is it from a restricted access road? (See definition in way_function)
+target_restricted  | Read        | Boolean | Is it to a restricted access road? (See definition in way_function)
+angle              | Read        | Float   | Angle of turn in degrees (0-360: 0=u-turn, 180=straight on)
+duration           | Read/write  | Float   | Penalty to be applied for this turn (duration in deciseconds)
+weight             | Read/write  | Float   | Penalty to be applied for this turn (routing weight)
