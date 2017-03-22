@@ -38,14 +38,12 @@ struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Si
 
         root_rule =
             BaseGrammar::query_rule(qi::_r1) > -qi::lit(".json") >
-            -('?' >
-              (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1) |
-               (qi::lit("gaps=") >
-                gaps_type[ph::bind(&engine::api::MatchParameters::gaps_processing, qi::_r1) =
-                              qi::_1]) |
-               (qi::lit("tidying=") > qi::bool_[ph::bind(&engine::api::MatchParameters::use_tidying,
-                                                         qi::_r1) = qi::_1])) %
-                  '&');
+            -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1) |
+                     (qi::lit("gaps=") >
+                      gaps_type[ph::bind(&engine::api::MatchParameters::gaps, qi::_r1) = qi::_1]) |
+                     (qi::lit("tidy=") >
+                      qi::bool_[ph::bind(&engine::api::MatchParameters::tidy, qi::_r1) = qi::_1])) %
+                        '&');
     }
 
   private:
