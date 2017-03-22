@@ -42,20 +42,20 @@ $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTR
 	@echo "Verifiyng data file integrity..."
 	$(MD5SUM) -c data.md5sum
 	@echo "Running osrm-extract..."
-	$(TIMER) "osrm-extract\t$@" $(OSRM_EXTRACT) $< -p $(PROFILE)
+	$(OSRM_EXTRACT) $< -p $(PROFILE)
 
 ch/$(DATA_NAME).osrm.hsgr: ch/$(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
-	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) $<
+	$(OSRM_CONTRACT) $<
 
 corech/$(DATA_NAME).osrm.hsgr: corech/$(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
-	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) --core=0.5 $<
+	$(OSRM_CONTRACT) --core=0.5 $<
 
 mld/$(DATA_NAME).osrm.partition: mld/$(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
 	@echo "Running osrm-partition..."
-	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) $<
-	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) $<
+	$(OSRM_PARTITION) $<
+	$(OSRM_CUSTOMIZE) $<
 
 checksum:
 	$(MD5SUM) $(DATA_NAME).osm.pbf $(DATA_NAME).poly > data.md5sum
