@@ -136,7 +136,6 @@ void ExtractionContainers::FlushVectors()
     all_edges_list.flush();
     name_char_data.flush();
     name_offsets.flush();
-    restrictions_list.flush();
     way_start_end_id_list.flush();
 }
 
@@ -650,7 +649,7 @@ void ExtractionContainers::WriteRestrictions(const std::string &path)
             if (!restriction_container.restriction.condition.empty())
             {
                 // write conditional turn restrictions to disk, for use in contractor later
-                io::write(restrictions_out_file, restriction_container);
+                io::write(restrictions_out_file, restriction_container.restriction);
                 ++written_restriction_count;
             }
             else
@@ -683,10 +682,9 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting " << restrictions_list.size() << " restriction. by from... ";
         TIMER_START(sort_restrictions);
-        stxxl::sort(restrictions_list.begin(),
+        std::sort(restrictions_list.begin(),
                     restrictions_list.end(),
-                    CmpRestrictionContainerByFrom(),
-                    stxxl_memory);
+                    CmpRestrictionContainerByFrom());
         TIMER_STOP(sort_restrictions);
         log << "ok, after " << TIMER_SEC(sort_restrictions) << "s";
     }
@@ -780,10 +778,9 @@ void ExtractionContainers::PrepareRestrictions()
         util::UnbufferedLog log;
         log << "Sorting restrictions. by to  ... " << std::flush;
         TIMER_START(sort_restrictions_to);
-        stxxl::sort(restrictions_list.begin(),
+        std::sort(restrictions_list.begin(),
                     restrictions_list.end(),
-                    CmpRestrictionContainerByTo(),
-                    stxxl_memory);
+                    CmpRestrictionContainerByTo());
         TIMER_STOP(sort_restrictions_to);
         log << "ok, after " << TIMER_SEC(sort_restrictions_to) << "s";
     }

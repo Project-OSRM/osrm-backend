@@ -112,6 +112,7 @@ struct ExtractorConfig
     std::string turn_penalties_index_path;
 
     bool use_metadata;
+    bool parse_conditionals;
 };
 }
 }

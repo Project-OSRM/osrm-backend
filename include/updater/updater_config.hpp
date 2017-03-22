@@ -76,6 +76,7 @@ struct UpdaterConfig final
     std::string datasource_names_path;
     std::string profile_properties_path;
     std::string turn_restrictions_path;
+    std::string tz_file_path;
 };
 }
 }

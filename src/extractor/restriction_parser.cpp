@@ -25,8 +25,8 @@ namespace osrm
 namespace extractor
 {
 
-RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment)
-    : use_turn_restrictions(scripting_environment.GetProfileProperties().use_turn_restrictions)
+RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment, bool parse_conditionals_)
+    : use_turn_restrictions(scripting_environment.GetProfileProperties().use_turn_restrictions), parse_conditionals(parse_conditionals_)
 {
     if (use_turn_restrictions)
     {
@@ -55,10 +55,10 @@ RestrictionParser::RestrictionParser(ScriptingEnvironment &scripting_environment
  * in the corresponding profile. We use it for both namespacing restrictions, as in
  * restriction:motorcar as well as whitelisting if its in except:motorcar.
  */
-boost::optional<std::vector<InputRestrictionContainer>>
-RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_conditional) const
+std::vector<boost::optional<InputRestrictionContainer>>
+RestrictionParser::TryParse(const osmium::Relation &relation) const
 {
-    std::vector<InputRestrictionContainer> parsed_restrictions;
+    std::vector<boost::optional<InputRestrictionContainer>> parsed_restrictions;
     // return if turn restrictions should be ignored
     if (!use_turn_restrictions)
     {
@@ -67,18 +67,20 @@ RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_c
 
     osmium::tags::KeyFilter filter(false);
     filter.add(true, "restriction");
-    if (parse_conditional)
-        filter.add(
-            true,
-            "restriction:conditional"); // TODO put this behind if flag for conditional option
+    if (parse_conditionals)
+    {
+        filter.add(true, "restriction:conditional");
+        for (const auto &namespaced : restrictions)
+        {
+            filter.add(true, "restriction:" + namespaced + ":conditional");
+        }
+    }
 
     // Not only use restriction= but also e.g. restriction:motorcar=
     // Include restriction:{mode}:conditional if flagged
     for (const auto &namespaced : restrictions)
     {
         filter.add(true, "restriction:" + namespaced);
-        if (parse_conditional)
-            filter.add(true, "restriction:" + namespaced + ":conditional");
     }
 
     const osmium::TagList &tag_list = relation.tags();
@@ -172,16 +174,17 @@ RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_c
         }
     }
 
-    // push back a copy of turn restriction
-    parsed_restrictions.push_back(restriction_container);
-
-    // parse conditional tags if flagged
-    if (parse_conditional)
+    // parse conditional tags
+    if (parse_conditionals)
     {
+        osmium::tags::KeyFilter::iterator fi_begin(filter, tag_list.begin(), tag_list.end());
+        osmium::tags::KeyFilter::iterator fi_end(filter, tag_list.end(), tag_list.end());
         for (; fi_begin != fi_end; ++fi_begin)
         {
+            const std::string key(fi_begin->key());
+            const std::string value(fi_begin->value());
             // Parse condition and add independent value/condition pairs
-            const auto &parsed = osrm::util::ParseConditionalRestrictions(fi_begin->value());
+            const auto &parsed = osrm::util::ParseConditionalRestrictions(value);
 
             if (parsed.empty())
             {
@@ -195,12 +198,17 @@ RestrictionParser::TryParse(const osmium::Relation &relation, const bool parse_c
 
             for (auto &p : parsed)
             {
-                restriction_container.restriction.condition = p.condition;
-                parsed_restrictions.push_back(restriction_container);
+                std::vector<util::OpeningHours> parsed = util::ParseOpeningHours(p.condition);
+                if (!parsed.empty())
+                    restriction_container.restriction.condition = std::move(parsed);
             }
         }
     }
-    return boost::make_optional(std::move(parsed_restrictions));
+
+    // push back a copy of turn restriction
+    parsed_restrictions.push_back(boost::make_optional(restriction_container));
+
+    return std::move(parsed_restrictions);
 }
 
 bool RestrictionParser::ShouldIgnoreRestriction(const std::string &except_tag_string) const

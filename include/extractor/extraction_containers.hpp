@@ -48,7 +48,7 @@ class ExtractionContainers
     using STXXLNodeIDVector = stxxl::vector<OSMNodeID>;
     using STXXLNodeVector = stxxl::vector<ExternalMemoryNode>;
     using STXXLEdgeVector = stxxl::vector<InternalExtractorEdge>;
-    using STXXLRestrictionsVector = stxxl::vector<InputRestrictionContainer>;
+    using RestrictionsVector = std::vector<InputRestrictionContainer>;
     using STXXLWayIDStartEndVector = stxxl::vector<FirstAndLastSegmentOfWay>;
     using STXXLNameCharData = stxxl::vector<unsigned char>;
     using STXXLNameOffsets = stxxl::vector<unsigned>;
@@ -59,7 +59,7 @@ class ExtractionContainers
     STXXLNameCharData name_char_data;
     STXXLNameOffsets name_offsets;
     // an adjacency array containing all turn lane masks
-    STXXLRestrictionsVector restrictions_list;
+    RestrictionsVector restrictions_list;
     STXXLWayIDStartEndVector way_start_end_id_list;
     std::unordered_map<OSMNodeID, NodeID> external_to_internal_node_id_map;
     unsigned max_internal_node_id;

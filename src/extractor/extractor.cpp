@@ -251,7 +251,7 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     tbb::concurrent_vector<boost::optional<InputRestrictionContainer>> resulting_restrictions;
 
     // setup restriction parser
-    const RestrictionParser restriction_parser(scripting_environment);
+    const RestrictionParser restriction_parser(scripting_environment, config.parse_conditionals);
 
     // create a vector of iterators into the buffer
     for (std::vector<osmium::memory::Buffer::const_iterator> osm_elements;

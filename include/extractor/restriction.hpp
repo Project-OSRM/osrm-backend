@@ -2,6 +2,7 @@
 #define RESTRICTION_HPP
 
 #include "util/coordinate.hpp"
+#include "util/opening_hours.hpp"
 #include "util/typedefs.hpp"
 
 #include <limits>
@@ -21,7 +22,7 @@ struct TurnRestriction
     WayOrNode from;
     WayOrNode to;
 
-    std::string condition; // todo store this as something cuter than a string
+    std::vector<util::OpeningHours> condition;
 
     struct Bits
     { // mostly unused

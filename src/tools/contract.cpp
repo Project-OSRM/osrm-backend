@@ -62,7 +62,13 @@ return_code parseArguments(int argc, char *argv[], contractor::ContractorConfig 
             &contractor_config.updater_config.log_edge_updates_factor)
             ->default_value(0.0),
         "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge "
-        "weights updated by more than this factor");
+        "weights updated by more than this factor")(
+        "time-zone-file",
+        boost::program_options::value<std::string>(&contractor_config.updater_config.tz_file_path)
+            ->default_value("world/tz_world.shp"),
+            //->default_value(""),
+        "Required for conditional turn restriction parsing, provide a shp or dbf file containing "
+        "time zone boundaries");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
