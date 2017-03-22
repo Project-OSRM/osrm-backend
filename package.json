@@ -1,24 +1,12 @@
 {
   "name": "osrm",
-  "version": "5.7.0-latest",
-  "private": true,
+  "version": "5.7.0-alpha.2",
+  "private": false,
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++14 designed to run on OpenStreetMap data.",
   "dependencies": {
-    "chalk": "^1.1.3",
-    "cucumber": "^1.2.1",
-    "d3-queue": "^2.0.3",
-    "mkdirp": "^0.5.1",
     "nan": "^2.1.0",
     "node-cmake": "^1.2.1",
-    "node-pre-gyp": "^0.6.34",
-    "node-timeout": "0.0.4",
-    "polyline": "^0.2.0",
-    "request": "^2.69.0",
-    "rimraf": "^2.5.4",
-    "xmlbuilder": "^4.2.1"
-  },
-  "bin": {
-    "cucumber": "./node_modules/cucumber/bin/cucumber.js"
+    "node-pre-gyp": "^0.6.34"
   },
   "browserify": {
     "transform": [
@@ -29,8 +17,7 @@
   "scripts": {
     "lint": "eslint -c ./.eslintrc features/step_definitions/ features/support/",
     "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
-    "clean-test": "rm -rf test/cache",
-    "cucumber": "./node_modules/cucumber/bin/cucumber.js",
+    "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
     "install": "node-pre-gyp install --fallback-to-build=false"
   },
@@ -51,9 +38,17 @@
     "docbox": "^1.0.5",
     "documentation": "^4.0.0-beta.18",
     "eslint": "^2.4.0",
-
+    "chalk": "^1.1.3",
+    "cucumber": "^1.2.1",
+    "d3-queue": "^2.0.3",
+    "mkdirp": "^0.5.1",
     "aws-sdk": "~2.0.31",
-    "tape": "^4.2.2"
+    "tape": "^4.2.2",
+    "node-timeout": "0.0.4",
+    "polyline": "^0.2.0",
+    "request": "^2.69.0",
+    "rimraf": "^2.5.4",
+    "xmlbuilder": "^4.2.1"
   },
   "bundleDependencies": [
     "node-pre-gyp"

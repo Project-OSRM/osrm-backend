@@ -26,6 +26,8 @@ cache:
 
 env:
   global:
+   - secure: "hk+32aXXF5t1ApaM2Wjqooz3dx1si907L87WRMkO47WlpJmUUU/Ye+MJk9sViH8MdhOcceocVAmdYl5/WFWOIbDWNlBya9QvXDZyIu2KIre/0QyOCTZbrsif8paBXKIO5O/R4OTvIZ8rvWZsadBdmAT9GSbDhih6FzqXAEgeIYQ="
+   - secure: "VE+cFkseFwW4jK6XwkP0yW3h4DixPJ8+Eb3yKcchGZ5iIJxlZ/8i1vKHYxadgPRwSYwPSB14tF70xj2OmiT2keGzZUfphmPXinBaLEhYk+Bde+GZZkoSl5ND109I/LcyNr0nG9dDgtV6pkvFchgchpyP9JnVOOS0+crEZlAz0RE="
    - CCACHE_TEMPDIR=/tmp/.ccache-temp
    - CCACHE_COMPRESS=1
    - CASHER_TIME_OUT=599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
@@ -228,6 +230,5 @@ after_success:
 
   - |
     if [ -n "${ENABLE_NODE_BINDINGS}" ]; then
-      source ./scripts/travis/build.sh
       ./scripts/travis/publish.sh
     fi

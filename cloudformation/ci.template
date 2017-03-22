@@ -1,0 +1,75 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "user for publishing to s3://mapbox-node-binary/osrm",
+    "Resources": {
+        "User": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "Policies": [
+                    {
+                        "PolicyName": "list",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::mapbox-node-binary",
+                                    "Condition": {
+                                        "StringLike": {
+                                            "s3:prefix": [
+                                                "osrm/*"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "publish",
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:DeleteObject",
+                                        "s3:GetObject",
+                                        "s3:GetObjectAcl",
+                                        "s3:PutObject",
+                                        "s3:PutObjectAcl"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::mapbox-node-binary/osrm/*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "AccessKey": {
+            "Type": "AWS::IAM::AccessKey",
+            "Properties": {
+                "UserName": {
+                    "Ref": "User"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "AccessKeyId": {
+            "Value": {
+                "Ref": "AccessKey"
+            }
+        },
+        "SecretAccessKey": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "AccessKey",
+                    "SecretAccessKey"
+                ]
+            }
+        }
+    }
+}
