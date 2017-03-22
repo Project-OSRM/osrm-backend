@@ -280,7 +280,7 @@ In addition to the [general options](#general-options) the following options are
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamps for the input locations in seconds since UNIX epoch. Timestamps need to be monotonically increasing. |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
 |gaps        |`split` (default), `ignore`                     |Allows the input track splitting based on huge timestamp gaps between points.             |
-|tidying     |`true`, `false` (default)                       |Allows the input track modification to obtain better matching quality for noisy tracks.   |
+|tidy        |`true`, `false` (default)                       |Allows the input track modification to obtain better matching quality for noisy tracks.   |
 
 |Parameter   |Values                             |
 |------------|-----------------------------------|

@@ -62,7 +62,7 @@ Feature: Basic Map Matching
         Given a grid size of 100 meters
 
         Given the query options
-            | tidying | true |
+            | tidy | true |
 
         Given the node map
             """
@@ -82,7 +82,7 @@ Feature: Basic Map Matching
         Given a grid size of 100 meters
 
         Given the query options
-            | tidying | true |
+            | tidy | true |
 
         Given the node map
             """
@@ -102,7 +102,7 @@ Feature: Basic Map Matching
         Given a grid size of 8 meters
 
         Given the query options
-            | tidying | true |
+            | tidy | true |
 
         Given the node map
             """

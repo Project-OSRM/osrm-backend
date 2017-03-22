@@ -148,7 +148,7 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
 
     SubMatchingList sub_matchings;
     api::tidy::Result tidied;
-    if (parameters.use_tidying)
+    if (parameters.tidy)
     {
         // Transparently tidy match parameters, do map matching on tidied parameters.
         // Then use the mapping to restore the original <-> tidied relationship.
@@ -207,7 +207,7 @@ Status MatchPlugin::HandleRequest(const datafacade::ContiguousInternalMemoryData
                                tidied.parameters.coordinates,
                                tidied.parameters.timestamps,
                                tidied.parameters.radiuses,
-                               parameters.gaps_processing == api::MatchParameters::GapsType::Split);
+                               parameters.gaps == api::MatchParameters::GapsType::Split);
 
     if (sub_matchings.size() == 0)
     {

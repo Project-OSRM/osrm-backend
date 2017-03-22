@@ -63,23 +63,20 @@ struct MatchParameters : public RouteParameters
                           RouteParameters::GeometriesType::Polyline,
                           RouteParameters::OverviewType::Simplified,
                           {}),
-          gaps_processing(GapsType::Split), use_tidying(false)
+          gaps(GapsType::Split), tidy(false)
     {
     }
 
     template <typename... Args>
-    MatchParameters(std::vector<unsigned> timestamps_,
-                    GapsType gaps_processing_,
-                    bool use_tidying_,
-                    Args... args_)
+    MatchParameters(std::vector<unsigned> timestamps_, GapsType gaps_, bool tidy_, Args... args_)
         : RouteParameters{std::forward<Args>(args_)...}, timestamps{std::move(timestamps_)},
-          gaps_processing(gaps_processing_), use_tidying(use_tidying_)
+          gaps(gaps_), tidy(tidy_)
     {
     }
 
     std::vector<unsigned> timestamps;
-    GapsType gaps_processing;
-    bool use_tidying;
+    GapsType gaps;
+    bool tidy;
 
     bool IsValid() const
     {
