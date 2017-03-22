@@ -3,8 +3,7 @@ language: cpp
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
-sudo: required
+sudo: false
 dist: trusty
 
 notifications:
@@ -180,16 +179,16 @@ install:
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
   - ccache -s
-  - sudo make install
+    #- sudo make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       sudo ldconfig
     fi
   - popd
-  - mkdir example/build && pushd example/build
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-  - make --jobs=${JOBS}
-  - popd
+  #- mkdir example/build && pushd example/build
+  #- cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+  #- make --jobs=${JOBS}
+  #- popd
   - npm run build-api-docs
 
 script:
