@@ -48,7 +48,7 @@
     "node": ">=4.0.0"
   },
   "devDependencies": {
-    "docbox": "^1.0.2",
+    "docbox": "^1.0.5",
     "documentation": "^4.0.0-beta.18",
     "eslint": "^2.4.0",
 
