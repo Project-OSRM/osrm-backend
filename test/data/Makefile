@@ -9,9 +9,7 @@ OSRM_CONTRACT:=$(OSRM_BUILD_DIR)/osrm-contract
 OSRM_PARTITION:=$(OSRM_BUILD_DIR)/osrm-partition
 OSRM_CUSTOMIZE:=$(OSRM_BUILD_DIR)/osrm-customize
 OSRM_ROUTED:=$(OSRM_BUILD_DIR)/osrm-routed
-POLY2REQ:=$(SCRIPT_ROOT)/poly2req.js
 MD5SUM:=$(SCRIPT_ROOT)/md5sum.js
-TIMER:=$(SCRIPT_ROOT)/timer.sh
 PROFILE:=$(PROFILE_ROOT)/car.lua
 
 all: data
@@ -59,31 +57,7 @@ mld/$(DATA_NAME).osrm.partition: mld/$(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITI
 	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) $<
 	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) $<
 
-$(DATA_NAME).requests: $(DATA_NAME).poly
-	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests
-
-benchmark: data $(DATA_NAME).requests
-	@echo "Running benchmark..."
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CH ch/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
-	@sleep 1
-	$(TIMER) "queries\tCH" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
-	@cat osrm-routed.pid | xargs kill
-	@rm osrm-routed.pid
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=CoreCH corech/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
-	@sleep 1
-	$(TIMER) "queries\tCoreCH" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
-	@cat osrm-routed.pid | xargs kill
-	@rm osrm-routed.pid
-	@/bin/sh -c '$(OSRM_ROUTED) --algorithm=MLD mld/$(DATA_NAME).osrm > /dev/null & echo "$$!" > osrm-routed.pid'
-	@sleep 1
-	$(TIMER) "queries\tMLD" "cat $(DATA_NAME).requests | xargs curl &> /dev/null"
-	@cat osrm-routed.pid | xargs kill
-	@rm osrm-routed.pid
-	@echo "**** timings ***"
-	@cat /tmp/osrm.timings
-	@echo "****************"
-
 checksum:
 	$(MD5SUM) $(DATA_NAME).osm.pbf $(DATA_NAME).poly > data.md5sum
 
-.PHONY: clean checksum benchmark data
+.PHONY: clean checksum data

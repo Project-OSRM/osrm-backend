@@ -171,31 +171,33 @@ install:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
+  - export OSRM_INSTALL_DIR="$(pwd)/install-osrm"
   - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
   - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DENABLE_CCACHE=ON -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF}
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DENABLE_CCACHE=ON -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
   - ccache -s
-    #- sudo make install
+  - make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      sudo ldconfig
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib
     fi
   - popd
-  #- mkdir example/build && pushd example/build
-  #- cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-  #- make --jobs=${JOBS}
-  #- popd
+  - mkdir example/build && pushd example/build
+  - export PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+  - make --jobs=${JOBS}
+  - popd
   - npm run build-api-docs
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
-  - make -C test/data benchmark
+  - make -C test/data
   - ./example/build/osrm-example test/data/ch/monaco.osrm
   # All tests assume to be run from the build directory
   - pushd ${OSRM_BUILD_DIR}
