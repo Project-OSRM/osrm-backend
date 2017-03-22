@@ -202,7 +202,8 @@ install:
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make --jobs=${JOBS}
   - popd
-  - yarn run docs
+  # building docs only works with npm3+ not with yarn or npm2
+  #- yarn run docs
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
