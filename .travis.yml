@@ -55,12 +55,13 @@ matrix:
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
 
     - os: linux
+      sudo: true
       compiler: "mason-linux-debug-santize"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON ENABLE_NODE_BINDINGS=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON TARGET_ARCH='x86_64-asan' ENABLE_SANITIZER=ON ENABLE_NODE_BINDINGS=ON
 
     # Release Builds
     - os: linux
@@ -98,7 +99,7 @@ matrix:
       osx_image: xcode8.2
       compiler: "mason-osx-release"
       # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON
 
       # Disabled because of CI slowness
       #- os: linux
