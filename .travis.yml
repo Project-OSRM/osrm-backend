@@ -164,10 +164,7 @@ before_install:
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
   # setup stxxl to use only internal memory
-  - pushd $HOME
-  - echo "disk=,2GB,memory" > stxxl.cfg
-  - export STXXLCFG=$HOME/stxxl.cfg
-  - popd
+  - export STXXLCFG=test/.stxxl
 
 install:
   - |
