@@ -116,11 +116,11 @@ class CellCustomizer
         }
 
         // Relax base graph edges if a sub-cell border edge
-        for (auto edge : graph.GetInternalEdgeRange(level, node))
+        for (auto edge : graph.GetAdjacentEdgeRange(node))
         {
             const NodeID to = graph.GetTarget(edge);
             const auto &data = graph.GetEdgeData(edge);
-            if (data.forward &&
+            if (data.forward && partition.GetCell(level, to) == id &&
                 (first_level ||
                  partition.GetCell(level - 1, node) != partition.GetCell(level - 1, to)))
             {
