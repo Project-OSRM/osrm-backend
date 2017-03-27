@@ -110,9 +110,17 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, UseSharedMemory>
         // which can be smaller then the total number of nodes.
         // this will save memory in case we sort the border nodes first
         if (index >= node_to_edge_offset.size() - 1)
-            return SuperT::BeginEdges(node);
+        {
+            // On level 0 all edges are border edges
+            if (level == 0)
+                return SuperT::BeginEdges(node);
+            else
+                return SuperT::EndEdges(node);
+        }
         else
+        {
             return SuperT::BeginEdges(node) + node_to_edge_offset[index + level];
+        }
     }
 
     // We save the level as sentinel at the end
