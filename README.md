@@ -41,18 +41,26 @@ The easiest and quickest way to setup your own routing engine backend is to use 
 
 ### Using Docker
 
-We base the Docker images on Alpine Linux and make sure they are as lightweight as possible (around 10-15 MB).
-In the following, replace `X.Y.Z` with the current stable release version.
+We base [our Docker images](https://hub.docker.com/r/osrm/osrm-backend/) on Alpine Linux and make sure they are as lightweight as possible.
 
 ```
 wget http://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
 
-docker run -t -v $(pwd):/data osrm/osrm-backend:vX.Y.Z osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
-docker run -t -v $(pwd):/data osrm/osrm-backend:vX.Y.Z osrm-contract /data/berlin-latest.osrm
-docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend:vX.Y.Z osrm-routed /data/berlin-latest.osrm
+docker run -t -v $(pwd):/data osrm/osrm-backend osrm-extract -p /opt/car.lua /data/berlin-latest.osm.pbf
+docker run -t -v $(pwd):/data osrm/osrm-backend osrm-contract /data/berlin-latest.osrm
+docker run -t -i -p 5000:5000 -v $(pwd):/data osrm/osrm-backend osrm-routed /data/berlin-latest.osrm
 
-curl http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true
+curl "http://127.0.0.1:5000/route/v1/driving/13.388860,52.517037;13.385983,52.496891?steps=true"
 ```
+
+In case Docker complains about not being able to connect to the Docker daemon make sure you are in the `docker` group.
+
+```
+sudo usermod -aG docker $USER
+```
+
+After adding yourself to the `docker` group make sure to log out and back in again with your terminal.
+
 
 ### Building from Source
 
