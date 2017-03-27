@@ -108,12 +108,12 @@ int Partitioner::Run(const PartitionConfig &config)
         makeBisectionGraph(compressed_node_based_graph.coordinates,
                            adaptToBisectionEdge(std::move(compressed_node_based_graph.edges)));
 
-    util::Log() << " running partition: " << config.minimum_cell_size << " " << config.balance
+    util::Log() << " running partition: " << config.max_cell_sizes.front() << " " << config.balance
                 << " " << config.boundary_factor << " " << config.num_optimizing_cuts << " "
                 << config.small_component_size
                 << " # max_cell_size balance boundary cuts small_component_size";
     RecursiveBisection recursive_bisection(graph,
-                                           config.minimum_cell_size,
+                                           config.max_cell_sizes.front(),
                                            config.balance,
                                            config.boundary_factor,
                                            config.num_optimizing_cuts,
@@ -161,11 +161,7 @@ int Partitioner::Run(const PartitionConfig &config)
     std::vector<Partition> partitions;
     std::vector<std::uint32_t> level_to_num_cells;
     std::tie(partitions, level_to_num_cells) =
-        bisectionToPartition(edge_based_partition_ids,
-                             {config.minimum_cell_size,
-                              config.minimum_cell_size * 32,
-                              config.minimum_cell_size * 32 * 16,
-                              config.minimum_cell_size * 32 * 16 * 32});
+        bisectionToPartition(edge_based_partition_ids, config.max_cell_sizes);
 
     auto num_unconnected = removeUnconnectedBoundaryNodes(*edge_based_graph, partitions);
     util::Log() << "Fixed " << num_unconnected << " unconnected nodes";

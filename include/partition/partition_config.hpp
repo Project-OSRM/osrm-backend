@@ -13,7 +13,12 @@ namespace partition
 
 struct PartitionConfig
 {
-    PartitionConfig() : requested_num_threads(0) {}
+    PartitionConfig()
+        : requested_num_threads(0), balance(1.2), boundary_factor(0.25), num_optimizing_cuts(10),
+          small_component_size(1000),
+          max_cell_sizes{128, 128 * 32, 128 * 32 * 16, 128 * 32 * 16 * 32}
+    {
+    }
 
     void UseDefaults()
     {
@@ -49,11 +54,11 @@ struct PartitionConfig
 
     unsigned requested_num_threads;
 
-    std::size_t minimum_cell_size;
     double balance;
     double boundary_factor;
     std::size_t num_optimizing_cuts;
     std::size_t small_component_size;
+    std::vector<std::size_t> max_cell_sizes;
 };
 }
 }

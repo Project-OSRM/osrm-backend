@@ -8,9 +8,11 @@
 
 #include <tbb/task_scheduler_init.h>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 #include <iostream>
 
@@ -23,7 +25,7 @@ enum class return_code : unsigned
     exit
 };
 
-return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &partition_config)
+return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &config)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -34,40 +36,47 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &p
     config_options.add_options()
         //
         ("threads,t",
-         boost::program_options::value<unsigned int>(&partition_config.requested_num_threads)
+         boost::program_options::value<unsigned int>(&config.requested_num_threads)
              ->default_value(tbb::task_scheduler_init::default_num_threads()),
          "Number of threads to use")
         //
-        ("min-cell-size",
-         boost::program_options::value<std::size_t>(&partition_config.minimum_cell_size)
-             ->default_value(128),
-         "Bisection termination citerion based on cell size")
-        //
         ("balance",
-         boost::program_options::value<double>(&partition_config.balance)->default_value(1.2),
+         boost::program_options::value<double>(&config.balance)->default_value(config.balance),
          "Balance for left and right side in single bisection")
         //
         ("boundary",
-         boost::program_options::value<double>(&partition_config.boundary_factor)
-             ->default_value(0.25),
+         boost::program_options::value<double>(&config.boundary_factor)
+             ->default_value(config.boundary_factor),
          "Percentage of embedded nodes to contract as sources and sinks")
         //
         ("optimizing-cuts",
-         boost::program_options::value<std::size_t>(&partition_config.num_optimizing_cuts)
-             ->default_value(10),
+         boost::program_options::value<std::size_t>(&config.num_optimizing_cuts)
+             ->default_value(config.num_optimizing_cuts),
          "Number of cuts to use for optimizing a single bisection")
         //
         ("small-component-size",
-         boost::program_options::value<std::size_t>(&partition_config.small_component_size)
-             ->default_value(1000),
-         "Size threshold for small components.");
+         boost::program_options::value<std::size_t>(&config.small_component_size)
+             ->default_value(config.small_component_size),
+         "Size threshold for small components.")
+        //
+        ("max-cell-sizes",
+         boost::program_options::value<std::vector<std::size_t>>(&config.max_cell_sizes)
+             ->multitoken()
+             ->default_value(config.max_cell_sizes,
+                             boost::algorithm::join(
+                                 config.max_cell_sizes |
+                                     boost::adaptors::transformed(
+                                         static_cast<std::string (*)(std::size_t)>(std::to_string)),
+                                 " ")),
+         "Maximum cell sizes starting from the level 1. The first cell size value is a bisection "
+         "termination citerion");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
     hidden_options.add_options()(
         "input,i",
-        boost::program_options::value<boost::filesystem::path>(&partition_config.base_path),
+        boost::program_options::value<boost::filesystem::path>(&config.base_path),
         "Input file in .osrm format");
 
     // positional option
@@ -116,6 +125,24 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &p
     if (!option_variables.count("input"))
     {
         std::cout << visible_options;
+        return return_code::fail;
+    }
+
+    if (config.max_cell_sizes.empty())
+    {
+        util::Log(logERROR) << "The maximum cell sizes array must be non-empty";
+        return return_code::fail;
+    }
+
+    if (!std::is_sorted(config.max_cell_sizes.begin(), config.max_cell_sizes.end()))
+    {
+        util::Log(logERROR) << "The maximum cell sizes array must be sorted in non-descending order.";
+        return return_code::fail;
+    }
+
+    if (config.max_cell_sizes.front() < 2)
+    {
+        util::Log(logERROR) << "Cells on the first level must have at least 2 nodes";
         return return_code::fail;
     }
 

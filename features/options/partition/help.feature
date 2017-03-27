@@ -10,11 +10,11 @@ Feature: osrm-partition command line options: help
         And stdout should contain "--help"
         And stdout should contain "Configuration:"
         And stdout should contain "--threads"
-        And stdout should contain "--min-cell-size"
         And stdout should contain "--balance"
         And stdout should contain "--boundary"
         And stdout should contain "--optimizing-cuts"
         And stdout should contain "--small-component-size"
+        And stdout should contain "--max-cell-sizes"
         And it should exit with an error
 
     Scenario: osrm-partition - Help, short
@@ -26,11 +26,11 @@ Feature: osrm-partition command line options: help
         And stdout should contain "--help"
         And stdout should contain "Configuration:"
         And stdout should contain "--threads"
-        And stdout should contain "--min-cell-size"
         And stdout should contain "--balance"
         And stdout should contain "--boundary"
         And stdout should contain "--optimizing-cuts"
         And stdout should contain "--small-component-size"
+        And stdout should contain "--max-cell-sizes"
         And it should exit successfully
 
     Scenario: osrm-partition - Help, long
@@ -42,9 +42,9 @@ Feature: osrm-partition command line options: help
         And stdout should contain "--help"
         And stdout should contain "Configuration:"
         And stdout should contain "--threads"
-        And stdout should contain "--min-cell-size"
         And stdout should contain "--balance"
         And stdout should contain "--boundary"
         And stdout should contain "--optimizing-cuts"
         And stdout should contain "--small-component-size"
+        And stdout should contain "--max-cell-sizes"
         And it should exit successfully
