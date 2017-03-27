@@ -444,16 +444,28 @@ function way_function (way, result)
   end
 
   -- cycleways
+  local has_cycleway_left, has_cycleway_right
   if cycleway and profile.cycleway_tags[cycleway] then
-    result.forward_speed = profile.bicycle_speeds["cycleway"]
-    result.backward_speed = profile.bicycle_speeds["cycleway"]
+    has_cycleway_left = true
+    has_cycleway_right = true
   elseif cycleway_left and profile.cycleway_tags[cycleway_left] then
-    result.forward_speed = profile.bicycle_speeds["cycleway"]
-    result.backward_speed = profile.bicycle_speeds["cycleway"]
+    has_cycleway_left = true
+    has_cycleway_right = true
   elseif cycleway_right and profile.cycleway_tags[cycleway_right] then
+    has_cycleway_left = true
+    has_cycleway_right = true
+  end
+  if has_cycleway_right and
+     (result.forward_mode == mode.inaccessible or
+      result.forward_mode == mode.cycling) then
     result.forward_speed = profile.bicycle_speeds["cycleway"]
+  end
+  if has_cycleway_left and
+     (result.backward_mode == mode.inaccessible or
+      result.backward_mode == mode.cycling) then
     result.backward_speed = profile.bicycle_speeds["cycleway"]
   end
+
 
   -- dismount
   if bicycle == "dismount" then
