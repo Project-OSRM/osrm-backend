@@ -39,9 +39,9 @@ class CellCustomizer
                 const EdgeWeight weight = heap.GetKey(node);
 
                 if (level == 1)
-                    RelaxNode<true>(graph, cells, heap, level, id, node, weight);
+                    RelaxNode<true>(graph, cells, heap, level, node, weight);
                 else
-                    RelaxNode<false>(graph, cells, heap, level, id, node, weight);
+                    RelaxNode<false>(graph, cells, heap, level, node, weight);
 
                 destinations_set.erase(node);
             }
@@ -85,7 +85,6 @@ class CellCustomizer
                    const partition::CellStorage &cells,
                    Heap &heap,
                    LevelID level,
-                   CellID id,
                    NodeID node,
                    EdgeWeight weight) const
     {
