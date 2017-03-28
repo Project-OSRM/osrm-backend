@@ -12,7 +12,9 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/range/adaptor/tokenized.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
 
 #include <iostream>
 
@@ -24,6 +26,45 @@ enum class return_code : unsigned
     fail,
     exit
 };
+
+struct MaxCellSizesArgument
+{
+    std::vector<size_t> value;
+};
+
+std::ostream &operator<<(std::ostream &os, const MaxCellSizesArgument &arg)
+{
+    return os << boost::algorithm::join(
+               arg.value | boost::adaptors::transformed([](auto x) { return std::to_string(x); }),
+               ",");
+}
+
+void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSizesArgument *, int)
+{
+    using namespace boost::program_options;
+    using namespace boost::adaptors;
+
+    // Make sure no previous assignment to 'v' was made.
+    validators::check_first_occurrence(v);
+    // Extract the first string from 'values'. If there is more than
+    // one string, it's an error, and exception will be thrown.
+    const std::string &s = validators::get_single_string(values);
+
+    std::vector<size_t> output;
+    boost::copy(s | tokenized(boost::regex(","), -1) | transformed([](const auto &x) {
+                    try
+                    {
+                        return boost::lexical_cast<std::size_t>(x);
+                    }
+                    catch (const boost::bad_lexical_cast &)
+                    {
+                        throw validation_error(validation_error::invalid_option_value);
+                    }
+                }),
+                std::back_inserter(output));
+
+    v = boost::any(MaxCellSizesArgument{output});
+}
 
 return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &config)
 {
@@ -60,14 +101,8 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &c
          "Size threshold for small components.")
         //
         ("max-cell-sizes",
-         boost::program_options::value<std::vector<std::size_t>>(&config.max_cell_sizes)
-             ->multitoken()
-             ->default_value(config.max_cell_sizes,
-                             boost::algorithm::join(
-                                 config.max_cell_sizes |
-                                     boost::adaptors::transformed(
-                                         static_cast<std::string (*)(std::size_t)>(std::to_string)),
-                                 " ")),
+         boost::program_options::value<MaxCellSizesArgument>()->default_value(
+             MaxCellSizesArgument{config.max_cell_sizes}),
          "Maximum cell sizes starting from the level 1. The first cell size value is a bisection "
          "termination citerion");
 
@@ -128,23 +163,16 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &c
         return return_code::fail;
     }
 
-    if (config.max_cell_sizes.empty())
+    if (option_variables.count("max-cell-sizes"))
     {
-        util::Log(logERROR) << "The maximum cell sizes array must be non-empty";
-        return return_code::fail;
-    }
+        config.max_cell_sizes = option_variables["max-cell-sizes"].as<MaxCellSizesArgument>().value;
 
-    if (!std::is_sorted(config.max_cell_sizes.begin(), config.max_cell_sizes.end()))
-    {
-        util::Log(logERROR)
-            << "The maximum cell sizes array must be sorted in non-descending order.";
-        return return_code::fail;
-    }
-
-    if (config.max_cell_sizes.front() < 2)
-    {
-        util::Log(logERROR) << "Cells on the first level must have at least 2 nodes";
-        return return_code::fail;
+        if (!std::is_sorted(config.max_cell_sizes.begin(), config.max_cell_sizes.end()))
+        {
+            util::Log(logERROR)
+                << "The maximum cell sizes array must be sorted in non-descending order.";
+            return return_code::fail;
+        }
     }
 
     return return_code::ok;
