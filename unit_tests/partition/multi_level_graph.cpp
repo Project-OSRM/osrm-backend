@@ -199,4 +199,25 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
     CHECK_EQUAL_RANGE(graph.GetBorderEdgeRange(4, 12), graph.FindEdge(12, 11));
 }
 
+BOOST_AUTO_TEST_CASE(check_last_internal_edge)
+{
+    //                      a--b--c--d
+    std::vector<CellID> l1{{0, 0, 1, 1}};
+    std::vector<CellID> l2{{0, 0, 1, 1}};
+    MultiLevelPartition mlp{{l1, l2}, {2, 2}};
+
+    std::vector<MockEdge> edges = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}};
+
+    auto graph = makeGraph(mlp, edges);
+
+    auto all_edges = graph.GetAdjacentEdgeRange(3);
+    CHECK_EQUAL_COLLECTIONS(graph.GetBorderEdgeRange(0, 3), all_edges);
+    BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 3).size(), 0);
+    BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(2, 3).size(), 0);
+
+    BOOST_CHECK_EQUAL(graph.GetInternalEdgeRange(0, 3).size(), 0);
+    CHECK_EQUAL_COLLECTIONS(graph.GetInternalEdgeRange(1, 3), all_edges);
+    CHECK_EQUAL_COLLECTIONS(graph.GetInternalEdgeRange(2, 3), all_edges);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
