@@ -3,7 +3,7 @@ Feature: Multi level routing
 
     Background:
         Given the profile "testbot"
-        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 4 16 64 --"
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 4,16,64"
 
     Scenario: Testbot - Multi level routing check partition
         Given the node map
@@ -31,7 +31,7 @@ Feature: Multi level routing
             | be    | primary |
 
         And the data has been extracted
-        When I run "osrm-partition --max-cell-sizes 4 16 --small-component-size 1 {processed_file}"
+        When I run "osrm-partition --max-cell-sizes 4,16 --small-component-size 1 {processed_file}"
         Then it should exit successfully
         And stdout should not contain "level 1 #cells 1 bit size 1"
 
@@ -111,7 +111,7 @@ Feature: Multi level routing
                           │   │
                           l───k
             """
-        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 4 16 --"
+        And the partition extra arguments "--small-component-size 1 --max-cell-sizes 4,16"
         And the ways
             | nodes | maxspeed |
             | abcda |        5 |
