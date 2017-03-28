@@ -136,7 +136,8 @@ return_code parseArguments(int argc, char *argv[], partition::PartitionConfig &c
 
     if (!std::is_sorted(config.max_cell_sizes.begin(), config.max_cell_sizes.end()))
     {
-        util::Log(logERROR) << "The maximum cell sizes array must be sorted in non-descending order.";
+        util::Log(logERROR)
+            << "The maximum cell sizes array must be sorted in non-descending order.";
         return return_code::fail;
     }
 
