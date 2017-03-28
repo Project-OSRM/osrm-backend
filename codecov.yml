@@ -1,7 +1,6 @@
 coverage:
 
   ignore:
-    - unit_tests/.*
     - third_party/.*
 
 comment: off
