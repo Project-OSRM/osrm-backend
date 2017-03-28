@@ -51,7 +51,7 @@ void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSize
     const std::string &s = validators::get_single_string(values);
 
     std::vector<size_t> output;
-    boost::copy(s | tokenized(boost::regex(","), -1) | transformed([](const auto &x) {
+    boost::copy(s | tokenized(boost::regex("[^,]+")) | transformed([](const auto &x) {
                     try
                     {
                         return boost::lexical_cast<std::size_t>(x);
