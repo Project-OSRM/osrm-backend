@@ -46,11 +46,11 @@ BOOST_AUTO_TEST_SUITE(multi_level_graph)
 
 BOOST_AUTO_TEST_CASE(check_edges_sorting)
 {
-    // node:                0  1  2  3  4  5  6  7  8  9 10 11 12
-    std::vector<CellID> l1{{0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6}};
-    std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 4}};
-    std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2}};
-    std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
+    // node:                0  1  2  3  4  5  6  7  8  9 10 11 12 13
+    std::vector<CellID> l1{{0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6}};
+    std::vector<CellID> l2{{0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4}};
+    std::vector<CellID> l3{{0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2}};
+    std::vector<CellID> l4{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1}};
     MultiLevelPartition mlp{{l1, l2, l3, l4}, {7, 5, 3, 2}};
 
     std::vector<MockEdge> edges = {
@@ -69,7 +69,8 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
         {9, 8},   //  i   i   i   i
         {10, 11}, //  i   i   i   i
         {11, 10}, //  i   i   i   i
-        {11, 12}  //  b   b   b   b
+        {11, 12}, //  b   b   b   b
+        {12, 13}  //  i   i   i   i
     };
 
     auto graph = makeGraph(mlp, edges);
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
     // the union of border and internal edge needs to equal the adjacent edges
     for (auto level : util::irange<LevelID>(0, 4))
     {
-        for (auto node : util::irange<NodeID>(0, 13))
+        for (auto node : util::irange<NodeID>(0, 14))
         {
             const auto adjacent = graph.GetAdjacentEdgeRange(node);
             const auto border = graph.GetBorderEdgeRange(level, node);
@@ -122,6 +123,7 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 10).size(), 0);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 11).size(), 2);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 12).size(), 1);
+    BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(1, 13).size(), 0);
 
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(2, 0).size(), 1);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(2, 1).size(), 0);
@@ -136,6 +138,7 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(2, 10).size(), 0);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(2, 11).size(), 2);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(2, 12).size(), 1);
+    BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(2, 13).size(), 0);
 
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(3, 0).size(), 1);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(3, 1).size(), 0);
@@ -150,6 +153,7 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(3, 10).size(), 0);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(3, 11).size(), 1);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(3, 12).size(), 1);
+    BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(3, 13).size(), 0);
 
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(4, 0).size(), 0);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(4, 1).size(), 0);
@@ -164,6 +168,7 @@ BOOST_AUTO_TEST_CASE(check_edges_sorting)
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(4, 10).size(), 0);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(4, 11).size(), 1);
     BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(3, 12).size(), 1);
+    BOOST_CHECK_EQUAL(graph.GetBorderEdgeRange(4, 13).size(), 0);
 
     CHECK_EQUAL_RANGE(graph.GetBorderEdgeRange(1, 0), graph.FindEdge(0, 4));
     CHECK_EQUAL_RANGE(graph.GetBorderEdgeRange(1, 3), graph.FindEdge(3, 7));
