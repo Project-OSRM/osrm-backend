@@ -397,21 +397,24 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             BOOST_ASSERT(edge_iterator->source_coordinate.lon !=
                          util::FixedLongitude{std::numeric_limits<std::int32_t>::min()});
 
-            const util::Coordinate target_coord{node_iterator->lon, node_iterator->lat};
-            const double distance = util::coordinate_calculation::greatCircleDistance(
-                edge_iterator->source_coordinate, target_coord);
+            util::Coordinate source_coord(edge_iterator->source_coordinate);
+            util::Coordinate target_coord{node_iterator->lon, node_iterator->lat};
 
-            auto weight = edge_iterator->weight_data(distance);
-            auto duration = edge_iterator->duration_data(distance);
+            // flip source and target coordinates if segment is in backward direction only
+            if (!edge_iterator->result.forward && edge_iterator->result.backward)
+                std::swap(source_coord, target_coord);
 
-            ExtractionSegment extracted_segment(
-                edge_iterator->source_coordinate, target_coord, distance, weight, duration);
-            scripting_environment.ProcessSegment(extracted_segment);
+            const auto distance =
+                util::coordinate_calculation::greatCircleDistance(source_coord, target_coord);
+            const auto weight = edge_iterator->weight_data(distance);
+            const auto duration = edge_iterator->duration_data(distance);
+
+            ExtractionSegment segment(source_coord, target_coord, distance, weight, duration);
+            scripting_environment.ProcessSegment(segment);
 
             auto &edge = edge_iterator->result;
-            edge.weight =
-                std::max<EdgeWeight>(1, std::round(extracted_segment.weight * weight_multiplier));
-            edge.duration = std::max<EdgeWeight>(1, std::round(extracted_segment.duration * 10.));
+            edge.weight = std::max<EdgeWeight>(1, std::round(segment.weight * weight_multiplier));
+            edge.duration = std::max<EdgeWeight>(1, std::round(segment.duration * 10.));
 
             // assign new node id
             auto id_iter = external_to_internal_node_id_map.find(node_iterator->node_id);
