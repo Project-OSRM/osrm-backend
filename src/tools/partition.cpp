@@ -12,11 +12,11 @@
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <boost/range/adaptor/tokenized.hpp>
 #include <boost/range/adaptor/transformed.hpp>
-#include <boost/range/algorithm/copy.hpp>
 
 #include <iostream>
+#include <iterator>
+#include <regex>
 
 using namespace osrm;
 
@@ -34,9 +34,8 @@ struct MaxCellSizesArgument
 
 std::ostream &operator<<(std::ostream &os, const MaxCellSizesArgument &arg)
 {
-    return os << boost::algorithm::join(
-               arg.value | boost::adaptors::transformed([](auto x) { return std::to_string(x); }),
-               ",");
+    auto to_string = [](std::size_t x) { return std::to_string(x); };
+    return os << boost::algorithm::join(arg.value | boost::adaptors::transformed(to_string), ",");
 }
 
 void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSizesArgument *, int)
@@ -50,18 +49,21 @@ void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSize
     // one string, it's an error, and exception will be thrown.
     const std::string &s = validators::get_single_string(values);
 
+    std::regex re(",");
     std::vector<size_t> output;
-    boost::copy(s | tokenized(boost::regex("[^,]+")) | transformed([](const auto &x) {
-                    try
-                    {
-                        return boost::lexical_cast<std::size_t>(x);
-                    }
-                    catch (const boost::bad_lexical_cast &)
-                    {
-                        throw validation_error(validation_error::invalid_option_value);
-                    }
-                }),
-                std::back_inserter(output));
+    std::transform(std::sregex_token_iterator(s.begin(), s.end(), re, -1),
+                   std::sregex_token_iterator(),
+                   std::back_inserter(output),
+                   [](const auto &x) {
+                       try
+                       {
+                           return boost::lexical_cast<std::size_t>(x);
+                       }
+                       catch (const boost::bad_lexical_cast &)
+                       {
+                           throw validation_error(validation_error::invalid_option_value);
+                       }
+                   });
 
     v = boost::any(MaxCellSizesArgument{output});
 }
