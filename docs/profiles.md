@@ -64,6 +64,7 @@ backward_restricted                     | Boolean  |  "   "
 is_startpoint                           | Boolean  | Can a journey start on this way? (e.g. ferry; if false, prevents snapping the start point to this way)
 roundabout                              | Boolean  | Is this part of a roundabout?
 circular                                | Boolean  | Is this part of a non-roundabout circular junction?
+split_edges                             | Boolean  | True value forces a split of forward and backward edges of the way and guarantees that segment_function will be called for all segments
 name                                    | String   | Name of the way
 ref                                     | String   | Road number
 pronunciation                           | String   | Name pronunciation
