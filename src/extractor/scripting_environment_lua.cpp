@@ -247,7 +247,9 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         "weight_name",
         sol::property(&ProfileProperties::SetWeightName, &ProfileProperties::GetWeightName),
         "max_turn_weight",
-        sol::property(&ProfileProperties::GetMaxTurnWeight));
+        sol::property(&ProfileProperties::GetMaxTurnWeight),
+        "force_split_edges",
+        &ProfileProperties::force_split_edges);
 
     context.state.new_usertype<std::vector<std::string>>(
         "vector",
@@ -356,10 +358,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                       [](ExtractionWay &way, bool flag) { way.forward_restricted = flag; }),
         "backward_restricted",
         sol::property([](const ExtractionWay &way) { return way.backward_restricted; },
-                      [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }),
-        "split_edges",
-        sol::property([](const ExtractionWay &way) { return way.split_edges; },
-                      [](ExtractionWay &way, bool flag) { way.split_edges = flag; }));
+                      [](ExtractionWay &way, bool flag) { way.backward_restricted = flag; }));
 
     context.state.new_usertype<ExtractionSegment>("ExtractionSegment",
                                                   "source",

@@ -63,6 +63,7 @@ class ExtractorCallbacks
     guidance::LaneDescriptionMap lane_description_map;
     ExtractionContainers &external_memory;
     bool fallback_to_duration;
+    bool force_split_edges;
 
   public:
     explicit ExtractorCallbacks(ExtractionContainers &extraction_containers,
