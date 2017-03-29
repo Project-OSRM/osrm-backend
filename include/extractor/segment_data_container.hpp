@@ -4,6 +4,8 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
+#include "storage/shared_memory.hpp"
+
 #include <boost/filesystem/path.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -22,24 +24,24 @@ class CompressedEdgeContainer;
 
 namespace detail
 {
-template <bool UseShareMemory> class SegmentDataContainerImpl;
+template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainerImpl;
 }
 
 namespace io
 {
-template <bool UseShareMemory>
+template <osrm::storage::MemorySetting MemorySetting>
 inline void read(const boost::filesystem::path &path,
-                 detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
-template <bool UseShareMemory>
+                 detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
+template <osrm::storage::MemorySetting MemorySetting>
 inline void write(const boost::filesystem::path &path,
-                  const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+                  const detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
 }
 
 namespace detail
 {
-template <bool UseShareMemory> class SegmentDataContainerImpl
+template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainerImpl
 {
-    template <typename T> using Vector = typename util::ShM<T, UseShareMemory>::vector;
+    template <typename T> using Vector = typename util::ShM<T, MemorySetting>::vector;
 
     friend CompressedEdgeContainer;
 
@@ -189,11 +191,11 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
     friend void
-    io::read<UseShareMemory>(const boost::filesystem::path &path,
-                             detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+    io::read<MemorySetting>(const boost::filesystem::path &path,
+                             detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
     friend void
-    io::write<UseShareMemory>(const boost::filesystem::path &path,
-                              const detail::SegmentDataContainerImpl<UseShareMemory> &segment_data);
+    io::write<MemorySetting>(const boost::filesystem::path &path,
+                              const detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
 
   private:
     Vector<std::uint32_t> index;
@@ -206,8 +208,8 @@ template <bool UseShareMemory> class SegmentDataContainerImpl
 };
 }
 
-using SegmentDataView = detail::SegmentDataContainerImpl<true>;
-using SegmentDataContainer = detail::SegmentDataContainerImpl<false>;
+using SegmentDataView = detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::SharedMemory>;
+using SegmentDataContainer = detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::InternalMemory>;
 }
 }
 

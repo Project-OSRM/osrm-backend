@@ -7,6 +7,7 @@
 #include "partition/multi_level_partition.hpp"
 
 #include "storage/io.hpp"
+#include "storage/shared_memory.hpp"
 
 namespace osrm
 {
@@ -15,9 +16,9 @@ namespace partition
 namespace io
 {
 
-template <typename EdgeDataT, bool UseSharedMemory>
+template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting>
 inline void read(const boost::filesystem::path &path,
-                 MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph)
+                 MultiLevelGraph<EdgeDataT, MemorySetting> &graph)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -27,9 +28,9 @@ inline void read(const boost::filesystem::path &path,
     reader.DeserializeVector(graph.edge_to_level);
 }
 
-template <typename EdgeDataT, bool UseSharedMemory>
+template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting>
 inline void write(const boost::filesystem::path &path,
-                  const MultiLevelGraph<EdgeDataT, UseSharedMemory> &graph)
+                  const MultiLevelGraph<EdgeDataT, MemorySetting> &graph)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};

@@ -4,6 +4,8 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
+#include "storage/shared_memory.hpp"
+
 #include <cmath>
 #include <vector>
 
@@ -20,7 +22,7 @@ namespace util
  * NOTE: this type is templated for future use, but will require a slight refactor to
  * configure BITSIZE and ELEMSIZE
  */
-template <typename T, bool UseSharedMemory = false> class PackedVector
+template <typename T, osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory> class PackedVector
 {
     static const constexpr std::size_t BITSIZE = 33;
     static const constexpr std::size_t ELEMSIZE = 64;
@@ -120,20 +122,20 @@ template <typename T, bool UseSharedMemory = false> class PackedVector
 
     std::size_t size() const { return num_elements; }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
     {
         vec.reserve(elements_to_blocks(capacity));
     }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     void reset(typename std::enable_if<enabled, std::uint64_t>::type *ptr,
                typename std::enable_if<enabled, std::size_t>::type size)
     {
         vec.reset(ptr, size);
     }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     void set_number_of_entries(typename std::enable_if<enabled, std::size_t>::type count)
     {
         num_elements = count;
@@ -145,44 +147,44 @@ template <typename T, bool UseSharedMemory = false> class PackedVector
     }
 
   private:
-    typename util::ShM<std::uint64_t, UseSharedMemory>::vector vec;
+    typename util::ShM<std::uint64_t, MemorySetting>::vector vec;
 
     std::size_t num_elements = 0;
 
     signed cursor = -1;
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     void replace_last_elem(typename std::enable_if<enabled, std::uint64_t>::type last_elem)
     {
         vec[cursor] = last_elem;
     }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     void replace_last_elem(typename std::enable_if<!enabled, std::uint64_t>::type last_elem)
     {
         vec.back() = last_elem;
     }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     void add_last_elem(typename std::enable_if<enabled, std::uint64_t>::type last_elem)
     {
         vec[cursor + 1] = last_elem;
         cursor++;
     }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     void add_last_elem(typename std::enable_if<!enabled, std::uint64_t>::type last_elem)
     {
         vec.push_back(last_elem);
     }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     std::uint64_t vec_back(typename std::enable_if<enabled>::type * = nullptr)
     {
         return vec[cursor];
     }
 
-    template <bool enabled = UseSharedMemory>
+    template <bool enabled = (MemorySetting == osrm::storage::MemorySetting::SharedMemory)>
     std::uint64_t vec_back(typename std::enable_if<!enabled>::type * = nullptr)
     {
         return vec.back();

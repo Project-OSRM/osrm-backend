@@ -30,6 +30,12 @@ namespace osrm
 namespace storage
 {
 
+enum class MemorySetting
+{
+   SharedMemory,
+   InternalMemory
+};
+
 struct OSRMLockFile
 {
     boost::filesystem::path operator()()
