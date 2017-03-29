@@ -33,6 +33,7 @@ local profile = {
     'sally_port',
     'gate',
     'no',
+    'kerb',
     'block'
   },
 
