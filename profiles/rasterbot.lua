@@ -47,7 +47,7 @@ function segment_function (segment)
   local scaled_duration = segment.duration
 
   if sourceData.datum ~= invalid and targetData.datum ~= invalid then
-    local slope = math.abs(sourceData.datum - targetData.datum) / segment.distance
+    local slope = (targetData.datum - sourceData.datum) / segment.distance
     scaled_weight = scaled_weight / (1.0 - (slope * 5.0))
     scaled_duration = scaled_duration / (1.0 - (slope * 5.0))
     io.write("   slope: " .. slope .. "\n")

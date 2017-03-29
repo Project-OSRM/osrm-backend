@@ -50,8 +50,9 @@ Feature: Raster - weights
         And I route I should get
             | from | to | route    | speed   |
             | a    | b  | ab,ab    | 8 km/h  |
-            | a    | c  | ad,dc,dc | 15 km/h |
-            | b    | c  | bc,bc    | 8 km/h  |
+            | b    | a  | ab,ab    | 22 km/h |
+            | a    | c  | ab,bc,bc | 12 km/h |
+            | b    | c  | bc,bc    | 22 km/h |
             | a    | d  | ad,ad    | 15 km/h |
             | d    | c  | dc,dc    | 15 km/h |
             | d    | e  | de,de    | 10 km/h |
