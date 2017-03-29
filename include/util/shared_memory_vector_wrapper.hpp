@@ -3,6 +3,8 @@
 
 #include "util/log.hpp"
 
+#include "storage/shared_memory.hpp"
+
 #include <boost/assert.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
@@ -130,7 +132,7 @@ template <typename DataT> class SharedMemoryWrapper
     friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;
 };
 
-template <> class SharedMemoryWrapper<bool>
+template <> class SharedMemoryWrapper<osrm::storage::MemorySetting>
 {
   private:
     unsigned *m_ptr;
@@ -173,9 +175,9 @@ void swap(SharedMemoryWrapper<DataT> &lhs, SharedMemoryWrapper<DataT> &rhs) noex
     std::swap(lhs.m_size, rhs.m_size);
 }
 
-template <typename DataT, bool UseSharedMemory> struct ShM
+template <typename DataT, osrm::storage::MemorySetting MemorySetting> struct ShM
 {
-    using vector = typename std::conditional<UseSharedMemory,
+    using vector = typename std::conditional<MemorySetting == osrm::storage::MemorySetting::SharedMemory,
                                              SharedMemoryWrapper<DataT>,
                                              std::vector<DataT>>::type;
 };

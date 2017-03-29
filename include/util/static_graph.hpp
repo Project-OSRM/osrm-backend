@@ -7,6 +7,8 @@
 #include "util/shared_memory_vector_wrapper.hpp"
 #include "util/typedefs.hpp"
 
+#include "storage/shared_memory.hpp"
+
 #include <boost/assert.hpp>
 
 #include <algorithm>
@@ -97,7 +99,7 @@ EntryT edgeToEntry(const OtherEdge &from, std::false_type)
 
 } // namespace static_graph_details
 
-template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
+template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory> class StaticGraph
 {
   public:
     using InputEdge = static_graph_details::SortableEdgeWithData<EdgeDataT>;
@@ -122,8 +124,8 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
         InitializeFromSortedEdgeRange(nodes, edges.begin(), edges.end());
     }
 
-    StaticGraph(typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array_,
-                typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array_)
+    StaticGraph(typename ShM<NodeArrayEntry, MemorySetting>::vector node_array_,
+                typename ShM<EdgeArrayEntry, MemorySetting>::vector edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
         BOOST_ASSERT(!node_array.empty());
@@ -258,8 +260,8 @@ template <typename EdgeDataT, bool UseSharedMemory = false> class StaticGraph
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
-    typename ShM<NodeArrayEntry, UseSharedMemory>::vector node_array;
-    typename ShM<EdgeArrayEntry, UseSharedMemory>::vector edge_array;
+    typename ShM<NodeArrayEntry, MemorySetting>::vector node_array;
+    typename ShM<EdgeArrayEntry, MemorySetting>::vector edge_array;
 };
 
 } // namespace util

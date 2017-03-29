@@ -7,6 +7,8 @@
 #include "util/static_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include "storage/shared_memory.hpp"
+
 #include <boost/filesystem/path.hpp>
 
 namespace osrm
@@ -16,16 +18,16 @@ namespace customizer
 
 using EdgeBasedGraphEdgeData = partition::EdgeBasedGraphEdgeData;
 
-struct MultiLevelEdgeBasedGraph : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, false>
+struct MultiLevelEdgeBasedGraph : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::InternalMemory>
 {
-    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, false>;
+    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::InternalMemory>;
     using Base::Base;
 };
 
 struct MultiLevelEdgeBasedGraphView
-    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, true>
+    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::SharedMemory>
 {
-    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, true>;
+    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::SharedMemory>;
     using Base::Base;
 };
 

@@ -10,6 +10,7 @@
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
+#include "storage/shared_memory.hpp"
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -26,24 +27,24 @@ namespace partition
 {
 namespace detail
 {
-template <bool UseShareMemory> class CellStorageImpl;
+template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl;
 }
-using CellStorage = detail::CellStorageImpl<false>;
-using CellStorageView = detail::CellStorageImpl<true>;
+using CellStorage = detail::CellStorageImpl<osrm::storage::MemorySetting::InternalMemory>;
+using CellStorageView = detail::CellStorageImpl<osrm::storage::MemorySetting::SharedMemory>;
 
 namespace io
 {
-template <bool UseShareMemory>
+template <osrm::storage::MemorySetting MemorySetting>
 inline void read(const boost::filesystem::path &path,
-                 detail::CellStorageImpl<UseShareMemory> &storage);
-template <bool UseShareMemory>
+                 detail::CellStorageImpl<MemorySetting> &storage);
+template <osrm::storage::MemorySetting MemorySetting>
 inline void write(const boost::filesystem::path &path,
-                  const detail::CellStorageImpl<UseShareMemory> &storage);
+                  const detail::CellStorageImpl<MemorySetting> &storage);
 }
 
 namespace detail
 {
-template <bool UseShareMemory> class CellStorageImpl
+template <osrm::storage::MemorySetting MemorySetting> class CellStorageImpl
 {
   public:
     using WeightOffset = std::uint32_t;
@@ -65,7 +66,7 @@ template <bool UseShareMemory> class CellStorageImpl
     };
 
   private:
-    template <typename T> using Vector = typename util::ShM<T, UseShareMemory>::vector;
+    template <typename T> using Vector = typename util::ShM<T, MemorySetting>::vector;
 
     // Implementation of the cell view. We need a template parameter here
     // because we need to derive a read-only and read-write view from this.
@@ -185,7 +186,7 @@ template <bool UseShareMemory> class CellStorageImpl
 
     CellStorageImpl() {}
 
-    template <typename GraphT, typename = std::enable_if<!UseShareMemory>>
+    template <typename GraphT, typename = std::enable_if<MemorySetting == osrm::storage::MemorySetting::InternalMemory>>
     CellStorageImpl(const partition::MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
@@ -314,7 +315,7 @@ template <bool UseShareMemory> class CellStorageImpl
         weights.resize(weight_offset + 1, INVALID_EDGE_WEIGHT);
     }
 
-    template <typename = std::enable_if<UseShareMemory>>
+    template <typename = std::enable_if<MemorySetting == osrm::storage::MemorySetting::SharedMemory>>
     CellStorageImpl(Vector<EdgeWeight> weights_,
                     Vector<NodeID> source_boundary_,
                     Vector<NodeID> destination_boundary_,
@@ -339,7 +340,7 @@ template <bool UseShareMemory> class CellStorageImpl
                          destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
 
-    template <typename = std::enable_if<!UseShareMemory>> Cell GetCell(LevelID level, CellID id)
+    template <typename = std::enable_if<MemorySetting == osrm::storage::MemorySetting::InternalMemory>> Cell GetCell(LevelID level, CellID id)
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
@@ -350,10 +351,10 @@ template <bool UseShareMemory> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    friend void io::read<UseShareMemory>(const boost::filesystem::path &path,
-                                         detail::CellStorageImpl<UseShareMemory> &storage);
-    friend void io::write<UseShareMemory>(const boost::filesystem::path &path,
-                                          const detail::CellStorageImpl<UseShareMemory> &storage);
+    friend void io::read<MemorySetting>(const boost::filesystem::path &path,
+                                         detail::CellStorageImpl<MemorySetting> &storage);
+    friend void io::write<MemorySetting>(const boost::filesystem::path &path,
+                                          const detail::CellStorageImpl<MemorySetting> &storage);
 
   private:
     Vector<EdgeWeight> weights;

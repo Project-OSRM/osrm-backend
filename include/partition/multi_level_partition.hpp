@@ -8,6 +8,7 @@
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"
+#include "storage/shared_memory.hpp"
 
 #include <algorithm>
 #include <array>
@@ -25,31 +26,31 @@ namespace partition
 {
 namespace detail
 {
-template <bool UseShareMemory> class MultiLevelPartitionImpl;
+template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionImpl;
 }
-using MultiLevelPartition = detail::MultiLevelPartitionImpl<false>;
-using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<true>;
+using MultiLevelPartition = detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::InternalMemory>;
+using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::SharedMemory>;
 
 namespace io
 {
-template <bool UseShareMemory>
+template <osrm::storage::MemorySetting MemorySetting>
 void read(const boost::filesystem::path &file,
-          detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
-template <bool UseShareMemory>
+          detail::MultiLevelPartitionImpl<MemorySetting> &mlp);
+template <osrm::storage::MemorySetting MemorySetting>
 void write(const boost::filesystem::path &file,
-           const detail::MultiLevelPartitionImpl<UseShareMemory> &mlp);
+           const detail::MultiLevelPartitionImpl<MemorySetting> &mlp);
 }
 
 namespace detail
 {
 
-template <bool UseShareMemory> class MultiLevelPartitionImpl final
+template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionImpl final
 {
     // we will support at most 16 levels
     static const constexpr std::uint8_t MAX_NUM_LEVEL = 16;
     static const constexpr std::uint8_t NUM_PARTITION_BITS = sizeof(PartitionID) * CHAR_BIT;
 
-    template <typename T> using Vector = typename util::ShM<T, UseShareMemory>::vector;
+    template <typename T> using Vector = typename util::ShM<T, MemorySetting>::vector;
 
   public:
     // Contains all data necessary to describe the level hierarchy
@@ -68,7 +69,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
     // cell_sizes is index by level (starting at 0, the base graph).
     // However level 0 always needs to have cell size 1, since it is the
     // basegraph.
-    template <typename = typename std::enable_if<!UseShareMemory>>
+    template <typename = typename std::enable_if<MemorySetting == osrm::storage::MemorySetting::InternalMemory>>
     MultiLevelPartitionImpl(const std::vector<std::vector<CellID>> &partitions,
                             const std::vector<std::uint32_t> &lidx_to_num_cells)
         : level_data(MakeLevelData(lidx_to_num_cells))
@@ -76,7 +77,7 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         InitializePartitionIDs(partitions);
     }
 
-    template <typename = typename std::enable_if<UseShareMemory>>
+    template <typename = typename std::enable_if<MemorySetting == osrm::storage::MemorySetting::SharedMemory>>
     MultiLevelPartitionImpl(LevelData level_data,
                             Vector<PartitionID> partition_,
                             Vector<CellID> cell_to_children_)
@@ -134,9 +135,9 @@ template <bool UseShareMemory> class MultiLevelPartitionImpl final
         return cell_to_children[offset + cell + 1];
     }
 
-    friend void io::read<UseShareMemory>(const boost::filesystem::path &file,
+    friend void io::read<MemorySetting>(const boost::filesystem::path &file,
                                          MultiLevelPartitionImpl &mlp);
-    friend void io::write<UseShareMemory>(const boost::filesystem::path &file,
+    friend void io::write<MemorySetting>(const boost::filesystem::path &file,
                                           const MultiLevelPartitionImpl &mlp);
 
   private:
