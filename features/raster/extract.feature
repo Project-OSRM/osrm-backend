@@ -2,10 +2,10 @@
 Feature: osrm-extract with a profile containing raster source
     Scenario: osrm-extract on a valid profile
         Given the profile "rasterbot"
-        And the node map
-            """
-            a b
-            """
+        And the node locations
+            | node | lat        | lon      |
+            | a    | 0.1        | 0.1      |
+            | b    | 0.05       | 0.1      |
         And the ways
             | nodes |
             | ab    |
@@ -20,4 +20,6 @@ Feature: osrm-extract with a profile containing raster source
         And the data has been saved to disk
         When I run "osrm-extract {osm_file} -p {profile_file}"
         Then stdout should contain "source loader"
+        Then stdout should contain "slope: 0.089906793627046"
+        Then stdout should contain "slope: 0.089906793627046"
         And it should exit successfully
