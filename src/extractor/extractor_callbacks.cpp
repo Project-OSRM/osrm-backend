@@ -330,7 +330,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                              (turn_lane_id_forward != turn_lane_id_backward));
 
     if (in_forward_direction)
-    {
+    { // add (forward) segments or (forward,backward) for non-split edges in backward direction
         util::for_each_pair(
             nodes.cbegin(),
             nodes.cend(),
@@ -355,8 +355,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
             });
     }
 
-    if (in_backward_direction || split_edge)
-    {
+    if (in_backward_direction && (!in_forward_direction || split_edge))
+    { // add (backward) segments for split edges or not in forward direction
         util::for_each_pair(
             nodes.cbegin(),
             nodes.cend(),
