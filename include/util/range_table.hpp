@@ -2,8 +2,8 @@
 #define RANGE_TABLE_HPP
 
 #include "storage/io.hpp"
-#include "util/integer_range.hpp"
 #include "storage/shared_memory.hpp"
+#include "util/integer_range.hpp"
 #include "util/shared_memory_vector_wrapper.hpp"
 
 #include <array>
@@ -19,7 +19,9 @@ namespace util
  * and otherwise the compiler gets confused.
  */
 
-template <unsigned BLOCK_SIZE = 16, osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory> class RangeTable;
+template <unsigned BLOCK_SIZE = 16,
+          osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory>
+class RangeTable;
 
 template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting>
 std::ostream &operator<<(std::ostream &out, const RangeTable<BLOCK_SIZE, MemorySetting> &table);
@@ -215,7 +217,7 @@ template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting> class
 
 template <unsigned BLOCK_SIZE, osrm::storage::MemorySetting MemorySetting>
 unsigned RangeTable<BLOCK_SIZE, MemorySetting>::PrefixSumAtIndex(int index,
-                                                                     const BlockT &block) const
+                                                                 const BlockT &block) const
 {
     // this loop looks inefficent, but a modern compiler
     // will emit nice SIMD here, at least for sensible block sizes. (I checked.)

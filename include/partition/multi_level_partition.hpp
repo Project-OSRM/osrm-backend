@@ -28,14 +28,15 @@ namespace detail
 {
 template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionImpl;
 }
-using MultiLevelPartition = detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::InternalMemory>;
-using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::SharedMemory>;
+using MultiLevelPartition =
+    detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::InternalMemory>;
+using MultiLevelPartitionView =
+    detail::MultiLevelPartitionImpl<osrm::storage::MemorySetting::SharedMemory>;
 
 namespace io
 {
 template <osrm::storage::MemorySetting MemorySetting>
-void read(const boost::filesystem::path &file,
-          detail::MultiLevelPartitionImpl<MemorySetting> &mlp);
+void read(const boost::filesystem::path &file, detail::MultiLevelPartitionImpl<MemorySetting> &mlp);
 template <osrm::storage::MemorySetting MemorySetting>
 void write(const boost::filesystem::path &file,
            const detail::MultiLevelPartitionImpl<MemorySetting> &mlp);
@@ -69,7 +70,8 @@ template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionI
     // cell_sizes is index by level (starting at 0, the base graph).
     // However level 0 always needs to have cell size 1, since it is the
     // basegraph.
-    template <typename = typename std::enable_if<MemorySetting == osrm::storage::MemorySetting::InternalMemory>>
+    template <typename = typename std::enable_if<MemorySetting ==
+                                                 osrm::storage::MemorySetting::InternalMemory>>
     MultiLevelPartitionImpl(const std::vector<std::vector<CellID>> &partitions,
                             const std::vector<std::uint32_t> &lidx_to_num_cells)
         : level_data(MakeLevelData(lidx_to_num_cells))
@@ -77,7 +79,8 @@ template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionI
         InitializePartitionIDs(partitions);
     }
 
-    template <typename = typename std::enable_if<MemorySetting == osrm::storage::MemorySetting::SharedMemory>>
+    template <typename = typename std::enable_if<MemorySetting ==
+                                                 osrm::storage::MemorySetting::SharedMemory>>
     MultiLevelPartitionImpl(LevelData level_data,
                             Vector<PartitionID> partition_,
                             Vector<CellID> cell_to_children_)
@@ -136,9 +139,9 @@ template <osrm::storage::MemorySetting MemorySetting> class MultiLevelPartitionI
     }
 
     friend void io::read<MemorySetting>(const boost::filesystem::path &file,
-                                         MultiLevelPartitionImpl &mlp);
+                                        MultiLevelPartitionImpl &mlp);
     friend void io::write<MemorySetting>(const boost::filesystem::path &file,
-                                          const MultiLevelPartitionImpl &mlp);
+                                         const MultiLevelPartitionImpl &mlp);
 
   private:
     auto MakeLevelData(const std::vector<std::uint32_t> &lidx_to_num_cells)

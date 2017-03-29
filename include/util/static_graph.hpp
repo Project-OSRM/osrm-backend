@@ -99,7 +99,9 @@ EntryT edgeToEntry(const OtherEdge &from, std::false_type)
 
 } // namespace static_graph_details
 
-template <typename EdgeDataT, osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory> class StaticGraph
+template <typename EdgeDataT,
+          osrm::storage::MemorySetting MemorySetting = osrm::storage::MemorySetting::InternalMemory>
+class StaticGraph
 {
   public:
     using InputEdge = static_graph_details::SortableEdgeWithData<EdgeDataT>;

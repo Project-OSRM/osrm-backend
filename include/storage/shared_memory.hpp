@@ -32,8 +32,8 @@ namespace storage
 
 enum class MemorySetting
 {
-   SharedMemory,
-   InternalMemory
+    SharedMemory,
+    InternalMemory
 };
 
 struct OSRMLockFile

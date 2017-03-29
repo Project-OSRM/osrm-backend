@@ -177,9 +177,10 @@ void swap(SharedMemoryWrapper<DataT> &lhs, SharedMemoryWrapper<DataT> &rhs) noex
 
 template <typename DataT, osrm::storage::MemorySetting MemorySetting> struct ShM
 {
-    using vector = typename std::conditional<MemorySetting == osrm::storage::MemorySetting::SharedMemory,
-                                             SharedMemoryWrapper<DataT>,
-                                             std::vector<DataT>>::type;
+    using vector =
+        typename std::conditional<MemorySetting == osrm::storage::MemorySetting::SharedMemory,
+                                  SharedMemoryWrapper<DataT>,
+                                  std::vector<DataT>>::type;
 };
 }
 }

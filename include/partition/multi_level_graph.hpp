@@ -185,10 +185,10 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, MemorySetting>
 
     friend void
     io::read<EdgeDataT, MemorySetting>(const boost::filesystem::path &path,
-                                         MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
+                                       MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
     friend void
     io::write<EdgeDataT, MemorySetting>(const boost::filesystem::path &path,
-                                          const MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
+                                        const MultiLevelGraph<EdgeDataT, MemorySetting> &graph);
 
     Vector<EdgeOffset> node_to_edge_offset;
 };
