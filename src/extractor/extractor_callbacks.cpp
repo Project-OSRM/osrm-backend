@@ -323,11 +323,12 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         (parsed_way.backward_travel_mode != TRAVEL_MODE_INACCESSIBLE);
 
     // split an edge into two edges if forwards/backwards behavior differ
-    const bool split_edge = in_forward_direction && in_backward_direction &&
-                            ((parsed_way.forward_rate != parsed_way.backward_rate) ||
-                             (parsed_way.forward_speed != parsed_way.backward_speed) ||
-                             (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode) ||
-                             (turn_lane_id_forward != turn_lane_id_backward));
+    const bool split_edge =
+        in_forward_direction && in_backward_direction &&
+        (parsed_way.split_edges || (parsed_way.forward_rate != parsed_way.backward_rate) ||
+         (parsed_way.forward_speed != parsed_way.backward_speed) ||
+         (parsed_way.forward_travel_mode != parsed_way.backward_travel_mode) ||
+         (turn_lane_id_forward != turn_lane_id_backward));
 
     if (in_forward_direction)
     { // add (forward) segments or (forward,backward) for non-split edges in backward direction

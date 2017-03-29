@@ -60,14 +60,8 @@ struct ExtractionWay
         road_classification = guidance::RoadClassification();
         backward_restricted = false;
         forward_restricted = false;
+        split_edges = false;
     }
-
-    // These accessors exists because it's not possible to take the address of a bitfield,
-    // and LUA therefore cannot read/write the mode attributes directly.
-    void set_forward_mode(const TravelMode m) { forward_travel_mode = m; }
-    TravelMode get_forward_mode() const { return forward_travel_mode; }
-    void set_backward_mode(const TravelMode m) { backward_travel_mode = m; }
-    TravelMode get_backward_mode() const { return backward_travel_mode; }
 
     // wrappers to allow assigning nil (nullptr) to string values
     void SetName(const char *value) { detail::maybeSetString(name, value); }
@@ -105,14 +99,15 @@ struct ExtractionWay
     std::string destinations;
     std::string turn_lanes_forward;
     std::string turn_lanes_backward;
-    bool roundabout;
-    bool circular;
-    bool is_startpoint;
-    bool backward_restricted;
-    bool forward_restricted;
+    guidance::RoadClassification road_classification;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;
-    guidance::RoadClassification road_classification;
+    bool roundabout : 1;
+    bool circular : 1;
+    bool is_startpoint : 1;
+    bool forward_restricted : 1;
+    bool backward_restricted : 1;
+    bool split_edges : 1;
 };
 }
 }

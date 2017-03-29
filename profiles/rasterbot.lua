@@ -19,6 +19,7 @@ function way_function (way, result)
 
   result.forward_speed = 15
   result.backward_speed = 15
+  result.split_edges = true
 end
 
 function source_function ()
