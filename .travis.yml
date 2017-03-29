@@ -148,10 +148,8 @@ before_install:
       sudo mdutil -i off /
       npm install -g yarn
     fi
-  # enanble publishing for all tags that match the package version
   - export PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
   - export PUBLISH=$([[ "${TRAVIS_TAG:-}" == "v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off")
-  - echo "Node binary publishing: ${PUBLISH}"
   - echo "Using ${JOBS} jobs"
   - yarn install --ignore-scripts
     # Bootstrap cmake to be able to run mason
