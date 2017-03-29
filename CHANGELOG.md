@@ -10,6 +10,8 @@
       - .osrm.datasource_index file was removed. Data is now part of .osrm.geometries.
       - .osrm.edge_lookup was removed. The option `--generate-edge-lookup` does nothing now.
       - `osrm-contract` does not depend on the `.osrm.fileIndex` file anymore
+    - Profiles
+      - Added `split_edges` flag in extracted ways. True value guarantees that segment_function will be called for all segments, but also could double memory consumption
 
 # 5.6.3
   - Changes from 5.6.0
