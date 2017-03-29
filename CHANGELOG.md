@@ -1,3 +1,7 @@
+# 5.6.5
+  - Changes from 5.6.4
+    - Bugfixes
+      - Fix #3873 excessive usage of disk and memory during osrm-extract because edge deduplication was broken
 
 # 5.6.4
   - Changes from 5.6.3
