@@ -1,23 +1,25 @@
 var OSRM = require('../../');
 var test = require('tape');
-var berlin_path = "test/data/berlin-latest.osrm";
+var data_path = require('./constants').data_path;
+var tile = require('./constants').test_tile;
 
 test.test('tile check size coarse', function(assert) {
     assert.plan(2);
-    var osrm = new OSRM(berlin_path);
-    osrm.tile([17603, 10747, 15], function(err, result) {
+    var osrm = new OSRM(data_path);
+    osrm.tile(tile.at, function(err, result) {
         assert.ifError(err);
-        assert.ok(result.length > 35000);
+        assert.ok(result.length > tile.size);
     });
 });
 
-// FIXME the size of the tile that is returned depends on the architecture
-// See issue #3343 in osrm-backend
-test.skip('tile', function(assert) {
-    assert.plan(2);
-    var osrm = new OSRM(berlin_path);
-    osrm.tile([17603, 10747, 15], function(err, result) {
-        assert.ifError(err);
-        assert.equal(result.length, 35970);
-    });
+test.test('tile interface pre-conditions', function(assert) {
+    assert.plan(6);
+    var osrm = new OSRM(data_path);
+
+    assert.throws(function() { osrm.tile(null, function(err, result) {}) }, /must be an array \[x, y, z\]/);
+    assert.throws(function() { osrm.tile([], function(err, result) {}) }, /must be an array \[x, y, z\]/);
+    assert.throws(function() { osrm.tile([[]], function(err, result) {}) }, /must be an array \[x, y, z\]/);
+    assert.throws(function() { osrm.tile(undefined, function(err, result) {}) }, /must be an array \[x, y, z\]/);
+    assert.throws(function() { osrm.tile(17059, 11948, 15, function(err, result) {}) }, /must be an array \[x, y, z\]/);
+    assert.throws(function() { osrm.tile([17059, 11948, -15], function(err, result) {}) }, /must be unsigned/);
 });

@@ -7,12 +7,14 @@ message(STATUS "Building node-osrm")
 set(BINDING_DIR "${PROJECT_SOURCE_DIR}/lib/binding")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/nodejs")
-include(FindNodeJS)
 
 set(NodeJS_CXX_STANDARD 14 CACHE INTERNAL "Use C++14" FORCE)
 set(NodeJS_DOWNLOAD ON CACHE INTERNAL "Download node.js sources" FORCE)
 set(NodeJS_USE_CLANG_STDLIB OFF CACHE BOOL "Don't use libc++ by default" FORCE)
 
+# ^ Make sure to set NodeJs options before including and requiring the NodeJs module.
+# Otherwise the module will use defaults (which - among many bad choices - means libc++).
+include(FindNodeJS)
 find_package(NodeJS REQUIRED)
 add_nodejs_module(node-osrm node_osrm.cpp)
 target_link_libraries(node-osrm osrm)

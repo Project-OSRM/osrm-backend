@@ -19,7 +19,8 @@
     "test": "npm run lint && node ./node_modules/cucumber/bin/cucumber.js features/ -p verify && node ./node_modules/cucumber/bin/cucumber.js features/ -p mld",
     "clean": "rm -rf test/cache",
     "docs": "./scripts/build_api_docs.sh",
-    "install": "node-pre-gyp install --fallback-to-build=false"
+    "install": "node-pre-gyp install --fallback-to-build=false",
+    "nodejs-tests": "make -C test/data && ./lib/binding/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet"
   },
   "repository": {
     "type": "git",
@@ -44,6 +45,7 @@
     "mkdirp": "^0.5.1",
     "aws-sdk": "~2.0.31",
     "tape": "^4.2.2",
+    "faucet": "^0.0.1",
     "node-timeout": "0.0.4",
     "polyline": "^0.2.0",
     "request": "^2.69.0",

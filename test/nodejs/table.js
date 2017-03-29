@@ -1,12 +1,15 @@
 var OSRM = require('../../');
 var test = require('tape');
-var berlin_path = require('./osrm-data-path').data_path;
+var data_path = require('./constants').data_path;
+var three_test_coordinates = require('./constants').three_test_coordinates;
+var two_test_coordinates = require('./constants').two_test_coordinates;
 
-test('table: distance table in Berlin', function(assert) {
-    assert.plan(9);
-    var osrm = new OSRM(berlin_path);
+
+test('table: distance table in Monaco', function(assert) {
+    assert.plan(11);
+    var osrm = new OSRM(data_path);
     var options = {
-        coordinates: [[13.43864,52.51993],[13.415852,52.513191]]
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]]
     };
     osrm.table(options, function(err, table) {
         assert.ifError(err);
@@ -23,6 +26,8 @@ test('table: distance table in Berlin', function(assert) {
                 } else {
                     // everything else is non-zero
                     assert.notEqual(0, column[j], 'other entries must be non-zero');
+                    // and finite (not nan, inf etc.)
+                    assert.ok(Number.isFinite(column[j]), 'distance is finite number');
                 }
             }
         }
@@ -30,11 +35,11 @@ test('table: distance table in Berlin', function(assert) {
     });
 });
 
-test('table: distance table in Berlin with sources/destinations', function(assert) {
-    assert.plan(6);
-    var osrm = new OSRM(berlin_path);
+test('table: distance table in Monaco with sources/destinations', function(assert) {
+    assert.plan(7);
+    var osrm = new OSRM(data_path);
     var options = {
-        coordinates: [[13.43864,52.51993],[13.415852,52.513191]],
+        coordinates: [three_test_coordinates[0], three_test_coordinates[1]],
         sources: [0],
         destinations: [0,1]
     };
@@ -53,6 +58,8 @@ test('table: distance table in Berlin with sources/destinations', function(asser
                 } else {
                     // everything else is non-zero
                     assert.notEqual(0, column[j], 'other entries must be non-zero');
+                    // and finite (not nan, inf etc.)
+                    assert.ok(Number.isFinite(column[j]), 'distance is finite number');
                 }
             }
         }
@@ -62,24 +69,24 @@ test('table: distance table in Berlin with sources/destinations', function(asser
 
 test('table: throws on invalid arguments', function(assert) {
     assert.plan(14);
-    var osrm = new OSRM(berlin_path);
+    var osrm = new OSRM(data_path);
     var options = {};
     assert.throws(function() { osrm.table(options); },
         /Two arguments required/);
     options.coordinates = null;
     assert.throws(function() { osrm.table(options, function() {}); },
         /Coordinates must be an array of \(lon\/lat\) pairs/);
-    options.coordinates = [[13.393252,52.542648]];
+    options.coordinates = [three_test_coordinates[0]];
     assert.throws(function() { osrm.table(options, function(err, response) {}) },
         /At least two coordinates must be provided/);
-    options.coordinates = [13.393252,52.542648];
+    options.coordinates = three_test_coordinates[0];
     assert.throws(function() { osrm.table(options, function(err, response) {}) },
         /Coordinates must be an array of \(lon\/lat\) pairs/);
-    options.coordinates = [[13.393252],[52.542648]];
+    options.coordinates = [three_test_coordinates[0][0], three_test_coordinates[0][1]];
     assert.throws(function() { osrm.table(options, function(err, response) {}) },
         /Coordinates must be an array of \(lon\/lat\) pairs/);
 
-    options.coordinates = [[13.393252,52.542648],[13.393252,52.542648]];
+    options.coordinates = two_test_coordinates;
     options.sources = true;
     assert.throws(function() { osrm.table(options, function(err, response) {}) },
         /Sources must be an array of indices \(or undefined\)/);
@@ -110,22 +117,22 @@ test('table: throws on invalid arguments', function(assert) {
     assert.doesNotThrow(function() { osrm.table(options, function(err, response) {}) },
         /You can either specify sources and destinations, or coordinates/);
 
-    assert.throws(function() { osrm.route({coordinates: [[13.43864,52.51993],[13.415852,52.513191]], generate_hints: null}, function(err, route) {}) },
+    assert.throws(function() { osrm.route({coordinates: two_test_coordinates, generate_hints: null}, function(err, route) {}) },
         /generate_hints must be of type Boolean/);
 });
 
 test('table: throws on invalid arguments', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM(berlin_path);
+    var osrm = new OSRM(data_path);
     assert.throws(function() { osrm.table(null, function() {}); },
         /First arg must be an object/);
 });
 
-test('table: distance table in Berlin with hints', function(assert) {
+test('table: distance table in Monaco with hints', function(assert) {
     assert.plan(5);
-    var osrm = new OSRM(berlin_path);
+    var osrm = new OSRM(data_path);
     var options = {
-        coordinates: [[13.43864,52.51993],[13.415852,52.513191]],
+        coordinates: two_test_coordinates,
         generate_hints: true  // true is default but be explicit here
     };
     osrm.table(options, function(err, table) {
@@ -141,11 +148,11 @@ test('table: distance table in Berlin with hints', function(assert) {
     });
 });
 
-test('table: distance table in Berlin without hints', function(assert) {
+test('table: distance table in Monaco without hints', function(assert) {
     assert.plan(5);
-    var osrm = new OSRM(berlin_path);
+    var osrm = new OSRM(data_path);
     var options = {
-        coordinates: [[13.43864,52.51993],[13.415852,52.513191]],
+        coordinates: two_test_coordinates,
         generate_hints: false  // true is default
     };
     osrm.table(options, function(err, table) {

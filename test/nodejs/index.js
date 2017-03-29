@@ -1,8 +1,8 @@
 var OSRM = require('../../');
 var test = require('tape');
-var berlin_path = require('./osrm-data-path').data_path;
-var berlin_mld_path = require('./osrm-data-path').mld_data_path;
-var berlin_corech_path = require('./osrm-data-path').corech_data_path;
+var monaco_path = require('./constants').data_path;
+var monaco_mld_path = require('./constants').mld_data_path;
+var monaco_corech_path = require('./constants').corech_data_path;
 
 test('constructor: throws if new keyword is not used', function(assert) {
     assert.plan(1);
@@ -30,7 +30,7 @@ test('constructor: throws if necessary files do not exist', function(assert) {
 
 test('constructor: takes a shared memory argument', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({path: berlin_path, shared_memory: false});
+    var osrm = new OSRM({path: monaco_path, shared_memory: false});
     assert.ok(osrm);
 });
 
@@ -42,7 +42,7 @@ test('constructor: throws if shared_memory==false with no path defined', functio
 
 test('constructor: throws if given a non-bool shared_memory option', function(assert) {
     assert.plan(1);
-    assert.throws(function() { new OSRM({path: berlin_path, shared_memory: 'a'}); },
+    assert.throws(function() { new OSRM({path: monaco_path, shared_memory: 'a'}); },
         /Shared_memory option must be a boolean/);
 });
 
@@ -66,19 +66,19 @@ test('constructor: throws if given an invalid algorithm', function(assert) {
 
 test('constructor: loads MLD if given as algorithm', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({algorithm: 'MLD', path: berlin_mld_path});
+    var osrm = new OSRM({algorithm: 'MLD', path: monaco_mld_path});
     assert.ok(osrm);
 });
 
 test('constructor: loads CH if given as algorithm', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({algorithm: 'CH', path: berlin_path});
+    var osrm = new OSRM({algorithm: 'CH', path: monaco_path});
     assert.ok(osrm);
 });
 
 test('constructor: loads CoreCH if given as algorithm', function(assert) {
     assert.plan(1);
-    var osrm = new OSRM({algorithm: 'CoreCH', path: berlin_corech_path});
+    var osrm = new OSRM({algorithm: 'CoreCH', path: monaco_corech_path});
     assert.ok(osrm);
 });
 
