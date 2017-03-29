@@ -192,10 +192,10 @@ template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainer
 
     friend void
     io::read<MemorySetting>(const boost::filesystem::path &path,
-                             detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
+                            detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
     friend void
     io::write<MemorySetting>(const boost::filesystem::path &path,
-                              const detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
+                             const detail::SegmentDataContainerImpl<MemorySetting> &segment_data);
 
   private:
     Vector<std::uint32_t> index;
@@ -208,8 +208,10 @@ template <osrm::storage::MemorySetting MemorySetting> class SegmentDataContainer
 };
 }
 
-using SegmentDataView = detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::SharedMemory>;
-using SegmentDataContainer = detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::InternalMemory>;
+using SegmentDataView =
+    detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::SharedMemory>;
+using SegmentDataContainer =
+    detail::SegmentDataContainerImpl<osrm::storage::MemorySetting::InternalMemory>;
 }
 }
 

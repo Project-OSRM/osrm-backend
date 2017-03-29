@@ -55,8 +55,10 @@ namespace storage
 {
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode =
-    util::StaticRTree<RTreeLeaf, util::ShM<util::Coordinate, osrm::storage::MemorySetting::SharedMemory>::vector, osrm::storage::MemorySetting::SharedMemory>::TreeNode;
+using RTreeNode = util::StaticRTree<
+    RTreeLeaf,
+    util::ShM<util::Coordinate, osrm::storage::MemorySetting::SharedMemory>::vector,
+    osrm::storage::MemorySetting::SharedMemory>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 
@@ -364,12 +366,15 @@ void Storage::PopulateLayout(DataLayout &layout)
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         layout.SetBlockSize<unsigned>(DataLayout::BEARING_OFFSETS, bearing_blocks);
-        layout.SetBlockSize<typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT>(DataLayout::BEARING_BLOCKS,
-                                                                         bearing_blocks);
+        layout.SetBlockSize<
+            typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT>(
+            DataLayout::BEARING_BLOCKS, bearing_blocks);
 
         // No need to read the data
         intersection_file.Skip<unsigned>(bearing_blocks);
-        intersection_file.Skip<typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT>(bearing_blocks);
+        intersection_file.Skip<
+            typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT>(
+            bearing_blocks);
 
         const auto num_bearings = intersection_file.ReadElementCount64();
 
@@ -803,8 +808,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         intersection_file.Skip<std::uint32_t>(1); // sum_lengths
 
         std::vector<unsigned> bearing_offsets_data(bearing_blocks);
-        std::vector<typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT> bearing_blocks_data(
-            bearing_blocks);
+        std::vector<
+            typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT>
+            bearing_blocks_data(bearing_blocks);
 
         intersection_file.ReadInto(bearing_offsets_data.data(), bearing_blocks);
         intersection_file.ReadInto(bearing_blocks_data.data(), bearing_blocks);
@@ -843,9 +849,9 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
         if (layout.GetBlockSize(DataLayout::BEARING_BLOCKS) > 0)
         {
-            const auto bearing_blocks_ptr =
-                layout.GetBlockPtr<typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT, true>(
-                    memory_ptr, DataLayout::BEARING_BLOCKS);
+            const auto bearing_blocks_ptr = layout.GetBlockPtr<
+                typename util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT,
+                true>(memory_ptr, DataLayout::BEARING_BLOCKS);
             BOOST_ASSERT(
                 static_cast<std::size_t>(layout.GetBlockSize(DataLayout::BEARING_BLOCKS)) >=
                 std::distance(bearing_blocks_data.begin(), bearing_blocks_data.end()) *

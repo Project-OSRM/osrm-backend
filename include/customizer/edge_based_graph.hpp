@@ -18,16 +18,21 @@ namespace customizer
 
 using EdgeBasedGraphEdgeData = partition::EdgeBasedGraphEdgeData;
 
-struct MultiLevelEdgeBasedGraph : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::InternalMemory>
+struct MultiLevelEdgeBasedGraph
+    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
+                                        osrm::storage::MemorySetting::InternalMemory>
 {
-    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::InternalMemory>;
+    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
+                                            osrm::storage::MemorySetting::InternalMemory>;
     using Base::Base;
 };
 
 struct MultiLevelEdgeBasedGraphView
-    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::SharedMemory>
+    : public partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
+                                        osrm::storage::MemorySetting::SharedMemory>
 {
-    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData, osrm::storage::MemorySetting::SharedMemory>;
+    using Base = partition::MultiLevelGraph<EdgeBasedGraphEdgeData,
+                                            osrm::storage::MemorySetting::SharedMemory>;
     using Base::Base;
 };
 
