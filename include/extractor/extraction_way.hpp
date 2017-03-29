@@ -60,7 +60,6 @@ struct ExtractionWay
         road_classification = guidance::RoadClassification();
         backward_restricted = false;
         forward_restricted = false;
-        split_edges = false;
     }
 
     // wrappers to allow assigning nil (nullptr) to string values
@@ -107,7 +106,6 @@ struct ExtractionWay
     bool is_startpoint : 1;
     bool forward_restricted : 1;
     bool backward_restricted : 1;
-    bool split_edges : 1;
 };
 }
 }

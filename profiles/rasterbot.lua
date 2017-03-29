@@ -1,6 +1,8 @@
 api_version = 1
 -- Rasterbot profile
 
+properties.force_split_edges = true
+
 -- Minimalist node_ and way_functions in order to test source_ and segment_functions
 
 function node_function (node, result)
@@ -19,7 +21,6 @@ function way_function (way, result)
 
   result.forward_speed = 15
   result.backward_speed = 15
-  result.split_edges = true
 end
 
 function source_function ()
