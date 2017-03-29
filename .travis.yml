@@ -223,6 +223,10 @@ script:
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
   - ./unit_tests/partition-tests
+  - |
+    if [ -n "${ENABLE_NODE_BINDINGS}" ] && [ -z "${ENABLE_SANITIZER}" ]; then
+      npm run nodejs-tests
+    fi
   - popd
   - yarn test
 
