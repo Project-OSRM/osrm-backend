@@ -3,8 +3,7 @@ language: cpp
 git:
   depth: 10
 
-# sudo:required is needed for trusty images
-sudo: required
+sudo: false
 dist: trusty
 
 notifications:
@@ -28,6 +27,8 @@ env:
    - CCACHE_VERSION=3.3.1
    - CMAKE_VERSION=3.7.2
    - MASON="$(pwd)/scripts/mason.sh"
+     # auto detect does not work on container instances
+   - JOBS=3
 
 matrix:
   fast_finish: true
@@ -37,6 +38,7 @@ matrix:
 
     # Debug Builds
     - os: linux
+      sudo: true
       compiler: "gcc-6-debug"
       addons: &gcc6
         apt:
@@ -53,12 +55,13 @@ matrix:
       env: CLANG_VERSION='4.0.0' BUILD_TYPE='Debug' CUCUMBER_TIMEOUT=60000
 
     - os: linux
+      sudo: true
       compiler: "mason-linux-debug-santize"
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['libstdc++-5-dev']
-      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON ENABLE_SANITIZER=ON ENABLE_NODE_BINDINGS=ON
+      env: CLANG_VERSION='4.0.0' BUILD_TYPE='Release' ENABLE_MASON=ON TARGET_ARCH='x86_64-asan' ENABLE_SANITIZER=ON ENABLE_NODE_BINDINGS=ON
 
     # Release Builds
     - os: linux
@@ -78,6 +81,7 @@ matrix:
       env: CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
 
     - os: linux
+      sudo: true
       compiler: "gcc-6-release-i686"
       env: >
         TARGET_ARCH='i686' CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'
@@ -95,7 +99,7 @@ matrix:
       osx_image: xcode8.2
       compiler: "mason-osx-release"
       # we use the xcode provides clang and don't install our own
-      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON
+      env: ENABLE_MASON=ON BUILD_TYPE='Release' CUCUMBER_TIMEOUT=60000 CCOMPILER='clang' CXXCOMPILER='clang++' ENABLE_ASSERTIONS=ON ENABLE_LTO=ON ENABLE_NODE_BINDINGS=ON
 
       # Disabled because of CI slowness
       #- os: linux
@@ -127,16 +131,11 @@ matrix:
 before_install:
   - if [[ ! -z $TARGET_ARCH ]] ; then source ./scripts/travis/before_install.$TARGET_ARCH.sh ; fi
   - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      export JOBS=$((`nproc` + 1))
-    fi
-  - |
     if [ -n "${RUN_CLANG_FORMAT}" ]; then
       ${MASON} install clang-format 3.8.1 && PATH=$(${MASON} prefix clang-format 3.8.1)/bin:${PATH} ./scripts/format.sh
     fi
   - |
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      export JOBS=$((`sysctl -n hw.ncpu` + 1))
       sudo mdutil -i off /
     fi
   - echo "Using ${JOBS} jobs"
@@ -164,29 +163,33 @@ before_install:
       fi
     fi
   - ccache --max-size=256M  # limiting the cache's size to roughly the previous job's object sizes
+  # setup stxxl to use only internal memory
+  - export STXXLCFG=test/.stxxl
 
 install:
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
       ./scripts/check_taginfo.py taginfo.json profiles/car.lua
     fi
+  - export OSRM_INSTALL_DIR="$(pwd)/install-osrm"
   - export OSRM_BUILD_DIR="$(pwd)/build-osrm"
   - mkdir ${OSRM_BUILD_DIR} && pushd ${OSRM_BUILD_DIR}
   - export CC=${CCOMPILER} CXX=${CXXCOMPILER}
-  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DENABLE_CCACHE=ON -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF}
+  - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_MASON=${ENABLE_MASON:-OFF} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} -DENABLE_COVERAGE=${ENABLE_COVERAGE:-OFF} -DENABLE_SANITIZER=${ENABLE_SANITIZER:-OFF} -DBUILD_TOOLS=ON -DENABLE_CCACHE=ON -DENABLE_NODE_BINDINGS=${ENABLE_NODE_BINDINGS:-OFF} -DCMAKE_INSTALL_PREFIX=${OSRM_INSTALL_DIR}
   - echo "travis_fold:start:MAKE"
   - make --jobs=${JOBS}
   - make tests --jobs=${JOBS}
   - make benchmarks --jobs=${JOBS}
   - echo "travis_fold:end:MAKE"
   - ccache -s
-  - sudo make install
+  - make install
   - |
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      sudo ldconfig
+      export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${OSRM_INSTALL_DIR}/lib
     fi
   - popd
   - mkdir example/build && pushd example/build
+  - export PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig
   - cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   - make --jobs=${JOBS}
   - popd
@@ -194,7 +197,7 @@ install:
 
 script:
   - if [[ $TARGET_ARCH == armhf ]] ; then echo "Skip tests for $TARGET_ARCH" && exit 0 ; fi
-  - make -C test/data benchmark
+  - make -C test/data
   - ./example/build/osrm-example test/data/ch/monaco.osrm
   # All tests assume to be run from the build directory
   - pushd ${OSRM_BUILD_DIR}
