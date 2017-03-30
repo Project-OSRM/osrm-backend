@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "outDir": "build/osrm-routed-ng",
+        "target": "es5",
+        "removeComments": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "strictNullChecks": true,
+        "alwaysStrict": true,
+        "pretty": true,
+        "lib": ["es6"]
+    },
+    "include": [
+        "src/server-ng/*"
+    ]
+}
