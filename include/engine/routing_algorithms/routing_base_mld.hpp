@@ -24,9 +24,9 @@ namespace
 // Unrestricted search (Args is const PhantomNodes &):
 //   * use partition.GetQueryLevel to find the node query level based on source and target phantoms
 //   * allow to traverse all cells
-LevelID getNodeQureyLevel(const partition::MultiLevelPartitionView &partition,
-                          NodeID node,
-                          const PhantomNodes &phantom_nodes)
+inline LevelID getNodeQureyLevel(const partition::MultiLevelPartitionView &partition,
+                                 NodeID node,
+                                 const PhantomNodes &phantom_nodes)
 {
     auto level = [&partition, node](const SegmentID &source, const SegmentID &target) {
         if (source.enabled && target.enabled)
@@ -43,17 +43,21 @@ LevelID getNodeQureyLevel(const partition::MultiLevelPartitionView &partition,
                                    phantom_nodes.target_phantom.reverse_segment_id)));
 }
 
-bool checkParentCellRestriction(CellID, const PhantomNodes &) { return true; }
+inline bool checkParentCellRestriction(CellID, const PhantomNodes &) { return true; }
 
 // Restricted search (Args is LevelID, CellID):
 //   * use the fixed level for queries
 //   * check if the node cell is the same as the specified parent onr
-LevelID getNodeQureyLevel(const partition::MultiLevelPartitionView &, NodeID, LevelID level, CellID)
+inline LevelID
+getNodeQureyLevel(const partition::MultiLevelPartitionView &, NodeID, LevelID level, CellID)
 {
     return level;
 }
 
-bool checkParentCellRestriction(CellID cell, LevelID, CellID parent) { return cell == parent; }
+inline bool checkParentCellRestriction(CellID cell, LevelID, CellID parent)
+{
+    return cell == parent;
+}
 }
 
 template <bool DIRECTION, typename... Args>
@@ -305,7 +309,7 @@ search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     return std::make_tuple(weight, source_node, target_node, std::move(unpacked_path));
 }
 
-// Alias to be compatible with the overload for CoreCH that needs 4 heaps
+// Alias to be compatible with the overload for CoreCH that needs 4 heaps for shortest path search
 inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
@@ -360,6 +364,28 @@ void unpackPath(const FacadeT &facade,
     }
 
     annotatePath(facade, source_node, target_node, unpacked_edges, phantom_nodes, unpacked_path);
+}
+
+inline double
+getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &forward_core_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &reverse_core_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   int duration_upper_bound = INVALID_EDGE_WEIGHT)
+{
+    (void)facade;
+    (void)forward_heap;
+    (void)reverse_heap;
+    (void)forward_core_heap;
+    (void)reverse_core_heap;
+    (void)source_phantom;
+    (void)target_phantom;
+    (void)duration_upper_bound;
+
+    return 0.; // TODO: unimplemented
 }
 
 } // namespace mld

@@ -99,6 +99,9 @@ template <> struct HasDirectShortestPathSearch<mld::Algorithm> final : std::true
 template <> struct HasShortestPathSearch<mld::Algorithm> final : std::true_type
 {
 };
+template <> struct HasMapMatching<mld::Algorithm> final : std::true_type
+{
+};
 }
 }
 }
