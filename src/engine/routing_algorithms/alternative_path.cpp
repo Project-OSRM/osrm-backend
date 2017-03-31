@@ -164,8 +164,8 @@ void computeLengthAndSharingOfViaPath(
 {
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
 
-    QueryHeap &existing_forward_heap = *engine_working_data.forward_heap_1;
-    QueryHeap &existing_reverse_heap = *engine_working_data.reverse_heap_1;
+    auto &existing_forward_heap = *engine_working_data.GetForwardHeapPtr(Algorithm{});
+    auto &existing_reverse_heap = *engine_working_data.GetReverseHeapPtr(Algorithm{});
     QueryHeap &new_forward_heap = *engine_working_data.forward_heap_2;
     QueryHeap &new_reverse_heap = *engine_working_data.reverse_heap_2;
 
@@ -575,12 +575,13 @@ alternativePathSearch(SearchEngineData &engine_working_data,
     std::vector<SearchSpaceEdge> reverse_search_space;
 
     // Init queues, semi-expensive because access to TSS invokes a sys-call
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{},
+                                                                 facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearThirdThreadLocalStorage(facade.GetNumberOfNodes());
 
-    QueryHeap &forward_heap1 = *(engine_working_data.forward_heap_1);
-    QueryHeap &reverse_heap1 = *(engine_working_data.reverse_heap_1);
+    auto &forward_heap1 = *engine_working_data.GetForwardHeapPtr(Algorithm{});
+    auto &reverse_heap1 = *engine_working_data.GetReverseHeapPtr(Algorithm{});
     QueryHeap &forward_heap2 = *(engine_working_data.forward_heap_2);
     QueryHeap &reverse_heap2 = *(engine_working_data.reverse_heap_2);
 
