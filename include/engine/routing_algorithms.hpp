@@ -222,18 +222,6 @@ RoutingAlgorithms<routing_algorithms::mld::Algorithm>::ManyToManySearch(
 }
 
 template <>
-inline routing_algorithms::SubMatchingList
-RoutingAlgorithms<routing_algorithms::mld::Algorithm>::MapMatching(
-    const routing_algorithms::CandidateLists &,
-    const std::vector<util::Coordinate> &,
-    const std::vector<unsigned> &,
-    const std::vector<boost::optional<double>> &,
-    const bool) const
-{
-    throw util::exception("MapMatching is not implemented");
-}
-
-template <>
 inline std::vector<routing_algorithms::TurnData>
 RoutingAlgorithms<routing_algorithms::mld::Algorithm>::GetTileTurns(
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &,

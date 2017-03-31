@@ -1,5 +1,6 @@
 #include "engine/routing_algorithms/map_matching.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "engine/routing_algorithms/routing_base_mld.hpp"
 
 #include "engine/map_matching/hidden_markov_model.hpp"
 #include "engine/map_matching/matching_confidence.hpp"
@@ -431,6 +432,15 @@ mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
 template SubMatchingList
 mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+            const CandidateLists &candidates_list,
+            const std::vector<util::Coordinate> &trace_coordinates,
+            const std::vector<unsigned> &trace_timestamps,
+            const std::vector<boost::optional<double>> &trace_gps_precision,
+            const bool allow_splitting);
+
+template SubMatchingList
+mapMatching(SearchEngineData<mld::Algorithm> &engine_working_data,
+            const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
