@@ -70,8 +70,8 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
         std::shuffle(order.begin(), order.end(), g);
     }
 
-    typename ShM<TestNodeArrayEntry, osrm::storage::MemorySetting::InternalMemory>::vector nodes;
-    typename ShM<TestEdgeArrayEntry, osrm::storage::MemorySetting::InternalMemory>::vector edges;
+    typename util::InternalMemoryVector<TestNodeArrayEntry> nodes;
+    typename InternalMemoryVector<TestEdgeArrayEntry> edges;
     std::vector<unsigned> lengths;
     std::vector<unsigned> order;
 };
