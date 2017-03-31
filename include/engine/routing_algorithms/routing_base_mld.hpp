@@ -370,22 +370,31 @@ inline double
 getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    SearchEngineData<Algorithm>::QueryHeap &forward_heap,
                    SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &forward_core_heap,
-                   SearchEngineData<Algorithm>::QueryHeap &reverse_core_heap,
+                   SearchEngineData<Algorithm>::QueryHeap & /*forward_core_heap*/,
+                   SearchEngineData<Algorithm>::QueryHeap & /*reverse_core_heap*/,
                    const PhantomNode &source_phantom,
                    const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT)
+                   int /*duration_upper_bound*/)
 {
-    (void)facade;
-    (void)forward_heap;
-    (void)reverse_heap;
-    (void)forward_core_heap;
-    (void)reverse_core_heap;
-    (void)source_phantom;
-    (void)target_phantom;
-    (void)duration_upper_bound;
+    forward_heap.Clear();
+    reverse_heap.Clear();
 
-    return 0.; // TODO: unimplemented
+    const PhantomNodes phantom_nodes{source_phantom, target_phantom};
+    insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
+
+    EdgeWeight weight;
+    NodeID source_node, target_node;
+    std::vector<EdgeID> unpacked_edges;
+    std::tie(weight, source_node, target_node, unpacked_edges) = search(
+        facade, forward_heap, reverse_heap, DO_NOT_FORCE_LOOPS, DO_NOT_FORCE_LOOPS, phantom_nodes);
+
+    if (weight == INVALID_EDGE_WEIGHT)
+        return std::numeric_limits<double>::max();
+
+    std::vector<PathData> unpacked_path;
+    annotatePath(facade, source_node, target_node, unpacked_edges, phantom_nodes, unpacked_path);
+
+    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
 
 } // namespace mld
