@@ -55,16 +55,17 @@ namespace ch
 /// by the previous route.
 /// This variation is only an optimazation for graphs with slow queries, for example
 /// not fully contracted graphs.
-template <typename AlgorithmT>
+template <typename Algorithm>
 InternalRouteResult directShortestPathSearchImpl(
     SearchEngineData &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &facade,
+    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
     const PhantomNodes &phantom_nodes)
 {
-    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(Algorithm{},
+                                                                 facade.GetNumberOfNodes());
     engine_working_data.InitializeOrClearSecondThreadLocalStorage(facade.GetNumberOfNodes());
-    auto &forward_heap = *(engine_working_data.forward_heap_1);
-    auto &reverse_heap = *(engine_working_data.reverse_heap_1);
+    auto &forward_heap = *engine_working_data.GetForwardHeapPtr(Algorithm{});
+    auto &reverse_heap = *engine_working_data.GetReverseHeapPtr(Algorithm{});
     auto &forward_core_heap = *(engine_working_data.forward_heap_2);
     auto &reverse_core_heap = *(engine_working_data.reverse_heap_2);
     forward_heap.Clear();
@@ -130,10 +131,10 @@ InternalRouteResult directShortestPathSearch(
     const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
     const PhantomNodes &phantom_nodes)
 {
-    engine_working_data.InitializeOrClearMultiLayerDijkstraThreadLocalStorage(
-        facade.GetNumberOfNodes());
-    auto &forward_heap = *(engine_working_data.mld_forward_heap);
-    auto &reverse_heap = *(engine_working_data.mld_reverse_heap);
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(mld::Algorithm{},
+                                                                 facade.GetNumberOfNodes());
+    auto &forward_heap = *engine_working_data.GetForwardHeapPtr(mld::Algorithm{});
+    auto &reverse_heap = *engine_working_data.GetReverseHeapPtr(mld::Algorithm{});
     forward_heap.Clear();
     reverse_heap.Clear();
     insertNodesInHeaps(forward_heap, reverse_heap, phantom_nodes);
