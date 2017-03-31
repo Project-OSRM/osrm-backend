@@ -183,8 +183,12 @@ template <typename DataT, osrm::storage::MemorySetting MemorySetting> struct ShM
                                   std::vector<DataT>>::type;
 };
 
-template<typename DataT> using SharedMemoryVector = typename util::ShM<DataT, osrm::storage::MemorySetting::SharedMemory>::vector;
-template<typename DataT> using InternalMemoryVector = typename util::ShM<DataT, osrm::storage::MemorySetting::InternalMemory>::vector;
+template <typename DataT>
+using SharedMemoryVector =
+    typename util::ShM<DataT, osrm::storage::MemorySetting::SharedMemory>::vector;
+template <typename DataT>
+using InternalMemoryVector =
+    typename util::ShM<DataT, osrm::storage::MemorySetting::InternalMemory>::vector;
 }
 }
 
