@@ -360,8 +360,8 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
     std::string nodes_path;
     build_rtree<GraphFixture, MiniStaticRTree>("test_angle", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
-    MockDataFacade<engine::algorithm::CH> mockfacade;
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade<engine::algorithm::CH>> query(
+    MockDataFacade<engine::datafacade::CH> mockfacade;
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade<engine::datafacade::CH>> query(
         rtree, fixture.coords, mockfacade);
 
     Coordinate input(FloatLongitude{5.2}, FloatLatitude{5.0});
@@ -387,8 +387,8 @@ BOOST_AUTO_TEST_CASE(bearing_tests)
     std::string nodes_path;
     build_rtree<GraphFixture, MiniStaticRTree>("test_bearing", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
-    MockDataFacade<engine::algorithm::CH> mockfacade;
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade<engine::algorithm::CH>> query(
+    MockDataFacade<engine::datafacade::CH> mockfacade;
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade<engine::datafacade::CH>> query(
         rtree, fixture.coords, mockfacade);
 
     Coordinate input(FloatLongitude{5.1}, FloatLatitude{5.0});
@@ -461,8 +461,8 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
     std::string nodes_path;
     build_rtree<GraphFixture, MiniStaticRTree>("test_bbox", &fixture, leaves_path, nodes_path);
     MiniStaticRTree rtree(nodes_path, leaves_path, fixture.coords);
-    MockDataFacade<engine::algorithm::CH> mockfacade;
-    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade<engine::algorithm::CH>> query(
+    MockDataFacade<engine::datafacade::CH> mockfacade;
+    engine::GeospatialQuery<MiniStaticRTree, MockDataFacade<engine::datafacade::CH>> query(
         rtree, fixture.coords, mockfacade);
 
     {

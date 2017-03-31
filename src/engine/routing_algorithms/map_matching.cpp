@@ -419,14 +419,15 @@ mapMatchingImpl(SearchEngineData &engine_working_data,
     return sub_matchings;
 }
 
-SubMatchingList
-mapMatching(SearchEngineData &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-            const CandidateLists &candidates_list,
-            const std::vector<util::Coordinate> &trace_coordinates,
-            const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool use_tidying)
+namespace ch
+{
+SubMatchingList mapMatching(SearchEngineData &engine_working_data,
+                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                            const CandidateLists &candidates_list,
+                            const std::vector<util::Coordinate> &trace_coordinates,
+                            const std::vector<unsigned> &trace_timestamps,
+                            const std::vector<boost::optional<double>> &trace_gps_precision,
+                            const bool use_tidying)
 {
     return mapMatchingImpl(engine_working_data,
                            facade,
@@ -436,15 +437,17 @@ mapMatching(SearchEngineData &engine_working_data,
                            trace_gps_precision,
                            use_tidying);
 }
+}
 
-SubMatchingList
-mapMatching(SearchEngineData &engine_working_data,
-            const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
-            const CandidateLists &candidates_list,
-            const std::vector<util::Coordinate> &trace_coordinates,
-            const std::vector<unsigned> &trace_timestamps,
-            const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool use_tidying)
+namespace corech
+{
+SubMatchingList mapMatching(SearchEngineData &engine_working_data,
+                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                            const CandidateLists &candidates_list,
+                            const std::vector<util::Coordinate> &trace_coordinates,
+                            const std::vector<unsigned> &trace_timestamps,
+                            const std::vector<boost::optional<double>> &trace_gps_precision,
+                            const bool use_tidying)
 {
 
     return mapMatchingImpl(engine_working_data,
@@ -454,6 +457,7 @@ mapMatching(SearchEngineData &engine_working_data,
                            trace_timestamps,
                            trace_gps_precision,
                            use_tidying);
+}
 }
 
 } // namespace routing_algorithms

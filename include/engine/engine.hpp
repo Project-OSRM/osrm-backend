@@ -64,13 +64,13 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
         if (config.use_shared_memory)
         {
             util::Log(logDEBUG) << "Using shared memory with algorithm "
-                                << algorithm::name<AlgorithmT>();
+                                << routing_algorithms::name<AlgorithmT>();
             facade_provider = std::make_unique<WatchingProvider<AlgorithmT>>();
         }
         else
         {
             util::Log(logDEBUG) << "Using internal memory with algorithm "
-                                << algorithm::name<AlgorithmT>();
+                                << routing_algorithms::name<AlgorithmT>();
             facade_provider =
                 std::make_unique<ImmutableProvider<AlgorithmT>>(config.storage_config);
         }
@@ -143,7 +143,8 @@ template <typename AlgorithmT> class Engine final : public EngineInterface
     const plugins::TilePlugin tile_plugin;
 };
 
-template <> bool Engine<algorithm::CH>::CheckCompability(const EngineConfig &config)
+template <>
+bool Engine<routing_algorithms::ch::Algorithm>::CheckCompability(const EngineConfig &config)
 {
     if (config.use_shared_memory)
     {
@@ -168,9 +169,10 @@ template <> bool Engine<algorithm::CH>::CheckCompability(const EngineConfig &con
     }
 }
 
-template <> bool Engine<algorithm::CoreCH>::CheckCompability(const EngineConfig &config)
+template <>
+bool Engine<routing_algorithms::corech::Algorithm>::CheckCompability(const EngineConfig &config)
 {
-    if (!Engine<algorithm::CH>::CheckCompability(config))
+    if (!Engine<routing_algorithms::ch::Algorithm>::CheckCompability(config))
     {
         return false;
     }

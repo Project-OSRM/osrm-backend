@@ -23,7 +23,7 @@ namespace ch
 
 // Stalling
 template <bool DIRECTION, typename HeapT>
-bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                  const NodeID node,
                  const EdgeWeight weight,
                  const HeapT &query_heap)
@@ -49,7 +49,7 @@ bool stallAtNode(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
 }
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         SearchEngineData::QueryHeap &heap)
@@ -113,7 +113,7 @@ we need to add an offset to the termination criterion.
 static constexpr bool ENABLE_STALLING = true;
 static constexpr bool DISABLE_STALLING = false;
 template <bool DIRECTION, bool STALLING = ENABLE_STALLING>
-void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                  SearchEngineData::QueryHeap &forward_heap,
                  SearchEngineData::QueryHeap &reverse_heap,
                  NodeID &middle_node_id,
@@ -186,9 +186,8 @@ void routingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm:
 }
 
 template <bool UseDuration>
-EdgeWeight
-getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-              NodeID node)
+EdgeWeight getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                         NodeID node)
 {
     EdgeWeight loop_weight = UseDuration ? MAXIMAL_EDGE_DURATION : INVALID_EDGE_WEIGHT;
     for (auto edge : facade.GetAdjacentEdgeRange(node))
@@ -228,7 +227,7 @@ getLoopWeight(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH
  * original edge found.
  */
 template <typename BidirectionalIterator, typename Callback>
-void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void unpackPath(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                 BidirectionalIterator packed_path_begin,
                 BidirectionalIterator packed_path_end,
                 Callback &&callback)
@@ -325,7 +324,7 @@ void unpackPath(const FacadeT &facade,
  * @param to the node the CH edge finishes at
  * @param unpacked_path the sequence of original NodeIDs that make up the expanded CH edge
  */
-void unpackEdge(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void unpackEdge(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                 const NodeID from,
                 const NodeID to,
                 std::vector<NodeID> &unpacked_path);
@@ -351,7 +350,7 @@ void retrievePackedPathFromSingleHeap(const SearchEngineData::QueryHeap &search_
 // && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
 // requires
 // a force loop, if the heaps have been initialized with positive offsets.
-void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
             SearchEngineData::QueryHeap &forward_heap,
             SearchEngineData::QueryHeap &reverse_heap,
             std::int32_t &weight,
@@ -361,7 +360,7 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> 
             const int duration_upper_bound = INVALID_EDGE_WEIGHT);
 
 // Alias to be compatible with the overload for CoreCH that needs 4 heaps
-inline void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                    SearchEngineData::QueryHeap &forward_heap,
                    SearchEngineData::QueryHeap &reverse_heap,
                    SearchEngineData::QueryHeap &,
@@ -382,31 +381,11 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<algorith
            duration_upper_bound);
 }
 
-// assumes that heaps are already setup correctly.
-// A forced loop might be necessary, if source and target are on the same segment.
-// If this is the case and the offsets of the respective direction are larger for the source
-// than the target
-// then a force loop is required (e.g. source_phantom.forward_segment_id ==
-// target_phantom.forward_segment_id
-// && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
-// requires
-// a force loop, if the heaps have been initialized with positive offsets.
-void search(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
-            SearchEngineData::QueryHeap &forward_heap,
-            SearchEngineData::QueryHeap &reverse_heap,
-            SearchEngineData::QueryHeap &forward_core_heap,
-            SearchEngineData::QueryHeap &reverse_core_heap,
-            int &weight,
-            std::vector<NodeID> &packed_leg,
-            const bool force_loop_forward,
-            const bool force_loop_reverse,
-            int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
 bool needsLoopForward(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
 
 bool needsLoopBackwards(const PhantomNode &source_phantom, const PhantomNode &target_phantom);
 
-double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                        const std::vector<NodeID> &packed_path,
                        const PhantomNode &source_phantom,
                        const PhantomNode &target_phantom);
@@ -415,20 +394,7 @@ double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<algo
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
 double
-getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
-                   SearchEngineData::QueryHeap &forward_heap,
-                   SearchEngineData::QueryHeap &reverse_heap,
-                   SearchEngineData::QueryHeap &forward_core_heap,
-                   SearchEngineData::QueryHeap &reverse_core_heap,
-                   const PhantomNode &source_phantom,
-                   const PhantomNode &target_phantom,
-                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
-
-// Requires the heaps for be empty
-// If heaps should be adjusted to be initialized outside of this function,
-// the addition of force_loop parameters might be required
-double
-getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                    SearchEngineData::QueryHeap &forward_heap,
                    SearchEngineData::QueryHeap &reverse_heap,
                    const PhantomNode &source_phantom,
@@ -437,7 +403,7 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorith
 
 // Alias to be compatible with the overload for CoreCH that needs 4 heaps
 inline double
-getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                    SearchEngineData::QueryHeap &forward_heap,
                    SearchEngineData::QueryHeap &reverse_heap,
                    SearchEngineData::QueryHeap &,
@@ -449,8 +415,44 @@ getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<algorith
     return getNetworkDistance(
         facade, forward_heap, reverse_heap, source_phantom, target_phantom, duration_upper_bound);
 }
-
 } // namespace ch
+
+namespace corech
+{
+// assumes that heaps are already setup correctly.
+// A forced loop might be necessary, if source and target are on the same segment.
+// If this is the case and the offsets of the respective direction are larger for the source
+// than the target
+// then a force loop is required (e.g. source_phantom.forward_segment_id ==
+// target_phantom.forward_segment_id
+// && source_phantom.GetForwardWeightPlusOffset() > target_phantom.GetForwardWeightPlusOffset())
+// requires
+// a force loop, if the heaps have been initialized with positive offsets.
+void search(const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+            SearchEngineData::QueryHeap &forward_heap,
+            SearchEngineData::QueryHeap &reverse_heap,
+            SearchEngineData::QueryHeap &forward_core_heap,
+            SearchEngineData::QueryHeap &reverse_core_heap,
+            int &weight,
+            std::vector<NodeID> &packed_leg,
+            const bool force_loop_forward,
+            const bool force_loop_reverse,
+            int duration_upper_bound = INVALID_EDGE_WEIGHT);
+
+// Requires the heaps for be empty
+// If heaps should be adjusted to be initialized outside of this function,
+// the addition of force_loop parameters might be required
+double
+getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
+                   SearchEngineData::QueryHeap &forward_heap,
+                   SearchEngineData::QueryHeap &reverse_heap,
+                   SearchEngineData::QueryHeap &forward_core_heap,
+                   SearchEngineData::QueryHeap &reverse_core_heap,
+                   const PhantomNode &source_phantom,
+                   const PhantomNode &target_phantom,
+                   int duration_upper_bound = INVALID_EDGE_WEIGHT);
+} // namespace corech
+
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

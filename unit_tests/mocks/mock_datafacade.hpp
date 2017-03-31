@@ -238,8 +238,8 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
 template <typename AlgorithmT> class MockAlgorithmDataFacade;
 
 template <>
-class MockAlgorithmDataFacade<engine::algorithm::CH>
-    : public engine::datafacade::AlgorithmDataFacade<engine::algorithm::CH>
+class MockAlgorithmDataFacade<engine::datafacade::CH>
+    : public engine::datafacade::AlgorithmDataFacade<engine::datafacade::CH>
 {
   private:
     EdgeData foo;
@@ -281,8 +281,8 @@ class MockAlgorithmDataFacade<engine::algorithm::CH>
 };
 
 template <>
-class MockAlgorithmDataFacade<engine::algorithm::CoreCH>
-    : public engine::datafacade::AlgorithmDataFacade<engine::algorithm::CoreCH>
+class MockAlgorithmDataFacade<engine::datafacade::CoreCH>
+    : public engine::datafacade::AlgorithmDataFacade<engine::datafacade::CoreCH>
 {
   private:
     EdgeData foo;
@@ -297,10 +297,10 @@ class MockDataFacade final : public MockBaseDataFacade, public MockAlgorithmData
 };
 
 template <>
-class MockDataFacade<engine::algorithm::CoreCH> final
+class MockDataFacade<engine::datafacade::CoreCH> final
     : public MockBaseDataFacade,
-      public MockAlgorithmDataFacade<engine::algorithm::CH>,
-      public MockAlgorithmDataFacade<engine::algorithm::CoreCH>
+      public MockAlgorithmDataFacade<engine::datafacade::CH>,
+      public MockAlgorithmDataFacade<engine::datafacade::CoreCH>
 {
 };
 

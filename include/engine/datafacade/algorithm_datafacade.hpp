@@ -17,11 +17,16 @@ namespace engine
 namespace datafacade
 {
 
+// Namespace local aliases for algorithms
+using CH = routing_algorithms::ch::Algorithm;
+using CoreCH = routing_algorithms::corech::Algorithm;
+using MLD = routing_algorithms::mld::Algorithm;
+
 using EdgeRange = util::range<EdgeID>;
 
 template <typename AlgorithmT> class AlgorithmDataFacade;
 
-template <> class AlgorithmDataFacade<algorithm::CH>
+template <> class AlgorithmDataFacade<CH>
 {
   public:
     using EdgeData = contractor::QueryEdge::EdgeData;
@@ -56,7 +61,7 @@ template <> class AlgorithmDataFacade<algorithm::CH>
                                     const std::function<bool(EdgeData)> filter) const = 0;
 };
 
-template <> class AlgorithmDataFacade<algorithm::CoreCH>
+template <> class AlgorithmDataFacade<CoreCH>
 {
   public:
     using EdgeData = contractor::QueryEdge::EdgeData;
@@ -64,7 +69,7 @@ template <> class AlgorithmDataFacade<algorithm::CoreCH>
     virtual bool IsCoreNode(const NodeID id) const = 0;
 };
 
-template <> class AlgorithmDataFacade<algorithm::MLD>
+template <> class AlgorithmDataFacade<MLD>
 {
   public:
     using EdgeData = extractor::EdgeBasedEdge::EdgeData;

@@ -198,7 +198,7 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT> &fa
     }
 }
 
-void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void unpackLegs(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                 const std::vector<PhantomNodes> &phantom_nodes_vector,
                 const std::vector<NodeID> &total_packed_path,
                 const std::vector<std::size_t> &packed_leg_begin,
@@ -486,7 +486,7 @@ shortestPathSearchImpl(SearchEngineData &engine_working_data,
 
 InternalRouteResult
 shortestPathSearch(SearchEngineData &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint)
 {
@@ -496,7 +496,7 @@ shortestPathSearch(SearchEngineData &engine_working_data,
 
 InternalRouteResult
 shortestPathSearch(SearchEngineData &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint)
 {
