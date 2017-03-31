@@ -139,62 +139,6 @@ void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &fac
     }
 }
 
-double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                       const std::vector<NodeID> &packed_path,
-                       const PhantomNode &source_phantom,
-                       const PhantomNode &target_phantom)
-{
-    std::vector<PathData> unpacked_path;
-    PhantomNodes nodes;
-    nodes.source_phantom = source_phantom;
-    nodes.target_phantom = target_phantom;
-    unpackPath(facade, packed_path.begin(), packed_path.end(), nodes, unpacked_path);
-
-    using util::coordinate_calculation::detail::DEGREE_TO_RAD;
-    using util::coordinate_calculation::detail::EARTH_RADIUS;
-
-    double distance = 0;
-    double prev_lat = static_cast<double>(toFloating(source_phantom.location.lat)) * DEGREE_TO_RAD;
-    double prev_lon = static_cast<double>(toFloating(source_phantom.location.lon)) * DEGREE_TO_RAD;
-    double prev_cos = std::cos(prev_lat);
-    for (const auto &p : unpacked_path)
-    {
-        const auto current_coordinate = facade.GetCoordinateOfNode(p.turn_via_node);
-
-        const double current_lat =
-            static_cast<double>(toFloating(current_coordinate.lat)) * DEGREE_TO_RAD;
-        const double current_lon =
-            static_cast<double>(toFloating(current_coordinate.lon)) * DEGREE_TO_RAD;
-        const double current_cos = std::cos(current_lat);
-
-        const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
-        const double sin_dlat = std::sin((prev_lat - current_lat) / 2.0);
-
-        const double aharv = sin_dlat * sin_dlat + prev_cos * current_cos * sin_dlon * sin_dlon;
-        const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
-        distance += EARTH_RADIUS * charv;
-
-        prev_lat = current_lat;
-        prev_lon = current_lon;
-        prev_cos = current_cos;
-    }
-
-    const double current_lat =
-        static_cast<double>(toFloating(target_phantom.location.lat)) * DEGREE_TO_RAD;
-    const double current_lon =
-        static_cast<double>(toFloating(target_phantom.location.lon)) * DEGREE_TO_RAD;
-    const double current_cos = std::cos(current_lat);
-
-    const double sin_dlon = std::sin((prev_lon - current_lon) / 2.0);
-    const double sin_dlat = std::sin((prev_lat - current_lat) / 2.0);
-
-    const double aharv = sin_dlat * sin_dlat + prev_cos * current_cos * sin_dlon * sin_dlon;
-    const double charv = 2. * std::atan2(std::sqrt(aharv), std::sqrt(1.0 - aharv));
-    distance += EARTH_RADIUS * charv;
-
-    return distance;
-}
-
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
@@ -250,7 +194,14 @@ double getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<A
         return std::numeric_limits<double>::max();
     }
 
-    return getPathDistance(facade, packed_path, source_phantom, target_phantom);
+    std::vector<PathData> unpacked_path;
+    unpackPath(facade,
+               packed_path.begin(),
+               packed_path.end(),
+               {source_phantom, target_phantom},
+               unpacked_path);
+
+    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
 } // namespace ch
 
@@ -474,12 +425,17 @@ double getNetworkDistance(const datafacade::ContiguousInternalMemoryDataFacade<A
            {source_phantom, target_phantom},
            weight_upper_bound);
 
-    double distance = std::numeric_limits<double>::max();
-    if (weight != INVALID_EDGE_WEIGHT)
-    {
-        return ch::getPathDistance(facade, packed_path, source_phantom, target_phantom);
-    }
-    return distance;
+    if (weight == INVALID_EDGE_WEIGHT)
+        return std::numeric_limits<double>::max();
+
+    std::vector<PathData> unpacked_path;
+    ch::unpackPath(facade,
+                   packed_path.begin(),
+                   packed_path.end(),
+                   {source_phantom, target_phantom},
+                   unpacked_path);
+
+    return getPathDistance(facade, unpacked_path, source_phantom, target_phantom);
 }
 } // namespace corech
 

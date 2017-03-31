@@ -382,11 +382,6 @@ inline void search(const datafacade::ContiguousInternalMemoryDataFacade<Algorith
            duration_upper_bound);
 }
 
-double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
-                       const std::vector<NodeID> &packed_path,
-                       const PhantomNode &source_phantom,
-                       const PhantomNode &target_phantom);
-
 // Requires the heaps for be empty
 // If heaps should be adjusted to be initialized outside of this function,
 // the addition of force_loop parameters might be required
