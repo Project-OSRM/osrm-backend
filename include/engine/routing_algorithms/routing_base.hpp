@@ -310,7 +310,7 @@ void annotatePath(const FacadeT &facade,
     }
 }
 
-template<typename Algorithm>
+template <typename Algorithm>
 double getPathDistance(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                        const std::vector<PathData> unpacked_path,
                        const PhantomNode &source_phantom,
