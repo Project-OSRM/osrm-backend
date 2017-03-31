@@ -48,14 +48,13 @@ unsigned getMedianSampleTime(const std::vector<unsigned> &timestamps)
 }
 
 template <typename Algorithm>
-SubMatchingList
-mapMatchingImpl(SearchEngineData<Algorithm> &engine_working_data,
-                const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                const CandidateLists &candidates_list,
-                const std::vector<util::Coordinate> &trace_coordinates,
-                const std::vector<unsigned> &trace_timestamps,
-                const std::vector<boost::optional<double>> &trace_gps_precision,
-                const bool allow_splitting)
+SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
+                            const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                            const CandidateLists &candidates_list,
+                            const std::vector<util::Coordinate> &trace_coordinates,
+                            const std::vector<unsigned> &trace_timestamps,
+                            const std::vector<boost::optional<double>> &trace_gps_precision,
+                            const bool allow_splitting)
 {
     map_matching::MatchingConfidence confidence;
     map_matching::EmissionLogProbability default_emission_log_probability(DEFAULT_GPS_PRECISION);
@@ -220,14 +219,14 @@ mapMatchingImpl(SearchEngineData<Algorithm> &engine_working_data,
                     }
 
                     double network_distance =
-                        ch::getNetworkDistance(facade,
-                                               forward_heap,
-                                               reverse_heap,
-                                               forward_core_heap,
-                                               reverse_core_heap,
-                                               prev_unbroken_timestamps_list[s].phantom_node,
-                                               current_timestamps_list[s_prime].phantom_node,
-                                               duration_upper_bound);
+                        getNetworkDistance(facade,
+                                           forward_heap,
+                                           reverse_heap,
+                                           forward_core_heap,
+                                           reverse_core_heap,
+                                           prev_unbroken_timestamps_list[s].phantom_node,
+                                           current_timestamps_list[s_prime].phantom_node,
+                                           duration_upper_bound);
 
                     // get distance diff between loc1/2 and locs/s_prime
                     const auto d_t = std::abs(network_distance - haversine_distance);
@@ -420,44 +419,23 @@ mapMatchingImpl(SearchEngineData<Algorithm> &engine_working_data,
     return sub_matchings;
 }
 
-template <>
-SubMatchingList
+template SubMatchingList
 mapMatching(SearchEngineData<ch::Algorithm> &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool use_tidying)
-{
-    return mapMatchingImpl(engine_working_data,
-                           facade,
-                           candidates_list,
-                           trace_coordinates,
-                           trace_timestamps,
-                           trace_gps_precision,
-                           use_tidying);
-}
+            const bool allow_splitting);
 
-template <>
-SubMatchingList
+template SubMatchingList
 mapMatching(SearchEngineData<corech::Algorithm> &engine_working_data,
             const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
             const CandidateLists &candidates_list,
             const std::vector<util::Coordinate> &trace_coordinates,
             const std::vector<unsigned> &trace_timestamps,
             const std::vector<boost::optional<double>> &trace_gps_precision,
-            const bool use_tidying)
-{
-
-    return mapMatchingImpl(engine_working_data,
-                           facade,
-                           candidates_list,
-                           trace_coordinates,
-                           trace_timestamps,
-                           trace_gps_precision,
-                           use_tidying);
-}
+            const bool allow_splitting);
 
 } // namespace routing_algorithms
 } // namespace engine
