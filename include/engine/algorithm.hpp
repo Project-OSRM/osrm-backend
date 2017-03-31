@@ -78,6 +78,7 @@ template <> struct HasGetTileTurns<ch::Algorithm> final : std::true_type
 };
 
 // Algorithms supported by Contraction Hierarchies with core
+// the rest is disabled because of performance reasons
 template <> struct HasShortestPathSearch<corech::Algorithm> final : std::true_type
 {
 };
@@ -90,31 +91,9 @@ template <> struct HasMapMatching<corech::Algorithm> final : std::true_type
 template <> struct HasGetTileTurns<corech::Algorithm> final : std::true_type
 {
 };
-// disbaled because of perfomance reasons
-template <> struct HasAlternativePathSearch<corech::Algorithm> final : std::false_type
-{
-};
-template <> struct HasManyToManySearch<corech::Algorithm> final : std::false_type
-{
-};
 
 // Algorithms supported by Multi-Level Dijkstra
 template <> struct HasDirectShortestPathSearch<mld::Algorithm> final : std::true_type
-{
-};
-template <> struct HasMapMatching<mld::Algorithm> final : std::false_type
-{
-};
-template <> struct HasAlternativePathSearch<mld::Algorithm> final : std::false_type
-{
-};
-template <> struct HasManyToManySearch<mld::Algorithm> final : std::false_type
-{
-};
-template <> struct HasShortestPathSearch<mld::Algorithm> final : std::false_type
-{
-};
-template <> struct HasGetTileTurns<mld::Algorithm> final : std::false_type
 {
 };
 }
