@@ -71,7 +71,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
     }
 
     typename util::InternalMemoryVector<TestNodeArrayEntry> nodes;
-    typename InternalMemoryVector<TestEdgeArrayEntry> edges;
+    typename util::InternalMemoryVector<TestEdgeArrayEntry> edges;
     std::vector<unsigned> lengths;
     std::vector<unsigned> order;
 };
