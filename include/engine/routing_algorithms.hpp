@@ -93,32 +93,32 @@ template <typename AlgorithmT> class RoutingAlgorithms final : public RoutingAlg
 
     bool HasAlternativePathSearch() const final override
     {
-        return algorithm_trais::HasAlternativePathSearch<AlgorithmT>::value;
+        return routing_algorithms::HasAlternativePathSearch<AlgorithmT>::value;
     }
 
     bool HasShortestPathSearch() const final override
     {
-        return algorithm_trais::HasShortestPathSearch<AlgorithmT>::value;
+        return routing_algorithms::HasShortestPathSearch<AlgorithmT>::value;
     }
 
     bool HasDirectShortestPathSearch() const final override
     {
-        return algorithm_trais::HasDirectShortestPathSearch<AlgorithmT>::value;
+        return routing_algorithms::HasDirectShortestPathSearch<AlgorithmT>::value;
     }
 
     bool HasMapMatching() const final override
     {
-        return algorithm_trais::HasMapMatching<AlgorithmT>::value;
+        return routing_algorithms::HasMapMatching<AlgorithmT>::value;
     }
 
     bool HasManyToManySearch() const final override
     {
-        return algorithm_trais::HasManyToManySearch<AlgorithmT>::value;
+        return routing_algorithms::HasManyToManySearch<AlgorithmT>::value;
     }
 
     bool HasGetTileTurns() const final override
     {
-        return algorithm_trais::HasGetTileTurns<AlgorithmT>::value;
+        return routing_algorithms::HasGetTileTurns<AlgorithmT>::value;
     }
 
   private:
@@ -131,7 +131,7 @@ template <typename AlgorithmT>
 InternalRouteResult
 RoutingAlgorithms<AlgorithmT>::AlternativePathSearch(const PhantomNodes &phantom_node_pair) const
 {
-    return routing_algorithms::alternativePathSearch(heaps, facade, phantom_node_pair);
+    return routing_algorithms::ch::alternativePathSearch(heaps, facade, phantom_node_pair);
 }
 
 template <typename AlgorithmT>
@@ -156,7 +156,7 @@ std::vector<EdgeWeight> RoutingAlgorithms<AlgorithmT>::ManyToManySearch(
     const std::vector<std::size_t> &source_indices,
     const std::vector<std::size_t> &target_indices) const
 {
-    return routing_algorithms::manyToManySearch(
+    return routing_algorithms::ch::manyToManySearch(
         heaps, facade, phantom_nodes, source_indices, target_indices);
 }
 
@@ -168,13 +168,13 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<AlgorithmT>::MapMat
     const std::vector<boost::optional<double>> &trace_gps_precision,
     const bool allow_splitting) const
 {
-    return routing_algorithms::mapMatching(heaps,
-                                           facade,
-                                           candidates_list,
-                                           trace_coordinates,
-                                           trace_timestamps,
-                                           trace_gps_precision,
-                                           allow_splitting);
+    return routing_algorithms::ch::mapMatching(heaps,
+                                               facade,
+                                               candidates_list,
+                                               trace_coordinates,
+                                               trace_timestamps,
+                                               trace_gps_precision,
+                                               allow_splitting);
 }
 
 template <typename AlgorithmT>
@@ -187,42 +187,45 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<AlgorithmT>::
 
 // MLD overrides for not implemented
 template <>
-InternalRouteResult inline RoutingAlgorithms<algorithm::MLD>::AlternativePathSearch(
-    const PhantomNodes &) const
+InternalRouteResult inline RoutingAlgorithms<
+    routing_algorithms::mld::Algorithm>::AlternativePathSearch(const PhantomNodes &) const
 {
     throw util::exception("AlternativePathSearch is not implemented");
 }
 
 template <>
 inline InternalRouteResult
-RoutingAlgorithms<algorithm::MLD>::ShortestPathSearch(const std::vector<PhantomNodes> &,
-                                                      const boost::optional<bool>) const
+RoutingAlgorithms<routing_algorithms::mld::Algorithm>::ShortestPathSearch(
+    const std::vector<PhantomNodes> &, const boost::optional<bool>) const
 {
     throw util::exception("ShortestPathSearch is not implemented");
 }
 
 template <>
 inline std::vector<EdgeWeight>
-RoutingAlgorithms<algorithm::MLD>::ManyToManySearch(const std::vector<PhantomNode> &,
-                                                    const std::vector<std::size_t> &,
-                                                    const std::vector<std::size_t> &) const
+RoutingAlgorithms<routing_algorithms::mld::Algorithm>::ManyToManySearch(
+    const std::vector<PhantomNode> &,
+    const std::vector<std::size_t> &,
+    const std::vector<std::size_t> &) const
 {
     throw util::exception("ManyToManySearch is not implemented");
 }
 
 template <>
 inline routing_algorithms::SubMatchingList
-RoutingAlgorithms<algorithm::MLD>::MapMatching(const routing_algorithms::CandidateLists &,
-                                               const std::vector<util::Coordinate> &,
-                                               const std::vector<unsigned> &,
-                                               const std::vector<boost::optional<double>> &,
-                                               const bool) const
+RoutingAlgorithms<routing_algorithms::mld::Algorithm>::MapMatching(
+    const routing_algorithms::CandidateLists &,
+    const std::vector<util::Coordinate> &,
+    const std::vector<unsigned> &,
+    const std::vector<boost::optional<double>> &,
+    const bool) const
 {
     throw util::exception("MapMatching is not implemented");
 }
 
 template <>
-inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<algorithm::MLD>::GetTileTurns(
+inline std::vector<routing_algorithms::TurnData>
+RoutingAlgorithms<routing_algorithms::mld::Algorithm>::GetTileTurns(
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &,
     const std::vector<std::size_t> &) const
 {

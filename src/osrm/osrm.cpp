@@ -18,11 +18,14 @@ namespace osrm
 
 OSRM::OSRM(engine::EngineConfig &config)
 {
+    using CH = engine::routing_algorithms::ch::Algorithm;
+    using CoreCH = engine::routing_algorithms::corech::Algorithm;
+    using MLD = engine::routing_algorithms::mld::Algorithm;
+
     if (config.algorithm == EngineConfig::Algorithm::CoreCH ||
         config.algorithm == EngineConfig::Algorithm::CH)
     {
-        bool corech_compatible =
-            engine::Engine<engine::algorithm::CoreCH>::CheckCompability(config);
+        bool corech_compatible = engine::Engine<CoreCH>::CheckCompability(config);
 
         // Activate CoreCH if we can because it is faster
         if (config.algorithm == EngineConfig::Algorithm::CH && corech_compatible)
@@ -40,13 +43,13 @@ OSRM::OSRM(engine::EngineConfig &config)
     switch (config.algorithm)
     {
     case EngineConfig::Algorithm::CH:
-        engine_ = std::make_unique<engine::Engine<engine::algorithm::CH>>(config);
+        engine_ = std::make_unique<engine::Engine<CH>>(config);
         break;
     case EngineConfig::Algorithm::CoreCH:
-        engine_ = std::make_unique<engine::Engine<engine::algorithm::CoreCH>>(config);
+        engine_ = std::make_unique<engine::Engine<CoreCH>>(config);
         break;
     case EngineConfig::Algorithm::MLD:
-        engine_ = std::make_unique<engine::Engine<engine::algorithm::MLD>>(config);
+        engine_ = std::make_unique<engine::Engine<MLD>>(config);
         break;
     default:
         util::exception("Algorithm not implemented!");

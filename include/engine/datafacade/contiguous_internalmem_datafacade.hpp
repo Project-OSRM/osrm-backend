@@ -58,8 +58,7 @@ namespace datafacade
 template <typename AlgorithmT> class ContiguousInternalMemoryAlgorithmDataFacade;
 
 template <>
-class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
-    : public datafacade::AlgorithmDataFacade<algorithm::CH>
+class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::AlgorithmDataFacade<CH>
 {
   private:
     using QueryGraph = util::StaticGraph<EdgeData, storage::Ownership::View>;
@@ -151,8 +150,8 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
 };
 
 template <>
-class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
-    : public datafacade::AlgorithmDataFacade<algorithm::CoreCH>
+class ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
+    : public datafacade::AlgorithmDataFacade<CoreCH>
 {
   private:
     util::vector_view<bool> m_is_core_node;
@@ -869,36 +868,34 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 template <typename AlgorithmT> class ContiguousInternalMemoryDataFacade;
 
 template <>
-class ContiguousInternalMemoryDataFacade<algorithm::CH>
+class ContiguousInternalMemoryDataFacade<CH>
     : public ContiguousInternalMemoryDataFacadeBase,
-      public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
+      public ContiguousInternalMemoryAlgorithmDataFacade<CH>
 {
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
         : ContiguousInternalMemoryDataFacadeBase(allocator),
-          ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>(allocator)
+          ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator)
 
     {
     }
 };
 
 template <>
-class ContiguousInternalMemoryDataFacade<algorithm::CoreCH> final
-    : public ContiguousInternalMemoryDataFacade<algorithm::CH>,
-      public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
+class ContiguousInternalMemoryDataFacade<CoreCH> final
+    : public ContiguousInternalMemoryDataFacade<CH>,
+      public ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>
 {
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
-        : ContiguousInternalMemoryDataFacade<algorithm::CH>(allocator),
-          ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>(allocator)
+        : ContiguousInternalMemoryDataFacade<CH>(allocator),
+          ContiguousInternalMemoryAlgorithmDataFacade<CoreCH>(allocator)
 
     {
     }
 };
 
-template <>
-class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
-    : public datafacade::AlgorithmDataFacade<algorithm::MLD>
+template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public AlgorithmDataFacade<MLD>
 {
     // MLD data
     partition::MultiLevelPartitionView mld_partition;
@@ -1065,15 +1062,15 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
 };
 
 template <>
-class ContiguousInternalMemoryDataFacade<algorithm::MLD> final
+class ContiguousInternalMemoryDataFacade<MLD> final
     : public ContiguousInternalMemoryDataFacadeBase,
-      public ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
+      public ContiguousInternalMemoryAlgorithmDataFacade<MLD>
 {
   private:
   public:
     ContiguousInternalMemoryDataFacade(std::shared_ptr<ContiguousBlockAllocator> allocator)
         : ContiguousInternalMemoryDataFacadeBase(allocator),
-          ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>(allocator)
+          ContiguousInternalMemoryAlgorithmDataFacade<MLD>(allocator)
 
     {
     }

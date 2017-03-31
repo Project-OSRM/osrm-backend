@@ -15,13 +15,13 @@ namespace routing_algorithms
 
 InternalRouteResult
 shortestPathSearch(SearchEngineData &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                   const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
 
 InternalRouteResult
 shortestPathSearch(SearchEngineData &engine_working_data,
-                   const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+                   const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
                    const std::vector<PhantomNodes> &phantom_nodes_vector,
                    const boost::optional<bool> continue_straight_at_waypoint);
 

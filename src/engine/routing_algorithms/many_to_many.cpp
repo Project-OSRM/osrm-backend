@@ -17,6 +17,9 @@ namespace routing_algorithms
 
 using ManyToManyQueryHeap = SearchEngineData::ManyToManyQueryHeap;
 
+namespace ch
+{
+
 namespace
 {
 struct NodeBucket
@@ -34,7 +37,7 @@ struct NodeBucket
 using SearchSpaceWithBuckets = std::unordered_map<NodeID, std::vector<NodeBucket>>;
 
 template <bool DIRECTION>
-void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
                         const EdgeWeight duration,
@@ -69,7 +72,7 @@ void relaxOutgoingEdges(const datafacade::ContiguousInternalMemoryDataFacade<alg
     }
 }
 
-void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                         const unsigned row_idx,
                         const unsigned number_of_targets,
                         ManyToManyQueryHeap &query_heap,
@@ -126,11 +129,10 @@ void forwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<alg
     relaxOutgoingEdges<FORWARD_DIRECTION>(facade, node, source_weight, source_duration, query_heap);
 }
 
-void backwardRoutingStep(
-    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
-    const unsigned column_idx,
-    ManyToManyQueryHeap &query_heap,
-    SearchSpaceWithBuckets &search_space_with_buckets)
+void backwardRoutingStep(const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
+                         const unsigned column_idx,
+                         ManyToManyQueryHeap &query_heap,
+                         SearchSpaceWithBuckets &search_space_with_buckets)
 {
     const NodeID node = query_heap.DeleteMin();
     const EdgeWeight target_weight = query_heap.GetKey(node);
@@ -150,7 +152,7 @@ void backwardRoutingStep(
 
 std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+                 const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
                  const std::vector<PhantomNode> &phantom_nodes,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices)
@@ -240,6 +242,7 @@ manyToManySearch(SearchEngineData &engine_working_data,
     return durations_table;
 }
 
+} // namespace ch
 } // namespace routing_algorithms
 } // namespace engine
 } // namespace osrm

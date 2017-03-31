@@ -7,30 +7,36 @@ namespace osrm
 {
 namespace engine
 {
-namespace algorithm
+namespace routing_algorithms
 {
 
 // Contraction Hiearchy
-struct CH final
+namespace ch
+{
+struct Algorithm final
 {
 };
+}
 // Contraction Hiearchy with core
-struct CoreCH final
+namespace corech
+{
+struct Algorithm final
 {
 };
+}
 // Multi-Level Dijkstra
-struct MLD final
+namespace mld
+{
+struct Algorithm final
 {
 };
-
-template <typename AlgorithmT> const char *name();
-template <> inline const char *name<CH>() { return "CH"; }
-template <> inline const char *name<CoreCH>() { return "CoreCH"; }
-template <> inline const char *name<MLD>() { return "MLD"; }
 }
 
-namespace algorithm_trais
-{
+// Algorithm names
+template <typename AlgorithmT> const char *name();
+template <> inline const char *name<ch::Algorithm>() { return "CH"; }
+template <> inline const char *name<corech::Algorithm>() { return "CoreCH"; }
+template <> inline const char *name<mld::Algorithm>() { return "MLD"; }
 
 template <typename AlgorithmT> struct HasAlternativePathSearch final : std::false_type
 {
@@ -51,62 +57,64 @@ template <typename AlgorithmT> struct HasGetTileTurns final : std::false_type
 {
 };
 
-template <> struct HasAlternativePathSearch<algorithm::CH> final : std::true_type
+// Algorithms supported by Contraction Hierarchies
+template <> struct HasAlternativePathSearch<ch::Algorithm> final : std::true_type
 {
 };
-template <> struct HasShortestPathSearch<algorithm::CH> final : std::true_type
+template <> struct HasShortestPathSearch<ch::Algorithm> final : std::true_type
 {
 };
-template <> struct HasDirectShortestPathSearch<algorithm::CH> final : std::true_type
+template <> struct HasDirectShortestPathSearch<ch::Algorithm> final : std::true_type
 {
 };
-template <> struct HasMapMatching<algorithm::CH> final : std::true_type
+template <> struct HasMapMatching<ch::Algorithm> final : std::true_type
 {
 };
-template <> struct HasManyToManySearch<algorithm::CH> final : std::true_type
+template <> struct HasManyToManySearch<ch::Algorithm> final : std::true_type
 {
 };
-template <> struct HasGetTileTurns<algorithm::CH> final : std::true_type
-{
-};
-
-// disbaled because of perfomance reasons
-template <> struct HasAlternativePathSearch<algorithm::CoreCH> final : std::false_type
-{
-};
-template <> struct HasManyToManySearch<algorithm::CoreCH> final : std::false_type
-{
-};
-template <> struct HasShortestPathSearch<algorithm::CoreCH> final : std::true_type
-{
-};
-template <> struct HasDirectShortestPathSearch<algorithm::CoreCH> final : std::true_type
-{
-};
-template <> struct HasMapMatching<algorithm::CoreCH> final : std::true_type
-{
-};
-template <> struct HasGetTileTurns<algorithm::CoreCH> final : std::true_type
+template <> struct HasGetTileTurns<ch::Algorithm> final : std::true_type
 {
 };
 
+// Algorithms supported by Contraction Hierarchies with core
+template <> struct HasShortestPathSearch<corech::Algorithm> final : std::true_type
+{
+};
+template <> struct HasDirectShortestPathSearch<corech::Algorithm> final : std::true_type
+{
+};
+template <> struct HasMapMatching<corech::Algorithm> final : std::true_type
+{
+};
+template <> struct HasGetTileTurns<corech::Algorithm> final : std::true_type
+{
+};
 // disbaled because of perfomance reasons
-template <> struct HasAlternativePathSearch<algorithm::MLD> final : std::false_type
+template <> struct HasAlternativePathSearch<corech::Algorithm> final : std::false_type
 {
 };
-template <> struct HasManyToManySearch<algorithm::MLD> final : std::false_type
+template <> struct HasManyToManySearch<corech::Algorithm> final : std::false_type
 {
 };
-template <> struct HasShortestPathSearch<algorithm::MLD> final : std::false_type
+
+// Algorithms supported by Multi-Level Dijkstra
+template <> struct HasDirectShortestPathSearch<mld::Algorithm> final : std::true_type
 {
 };
-template <> struct HasDirectShortestPathSearch<algorithm::MLD> final : std::true_type
+template <> struct HasMapMatching<mld::Algorithm> final : std::false_type
 {
 };
-template <> struct HasMapMatching<algorithm::MLD> final : std::false_type
+template <> struct HasAlternativePathSearch<mld::Algorithm> final : std::false_type
 {
 };
-template <> struct HasGetTileTurns<algorithm::MLD> final : std::false_type
+template <> struct HasManyToManySearch<mld::Algorithm> final : std::false_type
+{
+};
+template <> struct HasShortestPathSearch<mld::Algorithm> final : std::false_type
+{
+};
+template <> struct HasGetTileTurns<mld::Algorithm> final : std::false_type
 {
 };
 }

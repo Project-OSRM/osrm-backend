@@ -109,7 +109,7 @@ InternalRouteResult directShortestPathSearchImpl(
 template <>
 InternalRouteResult directShortestPathSearch(
     SearchEngineData &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CoreCH> &facade,
+    const datafacade::ContiguousInternalMemoryDataFacade<corech::Algorithm> &facade,
     const PhantomNodes &phantom_nodes)
 {
     return ch::directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
@@ -118,7 +118,7 @@ InternalRouteResult directShortestPathSearch(
 template <>
 InternalRouteResult directShortestPathSearch(
     SearchEngineData &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::CH> &facade,
+    const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
     const PhantomNodes &phantom_nodes)
 {
     return ch::directShortestPathSearchImpl(engine_working_data, facade, phantom_nodes);
@@ -127,7 +127,7 @@ InternalRouteResult directShortestPathSearch(
 template <>
 InternalRouteResult directShortestPathSearch(
     SearchEngineData &engine_working_data,
-    const datafacade::ContiguousInternalMemoryDataFacade<algorithm::MLD> &facade,
+    const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
     const PhantomNodes &phantom_nodes)
 {
     engine_working_data.InitializeOrClearMultiLayerDijkstraThreadLocalStorage(
