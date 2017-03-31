@@ -132,7 +132,7 @@ template <typename DataT> class SharedMemoryWrapper
     friend void swap(SharedMemoryWrapper<T> &, SharedMemoryWrapper<T> &) noexcept;
 };
 
-template <> class SharedMemoryWrapper<osrm::storage::MemorySetting>
+template <> class SharedMemoryWrapper<bool>
 {
   private:
     unsigned *m_ptr;

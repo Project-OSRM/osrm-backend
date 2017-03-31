@@ -155,7 +155,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
     : public datafacade::AlgorithmDataFacade<algorithm::CoreCH>
 {
   private:
-    util::ShM<unsigned, osrm::storage::MemorySetting::SharedMemory>::vector m_is_core_node;
+    util::ShM<bool, osrm::storage::MemorySetting::SharedMemory>::vector m_is_core_node;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
@@ -164,7 +164,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
     {
         auto core_marker_ptr =
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CH_CORE_MARKER);
-        util::ShM<unsigned, osrm::storage::MemorySetting::SharedMemory>::vector is_core_node(
+        util::ShM<bool, osrm::storage::MemorySetting::SharedMemory>::vector is_core_node(
             core_marker_ptr, data_layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
         m_is_core_node = std::move(is_core_node);
     }
