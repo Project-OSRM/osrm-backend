@@ -572,7 +572,7 @@ void ExtractionContainers::WriteEdges(storage::io::FileWriter &file_out) const
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
 
-        file_out.WriteElementCount32(normal_edges.size());
+        file_out.WriteElementCount64(normal_edges.size());
         file_out.WriteFrom(normal_edges.data(), normal_edges.size());
 
         TIMER_STOP(write_edges);
@@ -584,10 +584,9 @@ void ExtractionContainers::WriteEdges(storage::io::FileWriter &file_out) const
 void ExtractionContainers::WriteNodes(storage::io::FileWriter &file_out) const
 {
     {
-        // write dummy value, will be overwritten later
         util::UnbufferedLog log;
         log << "setting number of nodes   ... " << std::flush;
-        file_out.WriteElementCount32(max_internal_node_id);
+        file_out.WriteElementCount64(max_internal_node_id);
         log << "ok";
     }
 
@@ -634,7 +633,7 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
     storage::io::FileWriter restrictions_out_file(path,
                                                   storage::io::FileWriter::GenerateFingerprint);
 
-    restrictions_out_file.WriteElementCount32(written_restriction_count);
+    restrictions_out_file.WriteElementCount64(written_restriction_count);
 
     for (const auto &restriction_container : restrictions_list)
     {
@@ -647,7 +646,7 @@ void ExtractionContainers::WriteRestrictions(const std::string &path) const
         }
     }
     restrictions_out_file.SkipToBeginning();
-    restrictions_out_file.WriteElementCount32(written_restriction_count);
+    restrictions_out_file.WriteElementCount64(written_restriction_count);
     util::Log() << "usable restrictions: " << written_restriction_count;
 }
 
