@@ -2,7 +2,7 @@
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/guidance/turn_analysis.hpp"
 #include "extractor/guidance/turn_lane_handler.hpp"
-#include "extractor/io.hpp"
+#include "extractor/files.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/suffix_table.hpp"
 
@@ -205,7 +205,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
     m_edge_based_node_weights.reserve(m_max_edge_id + 1);
     {
         auto mapping = GenerateEdgeExpandedNodes();
-        io::write(cnbg_ebg_mapping_path, mapping);
+        files::writeNBGMapping(cnbg_ebg_mapping_path, mapping);
     }
     TIMER_STOP(generate_nodes);
 

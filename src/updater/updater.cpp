@@ -2,12 +2,14 @@
 
 #include "updater/csv_source.hpp"
 
+#include "extractor/files.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
-#include "extractor/io.hpp"
+#include "extractor/seralization.hpp"
 #include "extractor/node_based_edge.hpp"
 
 #include "storage/io.hpp"
+
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/for_each_pair.hpp"
@@ -85,7 +87,7 @@ void checkWeightsConsistency(
     using OriginalEdgeData = osrm::extractor::OriginalEdgeData;
 
     extractor::SegmentDataContainer segment_data;
-    extractor::io::read(config.geometry_path, segment_data);
+    extractor::files::readSegmentData(config.geometry_path, segment_data);
 
     Reader edges_input_file(config.osrm_input_path.string() + ".edges", Reader::HasNoFingerprint);
     std::vector<OriginalEdgeData> current_edge_data(edges_input_file.ReadElementCount64());
@@ -361,7 +363,7 @@ void saveDatasourcesNames(const UpdaterConfig &config)
         source++;
     }
 
-    extractor::io::write(config.datasource_names_path, sources);
+    extractor::files::writeDatasources(config.datasource_names_path, sources);
 }
 
 std::vector<std::uint64_t>
@@ -459,7 +461,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (update_edge_weights || update_turn_penalties)
     {
         const auto load_segment_data = [&] {
-            extractor::io::read(config.geometry_path, segment_data);
+            extractor::files::readSegmentData(config.geometry_path, segment_data);
         };
 
         const auto load_edge_data = [&] {
@@ -503,7 +505,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         updated_segments =
             updateSegmentData(config, profile_properties, segment_speed_lookup, segment_data);
         // Now save out the updated compressed geometries
-        extractor::io::write(config.geometry_path, segment_data);
+        extractor::files::writeSegmentData(config.geometry_path, segment_data);
         TIMER_STOP(segment);
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }

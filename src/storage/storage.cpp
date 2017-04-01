@@ -4,7 +4,7 @@
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
-#include "extractor/io.hpp"
+#include "extractor/files.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
@@ -686,7 +686,7 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     {
         const auto datasources_names_ptr = layout.GetBlockPtr<extractor::Datasources, true>(
             memory_ptr, DataLayout::DATASOURCES_NAMES);
-        extractor::io::read(config.datasource_names_path, *datasources_names_ptr);
+        extractor::files::readDatasources(config.datasource_names_path, *datasources_names_ptr);
     }
 
     // Loading list of coordinates

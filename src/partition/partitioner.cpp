@@ -9,7 +9,7 @@
 #include "partition/recursive_bisection.hpp"
 #include "partition/remove_unconnected.hpp"
 
-#include "extractor/io.hpp"
+#include "extractor/files.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/geojson_debug_logger.hpp"
@@ -126,7 +126,7 @@ int Partitioner::Run(const PartitionConfig &config)
     // For details see #3205
 
     std::vector<extractor::NBGToEBG> mapping;
-    extractor::io::read(config.cnbg_ebg_mapping_path.string(), mapping);
+    extractor::files::readNBGMapping(config.cnbg_ebg_mapping_path.string(), mapping);
     util::Log() << "Loaded node based graph to edge based graph mapping";
 
     auto edge_based_graph = LoadEdgeBasedGraph(config.edge_based_graph_path.string());
