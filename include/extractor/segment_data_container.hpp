@@ -17,6 +17,15 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace extractor
 {
 
@@ -27,13 +36,13 @@ namespace detail
 template <storage::Ownership Ownership> class SegmentDataContainerImpl;
 }
 
-namespace io
+namespace serialization
 {
 template <storage::Ownership Ownership>
-inline void read(const boost::filesystem::path &path,
+inline void read(storage::io::FileReader &reader,
                  detail::SegmentDataContainerImpl<Ownership> &segment_data);
 template <storage::Ownership Ownership>
-inline void write(const boost::filesystem::path &path,
+inline void write(storage::io::FileWriter &writer,
                   const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 }
 
@@ -190,11 +199,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     auto GetNumberOfGeometries() const { return index.size() - 1; }
     auto GetNumberOfSegments() const { return fwd_weights.size(); }
 
-    friend void io::read<Ownership>(const boost::filesystem::path &path,
-                                    detail::SegmentDataContainerImpl<Ownership> &segment_data);
     friend void
-    io::write<Ownership>(const boost::filesystem::path &path,
-                         const detail::SegmentDataContainerImpl<Ownership> &segment_data);
+    serialization::read<Ownership>(storage::io::FileReader &reader,
+                             detail::SegmentDataContainerImpl<Ownership> &segment_data);
+    friend void
+    serialization::write<Ownership>(storage::io::FileWriter &writer,
+                              const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:
     Vector<std::uint32_t> index;

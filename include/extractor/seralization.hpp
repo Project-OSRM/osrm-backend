@@ -13,47 +13,32 @@ namespace osrm
 {
 namespace extractor
 {
-namespace io
+namespace serialization
 {
 
-inline void read(const boost::filesystem::path &path, std::vector<NBGToEBG> &mapping)
+inline void read(storage::io::FileReader &reader, std::vector<NBGToEBG> &mapping)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
     reader.DeserializeVector(mapping);
 }
 
-inline void write(const boost::filesystem::path &path, const std::vector<NBGToEBG> &mapping)
+inline void write(storage::io::FileWriter &writer, const std::vector<NBGToEBG> &mapping)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter reader{path, fingerprint};
-
-    reader.SerializeVector(mapping);
+    writer.SerializeVector(mapping);
 }
 
-inline void read(const boost::filesystem::path &path, Datasources &sources)
+inline void read(storage::io::FileReader &reader, Datasources &sources)
 {
-    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
     reader.ReadInto(sources);
 }
 
-inline void write(const boost::filesystem::path &path, Datasources &sources)
+inline void write(storage::io::FileWriter &writer, Datasources &sources)
 {
-    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
-
     writer.WriteFrom(sources);
 }
 
 template <>
-inline void read(const boost::filesystem::path &path, SegmentDataContainer &segment_data)
+inline void read(storage::io::FileReader &reader, SegmentDataContainer &segment_data)
 {
-    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
     auto num_indices = reader.ReadElementCount32();
     segment_data.index.resize(num_indices);
     reader.ReadInto(segment_data.index.data(), num_indices);
@@ -75,11 +60,8 @@ inline void read(const boost::filesystem::path &path, SegmentDataContainer &segm
 }
 
 template <>
-inline void write(const boost::filesystem::path &path, const SegmentDataContainer &segment_data)
+inline void write(storage::io::FileWriter &writer, const SegmentDataContainer &segment_data)
 {
-    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
-
     writer.WriteElementCount32(segment_data.index.size());
     writer.WriteFrom(segment_data.index);
 
