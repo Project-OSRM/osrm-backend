@@ -497,6 +497,28 @@ void Storage::PopulateLayout(DataLayout &layout)
             layout.SetBlockSize<customizer::MultiLevelEdgeBasedGraph::EdgeOffset>(
                 DataLayout::MLD_GRAPH_NODE_TO_OFFSET, 0);
         }
+
+        if (boost::filesystem::exists(config.mld_grasp_path))
+        {
+            io::FileReader reader(config.mld_grasp_path, io::FileReader::VerifyFingerprint);
+
+            const auto num_nodes =
+                reader.ReadVectorSize<partition::GRASPStorageView::GRASPNodeEntry>();
+            const auto num_edges =
+                reader.ReadVectorSize<partition::GRASPStorageView::GRASPEdgeEntry>();
+
+            layout.SetBlockSize<partition::GRASPStorageView::GRASPNodeEntry>(
+                DataLayout::MLD_GRASP_NODE_LIST, num_nodes);
+            layout.SetBlockSize<partition::GRASPStorageView::GRASPNodeEntry>(
+                DataLayout::MLD_GRASP_EDGE_LIST, num_edges);
+        }
+        else
+        {
+            layout.SetBlockSize<partition::GRASPStorageView::GRASPNodeEntry>(
+                DataLayout::MLD_GRASP_NODE_LIST, 0);
+            layout.SetBlockSize<partition::GRASPStorageView::GRASPNodeEntry>(
+                DataLayout::MLD_GRASP_EDGE_LIST, 0);
+        }
     }
 }
 
@@ -955,6 +977,24 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
             customizer::MultiLevelEdgeBasedGraphView graph_view(
                 std::move(node_list), std::move(edge_list), std::move(node_to_offset));
             partition::files::readGraph(config.mld_graph_path, graph_view);
+        }
+
+        if (boost::filesystem::exists(config.mld_grasp_path))
+        {
+            auto mld_grasp_node_ptr =
+                layout.GetBlockPtr<partition::GRASPStorageView::GRASPNodeEntry, true>(
+                    memory_ptr, storage::DataLayout::MLD_GRASP_NODE_LIST);
+            auto mld_grasp_edges_ptr =
+                layout.GetBlockPtr<partition::GRASPStorageView::GRASPEdgeEntry, true>(
+                    memory_ptr, storage::DataLayout::MLD_GRASP_EDGE_LIST);
+
+            util::vector_view<partition::GRASPStorageView::GRASPNodeEntry> node_list(
+                mld_grasp_node_ptr, layout.num_entries[storage::DataLayout::MLD_GRASP_NODE_LIST]);
+            util::vector_view<partition::GRASPStorageView::GRASPEdgeEntry> edge_list(
+                mld_grasp_edges_ptr, layout.num_entries[storage::DataLayout::MLD_GRASP_EDGE_LIST]);
+
+            partition::GRASPStorageView storage{std::move(node_list), std::move(edge_list)};
+            partition::files::readGRASP(config.mld_grasp_path, storage);
         }
     }
 }

@@ -278,6 +278,22 @@ class StaticGraph
     serialization::write<EdgeDataT, Ownership>(storage::io::FileWriter &writer,
                                                const StaticGraph<EdgeDataT, Ownership> &graph);
 
+    std::vector<InputEdge> ToEdges() const
+    {
+        std::vector<InputEdge> edges;
+        edges.reserve(number_of_edges);
+
+        for (auto node : util::irange<NodeID>(0, number_of_nodes))
+        {
+            for (auto edge : GetAdjacentEdgeRange(node))
+            {
+                edges.emplace_back(node, GetTarget(edge), GetEdgeData(edge));
+            }
+        }
+
+        return edges;
+    }
+
   protected:
     template <typename IterT>
     void InitializeFromSortedEdgeRange(const std::uint32_t nodes, IterT begin, IterT end)

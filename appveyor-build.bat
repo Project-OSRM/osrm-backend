@@ -132,6 +132,14 @@ ECHO running server-tests.exe ...
 unit_tests\%Configuration%\server-tests.exe
 IF %ERRORLEVEL% NEQ 0 GOTO ERROR
 
+ECHO running partition-tests.exe ...
+unit_tests\%Configuration%\partition-tests.exe
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
+ECHO running customizer-tests.exe ...
+unit_tests\%Configuration%\customizer-tests.exe
+IF %ERRORLEVEL% NEQ 0 GOTO ERROR
+
 ECHO running library-tests.exe ...
 SET test_region=monaco
 SET test_region_ch=ch\monaco

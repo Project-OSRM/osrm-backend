@@ -15,7 +15,7 @@ namespace customizer
 
 struct CustomizationConfig
 {
-    CustomizationConfig() : requested_num_threads(0) {}
+    CustomizationConfig() : requested_num_threads(0), grasp(false) {}
 
     void UseDefaults()
     {
@@ -35,6 +35,7 @@ struct CustomizationConfig
         edge_based_graph_path = basepath + ".osrm.ebg";
         mld_partition_path = basepath + ".osrm.partition";
         mld_storage_path = basepath + ".osrm.cells";
+        mld_grasp_path = basepath + ".osrm.grasp";
         mld_graph_path = basepath + ".osrm.mldgr";
 
         updater_config.osrm_input_path = basepath + ".osrm";
@@ -46,9 +47,11 @@ struct CustomizationConfig
     boost::filesystem::path edge_based_graph_path;
     boost::filesystem::path mld_partition_path;
     boost::filesystem::path mld_storage_path;
+    boost::filesystem::path mld_grasp_path;
     boost::filesystem::path mld_graph_path;
 
     unsigned requested_num_threads;
+    bool grasp;
 
     updater::UpdaterConfig updater_config;
 };

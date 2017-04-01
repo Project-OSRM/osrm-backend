@@ -68,7 +68,9 @@ const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
                                             "MLD_CELL_LEVEL_OFFSETS",
                                             "MLD_GRAPH_NODE_LIST",
                                             "MLD_GRAPH_EDGE_LIST",
-                                            "MLD_GRAPH_NODE_TO_OFFSET"};
+                                            "MLD_GRAPH_NODE_TO_OFFSET",
+                                            "MLD_GRASP_NODE_LIST",
+                                            "MLD_GRASP_EDGE_LIST"};
 
 struct DataLayout
 {
@@ -125,6 +127,8 @@ struct DataLayout
         MLD_GRAPH_NODE_LIST,
         MLD_GRAPH_EDGE_LIST,
         MLD_GRAPH_NODE_TO_OFFSET,
+        MLD_GRASP_NODE_LIST,
+        MLD_GRASP_EDGE_LIST,
         NUM_BLOCKS
     };
 

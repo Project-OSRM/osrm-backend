@@ -3,12 +3,15 @@
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph.hpp"
+#include "partition/grasp_storage.hpp"
 #include "partition/multi_level_graph.hpp"
 #include "partition/multi_level_partition.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_memory_ownership.hpp"
+
+#include "util/serialization.hpp"
 
 namespace osrm
 {
@@ -72,6 +75,19 @@ inline void write(storage::io::FileWriter &writer,
     storage::serialization::write(writer, storage.destination_boundary);
     storage::serialization::write(writer, storage.cells);
     storage::serialization::write(writer, storage.level_to_cell_offset);
+}
+
+template <storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader, detail::GRASPStorageImpl<Ownership> &storage)
+{
+    util::serialization::read(reader, storage.downwards_graph);
+}
+
+template <storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::GRASPStorageImpl<Ownership> &storage)
+{
+    util::serialization::write(writer, storage.downwards_graph);
 }
 }
 }

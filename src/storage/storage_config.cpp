@@ -38,7 +38,7 @@ StorageConfig::StorageConfig(const boost::filesystem::path &base)
       intersection_class_path{base.string() + ".icd"}, turn_lane_data_path{base.string() + ".tld"},
       turn_lane_description_path{base.string() + ".tls"},
       mld_partition_path{base.string() + ".partition"}, mld_storage_path{base.string() + ".cells"},
-      mld_graph_path{base.string() + ".mldgr"}
+      mld_graph_path{base.string() + ".mldgr"}, mld_grasp_path{base.string() + ".grasp"}
 {
 }
 

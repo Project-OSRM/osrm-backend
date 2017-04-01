@@ -6,6 +6,7 @@
 #include "engine/algorithm.hpp"
 
 #include "partition/cell_storage.hpp"
+#include "partition/grasp_storage.hpp"
 #include "partition/multi_level_partition.hpp"
 
 #include "util/integer_range.hpp"
@@ -94,6 +95,8 @@ template <> class AlgorithmDataFacade<MLD>
     virtual const partition::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 
     virtual const partition::CellStorageView &GetCellStorage() const = 0;
+
+    virtual const partition::GRASPStorageView &GetGraspStorage() const = 0;
 
     virtual EdgeRange GetBorderEdgeRange(const LevelID level, const NodeID node) const = 0;
 

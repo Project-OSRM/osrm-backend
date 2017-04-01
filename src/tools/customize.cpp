@@ -46,7 +46,11 @@ parseArguments(int argc, char *argv[], customizer::CustomizationConfig &customiz
                 &customization_config.updater_config.turn_penalty_lookup_paths)
                 ->composing(),
             "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn "
-            "weights")("edge-weight-updates-over-factor",
+            "weights")("grasp",
+                       boost::program_options::value<bool>(
+                           &customization_config.grasp)
+                           ->default_value(false)->implicit_value(true),
+                       "Prepare data for GRASP queries")("edge-weight-updates-over-factor",
                        boost::program_options::value<double>(
                            &customization_config.updater_config.log_edge_updates_factor)
                            ->default_value(0.0),

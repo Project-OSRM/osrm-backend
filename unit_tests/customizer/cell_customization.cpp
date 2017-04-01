@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(two_level_test)
     REQUIRE_SIZE_RANGE(cell_1_1.GetOutWeight(2), 2);
     REQUIRE_SIZE_RANGE(cell_1_1.GetInWeight(3), 2);
 
-    customizer.Customize(graph, heap, storage, 1, 0);
-    customizer.Customize(graph, heap, storage, 1, 1);
+    customizer.CustomizeCell(graph, heap, storage, 1, 0);
+    customizer.CustomizeCell(graph, heap, storage, 1, 1);
 
     // cell 0
     // check row source -> destination
@@ -207,13 +207,13 @@ BOOST_AUTO_TEST_CASE(four_levels_test)
     CellCustomizer customizer(mlp);
     CellCustomizer::Heap heap(graph.GetNumberOfNodes());
 
-    customizer.Customize(graph, heap, storage, 1, 0);
-    customizer.Customize(graph, heap, storage, 1, 1);
-    customizer.Customize(graph, heap, storage, 1, 2);
-    customizer.Customize(graph, heap, storage, 1, 3);
+    customizer.CustomizeCell(graph, heap, storage, 1, 0);
+    customizer.CustomizeCell(graph, heap, storage, 1, 1);
+    customizer.CustomizeCell(graph, heap, storage, 1, 2);
+    customizer.CustomizeCell(graph, heap, storage, 1, 3);
 
-    customizer.Customize(graph, heap, storage, 2, 0);
-    customizer.Customize(graph, heap, storage, 2, 1);
+    customizer.CustomizeCell(graph, heap, storage, 2, 0);
+    customizer.CustomizeCell(graph, heap, storage, 2, 1);
 
     // level 1
     // cell 0

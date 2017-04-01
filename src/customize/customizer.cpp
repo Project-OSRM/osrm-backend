@@ -1,6 +1,7 @@
 #include "customizer/customizer.hpp"
 #include "customizer/cell_customizer.hpp"
 #include "customizer/edge_based_graph.hpp"
+#include "customizer/grasp_cell_customizer.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
@@ -107,11 +108,27 @@ int Customizer::Run(const CustomizationConfig &config)
     TIMER_STOP(loading_data);
     util::Log() << "Loading partition data took " << TIMER_SEC(loading_data) << " seconds";
 
-    TIMER_START(cell_customize);
-    CellCustomizer customizer(mlp);
-    customizer.Customize(*edge_based_graph, storage);
-    TIMER_STOP(cell_customize);
-    util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
+    if (config.grasp)
+    {
+        partition::GRASPStorage grasp;
+        partition::files::readGRASP(config.mld_grasp_path, grasp);
+
+        TIMER_START(cell_customize);
+        GRASPCellCustomizer customizer(mlp);
+        customizer.Customize(*edge_based_graph, storage, grasp);
+        TIMER_STOP(cell_customize);
+        util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
+
+        partition::files::writeGRASP(config.mld_grasp_path, grasp);
+    }
+    else
+    {
+        TIMER_START(cell_customize);
+        CellCustomizer customizer(mlp);
+        customizer.Customize(*edge_based_graph, storage);
+        TIMER_STOP(cell_customize);
+        util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
+    }
 
     TIMER_START(writing_mld_data);
     partition::files::writeCells(config.mld_storage_path, storage);
@@ -122,8 +139,6 @@ int Customizer::Run(const CustomizationConfig &config)
     partition::files::writeGraph(config.mld_graph_path, *edge_based_graph);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
-
-    CellStorageStatistics(*edge_based_graph, mlp, storage);
 
     return 0;
 }

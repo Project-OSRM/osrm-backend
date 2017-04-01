@@ -97,6 +97,34 @@ inline void writeCells(const boost::filesystem::path &path, CellStorageT &storag
 
     serialization::write(writer, storage);
 }
+
+// reads .osrm.grasp file
+template <typename GRASPStorageT>
+inline void readGRASP(const boost::filesystem::path &path, GRASPStorageT &storage)
+{
+    static_assert(std::is_same<GRASPStorageView, GRASPStorageT>::value ||
+                      std::is_same<GRASPStorage, GRASPStorageT>::value,
+                  "");
+
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    serialization::read(reader, storage);
+}
+
+// writes .osrm.grasp file
+template <typename GRASPStorageT>
+inline void writeGRASP(const boost::filesystem::path &path, GRASPStorageT &storage)
+{
+    static_assert(std::is_same<GRASPStorageView, GRASPStorageT>::value ||
+                      std::is_same<GRASPStorage, GRASPStorageT>::value,
+                  "");
+
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+    storage::io::FileWriter writer{path, fingerprint};
+
+    serialization::write(writer, storage);
+}
 }
 }
 }

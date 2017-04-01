@@ -43,6 +43,7 @@ struct PartitionConfig
         storage_path = basepath + ".osrm.cells";
         node_data_path = basepath + ".osrm.ebg_nodes";
         hsgr_path = basepath + ".osrm.hsgr";
+        mld_grasp_path = basepath + ".osrm.grasp";
     }
 
     // might be changed to the node based graph at some point
@@ -55,8 +56,10 @@ struct PartitionConfig
     boost::filesystem::path storage_path;
     boost::filesystem::path node_data_path;
     boost::filesystem::path hsgr_path;
+    boost::filesystem::path mld_grasp_path;
 
     unsigned requested_num_threads;
+    bool grasp;
 
     double balance;
     double boundary_factor;

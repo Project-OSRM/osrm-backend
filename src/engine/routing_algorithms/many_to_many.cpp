@@ -384,6 +384,174 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     return durations_table;
 }
 
+template <typename QueryHeap>
+void extractRow(const std::size_t offset,
+                QueryHeap &query_heap,
+                const std::vector<std::size_t> &target_indices,
+                const std::vector<PhantomNode> &phantom_nodes,
+                std::vector<EdgeWeight> &durations_table,
+                std::vector<EdgeWeight> &weights_table)
+{
+    std::size_t column_idx = 0;
+    const auto extract_phantom = [&](const auto &phantom) {
+        auto &weight_entry = weights_table[offset + column_idx];
+        if (phantom.forward_segment_id.enabled && phantom.reverse_segment_id.enabled)
+        {
+            weight_entry = std::min(query_heap.GetKey(phantom.forward_segment_id.id),
+                                    query_heap.GetKey(phantom.reverse_segment_id.id));
+        }
+        else if (phantom.forward_segment_id.enabled)
+        {
+            weight_entry = query_heap.GetKey(phantom.forward_segment_id.id);
+        }
+        else if (phantom.reverse_segment_id.enabled)
+        {
+            weight_entry = query_heap.GetKey(phantom.reverse_segment_id.id);
+        }
+    };
+
+    if (target_indices.empty())
+    {
+        for (const auto &phantom : phantom_nodes)
+        {
+            extract_phantom(phantom);
+        }
+    }
+    else
+    {
+        for (const auto index : target_indices)
+        {
+            const auto &phantom = phantom_nodes[index];
+            extract_phantom(phantom);
+        }
+    }
+}
+}
+
+std::vector<EdgeWeight>
+manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
+                 const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+                 const std::vector<PhantomNode> &phantom_nodes,
+                 const std::vector<std::size_t> &source_indices,
+                 const std::vector<std::size_t> &target_indices)
+{
+    const auto number_of_sources =
+        source_indices.empty() ? phantom_nodes.size() : source_indices.size();
+    const auto number_of_targets =
+        target_indices.empty() ? phantom_nodes.size() : target_indices.size();
+    const auto number_of_entries = number_of_sources * number_of_targets;
+
+    const auto &grasp_storage = facade.GetGraspStorage();
+
+    std::vector<EdgeWeight> weights_table(number_of_entries, INVALID_EDGE_WEIGHT);
+    std::vector<EdgeWeight> durations_table(number_of_entries, MAXIMAL_EDGE_DURATION);
+    std::vector<bool> is_target(facade.GetNumberOfNodes(), false);
+
+    const auto mark_target = [&](const PhantomNode& phantom) {
+        if (phantom.forward_segment_id.enabled)
+            is_target[phantom.forward_segment_id.id] = true;
+        if (phantom.reverse_segment_id.enabled)
+            is_target[phantom.reverse_segment_id.id] = true;
+    };
+
+    if (target_indices.empty())
+    {
+        for (const auto &phantom : phantom_nodes)
+        {
+            mark_target(phantom);
+        }
+    }
+    else
+    {
+        for (const auto index : target_indices)
+        {
+            const auto &phantom = phantom_nodes[index];
+            mark_target(phantom);
+        }
+    }
+
+    for (const auto node : util::irange<NodeID>(0, facade.GetNumberOfNodes()))
+    {
+        if (is_target[node])
+        {
+            for (const auto edge : grasp_storage.GetDownwardEdgeRange(node))
+            {
+                const auto source = grasp_storage.GetSource(edge);
+                // we can insure this because of our ID sorting
+                // that sortes border vertices of smaller cells later
+                BOOST_ASSERT(source < node);
+                is_target[source] = true;
+            }
+        }
+    }
+
+    engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes());
+    auto &query_heap = *(engine_working_data.forward_heap_1);
+
+    const auto& partition = facade.GetMultiLevelPartition();
+    const auto& cell_storage = facade.GetCellStorage();
+
+    // for each source do forward search
+    unsigned row_idx = 0;
+    const auto search_source_phantom = [&](const PhantomNode &phantom) {
+        // clear heap and insert source nodes
+        query_heap.Clear();
+        insertSourceInHeap(query_heap, phantom);
+
+        // explore search space
+        while (!query_heap.Empty())
+        {
+            forwardRoutingStep(facade, partition, cell_storage, phantom, query_heap);
+        }
+
+        for (const auto level : boost::range::reverse(util::irange<LevelID>(0, partition.GetNumberOfLevel())))
+        {
+            for (const auto cell_id : util::irange<CellID>(0, partition.GetNumberOfCells(level)))
+            {
+                const auto &cell = cell_storage.GetCell(cell_id);
+
+                for (const auto node : cell.GetSourceNodes())
+                {
+                    const auto &data = query_heap.GetData(node);
+
+                    for (const auto edge : grasp_storage.GetDownwardEdgeRange(node))
+                    {
+                        auto source = graph_storage.GetSource(edge);
+                        const auto &edge_data = grasp_storage.GetEdgeData(edge);
+                        auto new_weight = data.weight + edge_data.weight;
+                        auto new_duration = data.duration + edge_data.duration;
+
+                        // FIXME update data in heap
+                    }
+                }
+            }
+        }
+
+        const auto offset = row_idx * number_of_targets;
+        extractRow(
+            offset, query_heap, target_indices, phantom_nodes, durations_table, weights_table);
+        ++row_idx;
+    };
+
+    if (source_indices.empty())
+    {
+        for (const auto &phantom : phantom_nodes)
+        {
+            search_source_phantom(phantom);
+        }
+    }
+    else
+    {
+        for (const auto index : source_indices)
+        {
+            const auto &phantom = phantom_nodes[index];
+            search_source_phantom(phantom);
+        }
+    }
+
+    return durations_table;
+}
+
 template std::vector<EdgeWeight>
 manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const datafacade::ContiguousInternalMemoryDataFacade<ch::Algorithm> &facade,
@@ -391,12 +559,12 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                  const std::vector<std::size_t> &source_indices,
                  const std::vector<std::size_t> &target_indices);
 
-template std::vector<EdgeWeight>
-manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
-                 const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
-                 const std::vector<PhantomNode> &phantom_nodes,
-                 const std::vector<std::size_t> &source_indices,
-                 const std::vector<std::size_t> &target_indices);
+//template std::vector<EdgeWeight>
+//manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
+//                 const datafacade::ContiguousInternalMemoryDataFacade<mld::Algorithm> &facade,
+//                 const std::vector<PhantomNode> &phantom_nodes,
+//                 const std::vector<std::size_t> &source_indices,
+//                 const std::vector<std::size_t> &target_indices);
 
 } // namespace routing_algorithms
 } // namespace engine

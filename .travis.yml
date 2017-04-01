@@ -356,6 +356,7 @@ script:
   - ./unit_tests/util-tests
   - ./unit_tests/server-tests
   - ./unit_tests/partition-tests
+  - ./unit_tests/customizer-tests
   - |
     if [ -z "${ENABLE_SANITIZER}" ] && [ "$TARGET_ARCH" != "i686" ]; then
       npm run nodejs-tests

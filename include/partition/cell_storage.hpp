@@ -376,7 +376,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
     friend void serialization::write<Ownership>(storage::io::FileWriter &writer,
                                                 const detail::CellStorageImpl<Ownership> &storage);
 
-  private:
+  protected:
     Vector<EdgeWeight> weights;
     Vector<EdgeDuration> durations;
     Vector<NodeID> source_boundary;
@@ -384,6 +384,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
     Vector<CellData> cells;
     Vector<std::uint64_t> level_to_cell_offset;
 };
+
 }
 }
 }
