@@ -14,17 +14,26 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace partition
 {
 template <typename EdgeDataT, storage::Ownership Ownership> class MultiLevelGraph;
 
-namespace io
+namespace serialization
 {
 template <typename EdgeDataT, storage::Ownership Ownership>
-void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, Ownership> &graph);
+void read(storage::io::FileReader &reader, MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
 template <typename EdgeDataT, storage::Ownership Ownership>
-void write(const boost::filesystem::path &path, const MultiLevelGraph<EdgeDataT, Ownership> &graph);
+void write(storage::io::FileWriter &writer, const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
@@ -190,10 +199,12 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         node_to_edge_offset.push_back(mlp.GetNumberOfLevels());
     }
 
-    friend void io::read<EdgeDataT, Ownership>(const boost::filesystem::path &path,
-                                               MultiLevelGraph<EdgeDataT, Ownership> &graph);
-    friend void io::write<EdgeDataT, Ownership>(const boost::filesystem::path &path,
-                                                const MultiLevelGraph<EdgeDataT, Ownership> &graph);
+    friend void
+    serialization::read<EdgeDataT, Ownership>(storage::io::FileReader &reader,
+                                              MultiLevelGraph<EdgeDataT, Ownership> &graph);
+    friend void
+    serialization::write<EdgeDataT, Ownership>(storage::io::FileWriter &writer,
+                                               const MultiLevelGraph<EdgeDataT, Ownership> &graph);
 
     Vector<EdgeOffset> node_to_edge_offset;
 };

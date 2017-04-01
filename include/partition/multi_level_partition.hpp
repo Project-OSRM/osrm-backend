@@ -22,6 +22,14 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
 namespace partition
 {
 namespace detail
@@ -31,13 +39,12 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl;
 using MultiLevelPartition = detail::MultiLevelPartitionImpl<storage::Ownership::Container>;
 using MultiLevelPartitionView = detail::MultiLevelPartitionImpl<storage::Ownership::View>;
 
-namespace io
+namespace serialization
 {
 template <storage::Ownership Ownership>
-void read(const boost::filesystem::path &file, detail::MultiLevelPartitionImpl<Ownership> &mlp);
+void read(storage::io::FileReader &reader, detail::MultiLevelPartitionImpl<Ownership> &mlp);
 template <storage::Ownership Ownership>
-void write(const boost::filesystem::path &file,
-           const detail::MultiLevelPartitionImpl<Ownership> &mlp);
+void write(storage::io::FileWriter &writer, const detail::MultiLevelPartitionImpl<Ownership> &mlp);
 }
 
 namespace detail
@@ -134,10 +141,10 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
         return cell_to_children[offset + cell + 1];
     }
 
-    friend void io::read<Ownership>(const boost::filesystem::path &file,
-                                    MultiLevelPartitionImpl &mlp);
-    friend void io::write<Ownership>(const boost::filesystem::path &file,
-                                     const MultiLevelPartitionImpl &mlp);
+    friend void serialization::read<Ownership>(storage::io::FileReader &reader,
+                                               MultiLevelPartitionImpl &mlp);
+    friend void serialization::write<Ownership>(storage::io::FileWriter &writer,
+                                                const MultiLevelPartitionImpl &mlp);
 
   private:
     auto MakeLevelData(const std::vector<std::uint32_t> &lidx_to_num_cells)
