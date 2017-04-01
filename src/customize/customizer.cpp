@@ -1,11 +1,10 @@
 #include "customizer/customizer.hpp"
 #include "customizer/cell_customizer.hpp"
 #include "customizer/edge_based_graph.hpp"
-#include "customizer/io.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
-#include "partition/io.hpp"
+#include "partition/files.hpp"
 #include "partition/multi_level_partition.hpp"
 
 #include "storage/shared_memory_ownership.hpp"
@@ -100,12 +99,12 @@ int Customizer::Run(const CustomizationConfig &config)
     TIMER_START(loading_data);
 
     partition::MultiLevelPartition mlp;
-    partition::io::read(config.mld_partition_path, mlp);
+    partition::files::readPartition(config.mld_partition_path, mlp);
 
     auto edge_based_graph = LoadAndUpdateEdgeExpandedGraph(config, mlp);
 
     partition::CellStorage storage;
-    partition::io::read(config.mld_storage_path, storage);
+    partition::files::readCells(config.mld_storage_path, storage);
     TIMER_STOP(loading_data);
     util::Log() << "Loading partition data took " << TIMER_SEC(loading_data) << " seconds";
 
@@ -116,12 +115,12 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "Cells customization took " << TIMER_SEC(cell_customize) << " seconds";
 
     TIMER_START(writing_mld_data);
-    partition::io::write(config.mld_storage_path, storage);
+    partition::files::writeCells(config.mld_storage_path, storage);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    partition::io::write(config.mld_graph_path, *edge_based_graph);
+    partition::files::writeGraph(config.mld_graph_path, *edge_based_graph);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 

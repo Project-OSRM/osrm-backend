@@ -4,7 +4,7 @@
 #include "partition/cell_storage.hpp"
 #include "partition/compressed_node_based_graph_reader.hpp"
 #include "partition/edge_based_graph_reader.hpp"
-#include "partition/io.hpp"
+#include "partition/files.hpp"
 #include "partition/multi_level_partition.hpp"
 #include "partition/recursive_bisection.hpp"
 #include "partition/remove_unconnected.hpp"
@@ -184,8 +184,8 @@ int Partitioner::Run(const PartitionConfig &config)
     util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
 
     TIMER_START(writing_mld_data);
-    io::write(config.mld_partition_path, mlp);
-    io::write(config.mld_storage_path, storage);
+    files::writePartition(config.mld_partition_path, mlp);
+    files::writeCells(config.mld_storage_path, storage);
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 

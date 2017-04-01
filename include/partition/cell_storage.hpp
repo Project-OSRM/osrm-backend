@@ -23,6 +23,15 @@
 
 namespace osrm
 {
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace partition
 {
 namespace detail
@@ -32,12 +41,12 @@ template <storage::Ownership Ownership> class CellStorageImpl;
 using CellStorage = detail::CellStorageImpl<storage::Ownership::Container>;
 using CellStorageView = detail::CellStorageImpl<storage::Ownership::View>;
 
-namespace io
+namespace serialization
 {
 template <storage::Ownership Ownership>
-inline void read(const boost::filesystem::path &path, detail::CellStorageImpl<Ownership> &storage);
+inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<Ownership> &storage);
 template <storage::Ownership Ownership>
-inline void write(const boost::filesystem::path &path,
+inline void write(storage::io::FileWriter &writer,
                   const detail::CellStorageImpl<Ownership> &storage);
 }
 
@@ -88,10 +97,9 @@ template <storage::Ownership Ownership> class CellStorageImpl
                                                              WeightValueT,
                                                              boost::random_access_traversal_tag>
         {
-            typedef boost::iterator_facade<ColumnIterator,
-                                           WeightValueT,
-                                           boost::random_access_traversal_tag>
-                base_t;
+            typedef boost::
+                iterator_facade<ColumnIterator, WeightValueT, boost::random_access_traversal_tag>
+                    base_t;
 
           public:
             typedef typename base_t::value_type value_type;
@@ -352,10 +360,10 @@ template <storage::Ownership Ownership> class CellStorageImpl
             cells[cell_index], weights.data(), source_boundary.data(), destination_boundary.data()};
     }
 
-    friend void io::read<Ownership>(const boost::filesystem::path &path,
-                                    detail::CellStorageImpl<Ownership> &storage);
-    friend void io::write<Ownership>(const boost::filesystem::path &path,
-                                     const detail::CellStorageImpl<Ownership> &storage);
+    friend void serialization::read<Ownership>(storage::io::FileReader &reader,
+                                               detail::CellStorageImpl<Ownership> &storage);
+    friend void serialization::write<Ownership>(storage::io::FileWriter &writer,
+                                                const detail::CellStorageImpl<Ownership> &storage);
 
   private:
     Vector<EdgeWeight> weights;

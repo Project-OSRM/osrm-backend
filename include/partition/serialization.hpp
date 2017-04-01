@@ -1,5 +1,5 @@
-#ifndef OSRM_PARTITION_IO_HPP
-#define OSRM_PARTITION_IO_HPP
+#ifndef OSRM_PARTITION_SERIALIZATION_HPP
+#define OSRM_PARTITION_SERIALIZATION_HPP
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph.hpp"
@@ -13,57 +13,43 @@ namespace osrm
 {
 namespace partition
 {
-namespace io
+namespace serialization
 {
 
 template <typename EdgeDataT, storage::Ownership Ownership>
-inline void read(const boost::filesystem::path &path, MultiLevelGraph<EdgeDataT, Ownership> &graph)
+inline void read(storage::io::FileReader &reader,
+                 MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
     reader.DeserializeVector(graph.node_array);
     reader.DeserializeVector(graph.edge_array);
     reader.DeserializeVector(graph.edge_to_level);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
-inline void write(const boost::filesystem::path &path,
+inline void write(storage::io::FileWriter &writer,
                   const MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
-
     writer.SerializeVector(graph.node_array);
     writer.SerializeVector(graph.edge_array);
     writer.SerializeVector(graph.node_to_edge_offset);
 }
 
-template <> inline void read(const boost::filesystem::path &path, MultiLevelPartition &mlp)
+template <> inline void read(storage::io::FileReader &reader, MultiLevelPartition &mlp)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
     reader.ReadInto<MultiLevelPartition::LevelData>(mlp.level_data);
     reader.DeserializeVector(mlp.partition);
     reader.DeserializeVector(mlp.cell_to_children);
 }
 
-template <> inline void write(const boost::filesystem::path &path, const MultiLevelPartition &mlp)
+template <> inline void write(storage::io::FileWriter &writer, const MultiLevelPartition &mlp)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
-
     writer.WriteOne(mlp.level_data);
     writer.SerializeVector(mlp.partition);
     writer.SerializeVector(mlp.cell_to_children);
 }
 
-template <> inline void read(const boost::filesystem::path &path, CellStorage &storage)
+template <> inline void read(storage::io::FileReader &reader, CellStorage &storage)
 {
-    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
-    storage::io::FileReader reader{path, fingerprint};
-
     reader.DeserializeVector(storage.weights);
     reader.DeserializeVector(storage.source_boundary);
     reader.DeserializeVector(storage.destination_boundary);
@@ -71,11 +57,8 @@ template <> inline void read(const boost::filesystem::path &path, CellStorage &s
     reader.DeserializeVector(storage.level_to_cell_offset);
 }
 
-template <> inline void write(const boost::filesystem::path &path, const CellStorage &storage)
+template <> inline void write(storage::io::FileWriter &writer, const CellStorage &storage)
 {
-    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
-    storage::io::FileWriter writer{path, fingerprint};
-
     writer.SerializeVector(storage.weights);
     writer.SerializeVector(storage.source_boundary);
     writer.SerializeVector(storage.destination_boundary);
