@@ -88,7 +88,7 @@ template <typename DataT> class vector_view
     {
         if (m_size != size)
         {
-            throw util::exception("Invalid resize on immutable shared memory vector.");
+            throw util::exception("Invalid resize " + std::to_string(size) + " on immutable vector view of size " + std::to_string(m_size) + ".");
         }
     }
 
