@@ -9,6 +9,8 @@ namespace osrm
 {
 namespace util
 {
+namespace serialization
+{
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,
@@ -20,7 +22,7 @@ inline void read(storage::io::FileReader &reader,
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 inline void write(storage::io::FileWriter &writer,
-                 StaticGraph<EdgeDataT, Ownership> &graph)
+                 const StaticGraph<EdgeDataT, Ownership> &graph)
 {
     writer.SerializeVector(graph.node_array);
     writer.SerializeVector(graph.edge_array);
@@ -43,7 +45,7 @@ inline void read(storage::io::FileReader &reader,
 
 template <typename EdgeDataT>
 inline void write(storage::io::FileWriter &writer,
-                 DynamicGraph<EdgeDataT> &graph)
+                 const DynamicGraph<EdgeDataT> &graph)
 {
     writer.SerializeVector(graph.node_array);
     writer.WriteElementCount64(graph.number_of_edges);
@@ -53,6 +55,7 @@ inline void write(storage::io::FileWriter &writer,
     }
 }
 
+}
 }
 }
 
