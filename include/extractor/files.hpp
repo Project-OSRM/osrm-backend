@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_FILES_HPP
 #define OSRM_EXTRACTOR_FILES_HPP
 
+#include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/seralization.hpp"
 
 #include <boost/assert.hpp>
@@ -92,6 +93,33 @@ inline void writeTurnData(const boost::filesystem::path &path,
 
     serialization::write(writer, turn_data);
 }
+
+// reads .osrm.tls
+template <bool UseShareMemory>
+inline void readTurnLaneDescriptions(const boost::filesystem::path &path,
+                         typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
+                         typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector &turn_masks)
+{
+    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    reader.DeserializeVector(turn_offsets);
+    reader.DeserializeVector(turn_masks);
+}
+
+// writes .osrm.tls
+template <bool UseShareMemory>
+inline void writeTurnLaneDescriptions(const boost::filesystem::path &path,
+                         const typename util::ShM<std::uint32_t, UseShareMemory>::vector &turn_offsets,
+                         const typename util::ShM<extractor::guidance::TurnLaneType::Mask, UseShareMemory>::vector &turn_masks)
+{
+    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
+    storage::io::FileWriter writer{path, fingerprint};
+
+    writer.SerializeVector(turn_offsets);
+    writer.SerializeVector(turn_masks);
+}
+
 }
 }
 }

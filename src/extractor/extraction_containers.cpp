@@ -7,7 +7,6 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
-#include "util/io.hpp"
 #include "util/log.hpp"
 #include "util/name_table.hpp"
 #include "util/timing_util.hpp"

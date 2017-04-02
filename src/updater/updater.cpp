@@ -15,7 +15,6 @@
 #include "util/for_each_pair.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
-#include "util/io.hpp"
 #include "util/log.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
