@@ -4,6 +4,10 @@
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/seralization.hpp"
 
+#include "util/coordinate.hpp"
+#include "util/packed_vector.hpp"
+#include "util/serialization.hpp"
+
 #include <boost/assert.hpp>
 
 namespace osrm
@@ -12,6 +16,32 @@ namespace extractor
 {
 namespace files
 {
+
+// reads .osrm.nodes
+template<storage::Ownership Ownership>
+inline void readNodes(const boost::filesystem::path &path,
+        typename util::ShM<util::Coordinate, Ownership>::vector &coordinates,
+        util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
+{
+    const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    reader.DeserializeVector(coordinates);
+    util::serialization::read(reader, osm_node_ids);
+}
+
+// writes .osrm.nodes
+template<storage::Ownership Ownership>
+inline void writeNodes(const boost::filesystem::path &path,
+        const typename util::ShM<util::Coordinate, Ownership>::vector &coordinates,
+        const util::detail::PackedVector<OSMNodeID, Ownership> &osm_node_ids)
+{
+    const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
+    storage::io::FileWriter writer{path, fingerprint};
+
+    writer.SerializeVector(coordinates);
+    util::serialization::write(writer, osm_node_ids);
+}
 
 // reads .osrm.cnbg_to_ebg
 inline void readNBGMapping(const boost::filesystem::path &path, std::vector<NBGToEBG> &mapping)

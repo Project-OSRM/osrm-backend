@@ -10,6 +10,7 @@
 #include "util/fingerprint.hpp"
 #include "util/log.hpp"
 #include "util/typedefs.hpp"
+#include "util/packed_vector.hpp"
 
 #include <boost/assert.hpp>
 #include <boost/filesystem.hpp>
@@ -57,21 +58,23 @@ template <typename BarrierOutIter, typename TrafficSignalsOutIter>
 NodeID loadNodesFromFile(storage::io::FileReader &file_reader,
                          BarrierOutIter barriers,
                          TrafficSignalsOutIter traffic_signals,
-                         std::vector<extractor::QueryNode> &node_array)
+                         std::vector<util::Coordinate> &coordinates,
+                         util::PackedVector<OSMNodeID> &osm_node_ids)
 {
     NodeID number_of_nodes = file_reader.ReadElementCount32();
     Log() << "Importing number_of_nodes new = " << number_of_nodes << " nodes ";
 
-    node_array.resize(number_of_nodes);
+    coordinates.resize(number_of_nodes);
+    osm_node_ids.reserve(number_of_nodes);
 
     extractor::ExternalMemoryNode current_node;
     for (NodeID i = 0; i < number_of_nodes; ++i)
     {
         file_reader.ReadInto(&current_node, 1);
 
-        node_array[i].lon = current_node.lon;
-        node_array[i].lat = current_node.lat;
-        node_array[i].node_id = current_node.node_id;
+        coordinates[i].lon = current_node.lon;
+        coordinates[i].lat = current_node.lat;
+        osm_node_ids.push_back(current_node.node_id);
 
         if (current_node.barrier)
         {

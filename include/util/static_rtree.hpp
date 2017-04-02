@@ -53,16 +53,17 @@ namespace util
 // All coordinates are pojected first to Web Mercator before the bounding boxes
 // are computed, this means the internal distance metric doesn not represent meters!
 template <class EdgeDataT,
-          class CoordinateListT = std::vector<Coordinate>,
           storage::Ownership Ownership = storage::Ownership::Container,
           std::uint32_t BRANCHING_FACTOR = 128,
           std::uint32_t LEAF_PAGE_SIZE = 4096>
 class StaticRTree
 {
+    template <typename T> using Vector = typename ShM<T, Ownership>::vector;
+
   public:
     using Rectangle = RectangleInt2D;
     using EdgeData = EdgeDataT;
-    using CoordinateList = CoordinateListT;
+    using CoordinateList = Vector<util::Coordinate>;
 
     static_assert(LEAF_PAGE_SIZE >= sizeof(uint32_t) + sizeof(EdgeDataT), "page size is too small");
     static_assert(((LEAF_PAGE_SIZE - 1) & LEAF_PAGE_SIZE) == 0, "page size is not a power of 2");
@@ -154,8 +155,8 @@ class StaticRTree
         Coordinate fixed_projected_coordinate;
     };
 
-    typename ShM<TreeNode, Ownership>::vector m_search_tree;
-    const CoordinateListT &m_coordinate_list;
+    Vector<TreeNode> m_search_tree;
+    const Vector<Coordinate> &m_coordinate_list;
 
     boost::iostreams::mapped_file_source m_leaves_region;
     // read-only view of leaves
@@ -165,12 +166,11 @@ class StaticRTree
     StaticRTree(const StaticRTree &) = delete;
     StaticRTree &operator=(const StaticRTree &) = delete;
 
-    template <typename CoordinateT>
     // Construct a packed Hilbert-R-Tree with Kamel-Faloutsos algorithm [1]
     explicit StaticRTree(const std::vector<EdgeDataT> &input_data_vector,
                          const std::string &tree_node_filename,
                          const std::string &leaf_node_filename,
-                         const std::vector<CoordinateT> &coordinate_list)
+                         const Vector<Coordinate> &coordinate_list)
         : m_coordinate_list(coordinate_list)
     {
         const uint64_t element_count = input_data_vector.size();
@@ -347,7 +347,7 @@ class StaticRTree
 
     explicit StaticRTree(const boost::filesystem::path &node_file,
                          const boost::filesystem::path &leaf_file,
-                         const CoordinateListT &coordinate_list)
+                         const Vector<Coordinate> &coordinate_list)
         : m_coordinate_list(coordinate_list)
     {
         storage::io::FileReader tree_node_file(node_file,
@@ -364,7 +364,7 @@ class StaticRTree
     explicit StaticRTree(TreeNode *tree_node_ptr,
                          const uint64_t number_of_nodes,
                          const boost::filesystem::path &leaf_file,
-                         const CoordinateListT &coordinate_list)
+                         const Vector<Coordinate> &coordinate_list)
         : m_search_tree(tree_node_ptr, number_of_nodes), m_coordinate_list(coordinate_list)
     {
         MapLeafNodesFile(leaf_file);

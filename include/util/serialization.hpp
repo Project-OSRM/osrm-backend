@@ -1,6 +1,7 @@
 #ifndef OSMR_UTIL_SERIALIZATION_HPP
 #define OSMR_UTIL_SERIALIZATION_HPP
 
+#include "util/packed_vector.hpp"
 #include "util/static_graph.hpp"
 #include "util/dynamic_graph.hpp"
 #include "storage/io.hpp"
@@ -11,6 +12,21 @@ namespace util
 {
 namespace serialization
 {
+template <typename T, storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader,
+                 detail::PackedVector<T, Ownership> &vec)
+{
+    vec.num_elements =reader.ReadOne<std::uint64_t>();
+    reader.DeserializeVector(vec.vec);
+}
+
+template <typename T, storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                 const detail::PackedVector<T, Ownership> &vec)
+{
+    writer.WriteOne(vec.num_elements);
+    writer.SerializeVector(vec.vec);
+}
 
 template <typename EdgeDataT, storage::Ownership Ownership>
 inline void read(storage::io::FileReader &reader,

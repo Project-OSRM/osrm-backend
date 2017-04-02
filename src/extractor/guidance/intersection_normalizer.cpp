@@ -16,13 +16,13 @@ namespace guidance
 
 IntersectionNormalizer::IntersectionNormalizer(
     const util::NodeBasedDynamicGraph &node_based_graph,
-    const std::vector<extractor::QueryNode> &node_coordinates,
+    const std::vector<util::Coordinate> &coordinates,
     const util::NameTable &name_table,
     const SuffixTable &street_name_suffix_table,
     const IntersectionGenerator &intersection_generator)
     : node_based_graph(node_based_graph), intersection_generator(intersection_generator),
       mergable_road_detector(node_based_graph,
-                             node_coordinates,
+                             coordinates,
                              intersection_generator,
                              intersection_generator.GetCoordinateExtractor(),
                              name_table,

@@ -44,7 +44,7 @@ inline auto makeCheckRoadForName(const NameID name_id,
 }
 
 MergableRoadDetector::MergableRoadDetector(const util::NodeBasedDynamicGraph &node_based_graph,
-                                           const std::vector<QueryNode> &node_coordinates,
+                                           const std::vector<util::Coordinate> &node_coordinates,
                                            const IntersectionGenerator &intersection_generator,
                                            const CoordinateExtractor &coordinate_extractor,
                                            const util::NameTable &name_table,

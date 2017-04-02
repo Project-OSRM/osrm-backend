@@ -40,7 +40,7 @@ class IntersectionGenerator
     IntersectionGenerator(const util::NodeBasedDynamicGraph &node_based_graph,
                           const RestrictionMap &restriction_map,
                           const std::unordered_set<NodeID> &barrier_nodes,
-                          const std::vector<QueryNode> &node_info_list,
+                          const std::vector<util::Coordinate> &coordinates,
                           const CompressedEdgeContainer &compressed_edge_container);
 
     // For a source node `a` and a via edge `ab` creates an intersection at target `b`.
@@ -112,7 +112,7 @@ class IntersectionGenerator
     const util::NodeBasedDynamicGraph &node_based_graph;
     const RestrictionMap &restriction_map;
     const std::unordered_set<NodeID> &barrier_nodes;
-    const std::vector<QueryNode> &node_info_list;
+    const std::vector<util::Coordinate> &coordinates;
 
     // own state, used to find the correct coordinates along a road
     const CoordinateExtractor coordinate_extractor;

@@ -34,7 +34,7 @@ class IntersectionHandler
 {
   public:
     IntersectionHandler(const util::NodeBasedDynamicGraph &node_based_graph,
-                        const std::vector<QueryNode> &node_info_list,
+                        const std::vector<util::Coordinate> &coordinates,
                         const util::NameTable &name_table,
                         const SuffixTable &street_name_suffix_table,
                         const IntersectionGenerator &intersection_generator);
@@ -51,7 +51,7 @@ class IntersectionHandler
 
   protected:
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const std::vector<QueryNode> &node_info_list;
+    const std::vector<util::Coordinate> &coordinates;
     const util::NameTable &name_table;
     const SuffixTable &street_name_suffix_table;
     const IntersectionGenerator &intersection_generator;

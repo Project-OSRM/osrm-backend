@@ -23,7 +23,7 @@ class CoordinateExtractor
   public:
     CoordinateExtractor(const util::NodeBasedDynamicGraph &node_based_graph,
                         const extractor::CompressedEdgeContainer &compressed_geometries,
-                        const std::vector<extractor::QueryNode> &node_coordinates);
+                        const std::vector<util::Coordinate> &node_coordinates);
 
     /* Find a interpolated coordinate a long the compressed geometries. The desired coordinate
      * should be in a certain distance. This method is dedicated to find representative coordinates
@@ -156,7 +156,7 @@ class CoordinateExtractor
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
     const extractor::CompressedEdgeContainer &compressed_geometries;
-    const std::vector<extractor::QueryNode> &node_coordinates;
+    const std::vector<util::Coordinate> &node_coordinates;
 
     double ComputeInterpolationFactor(const double desired_distance,
                                       const double distance_to_first,

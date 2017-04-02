@@ -32,7 +32,8 @@ using TarjanGraph = util::StaticGraph<void>;
 using TarjanEdge = util::static_graph_details::SortableEdgeWithData<void>;
 
 std::size_t loadGraph(const std::string &path,
-                      std::vector<extractor::QueryNode> &coordinate_list,
+                      std::vector<util::Coordinate> &coordinate_list,
+                      util::PackedVector<OSMNodeID> &osm_node_ids,
                       std::vector<TarjanEdge> &graph_edge_list)
 {
     storage::io::FileReader file_reader(path, storage::io::FileReader::VerifyFingerprint);
@@ -41,7 +42,7 @@ std::size_t loadGraph(const std::string &path,
 
     auto nop = boost::make_function_output_iterator([](auto) {});
 
-    const auto number_of_nodes = util::loadNodesFromFile(file_reader, nop, nop, coordinate_list);
+    const auto number_of_nodes = util::loadNodesFromFile(file_reader, nop, nop, coordinate_list, osm_node_ids);
 
     util::loadEdgesFromFile(file_reader, edge_list);
 
@@ -75,7 +76,9 @@ struct FeatureWriter
     }
 
     void
-    AddLine(const extractor::QueryNode from, const extractor::QueryNode to, const std::string &type)
+    AddLine(const util::Coordinate from, const util::Coordinate to, 
+            const OSMNodeID from_id, const OSMNodeID to_id,
+            const std::string &type)
     {
         const auto from_lon = static_cast<double>(util::toFloating(from.lon));
         const auto from_lat = static_cast<double>(util::toFloating(from.lat));
@@ -89,8 +92,8 @@ struct FeatureWriter
             out << ",";
         }
 
-        out << "{\"type\":\"Feature\",\"properties\":{\"from\":" << from.node_id << ","
-            << "\"to\":" << to.node_id << ",\"type\":\"" << type
+        out << "{\"type\":\"Feature\",\"properties\":{\"from\":" << from_id << ","
+            << "\"to\":" << to_id << ",\"type\":\"" << type
             << "\"},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[" << from_lon << ","
             << from_lat << "],[" << to_lon << "," << to_lat << "]]}}";
 
@@ -110,7 +113,6 @@ int main(int argc, char *argv[])
 {
     using namespace osrm;
 
-    std::vector<extractor::QueryNode> coordinate_list;
     util::LogPolicy::GetInstance().Unmute();
 
     if (argc < 3)
@@ -137,7 +139,9 @@ int main(int argc, char *argv[])
     }
 
     std::vector<tools::TarjanEdge> graph_edge_list;
-    auto number_of_nodes = tools::loadGraph(inpath, coordinate_list, graph_edge_list);
+    std::vector<util::Coordinate> coordinate_list;
+    util::PackedVector<OSMNodeID> osm_node_ids;
+    auto number_of_nodes = tools::loadGraph(inpath, coordinate_list, osm_node_ids, graph_edge_list);
 
     tbb::parallel_sort(graph_edge_list.begin(), graph_edge_list.end());
 
@@ -185,7 +189,7 @@ int main(int argc, char *argv[])
                     auto same_component = source_component_id == target_component_id;
                     std::string type = same_component ? "inner" : "border";
 
-                    writer.AddLine(coordinate_list[source], coordinate_list[target], type);
+                    writer.AddLine(coordinate_list[source], coordinate_list[target], osm_node_ids[source], osm_node_ids[target], type);
                 }
             }
         }

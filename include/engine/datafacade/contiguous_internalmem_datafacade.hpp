@@ -204,8 +204,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     using super = BaseDataFacade;
     using IndexBlock = util::RangeTable<16, storage::Ownership::View>::BlockT;
     using RTreeLeaf = super::RTreeLeaf;
-    using SharedRTree =
-        util::StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, storage::Ownership::View>;
+    using SharedRTree = util::StaticRTree<RTreeLeaf, storage::Ownership::View>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
@@ -215,7 +214,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     unsigned m_check_sum;
     util::vector_view<util::Coordinate> m_coordinate_list;
-    util::PackedVector<OSMNodeID, storage::Ownership::View> m_osmnodeid_list;
+    util::PackedVectorView<OSMNodeID> m_osmnodeid_list;
     util::NameTable m_names_table;
     util::vector_view<std::uint32_t> m_lane_description_offsets;
     util::vector_view<extractor::guidance::TurnLaneType::Mask> m_lane_description_masks;

@@ -58,7 +58,8 @@ class Extractor
 
     std::pair<std::size_t, EdgeID>
     BuildEdgeExpandedGraph(ScriptingEnvironment &scripting_environment,
-                           std::vector<QueryNode> &internal_to_external_node_map,
+                           std::vector<util::Coordinate> &coordinates,
+                           util::PackedVector<OSMNodeID> &osm_node_ids,
                            std::vector<EdgeBasedNode> &node_based_edge_list,
                            std::vector<bool> &node_is_startpoint,
                            std::vector<EdgeWeight> &edge_based_node_weights,
@@ -66,18 +67,18 @@ class Extractor
                            const std::string &intersection_class_output_file);
     void WriteProfileProperties(const std::string &output_path,
                                 const ProfileProperties &properties) const;
-    void WriteNodeMapping(const std::vector<QueryNode> &internal_to_external_node_map);
     void FindComponents(unsigned max_edge_id,
                         const util::DeallocatingVector<EdgeBasedEdge> &edges,
                         std::vector<EdgeBasedNode> &nodes) const;
     void BuildRTree(std::vector<EdgeBasedNode> node_based_edge_list,
                     std::vector<bool> node_is_startpoint,
-                    const std::vector<QueryNode> &internal_to_external_node_map);
+                    const std::vector<util::Coordinate> &coordinates);
     std::shared_ptr<RestrictionMap> LoadRestrictionMap();
     std::shared_ptr<util::NodeBasedDynamicGraph>
     LoadNodeBasedGraph(std::unordered_set<NodeID> &barrier_nodes,
                        std::unordered_set<NodeID> &traffic_lights,
-                       std::vector<QueryNode> &internal_to_external_node_map);
+                       std::vector<util::Coordinate> &coordinates,
+                       util::PackedVector<OSMNodeID> &osm_node_ids);
 
     void WriteEdgeBasedGraph(const std::string &output_file_filename,
                              const EdgeID max_edge_id,
@@ -94,7 +95,7 @@ class Extractor
     // Writes compressed node based graph and its embedding into a file for osrm-partition to use.
     static void WriteCompressedNodeBasedGraph(const std::string &path,
                                               const util::NodeBasedDynamicGraph &graph,
-                                              const std::vector<QueryNode> &externals);
+                                              const std::vector<util::Coordinate> &coordiantes);
 
     // globals persisting during the extraction process and the graph generation process
 

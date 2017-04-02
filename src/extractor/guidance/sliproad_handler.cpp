@@ -23,11 +23,11 @@ namespace guidance
 
 SliproadHandler::SliproadHandler(const IntersectionGenerator &intersection_generator,
                                  const util::NodeBasedDynamicGraph &node_based_graph,
-                                 const std::vector<QueryNode> &node_info_list,
+                                 const std::vector<util::Coordinate> &coordinates,
                                  const util::NameTable &name_table,
                                  const SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
-                          node_info_list,
+                          coordinates,
                           name_table,
                           street_name_suffix_table,
                           intersection_generator)
@@ -374,8 +374,8 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             // Only check for curvature and ~90 degree when it makes sense to do so.
             const constexpr auto MIN_LENGTH = 3.;
 
-            const auto length = haversineDistance(node_info_list[intersection_node_id],
-                                                  node_info_list[main_road_intersection->node]);
+            const auto length = haversineDistance(coordinates[intersection_node_id],
+                                                  coordinates[main_road_intersection->node]);
 
             const double perpendicular_angle = 90 + FUZZY_ANGLE_DIFFERENCE;
 
@@ -638,9 +638,9 @@ bool SliproadHandler::isValidSliproadArea(const double max_area,
 {
     using namespace util::coordinate_calculation;
 
-    const auto first = node_info_list[a];
-    const auto second = node_info_list[b];
-    const auto third = node_info_list[c];
+    const auto first = coordinates[a];
+    const auto second = coordinates[b];
+    const auto third = coordinates[c];
 
     const auto length = haversineDistance(first, second);
     const auto heigth = haversineDistance(second, third);
