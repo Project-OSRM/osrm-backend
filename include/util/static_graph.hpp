@@ -19,8 +19,28 @@
 
 namespace osrm
 {
+
+namespace storage
+{
+namespace io
+{
+class FileReader;
+class FileWriter;
+}
+}
+
 namespace util
 {
+template <typename EdgeDataT, storage::Ownership Ownership> class StaticGraph;
+
+namespace serialization
+{
+template <typename EdgeDataT, storage::Ownership Ownership>
+void read(storage::io::FileReader &reader, StaticGraph<EdgeDataT, Ownership> &graph);
+
+template <typename EdgeDataT, storage::Ownership Ownership>
+void write(storage::io::FileWriter &writer, const StaticGraph<EdgeDataT, Ownership> &graph);
+}
 
 namespace static_graph_details
 {
@@ -102,6 +122,8 @@ EntryT edgeToEntry(const OtherEdge &from, std::false_type)
 template <typename EdgeDataT, storage::Ownership Ownership = storage::Ownership::Container>
 class StaticGraph
 {
+    template <typename T> using Vector = typename util::ShM<T, Ownership>::vector;
+
   public:
     using InputEdge = static_graph_details::SortableEdgeWithData<EdgeDataT>;
     using NodeIterator = static_graph_details::NodeIterator;
@@ -125,8 +147,7 @@ class StaticGraph
         InitializeFromSortedEdgeRange(nodes, edges.begin(), edges.end());
     }
 
-    StaticGraph(typename util::ShM<NodeArrayEntry, Ownership>::vector node_array_,
-                typename util::ShM<EdgeArrayEntry, Ownership>::vector edge_array_)
+    StaticGraph(Vector<NodeArrayEntry> node_array_, Vector<EdgeArrayEntry> edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
         BOOST_ASSERT(!node_array.empty());
@@ -229,8 +250,12 @@ class StaticGraph
         return current_iterator;
     }
 
-    const NodeArrayEntry &GetNode(const NodeID nid) const { return node_array[nid]; }
-    const EdgeArrayEntry &GetEdge(const EdgeID eid) const { return edge_array[eid]; }
+    friend void serialization::read<EdgeDataT, Ownership>(storage::io::FileReader &reader,
+                                                          StaticGraph<EdgeDataT, Ownership> &graph);
+    friend void
+    serialization::write<EdgeDataT, Ownership>(storage::io::FileWriter &writer,
+                                               const StaticGraph<EdgeDataT, Ownership> &graph);
+
   protected:
     template <typename IterT>
     void InitializeFromSortedEdgeRange(const unsigned nodes, IterT begin, IterT end)
@@ -261,8 +286,8 @@ class StaticGraph
     NodeIterator number_of_nodes;
     EdgeIterator number_of_edges;
 
-    typename ShM<NodeArrayEntry, Ownership>::vector node_array;
-    typename ShM<EdgeArrayEntry, Ownership>::vector edge_array;
+    Vector<NodeArrayEntry> node_array;
+    Vector<EdgeArrayEntry> edge_array;
 };
 
 } // namespace util
