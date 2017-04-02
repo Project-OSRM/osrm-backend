@@ -24,7 +24,6 @@
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/fingerprint.hpp"
-#include "util/io.hpp"
 #include "util/log.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
@@ -213,15 +212,14 @@ void Storage::PopulateLayout(DataLayout &layout)
     }
 
     {
-        std::vector<std::uint32_t> lane_description_offsets;
-        std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
-        util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
-                                        lane_description_offsets,
-                                        lane_description_masks);
+        io::FileReader reader(config.turn_lane_description_path, io::FileReader::HasNoFingerprint);
+        auto num_offsets = reader.ReadVectorSize<std::uint32_t>();
+        auto num_masks = reader.ReadVectorSize<extractor::guidance::TurnLaneType::Mask>();
+
         layout.SetBlockSize<std::uint32_t>(DataLayout::LANE_DESCRIPTION_OFFSETS,
-                                           lane_description_offsets.size());
+                                           num_offsets);
         layout.SetBlockSize<extractor::guidance::TurnLaneType::Mask>(
-            DataLayout::LANE_DESCRIPTION_MASKS, lane_description_masks.size());
+            DataLayout::LANE_DESCRIPTION_MASKS, num_masks);
     }
 
     // Loading information for original edges
@@ -558,38 +556,17 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Turn lane descriptions
     {
-        std::vector<std::uint32_t> lane_description_offsets;
-        std::vector<extractor::guidance::TurnLaneType::Mask> lane_description_masks;
-        util::deserializeAdjacencyArray(config.turn_lane_description_path.string(),
-                                        lane_description_offsets,
-                                        lane_description_masks);
+        auto offsets_ptr = layout.GetBlockPtr<std::uint32_t, true>(
+            memory_ptr, storage::DataLayout::LANE_DESCRIPTION_OFFSETS);
+        util::ShM<std::uint32_t, true>::vector offsets(
+            offsets_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_OFFSETS]);
 
-        const auto turn_lane_offset_ptr = layout.GetBlockPtr<std::uint32_t, true>(
-            memory_ptr, DataLayout::LANE_DESCRIPTION_OFFSETS);
-        if (!lane_description_offsets.empty())
-        {
-            BOOST_ASSERT(
-                static_cast<std::size_t>(
-                    layout.GetBlockSize(DataLayout::LANE_DESCRIPTION_OFFSETS)) >=
-                std::distance(lane_description_offsets.begin(), lane_description_offsets.end()) *
-                    sizeof(decltype(lane_description_offsets)::value_type));
-            std::copy(lane_description_offsets.begin(),
-                      lane_description_offsets.end(),
-                      turn_lane_offset_ptr);
-        }
+        auto masks_ptr = layout.GetBlockPtr<extractor::guidance::TurnLaneType::Mask, true>(
+            memory_ptr, storage::DataLayout::LANE_DESCRIPTION_MASKS);
+        util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
+            masks_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
 
-        const auto turn_lane_mask_ptr =
-            layout.GetBlockPtr<extractor::guidance::TurnLaneType::Mask, true>(
-                memory_ptr, DataLayout::LANE_DESCRIPTION_MASKS);
-        if (!lane_description_masks.empty())
-        {
-            BOOST_ASSERT(
-                static_cast<std::size_t>(layout.GetBlockSize(DataLayout::LANE_DESCRIPTION_MASKS)) >=
-                std::distance(lane_description_masks.begin(), lane_description_masks.end()) *
-                    sizeof(decltype(lane_description_masks)::value_type));
-            std::copy(
-                lane_description_masks.begin(), lane_description_masks.end(), turn_lane_mask_ptr);
-        }
+        extractor::files::readTurnLaneDescriptions<true>(config.turn_lane_description_path, offsets, masks);
     }
 
     // Load original edge data

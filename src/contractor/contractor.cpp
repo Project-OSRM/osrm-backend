@@ -15,7 +15,6 @@
 #include "util/exception_utils.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
-#include "util/io.hpp"
 #include "util/log.hpp"
 #include "util/static_graph.hpp"
 #include "util/string_util.hpp"

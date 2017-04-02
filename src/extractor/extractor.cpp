@@ -11,11 +11,11 @@
 #include "extractor/scripting_environment.hpp"
 
 #include "storage/io.hpp"
+
 #include "util/exception.hpp"
 #include "util/exception_utils.hpp"
 #include "util/graph_loader.hpp"
 #include "util/integer_range.hpp"
-#include "util/io.hpp"
 #include "util/log.hpp"
 #include "util/name_table.hpp"
 #include "util/range_table.hpp"
