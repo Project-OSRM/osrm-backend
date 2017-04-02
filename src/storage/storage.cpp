@@ -55,10 +55,9 @@ namespace storage
 {
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode = util::StaticRTree<
-    RTreeLeaf,
-    util::ShM<util::Coordinate, osrm::storage::MemorySetting::SharedMemory>::vector,
-    osrm::storage::MemorySetting::SharedMemory>::TreeNode;
+using RTreeNode = util::StaticRTree<RTreeLeaf,
+                                    util::vector_view<util::Coordinate>,
+                                    osrm::storage::MemorySetting::SharedMemory>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 

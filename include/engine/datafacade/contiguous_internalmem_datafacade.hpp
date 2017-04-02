@@ -79,9 +79,9 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CH>
         auto graph_edges_ptr = data_layout.GetBlockPtr<GraphEdge>(
             memory_block, storage::DataLayout::CH_GRAPH_EDGE_LIST);
 
-        util::SharedMemoryVector<GraphNode> node_list(
+        util::vector_view<GraphNode> node_list(
             graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_NODE_LIST]);
-        util::SharedMemoryVector<GraphEdge> edge_list(
+        util::vector_view<GraphEdge> edge_list(
             graph_edges_ptr, data_layout.num_entries[storage::DataLayout::CH_GRAPH_EDGE_LIST]);
         m_query_graph.reset(new QueryGraph(node_list, edge_list));
     }
@@ -155,7 +155,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
     : public datafacade::AlgorithmDataFacade<algorithm::CoreCH>
 {
   private:
-    util::ShM<bool, osrm::storage::MemorySetting::SharedMemory>::vector m_is_core_node;
+    util::vector_view<bool> m_is_core_node;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
@@ -164,7 +164,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::CoreCH>
     {
         auto core_marker_ptr =
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::CH_CORE_MARKER);
-        util::ShM<bool, osrm::storage::MemorySetting::SharedMemory>::vector is_core_node(
+        util::vector_view<bool> is_core_node(
             core_marker_ptr, data_layout.num_entries[storage::DataLayout::CH_CORE_MARKER]);
         m_is_core_node = std::move(is_core_node);
     }
@@ -202,10 +202,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     using super = BaseDataFacade;
     using IndexBlock = util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>::BlockT;
     using RTreeLeaf = super::RTreeLeaf;
-    using SharedRTree = util::StaticRTree<
-        RTreeLeaf,
-        util::ShM<util::Coordinate, osrm::storage::MemorySetting::SharedMemory>::vector,
-        osrm::storage::MemorySetting::SharedMemory>;
+    using SharedRTree = util::StaticRTree<RTreeLeaf,
+                                          util::vector_view<util::Coordinate>,
+                                          osrm::storage::MemorySetting::SharedMemory>;
     using SharedGeospatialQuery = GeospatialQuery<SharedRTree, BaseDataFacade>;
     using RTreeNode = SharedRTree::TreeNode;
 
@@ -214,38 +213,28 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     extractor::Datasources *m_datasources;
 
     unsigned m_check_sum;
-    util::ShM<util::Coordinate, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_coordinate_list;
+    util::vector_view<util::Coordinate> m_coordinate_list;
     util::PackedVector<OSMNodeID, osrm::storage::MemorySetting::SharedMemory> m_osmnodeid_list;
-    util::SharedMemoryVector<GeometryID> m_via_geometry_list;
-    util::SharedMemoryVector<NameID> m_name_ID_list;
-    util::SharedMemoryVector<LaneDataID> m_lane_data_id;
-    util::ShM<extractor::guidance::TurnInstruction,
-              osrm::storage::MemorySetting::SharedMemory>::vector m_turn_instruction_list;
-    util::ShM<extractor::TravelMode, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_travel_mode_list;
-    util::ShM<util::guidance::TurnBearing, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_pre_turn_bearing;
-    util::ShM<util::guidance::TurnBearing, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_post_turn_bearing;
+    util::vector_view<GeometryID> m_via_geometry_list;
+    util::vector_view<NameID> m_name_ID_list;
+    util::vector_view<LaneDataID> m_lane_data_id;
+    util::vector_view<extractor::guidance::TurnInstruction> m_turn_instruction_list;
+    util::vector_view<extractor::TravelMode> m_travel_mode_list;
+    util::vector_view<util::guidance::TurnBearing> m_pre_turn_bearing;
+    util::vector_view<util::guidance::TurnBearing> m_post_turn_bearing;
     util::NameTable m_names_table;
-    util::SharedMemoryVector<unsigned> m_name_begin_indices;
-    util::SharedMemoryVector<bool> m_is_core_node;
-    util::ShM<std::uint32_t, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_lane_description_offsets;
-    util::ShM<extractor::guidance::TurnLaneType::Mask,
-              osrm::storage::MemorySetting::SharedMemory>::vector m_lane_description_masks;
-    util::SharedMemoryVector<TurnPenalty> m_turn_weight_penalties;
-    util::SharedMemoryVector<TurnPenalty> m_turn_duration_penalties;
+    util::vector_view<unsigned> m_name_begin_indices;
+    util::vector_view<bool> m_is_core_node;
+    util::vector_view<std::uint32_t> m_lane_description_offsets;
+    util::vector_view<extractor::guidance::TurnLaneType::Mask> m_lane_description_masks;
+    util::vector_view<TurnPenalty> m_turn_weight_penalties;
+    util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
 
-    util::SharedMemoryVector<char> m_datasource_name_data;
-    util::ShM<std::size_t, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_datasource_name_offsets;
-    util::ShM<std::size_t, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_datasource_name_lengths;
-    util::ShM<util::guidance::LaneTupleIdPair, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_lane_tupel_id_pairs;
+    util::vector_view<char> m_datasource_name_data;
+    util::vector_view<std::size_t> m_datasource_name_offsets;
+    util::vector_view<std::size_t> m_datasource_name_lengths;
+    util::vector_view<util::guidance::LaneTupleIdPair> m_lane_tupel_id_pairs;
 
     std::unique_ptr<SharedRTree> m_static_rtree;
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
@@ -253,19 +242,18 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     util::NameTable m_name_table;
     // bearing classes by node based node
-    util::SharedMemoryVector<BearingClassID> m_bearing_class_id_table;
+    util::vector_view<BearingClassID> m_bearing_class_id_table;
     // entry class IDs
-    util::SharedMemoryVector<EntryClassID> m_entry_class_id_list;
+    util::vector_view<EntryClassID> m_entry_class_id_list;
 
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
-    util::ShM<util::guidance::EntryClass, osrm::storage::MemorySetting::SharedMemory>::vector
-        m_entry_class_table;
+    util::vector_view<util::guidance::EntryClass> m_entry_class_table;
     // the look-up table for distinct bearing classes. A bearing class lists the available bearings
     // at an intersection
     std::shared_ptr<util::RangeTable<16, osrm::storage::MemorySetting::SharedMemory>>
         m_bearing_ranges_table;
-    util::SharedMemoryVector<DiscreteBearing> m_bearing_values_table;
+    util::vector_view<DiscreteBearing> m_bearing_values_table;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
@@ -341,61 +329,53 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         const auto travel_mode_list_ptr = data_layout.GetBlockPtr<extractor::TravelMode>(
             memory_block, storage::DataLayout::TRAVEL_MODE);
-        util::ShM<extractor::TravelMode, osrm::storage::MemorySetting::SharedMemory>::vector
-            travel_mode_list(travel_mode_list_ptr,
-                             data_layout.num_entries[storage::DataLayout::TRAVEL_MODE]);
+        util::vector_view<extractor::TravelMode> travel_mode_list(
+            travel_mode_list_ptr, data_layout.num_entries[storage::DataLayout::TRAVEL_MODE]);
         m_travel_mode_list = std::move(travel_mode_list);
 
         const auto lane_data_id_ptr =
             data_layout.GetBlockPtr<LaneDataID>(memory_block, storage::DataLayout::LANE_DATA_ID);
-        util::SharedMemoryVector<LaneDataID> lane_data_id(
+        util::vector_view<LaneDataID> lane_data_id(
             lane_data_id_ptr, data_layout.num_entries[storage::DataLayout::LANE_DATA_ID]);
         m_lane_data_id = std::move(lane_data_id);
 
         const auto lane_tupel_id_pair_ptr =
             data_layout.GetBlockPtr<util::guidance::LaneTupleIdPair>(
                 memory_block, storage::DataLayout::TURN_LANE_DATA);
-        util::ShM<util::guidance::LaneTupleIdPair,
-                  osrm::storage::MemorySetting::SharedMemory>::vector
-            lane_tupel_id_pair(lane_tupel_id_pair_ptr,
-                               data_layout.num_entries[storage::DataLayout::TURN_LANE_DATA]);
+        util::vector_view<util::guidance::LaneTupleIdPair> lane_tupel_id_pair(
+            lane_tupel_id_pair_ptr, data_layout.num_entries[storage::DataLayout::TURN_LANE_DATA]);
         m_lane_tupel_id_pairs = std::move(lane_tupel_id_pair);
 
         const auto turn_instruction_list_ptr =
             data_layout.GetBlockPtr<extractor::guidance::TurnInstruction>(
                 memory_block, storage::DataLayout::TURN_INSTRUCTION);
-        util::ShM<extractor::guidance::TurnInstruction,
-                  osrm::storage::MemorySetting::SharedMemory>::vector
-            turn_instruction_list(turn_instruction_list_ptr,
-                                  data_layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
+        util::vector_view<extractor::guidance::TurnInstruction> turn_instruction_list(
+            turn_instruction_list_ptr,
+            data_layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
         m_turn_instruction_list = std::move(turn_instruction_list);
 
         const auto name_id_list_ptr =
             data_layout.GetBlockPtr<NameID>(memory_block, storage::DataLayout::NAME_ID_LIST);
-        util::SharedMemoryVector<NameID> name_id_list(
+        util::vector_view<NameID> name_id_list(
             name_id_list_ptr, data_layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
         m_name_ID_list = std::move(name_id_list);
 
         const auto entry_class_id_list_ptr =
             data_layout.GetBlockPtr<EntryClassID>(memory_block, storage::DataLayout::ENTRY_CLASSID);
-        typename util::SharedMemoryVector<EntryClassID> entry_class_id_list(
+        typename util::vector_view<EntryClassID> entry_class_id_list(
             entry_class_id_list_ptr, data_layout.num_entries[storage::DataLayout::ENTRY_CLASSID]);
         m_entry_class_id_list = std::move(entry_class_id_list);
 
         const auto pre_turn_bearing_ptr = data_layout.GetBlockPtr<util::guidance::TurnBearing>(
             memory_block, storage::DataLayout::PRE_TURN_BEARING);
-        typename util::ShM<util::guidance::TurnBearing,
-                           osrm::storage::MemorySetting::SharedMemory>::vector
-            pre_turn_bearing(pre_turn_bearing_ptr,
-                             data_layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
+        typename util::vector_view<util::guidance::TurnBearing> pre_turn_bearing(
+            pre_turn_bearing_ptr, data_layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
         m_pre_turn_bearing = std::move(pre_turn_bearing);
 
         const auto post_turn_bearing_ptr = data_layout.GetBlockPtr<util::guidance::TurnBearing>(
             memory_block, storage::DataLayout::POST_TURN_BEARING);
-        typename util::ShM<util::guidance::TurnBearing,
-                           osrm::storage::MemorySetting::SharedMemory>::vector
-            post_turn_bearing(post_turn_bearing_ptr,
-                              data_layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
+        typename util::vector_view<util::guidance::TurnBearing> post_turn_bearing(
+            post_turn_bearing_ptr, data_layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
         m_post_turn_bearing = std::move(post_turn_bearing);
     }
 
@@ -403,7 +383,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto via_geometry_list_ptr =
             data_layout.GetBlockPtr<GeometryID>(memory_block, storage::DataLayout::VIA_NODE_LIST);
-        util::SharedMemoryVector<GeometryID> via_geometry_list(
+        util::vector_view<GeometryID> via_geometry_list(
             via_geometry_list_ptr, data_layout.num_entries[storage::DataLayout::VIA_NODE_LIST]);
         m_via_geometry_list = std::move(via_geometry_list);
     }
@@ -421,16 +401,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto offsets_ptr = data_layout.GetBlockPtr<std::uint32_t>(
             memory_block, storage::DataLayout::LANE_DESCRIPTION_OFFSETS);
-        util::ShM<std::uint32_t, osrm::storage::MemorySetting::SharedMemory>::vector offsets(
+        util::vector_view<std::uint32_t> offsets(
             offsets_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_OFFSETS]);
         m_lane_description_offsets = std::move(offsets);
 
         auto masks_ptr = data_layout.GetBlockPtr<extractor::guidance::TurnLaneType::Mask>(
             memory_block, storage::DataLayout::LANE_DESCRIPTION_MASKS);
 
-        util::ShM<extractor::guidance::TurnLaneType::Mask,
-                  osrm::storage::MemorySetting::SharedMemory>::vector
-            masks(masks_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
+        util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
+            masks_ptr, data_layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
         m_lane_description_masks = std::move(masks);
     }
 
@@ -438,12 +417,12 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto turn_weight_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
             memory_block, storage::DataLayout::TURN_WEIGHT_PENALTIES);
-        m_turn_weight_penalties = util::SharedMemoryVector<TurnPenalty>(
+        m_turn_weight_penalties = util::vector_view<TurnPenalty>(
             turn_weight_penalties_ptr,
             data_layout.num_entries[storage::DataLayout::TURN_WEIGHT_PENALTIES]);
         auto turn_duration_penalties_ptr = data_layout.GetBlockPtr<TurnPenalty>(
             memory_block, storage::DataLayout::TURN_DURATION_PENALTIES);
-        m_turn_duration_penalties = util::SharedMemoryVector<TurnPenalty>(
+        m_turn_duration_penalties = util::vector_view<TurnPenalty>(
             turn_duration_penalties_ptr,
             data_layout.num_entries[storage::DataLayout::TURN_DURATION_PENALTIES]);
     }
@@ -452,42 +431,42 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto geometries_index_ptr =
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::GEOMETRIES_INDEX);
-        util::SharedMemoryVector<unsigned> geometry_begin_indices(
+        util::vector_view<unsigned> geometry_begin_indices(
             geometries_index_ptr, data_layout.num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
 
         auto geometries_node_list_ptr = data_layout.GetBlockPtr<NodeID>(
             memory_block, storage::DataLayout::GEOMETRIES_NODE_LIST);
-        util::SharedMemoryVector<NodeID> geometry_node_list(
+        util::vector_view<NodeID> geometry_node_list(
             geometries_node_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
 
         auto geometries_fwd_weight_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
-        util::SharedMemoryVector<EdgeWeight> geometry_fwd_weight_list(
+        util::vector_view<EdgeWeight> geometry_fwd_weight_list(
             geometries_fwd_weight_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
 
         auto geometries_rev_weight_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
-        util::SharedMemoryVector<EdgeWeight> geometry_rev_weight_list(
+        util::vector_view<EdgeWeight> geometry_rev_weight_list(
             geometries_rev_weight_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
 
         auto geometries_fwd_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
-        util::SharedMemoryVector<EdgeWeight> geometry_fwd_duration_list(
+        util::vector_view<EdgeWeight> geometry_fwd_duration_list(
             geometries_fwd_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
 
         auto geometries_rev_duration_list_ptr = data_layout.GetBlockPtr<EdgeWeight>(
             memory_block, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
-        util::SharedMemoryVector<EdgeWeight> geometry_rev_duration_list(
+        util::vector_view<EdgeWeight> geometry_rev_duration_list(
             geometries_rev_duration_list_ptr,
             data_layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
 
         auto datasources_list_ptr = data_layout.GetBlockPtr<DatasourceID>(
             memory_block, storage::DataLayout::DATASOURCES_LIST);
-        util::SharedMemoryVector<DatasourceID> datasources_list(
+        util::vector_view<DatasourceID> datasources_list(
             datasources_list_ptr, data_layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
 
         segment_data = extractor::SegmentDataView{std::move(geometry_begin_indices),
@@ -506,13 +485,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         auto bearing_class_id_ptr = data_layout.GetBlockPtr<BearingClassID>(
             memory_block, storage::DataLayout::BEARING_CLASSID);
-        typename util::SharedMemoryVector<BearingClassID> bearing_class_id_table(
+        typename util::vector_view<BearingClassID> bearing_class_id_table(
             bearing_class_id_ptr, data_layout.num_entries[storage::DataLayout::BEARING_CLASSID]);
         m_bearing_class_id_table = std::move(bearing_class_id_table);
 
         auto bearing_class_ptr = data_layout.GetBlockPtr<DiscreteBearing>(
             memory_block, storage::DataLayout::BEARING_VALUES);
-        typename util::SharedMemoryVector<DiscreteBearing> bearing_class_table(
+        typename util::vector_view<DiscreteBearing> bearing_class_table(
             bearing_class_ptr, data_layout.num_entries[storage::DataLayout::BEARING_VALUES]);
         m_bearing_values_table = std::move(bearing_class_table);
 
@@ -520,9 +499,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             data_layout.GetBlockPtr<unsigned>(memory_block, storage::DataLayout::BEARING_OFFSETS);
         auto blocks_ptr =
             data_layout.GetBlockPtr<IndexBlock>(memory_block, storage::DataLayout::BEARING_BLOCKS);
-        util::SharedMemoryVector<unsigned> bearing_offsets(
+        util::vector_view<unsigned> bearing_offsets(
             offsets_ptr, data_layout.num_entries[storage::DataLayout::BEARING_OFFSETS]);
-        util::SharedMemoryVector<IndexBlock> bearing_blocks(
+        util::vector_view<IndexBlock> bearing_blocks(
             blocks_ptr, data_layout.num_entries[storage::DataLayout::BEARING_BLOCKS]);
 
         m_bearing_ranges_table =
@@ -533,10 +512,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         auto entry_class_ptr = data_layout.GetBlockPtr<util::guidance::EntryClass>(
             memory_block, storage::DataLayout::ENTRY_CLASS);
-        typename util::ShM<util::guidance::EntryClass,
-                           osrm::storage::MemorySetting::SharedMemory>::vector
-            entry_class_table(entry_class_ptr,
-                              data_layout.num_entries[storage::DataLayout::ENTRY_CLASS]);
+        typename util::vector_view<util::guidance::EntryClass> entry_class_table(
+            entry_class_ptr, data_layout.num_entries[storage::DataLayout::ENTRY_CLASS]);
         m_entry_class_table = std::move(entry_class_table);
     }
 
@@ -958,15 +935,13 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
                 memory_block, storage::DataLayout::MLD_PARTITION);
             auto partition_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_PARTITION);
-            util::SharedMemoryVector<PartitionID> partition(mld_partition_ptr,
-                                                            partition_entries_count);
+            util::vector_view<PartitionID> partition(mld_partition_ptr, partition_entries_count);
 
             auto mld_chilren_ptr = data_layout.GetBlockPtr<CellID>(
                 memory_block, storage::DataLayout::MLD_CELL_TO_CHILDREN);
             auto children_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_TO_CHILDREN);
-            util::SharedMemoryVector<CellID> cell_to_children(mld_chilren_ptr,
-                                                              children_entries_count);
+            util::vector_view<CellID> cell_to_children(mld_chilren_ptr, children_entries_count);
 
             mld_partition =
                 partition::MultiLevelPartitionView{level_data, partition, cell_to_children};
@@ -998,17 +973,15 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
             auto cell_level_offsets_entries_count =
                 data_layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            util::SharedMemoryVector<EdgeWeight> weights(mld_cell_weights_ptr,
-                                                         weight_entries_count);
-            util::SharedMemoryVector<NodeID> source_boundary(mld_source_boundary_ptr,
-                                                             source_boundary_entries_count);
-            util::SharedMemoryVector<NodeID> destination_boundary(
-                mld_destination_boundary_ptr, destination_boundary_entries_count);
-            util::ShM<partition::CellStorageView::CellData,
-                      osrm::storage::MemorySetting::SharedMemory>::vector
-                cells(mld_cells_ptr, cells_entries_counts);
-            util::ShM<std::uint64_t, osrm::storage::MemorySetting::SharedMemory>::vector
-                level_offsets(mld_cell_level_offsets_ptr, cell_level_offsets_entries_count);
+            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
+            util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
+                                                      source_boundary_entries_count);
+            util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
+                                                           destination_boundary_entries_count);
+            util::vector_view<partition::CellStorageView::CellData> cells(mld_cells_ptr,
+                                                                          cells_entries_counts);
+            util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
+                                                           cell_level_offsets_entries_count);
 
             mld_cell_storage = partition::CellStorageView{std::move(weights),
                                                           std::move(source_boundary),
@@ -1028,13 +1001,13 @@ class ContiguousInternalMemoryAlgorithmDataFacade<algorithm::MLD>
         auto graph_node_to_offset_ptr = data_layout.GetBlockPtr<QueryGraph::EdgeOffset>(
             memory_block, storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET);
 
-        util::SharedMemoryVector<GraphNode> node_list(
+        util::vector_view<GraphNode> node_list(
             graph_nodes_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_LIST]);
-        util::SharedMemoryVector<GraphEdge> edge_list(
+        util::vector_view<GraphEdge> edge_list(
             graph_edges_ptr, data_layout.num_entries[storage::DataLayout::MLD_GRAPH_EDGE_LIST]);
-        util::ShM<QueryGraph::EdgeOffset, osrm::storage::MemorySetting::SharedMemory>::vector
-            node_to_offset(graph_node_to_offset_ptr,
-                           data_layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET]);
+        util::vector_view<QueryGraph::EdgeOffset> node_to_offset(
+            graph_node_to_offset_ptr,
+            data_layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET]);
 
         query_graph =
             QueryGraph(std::move(node_list), std::move(edge_list), std::move(node_to_offset));

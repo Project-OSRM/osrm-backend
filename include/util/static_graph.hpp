@@ -126,8 +126,8 @@ class StaticGraph
         InitializeFromSortedEdgeRange(nodes, edges.begin(), edges.end());
     }
 
-    StaticGraph(typename ShM<NodeArrayEntry, MemorySetting>::vector node_array_,
-                typename ShM<EdgeArrayEntry, MemorySetting>::vector edge_array_)
+    StaticGraph(typename util::ShM<NodeArrayEntry, MemorySetting>::vector node_array_,
+                typename util::ShM<EdgeArrayEntry, MemorySetting>::vector edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
         BOOST_ASSERT(!node_array.empty());

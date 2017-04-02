@@ -184,8 +184,7 @@ template <typename DataT, osrm::storage::MemorySetting MemorySetting> struct ShM
 };
 
 template <typename DataT>
-using SharedMemoryVector =
-    typename util::ShM<DataT, osrm::storage::MemorySetting::SharedMemory>::vector;
+using vector_view = typename util::ShM<DataT, osrm::storage::MemorySetting::SharedMemory>::vector;
 template <typename DataT>
 using InternalMemoryVector =
     typename util::ShM<DataT, osrm::storage::MemorySetting::InternalMemory>::vector;
