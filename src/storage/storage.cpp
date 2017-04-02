@@ -650,50 +650,55 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // load compressed geometry
     {
-        io::FileReader geometry_input_file(config.geometries_path,
-                                           io::FileReader::HasNoFingerprint);
+        auto geometries_index_ptr =
+            layout.GetBlockPtr<unsigned, true>(memory_ptr, storage::DataLayout::GEOMETRIES_INDEX);
+        util::vector_view<unsigned> geometry_begin_indices(
+            geometries_index_ptr, layout.num_entries[storage::DataLayout::GEOMETRIES_INDEX]);
 
-        const auto geometry_index_count = geometry_input_file.ReadElementCount32();
-        const auto geometries_index_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::GEOMETRIES_INDEX);
-        BOOST_ASSERT(geometry_index_count == layout.num_entries[DataLayout::GEOMETRIES_INDEX]);
-        geometry_input_file.ReadInto(geometries_index_ptr, geometry_index_count);
+        auto geometries_node_list_ptr = layout.GetBlockPtr<NodeID, true>(
+            memory_ptr, storage::DataLayout::GEOMETRIES_NODE_LIST);
+        util::vector_view<NodeID> geometry_node_list(
+            geometries_node_list_ptr,
+            layout.num_entries[storage::DataLayout::GEOMETRIES_NODE_LIST]);
 
-        const auto geometries_node_id_list_ptr =
-            layout.GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::GEOMETRIES_NODE_LIST);
-        const auto geometry_node_lists_count = geometry_input_file.ReadElementCount32();
-        BOOST_ASSERT(geometry_node_lists_count ==
-                     layout.num_entries[DataLayout::GEOMETRIES_NODE_LIST]);
-        geometry_input_file.ReadInto(geometries_node_id_list_ptr, geometry_node_lists_count);
+        auto geometries_fwd_weight_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+            memory_ptr, storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
+        util::vector_view<EdgeWeight> geometry_fwd_weight_list(
+            geometries_fwd_weight_list_ptr,
+            layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
 
-        const auto geometries_fwd_weight_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
-            memory_ptr, DataLayout::GEOMETRIES_FWD_WEIGHT_LIST);
-        BOOST_ASSERT(geometry_node_lists_count ==
-                     layout.num_entries[DataLayout::GEOMETRIES_FWD_WEIGHT_LIST]);
-        geometry_input_file.ReadInto(geometries_fwd_weight_list_ptr, geometry_node_lists_count);
+        auto geometries_rev_weight_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+            memory_ptr, storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
+        util::vector_view<EdgeWeight> geometry_rev_weight_list(
+            geometries_rev_weight_list_ptr,
+            layout.num_entries[storage::DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
 
-        const auto geometries_rev_weight_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
-            memory_ptr, DataLayout::GEOMETRIES_REV_WEIGHT_LIST);
-        BOOST_ASSERT(geometry_node_lists_count ==
-                     layout.num_entries[DataLayout::GEOMETRIES_REV_WEIGHT_LIST]);
-        geometry_input_file.ReadInto(geometries_rev_weight_list_ptr, geometry_node_lists_count);
+        auto geometries_fwd_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+            memory_ptr, storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST);
+        util::vector_view<EdgeWeight> geometry_fwd_duration_list(
+            geometries_fwd_duration_list_ptr,
+            layout.num_entries[storage::DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
 
-        const auto geometries_fwd_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
-            memory_ptr, DataLayout::GEOMETRIES_FWD_DURATION_LIST);
-        BOOST_ASSERT(geometry_node_lists_count ==
-                     layout.num_entries[DataLayout::GEOMETRIES_FWD_DURATION_LIST]);
-        geometry_input_file.ReadInto(geometries_fwd_duration_list_ptr, geometry_node_lists_count);
+        auto geometries_rev_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+            memory_ptr, storage::DataLayout::GEOMETRIES_REV_DURATION_LIST);
+        util::vector_view<EdgeWeight> geometry_rev_duration_list(
+            geometries_rev_duration_list_ptr,
+            layout.num_entries[storage::DataLayout::GEOMETRIES_REV_DURATION_LIST]);
 
-        const auto geometries_rev_duration_list_ptr = layout.GetBlockPtr<EdgeWeight, true>(
-            memory_ptr, DataLayout::GEOMETRIES_REV_DURATION_LIST);
-        BOOST_ASSERT(geometry_node_lists_count ==
-                     layout.num_entries[DataLayout::GEOMETRIES_REV_DURATION_LIST]);
-        geometry_input_file.ReadInto(geometries_rev_duration_list_ptr, geometry_node_lists_count);
+        auto datasources_list_ptr = layout.GetBlockPtr<DatasourceID, true>(
+            memory_ptr, storage::DataLayout::DATASOURCES_LIST);
+        util::vector_view<DatasourceID> datasources_list(
+            datasources_list_ptr, layout.num_entries[storage::DataLayout::DATASOURCES_LIST]);
 
-        const auto datasource_list_ptr =
-            layout.GetBlockPtr<DatasourceID, true>(memory_ptr, DataLayout::DATASOURCES_LIST);
-        BOOST_ASSERT(geometry_node_lists_count == layout.num_entries[DataLayout::DATASOURCES_LIST]);
-        geometry_input_file.ReadInto(datasource_list_ptr, geometry_node_lists_count);
+        extractor::SegmentDataView segment_data{std::move(geometry_begin_indices),
+                                                  std::move(geometry_node_list),
+                                                  std::move(geometry_fwd_weight_list),
+                                                  std::move(geometry_rev_weight_list),
+                                                  std::move(geometry_fwd_duration_list),
+                                                  std::move(geometry_rev_duration_list),
+                                                  std::move(datasources_list)};
+
+        extractor::files::readSegmentData(config.geometries_path, segment_data);
     }
 
     {
