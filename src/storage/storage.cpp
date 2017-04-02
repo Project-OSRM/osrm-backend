@@ -926,39 +926,46 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
         if (boost::filesystem::exists(config.mld_storage_path))
         {
-            io::FileReader reader(config.mld_storage_path, io::FileReader::VerifyFingerprint);
-            auto mld_cell_weights_ptr =
-                layout.GetBlockPtr<EdgeWeight, true>(memory_ptr, DataLayout::MLD_CELL_WEIGHTS);
-            auto mld_source_boundary_ptr =
-                layout.GetBlockPtr<NodeID, true>(memory_ptr, DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELLS) > 0);
+            BOOST_ASSERT(layout.GetBlockSize(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS) > 0);
+
+            auto mld_cell_weights_ptr = layout.GetBlockPtr<EdgeWeight, true>(
+                memory_ptr, storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto mld_source_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
+                memory_ptr, storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
             auto mld_destination_boundary_ptr = layout.GetBlockPtr<NodeID, true>(
-                memory_ptr, DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
-            auto mld_cells_ptr = layout.GetBlockPtr<partition::CellStorage::CellData, true>(
-                memory_ptr, DataLayout::MLD_CELLS);
+                memory_ptr, storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto mld_cells_ptr = layout.GetBlockPtr<partition::CellStorageView::CellData, true>(
+                memory_ptr, storage::DataLayout::MLD_CELLS);
             auto mld_cell_level_offsets_ptr = layout.GetBlockPtr<std::uint64_t, true>(
-                memory_ptr, DataLayout::MLD_CELL_LEVEL_OFFSETS);
+                memory_ptr, storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            std::uint64_t size;
+            auto weight_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_WEIGHTS);
+            auto source_boundary_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_SOURCE_BOUNDARY);
+            auto destination_boundary_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_DESTINATION_BOUNDARY);
+            auto cells_entries_counts = layout.GetBlockEntries(storage::DataLayout::MLD_CELLS);
+            auto cell_level_offsets_entries_count =
+                layout.GetBlockEntries(storage::DataLayout::MLD_CELL_LEVEL_OFFSETS);
 
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_WEIGHTS));
-            reader.ReadInto(mld_cell_weights_ptr, size);
+            util::vector_view<EdgeWeight> weights(mld_cell_weights_ptr, weight_entries_count);
+            util::vector_view<NodeID> source_boundary(mld_source_boundary_ptr,
+                                                      source_boundary_entries_count);
+            util::vector_view<NodeID> destination_boundary(mld_destination_boundary_ptr,
+                                                           destination_boundary_entries_count);
+            util::vector_view<partition::CellStorageView::CellData> cells(mld_cells_ptr,
+                                                                          cells_entries_counts);
+            util::vector_view<std::uint64_t> level_offsets(mld_cell_level_offsets_ptr,
+                                                           cell_level_offsets_entries_count);
 
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_SOURCE_BOUNDARY));
-            reader.ReadInto(mld_source_boundary_ptr, size);
-
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_DESTINATION_BOUNDARY));
-            reader.ReadInto(mld_destination_boundary_ptr, size);
-
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELLS));
-            reader.ReadInto(mld_cells_ptr, size);
-
-            reader.ReadInto(size);
-            BOOST_ASSERT(size == layout.GetBlockEntries(DataLayout::MLD_CELL_LEVEL_OFFSETS));
-            reader.ReadInto(mld_cell_level_offsets_ptr, size);
+            partition::CellStorageView storage{std::move(weights),
+                                               std::move(source_boundary),
+                                               std::move(destination_boundary),
+                                               std::move(cells),
+                                               std::move(level_offsets)};
+            partition::files::readCells(config.mld_storage_path, storage);
         }
 
         if (boost::filesystem::exists(config.mld_graph_path))
