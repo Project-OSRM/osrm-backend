@@ -70,42 +70,6 @@ inline void readHSGR(io::FileReader &input_file,
     input_file.ReadInto(edge_buffer, number_of_edges);
 }
 
-// Loads edge data from .edge files into memory which includes its
-// geometry, name ID, turn instruction, lane data ID, travel mode, entry class ID
-// Needs to be called after readElementCount() to get the correct offset in the stream
-inline void readEdges(io::FileReader &edges_input_file,
-                      GeometryID *geometry_list,
-                      NameID *name_id_list,
-                      extractor::guidance::TurnInstruction *turn_instruction_list,
-                      LaneDataID *lane_data_id_list,
-                      extractor::TravelMode *travel_mode_list,
-                      EntryClassID *entry_class_id_list,
-                      util::guidance::TurnBearing *pre_turn_bearing_list,
-                      util::guidance::TurnBearing *post_turn_bearing_list,
-                      const std::uint64_t number_of_edges)
-{
-    BOOST_ASSERT(geometry_list);
-    BOOST_ASSERT(name_id_list);
-    BOOST_ASSERT(turn_instruction_list);
-    BOOST_ASSERT(lane_data_id_list);
-    BOOST_ASSERT(travel_mode_list);
-    BOOST_ASSERT(entry_class_id_list);
-    extractor::OriginalEdgeData current_edge_data;
-    for (std::uint64_t i = 0; i < number_of_edges; ++i)
-    {
-        edges_input_file.ReadInto(current_edge_data);
-
-        geometry_list[i] = current_edge_data.via_geometry;
-        name_id_list[i] = current_edge_data.name_id;
-        turn_instruction_list[i] = current_edge_data.turn_instruction;
-        lane_data_id_list[i] = current_edge_data.lane_data_id;
-        travel_mode_list[i] = current_edge_data.travel_mode;
-        entry_class_id_list[i] = current_edge_data.entry_classid;
-        pre_turn_bearing_list[i] = current_edge_data.pre_turn_bearing;
-        post_turn_bearing_list[i] = current_edge_data.post_turn_bearing;
-    }
-}
-
 // Loads coordinates and OSM node IDs from .nodes files into memory
 // Needs to be called after readElementCount() to get the correct offset in the stream
 template <typename OSMNodeIDVectorT>

@@ -3,8 +3,8 @@
 #include "customizer/edge_based_graph.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
-#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/files.hpp"
+#include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/original_edge_data.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
@@ -56,9 +56,8 @@ namespace storage
 {
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode = util::StaticRTree<RTreeLeaf,
-                                    util::vector_view<util::Coordinate>,
-                                    storage::Ownership::View>::TreeNode;
+using RTreeNode = util::
+    StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, storage::Ownership::View>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 
@@ -596,43 +595,57 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load original edge data
     {
-        io::FileReader edges_input_file(config.edges_data_path, io::FileReader::HasNoFingerprint);
+        auto via_geometry_list_ptr =
+            layout.GetBlockPtr<GeometryID, true>(memory_ptr, storage::DataLayout::VIA_NODE_LIST);
+        util::vector_view<GeometryID> geometry_ids(
+            via_geometry_list_ptr, layout.num_entries[storage::DataLayout::VIA_NODE_LIST]);
 
-        const auto number_of_original_edges = edges_input_file.ReadElementCount64();
-
-        const auto via_geometry_ptr =
-            layout.GetBlockPtr<GeometryID, true>(memory_ptr, DataLayout::VIA_NODE_LIST);
-
-        const auto name_id_ptr =
-            layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::NAME_ID_LIST);
-
-        const auto travel_mode_ptr =
-            layout.GetBlockPtr<extractor::TravelMode, true>(memory_ptr, DataLayout::TRAVEL_MODE);
-        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing, true>(
-            memory_ptr, DataLayout::PRE_TURN_BEARING);
-        const auto post_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing, true>(
-            memory_ptr, DataLayout::POST_TURN_BEARING);
+        const auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode, true>(
+            memory_ptr, storage::DataLayout::TRAVEL_MODE);
+        util::vector_view<extractor::TravelMode> travel_modes(
+            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE]);
 
         const auto lane_data_id_ptr =
-            layout.GetBlockPtr<LaneDataID, true>(memory_ptr, DataLayout::LANE_DATA_ID);
+            layout.GetBlockPtr<LaneDataID, true>(memory_ptr, storage::DataLayout::LANE_DATA_ID);
+        util::vector_view<LaneDataID> lane_data_ids(
+            lane_data_id_ptr, layout.num_entries[storage::DataLayout::LANE_DATA_ID]);
 
-        const auto turn_instructions_ptr =
+        const auto turn_instruction_list_ptr =
             layout.GetBlockPtr<extractor::guidance::TurnInstruction, true>(
-                memory_ptr, DataLayout::TURN_INSTRUCTION);
+                memory_ptr, storage::DataLayout::TURN_INSTRUCTION);
+        util::vector_view<extractor::guidance::TurnInstruction> turn_instructions(
+            turn_instruction_list_ptr, layout.num_entries[storage::DataLayout::TURN_INSTRUCTION]);
 
-        const auto entry_class_id_ptr =
-            layout.GetBlockPtr<EntryClassID, true>(memory_ptr, DataLayout::ENTRY_CLASSID);
+        const auto name_id_list_ptr =
+            layout.GetBlockPtr<NameID, true>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
+        util::vector_view<NameID> name_ids(name_id_list_ptr,
+                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
 
-        serialization::readEdges(edges_input_file,
-                                 via_geometry_ptr,
-                                 name_id_ptr,
-                                 turn_instructions_ptr,
-                                 lane_data_id_ptr,
-                                 travel_mode_ptr,
-                                 entry_class_id_ptr,
-                                 pre_turn_bearing_ptr,
-                                 post_turn_bearing_ptr,
-                                 number_of_original_edges);
+        const auto entry_class_id_list_ptr =
+            layout.GetBlockPtr<EntryClassID, true>(memory_ptr, storage::DataLayout::ENTRY_CLASSID);
+        util::vector_view<EntryClassID> entry_class_ids(
+            entry_class_id_list_ptr, layout.num_entries[storage::DataLayout::ENTRY_CLASSID]);
+
+        const auto pre_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing, true>(
+            memory_ptr, storage::DataLayout::PRE_TURN_BEARING);
+        util::vector_view<util::guidance::TurnBearing> pre_turn_bearings(
+            pre_turn_bearing_ptr, layout.num_entries[storage::DataLayout::PRE_TURN_BEARING]);
+
+        const auto post_turn_bearing_ptr = layout.GetBlockPtr<util::guidance::TurnBearing, true>(
+            memory_ptr, storage::DataLayout::POST_TURN_BEARING);
+        util::vector_view<util::guidance::TurnBearing> post_turn_bearings(
+            post_turn_bearing_ptr, layout.num_entries[storage::DataLayout::POST_TURN_BEARING]);
+
+        extractor::TurnDataView turn_data(std::move(geometry_ids),
+                                          std::move(name_ids),
+                                          std::move(turn_instructions),
+                                          std::move(lane_data_ids),
+                                          std::move(travel_modes),
+                                          std::move(entry_class_ids),
+                                          std::move(pre_turn_bearings),
+                                          std::move(post_turn_bearings));
+
+        extractor::files::readTurnData(config.edges_data_path, turn_data);
     }
 
     // load compressed geometry

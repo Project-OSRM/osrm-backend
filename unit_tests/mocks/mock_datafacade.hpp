@@ -203,7 +203,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return util::guidance::TurnBearing{0.0};
     }
 
-    bool hasLaneData(const EdgeID /*id*/) const override final { return true; };
+    bool HasLaneData(const EdgeID /*id*/) const override final { return true; };
     util::guidance::LaneTupleIdPair GetLaneData(const EdgeID /*id*/) const override final
     {
         return {{0, 0}, 0};

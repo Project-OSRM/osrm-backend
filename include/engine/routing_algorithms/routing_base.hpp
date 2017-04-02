@@ -174,7 +174,7 @@ void annotatePath(const FacadeT &facade,
                                              util::guidance::TurnBearing(0)});
         }
         BOOST_ASSERT(unpacked_path.size() > 0);
-        if (facade.hasLaneData(turn_id))
+        if (facade.HasLaneData(turn_id))
             unpacked_path.back().lane_data = facade.GetLaneData(turn_id);
 
         unpacked_path.back().entry_classid = facade.GetEntryClassID(turn_id);

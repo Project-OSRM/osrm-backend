@@ -65,6 +65,27 @@ inline void writeSegmentData(const boost::filesystem::path &path, const SegmentD
 
     serialization::write(writer, segment_data);
 }
+
+// reads .osrm.edges
+template<storage::Ownership Ownership>
+inline void readTurnData(const boost::filesystem::path &path, detail::TurnDataContainerImpl<Ownership> &turn_data)
+{
+    const auto fingerprint = storage::io::FileReader::HasNoFingerprint;
+    storage::io::FileReader reader{path, fingerprint};
+
+    serialization::read(reader, turn_data);
+}
+
+// writes .osrm.edges
+template<storage::Ownership Ownership>
+inline void writeTurnData(const boost::filesystem::path &path, const detail::TurnDataContainerImpl<Ownership> &turn_data)
+{
+    const auto fingerprint = storage::io::FileWriter::HasNoFingerprint;
+    storage::io::FileWriter writer{path, fingerprint};
+
+    serialization::write(writer, turn_data);
+}
+
 }
 }
 }

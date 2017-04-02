@@ -201,10 +201,10 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     friend void
     serialization::read<Ownership>(storage::io::FileReader &reader,
-                             detail::SegmentDataContainerImpl<Ownership> &segment_data);
-    friend void
-    serialization::write<Ownership>(storage::io::FileWriter &writer,
-                              const detail::SegmentDataContainerImpl<Ownership> &segment_data);
+                                   detail::SegmentDataContainerImpl<Ownership> &segment_data);
+    friend void serialization::write<Ownership>(
+        storage::io::FileWriter &writer,
+        const detail::SegmentDataContainerImpl<Ownership> &segment_data);
 
   private:
     Vector<std::uint32_t> index;
