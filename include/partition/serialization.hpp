@@ -21,7 +21,7 @@ inline void read(storage::io::FileReader &reader, MultiLevelGraph<EdgeDataT, Own
 {
     reader.DeserializeVector(graph.node_array);
     reader.DeserializeVector(graph.edge_array);
-    reader.DeserializeVector(graph.edge_to_level);
+    reader.DeserializeVector(graph.node_to_edge_offset);
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
