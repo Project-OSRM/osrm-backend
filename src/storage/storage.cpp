@@ -7,8 +7,8 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/shared_monitor.hpp"
 
-#include "contractor/query_graph.hpp"
 #include "contractor/files.hpp"
+#include "contractor/query_graph.hpp"
 
 #include "customizer/edge_based_graph.hpp"
 
@@ -64,7 +64,8 @@ namespace storage
 {
 
 using RTreeLeaf = engine::datafacade::BaseDataFacade::RTreeLeaf;
-using RTreeNode = util:: StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, storage::Ownership::View>::TreeNode;
+using RTreeNode = util::
+    StaticRTree<RTreeLeaf, util::vector_view<util::Coordinate>, storage::Ownership::View>::TreeNode;
 using QueryGraph = util::StaticGraph<contractor::QueryEdge::EdgeData>;
 using EdgeBasedGraph = util::StaticGraph<extractor::EdgeBasedEdge::EdgeData>;
 
@@ -223,8 +224,7 @@ void Storage::PopulateLayout(DataLayout &layout)
         auto num_offsets = reader.ReadVectorSize<std::uint32_t>();
         auto num_masks = reader.ReadVectorSize<extractor::guidance::TurnLaneType::Mask>();
 
-        layout.SetBlockSize<std::uint32_t>(DataLayout::LANE_DESCRIPTION_OFFSETS,
-                                           num_offsets);
+        layout.SetBlockSize<std::uint32_t>(DataLayout::LANE_DESCRIPTION_OFFSETS, num_offsets);
         layout.SetBlockSize<extractor::guidance::TurnLaneType::Mask>(
             DataLayout::LANE_DESCRIPTION_MASKS, num_masks);
     }
@@ -259,15 +259,17 @@ void Storage::PopulateLayout(DataLayout &layout)
 
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 1);
         layout.SetBlockSize<contractor::QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST,
-                                                        num_nodes);
+                                                                    num_nodes);
         layout.SetBlockSize<contractor::QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
-                                                        num_edges);
+                                                                    num_edges);
     }
     else
     {
         layout.SetBlockSize<unsigned>(DataLayout::HSGR_CHECKSUM, 0);
-        layout.SetBlockSize<contractor::QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST, 0);
-        layout.SetBlockSize<contractor::QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST, 0);
+        layout.SetBlockSize<contractor::QueryGraph::NodeArrayEntry>(DataLayout::CH_GRAPH_NODE_LIST,
+                                                                    0);
+        layout.SetBlockSize<contractor::QueryGraph::EdgeArrayEntry>(DataLayout::CH_GRAPH_EDGE_LIST,
+                                                                    0);
     }
 
     // load rsearch tree size
@@ -507,10 +509,10 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
     else
     {
         layout.GetBlockPtr<unsigned, true>(memory_ptr, DataLayout::HSGR_CHECKSUM);
-        layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(memory_ptr,
-                                                             DataLayout::CH_GRAPH_NODE_LIST);
-        layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(memory_ptr,
-                                                             DataLayout::CH_GRAPH_EDGE_LIST);
+        layout.GetBlockPtr<contractor::QueryGraphView::NodeArrayEntry, true>(
+            memory_ptr, DataLayout::CH_GRAPH_NODE_LIST);
+        layout.GetBlockPtr<contractor::QueryGraphView::EdgeArrayEntry, true>(
+            memory_ptr, DataLayout::CH_GRAPH_EDGE_LIST);
     }
 
     // store the filename of the on-disk portion of the RTree
@@ -568,7 +570,8 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         util::vector_view<extractor::guidance::TurnLaneType::Mask> masks(
             masks_ptr, layout.num_entries[storage::DataLayout::LANE_DESCRIPTION_MASKS]);
 
-        extractor::files::readTurnLaneDescriptions<storage::Ownership::View>(config.turn_lane_description_path, offsets, masks);
+        extractor::files::readTurnLaneDescriptions<storage::Ownership::View>(
+            config.turn_lane_description_path, offsets, masks);
     }
 
     // Load original edge data
@@ -949,24 +952,28 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
         if (boost::filesystem::exists(config.mld_graph_path))
         {
-            io::FileReader reader(config.mld_graph_path, io::FileReader::VerifyFingerprint);
 
-            auto nodes_ptr =
-                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraph::NodeArrayEntry, true>(
-                    memory_ptr, DataLayout::MLD_GRAPH_NODE_LIST);
-            auto edges_ptr =
-                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraph::EdgeArrayEntry, true>(
-                    memory_ptr, DataLayout::MLD_GRAPH_EDGE_LIST);
-            auto node_to_offset_ptr =
-                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraph::EdgeOffset, true>(
-                    memory_ptr, DataLayout::MLD_GRAPH_NODE_TO_OFFSET);
+            auto graph_nodes_ptr =
+                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry, true>(
+                    memory_ptr, storage::DataLayout::MLD_GRAPH_NODE_LIST);
+            auto graph_edges_ptr =
+                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry, true>(
+                    memory_ptr, storage::DataLayout::MLD_GRAPH_EDGE_LIST);
+            auto graph_node_to_offset_ptr =
+                layout.GetBlockPtr<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset, true>(
+                    memory_ptr, storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET);
 
-            auto num_nodes = reader.ReadElementCount64();
-            reader.ReadInto(nodes_ptr, num_nodes);
-            auto num_edges = reader.ReadElementCount64();
-            reader.ReadInto(edges_ptr, num_edges);
-            auto num_node_to_offset = reader.ReadElementCount64();
-            reader.ReadInto(node_to_offset_ptr, num_node_to_offset);
+            util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list(
+                graph_nodes_ptr, layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_LIST]);
+            util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list(
+                graph_edges_ptr, layout.num_entries[storage::DataLayout::MLD_GRAPH_EDGE_LIST]);
+            util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset> node_to_offset(
+                graph_node_to_offset_ptr,
+                layout.num_entries[storage::DataLayout::MLD_GRAPH_NODE_TO_OFFSET]);
+
+            customizer::MultiLevelEdgeBasedGraphView graph_view(
+                std::move(node_list), std::move(edge_list), std::move(node_to_offset));
+            partition::files::readGraph(config.mld_graph_path, graph_view);
         }
     }
 }
