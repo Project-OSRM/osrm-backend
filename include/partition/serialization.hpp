@@ -17,8 +17,7 @@ namespace serialization
 {
 
 template <typename EdgeDataT, storage::Ownership Ownership>
-inline void read(storage::io::FileReader &reader,
-                 MultiLevelGraph<EdgeDataT, Ownership> &graph)
+inline void read(storage::io::FileReader &reader, MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
     reader.DeserializeVector(graph.node_array);
     reader.DeserializeVector(graph.edge_array);
@@ -34,21 +33,25 @@ inline void write(storage::io::FileWriter &writer,
     writer.SerializeVector(graph.node_to_edge_offset);
 }
 
-template <> inline void read(storage::io::FileReader &reader, MultiLevelPartition &mlp)
+template <storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader, detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
-    reader.ReadInto<MultiLevelPartition::LevelData>(mlp.level_data);
+    reader.ReadInto(*mlp.level_data);
     reader.DeserializeVector(mlp.partition);
     reader.DeserializeVector(mlp.cell_to_children);
 }
 
-template <> inline void write(storage::io::FileWriter &writer, const MultiLevelPartition &mlp)
+template <storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
-    writer.WriteOne(mlp.level_data);
+    writer.WriteOne(*mlp.level_data);
     writer.SerializeVector(mlp.partition);
     writer.SerializeVector(mlp.cell_to_children);
 }
 
-template <> inline void read(storage::io::FileReader &reader, CellStorage &storage)
+template <storage::Ownership Ownership>
+inline void read(storage::io::FileReader &reader, detail::CellStorageImpl<Ownership> &storage)
 {
     reader.DeserializeVector(storage.weights);
     reader.DeserializeVector(storage.source_boundary);
@@ -57,7 +60,9 @@ template <> inline void read(storage::io::FileReader &reader, CellStorage &stora
     reader.DeserializeVector(storage.level_to_cell_offset);
 }
 
-template <> inline void write(storage::io::FileWriter &writer, const CellStorage &storage)
+template <storage::Ownership Ownership>
+inline void write(storage::io::FileWriter &writer,
+                  const detail::CellStorageImpl<Ownership> &storage)
 {
     writer.SerializeVector(storage.weights);
     writer.SerializeVector(storage.source_boundary);

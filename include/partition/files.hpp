@@ -35,7 +35,8 @@ inline void writeGraph(const boost::filesystem::path &path,
 }
 
 // read .osrm.partition file
-inline void readPartition(const boost::filesystem::path &path, MultiLevelPartition &mlp)
+template<storage::Ownership Ownership>
+inline void readPartition(const boost::filesystem::path &path, detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -44,7 +45,8 @@ inline void readPartition(const boost::filesystem::path &path, MultiLevelPartiti
 }
 
 // writes .osrm.partition file
-inline void writePartition(const boost::filesystem::path &path, const MultiLevelPartition &mlp)
+template<storage::Ownership Ownership>
+inline void writePartition(const boost::filesystem::path &path, const detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
@@ -53,7 +55,8 @@ inline void writePartition(const boost::filesystem::path &path, const MultiLevel
 }
 
 // reads .osrm.cells file
-inline void readCells(const boost::filesystem::path &path, CellStorage &storage)
+template<storage::Ownership Ownership>
+inline void readCells(const boost::filesystem::path &path, detail::CellStorageImpl<Ownership> &storage)
 {
     const auto fingerprint = storage::io::FileReader::VerifyFingerprint;
     storage::io::FileReader reader{path, fingerprint};
@@ -62,7 +65,8 @@ inline void readCells(const boost::filesystem::path &path, CellStorage &storage)
 }
 
 // writes .osrm.cells file
-inline void writeCells(const boost::filesystem::path &path, const CellStorage &storage)
+template<storage::Ownership Ownership>
+inline void writeCells(const boost::filesystem::path &path, const detail::CellStorageImpl<Ownership> &storage)
 {
     const auto fingerprint = storage::io::FileWriter::GenerateFingerprint;
     storage::io::FileWriter writer{path, fingerprint};
